@@ -8,10 +8,8 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.InAppFCManager
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
-import com.clevertap.android.sdk.copyFrom
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
@@ -44,7 +42,6 @@ internal class NetworkManager constructor(
     private val ctApiWrapper: CtApiWrapper,
     private val encryptionManager: NetworkEncryptionManager,
     private val networkRepo: NetworkRepo,
-    private val queueHeaderBuilder: QueueHeaderBuilder
 ) {
 
     companion object {
@@ -74,13 +71,6 @@ internal class NetworkManager constructor(
     private var networkRetryCount = 0
     private var minDelayFrequency = 0
 
-    /**
-     * Sets the InAppFCManager for queue header building.
-     * This is a temporary bridge until InAppFCManager is fully integrated into features.
-     */
-    internal fun setInAppFCManager(inAppFCManager: InAppFCManager) {
-        queueHeaderBuilder.inAppFCManager = inAppFCManager
-    }
 
     /**
      * Flushes the events queue from the local database to CleverTap servers.
@@ -202,13 +192,6 @@ internal class NetworkManager constructor(
         return newDomain != oldDomain
     }
 
-    /**
-     * Use QueueHeaderBuilder for header construction
-     */
-    private fun getQueueHeader(caller: String?): JSONObject? {
-        return queueHeaderBuilder.buildHeader(caller)
-    }
-
     @WorkerThread
     fun performHandshakeForDomain(
         eventGroup: EventGroup,
@@ -304,8 +287,7 @@ internal class NetworkManager constructor(
         }
 
         val endpointId: EndpointId = fromEventGroup(eventGroup)
-        val queueHeader: JSONObject? = getQueueHeader(caller)
-        applyQueueHeaderListeners(queueHeader, endpointId)
+        val queueHeader: JSONObject? = coreContract.networkHeaderForQueue(EndpointId.ENDPOINT_A1, caller)
 
         val requestBody = SendQueueRequestBody(queueHeader, queue)
         logger.debug(accountId, "Send queue contains ${queue.length()} items: $requestBody")
@@ -347,18 +329,6 @@ internal class NetworkManager constructor(
                     response = response,
                     queue = requestBody.queue
                 )
-            }
-        }
-    }
-
-    private fun applyQueueHeaderListeners(
-        queueHeader: JSONObject?,
-        endpointId: EndpointId
-    ) {
-        if (queueHeader != null) {
-            val headersToAttach = coreContract.getHeadersToAttach(endpointId)
-            if (headersToAttach != null) {
-                queueHeader.copyFrom(headersToAttach)
             }
         }
     }
@@ -505,7 +475,7 @@ internal class NetworkManager constructor(
 
     @WorkerThread
     fun defineTemplates(templates: Collection<CustomTemplate>): Boolean {
-        val header = getQueueHeader(null) ?: return false
+        val header = coreContract.networkHeaderForQueue(EndpointId.TEMPLATES, null) ?: return false
 
         val body = DefineTemplatesRequestBody(header, templates)
         logger.debug(accountId, "Will define templates: $body")

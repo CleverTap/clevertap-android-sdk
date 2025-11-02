@@ -100,7 +100,7 @@ internal class ContentFetchManager(
     }
 
     private suspend fun sendContentFetchRequest(content: JSONArray): Boolean {
-        val header = queueHeaderBuilder.buildHeader(null) ?: return false
+        val header = coreContract.networkHeaderForQueue(EndpointId.CONTENT_FETCH, null) ?: return false
         val body = ContentFetchRequestBody(header, content)
         logger.debug(TAG, "Fetching Content: $body")
 

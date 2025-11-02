@@ -38,7 +38,6 @@ import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
-import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
@@ -242,8 +241,7 @@ internal object CleverTapFactory {
         val networkManager = NetworkManager(
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
-            networkRepo = networkRepo,
-            queueHeaderBuilder = queueHeaderBuilder
+            networkRepo = networkRepo
         )
 
         val loginInfoProvider = LoginInfoProvider(
@@ -351,9 +349,8 @@ internal object CleverTapFactory {
         val networkFeature = NetworkFeature(
             networkManager = networkManager,
             encryptionManager = encryptionManager,
-            networkHeadersListeners = mutableListOf()
+            networkRepo = networkRepo,
         )
-        networkFeature.addNetworkHeadersListener(evaluationManager)
 
         // Analytics
         val analyticsFeature = AnalyticsFeature(

@@ -47,6 +47,7 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.product_config.CTProductConfigController
@@ -142,7 +143,6 @@ internal open class CoreState(
         }
         this.inApp.inAppFCManager = iam
         this.inApp.inAppController.setInAppFCManager(iam)
-        this.network.networkManager.setInAppFCManager(iam)
     }
 
     fun getInAppFCManager() : InAppFCManager? {
@@ -779,24 +779,7 @@ internal open class CoreState(
     }
 
     override fun notifyHeadersSent(allHeaders: JSONObject, endpointId: EndpointId) {
-        val networkHeadersListeners = network.networkHeadersListeners
-        for (listener in networkHeadersListeners) {
-            listener.onSentHeaders(allHeaders, endpointId)
-        }
-    }
-
-    override fun getHeadersToAttach(endpointId: EndpointId): JSONObject? {
-        val networkHeadersListeners = network.networkHeadersListeners
-        val combinedHeaders = JSONObject()
-
-        for (listener in networkHeadersListeners) {
-            val headersToAttach = listener.onAttachHeaders(endpointId)
-            if (headersToAttach != null) {
-                combinedHeaders.copyFrom(headersToAttach)
-            }
-        }
-
-        return if (combinedHeaders.length() > 0) combinedHeaders else null
+        inApp.evaluationManager.onSentHeaders(allHeaders, endpointId)
     }
 
     override fun notifySCDomainAvailable(domain: String) {
@@ -821,6 +804,7 @@ internal open class CoreState(
     override fun database(): BaseDatabaseManager = data.databaseManager
     override fun logger(): ILogger = core.config.logger
     override fun analytics(): AnalyticsManager = analytics.analyticsManager
+    override fun clock(): Clock = core.clock
 
     // ============ HELPER METHODS ============
 
@@ -1054,5 +1038,28 @@ internal open class CoreState(
         }
     }
 
-    override fun clock(): Clock = core.clock
+    override fun networkHeaderForQueue(endpointId: EndpointId, caller: String?): JSONObject? {
+        val header = QueueHeaderBuilder(
+            context = core.context,
+            config = core.config,
+            coreMetaData = core.coreMetaData,
+            deviceInfo = core.deviceInfo,
+            arpRepo = core.arpRepo,
+            ijRepo = core.ijRepo,
+            databaseManager = data.databaseManager,
+            validationResultStack = core.validationResultStack,
+            firstRequestTs = network.networkRepo::getFirstRequestTs,
+            lastRequestTs = network.networkRepo::getLastRequestTs,
+            logger = core.config.logger
+        ).apply {
+            inAppFCManager = inApp.inAppFCManager
+            pushProviders = push.pushProviders
+        }.buildHeader(caller)?.apply {
+            val onAttachHeaders = inApp.evaluationManager.onAttachHeaders(endpointId)
+            if (onAttachHeaders != null) {
+                this.copyFrom(onAttachHeaders)
+            }
+        }
+        return header
+    }
 }

@@ -83,11 +83,6 @@ internal interface CoreContract {
     fun notifyHeadersSent(allHeaders: JSONObject, endpointId: EndpointId)
 
     /**
-     * Collects headers from features to attach to request
-     */
-    fun getHeadersToAttach(endpointId: EndpointId): JSONObject?
-
-    /**
      * Notifies SC Domain listener about domain availability
      */
     fun notifySCDomainAvailable(domain: String)
@@ -96,6 +91,11 @@ internal interface CoreContract {
      * Notifies SC Domain listener about domain unavailability
      */
     fun notifySCDomainUnavailable()
+
+    /**
+     * Builds the first json item to be sent in queue for clevertap api calls
+     */
+    fun networkHeaderForQueue(endpointId: EndpointId, caller: String?): JSONObject?
 
     // ============ CORE DEPENDENCIES ACCESS ============
 
