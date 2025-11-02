@@ -27,7 +27,6 @@ import org.json.JSONObject
 internal class ContentFetchManager(
     private val logger: ILogger,
     private val coreMetaData: CoreMetaData,
-    private val queueHeaderBuilder: QueueHeaderBuilder,
     private val ctApiWrapper: CtApiWrapper,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS,
     private val clock: Clock = Clock.SYSTEM,

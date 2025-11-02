@@ -231,7 +231,6 @@ internal object CleverTapFactory {
         val contentFetchManager = ContentFetchManager(
             config.logger,
             coreMetaData,
-            queueHeaderBuilder,
             ctApiWrapper
         )
         val pushAmpResponse = PushAmpResponse(
