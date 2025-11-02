@@ -97,6 +97,8 @@ internal interface CoreContract {
      */
     fun networkHeaderForQueue(endpointId: EndpointId, caller: String?): JSONObject?
 
+    fun evaluateInAppForEvent(context: Context, event: JSONObject, eventType: Int)
+
     // ============ CORE DEPENDENCIES ACCESS ============
 
     fun context(): Context
@@ -106,6 +108,5 @@ internal interface CoreContract {
     fun database(): BaseDatabaseManager
     fun logger(): ILogger
     fun analytics(): AnalyticsManager
-
     fun clock(): Clock
 }

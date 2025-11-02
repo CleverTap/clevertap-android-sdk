@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.app.Activity
 import android.content.Context
+import android.location.Location
 import android.os.Bundle
 import android.os.RemoteException
 import android.text.TextUtils
@@ -45,6 +46,7 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkManager.Companion.isNetworkOnline
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
@@ -60,7 +62,6 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
-import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.sdk.video.VideoLibChecker
 import org.json.JSONArray
 import org.json.JSONException
@@ -1032,6 +1033,14 @@ internal open class CoreState(
         }
     }
 
+    /**
+     * Constructs the network header for a request queue.
+     *
+     * This function assembles a [JSONObject] containing various pieces of device, user, and session
+     * information that are sent with every network request containing a queue of events.
+     * It utilizes [QueueHeaderBuilder] to gather data from different parts of the SDK.
+     * Additionally, it attaches headers specific to In-App notifications if available.
+     */
     override fun networkHeaderForQueue(endpointId: EndpointId, caller: String?): JSONObject? {
         val header = QueueHeaderBuilder(
             context = core.context,
@@ -1055,5 +1064,54 @@ internal open class CoreState(
             }
         }
         return header
+    }
+
+    /**
+     * Evaluates and potentially displays an in-app notification based on the triggered event.
+     * This method is called when an event is raised, and it checks if any in-app campaigns
+     * are configured to be shown for that event.
+     *
+     * @param event The [JSONObject] representing the event that was triggered.
+     */
+    override fun evaluateInAppForEvent(context: Context, event: JSONObject, eventType: Int) {
+        val eventMediator = analytics.eventMediator
+        val inAppController = inApp.inAppController
+
+        val eventName = eventMediator.getEventName(event)
+        val userLocation: Location? = core.coreMetaData.locationFromUser
+        updateLocalStore(eventName, eventType)
+
+        if (eventMediator.isChargedEvent(event)) {
+            inAppController.onQueueChargedEvent(
+                eventMediator.getChargedEventDetails(event),
+                eventMediator.getChargedEventItemDetails(event), userLocation
+            )
+        } else if (!isNetworkOnline(context) && eventMediator.isEvent(event)) {
+            // in case device is offline just evaluate all events
+            inAppController.onQueueEvent(
+                eventName!!,
+                eventMediator.getEventProperties(event),
+                userLocation
+            )
+        } else if (eventType == Constants.PROFILE_EVENT) {
+            // in case profile event, evaluate for user attribute changes
+            val userAttributeChangedProperties =
+                eventMediator.computeUserAttributeChangeProperties(event)
+            inAppController.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
+        } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
+            // in case device is online only evaluate non-appLaunched events
+            inAppController.onQueueEvent(
+                eventName!!,
+                eventMediator.getEventProperties(event),
+                userLocation
+            )
+        }
+    }
+
+    @WorkerThread
+    private fun updateLocalStore(eventName: String?, type: Int) {
+        if (type == Constants.RAISED_EVENT) {
+            localDataStore.persistUserEventLog(eventName)
+        }
     }
 }

@@ -263,7 +263,6 @@ internal object CleverTapFactory {
             ctLockManager,
             localDataStore,
             loginInfoProvider,
-            null, // set this later
             executors
         )
 
@@ -302,7 +301,6 @@ internal object CleverTapFactory {
             inAppNotificationInflater,
             SYSTEM
         )
-        baseEventQueueManager.setInAppController(inAppController)
 
         val locationManager = LocationManager(context, config, coreMetaData, baseEventQueueManager)
 
