@@ -323,7 +323,6 @@ internal object CleverTapFactory {
         // DisplayUnit
         val contentFetchManager = ContentFetchManager(
             logger = config.logger,
-            coreMetaData = coreMetaData,
             ctApiWrapper = ctApiWrapper
         )
         

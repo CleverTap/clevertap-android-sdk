@@ -26,7 +26,6 @@ import org.json.JSONObject
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ContentFetchManager(
     private val logger: ILogger,
-    private val coreMetaData: CoreMetaData,
     private val ctApiWrapper: CtApiWrapper,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS,
     private val clock: Clock = Clock.SYSTEM,
@@ -85,6 +84,7 @@ internal class ContentFetchManager(
     }
 
     private fun getMetaData(packageName: String): JSONObject {
+        val coreMetaData = coreContract.coreMetaData()
         return JSONObject().apply {
             put(Constants.KEY_TYPE, "event")
             put(Constants.KEY_EVT_NAME, "content_fetch")
