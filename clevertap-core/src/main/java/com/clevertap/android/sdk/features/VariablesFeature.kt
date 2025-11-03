@@ -2,6 +2,9 @@ package com.clevertap.android.sdk.features
 
 import android.content.Context
 import com.clevertap.android.sdk.CoreContract
+import com.clevertap.android.sdk.db.DBEncryptionHandler
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.response.FetchVariablesResponse
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
@@ -10,16 +13,55 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import org.json.JSONObject
 
-internal data class VariablesFeature(
-    val cTVariables: CTVariables,
-    val varCache: VarCache,
-    val parser: Parser,
-    val variablesRepository: VariablesRepo,
-    val fetchVariablesResponse: FetchVariablesResponse
+/**
+ * Variables feature for managing dynamic variables and A/B testing
+ * Handles variable definitions, fetching, and updates
+ */
+internal class VariablesFeature(
+    private val storeRegistry: StoreRegistry,
+    private val dbEncryptionHandler: DBEncryptionHandler,
+    var fetchVariablesCallback: FetchVariablesCallback? = null
 ) : CleverTapFeature {
 
     lateinit var coreContract: CoreContract
-    var fetchVariablesCallback: FetchVariablesCallback? = null
+
+    // Lazy-initialized Variables dependencies (initialized after coreContract is set)
+    val variablesRepository: VariablesRepo by lazy {
+        VariablesRepo(
+            context = coreContract.context(),
+            accountId = coreContract.config().accountId,
+            dbEncryptionHandler = dbEncryptionHandler
+        )
+    }
+
+    private val fileResourcesRepo by lazy {
+        FileResourcesRepoFactory.createFileResourcesRepo(
+            context = coreContract.context(),
+            logger = coreContract.logger(),
+            storeRegistry = storeRegistry
+        )
+    }
+
+    val varCache: VarCache by lazy {
+        VarCache(
+            coreContract.config(),
+            coreContract.context(),
+            fileResourcesRepo,
+            variablesRepository
+        )
+    }
+
+    val cTVariables: CTVariables by lazy {
+        CTVariables(varCache)
+    }
+
+    val parser: Parser by lazy {
+        Parser(cTVariables)
+    }
+
+    val fetchVariablesResponse: FetchVariablesResponse by lazy {
+        FetchVariablesResponse(coreContract.config(), cTVariables)
+    }
 
     override fun coreContract(coreContract: CoreContract) {
         this.coreContract = coreContract

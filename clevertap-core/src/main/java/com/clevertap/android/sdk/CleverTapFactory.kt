@@ -27,7 +27,6 @@ import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
-import com.clevertap.android.sdk.response.FetchVariablesResponse
 import com.clevertap.android.sdk.response.GeofenceResponse
 import com.clevertap.android.sdk.response.InboxResponse
 import com.clevertap.android.sdk.response.ProductConfigResponse
@@ -37,10 +36,7 @@ import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
-import com.clevertap.android.sdk.variables.CTVariables
-import com.clevertap.android.sdk.variables.Parser
-import com.clevertap.android.sdk.variables.VarCache
-import com.clevertap.android.sdk.variables.repo.VariablesRepo
+
 import com.clevertap.android.sdk.features.AnalyticsFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
@@ -54,7 +50,6 @@ import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -269,36 +264,10 @@ internal object CleverTapFactory {
             )
         )
         
-        // Variables
-        val variablesRepo = VariablesRepo(
-            context = context,
-            accountId = accountId,
-            dbEncryptionHandler = dbEncryptionHandler
-        )
-
-        val impl = createFileResourcesRepo(
-            context = context,
-            logger = config.logger,
-            storeRegistry = storeRegistry
-        )
-
-        val varCache = VarCache(
-            config,
-            context,
-            impl,
-            variablesRepo
-        )
-
-        val ctVariables = CTVariables(varCache)
-
-        val parser = Parser(ctVariables)
-        
+        // Variables (Self-Contained)
         val variablesFeature = VariablesFeature(
-            cTVariables = ctVariables,
-            varCache = varCache,
-            parser = parser,
-            variablesRepository = variablesRepo,
-            fetchVariablesResponse = FetchVariablesResponse(config, ctVariables)
+            storeRegistry = storeRegistry,
+            dbEncryptionHandler = dbEncryptionHandler
         )
         
         // Push
