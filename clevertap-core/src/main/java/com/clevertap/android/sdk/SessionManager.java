@@ -78,7 +78,7 @@ public class SessionManager extends BaseSessionManager {
         if (!cleverTapMetaData.inCurrentSession()) {
             cleverTapMetaData.setFirstRequestInSession(true);
             if (validator != null) {
-                validator.setDiscardedEvents(null);
+                cleverTapMetaData.setDiscardedEvents(null);
             }
             createSession(context);
         }

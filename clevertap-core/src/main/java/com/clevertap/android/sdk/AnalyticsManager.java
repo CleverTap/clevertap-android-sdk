@@ -218,7 +218,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        ValidationResult discardedResult = validator.isEventDiscarded(eventName);
+        ValidationResult discardedResult = coreMetaData.isEventDiscarded(eventName);
         // Check for a discarded event name
         if (discardedResult.getErrorCode() > 0) {
             validationResultStack.pushValidationResult(discardedResult);

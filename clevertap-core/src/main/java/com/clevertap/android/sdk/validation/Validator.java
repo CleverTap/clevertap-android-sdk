@@ -47,8 +47,6 @@ public final class Validator {
             Constants.SC_INCOMING_EVENT_NAME, Constants.SC_END_EVENT_NAME,
             Constants.SC_CAMPAIGN_OPT_OUT_EVENT_NAME};
 
-    private ArrayList<String> discardedEvents;
-
     /**
      * Cleans the event name to the following guidelines:
      * <p>
@@ -294,37 +292,6 @@ public final class Validator {
     }
 
     /**
-     * Checks whether the specified event name has been discarded from Dashboard. If it is,
-     * then create a pending error, and abort.
-     *
-     * @param name The event name
-     * @return Boolean indication whether the event name has been discarded from Dashboard
-     */
-    public ValidationResult isEventDiscarded(String name) {
-        ValidationResult error = new ValidationResult();
-        if (name == null) {
-            ValidationResult vr = ValidationResultFactory.create(510, Constants.EVENT_NAME_NULL);
-            error.setErrorCode(vr.getErrorCode());
-            error.setErrorDesc(vr.getErrorDesc());
-            return error;
-        }
-        if (getDiscardedEvents() != null) {
-            for (String x : getDiscardedEvents()) {
-                if (Utils.areNamesNormalizedEqual(name, x)) {
-                    // The event name is discarded
-                    ValidationResult vr = ValidationResultFactory.create(513, Constants.DISCARDED_EVENT_NAME, name);
-                    error.setErrorCode(vr.getErrorCode());
-                    error.setErrorDesc(vr.getErrorDesc());
-                    Logger.d(name
-                            + " s a discarded event name as per CleverTap. Dropping event at SDK level. Check discarded events in CleverTap Dashboard settings.");
-                    return error;
-                }
-            }
-        }
-        return error;
-    }
-
-    /**
      * Checks whether the specified event name is restricted. If it is,
      * then create a pending error, and abort.
      *
@@ -457,16 +424,6 @@ public final class Validator {
         vr.setObject(mergedList);
 
         return vr;
-    }
-
-    private ArrayList<String> getDiscardedEvents() {
-        return discardedEvents;
-    }
-
-    // multi-value list operations
-
-    public void setDiscardedEvents(ArrayList<String> discardedEvents) {
-        this.discardedEvents = discardedEvents;
     }
 
     private int scan(JSONArray list, Set<String> set, BitSet additionBitSet, int off) {

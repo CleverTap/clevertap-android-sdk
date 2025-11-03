@@ -45,7 +45,7 @@ internal data class AnalyticsFeature(
                 if (arp.length() > 0) {
                     //Handle Discarded events in ARP
                     try {
-                        processDiscardedEventsList(arp, validator)
+                        processDiscardedEventsList(arp)
                     } catch (t: Throwable) {
                         coreContract.logger().verbose("Error handling discarded events response: " + t.localizedMessage)
                     }
@@ -60,7 +60,7 @@ internal data class AnalyticsFeature(
      * Dashboard has a feature where marketers can discard event. We get that list in the ARP response,
      * SDK then checks if the event is in the discarded list before sending it to LC
      */
-    private fun processDiscardedEventsList(response: JSONObject, validator: Validator?) {
+    private fun processDiscardedEventsList(response: JSONObject) {
         if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
             coreContract.logger().verbose(coreContract.config().accountId, "ARP doesn't contain the Discarded Events key")
             return
@@ -74,11 +74,7 @@ internal data class AnalyticsFeature(
                     discardedEventsList.add(discardedEventsArray.getString(i))
                 }
             }
-            if (validator != null) {
-                validator.setDiscardedEvents(discardedEventsList)
-            } else {
-                coreContract.logger().verbose(coreContract.config().accountId, "Validator object is NULL")
-            }
+            coreContract.coreMetaData().setDiscardedEvents(discardedEventsList)
         } catch (e: JSONException) {
             coreContract.logger().verbose(
                 coreContract.config().accountId,

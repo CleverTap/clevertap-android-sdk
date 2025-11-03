@@ -5,7 +5,12 @@ import android.location.Location;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
+import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
+
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import org.json.JSONObject;
 
@@ -82,6 +87,47 @@ public class CoreMetaData extends CleverTapMetaData {
     private boolean relaxNetwork = false;
 
     private static int initialAppEnteredForegroundTime = 0;
+
+    private ArrayList<String> discardedEvents;
+
+    private ArrayList<String> getDiscardedEvents() {
+        return discardedEvents;
+    }
+
+    public void setDiscardedEvents(ArrayList<String> discardedEvents) {
+        this.discardedEvents = discardedEvents;
+    }
+
+    /**
+     * Checks whether the specified event name has been discarded from Dashboard. If it is,
+     * then create a pending error, and abort.
+     *
+     * @param name The event name
+     * @return Boolean indication whether the event name has been discarded from Dashboard
+     */
+    public ValidationResult isEventDiscarded(String name) {
+        ValidationResult error = new ValidationResult();
+        if (name == null) {
+            ValidationResult vr = ValidationResultFactory.create(510, Constants.EVENT_NAME_NULL);
+            error.setErrorCode(vr.getErrorCode());
+            error.setErrorDesc(vr.getErrorDesc());
+            return error;
+        }
+        if (getDiscardedEvents() != null) {
+            for (String x : getDiscardedEvents()) {
+                if (Utils.areNamesNormalizedEqual(name, x)) {
+                    // The event name is discarded
+                    ValidationResult vr = ValidationResultFactory.create(513, Constants.DISCARDED_EVENT_NAME, name);
+                    error.setErrorCode(vr.getErrorCode());
+                    error.setErrorDesc(vr.getErrorDesc());
+                    Logger.d(name
+                            + " s a discarded event name as per CleverTap. Dropping event at SDK level. Check discarded events in CleverTap Dashboard settings.");
+                    return error;
+                }
+            }
+        }
+        return error;
+    }
 
     public static Activity getCurrentActivity() {
         return (currentActivity == null) ? null : currentActivity.get();
