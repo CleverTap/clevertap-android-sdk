@@ -7,19 +7,28 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.InAppFCManager
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.PushPermissionHandler
 import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.features.callbacks.InAppCallbackManager
 import com.clevertap.android.sdk.inapp.ImpressionManager
+import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
+import com.clevertap.android.sdk.inapp.InAppNotificationInflater
+import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
 import com.clevertap.android.sdk.inapp.data.CtCacheType
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
+import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.response.InAppResponse
-import com.clevertap.android.sdk.task.CTExecutors
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -30,21 +39,105 @@ import kotlin.text.split
  * In-app messaging feature
  * Manages in-app notifications, templates, evaluations, and impressions
  */
-internal data class InAppFeature(
+internal class InAppFeature(
+    private val dataFeature: DataFeature,
     val storeRegistry: StoreRegistry,
-    val inAppController: InAppController,
-    val evaluationManager: EvaluationManager,
-    val impressionManager: ImpressionManager,
-    val templatesManager: TemplatesManager,
-    val triggerManager: TriggerManager,
-    val inAppResponse: InAppResponse,
-    val executors: CTExecutors,
-    val storeProvider: StoreProvider,
-    val inAppCallbackManager: InAppCallbackManager = InAppCallbackManager()
+    val storeProvider: StoreProvider
 ) : CleverTapFeature, InAppFeatureMethods {
 
     lateinit var coreContract: CoreContract
     var inAppFCManager: InAppFCManager? = null
+
+    // Lazy-initialized InApp dependencies (initialized after coreContract is set)
+    val inAppCallbackManager: InAppCallbackManager by lazy {
+        InAppCallbackManager()
+    }
+    
+    val triggerManager: TriggerManager by lazy {
+        TriggerManager(
+            coreContract.context(),
+            coreContract.config().accountId,
+            coreContract.deviceInfo()
+        )
+    }
+    
+    val impressionManager: ImpressionManager by lazy {
+        ImpressionManager(storeRegistry)
+    }
+    
+    private val triggersMatcher: TriggersMatcher by lazy {
+        TriggersMatcher(dataFeature.localDataStore)
+    }
+    
+    private val limitsMatcher: LimitsMatcher by lazy {
+        LimitsMatcher(impressionManager, triggerManager)
+    }
+    
+    private val inAppActionHandler: InAppActionHandler by lazy {
+        InAppActionHandler(
+            context = coreContract.context(),
+            ctConfig = coreContract.config(),
+            pushPermissionHandler = PushPermissionHandler(
+                config = coreContract.config(),
+                ctListeners = inAppCallbackManager.getPushPermissionResponseListenerList()
+            )
+        )
+    }
+    
+    private val systemTemplates: Set<CustomTemplate> by lazy {
+        SystemTemplates.getSystemTemplates(inAppActionHandler)
+    }
+    
+    val templatesManager: TemplatesManager by lazy {
+        TemplatesManager.createInstance(coreContract.config(), systemTemplates)
+    }
+    
+    val evaluationManager: EvaluationManager by lazy {
+        EvaluationManager(
+            triggersMatcher = triggersMatcher,
+            triggersManager = triggerManager,
+            limitsMatcher = limitsMatcher,
+            storeRegistry = storeRegistry,
+            templatesManager = templatesManager
+        )
+    }
+    
+    private val inAppNotificationInflater: InAppNotificationInflater by lazy {
+        InAppNotificationInflater(
+            storeRegistry,
+            templatesManager,
+            coreContract.executors(),
+            { FileResourceProvider.getInstance(coreContract.context(), coreContract.logger()) }
+        )
+    }
+    
+    val inAppController: InAppController by lazy {
+        InAppController(
+            context = coreContract.context(),
+            config = coreContract.config(),
+            executors = coreContract.executors(),
+            callbackManager = inAppCallbackManager,
+            analyticsManager = coreContract.analytics(),
+            coreMetaData = coreContract.coreMetaData(),
+            manifestInfo = ManifestInfo.getInstance(coreContract.context()),
+            deviceInfo = coreContract.deviceInfo(),
+            inAppQueue = StoreRegistryInAppQueue(storeRegistry, coreContract.config().accountId),
+            evaluationManager = evaluationManager,
+            templatesManager = templatesManager,
+            inAppActionHandler = inAppActionHandler,
+            inAppNotificationInflater = inAppNotificationInflater,
+            clock = coreContract.clock()
+        )
+    }
+    
+    val inAppResponse: InAppResponse by lazy {
+        InAppResponse(
+            coreContract.config().accountId,
+            coreContract.logger(),
+            false,
+            templatesManager
+        )
+    }
 
     override fun coreContract(coreContract: CoreContract) {
         this.coreContract = coreContract
@@ -145,7 +238,7 @@ internal data class InAppFeature(
 
     override fun displayInApp(inappNotifsArray: JSONArray) {
         // Fire the first notification, if any
-        val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+        val task = coreContract.executors().postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
         task.execute("InAppResponse#processResponse") {
             inAppController.addInAppNotificationsToQueue(inappNotifsArray)
         }

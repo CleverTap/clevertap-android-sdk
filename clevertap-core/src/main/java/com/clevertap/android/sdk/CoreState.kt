@@ -800,6 +800,7 @@ internal open class CoreState(
     override fun logger(): ILogger = core.config.logger
     override fun analytics(): AnalyticsManager = analytics.analyticsManager
     override fun clock(): Clock = core.clock
+    override fun executors(): CTExecutors = core.executors
 
     // ============ HELPER METHODS ============
 
