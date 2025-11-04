@@ -685,9 +685,7 @@ public class PushProviders implements CTPushProviderListener {
         task.execute("createOrResetWorker", new Callable<Void>() {
             @Override
             public Void call() {
-                if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                    stopJobScheduler(context);
-                }
+                stopJobScheduler(context);
                 if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
                     createOrResetWorker(false);
                 } else {
@@ -862,11 +860,11 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(channelIdError);
             }
 
-            boolean dif = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_DISCREET_IN_FOREGROUND));
-            boolean showHeadsUp = !(CoreMetaData.isAppForeground() && dif);
+            boolean discreetInForeground = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_DISCREET_IN_FOREGROUND));
+            boolean hideHeadsUp = CoreMetaData.isAppForeground() && discreetInForeground;
 
             // get channel using channel id from push payload. If channel id is null or empty then create default
-            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context, showHeadsUp);
+            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context, hideHeadsUp);
 
             // if no channel gets created then do not render push
             if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
