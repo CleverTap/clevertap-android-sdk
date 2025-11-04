@@ -25,7 +25,9 @@ public interface Constants {
     String TYPE_PHONE = "Phone";
 
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
+    String CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW = "ct_fallback_notification_channel_low_importance";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Misc";
+    String LOW_IMPORTANCE_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Silent Misc";
     String CLEVERTAP_OPTOUT = "ct_optout";
     String CLEVERTAP_ALLOW_SYSTEM_EVENTS = "ct_allow_sys_events_and_communication";
     String CLEVERTAP_STORAGE_TAG = "WizRocket";
