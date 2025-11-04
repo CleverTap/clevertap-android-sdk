@@ -67,15 +67,20 @@ fun Context.areAppNotificationsEnabled() = try {
 @RequiresApi(VERSION_CODES.O)
 @WorkerThread
 fun NotificationManager.getOrCreateChannel(
-    msgChannel: String?, context: Context
+    msgChannel: String?, context: Context, showHeadsUp : Boolean = true
 ): String? {
 
     try {
         /**
          * if channel id is present in push payload and registered by an app then return the payload channel id
          */
-        if (!msgChannel.isNullOrEmpty() && getNotificationChannel(msgChannel) != null) {
-            return msgChannel
+        if (!msgChannel.isNullOrEmpty()) {
+            val notificationChannel = getNotificationChannel(msgChannel)
+            if(notificationChannel != null) {
+                if (!showHeadsUp && notificationChannel.importance == NotificationManager.IMPORTANCE_LOW) {
+                    return msgChannel
+                }
+            }
         }
 
         val manifestMetadata = ManifestInfo.getInstance(context)
@@ -84,8 +89,27 @@ fun NotificationManager.getOrCreateChannel(
         /**
          * if channel id is present in manifest and registered by an app then return the manifest channel id
          */
-        if (!manifestChannel.isNullOrEmpty() && getNotificationChannel(manifestChannel) != null) {
-            return manifestChannel
+        if (!manifestChannel.isNullOrEmpty()) {
+            val manifestNotificationChannel = getNotificationChannel(manifestChannel)
+            if (manifestNotificationChannel != null) {
+                if (!showHeadsUp && manifestNotificationChannel.importance == NotificationManager.IMPORTANCE_LOW) {
+                    return msgChannel
+                }
+            }
+        }
+
+        if(!showHeadsUp) {
+            createNotificationChannel(
+                NotificationChannel(
+                    "low_importance_fallback_channel",
+                    "Misc with Low Importance",
+                    NotificationManager.IMPORTANCE_LOW
+                ).also {
+                    Logger.d(Constants.CLEVERTAP_LOG_TAG, "created low importance default channel: $it")
+                }
+            )
+
+            return "low_importance_fallback_channel"
         }
 
         if (manifestChannel.isNullOrEmpty()) {

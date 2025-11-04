@@ -30,6 +30,7 @@ import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -861,8 +862,11 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(channelIdError);
             }
 
+            boolean dif = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_DISCREET_IN_FOREGROUND));
+            boolean showHeadsUp = !(CoreMetaData.isAppForeground() && dif);
+
             // get channel using channel id from push payload. If channel id is null or empty then create default
-            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context);
+            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context, showHeadsUp);
 
             // if no channel gets created then do not render push
             if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
