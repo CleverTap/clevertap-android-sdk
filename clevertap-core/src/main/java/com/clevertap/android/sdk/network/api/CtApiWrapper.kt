@@ -31,13 +31,6 @@ internal class CtApiWrapper(
             deviceInfo = deviceInfo
         )
     }
-
-    fun needsHandshake(
-        isViewedEvent: Boolean
-    ) : Boolean =
-        ctApi.needsHandshake(
-            isViewedEvent = isViewedEvent
-        )
 }
 
 internal object CtApiProvider {

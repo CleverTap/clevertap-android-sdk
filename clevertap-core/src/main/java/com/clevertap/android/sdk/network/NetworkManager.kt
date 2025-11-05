@@ -167,7 +167,7 @@ internal class NetworkManager constructor(
 
     @WorkerThread
     fun needsHandshakeForDomain(eventGroup: EventGroup): Boolean {
-        val needsHandshake = ctApiWrapper.needsHandshake(
+        val needsHandshake = ctApiWrapper.ctApi.needsHandshake(
             eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED
         )
         val needHandshakeDueToFailure = responseFailureCount > 5

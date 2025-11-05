@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.network.ContentFetchManager
+import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import org.json.JSONArray
@@ -20,16 +21,38 @@ import java.lang.ref.WeakReference
  * Display Unit feature
  * Manages display units and content fetching for display units
  */
-internal data class DisplayUnitFeature(
-    val contentFetchManager: ContentFetchManager,
-    val contentFetchResponse: ContentFetchResponse,
-    val displayUnitResponse: DisplayUnitResponse
-) : CleverTapFeature, DisplayUnitNotifier {
-    var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null)
-
+internal class DisplayUnitFeature(
+    private val ctApiWrapper: CtApiWrapper,
+    var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null),
     var controller: CTDisplayUnitController? = null
+) : CleverTapFeature, DisplayUnitNotifier {
 
     lateinit var coreContract: CoreContract
+
+    // Lazy-initialized DisplayUnit dependencies (initialized after coreContract is set)
+    val contentFetchManager: ContentFetchManager by lazy {
+        ContentFetchManager(
+            logger = coreContract.logger(),
+            ctApiWrapper = ctApiWrapper
+        )
+    }
+
+    val contentFetchResponse: ContentFetchResponse by lazy {
+        ContentFetchResponse(
+            coreContract.config().accountId,
+            coreContract.logger()
+        )
+    }
+
+    val displayUnitResponse: DisplayUnitResponse by lazy {
+        DisplayUnitResponse(
+            coreContract.config().accountId,
+            coreContract.logger()
+        ).apply {
+            controller?.let { setController(it) }
+            setDisplayUnitNotifier(this@DisplayUnitFeature)
+        }
+    }
 
     fun attachListener(listener: DisplayUnitListener) {
         displayUnitListener = WeakReference(listener)
@@ -41,6 +64,7 @@ internal data class DisplayUnitFeature(
 
     override fun updateController(controller: CTDisplayUnitController) {
         this.controller = controller
+        // Update displayUnitResponse if already initialized
         this.displayUnitResponse.setController(controller)
         this.displayUnitResponse.setDisplayUnitNotifier(this)
     }

@@ -2,11 +2,14 @@ package com.clevertap.android.sdk
 
 import android.content.Context
 import com.clevertap.android.sdk.db.BaseDatabaseManager
+import com.clevertap.android.sdk.features.DataFeature
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.task.CTExecutors
+import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock
+import com.clevertap.android.sdk.validation.ValidationResultStack
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -111,4 +114,7 @@ internal interface CoreContract {
     fun analytics(): AnalyticsManager
     fun clock(): Clock
     fun executors(): CTExecutors
+    fun mainLooperHandler(): MainLooperHandler
+    fun validationResultStack(): ValidationResultStack
+    fun data(): DataFeature // note: eventually break this dependency
 }

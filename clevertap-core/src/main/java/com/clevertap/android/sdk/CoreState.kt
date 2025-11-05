@@ -406,7 +406,7 @@ internal open class CoreState(
      * This method is responsible for switching user identity for clevertap.
      */
     fun asyncProfileSwitchUser(
-        profile: Map<String, Any?>?,
+        profile: Map<String?, Any?>?,
         cacheGuid: String?,
         cleverTapID: String?
     ) {
@@ -475,7 +475,7 @@ internal open class CoreState(
     }
 
     @Suppress("unused")
-    fun onUserLogin(profile: Map<String, Any?>?, cleverTapID: String?) {
+    fun onUserLogin(profile: Map<String?, Any?>?, cleverTapID: String?) {
         if (core.config.enableCustomCleverTapId) {
             if (cleverTapID == null) {
                 Logger.i(
@@ -501,7 +501,7 @@ internal open class CoreState(
         }
     }
 
-    private fun _onUserLogin(profile: Map<String, Any?>?, cleverTapID: String?) {
+    private fun _onUserLogin(profile: Map<String?, Any?>?, cleverTapID: String?) {
         if (profile == null) {
             return
         }
@@ -521,7 +521,7 @@ internal open class CoreState(
                 .getRepo(core.context, core.config, core.validationResultStack)
             for (key in profile.keys) {
                 val value = profile[key]
-                val isProfileKey = iProfileHandler.hasIdentity(key)
+                val isProfileKey = key?.let { iProfileHandler.hasIdentity(it) } ?: false // todo - note we did not have this null check, it would go in catch block, please confirm
                 if (isProfileKey) {
                     try {
                         var identifier: String? = null
@@ -801,6 +801,9 @@ internal open class CoreState(
     override fun analytics(): AnalyticsManager = analytics.analyticsManager
     override fun clock(): Clock = core.clock
     override fun executors(): CTExecutors = core.executors
+    override fun validationResultStack(): ValidationResultStack = core.validationResultStack
+    override fun mainLooperHandler(): MainLooperHandler = core.mainLooperHandler
+    override fun data(): DataFeature = data
 
     // ============ HELPER METHODS ============
 

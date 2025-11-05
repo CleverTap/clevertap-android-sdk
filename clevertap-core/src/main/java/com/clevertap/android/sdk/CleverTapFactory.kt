@@ -11,26 +11,19 @@ import com.clevertap.android.sdk.cryption.EncryptionLevel.Companion.fromInt
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DBManager
-import com.clevertap.android.sdk.events.EventMediator
-import com.clevertap.android.sdk.events.EventQueueManager
+
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ArpRepo
-import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.api.CtApiWrapper
-import com.clevertap.android.sdk.pushnotification.PushProviders
-import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
-import com.clevertap.android.sdk.response.ContentFetchResponse
-import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
 import com.clevertap.android.sdk.response.GeofenceResponse
 import com.clevertap.android.sdk.response.InboxResponse
 import com.clevertap.android.sdk.response.ProductConfigResponse
-import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
@@ -153,14 +146,15 @@ internal object CleverTapFactory {
         )
 
         // ========== Network Layer ==========
+        val encryptionManager = NetworkEncryptionManager(
+            keyGenerator = ctKeyGenerator,
+            aesgcm = cryptFactory.getAesGcmCrypt()
+        )
+        
         val ctApiWrapper = CtApiWrapper(
             networkRepo = networkRepo,
             config = config,
             deviceInfo = deviceInfo
-        )
-        val encryptionManager = NetworkEncryptionManager(
-            keyGenerator = ctKeyGenerator,
-            aesgcm = cryptFactory.getAesGcmCrypt()
         )
         
         val networkManager = NetworkManager(
@@ -179,17 +173,7 @@ internal object CleverTapFactory {
         // ========== Analytics Layer ==========
         val profileValueHandler = ProfileValueHandler(validator, validationResultStack)
 
-        val eventMediator = EventMediator(
-            config,
-            coreMetaData,
-            localDataStore,
-            profileValueHandler,
-            networkRepo
-        )
-
         getInstance(context, config)
-
-        val sessionManager = SessionManager(config, coreMetaData, validator, localDataStore)
 
         val loginInfoProvider = LoginInfoProvider(
             context,
@@ -197,46 +181,17 @@ internal object CleverTapFactory {
             cryptHandler
         )
 
-        val baseEventQueueManager = EventQueueManager(
-            databaseManager,
-            context,
-            config,
-            eventMediator,
-            sessionManager,
-            mainLooperHandler,
-            deviceInfo,
-            validationResultStack,
-            networkManager,
-            coreMetaData,
-            ctLockManager,
-            localDataStore,
-            loginInfoProvider,
-            executors
-        )
-
-        val analyticsManager = AnalyticsManager(
-            context,
-            config,
-            baseEventQueueManager,
-            validator,
-            validationResultStack,
-            coreMetaData,
-            deviceInfo,
-            SYSTEM,
-            executors
-        )
-
-        // Analytics
+        // Analytics (Self-Contained)
         val analyticsFeature = AnalyticsFeature(
-            analyticsManager = analyticsManager,
-            baseEventQueueManager = baseEventQueueManager,
-            eventMediator = eventMediator,
-            sessionManager = sessionManager,
-            validator = validator
+            networkFeature = networkFeature,
+            validator = validator,
+            profileValueHandler = profileValueHandler,
+            loginInfoProvider = loginInfoProvider,
+            ctLockManager = ctLockManager
         )
         
         // ========== Profile Layer ==========
-        val locationManager = LocationManager(context, config, coreMetaData, baseEventQueueManager)
+        val locationManager = LocationManager(context, config, coreMetaData, analyticsFeature.baseEventQueueManager)
         
         // Profile
         val profileFeature = ProfileFeature(
@@ -270,35 +225,12 @@ internal object CleverTapFactory {
             dbEncryptionHandler = dbEncryptionHandler
         )
         
-        // Push
-        val ctWorkManager = CTWorkManager(context, config)
+        // Push (Self-Contained)
+        val pushFeature = PushFeature()
 
-        val pushProviders = PushProviders(
-            context,
-            config,
-            databaseManager,
-            validationResultStack,
-            analyticsManager,
-            ctWorkManager,
-            executors,
-            SYSTEM
-        )
-        
-        val pushFeature = PushFeature(
-            pushProviders = pushProviders,
-            pushAmpResponse = PushAmpResponse(accountId, config.logger)
-        )
-
-        // DisplayUnit
-        val contentFetchManager = ContentFetchManager(
-            logger = config.logger,
-            ctApiWrapper = ctApiWrapper
-        )
-        
+        // DisplayUnit (Self-Contained)
         val displayUnitFeature = DisplayUnitFeature(
-            contentFetchManager = contentFetchManager,
-            contentFetchResponse = ContentFetchResponse(accountId, config.logger),
-            displayUnitResponse = DisplayUnitResponse(accountId, config.logger)
+            ctApiWrapper = ctApiWrapper
         )
 
         // Geofence
@@ -311,7 +243,7 @@ internal object CleverTapFactory {
         val featureFlagFeature = FeatureFlagFeature(
             featureFlagResponse = FeatureFlagResponse(accountId, config.logger)
         )
-        
+
         // ProductConfig
         val productConfigFeature = ProductConfigFeature(
             productConfigResponse = ProductConfigResponse(accountId, config.logger)

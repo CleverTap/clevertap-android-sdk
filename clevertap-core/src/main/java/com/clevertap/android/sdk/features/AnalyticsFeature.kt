@@ -2,11 +2,15 @@ package com.clevertap.android.sdk.features
 
 import android.content.Context
 import com.clevertap.android.sdk.AnalyticsManager
+import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
+import com.clevertap.android.sdk.ProfileValueHandler
 import com.clevertap.android.sdk.SessionManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventMediator
+import com.clevertap.android.sdk.events.EventQueueManager
+import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.validation.Validator
 import org.json.JSONException
 import org.json.JSONObject
@@ -15,15 +19,68 @@ import org.json.JSONObject
  * Analytics and event tracking
  * Manages event queues, analytics, and user sessions
  */
-internal data class AnalyticsFeature(
-    val analyticsManager: AnalyticsManager,
-    val baseEventQueueManager: BaseEventQueueManager,
-    val eventMediator: EventMediator,
-    val sessionManager: SessionManager,
-    val validator: Validator
+internal class AnalyticsFeature(
+    private val networkFeature: NetworkFeature, // todo remove me and route via core.
+    val validator: Validator,
+    private val profileValueHandler: ProfileValueHandler,
+    private val loginInfoProvider: LoginInfoProvider,
+    private val ctLockManager: CTLockManager
 ) : CleverTapFeature {
 
     lateinit var coreContract: CoreContract
+
+    // Lazy-initialized Analytics dependencies (initialized after coreContract is set)
+    val eventMediator: EventMediator by lazy {
+        EventMediator(
+            coreContract.config(),
+            coreContract.coreMetaData(),
+            coreContract.data().localDataStore,
+            profileValueHandler,
+            networkFeature.networkRepo
+        )
+    }
+
+    val sessionManager: SessionManager by lazy {
+        SessionManager(
+            coreContract.config(),
+            coreContract.coreMetaData(),
+            validator,
+            coreContract.data().localDataStore
+        )
+    }
+
+    val baseEventQueueManager: BaseEventQueueManager by lazy {
+        EventQueueManager(
+            coreContract.data().databaseManager,
+            coreContract.context(),
+            coreContract.config(),
+            eventMediator,
+            sessionManager,
+            coreContract.mainLooperHandler(),
+            coreContract.deviceInfo(),
+            coreContract.validationResultStack(),
+            networkFeature.networkManager,
+            coreContract.coreMetaData(),
+            ctLockManager,
+            coreContract.data().localDataStore,
+            loginInfoProvider,
+            coreContract.executors()
+        )
+    }
+
+    val analyticsManager: AnalyticsManager by lazy {
+        AnalyticsManager(
+            context = coreContract.context(),
+            config = coreContract.config(),
+            baseEventQueueManager = baseEventQueueManager,
+            validator = validator,
+            validationResultStack = coreContract.validationResultStack(),
+            coreMetaData = coreContract.coreMetaData(),
+            deviceInfo = coreContract.deviceInfo(),
+            currentTimeProvider = coreContract.clock(),
+            executors = coreContract.executors()
+        )
+    }
 
     fun networkFailed() {
         baseEventQueueManager.scheduleQueueFlush(coreContract.context())
