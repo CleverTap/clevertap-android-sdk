@@ -16,7 +16,10 @@ internal data class NetworkFeature(
     val networkRepo: NetworkRepo,
 ) : CleverTapFeature {
 
+    lateinit var coreContract: CoreContract
+
     override fun coreContract(coreContract: CoreContract) {
+        this.coreContract = coreContract
         networkManager.coreContract = coreContract
     }
 

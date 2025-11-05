@@ -12,7 +12,7 @@ import java.lang.ref.WeakReference
  * Feature Flag feature
  * Manages feature flag evaluation and callbacks
  */
-internal data class FeatureFlagFeature(
+internal class FeatureFlagFeature(
     val featureFlagResponse: FeatureFlagResponse
 ) : CleverTapFeature {
 
