@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
+import com.clevertap.android.sdk.inapp.delay.InAppDelayManagerV2
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.network.NetworkManager
@@ -47,6 +48,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class InAppControllerTest {
 
+    private lateinit var mockInAppDelayManager: InAppDelayManagerV2
     private lateinit var mockControllerManager: ControllerManager
     private lateinit var mockInAppFCManager: InAppFCManager
     private lateinit var mockCallbackManager: CallbackManager
@@ -119,6 +121,8 @@ class InAppControllerTest {
                 CTInAppNotification(args[0] as JSONObject, true)
             )
         }
+
+        mockInAppDelayManager = mockk<InAppDelayManagerV2>()
         fakeInAppQueue = FakeInAppQueue()
     }
 
@@ -414,7 +418,11 @@ class InAppControllerTest {
     fun `onQueueEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns inApps
+        val delayedInApps = JSONArray()
+        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns Pair(
+            inApps,
+            delayedInApps
+        )
 
         val inAppController = createInAppController()
         inAppController.onQueueEvent("event", emptyMap<String, Any>(), mockk())
@@ -429,7 +437,11 @@ class InAppControllerTest {
     fun `onQueueChargedEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns inApps
+        val delayedInApps = JSONArray()
+        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns Pair(
+            inApps,
+            delayedInApps
+        )
 
         val inAppController = createInAppController()
         inAppController.onQueueChargedEvent(
@@ -448,13 +460,14 @@ class InAppControllerTest {
     fun `onQueueProfileEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
+        val delayedInApps = JSONArray()
         every {
             mockEvaluationManager.evaluateOnUserAttributeChange(
                 any(),
                 any(),
                 any()
             )
-        } returns inApps
+        } returns Pair(inApps, delayedInApps)
 
         val inAppController = createInAppController()
         inAppController.onQueueProfileEvent(
@@ -749,6 +762,7 @@ class InAppControllerTest {
             templatesManager = mockTemplatesManager,
             inAppActionHandler = mockInAppActionHandler,
             inAppNotificationInflater = mockInAppInflater,
+            inAppDelayManagerV2 = mockInAppDelayManager,
             clock = fakeClock
         )
     }

@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inapp.data
 
 import org.json.JSONArray
 
-data class PartitionedInApps(
+internal data class PartitionedInApps(
     val immediateInApps: JSONArray,
     val delayedInApps: JSONArray
 ) {
