@@ -9,7 +9,6 @@ import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.network.ContentFetchManager
-import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import org.json.JSONArray
@@ -22,7 +21,6 @@ import java.lang.ref.WeakReference
  * Manages display units and content fetching for display units
  */
 internal class DisplayUnitFeature(
-    private val ctApiWrapper: CtApiWrapper,
     var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null),
     var controller: CTDisplayUnitController? = null
 ) : CleverTapFeature, DisplayUnitNotifier {
@@ -33,7 +31,7 @@ internal class DisplayUnitFeature(
     val contentFetchManager: ContentFetchManager by lazy {
         ContentFetchManager(
             logger = coreContract.logger(),
-            ctApiWrapper = ctApiWrapper
+            ctApiWrapper = coreContract.apiWrapper()
         )
     }
 

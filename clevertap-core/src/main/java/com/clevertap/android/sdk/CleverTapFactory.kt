@@ -16,10 +16,8 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ArpRepo
 import com.clevertap.android.sdk.network.IJRepo
-import com.clevertap.android.sdk.network.NetworkEncryptionManager
-import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkRepo
-import com.clevertap.android.sdk.network.api.CtApiWrapper
+
 import com.clevertap.android.sdk.response.FeatureFlagResponse
 import com.clevertap.android.sdk.response.GeofenceResponse
 import com.clevertap.android.sdk.response.InboxResponse
@@ -104,6 +102,17 @@ internal object CleverTapFactory {
             arpRepo = arpRepo
         )
 
+        // ========== Network Layer (Created Early) ==========
+        // NetworkRepo is shared between Network and Data layers
+        val networkRepo = NetworkRepo(context = context, config = config)
+
+        // Network layer (Self-Contained)
+        val networkFeature = NetworkFeature(
+            networkRepo = networkRepo,
+            ctKeyGenerator = ctKeyGenerator,
+            cryptFactory = cryptFactory
+        )
+
         // ========== Data Layer ==========
         val storeProvider = getInstance()
         
@@ -115,7 +124,6 @@ internal object CleverTapFactory {
             filesStore = storeProvider.provideFileStore(context, accountId)
         )
 
-        val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
 
         val dbEncryptionHandler = DBEncryptionHandler(
@@ -143,31 +151,6 @@ internal object CleverTapFactory {
         val dataFeature = DataFeature(
             databaseManager = databaseManager,
             localDataStore = localDataStore
-        )
-
-        // ========== Network Layer ==========
-        val encryptionManager = NetworkEncryptionManager(
-            keyGenerator = ctKeyGenerator,
-            aesgcm = cryptFactory.getAesGcmCrypt()
-        )
-        
-        val ctApiWrapper = CtApiWrapper(
-            networkRepo = networkRepo,
-            config = config,
-            deviceInfo = deviceInfo
-        )
-        
-        val networkManager = NetworkManager(
-            ctApiWrapper = ctApiWrapper,
-            encryptionManager = encryptionManager,
-            networkRepo = networkRepo
-        )
-        
-        // Network layer
-        val networkFeature = NetworkFeature(
-            networkManager = networkManager,
-            encryptionManager = encryptionManager,
-            networkRepo = networkRepo
         )
 
         // ========== Analytics Layer ==========
@@ -229,9 +212,7 @@ internal object CleverTapFactory {
         val pushFeature = PushFeature()
 
         // DisplayUnit (Self-Contained)
-        val displayUnitFeature = DisplayUnitFeature(
-            ctApiWrapper = ctApiWrapper
-        )
+        val displayUnitFeature = DisplayUnitFeature()
 
         // Geofence
         val geofenceFeature = GeofenceFeature(

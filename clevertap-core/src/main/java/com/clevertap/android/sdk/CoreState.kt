@@ -48,6 +48,7 @@ import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkManager.Companion.isNetworkOnline
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
+import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.product_config.CTProductConfigController
@@ -804,6 +805,7 @@ internal open class CoreState(
     override fun validationResultStack(): ValidationResultStack = core.validationResultStack
     override fun mainLooperHandler(): MainLooperHandler = core.mainLooperHandler
     override fun data(): DataFeature = data
+    override fun apiWrapper(): CtApiWrapper = network.ctApiWrapper
 
     // ============ HELPER METHODS ============
 
