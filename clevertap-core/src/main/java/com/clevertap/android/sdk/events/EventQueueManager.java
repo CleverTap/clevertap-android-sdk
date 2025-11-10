@@ -7,27 +7,18 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.clevertap.android.sdk.CTLockManager;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreContract;
 import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.FailureFlushListener;
-import com.clevertap.android.sdk.LocalDataStore;
-import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.SessionManager;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.task.CTExecutors;
-import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,80 +32,33 @@ import java.util.concurrent.Future;
 public class EventQueueManager extends BaseEventQueueManager implements FailureFlushListener {
 
     private Runnable commsRunnable = null;
-
-    private final BaseDatabaseManager baseDatabaseManager;
-
-    private final CoreMetaData cleverTapMetaData;
-
-    private final CleverTapInstanceConfig config;
-
-    private final Context context;
-
-    private final CTLockManager ctLockManager;
-
-    private final DeviceInfo deviceInfo;
-
     private final EventMediator eventMediator;
-
-    private final LocalDataStore localDataStore;
-
-    private final Logger logger;
-
-    private final MainLooperHandler mainLooperHandler;
-
     private final NetworkManager networkManager;
-
     private final SessionManager sessionManager;
-
-    private final ValidationResultStack validationResultStack;
-
-    private final CTExecutors executors;
-
     private Runnable pushNotificationViewedRunnable = null;
-
     private final LoginInfoProvider loginInfoProvider;
-
-    private CoreContract coreContract;
+    private final CoreContract coreContract;
 
     public EventQueueManager(
-            final BaseDatabaseManager baseDatabaseManager,
-            Context context,
-            CleverTapInstanceConfig config,
             EventMediator eventMediator,
             SessionManager sessionManager,
-            MainLooperHandler mainLooperHandler,
-            DeviceInfo deviceInfo,
-            ValidationResultStack validationResultStack,
             NetworkManager networkManager,
-            CoreMetaData coreMetaData,
-            CTLockManager ctLockManager,
-            LocalDataStore localDataStore,
             LoginInfoProvider loginInfoProvider,
-            CTExecutors executors
+            CoreContract coreContract
     ) {
-        this.baseDatabaseManager = baseDatabaseManager;
-        this.context = context;
-        this.config = config;
         this.eventMediator = eventMediator;
         this.sessionManager = sessionManager;
-        this.mainLooperHandler = mainLooperHandler;
-        this.deviceInfo = deviceInfo;
-        this.validationResultStack = validationResultStack;
         this.networkManager = networkManager;
-        this.localDataStore = localDataStore;
-        this.logger = this.config.getLogger();
-        this.cleverTapMetaData = coreMetaData;
-        this.ctLockManager = ctLockManager;
         this.loginInfoProvider = loginInfoProvider;
-        this.executors = executors;
+        this.coreContract = coreContract;
     }
 
     // only call async
     @Override
     public void addToQueue(final Context context, final JSONObject event, final int eventType) {
         if (eventType == Constants.NV_EVENT) {
-            config.getLogger()
-                    .verbose(config.getAccountId(), "Pushing Notification Viewed event onto separate queue");
+            coreContract.logger()
+                    .verbose(coreContract.config().getAccountId(), "Pushing Notification Viewed event onto separate queue");
             processPushNotificationViewedEvent(context, event, eventType);
         } else if(eventType == Constants.DEFINE_VARS_EVENT) {
             processDefineVarsEvent(context, event);
@@ -135,20 +79,20 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     @Override
     public void flush() {
-        flushQueueAsync(context, EventGroup.REGULAR);
+        flushQueueAsync(coreContract.context(), EventGroup.REGULAR);
     }
 
     @Override
     public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
-        Task<Void> task = executors.postAsyncSafelyTask();
+        Task<Void> task = coreContract.executors().postAsyncSafelyTask();
         task.execute("CommsManager#flushQueueAsync", new Callable<Void>() {
             @Override
             public Void call() {
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                    logger.verbose(config.getAccountId(),
+                    coreContract.logger().verbose(coreContract.config().getAccountId(),
                             "Pushing Notification Viewed event onto queue flush sync");
                 } else {
-                    logger.verbose(config.getAccountId(), "Pushing event onto queue flush sync");
+                    coreContract.logger().verbose(coreContract.config().getAccountId(), "Pushing event onto queue flush sync");
                 }
                 flushQueueSync(context, eventGroup);
                 return null;
@@ -184,14 +128,14 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     public void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller, final boolean isUserSwitchFlush) {
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
-            logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
+            coreContract.logger().verbose(coreContract.config().getAccountId(), "Network connectivity unavailable. Will retry later");
             coreContract.didNotFlush();
             return;
         }
 
         // Check if CleverTap instance is set to offline mode
-        if (cleverTapMetaData.isOffline()) {
-            logger.debug(config.getAccountId(),
+        if (coreContract.coreMetaData().isOffline()) {
+            coreContract.logger().debug(coreContract.config().getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
             coreContract.didNotFlush();
             return;
@@ -202,7 +146,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             // Perform handshake and then flush the DB queue
             networkManager.initHandshake(eventGroup, () -> networkManager.flushDBQueue(context, eventGroup,caller, isUserSwitchFlush));
         } else {
-            logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
+            coreContract.logger().verbose(coreContract.config().getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
 
             // No handshake required, directly flush the DB queue
             networkManager.flushDBQueue(context, eventGroup,caller, isUserSwitchFlush);
@@ -217,12 +161,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData) {
         if (!NetworkManager.isNetworkOnline(context)) {
-            logger.verbose(config.getAccountId(), "Network connectivity unavailable. Event won't be sent.");
+            coreContract.logger().verbose(coreContract.config().getAccountId(), "Network connectivity unavailable. Event won't be sent.");
             return;
         }
 
-        if (cleverTapMetaData.isOffline()) {
-            logger.debug(config.getAccountId(),
+        if (coreContract.coreMetaData().isOffline()) {
+            coreContract.logger().debug(coreContract.config().getAccountId(),
                 "CleverTap Instance has been set to offline, won't send event");
             return;
         }
@@ -244,7 +188,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     }
 
     public void processEvent(final Context context, final JSONObject event, final int eventType) {
-        synchronized (ctLockManager.getEventLock()) {
+        synchronized (coreContract.ctLockManager().getEventLock()) {
             try {
                 if (CoreMetaData.getActivityCount() == 0) {
                     CoreMetaData.setActivityCount(1);
@@ -256,16 +200,16 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     type = "ping";
                     attachMeta(event, context);
                     if (event.has("bk")) {
-                        cleverTapMetaData.setBgPing(true);
+                        coreContract.coreMetaData().setBgPing(true);
                         event.remove("bk");
                     }
 
                     //Add a flag to denote, PING event is for geofences
-                    if (cleverTapMetaData.isLocationForGeofence()) {
+                    if (coreContract.coreMetaData().isLocationForGeofence()) {
                         event.put("gf", true);
-                        cleverTapMetaData.setLocationForGeofence(false);
-                        event.put("gfSDKVersion", cleverTapMetaData.getGeofenceSDKVersion());
-                        cleverTapMetaData.setGeofenceSDKVersion(0);
+                        coreContract.coreMetaData().setLocationForGeofence(false);
+                        event.put("gfSDKVersion", coreContract.coreMetaData().getGeofenceSDKVersion());
+                        coreContract.coreMetaData().setGeofenceSDKVersion(0);
                     }
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     type = "profile";
@@ -277,58 +221,58 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                 // Complete the received event with the other params
 
-                String currentActivityName = cleverTapMetaData.getScreenName();
+                String currentActivityName = coreContract.coreMetaData().getScreenName();
                 if (currentActivityName != null) {
                     event.put("n", currentActivityName);
                 }
 
-                int session = cleverTapMetaData.getCurrentSessionId();
+                int session = coreContract.coreMetaData().getCurrentSessionId();
                 event.put("s", session);
                 event.put("pg", CoreMetaData.getActivityCount());
                 event.put("type", type);
                 event.put("ep", getNow());
-                event.put("f", cleverTapMetaData.isFirstSession());
-                event.put("lsl", cleverTapMetaData.getLastSessionLength());
+                event.put("f", coreContract.coreMetaData().isFirstSession());
+                event.put("lsl", coreContract.coreMetaData().getLastSessionLength());
                 attachPackageNameIfRequired(context, event);
 
                 // Report any pending validation error
-                ValidationResult vr = validationResultStack.popValidationResult();
+                ValidationResult vr = coreContract.validationResultStack().popValidationResult();
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
-                localDataStore.setDataSyncFlag(event);
-                baseDatabaseManager.queueEventToDB(context, event, eventType);
+                coreContract.data().getLocalDataStore().setDataSyncFlag(event);
+                coreContract.database().queueEventToDB(context, event, eventType);
 
                 coreContract.evaluateInAppForEvent(context, event, eventType);
 
                 scheduleQueueFlush(context);
             } catch (Throwable e) {
-                config.getLogger().verbose(config.getAccountId(), "Failed to queue event: " + event.toString(), e);
+                coreContract.logger().verbose(coreContract.config().getAccountId(), "Failed to queue event: " + event.toString(), e);
             }
         }
     }
 
     public void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType) {
-        synchronized (ctLockManager.getEventLock()) {
+        synchronized (coreContract.ctLockManager().getEventLock()) {
             try {
-                int session = cleverTapMetaData.getCurrentSessionId();
+                int session = coreContract.coreMetaData().getCurrentSessionId();
                 event.put("s", session);
                 event.put("type", "event");
                 event.put("ep", getNow());
                 // Report any pending validation error
-                ValidationResult vr = validationResultStack.popValidationResult();
+                ValidationResult vr = coreContract.validationResultStack().popValidationResult();
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
-                config.getLogger().verbose(config.getAccountId(), "Pushing Notification Viewed event onto DB");
-                baseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
+                coreContract.logger().verbose(coreContract.config().getAccountId(), "Pushing Notification Viewed event onto DB");
+                coreContract.database().queuePushNotificationViewedEventToDB(context, event);
                 coreContract.evaluateInAppForEvent(context, event, eventType);
-                config.getLogger()
-                        .verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue flush");
+                coreContract.logger()
+                        .verbose(coreContract.config().getAccountId(), "Pushing Notification Viewed event onto queue flush");
                 schedulePushNotificationViewedQueueFlush(context);
             } catch (Throwable t) {
-                config.getLogger()
-                        .verbose(config.getAccountId(),
+                coreContract.logger()
+                        .verbose(coreContract.config().getAccountId(),
                                 "Failed to queue notification viewed event: " + event.toString(), t);
             }
         }
@@ -345,7 +289,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator<String> i = baseProfile.keys();
                 IdentityRepo iProfileHandler = IdentityRepoFactory
-                        .getRepo(context, config, validationResultStack);
+                        .getRepo(coreContract.context(), coreContract.config(), coreContract.validationResultStack());
                 while (i.hasNext()) {
                     String next = i.next();
 
@@ -370,7 +314,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         /*If key is present in IdentitySet and removeFromSharedPrefs is true then
                         proceed to removing PII key(Email) from shared prefs*/
 
-                        if (isProfileKey && !deviceInfo.isErrorDeviceId()) {
+                        if (isProfileKey && !coreContract.deviceInfo().isErrorDeviceId()) {
                             try {
                                 if (removeFromSharedPrefs) {
                                     // Remove the value associated with the GUID
@@ -388,12 +332,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             }
 
             try {
-                String carrier = deviceInfo.getCarrier();
+                String carrier = coreContract.deviceInfo().getCarrier();
                 if (carrier != null && !carrier.equals("")) {
                     profileEvent.put("Carrier", carrier);
                 }
 
-                String cc = deviceInfo.getCountryCode();
+                String cc = coreContract.deviceInfo().getCountryCode();
                 if (cc != null && !cc.equals("")) {
                     profileEvent.put("cc", cc);
                 }
@@ -402,28 +346,28 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                 JSONObject event = new JSONObject();
                 event.put("profile", profileEvent);
-                queueEvent(context, event, Constants.PROFILE_EVENT);
+                queueEvent(coreContract.context(), event, Constants.PROFILE_EVENT);
             } catch (JSONException e) {
-                config.getLogger()
-                        .verbose(config.getAccountId(), "FATAL: Creating basic profile update event failed!");
+                coreContract.logger()
+                        .verbose(coreContract.config().getAccountId(), "FATAL: Creating basic profile update event failed!");
             }
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Basic profile sync", t);
+            coreContract.logger().verbose(coreContract.config().getAccountId(), "Basic profile sync", t);
         }
     }
 
     @Override
     public void pushInitialEventsAsync() {
-        if (!cleverTapMetaData.inCurrentSession()) {
-            Task<Void> task = executors.postAsyncSafelyTask();
+        if (!coreContract.coreMetaData().inCurrentSession()) {
+            Task<Void> task = coreContract.executors().postAsyncSafelyTask();
             task.execute("CleverTapAPI#pushInitialEventsAsync", new Callable<Void>() {
                 @Override
                 public Void call() {
                     try {
-                        config.getLogger().verbose(config.getAccountId(), "Queuing daily events");
+                        coreContract.logger().verbose(coreContract.config().getAccountId(), "Queuing daily events");
                         pushBasicProfile(null, false);
                     } catch (Throwable t) {
-                        config.getLogger().verbose(config.getAccountId(), "Daily profile sync failed", t);
+                        coreContract.logger().verbose(coreContract.config().getAccountId(), "Daily profile sync failed", t);
                     }
                     return null;
                 }
@@ -440,7 +384,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
-        Task<Void> task = executors.postAsyncSafelyTask();
+        Task<Void> task = coreContract.executors().postAsyncSafelyTask();
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
             @WorkerThread
@@ -449,10 +393,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     return null;
                 }
                 if (eventMediator.shouldDeferProcessingEvent(event, eventType)) {
-                    config.getLogger().debug(config.getAccountId(),
+                    coreContract.logger().debug(coreContract.config().getAccountId(),
                             "App Launched not yet processed, re-queuing event " + event + "after 2s");
-                    mainLooperHandler.postDelayed(() -> {
-                        Task<Void> task1 = executors.postAsyncSafelyTask();
+                    coreContract.mainLooperHandler().postDelayed(() -> {
+                        Task<Void> task1 = coreContract.executors().postAsyncSafelyTask();
                         task1.execute("queueEventWithDelay", new Callable<Void>() {
                             @Override
                             @WorkerThread
@@ -490,11 +434,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             };
         }
         // Cancel any outstanding send runnables, and issue a new delayed one
-        mainLooperHandler.removeCallbacks(commsRunnable);
+        coreContract.mainLooperHandler().removeCallbacks(commsRunnable);
 
-        mainLooperHandler.postDelayed(commsRunnable, networkManager.getDelayFrequency());
+        coreContract.mainLooperHandler().postDelayed(commsRunnable, networkManager.getDelayFrequency());
 
-        logger.verbose(config.getAccountId(), "Scheduling delayed queue flush on main event loop");
+        coreContract.logger().verbose(coreContract.config().getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
 
     /**
@@ -531,7 +475,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     }
 
     private String getCleverTapID() {
-        return deviceInfo.getDeviceID();
+        return coreContract.deviceInfo().getDeviceID();
     }
 
     private void schedulePushNotificationViewedQueueFlush(final Context context) {
@@ -539,18 +483,14 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             pushNotificationViewedRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    config.getLogger()
-                        .verbose(config.getAccountId(),
+                    coreContract.logger()
+                        .verbose(coreContract.config().getAccountId(),
                             "Pushing Notification Viewed event onto queue flush async");
                     flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
                 }
             };
         }
-        mainLooperHandler.removeCallbacks(pushNotificationViewedRunnable);
-        mainLooperHandler.post(pushNotificationViewedRunnable);
-    }
-
-    public void setCoreContract(CoreContract coreContract) {
-        this.coreContract = coreContract;
+        coreContract.mainLooperHandler().removeCallbacks(pushNotificationViewedRunnable);
+        coreContract.mainLooperHandler().post(pushNotificationViewedRunnable);
     }
 }

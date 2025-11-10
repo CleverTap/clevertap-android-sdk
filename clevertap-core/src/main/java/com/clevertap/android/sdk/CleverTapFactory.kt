@@ -151,8 +151,7 @@ internal object CleverTapFactory {
             networkFeature = networkFeature,
             validator = validator,
             profileValueHandler = profileValueHandler,
-            loginInfoProvider = loginInfoProvider,
-            ctLockManager = ctLockManager
+            loginInfoProvider = loginInfoProvider
         )
         
         // ========== Profile Layer ==========

@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.features
 
 import android.content.Context
 import com.clevertap.android.sdk.AnalyticsManager
-import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.ProfileValueHandler
@@ -20,11 +19,10 @@ import org.json.JSONObject
  * Manages event queues, analytics, and user sessions
  */
 internal class AnalyticsFeature(
-    private val networkFeature: NetworkFeature, // todo remove me and route via core.
-    val validator: Validator,
+    private val networkFeature: NetworkFeature,
+    private val validator: Validator,
     private val profileValueHandler: ProfileValueHandler,
-    private val loginInfoProvider: LoginInfoProvider,
-    private val ctLockManager: CTLockManager
+    private val loginInfoProvider: LoginInfoProvider
 ) : CleverTapFeature {
 
     lateinit var coreContract: CoreContract
@@ -51,20 +49,11 @@ internal class AnalyticsFeature(
 
     val baseEventQueueManager: BaseEventQueueManager by lazy {
         EventQueueManager(
-            coreContract.data().databaseManager,
-            coreContract.context(),
-            coreContract.config(),
             eventMediator,
             sessionManager,
-            coreContract.mainLooperHandler(),
-            coreContract.deviceInfo(),
-            coreContract.validationResultStack(),
             networkFeature.networkManager,
-            coreContract.coreMetaData(),
-            ctLockManager,
-            coreContract.data().localDataStore,
             loginInfoProvider,
-            coreContract.executors()
+            coreContract
         )
     }
 
