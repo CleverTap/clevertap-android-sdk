@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
@@ -67,14 +66,8 @@ internal class DisplayUnitFeature(
         this.displayUnitResponse.setDisplayUnitNotifier(this)
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
     override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context
+        response: JSONObject
     ) {
         if (coreContract.config().isAnalyticsOnly) {
             coreContract.logger().verbose(
@@ -89,7 +82,7 @@ internal class DisplayUnitFeature(
             return
         }
         displayUnitResponse.processResponse(response)
-        contentFetchResponse.processResponse(response, context.packageName, contentFetchManager)
+        contentFetchResponse.processResponse(response, coreContract.context().packageName, contentFetchManager)
     }
 
     fun pushDisplayUnitClickedEventForID(unitID: String?) {
@@ -140,7 +133,7 @@ internal class DisplayUnitFeature(
                 put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits)
             }
 
-            handleApiData(responseJson, "", coreContract.context())
+            handleApiData(responseJson)
 
         } catch (e: JSONException) {
             coreContract.logger().verbose("Failed to parse display unit preview JSON from payload: $pushJsonPayload", e)

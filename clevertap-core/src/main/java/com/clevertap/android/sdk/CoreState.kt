@@ -86,7 +86,7 @@ internal open class CoreState(
 
     init {
         contentFetchManager.coreContract = this
-        network.coreContract(this)
+        network.coreContract = this
     }
 
     // Backward compatibility accessors - delegate to feature groups
@@ -723,7 +723,7 @@ internal open class CoreState(
         val featuresToProcess = if (isUserSwitchFlush) userSwitchFeats else allFeat
 
         featuresToProcess.forEach { feat ->
-            feat.handleApiData(bodyJson, bodyString, context)
+            feat.handleApiData(bodyJson)
         }
 
         // Notify success
@@ -737,7 +737,7 @@ internal open class CoreState(
 
         val allFeat = listOf(core, network, analytics, inApp, inbox, variables, push, productConfig, displayUnitF, featureFlagF, geofenceF)
         allFeat.forEach { feat ->
-            feat.handleApiData(response, "", context)
+            feat.handleApiData(response)
         }
     }
 

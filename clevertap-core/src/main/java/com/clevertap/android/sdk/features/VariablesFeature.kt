@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory
@@ -63,14 +62,8 @@ internal class VariablesFeature(
         FetchVariablesResponse(coreContract.config(), cTVariables)
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
     override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context
+        response: JSONObject
     ) {
         fetchVariablesResponse.processResponse(response)
     }

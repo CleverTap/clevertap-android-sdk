@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTInboxListener
@@ -64,15 +63,7 @@ internal class InboxFeature(
         inboxListener?.inboxDidInitialize()
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
-    override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context
-    ) {
+    override fun handleApiData(response: JSONObject) {
         if (coreContract.config().isAnalyticsOnly) {
             logger.verbose(
                 accountId,
@@ -98,7 +89,7 @@ internal class InboxFeature(
                     put(Constants.INBOX_JSON_RESPONSE_KEY, JSONArray().put(notificationJson))
                 }
 
-                handleApiData(jsonResponse, "", coreContract.context())
+                handleApiData(jsonResponse)
 
             } catch (e: JSONException) {
                 Logger.v("Failed to process inbox message from push notification payload", e)

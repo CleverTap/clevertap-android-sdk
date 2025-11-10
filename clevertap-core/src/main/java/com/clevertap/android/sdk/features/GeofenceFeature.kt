@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.GeofenceCallback
 import com.clevertap.android.sdk.response.GeofenceResponse
@@ -23,15 +22,7 @@ internal class GeofenceFeature() : CleverTapFeature {
         )
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
-    override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context
-    ) {
+    override fun handleApiData(response: JSONObject) {
         if (coreContract.config().isAnalyticsOnly) {
             coreContract.logger().verbose(
                 coreContract.config().accountId,

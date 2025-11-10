@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.features.callbacks.ProductConfigClientCallbacks
 import com.clevertap.android.sdk.product_config.CTProductConfigController
@@ -27,15 +26,7 @@ internal class ProductConfigFeature(
         )
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
-    override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context
-    ) {
+    override fun handleApiData(response: JSONObject) {
         // Arp handling happens irrespective of analytics mode
         response.optJSONObject("arp")?.let { arp ->
             if (arp.length() > 0) {

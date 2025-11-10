@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.cryption.CTKeyGenerator
 import com.clevertap.android.sdk.cryption.CryptFactory
@@ -48,10 +47,7 @@ internal class NetworkFeature(
         }
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
-    override fun handleApiData(response: JSONObject, stringBody: String, context: Context) {
+    override fun handleApiData(response: JSONObject) {
+        //no-op
     }
 }

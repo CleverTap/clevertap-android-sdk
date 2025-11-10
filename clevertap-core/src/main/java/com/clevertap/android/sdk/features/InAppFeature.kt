@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
@@ -139,15 +138,7 @@ internal class InAppFeature(
         )
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
-    override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context,
-    ) {
+    override fun handleApiData(response: JSONObject) {
         handleInAppResponse(response)
     }
 
@@ -322,7 +313,7 @@ internal class InAppFeature(
                 put(Constants.INAPP_JSON_RESPONSE_KEY, notificationsArray)
             }
 
-            handleApiData(apiResponseJson, "", coreContract.context())
+            handleApiData(apiResponseJson)
 
         } catch (e: JSONException) {
             // Catch specific exceptions

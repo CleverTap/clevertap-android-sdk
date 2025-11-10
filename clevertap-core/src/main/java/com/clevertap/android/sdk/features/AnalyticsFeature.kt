@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
@@ -75,15 +74,7 @@ internal class AnalyticsFeature(
         baseEventQueueManager.scheduleQueueFlush(coreContract.context())
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
-    override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context
-    ) {
+    override fun handleApiData(response: JSONObject) {
         // Handle "arp" (additional request parameters)
         try {
             if (response.has("arp")) {

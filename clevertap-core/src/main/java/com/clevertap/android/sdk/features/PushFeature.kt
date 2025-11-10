@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.features
 
-import android.content.Context
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.PushProviders
@@ -44,14 +43,8 @@ internal class PushFeature() : CleverTapFeature {
         )
     }
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
     override fun handleApiData(
-        response: JSONObject,
-        stringBody: String,
-        context: Context
+        response: JSONObject
     ) {
         // Handle Pull Notifications response
         if (coreContract.config().isAnalyticsOnly) {
@@ -61,7 +54,7 @@ internal class PushFeature() : CleverTapFeature {
             )
             return
         }
-        pushAmpResponse.processResponse(response, context, coreContract.database(), pushProviders, pushAmpListener)
+        pushAmpResponse.processResponse(response, coreContract.context(), coreContract.database(), pushProviders, pushAmpListener)
     }
 
 }

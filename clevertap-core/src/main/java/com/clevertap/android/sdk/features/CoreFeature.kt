@@ -42,13 +42,9 @@ internal data class CoreFeature(
     val coreCallbacks: CoreClientCallbacks = CoreClientCallbacks()
 ) : CleverTapFeature {
 
-    private lateinit var coreContract: CoreContract
+    lateinit var coreContract: CoreContract
 
-    override fun coreContract(coreContract: CoreContract) {
-        this.coreContract = coreContract
-    }
-
-    override fun handleApiData(response: JSONObject, stringBody: String, context: Context) {
+    override fun handleApiData(response: JSONObject) {
         consoleResponse.processResponse(response)
         metadataResponse.processResponse(response, context, ijRepo, deviceInfo)
         arpResponse.processResponse(response, context, arpRepo)
