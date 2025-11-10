@@ -104,6 +104,8 @@ internal interface CoreContract {
 
     fun evaluateInAppForEvent(context: Context, event: JSONObject, eventType: Int)
 
+    fun clearUserContext()
+
     // ============ CORE DEPENDENCIES ACCESS ============
 
     fun context(): Context

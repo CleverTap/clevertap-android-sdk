@@ -14,8 +14,6 @@ import com.clevertap.android.sdk.db.DBManager
 
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginInfoProvider
-import com.clevertap.android.sdk.network.ArpRepo
-import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkRepo
 
 import com.clevertap.android.sdk.response.FeatureFlagResponse
@@ -82,12 +80,6 @@ internal object CleverTapFactory {
         
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
         
-        val arpRepo = ArpRepo(
-            accountId = accountId,
-            logger = config.logger,
-            deviceInfo = deviceInfo
-        )
-
         // Core infrastructure
         val coreFeature = CoreFeature(
             context = context,
@@ -99,7 +91,7 @@ internal object CleverTapFactory {
             validationResultStack = validationResultStack,
             cryptHandler = cryptHandler,
             clock = SYSTEM,
-            arpRepo = arpRepo
+            ctLockManager = ctLockManager
         )
 
         // ========== Network Layer (Created Early) ==========
@@ -124,8 +116,6 @@ internal object CleverTapFactory {
             filesStore = storeProvider.provideFileStore(context, accountId)
         )
 
-        val ijRepo = IJRepo(config = config)
-
         val dbEncryptionHandler = DBEncryptionHandler(
             crypt = cryptHandler,
             logger = config.logger,
@@ -139,10 +129,7 @@ internal object CleverTapFactory {
             logger = config.logger,
             databaseName = databaseName,
             ctLockManager = ctLockManager,
-            ijRepo = ijRepo,
-            dbEncryptionHandler = dbEncryptionHandler,
-            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
-            clearLastRequestTs = networkRepo::clearLastRequestTs
+            dbEncryptionHandler = dbEncryptionHandler
         )
 
         val localDataStore = LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager)

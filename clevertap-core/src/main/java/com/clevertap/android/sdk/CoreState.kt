@@ -432,7 +432,7 @@ internal open class CoreState(
                     true
                 )
                 displayUnitF.contentFetchManager.cancelAllResponseJobs()
-                data.databaseManager.clearQueues(core.context)
+                clearUserContext()
 
                 // clear out the old data
                 CoreMetaData.setActivityCount(1)
@@ -1118,6 +1118,23 @@ internal open class CoreState(
     private fun updateLocalStore(eventName: String?, type: Int) {
         if (type == Constants.RAISED_EVENT) {
             localDataStore.persistUserEventLog(eventName)
+        }
+    }
+
+    /**
+     * Clears the user-specific data from the SDK.
+     * This includes clearing all event queues from the database and resetting In-App and ARP/I-J data.
+     * It's typically called when a user logs out or switches profiles.
+     *
+     * This method must be called on a worker thread.
+     */
+    @WorkerThread
+    override fun clearUserContext() {
+        synchronized(cTLockManager.eventLock) {
+            data.databaseManager.clearQueues(context)
+            core.ijRepo.clearIJ(context)
+            network.networkRepo.clearFirstRequestTs()
+            network.networkRepo.clearLastRequestTs()
         }
     }
 }

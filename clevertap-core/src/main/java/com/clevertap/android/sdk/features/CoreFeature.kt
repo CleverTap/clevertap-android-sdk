@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.features
 
 import android.content.Context
+import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.CoreMetaData
@@ -32,8 +33,9 @@ internal data class CoreFeature(
     val validationResultStack: ValidationResultStack,
     val cryptHandler: ICryptHandler,
     val clock: Clock,
-    val arpRepo: ArpRepo,
-    val ijRepo: IJRepo = IJRepo(config), // todo access IJRepo properly.
+    val ctLockManager: CTLockManager,
+    val arpRepo: ArpRepo = ArpRepo(config.accountId, config.logger, deviceInfo),
+    val ijRepo: IJRepo = IJRepo(config),
     val arpResponse: ARPResponse = ARPResponse(config.accountId, config.logger),
     val metadataResponse: MetadataResponse = MetadataResponse(config.accountId, config.logger),
     val consoleResponse: ConsoleResponse = ConsoleResponse(config.accountId, config.logger),

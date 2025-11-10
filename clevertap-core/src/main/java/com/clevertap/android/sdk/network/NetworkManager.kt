@@ -20,7 +20,6 @@ import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
-import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
 import org.json.JSONArray
 import org.json.JSONException
@@ -613,13 +612,7 @@ internal class NetworkManager constructor(
         if (mute) {
             networkRepo.setMuted(true)
             networkRepo.setDomain(null)
-
-            val config = coreContract.config()
-            val context = coreContract.context()
-            val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
-            task.execute("CommsManager#setMuted") {
-                coreContract.database().clearQueues(context)
-            }
+            coreContract.clearUserContext()
         } else {
             networkRepo.setMuted(false)
         }

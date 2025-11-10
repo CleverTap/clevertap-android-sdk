@@ -9,7 +9,6 @@ import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.PROFILE_EVENTS
 import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup
-import com.clevertap.android.sdk.network.IJRepo
 import org.json.JSONObject
 
 internal class DBManager constructor(
@@ -17,10 +16,7 @@ internal class DBManager constructor(
     private val logger: ILogger,
     private val databaseName: String,
     private val ctLockManager: CTLockManager,
-    private val ijRepo: IJRepo,
     private val dbEncryptionHandler: DBEncryptionHandler,
-    private val clearFirstRequestTs: () -> Unit = {},
-    private val clearLastRequestTs: () -> Unit = {}
 ) : BaseDatabaseManager {
 
     private companion object {
@@ -53,16 +49,18 @@ internal class DBManager constructor(
         return dbAdapter
     }
 
+    /**
+     * Deletes all the events from the event and profile event queues.
+     *
+     * @param context The Android context.
+     */
     @WorkerThread
     override fun clearQueues(context: Context) {
-        synchronized(ctLockManager.eventLock) {
-            val adapter = loadDBAdapter(context)
-            var tableName = EVENTS
-            adapter.removeEvents(tableName)
-            tableName = PROFILE_EVENTS
-            adapter.removeEvents(tableName)
-            clearUserContext(context)
-        }
+        val adapter = loadDBAdapter(context)
+        var tableName = EVENTS
+        adapter.removeEvents(tableName)
+        tableName = PROFILE_EVENTS
+        adapter.removeEvents(tableName)
     }
 
     /**
@@ -210,28 +208,6 @@ internal class DBManager constructor(
     @WorkerThread
     override fun queuePushNotificationViewedEventToDB(context: Context, event: JSONObject) {
         queueEventForTable(context, event, PUSH_NOTIFICATION_VIEWED)
-    }
-
-    //Session
-    private fun clearIJ(context: Context) {
-        ijRepo.clearIJ(context)
-    }
-
-    //Session
-    private fun clearLastRequestTimestamp() {
-        clearLastRequestTs()
-    }
-
-    //Session
-    private fun clearUserContext(context: Context) {
-        clearIJ(context)
-        clearFirstRequestTimestamp()
-        clearLastRequestTimestamp()
-    }
-
-    //Session
-    private fun clearFirstRequestTimestamp() {
-        clearFirstRequestTs()
     }
 
     @WorkerThread
