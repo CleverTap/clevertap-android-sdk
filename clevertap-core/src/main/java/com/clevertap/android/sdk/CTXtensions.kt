@@ -154,7 +154,9 @@ private fun NotificationManager.createFallbackChannel(
 @RequiresApi(VERSION_CODES.O)
 private fun NotificationManager.createLowImportanceFallback(): String {
     val channelId = Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW
-
+    if (getNotificationChannel(channelId) != null) {
+        return channelId
+    }
 
     createNotificationChannel(
         NotificationChannel(
