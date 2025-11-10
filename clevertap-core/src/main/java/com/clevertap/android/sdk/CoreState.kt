@@ -20,7 +20,6 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.events.EventMediator
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.features.AnalyticsFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
@@ -37,8 +36,6 @@ import com.clevertap.android.sdk.features.VariablesFeature
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.login.IdentityRepoFactory
@@ -63,7 +60,6 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
-import com.clevertap.android.sdk.video.VideoLibChecker
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -118,26 +114,12 @@ internal open class CoreState(
     val contentFetchManager: ContentFetchManager get() = displayUnitF.contentFetchManager
     val loginInfoProvider: LoginInfoProvider get() = profileFeat.loginInfoProvider
     val clock: Clock get() = core.clock
-    
-    internal var inAppFCManager: InAppFCManager?
-        get() = inApp.inAppFCManager
-        set(value) { inApp.inAppFCManager = value }
-    
-    internal var ctInboxController: CTInboxController?
-        get() = inbox.ctInboxController
-        set(value) { inbox.ctInboxController = value }
 
+    /**
+     * Phase 2: Delegating to InAppFeature
+     */
     fun initInAppFCManager(deviceId: String) {
-        val iam = InAppFCManager(
-            core.context, core.config, deviceId,
-            inApp.storeRegistry, inApp.impressionManager,
-            core.executors, core.clock
-        )
-        core.executors.postAsyncSafelyTask<Unit>().execute("initInAppFCManager") {
-            iam.init(deviceId)
-        }
-        this.inApp.inAppFCManager = iam
-        this.inApp.inAppController.setInAppFCManager(iam)
+        inApp.initInAppFCManager(deviceId)
     }
 
     /**
@@ -273,28 +255,12 @@ internal open class CoreState(
         }
     }
 
+    /**
+     * Phase 2: Delegating to InAppFeature
+     */
     @WorkerThread
     private fun initInAppStores(deviceId: String?) {
-        if (deviceId != null) {
-            if (inApp.storeRegistry.inAppStore == null) {
-                val inAppStore: InAppStore = inApp.storeProvider.provideInAppStore(
-                    context = core.context,
-                    cryptHandler = core.cryptHandler,
-                    deviceId = deviceId,
-                    accountId = core.config.accountId
-                )
-                inApp.storeRegistry.inAppStore = inAppStore
-                inApp.evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-            }
-            if (inApp.storeRegistry.impressionStore == null) {
-                val impStore: ImpressionStore = inApp.storeProvider.provideImpressionStore(
-                    context = core.context,
-                    deviceId = deviceId,
-                    accountId = core.config.accountId
-                )
-                inApp.storeRegistry.impressionStore = impStore
-            }
-        }
+        inApp.initInAppStores(deviceId)
     }
 
     fun deviceIDCreated(deviceId: String) {
@@ -354,26 +320,16 @@ internal open class CoreState(
         core.coreCallbacks.notifyCleverTapIDChanged(deviceId)
     }
 
+    /**
+     * Phase 2: Delegating to FeatureFlagFeature
+     */
     private fun initFeatureFlags(
         context: Context?,
         config: CleverTapInstanceConfig,
         deviceInfo: DeviceInfo,
         analyticsManager: AnalyticsManager?
     ) {
-        config.logger.verbose(
-            config.accountId + ":async_deviceID",
-            "Initializing Feature Flags with device Id = " + deviceInfo.deviceID
-        )
-        if (config.isAnalyticsOnly) {
-            config.logger.debug(config.accountId, "Feature Flag is not enabled for this instance")
-        } else {
-            featureFlagF.ctFeatureFlagsController = CTFeatureFlagsFactory.getInstance(
-                context,
-                deviceInfo.deviceID,
-                config, analyticsManager
-            )
-            config.logger.verbose(config.accountId + ":async_deviceID", "Feature Flags initialized")
-        }
+        featureFlagF.initialize(deviceInfo.deviceID)
     }
 
     /**
@@ -597,14 +553,17 @@ internal open class CoreState(
         featureFlagF.reset(core.deviceInfo.getDeviceID())
     }
 
+    /**
+     * Phase 2: Delegating to InboxFeature
+     */
     // always call async
     private fun resetInbox() {
-        synchronized(core.ctLockManager.inboxControllerLock) {
-            inbox.ctInboxController = null
-        }
-        initializeInbox()
+        inbox.reset()
     }
 
+    /**
+     * Phase 2: Delegating to InboxFeature
+     */
     @AnyThread
     fun initializeInbox() {
         if (core.config.isAnalyticsOnly) {
@@ -616,32 +575,7 @@ internal open class CoreState(
             return
         }
         val task = core.executors.postAsyncSafelyTask<Unit>()
-        task.execute("initializeInbox") { initializeInboxMain() }
-    }
-
-    // always call async
-    @WorkerThread
-    private fun initializeInboxMain() {
-        synchronized(core.ctLockManager.inboxControllerLock) {
-            if (inbox.ctInboxController != null) {
-                inbox._notifyInboxInitialized()
-                return
-            }
-            val deviceId = core.deviceInfo.getDeviceID()
-            if (deviceId != null) {
-                inbox.ctInboxController = CTInboxController(
-                    deviceId,
-                    data.databaseManager.loadDBAdapter(core.context),
-                    core.ctLockManager,
-                    VideoLibChecker.haveVideoPlayerSupport,
-                    core.executors,
-                    inbox
-                )
-                inbox._notifyInboxInitialized()
-            } else {
-                core.config.getLogger().info("CRITICAL : No device ID found!")
-            }
-        }
+        task.execute("initializeInbox") { inbox.initialize() }
     }
 
     /**
@@ -790,6 +724,7 @@ internal open class CoreState(
     override fun data(): DataFeature = data
     override fun apiWrapper(): CtApiWrapper = network.ctApiWrapper
     override fun ctLockManager(): CTLockManager = core.ctLockManager
+    override fun cryptHandler(): ICryptHandler = core.cryptHandler
 
     // ============ HELPER METHODS ============
 

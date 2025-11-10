@@ -294,6 +294,55 @@ internal class InAppFeature(
         return inAppFCManager
     }
 
+    /**
+     * Phase 2: Initialization method moved from CoreState
+     * Initializes the InAppFCManager with the provided device ID
+     */
+    fun initInAppFCManager(deviceId: String) {
+        val iam = InAppFCManager(
+            coreContract.context(),
+            coreContract.config(),
+            deviceId,
+            storeRegistry,
+            impressionManager,
+            coreContract.executors(),
+            coreContract.clock()
+        )
+        coreContract.executors().postAsyncSafelyTask<Unit>().execute("initInAppFCManager") {
+            iam.init(deviceId)
+        }
+        this.inAppFCManager = iam
+        this.inAppController.setInAppFCManager(iam)
+    }
+
+    /**
+     * Phase 2: Store initialization method moved from CoreState
+     * Initializes InApp and Impression stores for the given device ID
+     */
+    @WorkerThread
+    fun initInAppStores(deviceId: String?) {
+        if (deviceId != null) {
+            if (storeRegistry.inAppStore == null) {
+                val inAppStore = storeProvider.provideInAppStore(
+                    context = coreContract.context(),
+                    cryptHandler = coreContract.cryptHandler(),
+                    deviceId = deviceId,
+                    accountId = coreContract.config().accountId
+                )
+                storeRegistry.inAppStore = inAppStore
+                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
+            }
+            if (storeRegistry.impressionStore == null) {
+                val impStore = storeProvider.provideImpressionStore(
+                    context = coreContract.context(),
+                    deviceId = deviceId,
+                    accountId = coreContract.config().accountId
+                )
+                storeRegistry.impressionStore = impStore
+            }
+        }
+    }
+
     @WorkerThread
     fun handleInAppPreview(extras: Bundle) {
         try {

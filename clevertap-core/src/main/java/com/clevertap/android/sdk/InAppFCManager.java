@@ -29,6 +29,7 @@ import java.util.Map;
 import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function2;
 
+// todo make internal - constructor and init method.
 @RestrictTo(Scope.LIBRARY)
 public class InAppFCManager {
 
@@ -46,7 +47,7 @@ public class InAppFCManager {
     private final CTExecutors executors;
     private final Clock clock;
 
-    InAppFCManager(
+    public InAppFCManager(
             Context context,
             CleverTapInstanceConfig config,
             String deviceId,
@@ -357,7 +358,7 @@ public class InAppFCManager {
     }
 
     @WorkerThread
-    void init(String deviceId) {
+    public void init(String deviceId) {
         getConfigLogger()
                 .verbose(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
         try {

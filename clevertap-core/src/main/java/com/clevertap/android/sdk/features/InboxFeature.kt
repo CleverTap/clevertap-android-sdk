@@ -104,6 +104,55 @@ internal class InboxFeature(
     fun getCTInboxController(): CTInboxController? {
         return ctInboxController
     }
+
+    /**
+     * Phase 2: Initialization method moved from CoreState
+     * Initializes the inbox controller (must be called on worker thread)
+     */
+    @WorkerThread
+    fun initialize() {
+        if (coreContract.config().isAnalyticsOnly) {
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "Instance is analytics only, not initializing Notification Inbox"
+            )
+            return
+        }
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            if (ctInboxController != null) {
+                _notifyInboxInitialized()
+                return
+            }
+            val deviceId = coreContract.deviceInfo().getDeviceID()
+            if (deviceId != null) {
+                ctInboxController = CTInboxController(
+                    deviceId,
+                    coreContract.database().loadDBAdapter(coreContract.context()),
+                    coreContract.ctLockManager(),
+                    com.clevertap.android.sdk.video.VideoLibChecker.haveVideoPlayerSupport,
+                    coreContract.executors(),
+                    this
+                )
+                _notifyInboxInitialized()
+            } else {
+                coreContract.logger().info("CRITICAL : No device ID found!")
+            }
+        }
+    }
+
+    /**
+     * Phase 2: Reset method moved from CoreState
+     * Resets the inbox and reinitializes it
+     */
+    fun reset() {
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            ctInboxController = null
+        }
+        // Schedule initialization on async executor
+        coreContract.executors().postAsyncSafelyTask<Unit>().execute("initializeInbox") {
+            initialize()
+        }
+    }
 }
 
 internal interface InboxLiveCallbacks {

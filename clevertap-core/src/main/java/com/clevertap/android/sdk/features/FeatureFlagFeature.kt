@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk.features
 
+import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTFeatureFlagsListener
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.response.FeatureFlagResponse
 import org.json.JSONObject
 import java.lang.ref.WeakReference
@@ -64,6 +66,35 @@ internal class FeatureFlagFeature : CleverTapFeature {
             coreContract.logger().verbose(
                 coreContract.config().accountId,
                 "Can't reset Feature Flags, CTFeatureFlagsController is null or not initialized"
+            )
+        }
+    }
+
+    /**
+     * Phase 2: Initialization method moved from CoreState
+     * Initializes Feature Flags with the provided device ID
+     */
+    @WorkerThread
+    fun initialize(deviceId: String?) {
+        coreContract.logger().verbose(
+            coreContract.config().accountId + ":async_deviceID",
+            "Initializing Feature Flags with device Id = $deviceId"
+        )
+        if (coreContract.config().isAnalyticsOnly) {
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "Feature Flag is not enabled for this instance"
+            )
+        } else {
+            ctFeatureFlagsController = CTFeatureFlagsFactory.getInstance(
+                coreContract.context(),
+                deviceId,
+                coreContract.config(),
+                coreContract.analytics()
+            )
+            coreContract.logger().verbose(
+                coreContract.config().accountId + ":async_deviceID",
+                "Feature Flags initialized"
             )
         }
     }

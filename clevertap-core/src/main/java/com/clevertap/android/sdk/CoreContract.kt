@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.features.DataFeature
 import com.clevertap.android.sdk.network.EndpointId
@@ -122,4 +123,5 @@ internal interface CoreContract {
     fun data(): DataFeature // note: eventually break this dependency
     fun apiWrapper(): CtApiWrapper
     fun ctLockManager(): CTLockManager
+    fun cryptHandler(): ICryptHandler
 }
