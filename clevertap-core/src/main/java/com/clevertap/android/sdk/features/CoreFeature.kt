@@ -35,7 +35,7 @@ internal data class CoreFeature(
     val clock: Clock,
     val ctLockManager: CTLockManager,
     val arpRepo: ArpRepo = ArpRepo(config.accountId, config.logger, deviceInfo),
-    val ijRepo: IJRepo = IJRepo(config),
+    val ijRepo: IJRepo = IJRepo(config.accountId),
     val arpResponse: ARPResponse = ARPResponse(config.accountId, config.logger),
     val metadataResponse: MetadataResponse = MetadataResponse(config.accountId, config.logger),
     val consoleResponse: ConsoleResponse = ConsoleResponse(config.accountId, config.logger),
