@@ -139,6 +139,21 @@ internal class DisplayUnitFeature(
             coreContract.logger().verbose("Failed to parse display unit preview JSON from payload: $pushJsonPayload", e)
         }
     }
+
+    /**
+     * Phase 1: Reset method moved from CoreState
+     * Resets the Display Units controller cache
+     */
+    fun reset() {
+        if (controller != null) {
+            controller!!.reset()
+        } else {
+            coreContract.logger().verbose(
+                coreContract.config().accountId,
+                Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitController is null"
+            )
+        }
+    }
 }
 
 interface DisplayUnitNotifier {

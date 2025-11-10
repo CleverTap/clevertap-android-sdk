@@ -50,4 +50,21 @@ internal class FeatureFlagFeature : CleverTapFeature {
         this.listener = WeakReference(listener)
         ctFeatureFlagsController?.setFeatureFlagListener(this.listener)
     }
+
+    /**
+     * Phase 1: Reset method moved from CoreState
+     * Resets feature flags for the current user with new device ID
+     */
+    fun reset(deviceId: String?) {
+        val controller = ctFeatureFlagsController
+        if (controller != null && controller.isInitialized()) {
+            controller.resetWithGuid(deviceId)
+            controller.fetchFeatureFlags()
+        } else {
+            coreContract.logger().verbose(
+                coreContract.config().accountId,
+                "Can't reset Feature Flags, CTFeatureFlagsController is null or not initialized"
+            )
+        }
+    }
 }

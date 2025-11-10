@@ -286,6 +286,14 @@ internal class InAppFeature(
         )
     }
 
+    /**
+     * Phase 1: Accessor method moved from CoreState
+     * Returns the InAppFCManager instance
+     */
+    fun getInAppFCManager(): InAppFCManager? {
+        return inAppFCManager
+    }
+
     @WorkerThread
     fun handleInAppPreview(extras: Bundle) {
         try {

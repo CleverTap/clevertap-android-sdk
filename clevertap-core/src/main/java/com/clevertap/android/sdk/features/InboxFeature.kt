@@ -96,6 +96,14 @@ internal class InboxFeature(
             }
         }
     }
+
+    /**
+     * Phase 1: Accessor method moved from CoreState
+     * Returns the CTInboxController instance
+     */
+    fun getCTInboxController(): CTInboxController? {
+        return ctInboxController
+    }
 }
 
 internal interface InboxLiveCallbacks {

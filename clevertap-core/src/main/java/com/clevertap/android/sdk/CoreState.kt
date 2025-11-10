@@ -140,12 +140,18 @@ internal open class CoreState(
         this.inApp.inAppController.setInAppFCManager(iam)
     }
 
+    /**
+     * Phase 1: Delegating to InAppFeature
+     */
     fun getInAppFCManager() : InAppFCManager? {
-        return inApp.inAppFCManager
+        return inApp.getInAppFCManager()
     }
 
+    /**
+     * Phase 1: Delegating to InboxFeature
+     */
     fun getCTInboxController() : CTInboxController? {
-        return inbox.ctInboxController
+        return inbox.getCTInboxController()
     }
 
     fun asyncStartup() {
@@ -577,30 +583,18 @@ internal open class CoreState(
     }
 
     /**
+     * Phase 1: Delegating to DisplayUnitFeature
      * Resets the Display Units in the cache
      */
     private fun resetDisplayUnits() {
-        if (displayUnitF.controller != null) {
-            displayUnitF.controller!!.reset()
-        } else {
-            core.config.getLogger().verbose(
-                core.config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null"
-            )
-        }
+        displayUnitF.reset()
     }
 
+    /**
+     * Phase 1: Delegating to FeatureFlagFeature
+     */
     private fun resetFeatureFlags() {
-        val ctFeatureFlagsController = featureFlagF.ctFeatureFlagsController
-        if (ctFeatureFlagsController != null && ctFeatureFlagsController.isInitialized()) {
-            ctFeatureFlagsController.resetWithGuid(core.deviceInfo.getDeviceID())
-            ctFeatureFlagsController.fetchFeatureFlags()
-        } else {
-            core.config.getLogger().verbose(
-                core.config.accountId,
-                Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, CTFeatureFlagsController is null"
-            )
-        }
+        featureFlagF.reset(core.deviceInfo.getDeviceID())
     }
 
     // always call async
@@ -650,29 +644,19 @@ internal open class CoreState(
         }
     }
 
+    /**
+     * Phase 1: Delegating to ProductConfigFeature
+     */
     //Session
     private fun resetProductConfigs() {
-        if (core.config.isAnalyticsOnly) {
-            core.config.getLogger()
-                .debug(core.config.accountId, "Product Config is not enabled for this instance")
-            return
-        }
-        productConfig.productConfigController?.resetSettings()
-        val ctProductConfigController =
-            CTProductConfigFactory.getInstance(
-                core.context,
-                core.deviceInfo,
-                core.config,
-                analytics.analyticsManager,
-                core.coreMetaData,
-                productConfig.callbacks
-            )
-        productConfig.productConfigController = ctProductConfigController
-        core.config.getLogger().verbose(core.config.accountId, "Product Config reset")
+        productConfig.reset()
     }
 
+    /**
+     * Phase 1: Delegating to VariablesFeature
+     */
     private fun resetVariables() {
-        variables.cTVariables.clearUserContent()
+        variables.reset()
     }
 
     override fun handleSendQueueResponse(

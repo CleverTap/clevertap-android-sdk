@@ -73,4 +73,12 @@ internal class VariablesFeature(
         fetchVariablesCallback = null
     }
 
+    /**
+     * Phase 1: Reset method moved from CoreState
+     * Clears all user-specific variable content
+     */
+    fun reset() {
+        cTVariables.clearUserContent()
+    }
+
 }

@@ -44,4 +44,29 @@ internal class ProductConfigFeature(
         }
         productConfigResponse.processResponse(response, productConfigController, coreContract.coreMetaData())
     }
+
+    /**
+     * Phase 1: Reset method moved from CoreState
+     * Resets product configuration and reinitializes the controller
+     */
+    fun reset() {
+        if (coreContract.config().isAnalyticsOnly) {
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "Product Config is not enabled for this instance"
+            )
+            return
+        }
+        productConfigController?.resetSettings()
+        productConfigController = com.clevertap.android.sdk.product_config.CTProductConfigFactory
+            .getInstance(
+                coreContract.context(),
+                coreContract.deviceInfo(),
+                coreContract.config(),
+                coreContract.analytics(),
+                coreContract.coreMetaData(),
+                callbacks
+            )
+        coreContract.logger().verbose(coreContract.config().accountId, "Product Config reset")
+    }
 }
