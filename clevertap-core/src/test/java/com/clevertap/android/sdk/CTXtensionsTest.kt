@@ -285,6 +285,259 @@ class CTXtensionsTest : BaseTestCase() {
         }
     }
 
+    // Tests for hideHeadsUp = true
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_low_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_LOW, true, 30, "LowImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("LowImportanceChannel", application, hideHeadsUp = true)
+        assertEquals("LowImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_high_importance_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_HIGH, true, 30, "HighImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("HighImportanceChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_default_importance_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_DEFAULT, true, 30, "DefaultImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DefaultImportanceChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_max_importance_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_MAX, true, 30, "MaxImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("MaxImportanceChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_has_low_importance_then_return_manifestChannel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestLowImportanceChannel"
+
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_LOW, true, 30,
+                "ManifestLowImportanceChannel", "ManifestLowImportanceChannel"
+            )
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals("ManifestLowImportanceChannel", actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_has_high_importance_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestHighImportanceChannel"
+
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_HIGH, true, 30,
+                "ManifestHighImportanceChannel", "ManifestHighImportanceChannel"
+            )
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_null_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_not_registered_and_manifestChannel_null_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_not_registered_and_manifestChannel_not_registered_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "NonRegisteredManifestChannel"
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_low_importance_fallback_channel_already_exists_then_return_it() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            // Create the low importance fallback channel first
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_LOW, true, 30,
+                channelID = Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW
+            )
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    // Tests for hideHeadsUp = false (default behavior)
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_high_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_HIGH, true, 30, "HighImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("HighImportanceChannel", application, hideHeadsUp = false)
+        assertEquals("HighImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_low_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_LOW, true, 30, "LowImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("LowImportanceChannel", application, hideHeadsUp = false)
+        assertEquals("LowImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_default_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_DEFAULT, true, 30, "DefaultImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DefaultImportanceChannel", application, hideHeadsUp = false)
+        assertEquals("DefaultImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_null_and_manifestChannel_registered_then_return_manifestChannel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestChannelId"
+
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_DEFAULT, true, 30,
+                "ManifestChannelId", "ManifestChannelName"
+            )
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = false)
+            assertEquals("ManifestChannelId", actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_null_and_manifestChannel_null_then_return_default_fallback_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = false)
+            assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_not_registered_then_return_default_fallback_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = false)
+            assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
+        }
+    }
+
+    // Edge case tests
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_empty_string_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel("", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_importance_none_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_NONE, true, 30, "DisabledChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DisabledChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_importance_none_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_NONE, true, 30, "DisabledChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DisabledChannel", application, hideHeadsUp = false)
+        assertEquals("DisabledChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_getNotificationChannel_throws_exception_return_null() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = mockk<NotificationManager>(relaxed = true)
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestChannelId"
+
+            // Throw an exception from the `getNotificationChannel()` method
+            every { nm.getNotificationChannel("ManifestChannelId") } throws RuntimeException()
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals(null, actual)
+        }
+    }
+
     @Test
     fun `test isInvalidIndex with null JSONArray`() {
         val jsonArray: JSONArray? = null

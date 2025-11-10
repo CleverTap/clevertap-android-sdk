@@ -100,7 +100,7 @@ fun NotificationManager.getOrCreateChannel(
         Logger.d(Constants.CLEVERTAP_LOG_TAG, message)
 
         // Create appropriate fallback channel
-        createFallbackChannel(context, manifestChannel, hideHeadsUp)
+        createFallbackChannel(context, hideHeadsUp)
     } catch (e: Exception) {
         Logger.v(Constants.CLEVERTAP_LOG_TAG, "Error getting or creating notification channel", e)
         null
@@ -132,14 +132,12 @@ private fun NotificationManager.tryGetChannel(
  * Creates and returns the appropriate fallback notification channel.
  *
  * @param context The application context.
- * @param manifestChannel The channel ID from manifest (for logging purposes).
  * @param hideHeadsUp Whether to create a low importance channel.
  * @return The ID of the created fallback channel.
  */
 @RequiresApi(VERSION_CODES.O)
 private fun NotificationManager.createFallbackChannel(
     context: Context,
-    manifestChannel: String?,
     hideHeadsUp: Boolean
 ): String {
     if (hideHeadsUp) {
