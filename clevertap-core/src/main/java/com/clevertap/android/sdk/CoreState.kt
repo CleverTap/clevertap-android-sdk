@@ -68,7 +68,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-@Suppress("DEPRECATION")
 internal open class CoreState(
     val core: CoreFeature,
     val data: DataFeature,
