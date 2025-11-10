@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTInboxListener
-import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.Logger
@@ -21,7 +20,6 @@ import org.json.JSONObject
  * of inbox messages, and notifying listeners about updates.
  *
  * The class interacts with various components:
- * - [CTLockManager] to ensure thread-safe operations.
  * - [InboxResponse] to parse and process inbox messages from server responses.
  * - [CTInboxController] to manage the state and data of the inbox.
  * - [CTInboxListener] to provide callbacks to the user about inbox initialization and updates.
@@ -30,13 +28,11 @@ import org.json.JSONObject
  * It implements [CleverTapFeature] to integrate into the SDK's feature handling mechanism and
  * [InboxLiveCallbacks] to provide internal notifications about inbox state changes.
  *
- * @property cTLockManager Manages synchronization for thread safety.
  * @property inboxResponse Handles the parsing of inbox-related server responses.
  * @property mainPost A higher-order function to execute a given function on the main UI thread.
  *                    Defaults to using [Utils.runOnUiThread].
  */
 internal data class InboxFeature(
-    val cTLockManager: CTLockManager,
     val inboxResponse: InboxResponse,
     val mainPost: (() -> Unit) -> Unit = { func -> Utils.runOnUiThread { func } }
 ) : CleverTapFeature, InboxLiveCallbacks {
@@ -45,9 +41,15 @@ internal data class InboxFeature(
 
     lateinit var coreContract: CoreContract
 
+    private val logger
+        get() = coreContract.logger()
+
+    private val accountId
+        get() = coreContract.config().accountId
+
     override fun _notifyInboxMessagesDidUpdate() {
-        if (inboxListener != null) {
-            mainPost(inboxListener!!::inboxMessagesDidUpdate)
+        inboxListener?.let {
+            mainPost(it::inboxMessagesDidUpdate)
         }
     }
 
@@ -65,8 +67,8 @@ internal data class InboxFeature(
         context: Context
     ) {
         if (coreContract.config().isAnalyticsOnly) {
-            coreContract.logger().verbose(
-                coreContract.config().accountId,
+            logger.verbose(
+                accountId,
                 "CleverTap instance is configured to analytics only, not processing inbox messages"
             )
             return

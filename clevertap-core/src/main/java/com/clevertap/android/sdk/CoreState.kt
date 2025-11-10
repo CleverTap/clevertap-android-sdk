@@ -101,7 +101,7 @@ internal open class CoreState(
     val localDataStore: LocalDataStore get() = data.localDataStore
     val analyticsManager: AnalyticsManager get() = analytics.analyticsManager
     val baseEventQueueManager: BaseEventQueueManager get() = analytics.baseEventQueueManager
-    val cTLockManager: CTLockManager get() = inbox.cTLockManager
+    val cTLockManager: CTLockManager get() = core.ctLockManager
     val inAppController: InAppController get() = inApp.inAppController
     val sessionManager: SessionManager get() = analytics.sessionManager
     val validationResultStack: ValidationResultStack get() = core.validationResultStack
@@ -606,7 +606,7 @@ internal open class CoreState(
 
     // always call async
     private fun resetInbox() {
-        synchronized(inbox.cTLockManager.inboxControllerLock) {
+        synchronized(core.ctLockManager.inboxControllerLock) {
             inbox.ctInboxController = null
         }
         initializeInbox()
@@ -629,7 +629,7 @@ internal open class CoreState(
     // always call async
     @WorkerThread
     private fun initializeInboxMain() {
-        synchronized(inbox.cTLockManager.inboxControllerLock) {
+        synchronized(core.ctLockManager.inboxControllerLock) {
             if (inbox.ctInboxController != null) {
                 inbox._notifyInboxInitialized()
                 return
@@ -639,7 +639,7 @@ internal open class CoreState(
                 inbox.ctInboxController = CTInboxController(
                     deviceId,
                     data.databaseManager.loadDBAdapter(core.context),
-                    inbox.cTLockManager,
+                    core.ctLockManager,
                     VideoLibChecker.haveVideoPlayerSupport,
                     core.executors,
                     inbox

@@ -181,7 +181,6 @@ internal object CleverTapFactory {
         
         // Inbox
         val inboxFeature = InboxFeature(
-            cTLockManager = ctLockManager,
             inboxResponse = InboxResponse(
                 accountId,
                 config.logger,
