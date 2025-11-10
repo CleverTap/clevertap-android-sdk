@@ -121,4 +121,5 @@ internal interface CoreContract {
     fun validationResultStack(): ValidationResultStack
     fun data(): DataFeature // note: eventually break this dependency
     fun apiWrapper(): CtApiWrapper
+    fun ctLockManager(): CTLockManager
 }

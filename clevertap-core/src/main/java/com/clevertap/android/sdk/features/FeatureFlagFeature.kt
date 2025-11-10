@@ -12,9 +12,7 @@ import java.lang.ref.WeakReference
  * Feature Flag feature
  * Manages feature flag evaluation and callbacks
  */
-internal class FeatureFlagFeature(
-    val featureFlagResponse: FeatureFlagResponse
-) : CleverTapFeature {
+internal class FeatureFlagFeature : CleverTapFeature {
 
     private var listener: WeakReference<CTFeatureFlagsListener> = WeakReference(null)
 
@@ -24,6 +22,14 @@ internal class FeatureFlagFeature(
         }
 
     lateinit var coreContract: CoreContract
+
+    // Lazy-initialized FeatureFlag dependencies (initialized after coreContract is set)
+    val featureFlagResponse: FeatureFlagResponse by lazy {
+        FeatureFlagResponse(
+            coreContract.config().accountId,
+            coreContract.logger()
+        )
+    }
 
     override fun coreContract(coreContract: CoreContract) {
         this.coreContract = coreContract

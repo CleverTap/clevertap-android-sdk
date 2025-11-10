@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.features
 
 import android.content.Context
-import com.clevertap.android.sdk.BaseLocationManager
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.GeofenceCallback
 import com.clevertap.android.sdk.response.GeofenceResponse
@@ -11,13 +10,18 @@ import org.json.JSONObject
  * Geofence feature
  * Manages geofencing operations and location tracking
  */
-internal data class GeofenceFeature(
-    val locationManager: BaseLocationManager,
-    val geofenceResponse: GeofenceResponse
-) : CleverTapFeature {
+internal class GeofenceFeature() : CleverTapFeature {
 
     lateinit var coreContract: CoreContract
     var geofenceCallback: GeofenceCallback? = null
+
+    // Lazy-initialized Geofence dependencies (initialized after coreContract is set)
+    val geofenceResponse: GeofenceResponse by lazy {
+        GeofenceResponse(
+            coreContract.config().accountId,
+            coreContract.logger()
+        )
+    }
 
     override fun coreContract(coreContract: CoreContract) {
         this.coreContract = coreContract

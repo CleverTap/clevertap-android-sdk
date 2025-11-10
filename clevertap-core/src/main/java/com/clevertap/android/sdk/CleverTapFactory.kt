@@ -16,10 +16,6 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.NetworkRepo
 
-import com.clevertap.android.sdk.response.FeatureFlagResponse
-import com.clevertap.android.sdk.response.GeofenceResponse
-import com.clevertap.android.sdk.response.InboxResponse
-import com.clevertap.android.sdk.response.ProductConfigResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
@@ -95,7 +91,6 @@ internal object CleverTapFactory {
         )
 
         // ========== Network Layer (Created Early) ==========
-        // NetworkRepo is shared between Network and Data layers
         val networkRepo = NetworkRepo(context = context, config = config)
 
         // Network layer (Self-Contained)
@@ -180,13 +175,7 @@ internal object CleverTapFactory {
         // ========== Other Features ==========
         
         // Inbox
-        val inboxFeature = InboxFeature(
-            inboxResponse = InboxResponse(
-                accountId,
-                config.logger,
-                ctLockManager
-            )
-        )
+        val inboxFeature = InboxFeature()
         
         // Variables (Self-Contained)
         val variablesFeature = VariablesFeature(
@@ -201,20 +190,13 @@ internal object CleverTapFactory {
         val displayUnitFeature = DisplayUnitFeature()
 
         // Geofence
-        val geofenceFeature = GeofenceFeature(
-            locationManager = locationManager,
-            geofenceResponse = GeofenceResponse(accountId, config.logger)
-        )
+        val geofenceFeature = GeofenceFeature()
 
         // FeatureFlag
-        val featureFlagFeature = FeatureFlagFeature(
-            featureFlagResponse = FeatureFlagResponse(accountId, config.logger)
-        )
+        val featureFlagFeature = FeatureFlagFeature()
 
         // ProductConfig
-        val productConfigFeature = ProductConfigFeature(
-            productConfigResponse = ProductConfigResponse(accountId, config.logger)
-        )
+        val productConfigFeature = ProductConfigFeature()
         
         // ========== Create CoreState with Feature Groups ==========
         val state = CoreState(

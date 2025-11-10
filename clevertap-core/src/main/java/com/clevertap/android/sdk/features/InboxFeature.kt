@@ -28,17 +28,15 @@ import org.json.JSONObject
  * It implements [CleverTapFeature] to integrate into the SDK's feature handling mechanism and
  * [InboxLiveCallbacks] to provide internal notifications about inbox state changes.
  *
- * @property inboxResponse Handles the parsing of inbox-related server responses.
  * @property mainPost A higher-order function to execute a given function on the main UI thread.
  *                    Defaults to using [Utils.runOnUiThread].
  */
-internal data class InboxFeature(
-    val inboxResponse: InboxResponse,
+internal class InboxFeature(
     val mainPost: (() -> Unit) -> Unit = { func -> Utils.runOnUiThread { func } }
 ) : CleverTapFeature, InboxLiveCallbacks {
+    
     var ctInboxController: CTInboxController? = null
     var inboxListener: CTInboxListener? = null
-
     lateinit var coreContract: CoreContract
 
     private val logger
@@ -46,6 +44,15 @@ internal data class InboxFeature(
 
     private val accountId
         get() = coreContract.config().accountId
+
+    // Lazy-initialized Inbox dependencies (initialized after coreContract is set)
+    val inboxResponse: InboxResponse by lazy {
+        InboxResponse(
+            coreContract.config().accountId,
+            coreContract.logger(),
+            coreContract.ctLockManager()
+        )
+    }
 
     override fun _notifyInboxMessagesDidUpdate() {
         inboxListener?.let {

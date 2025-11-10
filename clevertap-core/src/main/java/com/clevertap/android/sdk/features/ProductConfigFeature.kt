@@ -9,15 +9,23 @@ import org.json.JSONObject
 
 /**
  * ProductConfigFeature feature
+ * Manages remote product configuration
  */
+@Deprecated("This is deprecated since clevertap version 5.0.0")
 internal class ProductConfigFeature(
-    val productConfigResponse: ProductConfigResponse,
     val callbacks: ProductConfigClientCallbacks = ProductConfigClientCallbacks()
 ) : CleverTapFeature {
 
     lateinit var coreContract: CoreContract
-
     var productConfigController: CTProductConfigController? = null
+
+    // Lazy-initialized ProductConfig dependencies (initialized after coreContract is set)
+    val productConfigResponse: ProductConfigResponse by lazy {
+        ProductConfigResponse(
+            coreContract.config().accountId,
+            coreContract.logger()
+        )
+    }
 
     override fun coreContract(coreContract: CoreContract) {
         this.coreContract = coreContract

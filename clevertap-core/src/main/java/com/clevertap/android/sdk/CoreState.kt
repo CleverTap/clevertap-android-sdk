@@ -806,6 +806,7 @@ internal open class CoreState(
     override fun mainLooperHandler(): MainLooperHandler = core.mainLooperHandler
     override fun data(): DataFeature = data
     override fun apiWrapper(): CtApiWrapper = network.ctApiWrapper
+    override fun ctLockManager(): CTLockManager = core.ctLockManager
 
     // ============ HELPER METHODS ============
 
