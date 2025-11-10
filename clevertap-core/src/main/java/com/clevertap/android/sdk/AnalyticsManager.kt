@@ -1046,8 +1046,8 @@ internal class AnalyticsManager internal constructor(
         }
     }
 
-    fun sendPingEvent(eventObject: JSONObject?) {
-        baseEventQueueManager
+    fun sendPingEvent(eventObject: JSONObject): Future<*>? {
+        return baseEventQueueManager
             .queueEvent(context, eventObject, Constants.PING_EVENT)
     }
 

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
-import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONObject
 import java.util.concurrent.Future
@@ -13,7 +12,7 @@ internal class LocationManager(
     private val mContext: Context,
     private val mConfig: CleverTapInstanceConfig,
     private val mCoreMetaData: CoreMetaData,
-    private val mBaseEventQueueManager: BaseEventQueueManager,
+    private val analyticsManager: AnalyticsManager,
     private val clock: Clock = Clock.SYSTEM
 ) : BaseLocationManager {
     var lastLocationPingTime: Int = 0
@@ -81,7 +80,7 @@ internal class LocationManager(
         if (mCoreMetaData.isLocationForGeofence && now > (lastLocationPingTimeForGeofence
                     + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)
         ) {
-            future = mBaseEventQueueManager.queueEvent(mContext, JSONObject(), Constants.PING_EVENT)
+            future = analyticsManager.sendPingEvent(JSONObject())
             this.lastLocationPingTimeForGeofence = now
             mLogger.verbose(
                 mConfig.accountId,
@@ -91,7 +90,7 @@ internal class LocationManager(
         } else if (!mCoreMetaData.isLocationForGeofence && now > (lastLocationPingTime
                     + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)
         ) {
-            future = mBaseEventQueueManager.queueEvent(mContext, JSONObject(), Constants.PING_EVENT)
+            future = analyticsManager.sendPingEvent(JSONObject())
             this.lastLocationPingTime = now
             mLogger.verbose(
                 mConfig.accountId,

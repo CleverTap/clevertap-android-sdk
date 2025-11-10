@@ -156,13 +156,11 @@ internal object CleverTapFactory {
         )
         
         // ========== Profile Layer ==========
-        val locationManager = LocationManager(context, config, coreMetaData, analyticsFeature.baseEventQueueManager)
-        
+
         // Profile
         val profileFeature = ProfileFeature(
             loginInfoProvider = loginInfoProvider,
-            profileValueHandler = profileValueHandler,
-            locationManager = locationManager
+            profileValueHandler = profileValueHandler
         )
         
         // ========== InApp Feature (Self-Contained) ==========
