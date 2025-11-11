@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.features
 
+import android.content.Context
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
@@ -21,7 +22,8 @@ import java.lang.ref.WeakReference
  */
 internal class DisplayUnitFeature(
     var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null),
-    var controller: CTDisplayUnitController? = null
+    var controller: CTDisplayUnitController? = null,
+    private val packageNameFetcher: (Context) -> String = { context -> context.packageName }
 ) : CleverTapFeature, DisplayUnitContract {
 
     lateinit var coreContract: CoreContract
@@ -57,6 +59,11 @@ internal class DisplayUnitFeature(
         displayUnitListener.get()?.onDisplayUnitsLoaded(displayUnits)
     }
 
+    /**
+     * Provides a singleton instance of [CTDisplayUnitController].
+     *
+     * @return The singleton [CTDisplayUnitController] instance.
+     */
     override fun provideDisplayUnitController(): CTDisplayUnitController {
         return controller ?: synchronized(this) {
             controller ?: CTDisplayUnitController()
@@ -83,9 +90,22 @@ internal class DisplayUnitFeature(
             return
         }
         displayUnitResponse.processResponse(response, this)
-        contentFetchResponse.processResponse(response, coreContract.context().packageName, contentFetchManager)
+        contentFetchResponse.processResponse(
+            jsonBody = response,
+            packageName = packageNameFetcher(coreContract.context()),
+            contentFetchManager = contentFetchManager
+        )
     }
 
+    /**
+     * Pushes a "Notification Clicked" event to CleverTap for the given display unit ID.
+     *
+     * This function retrieves the display unit's data using its ID, extracts the
+     * necessary fields (`wzrkFields`), and then raises a click event. This is
+     * essential for tracking user engagement with specific display units.
+     *
+     * @param unitID The unique identifier of the display unit that was clicked.
+     */
     fun pushDisplayUnitClickedEventForID(unitID: String?) {
         try {
             controller?.getDisplayUnitForID(unitID)?.wzrkFields?.let { data: JSONObject ->
@@ -100,6 +120,16 @@ internal class DisplayUnitFeature(
         }
     }
 
+    /**
+     * Pushes the "Notification Viewed" event for the given display unit ID.
+     *
+     * This function retrieves the display unit from the controller using the provided `unitID`.
+     * If found, it extracts the `wzrk_fields` from the unit and uses them to raise a
+     * "Display Unit Viewed" analytics event. This event is crucial for tracking user
+     *  engagement with specific display units.
+     *
+     * @param unitID The unique identifier of the display unit that was viewed. Can be null.
+     */
     fun pushDisplayUnitViewedEventForID(unitID: String?) {
         try {
             controller?.getDisplayUnitForID(unitID)?.wzrkFields?.let { data: JSONObject ->
@@ -114,6 +144,16 @@ internal class DisplayUnitFeature(
         }
     }
 
+    /**
+     * Handles the "Send Test" push notification for Display Units.
+     * This method is triggered when a test push containing a Display Unit payload is received.
+     * It extracts the Display Unit JSON from the notification's extras, wraps it
+     * in a standard response format, and then processes it as if it were received
+     * from a regular API call. This allows developers to receive Display Unit on a test device.
+     *
+     * @param extras The Bundle containing the push notification data. Expected to have a
+     *               String under the key [Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY].
+     */
     @WorkerThread
     fun handleSendTest(extras: Bundle) {
         val pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)
@@ -142,7 +182,6 @@ internal class DisplayUnitFeature(
     }
 
     /**
-     * Phase 1: Reset method moved from CoreState
      * Resets the Display Units controller cache
      */
     fun reset() {
