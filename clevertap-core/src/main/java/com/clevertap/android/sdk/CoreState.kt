@@ -208,12 +208,7 @@ internal open class CoreState(
 
         val taskInitFeatureFlags = core.executors.ioTask<Unit>()
         taskInitFeatureFlags.execute("initFeatureFlags") {
-            initFeatureFlags(
-                context = core.context,
-                config = core.config,
-                deviceInfo = core.deviceInfo,
-                analyticsManager = analytics.analyticsManager
-            )
+            initFeatureFlags(deviceInfo = core.deviceInfo)
         }
 
         val pushTask = core.executors.pushProviderTask<Unit>()
@@ -323,12 +318,7 @@ internal open class CoreState(
     /**
      * Phase 2: Delegating to FeatureFlagFeature
      */
-    private fun initFeatureFlags(
-        context: Context?,
-        config: CleverTapInstanceConfig,
-        deviceInfo: DeviceInfo,
-        analyticsManager: AnalyticsManager?
-    ) {
+    private fun initFeatureFlags(deviceInfo: DeviceInfo) {
         featureFlagF.initialize(deviceInfo.deviceID)
     }
 
@@ -730,33 +720,7 @@ internal open class CoreState(
 
     @Throws(JSONException::class)
     private fun notifyListenersForPushImpressionSentToServer(queue: JSONArray) {
-        for (i in 0..<queue.length()) {
-            try {
-                val notif = queue.getJSONObject(i).optJSONObject("evtData")
-                if (notif != null) {
-                    val pushId = notif.optString(Constants.WZRK_PUSH_ID)
-                    val pushAccountId = notif.optString(Constants.WZRK_ACCT_ID_KEY)
-
-                    notifyListenerForPushImpressionSentToServer(
-                        com.clevertap.android.sdk.pushnotification.PushNotificationUtil
-                            .buildPushNotificationRenderedListenerKey(
-                                pushAccountId,
-                                pushId
-                            )
-                    )
-                }
-            } catch (e: JSONException) {
-                core.config.logger.verbose(
-                    config.accountId,
-                    "Encountered an exception while parsing the push notification viewed event queue"
-                )
-            }
-        }
-
-        core.config.logger.verbose(
-            config.accountId,
-            "push notification viewed event sent successfully"
-        )
+        push.notifyPushImpressionsSentToServer(queue)
     }
 
     private fun notifyListenerForPushImpressionSentToServer(listenerKey: String) {
@@ -937,7 +901,13 @@ internal open class CoreState(
         }
     }
 
+    /**
+     * This function first checks if the notification is a test push for previewing
+     * In-App messages, App Inbox messages, or Product Configs/Feature Flags/Display Units.
+     * If it is, it invokes the corresponding preview handler.
+     */
     fun pushNotificationClickedEvent(extras: Bundle) {
+        // Check for preview types first
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
             handleInAppPreview(extras)
             return
@@ -952,10 +922,7 @@ internal open class CoreState(
             handleSendTestForDisplayUnits(extras)
             return
         }
-        val sent: Boolean = analyticsManager.pushNotificationClickedEvent(extras)
-        if (sent) {
-            push.pushNotificationListener?.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras))
-        }
+        push.handlePushNotificationClicked(extras = extras)
     }
 
     /**
