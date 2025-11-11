@@ -66,7 +66,7 @@ import org.json.JSONObject
 
 internal open class CoreState(
     val core: CoreFeature,
-    val data: DataFeature,
+    val data: DataFeature, // Break down DAO objects and pass them on to the features itself.
     val network: NetworkFeature,
     val analytics: AnalyticsFeature,
     val profileFeat: ProfileFeature,
@@ -83,6 +83,17 @@ internal open class CoreState(
     init {
         contentFetchManager.coreContract = this
         network.coreContract = this
+        core.coreContract = this
+        analytics.coreContract = this
+        profileFeat.coreContract = this
+        inApp.coreContract = this
+        inbox.coreContract = this
+        variables.coreContract = this
+        push.coreContract = this
+        productConfig.coreContract = this
+        displayUnitF.coreContract = this
+        featureFlagF.coreContract = this
+        geofenceF.coreContract = this
     }
 
     // Backward compatibility accessors - delegate to feature groups
@@ -114,20 +125,6 @@ internal open class CoreState(
     val contentFetchManager: ContentFetchManager get() = displayUnitF.contentFetchManager
     val loginInfoProvider: LoginInfoProvider get() = profileFeat.loginInfoProvider
     val clock: Clock get() = core.clock
-
-    /**
-     * Phase 2: Delegating to InAppFeature
-     */
-    fun initInAppFCManager(deviceId: String) {
-        inApp.initInAppFCManager(deviceId)
-    }
-
-    /**
-     * Phase 1: Delegating to InAppFeature
-     */
-    fun getInAppFCManager() : InAppFCManager? {
-        return inApp.getInAppFCManager()
-    }
 
     /**
      * Phase 1: Delegating to InboxFeature
@@ -197,7 +194,7 @@ internal open class CoreState(
                         core.config.accountId + ":async_deviceID",
                         "Initializing InAppFC with device Id = $deviceId"
                     )
-                initInAppFCManager(deviceId)
+                inApp.initInAppFCManager(deviceId)
             }
         }
 
@@ -208,7 +205,7 @@ internal open class CoreState(
 
         val taskInitFeatureFlags = core.executors.ioTask<Unit>()
         taskInitFeatureFlags.execute("initFeatureFlags") {
-            initFeatureFlags(deviceInfo = core.deviceInfo)
+            featureFlagF.initialize(deviceInfo.deviceID)
         }
 
         val pushTask = core.executors.pushProviderTask<Unit>()
@@ -279,7 +276,7 @@ internal open class CoreState(
                 "$accountId:async_deviceID",
                 "Initializing InAppFC after Device ID Created = $deviceId"
             )
-            initInAppFCManager(deviceId)
+            inApp.initInAppFCManager(deviceId)
         }
 
         //todo : replace with variables
@@ -313,13 +310,6 @@ internal open class CoreState(
             "Got device id from DeviceInfo, notifying user profile initialized to SyncListener"
         )
         core.coreCallbacks.notifyCleverTapIDChanged(deviceId)
-    }
-
-    /**
-     * Phase 2: Delegating to FeatureFlagFeature
-     */
-    private fun initFeatureFlags(deviceInfo: DeviceInfo) {
-        featureFlagF.initialize(deviceInfo.deviceID)
     }
 
     /**
@@ -405,17 +395,17 @@ internal open class CoreState(
                 core.deviceInfo.setSystemEventsAllowedStateFromStorage()
 
                 // variables for new user are fetched with App Launched
-                resetVariables()
+                variables.reset()
                 analytics.analyticsManager.forcePushAppLaunchedEvent()
                 if (profile != null) {
                     analytics.analyticsManager.pushProfile(profile)
                 }
                 push.pushProviders.forcePushDeviceToken(true)
-                resetInbox()
-                resetFeatureFlags()
-                resetProductConfigs()
+                inbox.reset()
+                featureFlagF.reset(core.deviceInfo.getDeviceID())
+                productConfig.reset()
                 recordDeviceIDErrors()
-                resetDisplayUnits()
+                displayUnitF.reset()
 
                 inApp.userChanged(core.deviceInfo.getDeviceID())
 
@@ -529,29 +519,6 @@ internal open class CoreState(
     }
 
     /**
-     * Phase 1: Delegating to DisplayUnitFeature
-     * Resets the Display Units in the cache
-     */
-    private fun resetDisplayUnits() {
-        displayUnitF.reset()
-    }
-
-    /**
-     * Phase 1: Delegating to FeatureFlagFeature
-     */
-    private fun resetFeatureFlags() {
-        featureFlagF.reset(core.deviceInfo.getDeviceID())
-    }
-
-    /**
-     * Phase 2: Delegating to InboxFeature
-     */
-    // always call async
-    private fun resetInbox() {
-        inbox.reset()
-    }
-
-    /**
      * Phase 2: Delegating to InboxFeature
      */
     @AnyThread
@@ -566,21 +533,6 @@ internal open class CoreState(
         }
         val task = core.executors.postAsyncSafelyTask<Unit>()
         task.execute("initializeInbox") { inbox.initialize() }
-    }
-
-    /**
-     * Phase 1: Delegating to ProductConfigFeature
-     */
-    //Session
-    private fun resetProductConfigs() {
-        productConfig.reset()
-    }
-
-    /**
-     * Phase 1: Delegating to VariablesFeature
-     */
-    private fun resetVariables() {
-        variables.reset()
     }
 
     override fun handleSendQueueResponse(
