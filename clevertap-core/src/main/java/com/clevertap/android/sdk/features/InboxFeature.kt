@@ -63,7 +63,11 @@ internal class InboxFeature(
         inboxListener?.inboxDidInitialize()
     }
 
-    override fun handleApiData(response: JSONObject) {
+    override fun handleApiData(
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
+    ) {
         if (coreContract.config().isAnalyticsOnly) {
             logger.verbose(
                 accountId,
@@ -89,7 +93,7 @@ internal class InboxFeature(
                     put(Constants.INBOX_JSON_RESPONSE_KEY, JSONArray().put(notificationJson))
                 }
 
-                handleApiData(jsonResponse)
+                handleApiData(response = jsonResponse)
 
             } catch (e: JSONException) {
                 Logger.v("Failed to process inbox message from push notification payload", e)

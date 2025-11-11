@@ -4,6 +4,7 @@ import android.content.Context
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.features.DataFeature
+import com.clevertap.android.sdk.features.callbacks.CoreClientCallbacks
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
@@ -89,16 +90,6 @@ internal interface CoreContract {
     fun notifyHeadersSent(allHeaders: JSONObject, endpointId: EndpointId)
 
     /**
-     * Notifies SC Domain listener about domain availability
-     */
-    fun notifySCDomainAvailable(domain: String)
-
-    /**
-     * Notifies SC Domain listener about domain unavailability
-     */
-    fun notifySCDomainUnavailable()
-
-    /**
      * Builds the first json item to be sent in queue for clevertap api calls
      */
     fun networkHeaderForQueue(endpointId: EndpointId, caller: String?): JSONObject?
@@ -124,4 +115,5 @@ internal interface CoreContract {
     fun apiWrapper(): CtApiWrapper
     fun ctLockManager(): CTLockManager
     fun cryptHandler(): ICryptHandler
+    fun clientCallbacks(): CoreClientCallbacks
 }

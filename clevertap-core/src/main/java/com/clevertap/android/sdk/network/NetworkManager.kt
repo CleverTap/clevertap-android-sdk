@@ -587,9 +587,10 @@ internal class NetworkManager constructor(
 
         // Notify CoreContract about domain changes
         if (domainName != null) {
-            coreContract.notifySCDomainAvailable(Utils.getSCDomain(domainName))
+            val domain = Utils.getSCDomain(domainName)
+            coreContract.clientCallbacks().scDomainListener?.onSCDomainAvailable(domain)
         } else {
-            coreContract.notifySCDomainUnavailable()
+            coreContract.clientCallbacks().scDomainListener?.onSCDomainUnavailable()
         }
     }
 

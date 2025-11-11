@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.features
 
+import android.content.Context
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
@@ -10,6 +11,7 @@ import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.PushPermissionHandler
 import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.features.callbacks.InAppCallbackManager
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
@@ -27,6 +29,7 @@ import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.response.InAppResponse
 import org.json.JSONArray
 import org.json.JSONException
@@ -138,7 +141,11 @@ internal class InAppFeature(
         )
     }
 
-    override fun handleApiData(response: JSONObject) {
+    override fun handleApiData(
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
+    ) {
         handleInAppResponse(response)
     }
 
@@ -370,7 +377,7 @@ internal class InAppFeature(
                 put(Constants.INAPP_JSON_RESPONSE_KEY, notificationsArray)
             }
 
-            handleApiData(apiResponseJson)
+            handleApiData(response = apiResponseJson)
 
         } catch (e: JSONException) {
             // Catch specific exceptions
@@ -434,6 +441,73 @@ internal class InAppFeature(
                 .debug(/* suffix = */ coreContract.config().accountId, /* message = */ "Failed to read the image-interstitial HTML file")
         }
         return null
+    }
+
+    /**
+     * Evaluates and potentially displays an in-app notification based on the triggered event.
+     * This method is called when an event is raised, and it checks if any in-app campaigns
+     * are configured to be shown for that event.
+     *
+     * @param context The Android context
+     * @param event The [JSONObject] representing the event that was triggered
+     * @param eventType The type of event (RAISED_EVENT, PROFILE_EVENT, etc.)
+     */
+    fun evaluateInAppForEvent(
+        context: Context,
+        event: JSONObject,
+        eventType: Int,
+        eventMediator: EventMediator
+    ) {
+        val eventName = eventMediator.getEventName(event)
+        val userLocation = coreContract.coreMetaData().locationFromUser
+        
+        // Update local store for raised events
+        updateLocalStore(eventName, eventType)
+
+        when {
+            eventMediator.isChargedEvent(event) -> {
+                inAppController.onQueueChargedEvent(
+                    eventMediator.getChargedEventDetails(event),
+                    eventMediator.getChargedEventItemDetails(event),
+                    userLocation
+                )
+            }
+            
+            !NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event) -> {
+                // When offline, evaluate all events
+                inAppController.onQueueEvent(
+                    eventName!!,
+                    eventMediator.getEventProperties(event),
+                    userLocation
+                )
+            }
+            
+            eventType == Constants.PROFILE_EVENT -> {
+                // Evaluate for user attribute changes
+                val userAttributeChangedProperties = 
+                    eventMediator.computeUserAttributeChangeProperties(event)
+                inAppController.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
+            }
+            
+            !eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event) -> {
+                // When online, only evaluate non-appLaunched events
+                inAppController.onQueueEvent(
+                    eventName!!,
+                    eventMediator.getEventProperties(event),
+                    userLocation
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates the local store with event information for raised events
+     */
+    @WorkerThread
+    private fun updateLocalStore(eventName: String?, type: Int) {
+        if (type == Constants.RAISED_EVENT) {
+            dataFeature.localDataStore.persistUserEventLog(eventName)
+        }
     }
 }
 

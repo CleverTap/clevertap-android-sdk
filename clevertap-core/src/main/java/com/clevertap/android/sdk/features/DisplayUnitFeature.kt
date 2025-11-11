@@ -67,7 +67,9 @@ internal class DisplayUnitFeature(
     }
 
     override fun handleApiData(
-        response: JSONObject
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
     ) {
         if (coreContract.config().isAnalyticsOnly) {
             coreContract.logger().verbose(
@@ -133,7 +135,7 @@ internal class DisplayUnitFeature(
                 put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits)
             }
 
-            handleApiData(responseJson)
+            handleApiData(response = responseJson)
 
         } catch (e: JSONException) {
             coreContract.logger().verbose("Failed to parse display unit preview JSON from payload: $pushJsonPayload", e)

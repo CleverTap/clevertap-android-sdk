@@ -26,7 +26,11 @@ internal class ProductConfigFeature(
         )
     }
 
-    override fun handleApiData(response: JSONObject) {
+    override fun handleApiData(
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
+    ) {
         // Arp handling happens irrespective of analytics mode
         response.optJSONObject("arp")?.let { arp ->
             if (arp.length() > 0) {

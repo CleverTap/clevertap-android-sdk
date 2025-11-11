@@ -56,7 +56,9 @@ internal class PushFeature(
     }
 
     override fun handleApiData(
-        response: JSONObject
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
     ) {
         // Handle Pull Notifications response
         if (coreContract.config().isAnalyticsOnly) {

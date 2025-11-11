@@ -44,7 +44,11 @@ internal data class CoreFeature(
 
     lateinit var coreContract: CoreContract
 
-    override fun handleApiData(response: JSONObject) {
+    override fun handleApiData(
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
+    ) {
         consoleResponse.processResponse(response)
         metadataResponse.processResponse(response, context, ijRepo, deviceInfo)
         arpResponse.processResponse(response, context, arpRepo)

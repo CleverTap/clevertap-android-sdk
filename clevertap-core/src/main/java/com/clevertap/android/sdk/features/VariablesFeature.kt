@@ -63,7 +63,9 @@ internal class VariablesFeature(
     }
 
     override fun handleApiData(
-        response: JSONObject
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
     ) {
         fetchVariablesResponse.processResponse(response)
     }

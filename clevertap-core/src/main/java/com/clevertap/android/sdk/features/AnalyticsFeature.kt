@@ -74,7 +74,11 @@ internal class AnalyticsFeature(
         baseEventQueueManager.scheduleQueueFlush(coreContract.context())
     }
 
-    override fun handleApiData(response: JSONObject) {
+    override fun handleApiData(
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
+    ) {
         // Handle "arp" (additional request parameters)
         try {
             if (response.has("arp")) {

@@ -2,7 +2,6 @@ package com.clevertap.android.sdk
 
 import android.app.Activity
 import android.content.Context
-import android.location.Location
 import android.os.Bundle
 import android.os.RemoteException
 import android.text.TextUtils
@@ -33,6 +32,7 @@ import com.clevertap.android.sdk.features.ProductConfigFeature
 import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
+import com.clevertap.android.sdk.features.callbacks.CoreClientCallbacks
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
@@ -43,8 +43,8 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.NetworkManager
-import com.clevertap.android.sdk.network.NetworkManager.Companion.isNetworkOnline
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
+import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
@@ -601,9 +601,7 @@ internal open class CoreState(
         }
 
         // Handle decryption if needed
-        val isEncryptedResponse = response.getHeaderValue(
-            com.clevertap.android.sdk.network.api.CtApi.HEADER_ENCRYPTION_ENABLED
-        ).toBoolean()
+        val isEncryptedResponse = response.getHeaderValue(CtApi.HEADER_ENCRYPTION_ENABLED).toBoolean()
 
         if (isEncryptedResponse) {
             when (val decryptResponse = network.encryptionManager.decryptResponse(bodyString = bodyString)) {
@@ -631,11 +629,15 @@ internal open class CoreState(
         val featuresToProcess = if (isUserSwitchFlush) userSwitchFeats else allFeat
 
         featuresToProcess.forEach { feat ->
-            feat.handleApiData(bodyJson)
+            feat.handleApiData(
+                response = bodyJson,
+                isFullResponse = isFullResponse,
+                isUserSwitching = isUserSwitchFlush
+            )
         }
 
         // Notify success
-        inApp.batchSent(requestBody.queue, true)
+        inApp.batchSent(batch = requestBody.queue, success = true)
     }
 
     override fun handleContentResponseData(
@@ -645,7 +647,7 @@ internal open class CoreState(
 
         val allFeat = listOf(core, network, analytics, inApp, inbox, variables, push, productConfig, displayUnitF, featureFlagF, geofenceF)
         allFeat.forEach { feat ->
-            feat.handleApiData(response)
+            feat.handleApiData(response = response)
         }
     }
 
@@ -685,14 +687,6 @@ internal open class CoreState(
         inApp.evaluationManager.onSentHeaders(allHeaders, endpointId)
     }
 
-    override fun notifySCDomainAvailable(domain: String) {
-        core.coreCallbacks.scDomainListener?.onSCDomainAvailable(domain)
-    }
-
-    override fun notifySCDomainUnavailable() {
-        core.coreCallbacks.scDomainListener?.onSCDomainUnavailable()
-    }
-
     override fun didNotFlush() {
         variables.invokeCallbacksForNetworkError()
         inApp.batchSent(JSONArray(), false)
@@ -715,6 +709,7 @@ internal open class CoreState(
     override fun apiWrapper(): CtApiWrapper = network.ctApiWrapper
     override fun ctLockManager(): CTLockManager = core.ctLockManager
     override fun cryptHandler(): ICryptHandler = core.cryptHandler
+    override fun clientCallbacks(): CoreClientCallbacks = core.coreCallbacks
 
     // ============ HELPER METHODS ============
 
@@ -963,48 +958,19 @@ internal open class CoreState(
      * This method is called when an event is raised, and it checks if any in-app campaigns
      * are configured to be shown for that event.
      *
-     * @param event The [JSONObject] representing the event that was triggered.
+     * Delegates to InAppFeature.
+     *
+     * @param context The Android context
+     * @param event The [JSONObject] representing the event that was triggered
+     * @param eventType The type of event (RAISED_EVENT, PROFILE_EVENT, etc.)
      */
     override fun evaluateInAppForEvent(context: Context, event: JSONObject, eventType: Int) {
-        val eventMediator = analytics.eventMediator
-        val inAppController = inApp.inAppController
-
-        val eventName = eventMediator.getEventName(event)
-        val userLocation: Location? = core.coreMetaData.locationFromUser
-        updateLocalStore(eventName, eventType)
-
-        if (eventMediator.isChargedEvent(event)) {
-            inAppController.onQueueChargedEvent(
-                eventMediator.getChargedEventDetails(event),
-                eventMediator.getChargedEventItemDetails(event), userLocation
-            )
-        } else if (!isNetworkOnline(context) && eventMediator.isEvent(event)) {
-            // in case device is offline just evaluate all events
-            inAppController.onQueueEvent(
-                eventName!!,
-                eventMediator.getEventProperties(event),
-                userLocation
-            )
-        } else if (eventType == Constants.PROFILE_EVENT) {
-            // in case profile event, evaluate for user attribute changes
-            val userAttributeChangedProperties =
-                eventMediator.computeUserAttributeChangeProperties(event)
-            inAppController.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
-        } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
-            // in case device is online only evaluate non-appLaunched events
-            inAppController.onQueueEvent(
-                eventName!!,
-                eventMediator.getEventProperties(event),
-                userLocation
-            )
-        }
-    }
-
-    @WorkerThread
-    private fun updateLocalStore(eventName: String?, type: Int) {
-        if (type == Constants.RAISED_EVENT) {
-            localDataStore.persistUserEventLog(eventName)
-        }
+        inApp.evaluateInAppForEvent(
+            context = context,
+            event = event,
+            eventType = eventType,
+            eventMediator = analytics.eventMediator
+        )
     }
 
     /**

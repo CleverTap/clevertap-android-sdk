@@ -47,7 +47,11 @@ internal class NetworkFeature(
         }
     }
 
-    override fun handleApiData(response: JSONObject) {
+    override fun handleApiData(
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
+    ) {
         //no-op
     }
 }

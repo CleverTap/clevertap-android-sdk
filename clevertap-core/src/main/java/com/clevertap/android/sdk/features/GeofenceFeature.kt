@@ -22,7 +22,11 @@ internal class GeofenceFeature() : CleverTapFeature {
         )
     }
 
-    override fun handleApiData(response: JSONObject) {
+    override fun handleApiData(
+        response: JSONObject,
+        isFullResponse: Boolean,
+        isUserSwitching: Boolean
+    ) {
         if (coreContract.config().isAnalyticsOnly) {
             coreContract.logger().verbose(
                 coreContract.config().accountId,
