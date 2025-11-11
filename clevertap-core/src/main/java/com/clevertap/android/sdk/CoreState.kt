@@ -181,7 +181,7 @@ internal open class CoreState(
 
         val taskInitStores = core.executors.ioTask<Unit>()
         taskInitStores.execute("initStores") {
-            initInAppStores(core.deviceInfo.getDeviceID())
+            inApp.initInAppStores(core.deviceInfo.getDeviceID())
         }
 
         //Get device id should be async to avoid strict mode policy.
@@ -247,14 +247,6 @@ internal open class CoreState(
         }
     }
 
-    /**
-     * Phase 2: Delegating to InAppFeature
-     */
-    @WorkerThread
-    private fun initInAppStores(deviceId: String?) {
-        inApp.initInAppStores(deviceId)
-    }
-
     fun deviceIDCreated(deviceId: String) {
         val accountId: String = core.config.accountId
 
@@ -264,7 +256,7 @@ internal open class CoreState(
         // must move initStores task to async executor due to addChangeUserCallback synchronization
         val task: Task<Unit> = core.executors.ioTask<Unit>()
         task.execute("initStores") {
-            initInAppStores(deviceId)
+            inApp.initInAppStores(deviceId)
         }
 
         /*
@@ -840,6 +832,7 @@ internal open class CoreState(
      *
      * @param extras - bundled data of notification payload
      */
+    @WorkerThread
     fun handleSendTestForDisplayUnits(extras: Bundle) {
         try {
             displayUnitF.handleSendTest(extras)
