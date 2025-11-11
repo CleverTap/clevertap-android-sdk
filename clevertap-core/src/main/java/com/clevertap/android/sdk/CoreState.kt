@@ -18,7 +18,6 @@ import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
-import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.features.AnalyticsFeature
 import com.clevertap.android.sdk.features.CoreFeature
 import com.clevertap.android.sdk.features.DataFeature
