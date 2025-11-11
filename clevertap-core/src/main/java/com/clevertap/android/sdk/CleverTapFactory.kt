@@ -40,6 +40,7 @@ import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -358,6 +359,11 @@ internal object CleverTapFactory {
             cleverTapResponseHandler = responseHandler
         )
 
+        val networkMonitor = NetworkMonitor(
+            context = context,
+            config = config
+        )
+
         val loginInfoProvider = LoginInfoProvider(
             context,
             config,
@@ -375,6 +381,7 @@ internal object CleverTapFactory {
             deviceInfo,
             validationResultStack,
             networkManager,
+            networkMonitor,
             coreMetaData,
             ctLockManager,
             localDataStore,
@@ -431,6 +438,7 @@ internal object CleverTapFactory {
             templatesManager,
             inAppActionHandler,
             inAppNotificationInflater,
+            networkMonitor,
             SYSTEM
         )
         controllerManager.inAppController = inAppController
@@ -507,6 +515,7 @@ internal object CleverTapFactory {
             validationResultStack = validationResultStack,
             mainLooperHandler = mainLooperHandler,
             networkManager = networkManager,
+            networkMonitor = networkMonitor,
             pushProviders = pushProviders,
             varCache = varCache,
             parser = parser,
