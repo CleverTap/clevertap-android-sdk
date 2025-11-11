@@ -22,7 +22,7 @@ import java.lang.ref.WeakReference
 internal class DisplayUnitFeature(
     var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null),
     var controller: CTDisplayUnitController? = null
-) : CleverTapFeature, DisplayUnitNotifier {
+) : CleverTapFeature, DisplayUnitContract {
 
     lateinit var coreContract: CoreContract
 
@@ -30,7 +30,8 @@ internal class DisplayUnitFeature(
     val contentFetchManager: ContentFetchManager by lazy {
         ContentFetchManager(
             logger = coreContract.logger(),
-            ctApiWrapper = coreContract.apiWrapper()
+            ctApiWrapper = coreContract.apiWrapper(),
+            coreContract = coreContract
         )
     }
 
@@ -45,10 +46,7 @@ internal class DisplayUnitFeature(
         DisplayUnitResponse(
             coreContract.config().accountId,
             coreContract.logger()
-        ).apply {
-            controller?.let { setController(it) }
-            setDisplayUnitNotifier(this@DisplayUnitFeature)
-        }
+        )
     }
 
     fun attachListener(listener: DisplayUnitListener) {
@@ -59,11 +57,12 @@ internal class DisplayUnitFeature(
         displayUnitListener.get()?.onDisplayUnitsLoaded(displayUnits)
     }
 
-    override fun updateController(controller: CTDisplayUnitController) {
-        this.controller = controller
-        // Update displayUnitResponse if already initialized
-        this.displayUnitResponse.setController(controller)
-        this.displayUnitResponse.setDisplayUnitNotifier(this)
+    override fun provideDisplayUnitController(): CTDisplayUnitController {
+        return controller ?: synchronized(this) {
+            controller ?: CTDisplayUnitController()
+        }.also {
+            controller = it
+        }
     }
 
     override fun handleApiData(
@@ -83,7 +82,7 @@ internal class DisplayUnitFeature(
             // process feature flag response
             return
         }
-        displayUnitResponse.processResponse(response)
+        displayUnitResponse.processResponse(response, this)
         contentFetchResponse.processResponse(response, coreContract.context().packageName, contentFetchManager)
     }
 
@@ -158,8 +157,7 @@ internal class DisplayUnitFeature(
     }
 }
 
-interface DisplayUnitNotifier {
+interface DisplayUnitContract {
     fun notifyDisplayUnitsLoaded(displayUnits: ArrayList<CleverTapDisplayUnit>?)
-
-    fun updateController(controller: CTDisplayUnitController)
+    fun provideDisplayUnitController(): CTDisplayUnitController
 }

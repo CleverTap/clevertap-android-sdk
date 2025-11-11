@@ -97,13 +97,11 @@ internal open class CoreState(
     }
 
     // Backward compatibility accessors - delegate to feature groups
-    val context: Context get() = core.context
+    val context: Context get() = context()
     val locationManager: BaseLocationManager get() = profileFeat.locationManager
     val config: CleverTapInstanceConfig get() = core.config
     val coreMetaData: CoreMetaData get() = core.coreMetaData
-    val databaseManager: BaseDatabaseManager get() = data.databaseManager
     val deviceInfo: DeviceInfo get() = core.deviceInfo
-    val eventMediator: EventMediator get() = analytics.eventMediator
     val localDataStore: LocalDataStore get() = data.localDataStore
     val analyticsManager: AnalyticsManager get() = analytics.analyticsManager
     val baseEventQueueManager: BaseEventQueueManager get() = analytics.baseEventQueueManager
@@ -111,7 +109,6 @@ internal open class CoreState(
     val inAppController: InAppController get() = inApp.inAppController
     val sessionManager: SessionManager get() = analytics.sessionManager
     val validationResultStack: ValidationResultStack get() = core.validationResultStack
-    val mainLooperHandler: MainLooperHandler get() = core.mainLooperHandler
     val networkManager: NetworkManager get() = network.networkManager
     val pushProviders: PushProviders get() = push.pushProviders
     val varCache: VarCache get() = variables.varCache
@@ -672,7 +669,7 @@ internal open class CoreState(
         CoreMetaData.setAppForeground(false)
         analytics.sessionManager.appLastSeen = clock.currentTimeMillis()
         core.config.logger.verbose(core.config.accountId, "App in background")
-        val task = executors.postAsyncSafelyTask<Unit>()
+        val task = core.executors.postAsyncSafelyTask<Unit>()
         task.execute("activityPaused") {
             val now = core.clock.currentTimeSecondsInt()
             if (core.coreMetaData.inCurrentSession()) {
@@ -814,14 +811,14 @@ internal open class CoreState(
     }
 
     fun handleInboxPreview(extras: Bundle) {
-        val task = executors.postAsyncSafelyTask<Unit>()
+        val task = core.executors.postAsyncSafelyTask<Unit>()
         task.execute("testInboxNotification") {
             inbox.handleSendTestInbox(extras)
         }
     }
 
     fun handleInAppPreview(extras: Bundle) {
-        val task = executors.postAsyncSafelyTask<Unit>()
+        val task = core.executors.postAsyncSafelyTask<Unit>()
         task.execute("testInappNotification") {
             inApp.handleInAppPreview(extras)
         }
@@ -927,7 +924,7 @@ internal open class CoreState(
      */
     @WorkerThread
     override fun clearUserContext() {
-        synchronized(cTLockManager.eventLock) {
+        synchronized(core.ctLockManager.eventLock) {
             data.databaseManager.clearQueues(context)
             core.ijRepo.clearIJ(context)
             network.networkRepo.clearFirstRequestTs()

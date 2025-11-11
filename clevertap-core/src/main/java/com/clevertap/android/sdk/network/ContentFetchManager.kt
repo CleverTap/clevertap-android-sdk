@@ -27,6 +27,7 @@ import org.json.JSONObject
 internal class ContentFetchManager(
     private val logger: ILogger,
     private val ctApiWrapper: CtApiWrapper,
+    private val coreContract: CoreContract,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS,
     private val clock: Clock = Clock.SYSTEM,
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
@@ -35,8 +36,6 @@ internal class ContentFetchManager(
         private const val DEFAULT_PARALLEL_REQUESTS = 5
         const val TAG = "ContentFetch"
     }
-
-    lateinit var coreContract: CoreContract
 
     var parentJob = SupervisorJob()
 

@@ -4,7 +4,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.features.DisplayUnitNotifier;
+import com.clevertap.android.sdk.features.DisplayUnitContract;
 
 import java.util.ArrayList;
 import org.json.JSONArray;
@@ -12,16 +12,9 @@ import org.json.JSONObject;
 
 public class DisplayUnitResponse {
 
-    private final Object displayUnitControllerLock = new Object();
-
     private final String accountId;
 
     private final ILogger logger;
-
-    private CTDisplayUnitController controller;
-
-    private DisplayUnitNotifier displayUnitNotifier;
-
     public DisplayUnitResponse(
             String accountId,
             ILogger logger
@@ -32,7 +25,7 @@ public class DisplayUnitResponse {
 
     //Logic for the processing of Display Unit response
 
-    public void processResponse(final JSONObject response) {
+    public void processResponse(final JSONObject response, DisplayUnitContract displayUnitContract) {
 
         logger.verbose(accountId, "Processing Display Unit items...");
 
@@ -49,10 +42,8 @@ public class DisplayUnitResponse {
             return;
         }
         try {
-            logger
-                    .verbose(accountId,
-                            Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
-            parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY));
+            logger.verbose(accountId, Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
+            parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY), displayUnitContract);
         } catch (Throwable t) {
             logger.verbose(accountId, Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
         }
@@ -63,31 +54,16 @@ public class DisplayUnitResponse {
      *
      * @param messages - Json array of Display Unit items
      */
-    private void parseDisplayUnits(JSONArray messages) {
+    private void parseDisplayUnits(JSONArray messages, DisplayUnitContract displayUnitContract) {
         if (messages == null || messages.length() == 0) {
             logger.verbose(accountId,
                     Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is either empty or null");
             return;
         }
 
-        synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
-            if (controller == null) {
-                controller = new CTDisplayUnitController();
-                displayUnitNotifier.updateController(controller);
-            }
-        }
+        CTDisplayUnitController controller = displayUnitContract.provideDisplayUnitController();
         ArrayList<CleverTapDisplayUnit> displayUnits = controller.updateDisplayUnits(messages);
 
-        if (displayUnitNotifier != null) {
-            displayUnitNotifier.notifyDisplayUnitsLoaded(displayUnits);
-        }
-    }
-
-    public void setController(CTDisplayUnitController controller) {
-        this.controller = controller;
-    }
-
-    public void setDisplayUnitNotifier(DisplayUnitNotifier displayUnitNotifier) {
-        this.displayUnitNotifier = displayUnitNotifier;
+        displayUnitContract.notifyDisplayUnitsLoaded(displayUnits);
     }
 }
