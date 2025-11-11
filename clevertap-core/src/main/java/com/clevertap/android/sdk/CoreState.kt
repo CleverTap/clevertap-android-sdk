@@ -81,7 +81,6 @@ internal open class CoreState(
 ) : CoreContract {
 
     init {
-        contentFetchManager.coreContract = this
         network.coreContract = this
         core.coreContract = this
         analytics.coreContract = this
