@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.network.NetworkMonitor;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -67,6 +68,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final NetworkManager networkManager;
 
+    private final NetworkMonitor networkMonitor;
+
     private final SessionManager sessionManager;
 
     private final ValidationResultStack validationResultStack;
@@ -87,6 +90,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             DeviceInfo deviceInfo,
             ValidationResultStack validationResultStack,
             NetworkManager networkManager,
+            NetworkMonitor networkMonitor,
             CoreMetaData coreMetaData,
             CTLockManager ctLockManager,
             final LocalDataStore localDataStore,
@@ -101,6 +105,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         this.deviceInfo = deviceInfo;
         this.validationResultStack = validationResultStack;
         this.networkManager = networkManager;
+        this.networkMonitor = networkMonitor;
         this.localDataStore = localDataStore;
         logger = this.config.getLogger();
         cleverTapMetaData = coreMetaData;
@@ -185,7 +190,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller, final boolean isUserSwitchFlush) {
         // Check if network connectivity is available
-        if (!NetworkManager.isNetworkOnline(context)) {
+        if (!networkMonitor.isNetworkOnline()) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
             controllerManager.invokeBatchListener(new JSONArray(), false);
@@ -220,7 +225,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData) {
-        if (!NetworkManager.isNetworkOnline(context)) {
+        if (!networkMonitor.isNetworkOnline()) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Event won't be sent.");
             return;
         }
@@ -321,7 +326,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             controllerManager.getInAppController()
                     .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
                             eventMediator.getChargedEventItemDetails(event), userLocation);
-        } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
+        } else if (!networkMonitor.isNetworkOnline() && eventMediator.isEvent(event)) {
             // in case device is offline just evaluate all events
             controllerManager.getInAppController().onQueueEvent(eventName,
                     eventMediator.getEventProperties(event), userLocation);
