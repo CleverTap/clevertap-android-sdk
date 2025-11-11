@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginController
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory
 import com.clevertap.android.sdk.pushnotification.PushProviders
@@ -45,6 +46,7 @@ internal open class CoreState(
     val validationResultStack: ValidationResultStack,
     val mainLooperHandler: MainLooperHandler,
     val networkManager: NetworkManager,
+    val networkMonitor: NetworkMonitor,
     val pushProviders: PushProviders,
     val varCache: VarCache,
     val parser: Parser,

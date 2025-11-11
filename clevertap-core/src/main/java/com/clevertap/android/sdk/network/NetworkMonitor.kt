@@ -1,0 +1,265 @@
+package com.clevertap.android.sdk.network
+
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.ILogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+internal class NetworkMonitor(
+    private val context: Context,
+    private val config: CleverTapInstanceConfig,
+    private val logger: ILogger = config.logger
+) {
+
+    companion object {
+        @JvmStatic
+        fun isNetworkOnline(context: Context): Boolean {
+            return isNetworkConnected(context)
+        }
+
+        private fun isNetworkConnected(context: Context): Boolean {
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            return try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val activeNetwork = connectivityManager?.activeNetwork
+                    val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
+                    capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                } else {
+                    @Suppress("DEPRECATION")
+                    val networkInfo = connectivityManager?.activeNetworkInfo
+                    @Suppress("DEPRECATION")
+                    networkInfo != null && networkInfo.isConnected
+                }
+            } catch (e: Exception) {
+                return true // Fallback to true to avoid blocking operations
+            }
+        }
+    }
+
+    enum class NetworkType {
+        WIFI,
+        CELLULAR,
+        ETHERNET,
+        VPN,
+        UNKNOWN,
+        DISCONNECTED
+    }
+
+    data class NetworkState(
+        val isAvailable: Boolean = false,
+        val networkType: NetworkType = NetworkType.UNKNOWN,
+        val isWifiConnected: Boolean = false
+    ) {
+        companion object {
+            val DISCONNECTED = NetworkState(
+                isAvailable = false,
+                networkType = NetworkType.DISCONNECTED,
+                isWifiConnected = false
+            )
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+            other as NetworkState
+            return isAvailable == other.isAvailable &&
+                    networkType == other.networkType &&
+                    isWifiConnected == other.isWifiConnected
+        }
+
+        override fun hashCode(): Int {
+            var result = isAvailable.hashCode()
+            result = 31 * result + networkType.hashCode()
+            result = 31 * result + isWifiConnected.hashCode()
+            return result
+        }
+    }
+
+    private val connectivityManager by lazy {
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+    }
+
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+
+    private val _stateFlow = MutableSharedFlow<NetworkState>(replay = 1)
+    val networkState: Flow<NetworkState> = _stateFlow.asSharedFlow().distinctUntilChanged()
+
+    // Internal network state managed by the monitor
+    private var _currentState: NetworkState = NetworkState.DISCONNECTED
+
+    /**
+     * EXECUTION STARTS IMMEDIATELY WHEN OBJECT IS CREATED
+     */
+    init {
+        logger.debug(config.accountId, "NetworkMonitor initializing...")
+        initializeNetworkMonitoring()
+    }
+
+    /**
+     * Starts network monitoring immediately upon object creation
+     */
+    private fun initializeNetworkMonitoring() {
+        if (connectivityManager == null) {
+            logger.debug(config.accountId, "ConnectivityManager not available")
+            _currentState = NetworkState.DISCONNECTED
+            return
+        }
+
+        // Calculate initial state
+        updateInternalNetworkState()
+
+        // Register network callback to monitor changes
+        registerNetworkCallback()
+
+        logger.debug(config.accountId, "NetworkMonitor initialized with state: $_currentState")
+    }
+
+    /**
+     * Updates internal state based on current network status
+     */
+    private fun updateInternalNetworkState() {
+        _currentState = calculateCurrentNetworkState()
+        _stateFlow.tryEmit(_currentState)
+    }
+
+    private fun calculateCurrentNetworkState(): NetworkState {
+        return try {
+            val hasInternet = isNetworkConnected(context)
+            if (!hasInternet) {
+                NetworkState.DISCONNECTED
+            } else {
+                val networkType = getCurrentNetworkType()
+                NetworkState(
+                    isAvailable = true,
+                    networkType = networkType,
+                    isWifiConnected = networkType == NetworkType.WIFI
+                )
+            }
+        } catch (e: Exception) {
+            logger.debug(config.accountId, "Network state calculation failed: ${e.message}")
+            NetworkState.DISCONNECTED
+        }
+    }
+
+    /**
+     * Registers network callback to monitor system network changes
+     */
+    private fun registerNetworkCallback() {
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                updateInternalNetworkState() // Update internal state
+                logger.verbose(config.accountId, "Network became available: ${_currentState.networkType}")
+            }
+
+            override fun onLost(network: Network) {
+                updateInternalNetworkState() // Update internal state
+                logger.verbose(config.accountId, "Network lost")
+            }
+
+            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                updateInternalNetworkState() // Update internal state
+                logger.verbose(config.accountId, "Network capabilities changed: ${_currentState.networkType}")
+            }
+
+            override fun onUnavailable() {
+                updateInternalNetworkState() // Update internal state
+                logger.verbose(config.accountId, "Network unavailable")
+            }
+        }
+
+        networkCallback = callback
+
+        try {
+            val networkRequest = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+                .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
+                .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
+                .build()
+
+            connectivityManager?.registerNetworkCallback(networkRequest, callback)
+            logger.verbose(config.accountId, "Network callback registered successfully")
+
+        } catch (e: SecurityException) {
+            logger.debug(config.accountId, "Network callback registration failed: ${e.message}")
+        } catch (e: Exception) {
+            logger.debug(config.accountId, "Network callback registration failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Synchronous methods that check the current internal state
+     */
+    fun getCurrentNetworkState(): NetworkState = _currentState
+
+    fun isNetworkOnline(): Boolean = _currentState.isAvailable
+
+    fun isWifiConnected(): Boolean = _currentState.isWifiConnected
+
+    fun getNetworkType(): NetworkType = _currentState.networkType
+
+    fun performQuickNetworkCheck(): Boolean = isNetworkOnline()
+
+    /**
+     * Gets current network type (internal implementation)
+     */
+    private fun getCurrentNetworkType(): NetworkType {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                getNetworkTypeFromCapabilities()
+            } else {
+                getNetworkTypeFromNetworkInfo()
+            }
+        } catch (e: Exception) {
+            logger.debug(config.accountId, "Network type detection failed: ${e.message}")
+            NetworkType.UNKNOWN
+        }
+    }
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.M)
+    private fun getNetworkTypeFromCapabilities(): NetworkType {
+        val activeNetwork = connectivityManager?.activeNetwork
+        val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork) ?: return NetworkType.UNKNOWN
+
+        return when {
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> NetworkType.WIFI
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> NetworkType.CELLULAR
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkType.ETHERNET
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> NetworkType.VPN
+            else -> NetworkType.UNKNOWN
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getNetworkTypeFromNetworkInfo(): NetworkType {
+        val networkInfo = connectivityManager?.activeNetworkInfo ?: return NetworkType.DISCONNECTED
+        return when (networkInfo.type) {
+            ConnectivityManager.TYPE_WIFI -> NetworkType.WIFI
+            ConnectivityManager.TYPE_MOBILE -> NetworkType.CELLULAR
+            ConnectivityManager.TYPE_ETHERNET -> NetworkType.ETHERNET
+            ConnectivityManager.TYPE_VPN -> NetworkType.VPN
+            else -> NetworkType.UNKNOWN
+        }
+    }
+
+    fun cleanup() {
+        networkCallback?.let { callback ->
+            try {
+                connectivityManager?.unregisterNetworkCallback(callback)
+                logger.verbose(config.accountId, "Network callback unregistered")
+            } catch (e: Exception) {
+                logger.debug(config.accountId, "Network callback un-registration failed: ${e.message}")
+            }
+        }
+        networkCallback = null
+    }
+}

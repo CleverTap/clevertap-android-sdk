@@ -1,8 +1,6 @@
 package com.clevertap.android.sdk.network
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.net.ConnectivityManager
 import android.text.TextUtils
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.BaseCallbackManager
@@ -59,22 +57,7 @@ internal class NetworkManager constructor(
 ) {
 
     companion object {
-
         private const val BATCH_SIZE = 50
-
-        @JvmStatic
-        fun isNetworkOnline(context: Context): Boolean {
-            try {
-                val cm =
-                    context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-                        ?: return true // lets be optimistic, if we are truly offline we handle the exception
-                @SuppressLint("MissingPermission") val netInfo = cm.activeNetworkInfo
-                return netInfo != null && netInfo.isConnected
-            } catch (ignore: Exception) {
-                // lets be optimistic, if we are truly offline we handle the exception
-                return true
-            }
-        }
     }
 
     private var responseFailureCount = 0

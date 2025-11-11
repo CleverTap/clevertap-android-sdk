@@ -25,7 +25,7 @@ import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
-import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.FakeClock
@@ -66,6 +66,7 @@ class InAppControllerTest {
     private lateinit var mockInAppActionHandler: InAppActionHandler
     private lateinit var mockInAppInflater: InAppNotificationInflater
     private lateinit var fakeInAppQueue: FakeInAppQueue
+    private lateinit var mockNetworkMonitor: NetworkMonitor
     private val fakeClock = FakeClock(timeMillis = 1735686000000) // 01.01.2025
 
     @Before
@@ -86,9 +87,9 @@ class InAppControllerTest {
         mockkObject(CTInAppBaseFragment.Companion)
         every { CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any()) } returns true
 
-        mockkStatic(NetworkManager::class)
-        mockkObject(NetworkManager)
-        every { NetworkManager.isNetworkOnline(any()) } returns true
+        mockkStatic(NetworkMonitor::class)
+        mockkObject(NetworkMonitor)
+        every { NetworkMonitor.isNetworkOnline(any()) } returns true
 
         mockInAppActionHandler = mockk(relaxed = true)
 
