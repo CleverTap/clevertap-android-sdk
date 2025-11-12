@@ -32,14 +32,11 @@ import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
 import com.clevertap.android.sdk.features.callbacks.CoreClientCallbacks
-import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.login.IdentityRepoFactory
-import com.clevertap.android.sdk.login.LoginInfoProvider
-import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
@@ -104,22 +101,16 @@ internal open class CoreState(
     val analyticsManager: AnalyticsManager get() = analytics.analyticsManager
     val baseEventQueueManager: BaseEventQueueManager get() = analytics.baseEventQueueManager
     val cTLockManager: CTLockManager get() = core.ctLockManager
-    val inAppController: InAppController get() = inApp.inAppController
     val sessionManager: SessionManager get() = analytics.sessionManager
     val validationResultStack: ValidationResultStack get() = core.validationResultStack
     val networkManager: NetworkManager get() = network.networkManager
     val pushProviders: PushProviders get() = push.pushProviders
     val varCache: VarCache get() = variables.varCache
     val parser: Parser get() = variables.parser
-    val cryptHandler: ICryptHandler get() = core.cryptHandler
     val storeRegistry: StoreRegistry get() = inApp.storeRegistry
     val templatesManager: TemplatesManager get() = inApp.templatesManager
-    val profileValueHandler: ProfileValueHandler get() = profileFeat.profileValueHandler
     val cTVariables: CTVariables get() = variables.cTVariables
     val executors: CTExecutors get() = core.executors
-    val contentFetchManager: ContentFetchManager get() = displayUnitF.contentFetchManager
-    val loginInfoProvider: LoginInfoProvider get() = profileFeat.loginInfoProvider
-    val clock: Clock get() = core.clock
 
     /**
      * Phase 1: Delegating to InboxFeature
@@ -200,7 +191,7 @@ internal open class CoreState(
 
         val taskInitFeatureFlags = core.executors.ioTask<Unit>()
         taskInitFeatureFlags.execute("initFeatureFlags") {
-            featureFlagF.initialize(deviceInfo.deviceID)
+            featureFlagF.initialize(core.deviceInfo.deviceID)
         }
 
         val pushTask = core.executors.pushProviderTask<Unit>()
@@ -665,7 +656,7 @@ internal open class CoreState(
     // lifecycle triggers
     fun activityPaused() {
         CoreMetaData.setAppForeground(false)
-        analytics.sessionManager.appLastSeen = clock.currentTimeMillis()
+        analytics.sessionManager.appLastSeen = core.clock.currentTimeMillis()
         core.config.logger.verbose(core.config.accountId, "App in background")
         val task = core.executors.postAsyncSafelyTask<Unit>()
         task.execute("activityPaused") {
@@ -729,7 +720,7 @@ internal open class CoreState(
             val referrerClient = InstallReferrerClient.newBuilder(context).build()
             referrerClient.startConnection(object : InstallReferrerStateListener {
                 override fun onInstallReferrerServiceDisconnected() {
-                    if (!coreMetaData.isInstallReferrerDataSent) {
+                    if (!core.coreMetaData.isInstallReferrerDataSent) {
                         handleInstallReferrerOnFirstInstall()
                     }
                 }

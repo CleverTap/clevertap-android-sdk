@@ -134,7 +134,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 return;
             }
 
-            setListener(ctState.getInAppController());
+            setListener(ctState.getInApp().getInAppController());
 
             inAppNotification = intentExtras.getParcelable(Constants.INAPP_KEY);
         } catch (Throwable t) {

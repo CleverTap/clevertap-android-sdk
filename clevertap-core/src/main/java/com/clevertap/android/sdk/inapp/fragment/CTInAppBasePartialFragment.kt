@@ -33,7 +33,7 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment() {
 
     override fun generateListener() {
         setListener(
-            CleverTapAPI.instanceWithConfig(requireContext(), config).coreState.inAppController
+            CleverTapAPI.instanceWithConfig(requireContext(), config).coreState.inApp.inAppController
         )
     }
 }

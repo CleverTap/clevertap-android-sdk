@@ -1187,7 +1187,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return boolean Returns true/false based on whether permission is granted or denied.
      */
     public boolean isPushPermissionGranted() {
-        return coreState.getInAppController().isPushPermissionGranted();
+        return coreState.getInApp().getInAppController().isPushPermissionGranted();
     }
 
     /**
@@ -1195,7 +1195,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param jsonObject JSONObject - Accepts jsonObject created by {@link CTLocalInApp} object
      */
     public void promptPushPrimer(JSONObject jsonObject) {
-        coreState.getInAppController().promptPushPrimer(jsonObject);
+        coreState.getInApp().getInAppController().promptPushPrimer(jsonObject);
     }
 
     /**
@@ -1204,7 +1204,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                             dialog which routes to app's notification settings page.
      */
     public void promptForPushPermission(boolean showFallbackSettings) {
-        coreState.getInAppController().promptPermission(showFallbackSettings);
+        coreState.getInApp().getInAppController().promptPermission(showFallbackSettings);
     }
 
     // Initialize
@@ -1330,7 +1330,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().debug(getAccountId(), "Discarding InApp Notifications...");
             getConfigLogger().debug(getAccountId(),
                     "Please Note - InApp Notifications will be dropped till resumeInAppNotifications() is not called again");
-            coreState.getInAppController().discardInApps();
+            coreState.getInApp().getInAppController().discardInApps();
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot discard InApp Notifications.");
@@ -2617,7 +2617,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void resumeInAppNotifications() {
         if (!coreState.getConfig().isAnalyticsOnly()) {
             getConfigLogger().debug(getAccountId(), "Resuming InApp Notifications...");
-            coreState.getInAppController().resumeInApps();
+            coreState.getInApp().getInAppController().resumeInApps();
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot resume InApp Notifications.");
@@ -2923,7 +2923,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().debug(getAccountId(), "Suspending InApp Notifications...");
             getConfigLogger().debug(getAccountId(),
                     "Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called again");
-            coreState.getInAppController().suspendInApps();
+            coreState.getInApp().getInAppController().suspendInApps();
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot suspend InApp Notifications.");
