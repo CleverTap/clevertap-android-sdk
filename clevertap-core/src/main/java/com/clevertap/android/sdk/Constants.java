@@ -221,7 +221,7 @@ public interface Constants {
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_DISMISS = "wzrk_dismiss";
     String WZRK_STICKY = "wzrk_sticky";
-    String WZRK_DISCREET_IN_FOREGROUND = "wzrk_dif";
+    String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";
     String WZRK_SOUND = "wzrk_sound";
     String WZRK_TIME_TO_LIVE = "wzrk_ttl";
     String WZRK_TIME_TO_LIVE_OFFSET = "wzrk_ttl_offset";

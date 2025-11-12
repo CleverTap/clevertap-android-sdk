@@ -860,8 +860,8 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(channelIdError);
             }
 
-            boolean discreetInForeground = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_DISCREET_IN_FOREGROUND));
-            boolean hideHeadsUp = CoreMetaData.isAppForeground() && discreetInForeground;
+            boolean silenceInForeground = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_SILENCE_IN_FOREGROUND));
+            boolean hideHeadsUp = CoreMetaData.isAppForeground() && silenceInForeground;
 
             // get channel using channel id from push payload. If channel id is null or empty then create default
             updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context, hideHeadsUp);
