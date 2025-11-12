@@ -86,18 +86,11 @@ fun NotificationManager.getOrCreateChannel(
 ): String? {
     return try {
         // Try payload channel first
-        tryGetChannel(msgChannel, hideHeadsUp)?.let { return it }
+        tryGetChannel(msgChannel, hideHeadsUp, "Payload")?.let { return it }
 
         // Try manifest channel second
         val manifestChannel = ManifestInfo.getInstance(context).devDefaultPushChannelId
-        tryGetChannel(manifestChannel, hideHeadsUp)?.let { return it }
-
-        val message = if (manifestChannel.isNullOrEmpty()) {
-            "Missing Default CleverTap Notification Channel metadata in AndroidManifest."
-        } else {
-            "Notification Channel set in AndroidManifest.xml has not been created by the app."
-        }
-        Logger.d(Constants.CLEVERTAP_LOG_TAG, message)
+        tryGetChannel(manifestChannel, hideHeadsUp, "Manifest")?.let { return it }
 
         // Create appropriate fallback channel
         createFallbackChannel(context, hideHeadsUp)
@@ -117,15 +110,27 @@ fun NotificationManager.getOrCreateChannel(
 @RequiresApi(VERSION_CODES.O)
 private fun NotificationManager.tryGetChannel(
     channelId: String?,
-    hideHeadsUp: Boolean
+    hideHeadsUp: Boolean,
+    channelSource: String
 ): String? {
-    if (channelId.isNullOrEmpty()) return null
+    if (channelId.isNullOrEmpty()) {
+        Logger.d(Constants.CLEVERTAP_LOG_TAG, "channelID from $channelSource is null or empty")
+        return null
+    }
 
     val channel = getNotificationChannel(channelId) ?: return null
 
     // If we need to hide heads-up but channel has high importance, skip it
     val shouldSkip = hideHeadsUp && channel.importance != NotificationManager.IMPORTANCE_LOW
-    return if (shouldSkip) null else channelId
+
+    if (shouldSkip) {
+        Logger.d(
+            Constants.CLEVERTAP_LOG_TAG,
+            "Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}"
+        )
+        return null
+    }
+    return channelId
 }
 
 /**
