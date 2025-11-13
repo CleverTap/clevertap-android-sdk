@@ -769,7 +769,7 @@ internal class InAppController(
             pendingNotifications.add(inAppNotification)
             logger.verbose(
                 defaultLogTag,
-                "InApp Notifications are set to be suspended at main thread check, queuing the nosi"
+                "InApp Notifications are set to be suspended at main thread check, queuing the In App"
             )
             return
         }
