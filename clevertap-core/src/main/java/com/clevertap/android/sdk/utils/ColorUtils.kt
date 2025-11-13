@@ -5,24 +5,36 @@ import androidx.core.graphics.toColorInt
 /**
  * Safely validates a color string and returns a valid color string.
  *
- * If this string is a valid color (e.g. "#RRGGBB" or "#AARRGGBB"), it's returned as-is.
- * If it's null, blank, or invalid, the provided [fallback] color string is returned instead.
- * If [fallback] is also null or invalid, "#FFFFFF" is used as a default safe fallback.
+ * - If [this] is a valid color (e.g. "#RRGGBB" or "#AARRGGBB"), it's returned as-is.
+ * - If [this] is null, blank, or invalid, [fallback] is validated and returned if valid.
+ * - If both are invalid or null, "#FFFFFF" is returned as the ultimate safe fallback.
+ *
+ * @receiver The color string to validate.
+ * @param fallback The fallback color string if this is invalid.
+ * @return A valid color string (guaranteed non-null).
  */
 fun String?.toValidColorOrFallback(fallback: String?): String {
+    // Validate fallback safely
     val safeFallback = fallback?.takeIf {
         it.startsWith("#") && (it.length == 7 || it.length == 9)
+    }?.let { candidate ->
+        try {
+            candidate.toColorInt() // Will throw if invalid
+            candidate
+        } catch (e: Exception) {
+            null
+        }
     } ?: "#FFFFFF"
 
+    // Validate main input
     if (this.isNullOrBlank()) return safeFallback
 
-    // Must start with '#' and have proper hex length
     if (!this.startsWith("#") || (this.length != 7 && this.length != 9)) {
         return safeFallback
     }
 
     return try {
-        this.toColorInt() // Validate by trying to convert
+        this.toColorInt()
         this
     } catch (e: Exception) {
         safeFallback
