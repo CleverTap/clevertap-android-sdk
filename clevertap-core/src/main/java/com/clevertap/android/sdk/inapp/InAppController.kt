@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
+import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.AnalyticsManager
@@ -344,6 +345,7 @@ internal class InAppController(
         }
     }
 
+    @MainThread
     fun discardInApps(hideInAppIfVisible: Boolean) {
         inAppState = InAppState.DISCARDED
         logger.verbose(defaultLogTag, "InAppState is DISCARDED")
@@ -354,6 +356,7 @@ internal class InAppController(
         }
     }
 
+    @MainThread
     private fun hideCurrentlyDisplayingInApp() {
         val inApp = currentlyDisplayingInApp ?: return
 
