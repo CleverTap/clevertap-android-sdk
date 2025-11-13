@@ -104,8 +104,8 @@ object Color {
             return try {
                 defaultColor.toColorInt()
             } catch (e: Exception) {
-                // Fallback to black if default color is also invalid
-                Color.WHITE
+                // Fallback to white if default color is also invalid
+                android.graphics.Color.WHITE
             }
         }
 
@@ -117,14 +117,14 @@ object Color {
             try {
                 defaultColor.toColorInt()
             } catch (e: Exception) {
-                Color.WHITE
+                android.graphics.Color.WHITE
             }
         } catch (e: StringIndexOutOfBoundsException) {
             // Thrown if the string is malformed (e.g. incomplete hex)
             try {
                 defaultColor.toColorInt()
             } catch (e: Exception) {
-                Color.WHITE
+                android.graphics.Color.WHITE
             }
         }
     }
