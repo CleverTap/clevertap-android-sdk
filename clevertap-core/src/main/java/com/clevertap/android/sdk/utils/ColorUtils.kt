@@ -7,30 +7,24 @@ import androidx.core.graphics.toColorInt
  *
  * If this string is a valid color (e.g. "#RRGGBB" or "#AARRGGBB"), it's returned as-is.
  * If it's null, blank, or invalid, the provided [fallback] color string is returned instead.
- *
- * Example:
- * ```
- * val valid = "#FF0000".toValidColorOrFallback("#FFFFFF") // "#FF0000"
- * val invalid = "notacolor".toValidColorOrFallback("#FFFFFF") // "#FFFFFF"
- * val empty = "".toValidColorOrFallback("#FFFFFF") // "#FFFFFF"
- * ```
- *
- * @receiver The color string to validate (e.g. "#FFFFFF", "#AARRGGBB")
- * @param fallback The fallback color string if invalid
- * @return A valid color string
+ * If [fallback] is also null or invalid, "#FFFFFF" is used as a default safe fallback.
  */
-fun String?.toValidColorOrFallback(fallback: String): String {
-    if (this.isNullOrBlank()) return fallback
+fun String?.toValidColorOrFallback(fallback: String?): String {
+    val safeFallback = fallback?.takeIf {
+        it.startsWith("#") && (it.length == 7 || it.length == 9)
+    } ?: "#FFFFFF"
+
+    if (this.isNullOrBlank()) return safeFallback
 
     // Must start with '#' and have proper hex length
     if (!this.startsWith("#") || (this.length != 7 && this.length != 9)) {
-        return fallback
+        return safeFallback
     }
 
     return try {
         this.toColorInt() // Validate by trying to convert
         this
     } catch (e: Exception) {
-        fallback
+        safeFallback
     }
 }

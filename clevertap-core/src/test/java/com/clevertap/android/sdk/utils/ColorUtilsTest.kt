@@ -70,4 +70,44 @@ class ColorUtilsTest {
         val result = input.toValidColorOrFallback(fallback)
         assertEquals("#00FF00", result)
     }
+
+    @Test
+    fun `returns default white when both input and fallback are null`() {
+        val input: String? = null
+        val fallback: String? = null
+        val result = input.toValidColorOrFallback(fallback)
+        assertEquals("#FFFFFF", result)
+    }
+
+    @Test
+    fun `returns default white when both input and fallback are invalid`() {
+        val input = "invalidColor"
+        val fallback = "notAColor"
+        val result = input.toValidColorOrFallback(fallback)
+        assertEquals("#FFFFFF", result)
+    }
+
+    @Test
+    fun `returns fallback when input invalid but fallback valid`() {
+        val input = "badcolor"
+        val fallback = "#00FF00" // Green
+        val result = input.toValidColorOrFallback(fallback)
+        assertEquals("#00FF00", result)
+    }
+
+    @Test
+    fun `returns default white when fallback invalid`() {
+        val input = null
+        val fallback = "notacolor"
+        val result = input.toValidColorOrFallback(fallback)
+        assertEquals("#FFFFFF", result)
+    }
+
+    @Test
+    fun `returns valid fallback when input blank and fallback valid`() {
+        val input = ""
+        val fallback = "#ABCDEF"
+        val result = input.toValidColorOrFallback(fallback)
+        assertEquals("#ABCDEF", result)
+    }
 }
