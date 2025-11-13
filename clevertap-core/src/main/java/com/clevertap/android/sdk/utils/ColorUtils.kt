@@ -1,42 +1,6 @@
 package com.clevertap.android.sdk.utils
 
-import android.graphics.Color
-import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
-
-/**
- * Safely converts a [String] to a color integer.
- *
- * This function attempts to parse a color string (e.g., "#RRGGBB" or "#AARRGGBB")
- * into an Android color integer. If the string is null, blank, or invalid, it returns
- * the provided [defaultColor].
- *
- * Example:
- * ```
- * val color = "#FF0000".toColorIntOrDefault() // Returns red
- * val invalid = "redcolor".toColorIntOrDefault(Color.GRAY) // Returns gray
- * ```
- *
- * @receiver The color string to parse (e.g., "#FFFFFF", "#80FF0000").
- * @param defaultColor The fallback color if parsing fails (default is [Color.WHITE]).
- * @return The parsed color integer or [defaultColor] if parsing fails.
- */
-@ColorInt
-fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = Color.WHITE): Int {
-    // If the string is null or empty, return the default color immediately
-    if (this.isNullOrBlank()) return defaultColor
-
-    return try {
-        // Try converting the string to a color integer
-        this.toColorInt()
-    } catch (e: IllegalArgumentException) {
-        // Handles invalid color format (e.g., "abc123")
-        defaultColor
-    } catch (e: StringIndexOutOfBoundsException) {
-        // Handles malformed color strings (e.g., "#F")
-        defaultColor
-    }
-}
 
 /**
  * Safely validates a color string and returns a valid color string.
@@ -58,85 +22,15 @@ fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = Color.WHITE): Int 
 fun String?.toValidColorOrFallback(fallback: String): String {
     if (this.isNullOrBlank()) return fallback
 
+    // Must start with '#' and have proper hex length
+    if (!this.startsWith("#") || (this.length != 7 && this.length != 9)) {
+        return fallback
+    }
+
     return try {
         this.toColorInt() // Validate by trying to convert
-        this // Valid, return same string
-    } catch (e: IllegalArgumentException) {
+        this
+    } catch (e: Exception) {
         fallback
-    } catch (e: StringIndexOutOfBoundsException) {
-        fallback
-    }
-}
-
-/**
- * Safely parses a color string into an Android color integer.
- *
- * This utility provides two overloads:
- * - [parseColor(colorString, defaultColor)] → returns the parsed color or a provided fallback color.
- * - [parseColor(colorString)] → same as above but defaults to WHITE on failure.
- *
- * Supported formats:
- * ```
- * #RRGGBB
- * #AARRGGBB
- * ```
- *
- * Example:
- * ```
- * val red = parseColor("#FF0000")                 // Returns red
- * val semiTransparent = parseColor("#80FF0000")   // Returns semi-transparent red
- * val invalid = parseColor("notacolor", Color.GRAY) // Returns gray
- * ```
- */
-object Color {
-
-    /**
-     * Safely parses a color string into a color integer.
-     *
-     * @param colorString The color string to parse (e.g. "#FFFFFF", "#AARRGGBB").
-     * @param defaultColor The fallback color as a string (e.g. "#000000").
-     * @return The parsed color integer, or parsed defaultColor if invalid.
-     */
-    @ColorInt
-    fun parseColor(colorString: String?, defaultColor: String): Int {
-        // Return parsed default color if the string is null or blank
-        if (colorString.isNullOrBlank()) {
-            return try {
-                defaultColor.toColorInt()
-            } catch (e: Exception) {
-                // Fallback to white if default color is also invalid
-                android.graphics.Color.WHITE
-            }
-        }
-
-        return try {
-            // Attempt to parse the color string
-            colorString.toColorInt()
-        } catch (e: IllegalArgumentException) {
-            // Thrown if the string is not a valid color format
-            try {
-                defaultColor.toColorInt()
-            } catch (e: Exception) {
-                android.graphics.Color.WHITE
-            }
-        } catch (e: StringIndexOutOfBoundsException) {
-            // Thrown if the string is malformed (e.g. incomplete hex)
-            try {
-                defaultColor.toColorInt()
-            } catch (e: Exception) {
-                android.graphics.Color.WHITE
-            }
-        }
-    }
-
-    /**
-     * Parses a color string, defaulting to WHITE(#FFFFFF) if parsing fails.
-     *
-     * @param colorString The color string to parse.
-     * @return The parsed color integer, or WHITE(#FFFFFF) if invalid or null.
-     */
-    @ColorInt
-    fun parseColor(colorString: String?): Int {
-        return parseColor(colorString, "#FFFFFF")
     }
 }
