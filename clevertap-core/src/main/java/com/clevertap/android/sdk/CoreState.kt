@@ -62,55 +62,97 @@ import org.json.JSONObject
 
 internal open class CoreState(
     val core: CoreFeature,
-    val data: DataFeature, // Break down DAO objects and pass them on to the features itself.
+    val data: DataFeature,
     val network: NetworkFeature,
-    val analytics: AnalyticsFeature,
-    val profileFeat: ProfileFeature,
-    val inApp: InAppFeature,
-    val inbox: InboxFeature,
-    val variables: VariablesFeature,
-    val push: PushFeature,
-    val productConfig: ProductConfigFeature,
-    val displayUnitF: DisplayUnitFeature,
-    val featureFlagF: FeatureFlagFeature,
-    val geofenceF: GeofenceFeature
+    private val analyticsProvider: () -> AnalyticsFeature,
+    private val profileProvider: () -> ProfileFeature,
+    private val inAppProvider: () -> InAppFeature,
+    private val inboxProvider: () -> InboxFeature,
+    private val variablesProvider: () -> VariablesFeature,
+    private val pushProvider: () -> PushFeature,
+    private val productConfigProvider: () -> ProductConfigFeature,
+    private val displayUnitProvider: () -> DisplayUnitFeature,
+    private val featureFlagProvider: () -> FeatureFlagFeature,
+    private val geofenceProvider: () -> GeofenceFeature
 ) : CoreContract {
 
     init {
         network.coreContract = this
         core.coreContract = this
-        analytics.coreContract = this
-        profileFeat.coreContract = this
-        inApp.coreContract = this
-        inbox.coreContract = this
-        variables.coreContract = this
-        push.coreContract = this
-        productConfig.coreContract = this
-        displayUnitF.coreContract = this
-        featureFlagF.coreContract = this
-        geofenceF.coreContract = this
     }
 
-    // Backward compatibility accessors - delegate to feature groups
-    val context: Context get() = context()
-    val locationManager: BaseLocationManager get() = profileFeat.locationManager
+    val analytics: AnalyticsFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing AnalyticsFeature")
+        analyticsProvider().apply { coreContract = this@CoreState }
+    }
+
+    val profileFeat: ProfileFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing ProfileFeature")
+        profileProvider().apply { coreContract = this@CoreState }
+    }
+
+    val inApp: InAppFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing InAppFeature")
+        inAppProvider().apply { coreContract = this@CoreState }
+    }
+
+    val inbox: InboxFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing InboxFeature")
+        inboxProvider().apply { coreContract = this@CoreState }
+    }
+
+    val variables: VariablesFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing VariablesFeature")
+        variablesProvider().apply { coreContract = this@CoreState }
+    }
+
+    val push: PushFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing PushFeature")
+        pushProvider().apply { coreContract = this@CoreState }
+    }
+
+    val productConfig: ProductConfigFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing ProductConfigFeature")
+        productConfigProvider().apply { coreContract = this@CoreState }
+    }
+
+    val displayUnitF: DisplayUnitFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing DisplayUnitFeature")
+        displayUnitProvider().apply { coreContract = this@CoreState }
+    }
+
+    val featureFlagF: FeatureFlagFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing FeatureFlagFeature")
+        featureFlagProvider().apply { coreContract = this@CoreState }
+    }
+
+    val geofenceF: GeofenceFeature by lazy {
+        config.logger.info(config.accountId, "[LAZY] Initializing GeofenceFeature")
+        geofenceProvider().apply { coreContract = this@CoreState }
+    }
+
+    // Backward compatibility accessors
+    val context: Context get() = core.context
     val config: CleverTapInstanceConfig get() = core.config
-    val coreMetaData: CoreMetaData get() = core.coreMetaData
     val deviceInfo: DeviceInfo get() = core.deviceInfo
-    val localDataStore: LocalDataStore get() = data.localDataStore
-    val analyticsManager: AnalyticsManager get() = analytics.analyticsManager
-    val baseEventQueueManager: BaseEventQueueManager get() = analytics.baseEventQueueManager
-    val cTLockManager: CTLockManager get() = core.ctLockManager
-    val sessionManager: SessionManager get() = analytics.sessionManager
-    val validationResultStack: ValidationResultStack get() = core.validationResultStack
-    val networkManager: NetworkManager get() = network.networkManager
-    val pushProviders: PushProviders get() = push.pushProviders
-    val varCache: VarCache get() = variables.varCache
-    val parser: Parser get() = variables.parser
-    val storeRegistry: StoreRegistry get() = inApp.storeRegistry
-    val templatesManager: TemplatesManager get() = inApp.templatesManager
-    val cTVariables: CTVariables get() = variables.cTVariables
+    val coreMetaData: CoreMetaData get() = core.coreMetaData
     val executors: CTExecutors get() = core.executors
+    val cTLockManager: CTLockManager get() = core.ctLockManager
+    val validationResultStack: ValidationResultStack get() = core.validationResultStack
+    val localDataStore: LocalDataStore get() = data.localDataStore
+
+    // Backward compatibility lazy accessors
+    val locationManager: BaseLocationManager by lazy { profileFeat.locationManager }
+    val analyticsManager: AnalyticsManager by lazy { analytics.analyticsManager }
+    val baseEventQueueManager: BaseEventQueueManager by lazy { analytics.baseEventQueueManager }
+    val sessionManager: SessionManager by lazy { analytics.sessionManager }
+    val networkManager: NetworkManager by lazy { network.networkManager }
+    val pushProviders: PushProviders by lazy { push.pushProviders }
+    val varCache: VarCache by lazy { variables.varCache }
+    val parser: Parser by lazy { variables.parser }
+    val storeRegistry: StoreRegistry by lazy { inApp.storeRegistry }
+    val templatesManager: TemplatesManager by lazy { inApp.templatesManager }
+    val cTVariables: CTVariables by lazy { variables.cTVariables }
 
     /**
      * Phase 1: Delegating to InboxFeature

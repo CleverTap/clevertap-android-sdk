@@ -14,7 +14,7 @@ import org.json.JSONObject
  * Manages network requests, encryption, and API communication
  */
 internal class NetworkFeature(
-    val networkRepo: NetworkRepo,  // Shared with DBManager
+    val networkRepo: NetworkRepo,
     private val ctKeyGenerator: CTKeyGenerator,
     private val cryptFactory: CryptFactory
 ) : CleverTapFeature {
