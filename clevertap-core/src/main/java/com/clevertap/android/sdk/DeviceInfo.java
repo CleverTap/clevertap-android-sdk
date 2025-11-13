@@ -28,6 +28,7 @@ import android.view.WindowManager;
 import android.view.WindowMetrics;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -798,9 +799,9 @@ public class DeviceInfo {
         }
     }
 
-    private synchronized void fetchGoogleAdID() {
+    private synchronized String fetchGoogleAdID() {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() called!");
-        if (getGoogleAdID() == null && !adIdRun) {
+        if (googleAdID == null && !adIdRun) {
             String advertisingID = null;
             try {
                 adIdRun = true;
@@ -817,7 +818,7 @@ public class DeviceInfo {
                     if (limitAdTracking) {
                         getConfigLogger().debug(config.getAccountId(),
                                 "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
-                        return;
+                        return null;
                     }
                 }
                 Method getAdId = adInfo.getClass().getMethod("getId");
@@ -836,7 +837,7 @@ public class DeviceInfo {
                         //Device has opted out of sharing Google Advertising ID
                         getConfigLogger().debug(config.getAccountId(),
                                 "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
-                        return;
+                        return null;
                     }
                     googleAdID = advertisingID.replace("-", "");
                 }
@@ -844,12 +845,12 @@ public class DeviceInfo {
 
             getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() done executing!");
         }
+        return googleAdID;
     }
 
-    private synchronized String generateDeviceID() {
+    private synchronized String generateDeviceID(@Nullable String adId) {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() called!");
         String generatedDeviceID;
-        String adId = getGoogleAdID();
         if (adId != null) {
             generatedDeviceID = Constants.GUID_PREFIX_GOOGLE_AD_ID + adId;
         } else {
@@ -926,15 +927,15 @@ public class DeviceInfo {
 
         if (!this.config.isUseGoogleAdId()) {
             getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling generateDeviceID()");
-            String genId = generateDeviceID();
+            String genId = generateDeviceID(null);
             getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called generateDeviceID()");
             return genId;
         }
 
         // fetch the googleAdID to generate GUID
         //has to be called on background thread
-        fetchGoogleAdID();
-        String genId = generateDeviceID();
+        String adId = fetchGoogleAdID();
+        String genId = generateDeviceID(adId);
 
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "initDeviceID() done executing!");
         return genId;
