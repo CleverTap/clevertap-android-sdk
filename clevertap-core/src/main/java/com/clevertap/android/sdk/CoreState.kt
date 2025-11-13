@@ -655,11 +655,6 @@ internal open class CoreState(
         push.notifyPushImpressionsSentToServer(queue)
     }
 
-    private fun notifyListenerForPushImpressionSentToServer(listenerKey: String) {
-        val notificationRenderedListener = CleverTapAPI.getNotificationRenderedListener(listenerKey)
-        notificationRenderedListener?.onNotificationRendered(true)
-    }
-
     // lifecycle triggers
     fun activityPaused() {
         CoreMetaData.setAppForeground(false)
