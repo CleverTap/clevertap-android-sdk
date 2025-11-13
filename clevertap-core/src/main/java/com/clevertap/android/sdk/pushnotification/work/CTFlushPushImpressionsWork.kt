@@ -29,7 +29,7 @@ class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameter
         CleverTapAPI.getAvailableInstances(context)
             .filterNotNull()
             .filter {
-                !it.coreState.config.isAnalyticsOnly
+                !it.coreState.core.config.isAnalyticsOnly
             }
             .forEach {
                 if (checkIfStopped())

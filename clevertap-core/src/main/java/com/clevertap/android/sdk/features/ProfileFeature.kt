@@ -15,6 +15,7 @@ internal class ProfileFeature(
 ) {
     lateinit var coreContract: CoreContract
     val locationManager by lazy {
+        // todo check if this is the right place for the same
         LocationManager(
             mContext = coreContract.context(),
             mConfig = coreContract.config(),

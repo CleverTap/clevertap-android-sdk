@@ -60,7 +60,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
 
         if (info.fromCleverTap) {
             if (cleverTapAPI != null) {
-                cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
+                cleverTapAPI.getCoreState().getCore().getConfig().log(LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template

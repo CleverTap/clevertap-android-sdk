@@ -31,7 +31,7 @@ public class PTPushNotificationReceiver extends CTPushNotificationReceiver {
 
         if (cleverTapAPI != null) {
             try {
-                CleverTapInstanceConfig config = cleverTapAPI.getCoreState().getConfig();
+                CleverTapInstanceConfig config = cleverTapAPI.getCoreState().getCore().getConfig();
                 Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
                 task.execute("PTPushNotificationReceiver#cleanUpFiles", new Callable<Void>() {
                     @Override

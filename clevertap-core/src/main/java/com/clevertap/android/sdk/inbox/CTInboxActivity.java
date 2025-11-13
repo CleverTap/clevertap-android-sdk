@@ -98,7 +98,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
         setContentView(R.layout.inbox_activity);
 
-        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCore().getCoreMetaData();
         coreMetaData.setAppInboxActivity(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -223,7 +223,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     protected void onDestroy() {
-        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCore().getCoreMetaData();
         coreMetaData.setAppInboxActivity(null);
 
         if (styleConfig.isUsingTabs()) {

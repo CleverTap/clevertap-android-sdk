@@ -16,7 +16,6 @@ import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.cryption.DataMigrationRepository
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.db.BaseDatabaseManager
-import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.features.AnalyticsFeature
 import com.clevertap.android.sdk.features.CoreFeature
@@ -32,13 +31,9 @@ import com.clevertap.android.sdk.features.ProfileFeature
 import com.clevertap.android.sdk.features.PushFeature
 import com.clevertap.android.sdk.features.VariablesFeature
 import com.clevertap.android.sdk.features.callbacks.CoreClientCallbacks
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
-import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
-import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.network.EndpointId
-import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -46,16 +41,12 @@ import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.product_config.CTProductConfigController
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory
-import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.task.Task
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.validation.ManifestValidator
 import com.clevertap.android.sdk.validation.ValidationResultStack
-import com.clevertap.android.sdk.variables.CTVariables
-import com.clevertap.android.sdk.variables.Parser
-import com.clevertap.android.sdk.variables.VarCache
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -81,90 +72,64 @@ internal open class CoreState(
         core.coreContract = this
     }
 
+    // For ease of use
+    private val logger: ILogger get() = core.config.logger
+    private val accountId: String get() = core.config.accountId
+
     val analytics: AnalyticsFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing AnalyticsFeature")
+        logger.info(accountId, "[LAZY] Initializing AnalyticsFeature")
         analyticsProvider().apply { coreContract = this@CoreState }
     }
 
     val profileFeat: ProfileFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing ProfileFeature")
+        logger.info(accountId, "[LAZY] Initializing ProfileFeature")
         profileProvider().apply { coreContract = this@CoreState }
     }
 
     val inApp: InAppFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing InAppFeature")
+        logger.info(accountId, "[LAZY] Initializing InAppFeature")
         inAppProvider().apply { coreContract = this@CoreState }
     }
 
     val inbox: InboxFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing InboxFeature")
+        logger.info(accountId, "[LAZY] Initializing InboxFeature")
         inboxProvider().apply { coreContract = this@CoreState }
     }
 
     val variables: VariablesFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing VariablesFeature")
+        logger.info(accountId, "[LAZY] Initializing VariablesFeature")
         variablesProvider().apply { coreContract = this@CoreState }
     }
 
     val push: PushFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing PushFeature")
+        logger.info(accountId, "[LAZY] Initializing PushFeature")
         pushProvider().apply { coreContract = this@CoreState }
     }
 
     val productConfig: ProductConfigFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing ProductConfigFeature")
+        logger.info(accountId, "[LAZY] Initializing ProductConfigFeature")
         productConfigProvider().apply { coreContract = this@CoreState }
     }
 
     val displayUnitF: DisplayUnitFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing DisplayUnitFeature")
+        logger.info(accountId, "[LAZY] Initializing DisplayUnitFeature")
         displayUnitProvider().apply { coreContract = this@CoreState }
     }
 
     val featureFlagF: FeatureFlagFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing FeatureFlagFeature")
+        logger.info(accountId, "[LAZY] Initializing FeatureFlagFeature")
         featureFlagProvider().apply { coreContract = this@CoreState }
     }
 
     val geofenceF: GeofenceFeature by lazy {
-        config.logger.info(config.accountId, "[LAZY] Initializing GeofenceFeature")
+        logger.info(accountId, "[LAZY] Initializing GeofenceFeature")
         geofenceProvider().apply { coreContract = this@CoreState }
-    }
-
-    // Backward compatibility accessors
-    val context: Context get() = core.context
-    val config: CleverTapInstanceConfig get() = core.config
-    val deviceInfo: DeviceInfo get() = core.deviceInfo
-    val coreMetaData: CoreMetaData get() = core.coreMetaData
-    val executors: CTExecutors get() = core.executors
-    val cTLockManager: CTLockManager get() = core.ctLockManager
-    val validationResultStack: ValidationResultStack get() = core.validationResultStack
-    val localDataStore: LocalDataStore get() = data.localDataStore
-
-    // Backward compatibility lazy accessors
-    val locationManager: BaseLocationManager by lazy { profileFeat.locationManager }
-    val analyticsManager: AnalyticsManager by lazy { analytics.analyticsManager }
-    val baseEventQueueManager: BaseEventQueueManager by lazy { analytics.baseEventQueueManager }
-    val sessionManager: SessionManager by lazy { analytics.sessionManager }
-    val networkManager: NetworkManager by lazy { network.networkManager }
-    val pushProviders: PushProviders by lazy { push.pushProviders }
-    val varCache: VarCache by lazy { variables.varCache }
-    val parser: Parser by lazy { variables.parser }
-    val storeRegistry: StoreRegistry by lazy { inApp.storeRegistry }
-    val templatesManager: TemplatesManager by lazy { inApp.templatesManager }
-    val cTVariables: CTVariables by lazy { variables.cTVariables }
-
-    /**
-     * Phase 1: Delegating to InboxFeature
-     */
-    fun getCTInboxController() : CTInboxController? {
-        return inbox.getCTInboxController()
     }
 
     fun asyncStartup() {
         val fileResourceProviderInit = core.executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
-            FileResourceProvider.getInstance(core.context, core.config.logger)
+            FileResourceProvider.getInstance(core.context, logger)
         }
         val task = core.executors.postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
@@ -175,13 +140,13 @@ internal open class CoreState(
                 dbAdapter = dbAdapter
             )
             val cryptMigrator = CryptMigrator(
-                logPrefix = core.config.accountId,
+                logPrefix = accountId,
                 configEncryptionLevel = core.config.encryptionLevel,
-                logger = core.config.logger,
+                logger = logger,
                 cryptHandler = core.cryptHandler,
                 cryptRepository = CryptRepository(
                     context = core.context,
-                    accountId = core.config.accountId
+                    accountId = accountId
                 ),
                 dataMigrationRepository = dataMigrationRepository,
                 variablesRepo = variables.variablesRepository,
@@ -190,7 +155,7 @@ internal open class CoreState(
             cryptMigrator.migrateEncryption()
         }
 
-        core.config.logger.verbose(config.accountId + ":async_deviceID", "DeviceInfo() called")
+        logger.verbose(accountId + ":async_deviceID", "DeviceInfo() called")
         val taskDeviceCachedInfo = core.executors.ioTask<Unit>()
         taskDeviceCachedInfo.execute("getDeviceCachedInfo"
         ) { core.deviceInfo.getDeviceCachedInfo() }
@@ -198,8 +163,8 @@ internal open class CoreState(
         val task1 = core.executors.ioTask<String>()
         // callback on main thread
         task1.addOnSuccessListener { deviceId: String ->
-            core.config.logger.verbose(
-                core.config.accountId + ":async_deviceID",
+            logger.verbose(
+                accountId + ":async_deviceID",
                 "DeviceID initialized successfully!" + Thread.currentThread()
             )
             // No need to put getDeviceID() on background thread because prefs already loaded
@@ -217,9 +182,9 @@ internal open class CoreState(
         taskInitFCManager.execute("initFCManager") {
             val deviceId = core.deviceInfo.deviceID
             if (deviceId != null && inApp.inAppFCManager == null) {
-                core.config.logger
+                logger
                     .verbose(
-                        core.config.accountId + ":async_deviceID",
+                        accountId + ":async_deviceID",
                         "Initializing InAppFC with device Id = $deviceId"
                     )
                 inApp.initInAppFCManager(deviceId)
@@ -266,7 +231,7 @@ internal open class CoreState(
                 Logger.v("Unable to save config to SharedPrefs, config Json is null")
                 return@execute
             }
-            putString(core.context, core.config.accountId, "instance", configJson)
+            putString(core.context, accountId, "instance", configJson)
         }
         core.executors.postAsyncSafelyTask<Unit>().execute("recordDeviceIDErrors") {
             if (core.deviceInfo.getDeviceID() != null) {
@@ -276,7 +241,7 @@ internal open class CoreState(
     }
 
     fun deviceIDCreated(deviceId: String) {
-        val accountId: String = core.config.accountId
+        val accountId: String = accountId
 
         // Inflate the local profile here as deviceId is required
         data.localDataStore.inflateLocalProfileAsync(core.context)
@@ -292,7 +257,7 @@ internal open class CoreState(
           during first initialisation from CleverTapFactory.getCoreState()
          */
         if (inApp.inAppFCManager == null) {
-            core.config.logger.verbose(
+            logger.verbose(
                 "$accountId:async_deviceID",
                 "Initializing InAppFC after Device ID Created = $deviceId"
             )
@@ -307,7 +272,7 @@ internal open class CoreState(
         val ctFeatureFlagsController = featureFlagF.ctFeatureFlagsController
 
         if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
-            core.config.logger.verbose(
+            logger.verbose(
                 "$accountId:async_deviceID",
                 "Initializing Feature Flags after Device ID Created = $deviceId"
             )
@@ -319,13 +284,13 @@ internal open class CoreState(
         if (ctProductConfigController != null && TextUtils
                 .isEmpty(ctProductConfigController.settings.guid)
         ) {
-            core.config.logger.verbose(
+            logger.verbose(
                 "$accountId:async_deviceID",
                 "Initializing Product Config after Device ID Created = $deviceId"
             )
             ctProductConfigController.setGuidAndInit(deviceId)
         }
-        core.config.logger.verbose(
+        logger.verbose(
             "$accountId:async_deviceID",
             "Got device id from DeviceInfo, notifying user profile initialized to SyncListener"
         )
@@ -340,14 +305,14 @@ internal open class CoreState(
         if (core.config.isAnalyticsOnly) {
             core.config.getLogger()
                 .debug(
-                    core.config.accountId,
+                    accountId,
                     "Product Config is not enabled for this instance"
                 )
             return null
         }
         if (productConfig.productConfigController == null) {
             core.config.getLogger().verbose(
-                core.config.accountId + ":async_deviceID",
+                accountId + ":async_deviceID",
                 "Initializing Product Config with device Id = " + core.deviceInfo.getDeviceID()
             )
             val ctProductConfigController = CTProductConfigFactory
@@ -376,7 +341,7 @@ internal open class CoreState(
         task.execute("resetProfile") {
             try {
                 core.config.getLogger().verbose(
-                    core.config.accountId,
+                    accountId,
                     "asyncProfileSwitchUser:[profile with Cached GUID $cacheGuid and cleverTapID $cleverTapID"
                 )
                 //set optOut to false on the current user to unregister the device token
@@ -431,7 +396,7 @@ internal open class CoreState(
 
                 inApp.inAppFCManager?.changeUser(core.deviceInfo.getDeviceID())
             } catch (t: Throwable) {
-                core.config.getLogger().verbose(core.config.accountId, "Reset Profile error", t)
+                core.config.getLogger().verbose(accountId, "Reset Profile error", t)
             }
         }
     }
@@ -507,7 +472,7 @@ internal open class CoreState(
             if (!core.deviceInfo.isErrorDeviceId()) {
                 if (!haveIdentifier || profileFeat.loginInfoProvider.isAnonymousDevice()) {
                     core.config.getLogger().debug(
-                        core.config.accountId,
+                        accountId,
                         "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile"
                     )
                     analytics.analyticsManager.pushProfile(profile)
@@ -518,7 +483,7 @@ internal open class CoreState(
             // if identifier maps to current guid, push on current profile
             if (cachedGUID != null && cachedGUID == currentGUID) {
                 core.config.getLogger().debug(
-                    core.config.accountId,
+                    accountId,
                     ("onUserLogin: " + profile + " maps to current device id " + currentGUID
                             + " pushing on current profile")
                 )
@@ -528,13 +493,13 @@ internal open class CoreState(
 
             core.config.getLogger()
                 .verbose(
-                    core.config.accountId, ("onUserLogin: queuing reset profile for " + profile
+                    accountId, ("onUserLogin: queuing reset profile for " + profile
                             + " with Cached GUID " + (cachedGUID ?: "NULL"))
                 )
 
             asyncProfileSwitchUser(profile, cachedGUID, cleverTapID)
         } catch (t: Throwable) {
-            core.config.getLogger().verbose(core.config.accountId, "onUserLogin failed", t)
+            core.config.getLogger().verbose(accountId, "onUserLogin failed", t)
         }
     }
 
@@ -546,7 +511,7 @@ internal open class CoreState(
         if (core.config.isAnalyticsOnly) {
             core.config.getLogger()
                 .debug(
-                    core.config.accountId,
+                    accountId,
                     "Instance is analytics only, not initializing Notification Inbox"
                 )
             return
@@ -565,7 +530,7 @@ internal open class CoreState(
         var bodyString: String? = response.readBody()
         var bodyJson: JSONObject? = bodyString.toJsonOrNull()
 
-        core.config.logger.verbose(config.accountId, "Processing response : $bodyJson")
+        logger.verbose(accountId, "Processing response : $bodyJson")
 
         if (bodyString.isNullOrBlank() || bodyJson == null) {
             inApp.batchSent(requestBody.queue, true)
@@ -578,20 +543,20 @@ internal open class CoreState(
         if (isEncryptedResponse) {
             when (val decryptResponse = network.encryptionManager.decryptResponse(bodyString = bodyString)) {
                 is com.clevertap.android.sdk.network.api.EncryptionFailure -> {
-                    core.config.logger.verbose(config.accountId, "Failed to decrypt response")
+                    logger.verbose(accountId, "Failed to decrypt response")
                     inApp.batchSent(requestBody.queue, false)
                     return
                 }
                 is com.clevertap.android.sdk.network.api.EncryptionSuccess -> {
                     bodyString = decryptResponse.data
                     bodyJson = bodyString.toJsonOrNull()
-                    core.config.logger.verbose("Decrypted response = $bodyString")
+                    logger.verbose("Decrypted response = $bodyString")
                 }
             }
         }
 
         if (bodyJson == null) {
-            core.config.logger.verbose("The parsed response is null so do not process.")
+            logger.verbose("The parsed response is null so do not process.")
             return
         }
 
@@ -627,15 +592,15 @@ internal open class CoreState(
         val bodyString = response.readBody()
         val bodyJson = bodyString.toJsonOrNull()
 
-        core.config.logger.verbose(config.accountId, "Processing variables response : $bodyJson")
+        logger.verbose(accountId, "Processing variables response : $bodyJson")
 
         // Process through ARP response handler
         core.arpResponse.processResponse(bodyJson, core.context, core.arpRepo)
     }
 
     override fun handlePushImpressionsResponse(response: Response, queue: JSONArray) {
-        core.config.logger.verbose(
-            config.accountId,
+        logger.verbose(
+            accountId,
             "Processing push impressions response : ${response.readBody().toJsonOrNull()}"
         )
 
@@ -671,7 +636,7 @@ internal open class CoreState(
     override fun deviceInfo(): DeviceInfo = core.deviceInfo
     override fun coreMetaData(): CoreMetaData = core.coreMetaData
     override fun database(): BaseDatabaseManager = data.databaseManager
-    override fun logger(): ILogger = core.config.logger
+    override fun logger(): ILogger = logger
     override fun analytics(): AnalyticsManager = analytics.analyticsManager
     override fun clock(): Clock = core.clock
     override fun executors(): CTExecutors = core.executors
@@ -699,23 +664,23 @@ internal open class CoreState(
     fun activityPaused() {
         CoreMetaData.setAppForeground(false)
         analytics.sessionManager.appLastSeen = core.clock.currentTimeMillis()
-        core.config.logger.verbose(core.config.accountId, "App in background")
+        logger.verbose(accountId, "App in background")
         val task = core.executors.postAsyncSafelyTask<Unit>()
         task.execute("activityPaused") {
             val now = core.clock.currentTimeSecondsInt()
             if (core.coreMetaData.inCurrentSession()) {
                 try {
                     StorageHelper.putInt(
-                        context,
-                        config.accountId,
+                        core.context,
+                        accountId,
                         Constants.LAST_SESSION_EPOCH,
                         now
                     )
                     core.config.getLogger()
-                        .verbose(core.config.accountId, "Updated session time: $now")
+                        .verbose(accountId, "Updated session time: $now")
                 } catch (t: Throwable) {
                     core.config.getLogger().verbose(
-                        core.config.accountId,
+                        accountId,
                         "Failed to update session time time: " + t.message
                     )
                 }
@@ -724,7 +689,7 @@ internal open class CoreState(
     }
 
     fun activityResumed(activity: Activity?) {
-        core.config.getLogger().verbose(core.config.accountId, "App in foreground")
+        core.config.getLogger().verbose(accountId, "App in foreground")
         analytics.sessionManager.checkTimeoutSession()
 
         //Anything in this If block will run once per App Launch.
@@ -747,9 +712,9 @@ internal open class CoreState(
             try {
                 geofenceF.geofenceCallback?.triggerLocation()
             } catch (e: IllegalStateException) {
-                core.config.getLogger().verbose(core.config.accountId, e.localizedMessage)
+                core.config.getLogger().verbose(accountId, e.localizedMessage)
             } catch (_: Exception) {
-                core.config.getLogger().verbose(core.config.accountId, "Failed to trigger location")
+                core.config.getLogger().verbose(accountId, "Failed to trigger location")
             }
         }
         analytics.baseEventQueueManager.pushInitialEventsAsync()
@@ -757,9 +722,9 @@ internal open class CoreState(
     }
 
     private fun handleInstallReferrerOnFirstInstall() {
-        core.config.getLogger().verbose(core.config.accountId, "Starting to handle install referrer")
+        core.config.getLogger().verbose(accountId, "Starting to handle install referrer")
         try {
-            val referrerClient = InstallReferrerClient.newBuilder(context).build()
+            val referrerClient = InstallReferrerClient.newBuilder(core.context).build()
             referrerClient.startConnection(object : InstallReferrerStateListener {
                 override fun onInstallReferrerServiceDisconnected() {
                     if (!core.coreMetaData.isInstallReferrerDataSent) {
@@ -783,12 +748,12 @@ internal open class CoreState(
                                     analytics.analyticsManager.pushInstallReferrer(referrerUrl)
                                     core.coreMetaData.isInstallReferrerDataSent = true
                                     core.config.getLogger().debug(
-                                        core.config.accountId,
+                                        accountId,
                                         "Install Referrer data set [Referrer URL-$referrerUrl]"
                                     )
                                 } catch (npe: NullPointerException) {
                                     core.config.getLogger().debug(
-                                        core.config.accountId,
+                                        accountId,
                                         "Install referrer client null pointer exception caused by Google Play Install Referrer library - "
                                                 + npe
                                             .message
@@ -804,7 +769,7 @@ internal open class CoreState(
                                     response = referrerClient.installReferrer
                                 } catch (e: RemoteException) {
                                     core.config.getLogger().debug(
-                                        core.config.accountId,
+                                        accountId,
                                         "Remote exception caused by Google Play Install Referrer library - " + e
                                             .message
                                     )
@@ -818,22 +783,22 @@ internal open class CoreState(
                         // API not available on the current Play Store app.
                         InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED ->
                             core.config.getLogger().debug(
-                                core.config.accountId,
+                                accountId,
                                 "Install Referrer data not set, API not supported by Play Store on device"
                             )
 
                         // Connection couldn't be established.
                         InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE ->
                             core.config.getLogger().debug(
-                                core.config.accountId,
+                                accountId,
                                 "Install Referrer data not set, connection to Play Store unavailable"
                             )
                     }
                 }
             })
         } catch (t: Throwable) {
-            config.getLogger().verbose(
-                config.accountId,
+            logger.verbose(
+                accountId,
                 ("Google Play Install Referrer's InstallReferrerClient Class not found - " + t
                     .localizedMessage
                         + " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle")
@@ -913,7 +878,7 @@ internal open class CoreState(
             validationResultStack = core.validationResultStack,
             firstRequestTs = network.networkRepo::getFirstRequestTs,
             lastRequestTs = network.networkRepo::getLastRequestTs,
-            logger = core.config.logger
+            logger = logger
         ).apply {
             inAppFCManager = inApp.inAppFCManager
             pushProviders = push.pushProviders
@@ -956,8 +921,8 @@ internal open class CoreState(
     @WorkerThread
     override fun clearUserContext() {
         synchronized(core.ctLockManager.eventLock) {
-            data.databaseManager.clearQueues(context)
-            core.ijRepo.clearIJ(context)
+            data.databaseManager.clearQueues(core.context)
+            core.ijRepo.clearIJ(core.context)
             network.networkRepo.clearFirstRequestTs()
             network.networkRepo.clearLastRequestTs()
         }

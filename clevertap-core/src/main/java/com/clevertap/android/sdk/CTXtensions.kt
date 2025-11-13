@@ -139,13 +139,14 @@ fun NotificationManager.getOrCreateChannel(
  */
 @MainThread
 fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: String, context: Context) {
-    val flushTask = CTExecutorFactory.executors(coreState.config).postAsyncSafelyTask<Void?>()
+    val ctConfig = coreState.core.config
+    val flushTask = CTExecutorFactory.executors(ctConfig).postAsyncSafelyTask<Void?>()
 
     val flushFutureResult = flushTask.submit(logTag) {
         try {
-            coreState.baseEventQueueManager.flushQueueSync(context, PUSH_NOTIFICATION_VIEWED, caller)
+            coreState.analytics.baseEventQueueManager.flushQueueSync(context, PUSH_NOTIFICATION_VIEWED, caller)
         } catch (e: Exception) {
-            Logger.d(logTag, "failed to flush push impressions on ct instance = " + coreState.config.accountId)
+            Logger.d(logTag, "failed to flush push impressions on ct instance = " + ctConfig.accountId)
         }
         null
     }

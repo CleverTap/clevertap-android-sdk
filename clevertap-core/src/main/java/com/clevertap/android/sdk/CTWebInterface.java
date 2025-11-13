@@ -28,7 +28,7 @@ public class CTWebInterface {
         if (cleverTapAPI != null) {
             CoreState coreState = cleverTapAPI.getCoreState();
             if (coreState != null) {
-                coreState.getCoreMetaData().setWebInterfaceInitializedExternally(true);
+                coreState.getCore().getCoreMetaData().setWebInterfaceInitializedExternally(true);
             }
         }
     }

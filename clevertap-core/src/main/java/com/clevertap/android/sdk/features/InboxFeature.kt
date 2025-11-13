@@ -31,7 +31,7 @@ import org.json.JSONObject
  *                    Defaults to using [Utils.runOnUiThread].
  */
 internal class InboxFeature(
-    val mainPost: (() -> Unit) -> Unit = { func -> Utils.runOnUiThread { func } }
+    private val mainPost: (() -> Unit) -> Unit = { func -> Utils.runOnUiThread { func } }
 ) : CleverTapFeature, InboxLiveCallbacks {
     
     var ctInboxController: CTInboxController? = null

@@ -134,7 +134,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             if (cleverTapAPI != null) {
                 try {
-                    this.config = cleverTapAPI.getCoreState().getConfig();
+                    this.config = cleverTapAPI.getCoreState().getCore().getConfig();
                     Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
                     task.execute("PushTemplateReceiver#renderNotification", new Callable<Void>() {
                         @Override
