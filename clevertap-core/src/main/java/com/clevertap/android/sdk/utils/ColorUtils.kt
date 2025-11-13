@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.utils
 
-import android.graphics.Color as GraphicColor
+import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
 
@@ -18,11 +18,11 @@ import androidx.core.graphics.toColorInt
  * ```
  *
  * @receiver The color string to parse (e.g., "#FFFFFF", "#80FF0000").
- * @param defaultColor The fallback color if parsing fails (default is [GraphicColor.WHITE]).
+ * @param defaultColor The fallback color if parsing fails (default is [Color.WHITE]).
  * @return The parsed color integer or [defaultColor] if parsing fails.
  */
 @ColorInt
-fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = GraphicColor.WHITE): Int {
+fun String?.toColorIntOrDefault(@ColorInt defaultColor: Int = Color.WHITE): Int {
     // If the string is null or empty, return the default color immediately
     if (this.isNullOrBlank()) return defaultColor
 
@@ -73,7 +73,7 @@ fun String?.toValidColorOrFallback(fallback: String): String {
  *
  * This utility provides two overloads:
  * - [parseColor(colorString, defaultColor)] → returns the parsed color or a provided fallback color.
- * - [parseColor(colorString)] → same as above but defaults to [Color.WHITE] on failure.
+ * - [parseColor(colorString)] → same as above but defaults to WHITE on failure.
  *
  * Supported formats:
  * ```
@@ -94,14 +94,19 @@ object Color {
      * Safely parses a color string into a color integer.
      *
      * @param colorString The color string to parse (e.g. "#FFFFFF", "#AARRGGBB").
-     * @param defaultColor The fallback color if parsing fails.
-     * @return The parsed color integer, or [defaultColor] if invalid or null.
+     * @param defaultColor The fallback color as a string (e.g. "#000000").
+     * @return The parsed color integer, or parsed defaultColor if invalid.
      */
     @ColorInt
-    fun parseColor(colorString: String?, @ColorInt defaultColor: Int): Int {
-        // Return default color if the string is null or blank
+    fun parseColor(colorString: String?, defaultColor: String): Int {
+        // Return parsed default color if the string is null or blank
         if (colorString.isNullOrBlank()) {
-            return defaultColor
+            return try {
+                defaultColor.toColorInt()
+            } catch (e: Exception) {
+                // Fallback to black if default color is also invalid
+                Color.WHITE
+            }
         }
 
         return try {
@@ -109,21 +114,29 @@ object Color {
             colorString.toColorInt()
         } catch (e: IllegalArgumentException) {
             // Thrown if the string is not a valid color format
-            defaultColor
+            try {
+                defaultColor.toColorInt()
+            } catch (e: Exception) {
+                Color.WHITE
+            }
         } catch (e: StringIndexOutOfBoundsException) {
             // Thrown if the string is malformed (e.g. incomplete hex)
-            defaultColor
+            try {
+                defaultColor.toColorInt()
+            } catch (e: Exception) {
+                Color.WHITE
+            }
         }
     }
 
     /**
-     * Parses a color string, defaulting to [GraphicColor.WHITE] if parsing fails.
+     * Parses a color string, defaulting to WHITE(#FFFFFF) if parsing fails.
      *
      * @param colorString The color string to parse.
-     * @return The parsed color integer, or [GraphicColor.WHITE] if invalid or null.
+     * @return The parsed color integer, or WHITE(#FFFFFF) if invalid or null.
      */
     @ColorInt
     fun parseColor(colorString: String?): Int {
-        return parseColor(colorString, GraphicColor.WHITE)
+        return parseColor(colorString, "#FFFFFF")
     }
 }
