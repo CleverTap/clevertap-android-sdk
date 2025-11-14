@@ -190,13 +190,6 @@ internal class InAppResponseAdapter(
             INAPP_DEFAULT_DELAY_SECONDS
         }
     }
-
-    /**
-     * Function to check if an in-app has a valid delay
-     * @param inApp JSONObject representing the in-app notification
-     * @return true if the in-app has a valid delay (1-1200 seconds)
-     */
-    private fun hasValidDelay(inApp: JSONObject): Boolean = getValidatedInAppDelay(inApp) > INAPP_DEFAULT_DELAY_SECONDS
 }
 
 enum class CtCacheType {

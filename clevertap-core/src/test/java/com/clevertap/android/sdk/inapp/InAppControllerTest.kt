@@ -19,7 +19,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
-import com.clevertap.android.sdk.inapp.delay.InAppDelayManagerV2
+import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.network.NetworkManager
@@ -48,7 +48,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class InAppControllerTest {
 
-    private lateinit var mockInAppDelayManager: InAppDelayManagerV2
+    private lateinit var mockInAppDelayManager: InAppDelayManager
     private lateinit var mockControllerManager: ControllerManager
     private lateinit var mockInAppFCManager: InAppFCManager
     private lateinit var mockCallbackManager: CallbackManager
@@ -122,7 +122,7 @@ class InAppControllerTest {
             )
         }
 
-        mockInAppDelayManager = mockk<InAppDelayManagerV2>()
+        mockInAppDelayManager = mockk<InAppDelayManager>()
         fakeInAppQueue = FakeInAppQueue()
     }
 
@@ -762,7 +762,7 @@ class InAppControllerTest {
             templatesManager = mockTemplatesManager,
             inAppActionHandler = mockInAppActionHandler,
             inAppNotificationInflater = mockInAppInflater,
-            inAppDelayManagerV2 = mockInAppDelayManager,
+            inAppDelayManager = mockInAppDelayManager,
             clock = fakeClock
         )
     }

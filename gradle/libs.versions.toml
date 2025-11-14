@@ -117,7 +117,7 @@ test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonas
 test_mockk = { module = "io.mockk:mockk", version.ref="mockk"}
 test_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines_test"}
 test_hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
-androidx-lifecycle-runtime-testing = { module = "androidx.lifecycle:lifecycle-runtime-testing", version.ref = "lifecycleRuntimeTesting" }
+androidx_lifecycle_runtime_testing = { module = "androidx.lifecycle:lifecycle-runtime-testing", version.ref = "lifecycleRuntimeTesting" }
 
 #Kotlin Stdlib
 kotlin_stdlib_jdk7 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk7", version.ref = "kotlin_stdlib_jdk7" }

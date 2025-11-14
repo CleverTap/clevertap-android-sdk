@@ -70,14 +70,16 @@ internal class EvaluationManager(
      * additional properties associated with the event, and the user's location.
      *
      * This method creates an [EventAdapter] instance representing the specified event with the provided details,
-     * evaluates the event against server-side, and then proceeds to evaluate it client-side.
+     * evaluates the event against server-side, and then proceeds to evaluate it client-side for both
+     * immediate and delayed in-app notifications.
      *
      * @param eventName The name of the event triggering the in-app notification evaluation.
      * @param eventProperties Additional properties associated with the event, provided as a map.
      * @param userLocation The location of the user triggering the event, if available.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
-     *         This array includes in-app notifications that meet the criteria for display.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
     fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {
         val event = listOf(EventAdapter(eventName, eventProperties, userLocation = userLocation))
@@ -90,13 +92,16 @@ internal class EvaluationManager(
      * a list of items associated with the event, and the user's location.
      *
      * This method creates an [EventAdapter] instance representing the charged event with the provided details,
-     * and then proceeds to evaluate the event against both the server-side and client-side.
+     * and then proceeds to evaluate the event against both server-side and client-side for immediate
+     * and delayed in-app notifications.
      *
      * @param details A map containing additional details about the charged event.
      * @param items A list of maps representing items associated with the charged event.
      * @param userLocation The location of the user triggering the charged event, if available.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
     fun evaluateOnChargedEvent(
         details: Map<String, Any>,
@@ -110,19 +115,24 @@ internal class EvaluationManager(
 
 
     /**
-     * Evaluates in-app notifications based on a profile event that corresponds to any profile attribute changes, incorporating the event name,
-     * additional properties associated with the event, the user's location and the profile attribute name.
-     * The key of an eventProperty is the profile attribute name that has been invoked in the profile event.
+     * Evaluates in-app notifications based on a profile event that corresponds to any profile attribute changes,
+     * incorporating the event name, additional properties associated with the event, the user's location,
+     * and the profile attribute name.
      *
-     * This method creates an [EventAdapter] instance representing each user attribute with the provided details,
-     * evaluates the event against server-side, and then proceeds to evaluate it client-side.
+     * This method creates an [EventAdapter] instance for each user attribute with the provided details,
+     * evaluates the events against server-side, and then proceeds to evaluate them client-side for both
+     * immediate and delayed in-app notifications.
+     *
+     * Note: The key of an eventProperty is the profile attribute name that has been invoked in the profile event.
      *
      * @param eventProperties Additional properties associated with the event, provided as a map.
+     *                        The outer map key is the profile attribute name.
      * @param userLocation The location of the user triggering the event, if available.
      * @param appFields Additional system properties for the event required for evaluation.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
-     *         This array includes in-app notifications that meet the criteria for display.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
     fun evaluateOnUserAttributeChange(
         eventProperties: Map<String, Map<String, Any>>,
@@ -150,13 +160,15 @@ internal class EvaluationManager(
      * incorporating properties associated with the event and the user's location.
      *
      * This method creates an [EventAdapter] instance representing the "App Launched" event
-     * with the provided event properties, and then proceeds to evaluate the event against the client-side.
+     * with the provided event properties, and then proceeds to evaluate the event against client-side
+     * in-app notifications for both immediate and delayed display.
      *
      * @param eventProperties Additional properties associated with the "App Launched" event, provided as a map.
      * @param userLocation The location of the user during the app launch, if available.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
-     *         This array includes in-app notifications that meet the criteria for display.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1000 seconds) to be scheduled
      */
     // onBatchSent with App Launched event in batch
     fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {

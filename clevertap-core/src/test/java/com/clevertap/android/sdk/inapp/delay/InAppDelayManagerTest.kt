@@ -24,6 +24,7 @@ import org.junit.runner.Description
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -43,12 +44,12 @@ class MainDispatcherRule(
 }
 
 @ExperimentalCoroutinesApi
-class InAppDelayManagerV2Test {
+class InAppDelayManagerTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var delayManager: InAppDelayManagerV2
+    private lateinit var delayManager: InAppDelayManager
     private lateinit var mockLogger: Logger
     private lateinit var mockStore: DelayedLegacyInAppStore
     private lateinit var testClock: TestClock
@@ -78,8 +79,8 @@ class InAppDelayManagerV2Test {
     private fun createDelayManager(
         store: DelayedLegacyInAppStore? = mockStore,
         clock: Clock = testClock,
-    ): InAppDelayManagerV2 {
-        return InAppDelayManagerV2(
+    ): InAppDelayManager {
+        return InAppDelayManager(
             accountId = accountId,
             logger = mockLogger,
             delayedLegacyInAppStore = store,
@@ -1517,9 +1518,4 @@ class InAppDelayManagerV2Test {
 
         destoryApp()
     }
-}
-
-// Helper extension to assert null
-private fun assertNull(value: Any?) {
-    assert(value == null) { "Expected null but was: $value" }
 }

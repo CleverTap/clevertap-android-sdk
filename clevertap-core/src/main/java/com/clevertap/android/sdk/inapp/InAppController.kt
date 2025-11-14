@@ -40,7 +40,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter
 import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
-import com.clevertap.android.sdk.inapp.delay.InAppDelayManagerV2
+import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
@@ -72,7 +72,7 @@ internal class InAppController(
     private val templatesManager: TemplatesManager,
     private val inAppActionHandler: InAppActionHandler,
     private val inAppNotificationInflater: InAppNotificationInflater,
-    private val inAppDelayManagerV2: InAppDelayManagerV2,
+    private val inAppDelayManager: InAppDelayManager,
     private val clock: Clock
 ) : InAppListener {
 
@@ -128,7 +128,7 @@ internal class InAppController(
             "InAppController: Scheduling ${delayedInApps.length()} delayed in-apps"
         )
 
-        inAppDelayManagerV2.scheduleDelayedInApps(delayedInApps) { result ->
+        inAppDelayManager.scheduleDelayedInApps(delayedInApps) { result ->
             when (result) {
                 is DelayedInAppResult.Success -> {
                     logger.verbose(
@@ -163,7 +163,7 @@ internal class InAppController(
      * Get count of currently active delayed in-apps
      */
     fun getActiveDelayedInAppsCount(): Int {
-        return inAppDelayManagerV2.getActiveCallbackCount()
+        return inAppDelayManager.getActiveCallbackCount()
     }
 
     fun promptPushPrimer(jsonObject: JSONObject) {

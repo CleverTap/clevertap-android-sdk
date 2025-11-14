@@ -37,9 +37,6 @@ sealed interface DelayedInAppResult {
         enum class ErrorReason(val message: String) {
             NOT_FOUND_IN_DB("Delayed in-app not found in database"),
             STORE_NOT_INITIALIZED("DelayedLegacyInAppStore is not initialized"),
-            INVALID_JSON("Retrieved data is not a valid JSONObject"),
-            CANCELLED("Delayed in-app callback was cancelled"),
-            EMPTY_INAPP_ID("InApp ID is empty or invalid"),
             DB_SAVE_FAILED("Failed to save delayed in-app to database"),
             UNKNOWN("Unknown error occurred");
 

@@ -22,7 +22,7 @@ import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
-import com.clevertap.android.sdk.inapp.delay.InAppDelayManagerV2
+import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
@@ -103,7 +103,7 @@ internal object CleverTapFactory {
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
-        val inAppDelayManagerV2 = InAppDelayManagerV2(accountId, config.logger)
+        val inAppDelayManager = InAppDelayManager(accountId, config.logger)
 
         val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
@@ -153,7 +153,7 @@ internal object CleverTapFactory {
         }
         val inAppDaoLoaderTask = executors.postAsyncSafelyTask<Unit>()
         inAppDaoLoaderTask.execute("loadInAppsDao") {
-            inAppDelayManagerV2.delayedLegacyInAppStore = DelayedLegacyInAppStore(
+            inAppDelayManager.delayedLegacyInAppStore = DelayedLegacyInAppStore(
                 databaseManager.loadDBAdapter(context).delayedLegacyInAppDAO(),
                 cryptHandler,
                 config.logger,
@@ -444,7 +444,7 @@ internal object CleverTapFactory {
             templatesManager,
             inAppActionHandler,
             inAppNotificationInflater,
-            inAppDelayManagerV2,
+            inAppDelayManager,
             SYSTEM
         )
         controllerManager.inAppController = inAppController

@@ -15,7 +15,6 @@ import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.filterObjects
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class InAppDelayManagerV2(
+internal class InAppDelayManager(
     private val accountId: String,
     private val logger: Logger,
     internal var delayedLegacyInAppStore: DelayedLegacyInAppStore? = null,
