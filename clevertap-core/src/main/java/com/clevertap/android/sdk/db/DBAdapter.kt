@@ -44,6 +44,8 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
 
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
+    @Volatile
+    private var delayedLegacyInAppDao: DelayedLegacyInAppDAO? = null
     private val logger = config.logger
 
     private val dbHelper: DatabaseHelper = DatabaseHelper(context, config, getDatabaseName(config), logger)
@@ -726,6 +728,14 @@ internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
                 USER_EVENT_LOGS_TABLE
             ).also { userEventLogDao = it }
 
+        }
+    }
+    @WorkerThread
+    fun delayedLegacyInAppDAO(): DelayedLegacyInAppDAO {
+        return delayedLegacyInAppDao ?: synchronized(this) {
+            delayedLegacyInAppDao ?: DelayedLegacyInAppDAOImpl(
+                dbHelper, logger, Table.DELAYED_LEGACY_INAPPS
+            ).also { delayedLegacyInAppDao = it }
         }
     }
 

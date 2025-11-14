@@ -8,6 +8,8 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
@@ -49,6 +51,10 @@ internal class EvaluationManager(
     private val templatesManager: TemplatesManager
 ) : NetworkHeadersListener {
 
+    companion object {
+        private val TAG = EvaluationManager::class.java.simpleName
+    }
+
     // Internal list to track server-side evaluated campaign IDs. This map is used to identify the evaluatedIDs for raised and profile events together.
     @VisibleForTesting
     internal var evaluatedServerSideCampaignIds: MutableList<Long> = ArrayList()
@@ -64,19 +70,21 @@ internal class EvaluationManager(
      * additional properties associated with the event, and the user's location.
      *
      * This method creates an [EventAdapter] instance representing the specified event with the provided details,
-     * evaluates the event against server-side, and then proceeds to evaluate it client-side.
+     * evaluates the event against server-side, and then proceeds to evaluate it client-side for both
+     * immediate and delayed in-app notifications.
      *
      * @param eventName The name of the event triggering the in-app notification evaluation.
      * @param eventProperties Additional properties associated with the event, provided as a map.
      * @param userLocation The location of the user triggering the event, if available.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
-     *         This array includes in-app notifications that meet the criteria for display.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
-    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
+    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {
         val event = listOf(EventAdapter(eventName, eventProperties, userLocation = userLocation))
         evaluateServerSide(event)
-        return evaluateClientSide(event)
+        return Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
     }
 
     /**
@@ -84,45 +92,53 @@ internal class EvaluationManager(
      * a list of items associated with the event, and the user's location.
      *
      * This method creates an [EventAdapter] instance representing the charged event with the provided details,
-     * and then proceeds to evaluate the event against both the server-side and client-side.
+     * and then proceeds to evaluate the event against both server-side and client-side for immediate
+     * and delayed in-app notifications.
      *
      * @param details A map containing additional details about the charged event.
      * @param items A list of maps representing items associated with the charged event.
      * @param userLocation The location of the user triggering the charged event, if available.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
     fun evaluateOnChargedEvent(
         details: Map<String, Any>,
         items: List<Map<String, Any>>,
         userLocation: Location?
-    ): JSONArray {
+    ): Pair<JSONArray,JSONArray> {
         val event = listOf(EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation))
         evaluateServerSide(event)
-        return evaluateClientSide(event)
+        return  Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
     }
 
 
     /**
-     * Evaluates in-app notifications based on a profile event that corresponds to any profile attribute changes, incorporating the event name,
-     * additional properties associated with the event, the user's location and the profile attribute name.
-     * The key of an eventProperty is the profile attribute name that has been invoked in the profile event.
+     * Evaluates in-app notifications based on a profile event that corresponds to any profile attribute changes,
+     * incorporating the event name, additional properties associated with the event, the user's location,
+     * and the profile attribute name.
      *
-     * This method creates an [EventAdapter] instance representing each user attribute with the provided details,
-     * evaluates the event against server-side, and then proceeds to evaluate it client-side.
+     * This method creates an [EventAdapter] instance for each user attribute with the provided details,
+     * evaluates the events against server-side, and then proceeds to evaluate them client-side for both
+     * immediate and delayed in-app notifications.
+     *
+     * Note: The key of an eventProperty is the profile attribute name that has been invoked in the profile event.
      *
      * @param eventProperties Additional properties associated with the event, provided as a map.
+     *                        The outer map key is the profile attribute name.
      * @param userLocation The location of the user triggering the event, if available.
      * @param appFields Additional system properties for the event required for evaluation.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
-     *         This array includes in-app notifications that meet the criteria for display.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
     fun evaluateOnUserAttributeChange(
         eventProperties: Map<String, Map<String, Any>>,
         userLocation: Location?,
         appFields: Map<String, Any>
-    ): JSONArray {
+    ): Pair<JSONArray,JSONArray> {
         val eventAdapterList = eventProperties.map { eventProperty ->
             val mergedEventProperties = eventProperty.value.toMutableMap().apply {
                 putAll(appFields)
@@ -135,7 +151,7 @@ internal class EvaluationManager(
             )
         }
         evaluateServerSide(eventAdapterList)
-        return evaluateClientSide(eventAdapterList)
+        return Pair(evaluateClientSide(eventAdapterList),evaluateDelayedClientSide(eventAdapterList))
     }
 
 
@@ -144,18 +160,20 @@ internal class EvaluationManager(
      * incorporating properties associated with the event and the user's location.
      *
      * This method creates an [EventAdapter] instance representing the "App Launched" event
-     * with the provided event properties, and then proceeds to evaluate the event against the client-side.
+     * with the provided event properties, and then proceeds to evaluate the event against client-side
+     * in-app notifications for both immediate and delayed display.
      *
      * @param eventProperties Additional properties associated with the "App Launched" event, provided as a map.
      * @param userLocation The location of the user during the app launch, if available.
      *
-     * @return A JSONArray containing the evaluated in-app notifications for client-side rendering.
-     *         This array includes in-app notifications that meet the criteria for display.
+     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
+     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
+     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1000 seconds) to be scheduled
      */
     // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): JSONArray {
+    fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {
         val event = listOf(EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation))
-        return evaluateClientSide(event)
+        return Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
     }
 
     /**
@@ -178,27 +196,28 @@ internal class EvaluationManager(
         eventProperties: Map<String, Any>,
         userLocation: Location?
     ): JSONArray {
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
+        return executeServerSideAppLaunchEvaluationFlow(
+            appLaunchedNotifs,
+            eventProperties,
+            userLocation,
+            InAppSelectionStrategy.Immediate
+        )
+    }
 
-        val eligibleInApps = evaluate(event, appLaunchedNotifs)
-
-        var updated = false
-        sortByPriority(eligibleInApps).forEach { inApp ->
-            if (!shouldSuppress(inApp)) {
-                if (updated) {
-                    saveSuppressedClientSideInAppIds()
-                } // save before returning
-                return JSONArray().also { it.put(inApp) }
-            } else {
-                updated = true
-                suppress(inApp)
-            }
-        }
-        // save before returning
-        if (updated) {
-            saveSuppressedClientSideInAppIds()
-        }
-        return JSONArray()
+    /**
+     * Evaluates server-side in-apps for the "App Launched" event (delayed display).
+     */
+    fun evaluateOnAppLaunchedDelayedServerSide(
+        appLaunchedDelayedNotifs: List<JSONObject>,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?
+    ): JSONArray {
+        return executeServerSideAppLaunchEvaluationFlow(
+            appLaunchedDelayedNotifs,
+            eventProperties,
+            userLocation,
+            InAppSelectionStrategy.Delayed
+        )
     }
 
     fun matchWhenLimitsBeforeDisplay(listOfLimitAdapter: List<LimitAdapter>, campaignId: String): Boolean {
@@ -257,45 +276,21 @@ internal class EvaluationManager(
      */
     @VisibleForTesting
     internal fun evaluateClientSide(events: List<EventAdapter>): JSONArray {
-        // Flag to track if the list of suppressed client-side in-app IDs has been updated.
-        var updated = false
-        // Access the in-app store from the store registry.
-        val eligibleInApps = mutableListOf<JSONObject>()
-        storeRegistry.inAppStore?.let { store ->
-            events.forEach { event ->
-                // Only for CS In-Apps check if oldValue != newValue for userAttribute events
-                val oldValue = event.eventProperties[Constants.KEY_OLD_VALUE]
-                val newValue = event.eventProperties[Constants.KEY_NEW_VALUE]
-                if (newValue == null || newValue !=  oldValue)
-                    eligibleInApps.addAll(evaluate(event, store.readClientSideInApps().toList()))
-            }
+        return executeClientSideEvaluationFlow(
+            events,
+            InAppSelectionStrategy.Immediate
+        ) { store -> store.readClientSideInApps().toList() }
+    }
 
-            // Sort eligible client-side in-app notifications by priority.
-            sortByPriority(eligibleInApps).forEach { inApp ->
-                // Check if the in-app notification should not be suppressed.
-                if (!shouldSuppress(inApp)) {
-                    // Save suppressed client-side in-app IDs before returning if there were updates.
-                    if (updated) {
-                        saveSuppressedClientSideInAppIds()
-                    } // save before returning
-
-                    // Update the Time to Live (TTL) for the in-app notification.
-                    updateTTL(inApp)
-                    // Return a JSONArray containing the current in-app notification.
-                    return JSONArray().also { it.put(inApp) }
-                } else {
-                    // Update the flag, suppress the in-app, and continue processing.
-                    updated = true
-                    suppress(inApp)
-                }
-            }
-            // Save suppressed client-side in-app IDs before returning if there were updates.
-            if (updated) {
-                saveSuppressedClientSideInAppIds()
-            } // save before returning
-
-            // Return an empty JSONArray if no eligible in-app notifications are displayed.
-        }.run { return JSONArray() }
+    /**
+     * Evaluates client-side in-apps for delayed display.
+     */
+    @VisibleForTesting
+    internal fun evaluateDelayedClientSide(events: List<EventAdapter>): JSONArray {
+        return executeClientSideEvaluationFlow(
+            events,
+            InAppSelectionStrategy.Delayed
+        ) { store -> store.readClientSideDelayedInApps().toList() }
     }
 
     /**
@@ -351,6 +346,116 @@ internal class EvaluationManager(
             }
         }
         return eligibleInApps
+    }
+
+    @VisibleForTesting
+    internal fun selectAndProcessEligibleInApps(
+        eligibleInApps: List<JSONObject>,
+        strategy: InAppSelectionStrategy,
+        shouldUpdateTTLForThisContext: Boolean = true
+    ): JSONArray {
+        // STEP 1: Sort eligible in-apps by priority (highest first) and then by timestamp (earliest first)
+        val sortedInApps = sortByPriority(eligibleInApps)
+
+        // STEP 2: Track suppression updates
+        var updated = false
+
+        // STEP 3: Strategy-specific selection
+        val selectedInApps = strategy.selectInApps(sortedInApps) { inApp ->
+            val isSuppressed = shouldSuppress(inApp)
+            if (isSuppressed) {
+                updated = true
+                suppress(inApp)
+                Logger.v(
+                    TAG,
+                    "Suppressed in-app: ${inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)}"
+                )
+            }
+            isSuppressed
+        }
+
+        // STEP 4: Strategy-specific TTL update (only if context allows)
+        if (shouldUpdateTTLForThisContext && strategy.shouldUpdateTTL()) {
+            selectedInApps.forEach { inApp ->
+                updateTTL(inApp)
+                Logger.v(
+                    TAG,
+                    "Updated TTL for in-app: ${inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)}"
+                )
+            }
+        }
+
+        // STEP 5: Persist suppression state if changed
+        if (updated) {
+            saveSuppressedClientSideInAppIds()
+        }
+
+        // STEP 6: Build and return result
+        if (selectedInApps.isNotEmpty()) {
+            return JSONArray().also { array ->
+                selectedInApps.forEach { array.put(it) }
+            }
+        }
+
+        return JSONArray()
+    }
+
+    @VisibleForTesting
+    internal fun executeClientSideEvaluationFlow(
+        events: List<EventAdapter>,
+        strategy: InAppSelectionStrategy,
+        readInAppsFromStore: (InAppStore) -> List<JSONObject>
+    ): JSONArray {
+        val eligibleInApps = mutableListOf<JSONObject>()
+
+        storeRegistry.inAppStore?.let { store ->
+            // STEP 1: Event evaluation and filtering
+            events.forEach { event ->
+                // Only evaluate if value actually changed (for user attribute events)
+                val oldValue = event.eventProperties[Constants.KEY_OLD_VALUE]
+                val newValue = event.eventProperties[Constants.KEY_NEW_VALUE]
+
+                if (newValue == null || newValue != oldValue) {
+                    eligibleInApps.addAll(
+                        evaluate(event, readInAppsFromStore(store))
+                    )
+                }
+            }
+
+            // STEP 2: Delegate to unified evaluation engine
+            return selectAndProcessEligibleInApps(
+                eligibleInApps,
+                strategy,
+                shouldUpdateTTLForThisContext = true // CS context allows TTL updates
+            )
+        }.run {
+            return JSONArray()
+        }
+    }
+
+    @VisibleForTesting
+    internal fun executeServerSideAppLaunchEvaluationFlow(
+        appLaunchedNotifs: List<JSONObject>,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?,
+        strategy: InAppSelectionStrategy
+    ): JSONArray {
+        // STEP 1: Create App Launched event adapter
+        val event = EventAdapter(
+            Constants.APP_LAUNCHED_EVENT,
+            eventProperties,
+            userLocation = userLocation
+        )
+
+        // STEP 2: Evaluate in-apps against the event
+        val eligibleInApps = evaluate(event, appLaunchedNotifs)
+
+        // STEP 3: Delegate to unified evaluation engine
+        return selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = false // SS context: TTL updated at display time
+        )
     }
 
     @VisibleForTesting
@@ -427,7 +532,6 @@ internal class EvaluationManager(
         return "${ti}_$date"
     }
 
-    @VisibleForTesting
     internal fun updateTTL(inApp: JSONObject, clock: Clock = Clock.SYSTEM) {
         val offset = inApp.opt(Constants.WZRK_TIME_TO_LIVE_OFFSET) as? Long
         if (offset != null) {
@@ -551,5 +655,98 @@ internal class EvaluationManager(
         storeRegistry.inAppStore?.storeSuppressedClientSideInAppIds(
             JsonUtil.listToJsonArray(suppressedClientSideInApps)
         )
+    }
+}
+
+/**
+ * Unified strategy interface for in-app evaluation.
+ * Supports both client-side and app launch server-side evaluations with immediate or delayed display.
+ */
+internal sealed interface InAppSelectionStrategy {
+    /**
+     * Selects eligible in-apps based on strategy-specific logic.
+     * This is the core differentiator between Immediate and Delayed strategies.
+     *
+     * @param sortedInApps List of in-apps already sorted by priority (highest first)
+     * @param suppressionHandler Handler that checks and applies suppression, returns true if suppressed
+     * @return List of selected in-apps for display/scheduling
+     */
+    fun selectInApps(
+        sortedInApps: List<JSONObject>,
+        suppressionHandler: (JSONObject) -> Boolean
+    ): List<JSONObject>
+
+    /**
+     * Determines whether TTL should be updated during evaluation.
+     * @return true if TTL should be updated now, false if deferred to display time
+     */
+    fun shouldUpdateTTL(): Boolean
+
+    /**
+     * Strategy for immediate in-app evaluation and display.
+     * - Updates TTL at evaluation time (for client-side only)
+     * - Returns only the first non-suppressed in-app
+     * - Used for both client-side and app launch server-side immediate in-apps
+     */
+    data object Immediate : InAppSelectionStrategy {
+        override fun shouldUpdateTTL(): Boolean = true
+
+        override fun selectInApps(
+            sortedInApps: List<JSONObject>,
+            suppressionHandler: (JSONObject) -> Boolean
+        ): List<JSONObject> {
+            for (inApp in sortedInApps) {
+                if (!suppressionHandler(inApp)) {
+                    return listOf(inApp)
+                }
+            }
+            return emptyList()
+        }
+    }
+
+    /**
+     * Strategy for delayed in-app evaluation and scheduling.
+     * - Defers TTL update to display time
+     * - Groups in-apps by delay value
+     * - Returns one in-app per delay group for concurrent scheduling
+     * - Used for both client-side and app launch server-side delayed in-apps
+     */
+    data object Delayed : InAppSelectionStrategy {
+        private val TAG = "DelayedInAppSelectionStrategy"
+        override fun shouldUpdateTTL(): Boolean = false
+
+        override fun selectInApps(
+            sortedInApps: List<JSONObject>,
+            suppressionHandler: (JSONObject) -> Boolean
+        ): List<JSONObject> {
+            // Group by delay value
+            val delayedInAppsByDelay = sortedInApps.groupBy {
+                it.optInt(INAPP_DELAY_AFTER_TRIGGER, 0)
+            }
+
+            val selectedInApps = mutableListOf<JSONObject>()
+
+            // For each delay group, select first non-suppressed in-app
+            delayedInAppsByDelay.forEach { (delay, inAppsWithSameDelay) ->
+                Logger.v(
+                    TAG,
+                    "Processing ${inAppsWithSameDelay.size} in-apps with delay: ${delay}s"
+                )
+
+                val selectedInApp = inAppsWithSameDelay.firstOrNull { inApp ->
+                    !suppressionHandler(inApp)
+                }
+
+                selectedInApp?.let { inApp ->
+                    selectedInApps.add(inApp)
+                    Logger.v(
+                        TAG,
+                        "Selected in-app for delay ${delay}s: ${inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)}"
+                    )
+                }
+            }
+
+            return selectedInApps
+        }
     }
 }

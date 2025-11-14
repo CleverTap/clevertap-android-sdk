@@ -48,6 +48,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.installreferrer)
     implementation(libs.androidx.work.runtime)
 
@@ -58,6 +59,7 @@ dependencies {
     testImplementation(project(":test_shared"))
     testImplementation(libs.firebase.messaging)
     testImplementation(libs.test.coroutines)
+    testImplementation(libs.androidx.lifecycle.runtime.testing)
 }
 
 sonarqube {

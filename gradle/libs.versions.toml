@@ -21,6 +21,7 @@ fragment = "1.5.4"
 recyclerview = "1.3.2"
 viewpager = "1.0.0"
 work_runtime = "2.10.2"
+lifecycleProcess = "2.9.4"
 
 #UI
 material = "1.12.0"
@@ -40,6 +41,7 @@ jsonassert = "1.5.0"
 mockk = "1.14.2"
 coroutines_test = "1.7.3"
 hamcrest = "3.0"
+lifecycleRuntimeTesting = "2.9.4"
 
 #Install Referrer
 installreferrer = "2.2"
@@ -97,6 +99,7 @@ androidx_fragment = { module = "androidx.fragment:fragment", version.ref = "frag
 androidx_recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 androidx_viewpager = { module = "androidx.viewpager:viewpager", version.ref = "viewpager" }
 androidx_work_runtime = { module = "androidx.work:work-runtime", version.ref = "work_runtime" }
+androidx_lifecycle_process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }
 
 #UI
 android_material = { module = "com.google.android.material:material", version.ref = "material" }
@@ -115,6 +118,7 @@ test_jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonas
 test_mockk = { module = "io.mockk:mockk", version.ref="mockk"}
 test_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines_test"}
 test_hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
+androidx_lifecycle_runtime_testing = { module = "androidx.lifecycle:lifecycle-runtime-testing", version.ref = "lifecycleRuntimeTesting" }
 
 #Kotlin Stdlib
 kotlin_stdlib_jdk7 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk7", version.ref = "kotlin_stdlib_jdk7" }
