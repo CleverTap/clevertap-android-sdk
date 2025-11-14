@@ -383,7 +383,7 @@ internal open class CoreState(
                 variables.reset()
                 analytics.analyticsManager.forcePushAppLaunchedEvent()
                 if (profile != null) {
-                    analytics.analyticsManager.pushProfile(profile)
+                    analytics.pushProfile(profile)
                 }
                 push.pushProviders.forcePushDeviceToken(true)
                 inbox.reset()
@@ -475,7 +475,7 @@ internal open class CoreState(
                         accountId,
                         "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile"
                     )
-                    analytics.analyticsManager.pushProfile(profile)
+                    analytics.pushProfile(profile)
                     return
                 }
             }
@@ -487,7 +487,7 @@ internal open class CoreState(
                     ("onUserLogin: " + profile + " maps to current device id " + currentGUID
                             + " pushing on current profile")
                 )
-                analytics.analyticsManager.pushProfile(profile)
+                analytics.pushProfile(profile)
                 return
             }
 
