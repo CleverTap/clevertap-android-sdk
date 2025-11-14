@@ -29,7 +29,6 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -43,13 +42,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.JsonTemplatesProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
-import com.clevertap.android.sdk.inapp.data.CtCacheType;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
-import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
-import com.clevertap.android.sdk.inbox.CTMessageDAO;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
@@ -69,13 +63,11 @@ import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,7 +77,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -162,10 +153,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CoreState coreState;
 
     private static Clock clevertapClock = Clock.SYSTEM;
-
-    private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
-
-    private WeakReference<InboxMessageListener> inboxMessageListener;
 
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
@@ -3128,7 +3115,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return Returns the Var instance.
      */
     public <T> Var<T> defineVariable(String name, T defaultValue) {
-        return Var.define(name, defaultValue,coreState.getVariables().getCTVariables());
+        return coreState.getVariables().defineVariable(name, defaultValue);
     }
 
     /**
@@ -3138,7 +3125,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return Returns the Var instance.
      */
     public Var<String> defineFileVariable(String name) {
-        return Var.define(name, null , CTVariableUtils.FILE, coreState.getVariables().getCTVariables());
+        return coreState.getVariables().defineFileVariable(name);
     }
 
     /**
@@ -3147,7 +3134,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param instances Instance or instances to parse.
      */
     public void parseVariables(Object... instances) {
-        coreState.getVariables().getParser().parseVariables(instances);
+        coreState.getVariables().parseVariables(instances);
     }
 
     /**
@@ -3157,7 +3144,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @noinspection unused
      */
     public void parseVariablesForClasses(Class<?>... classes) {
-        coreState.getVariables().getParser().parseVariablesForClasses(classes);
+        coreState.getVariables().parseVariablesForClasses(classes);
     }
 
     /**
@@ -3166,11 +3153,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param name The name of the variable or the group.
      * @return The value of the variable or the group.
      */
+    @Nullable
     public Object getVariableValue(String name) {
-        if (name == null) {
-            return null;
-        }
-        return coreState.getVariables().getVarCache().getMergedValue(name);
+        return coreState.getVariables().getVariableValue(name);
     }
 
     /**
@@ -3183,7 +3168,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (name == null) {
             return null;
         }
-        return coreState.getVariables().getVarCache().getVariable(name);
+        return coreState.getVariables().getVariable(name);
     }
 
     /**
@@ -3203,22 +3188,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getInApp().fetchInApps(callback);
     }
 
-    @NonNull
-    public static JSONObject getFetchRequestAsJson(int fetchType) {
-        // todo remove me, use AnalyticsFeature.fetchRequestAsJson
-        JSONObject event = new JSONObject();
-        JSONObject notif = new JSONObject();
-        try {
-            notif.put(Constants.KEY_T, fetchType);
-            event.put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH);
-            event.put(Constants.KEY_EVT_DATA, notif);
-        } catch (JSONException e) {
-            Logger.v(Constants.CLEVERTAP_LOG_TAG,
-                    "Failed while parsing fetch request as json:", e);
-        }
-        return event;
-    }
-
     /**
      * Fetches variable values from server.
      * Note that SDK keeps only one registered callback, if you call that method again it would
@@ -3227,22 +3196,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback instance to be invoked when fetching is done.
      */
     public void fetchVariables(FetchVariablesCallback callback) {
-        if (coreState.getCore().getConfig().isAnalyticsOnly()) {
-            return;
-        }
-        Logger.v("variables", "Fetching  variables");
-        if (callback != null) {
-            coreState.getVariables().setFetchVariablesCallback(callback);
-        }
-
-        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES);
-        coreState.getAnalytics().sendFetchEvent(event);
+        coreState.getVariables().fetchVariables(callback);
     }
 
     /**
      * Uploads variables to server.
      */
     public void syncVariables() {
+        // todo send me to VariablesFeature.kt class
         if (isDevelopmentMode()) {
             Logger.v("variables", "syncVariables: waiting for id to be available");
             getCleverTapID(x -> {
@@ -3262,7 +3223,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback to register.
      */
     public void addVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
-        coreState.getVariables().getCTVariables().addVariablesChangedCallback(callback);
+        coreState.getVariables().addVariablesChangedCallback(callback);
     }
 
     /**
@@ -3272,7 +3233,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback to register.
      */
     public void addOneTimeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
-        coreState.getVariables().getCTVariables().addOneTimeVariablesChangedCallback(callback);
+        coreState.getVariables().addOneTimeVariablesChangedCallback(callback);
     }
 
     /**
@@ -3281,7 +3242,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback to remove.
      */
     public void removeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
-        coreState.getVariables().getCTVariables().removeVariablesChangedCallback(callback);
+        coreState.getVariables().removeVariablesChangedCallback(callback);
     }
 
     /**
@@ -3290,7 +3251,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback to remove.
      */
     public void removeOneTimeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
-        coreState.getVariables().getCTVariables().removeOneTimeVariablesChangedHandler(callback);
+        coreState.getVariables().removeOneTimeVariablesChangedCallback(callback);
     }
 
     /**
@@ -3302,7 +3263,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback to register.
      */
     public void onVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
-        coreState.getVariables().getCTVariables().onVariablesChangedAndNoDownloadsPending(callback);
+        coreState.getVariables().onVariablesChangedAndNoDownloadsPending(callback);
     }
 
     /**
@@ -3314,7 +3275,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback to register.
      */
     public void onceVariablesChangedAndNoDownloadsPending(@NonNull VariablesChangedCallback callback) {
-        coreState.getVariables().getCTVariables().onceVariablesChangedAndNoDownloadsPending(callback);
+        coreState.getVariables().onceVariablesChangedAndNoDownloadsPending(callback);
     }
 
     /**
@@ -3322,7 +3283,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @noinspection unused
      */
     public void removeAllVariablesChangedCallbacks() {
-        coreState.getVariables().getCTVariables().removeAllVariablesChangedCallbacks();
+        coreState.getVariables().removeAllVariablesChangedCallbacks();
     }
 
     /**
@@ -3330,7 +3291,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @noinspection unused
      */
     public void removeAllOneTimeVariablesChangedCallbacks() {
-        coreState.getVariables().getCTVariables().removeAllOneTimeVariablesChangedCallbacks();
+        coreState.getVariables().removeAllOneTimeVariablesChangedCallbacks();
     }
 
     /**
