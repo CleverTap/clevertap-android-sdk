@@ -59,6 +59,7 @@ dependencies {
     testImplementation(project(":test_shared"))
     testImplementation(libs.firebase.messaging)
     testImplementation(libs.test.coroutines)
+    testImplementation(libs.androidx.lifecycle.runtime.testing)
 }
 
 sonarqube {

@@ -138,7 +138,12 @@ internal class InAppController(
 
                     val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
                     task.execute("InAppController#executeDelayedInAppCallback-${result.inAppId}") {
-                        // Add to display queue
+                        logger.verbose(config.accountId,"updating ttl L")
+                        //result.inApp.put(Constants.WZRK_TIME_TO_LIVE_OFFSET,60L)// 60 sec ttl for testing
+                        //Calculate fresh TTL after delay completes
+                        evaluationManager.updateTTL(result.inApp)
+
+                        // Add to display queue30
                         addInAppNotificationInFrontOfQueue(result.inApp)
                     }
                 }

@@ -22,9 +22,9 @@ import org.json.JSONObject
  * </p>
  *
  * @property delayedLegacyInAppDAO The DAO for database operations.
+ * @property cryptHandler The handler used for encryption and decryption of In-App messages.
  * @property logger The logger for verbose logging.
  * @property accountId The account ID for logging context.
- * @property cryptHandler The handler used for encryption and decryption of In-App messages.
  */
 internal class DelayedLegacyInAppStore(
     private val delayedLegacyInAppDAO: DelayedLegacyInAppDAO,
@@ -40,30 +40,26 @@ internal class DelayedLegacyInAppStore(
         var encryptionFailureCount = 0
 
         delayedInApps.iterator<JSONObject> { inAppJson ->
-            try {
-                val inAppId = inAppJson.optString(Constants.INAPP_ID_IN_PAYLOAD)
-                val delay = inAppJson.optInt(INAPP_DELAY_AFTER_TRIGGER)
+            val inAppId = inAppJson.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            val delay = inAppJson.optInt(INAPP_DELAY_AFTER_TRIGGER)
 
-                // Encrypt the inAppData before saving to database
-                val encryptedInAppData = cryptHandler.encrypt(inAppJson.toString())
+            // Encrypt the inAppData before saving to database
+            val encryptedInAppData = cryptHandler.encrypt(inAppJson.toString())
 
-                if (encryptedInAppData == null) {
-                    logger.verbose(
-                        accountId,
-                        "Failed to encrypt delayed in-app: $inAppId. Skipping this item."
+            if (encryptedInAppData == null) {
+                logger.verbose(
+                    accountId,
+                    "Failed to encrypt delayed in-app: $inAppId. Skipping this item."
+                )
+                encryptionFailureCount++
+            } else {
+                dataList.add(
+                    DelayedLegacyInAppData(
+                        inAppId = inAppId,
+                        delay = delay,
+                        inAppData = encryptedInAppData
                     )
-                    encryptionFailureCount++
-                } else {
-                    dataList.add(
-                        DelayedLegacyInAppData(
-                            inAppId = inAppId,
-                            delay = delay,
-                            inAppData = encryptedInAppData
-                        )
-                    )
-                }
-            } catch (e: JSONException) {
-                logger.verbose(accountId, "Error parsing delayed in-app", e)
+                )
             }
         }
 
@@ -100,8 +96,8 @@ internal class DelayedLegacyInAppStore(
                 }
 
                 JSONObject(decryptedInAppData)
-            } catch (e: Exception) {
-                logger.verbose(accountId, "Error decrypting/parsing delayed in-app: $inAppId", e)
+            } catch (e: JSONException) {
+                logger.verbose(accountId, "Error parsing delayed in-app: $inAppId", e)
                 null
             }
         }

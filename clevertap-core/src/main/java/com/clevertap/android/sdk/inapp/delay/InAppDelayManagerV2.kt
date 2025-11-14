@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.delay
 
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -41,7 +42,8 @@ internal class InAppDelayManagerV2(
     private val clock: Clock = Clock.SYSTEM,
     private val scope: CoroutineScope = ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.Default.limitedParallelism(
         PARALLEL_SCHEDULERS
-    )
+    ),
+    private val lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get()
 ) {
     companion object {
         private const val PARALLEL_SCHEDULERS = 20 // worst case - we assume 1 in-app per minute, session length 20 mins
@@ -55,7 +57,7 @@ internal class InAppDelayManagerV2(
         //System.setProperty("kotlinx.coroutines.debug","on")
         scope.launch {
             logCoroutineInfo("lifeCycleOwner scope launch, $coroutineContext, ${coroutineContext[Job]?.parent}}")
-            ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.STARTED) {
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 logCoroutineInfo("process lifeCycleOwner: started, $coroutineContext, ${coroutineContext[Job]?.parent}}")
                 try {
                     onAppForeground()
@@ -332,6 +334,7 @@ internal class InAppDelayManagerV2(
      * Get count of active scheduled callbacks
      */
     internal fun getActiveCallbackCount(): Int = activeJobs.size
+    internal fun getCancelledJobsCount(): Int = cancelledJobs.size
 
     /**
      * Check if a callback with specific ID is scheduled and active
