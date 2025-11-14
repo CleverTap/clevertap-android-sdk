@@ -294,14 +294,6 @@ internal class InAppFeature(
     }
 
     /**
-     * Phase 1: Accessor method moved from CoreState
-     * Returns the InAppFCManager instance
-     */
-    fun getInAppFCManager(): InAppFCManager? {
-        return inAppFCManager
-    }
-
-    /**
      * Phase 2: Initialization method moved from CoreState
      * Initializes the InAppFCManager with the provided device ID
      */
