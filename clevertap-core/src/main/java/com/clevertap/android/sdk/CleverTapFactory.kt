@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppNotificationInflater
+import com.clevertap.android.sdk.inapp.InAppPreviewHandler
 import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
@@ -404,6 +405,14 @@ internal object CleverTapFactory {
             coreMetaData
         )
 
+        val inAppPreviewHandler = InAppPreviewHandler(
+            executors,
+            networkManager,
+            inAppResponseForSendTestInApp,
+            context,
+            config.logger
+        )
+
         val analyticsManager = AnalyticsManager(
             context,
             config,
@@ -415,9 +424,9 @@ internal object CleverTapFactory {
             callbackManager,
             controllerManager,
             ctLockManager,
-            inAppResponseForSendTestInApp,
             SYSTEM,
-            executors
+            executors,
+            inAppPreviewHandler
         )
 
         val inAppNotificationInflater = InAppNotificationInflater(
