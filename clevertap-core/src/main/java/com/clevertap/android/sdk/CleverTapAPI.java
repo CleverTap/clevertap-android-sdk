@@ -2100,22 +2100,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @Override
     public void messageDidClick(CTInboxActivity ctInboxActivity, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, int buttonIndex) {
-
-        coreState.getAnalytics().pushInboxMessageStateEvent(true, inboxMessage, data);
-
-        Logger.v("clicked inbox notification.");
-        //notify the onInboxItemClicked callback if the listener is set.
-        if (inboxMessageListener != null && inboxMessageListener.get() != null) {
-            inboxMessageListener.get().onInboxItemClicked(inboxMessage, contentPageIndex, buttonIndex);
-        }
-
-        if (keyValue != null && !keyValue.isEmpty()) {
-            Logger.v("clicked button of an inbox notification.");
-            //notify the onInboxButtonClick callback if the listener is set.
-            if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
-                inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
-            }
-        }
+        coreState.getInbox().messageDidClick(contentPageIndex, inboxMessage, data, keyValue, buttonIndex);
     }
 
     //Session
@@ -2593,12 +2578,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("unused")
     public void setInboxMessageButtonListener(InboxMessageButtonListener listener) {
-        this.inboxMessageButtonListener = new WeakReference<>(listener);
+        coreState.getInbox().setInboxMessageButtonListener(listener);
     }
 
     @SuppressWarnings("unused")
     public void setCTInboxMessageListener(InboxMessageListener listener){
-        this.inboxMessageListener = new WeakReference<>(listener);
+        coreState.getInbox().setCTInboxMessageListener(listener);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)

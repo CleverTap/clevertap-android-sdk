@@ -8,6 +8,8 @@ import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.InboxMessageButtonListener
+import com.clevertap.android.sdk.InboxMessageListener
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.inbox.CTInboxActivity
@@ -18,6 +20,7 @@ import com.clevertap.android.sdk.task.Task
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 
 /**
  * This class encapsulates the logic for handling the App Inbox feature of the CleverTap SDK.
@@ -43,6 +46,9 @@ internal class InboxFeature(
     
     var ctInboxController: CTInboxController? = null
     var inboxListener: CTInboxListener? = null
+    private var inboxMessageButtonListener = WeakReference<InboxMessageButtonListener?>(null)
+    private var inboxMessageListener = WeakReference<InboxMessageListener?>(null)
+
     lateinit var coreContract: CoreContract
 
     private val logger
@@ -398,6 +404,35 @@ internal class InboxFeature(
                 coreContract.analytics().pushInboxMessageStateEvent(false, inboxMessage, data)
             }
         }
+    }
+
+    fun messageDidClick(
+        contentPageIndex: Int,
+        inboxMessage: CTInboxMessage,
+        data: Bundle?,
+        keyValue: HashMap<String?, String?>?,
+        buttonIndex: Int
+    ) {
+        coreContract.analytics().pushInboxMessageStateEvent(true, inboxMessage, data)
+
+        Logger.v("clicked inbox notification.")
+
+        // notify the onInboxItemClicked callback if the listener is set/non-null.
+        inboxMessageListener.get()?.onInboxItemClicked(inboxMessage, contentPageIndex, buttonIndex)
+
+        if (keyValue != null && !keyValue.isEmpty()) {
+            Logger.v("clicked button of an inbox notification.")
+            // notify the onInboxButtonClick callback if the listener is set/non-null.
+            inboxMessageButtonListener.get()?.onInboxButtonClick(keyValue)
+        }
+    }
+
+    fun setInboxMessageButtonListener(listener: InboxMessageButtonListener?) {
+        this.inboxMessageButtonListener = WeakReference<InboxMessageButtonListener?>(listener)
+    }
+
+    fun setCTInboxMessageListener(listener: InboxMessageListener?) {
+        this.inboxMessageListener = WeakReference<InboxMessageListener?>(listener)
     }
 
     // ========== PUBLIC API FACADE END ==========
