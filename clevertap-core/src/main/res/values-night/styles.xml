@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme for CTInboxActivity in dark mode -->
+    <style name="CTInboxActivityTheme" parent="Theme.AppCompat.DayNight">
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

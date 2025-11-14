@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme for CTInboxActivity with proper status bar configuration -->
+    <style name="CTInboxActivityTheme" parent="Theme.AppCompat.DayNight">
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

@@ -8,6 +8,7 @@ import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.*
 import com.clevertap.android.pushtemplates.PTConstants.KEY_CLICKED_STAR
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
@@ -31,10 +32,6 @@ const val PRODUCT_DISPLAY_CONTENT_PENDING_INTENT = 20
 const val PRODUCT_DISPLAY_DL1_PENDING_INTENT = 21
 const val PRODUCT_DISPLAY_DL2_PENDING_INTENT = 22
 const val PRODUCT_DISPLAY_DL3_PENDING_INTENT = 23
-const val PRODUCT_DISPLAY_CONTENT_SMALL1_PENDING_INTENT = 24
-const val PRODUCT_DISPLAY_CONTENT_SMALL2_PENDING_INTENT = 25
-const val PRODUCT_DISPLAY_CONTENT_SMALL3_PENDING_INTENT = 26
-const val PRODUCT_DISPLAY_BUY_NOW_PENDING_INTENT = 27
 const val PRODUCT_DISPLAY_DISMISS_PENDING_INTENT = 28
 const val ZERO_BEZEL_CONTENT_PENDING_INTENT = 29
 const val TIMER_CONTENT_PENDING_INTENT = 30
@@ -98,10 +95,21 @@ internal object PendingIntentFactory {
         )
     }
 
+    /**
+     * Improved version that uses specific parameters instead of entire TemplateData
+     */
     @JvmStatic
+    @JvmOverloads
     fun getPendingIntent(
-        context: Context, notificationId: Int, extras: Bundle,
-        isLauncher: Boolean, identifier: Int, renderer: TemplateRenderer?
+        context: Context,
+        notificationId: Int,
+        extras: Bundle,
+        isLauncher: Boolean,
+        identifier: Int,
+        deepLink: String? = null,
+        inputFeedback: String? = null,
+        inputAutoOpen: String? = null,
+        config: CleverTapInstanceConfig? = null
     ): PendingIntent? {
 
         launchIntent = null // reset to null or else last value will get retain
@@ -122,8 +130,8 @@ internal object PendingIntentFactory {
             MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, ZERO_BEZEL_CONTENT_PENDING_INTENT,
             TIMER_CONTENT_PENDING_INTENT, PRODUCT_DISPLAY_CONTENT_PENDING_INTENT,
             INPUT_BOX_CONTENT_PENDING_INTENT -> {
-                return if (renderer?.deepLinkList != null && renderer.deepLinkList!!.size > 0) {
-                    extras.putString(Constants.DEEP_LINK_KEY, renderer.deepLinkList!![0])
+                return if (deepLink != null) {
+                    extras.putString(Constants.DEEP_LINK_KEY, deepLink)
                     setPendingIntent(
                         context,
                         notificationId,
@@ -169,10 +177,7 @@ internal object PendingIntentFactory {
             }
 
             RATING_CONTENT_PENDING_INTENT -> {
-                extras.putString(
-                    Constants.DEEP_LINK_KEY,
-                    renderer?.pt_rating_default_dl
-                )
+                extras.putString(Constants.DEEP_LINK_KEY, deepLink)
                 return if (VERSION.SDK_INT < VERSION_CODES.S) {
                     setPendingIntent(
                         context,
@@ -193,7 +198,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtra("click$clickedStar", true)
                 launchIntent!!.putExtra(KEY_CLICKED_STAR, clickedStar)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra("config", renderer?.config)
+                launchIntent!!.putExtra("config", config)
                 return PendingIntent.getBroadcast(
                     context,
                     extras.getIntArray(PTConstants.KEY_REQUEST_CODES)?.get(clickedStar - 1)!!,
@@ -211,7 +216,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra(PTConstants.PT_CURRENT_POSITION, 0)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW_DL, renderer?.deepLinkList!![0])
+                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW_DL, deepLink)
                 return PendingIntent.getBroadcast(context, requestCode, launchIntent!!, flagsLaunchPendingIntent)
             }
 
@@ -219,7 +224,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra(PTConstants.PT_CURRENT_POSITION, 1)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW_DL, renderer?.deepLinkList!![1])
+                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW_DL, deepLink)
                 return PendingIntent.getBroadcast(context, requestCode, launchIntent!!, flagsLaunchPendingIntent)
             }
 
@@ -227,50 +232,8 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra(PTConstants.PT_CURRENT_POSITION, 2)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW_DL, renderer?.deepLinkList!![2])
+                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW_DL, deepLink)
                 return PendingIntent.getBroadcast(context, requestCode, launchIntent!!, flagsLaunchPendingIntent)
-            }
-
-            PRODUCT_DISPLAY_CONTENT_SMALL1_PENDING_INTENT -> {
-                extras.putString(
-                    Constants.DEEP_LINK_KEY,
-                    renderer?.deepLinkList!![0]
-                )
-                return setPendingIntent(
-                    context,
-                    notificationId,
-                    extras,
-                    launchIntent,
-                    requestCode
-                )
-            }
-
-            PRODUCT_DISPLAY_CONTENT_SMALL2_PENDING_INTENT -> {
-                extras.putString(
-                    Constants.DEEP_LINK_KEY,
-                    renderer?.deepLinkList!![1]
-                )
-                return setPendingIntent(
-                    context,
-                    notificationId,
-                    extras,
-                    launchIntent,
-                    requestCode
-                )
-            }
-
-            PRODUCT_DISPLAY_CONTENT_SMALL3_PENDING_INTENT -> {
-                extras.putString(
-                    Constants.DEEP_LINK_KEY,
-                    renderer?.deepLinkList!![2]
-                )
-                return setPendingIntent(
-                    context,
-                    notificationId,
-                    extras,
-                    launchIntent,
-                    requestCode
-                )
             }
 
             PRODUCT_DISPLAY_DISMISS_PENDING_INTENT -> {
@@ -278,32 +241,12 @@ internal object PendingIntentFactory {
                 return setDismissIntent(context, extras, dismissIntent)
             }
 
-            PRODUCT_DISPLAY_BUY_NOW_PENDING_INTENT -> {
-                launchIntent!!.putExtra(PTConstants.PT_IMAGE_1, true)
-                launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW_DL, renderer?.deepLinkList!![0])
-                launchIntent!!.putExtra(PTConstants.PT_BUY_NOW, true)
-                launchIntent!!.putExtra("config", renderer?.config)
-                launchIntent!!.putExtras(extras)
-                return PendingIntent.getBroadcast(
-                    context,
-                    requestCode,
-                    launchIntent!!,
-                    flagsLaunchPendingIntent
-                )
-            }
-
             INPUT_BOX_REPLY_PENDING_INTENT -> {
-                if (renderer?.deepLinkList!!.size > 0) {
-                    extras.putString(Constants.DEEP_LINK_KEY, renderer?.deepLinkList!![0])
-                }
-                launchIntent!!.putExtra(PTConstants.PT_INPUT_FEEDBACK, renderer?.pt_input_feedback)
-                launchIntent!!.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, renderer?.pt_input_auto_open)
-                launchIntent!!.putExtra("config", renderer?.config)
+                extras.putString(Constants.DEEP_LINK_KEY, deepLink)
+                launchIntent!!.putExtra(PTConstants.PT_INPUT_FEEDBACK, inputFeedback)
+                launchIntent!!.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, inputAutoOpen)
+                launchIntent!!.putExtra("config", config)
 
-                if (renderer.deepLinkList == null) {
-                    extras.putString(Constants.DEEP_LINK_KEY, null)
-                }
                 return setPendingIntent(
                     context,
                     notificationId,

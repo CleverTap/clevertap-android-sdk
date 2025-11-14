@@ -9,8 +9,6 @@ import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
 import com.clevertap.android.sdk.pushnotification.PushType;
 
-import java.util.Objects;
-
 public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
 
     @Override
@@ -20,9 +18,8 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
         CleverTapInstanceConfig config = extras.getParcelable("config");
 
         if (dismissOnClick != null && dismissOnClick.equalsIgnoreCase("true")) {
-            /**
-             * For input box remind CTA,pt_dismiss_on_click must be true to raise event
-             */
+
+            // For input box remind CTA,pt_dismiss_on_click must be true to raise event
             if (actionID != null && actionID.contains("remind")) {
                 Utils.raiseCleverTapEvent(context, config, extras);
             }
@@ -37,13 +34,13 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
         try {
             PTLog.debug("Inside Push Templates");
             // initial setup
-            INotificationRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
             CleverTapAPI cleverTapAPI = CleverTapAPI
                     .getGlobalInstance(applicationContext,
                             PushNotificationUtil.getAccountIdFromNotificationBundle(message));
-            Objects.requireNonNull(cleverTapAPI)
-                    .renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message);
-
+            if (cleverTapAPI != null) {
+                INotificationRenderer templateRenderer = new TemplateRenderer(applicationContext, message, cleverTapAPI.getCoreState().getConfig());
+                cleverTapAPI.renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message);
+            }
         } catch (Throwable throwable) {
             PTLog.verbose("Error parsing FCM payload", throwable);
         }

@@ -7,7 +7,9 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 
 import android.content.Context;
 import android.text.TextUtils;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.huawei.agconnect.AGConnectInstance;
 import com.huawei.agconnect.AGConnectOptions;
 import com.huawei.agconnect.AGConnectOptionsBuilder;
 import com.huawei.hms.aaid.HmsInstanceId;
@@ -21,34 +23,60 @@ import org.jetbrains.annotations.TestOnly;
 class HmsSdkHandler implements IHmsSdkHandler {
 
     private final Context context;
-
     private final CleverTapInstanceConfig mConfig;
-
-    private final AGConnectOptions options ;
+    private volatile AGConnectOptions options;
 
     HmsSdkHandler(final Context context, final CleverTapInstanceConfig config) {
         this.context = context.getApplicationContext();
-        mConfig = config;
-        options = new AGConnectOptionsBuilder().build(context);
+        this.mConfig = config;
     }
 
     @TestOnly
-    HmsSdkHandler(final Context context, final CleverTapInstanceConfig config,final AGConnectOptions op) {
+    HmsSdkHandler(final Context context, final CleverTapInstanceConfig config, final AGConnectOptions op) {
         this.context = context.getApplicationContext();
         mConfig = config;
         options = op;
     }
 
+    private synchronized void initializeOptions() {
+        if (options != null) {
+            return;
+        }
+        try {
+            // Try existing AGConnect instance first
+            AGConnectInstance instance = AGConnectInstance.getInstance();
+            if (instance != null && instance.getOptions() != null) {
+                options = instance.getOptions();
+                return;
+            }
+        } catch (Exception e) {
+            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to initialize AGConnect options: " + e.getMessage());
+        }
+
+        // Fallback to building new options
+        try {
+            options = new AGConnectOptionsBuilder().build(context);
+        } catch (Exception e) {
+            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to build new AGConnect options: " + e.getMessage());
+        }
+    }
 
     @Override
     public String appId() {
-        String appId = null;
-        try {
-            appId = options.getString(APP_ID_KEY);
-        } catch (Throwable t) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "HMS availability check failed.");
+        if (options == null) {
+            initializeOptions();
         }
-        return appId;
+
+        if (options == null) {
+            return null;
+        }
+
+        try {
+            return options.getString(APP_ID_KEY);
+        } catch (Throwable t) {
+            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to get HMS app ID: " + t.getMessage());
+            return null;
+        }
     }
 
     @Override

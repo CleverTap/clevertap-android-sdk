@@ -8,10 +8,11 @@ import android.os.Bundle
 import android.text.Html
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
-internal abstract class Style(private var renderer: TemplateRenderer) {
+internal abstract class Style(private val data: BaseContent, private val renderer: TemplateRenderer) {
 
     protected open fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,
@@ -32,7 +33,15 @@ internal abstract class Style(private var renderer: TemplateRenderer) {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            notificationBuilder.setSubText(renderer.pt_subtitle)
+            notificationBuilder.setSubText(data.textData.subtitle)
+        }
+
+        data.notificationBehavior.dismissAfter?.let { timeout ->
+            notificationBuilder.setTimeoutAfter(timeout)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            notificationBuilder.setOngoing(data.notificationBehavior.isSticky)
         }
 
         return notificationBuilder.setSmallIcon(renderer.smallIcon)
@@ -40,7 +49,7 @@ internal abstract class Style(private var renderer: TemplateRenderer) {
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())
-            .setColor(Color.parseColor(renderer.pt_small_icon_clr ?: PTConstants.PT_META_CLR_DEFAULTS))
+            .setColor(Color.parseColor(renderer.smallIconColour?: PTConstants.PT_META_CLR_DEFAULTS))
             .setAutoCancel(true)
             .setStyle(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -65,7 +74,7 @@ internal abstract class Style(private var renderer: TemplateRenderer) {
     ): NotificationCompat.Builder {
         return setNotificationBuilderBasics(
             nb, makeSmallContentRemoteView(context, renderer), makeBigContentRemoteView(context, renderer),
-            renderer.pt_title, makePendingIntent(context, extras, notificationId),
+            data.textData.title, makePendingIntent(context, extras, notificationId),
             makeDismissIntent(context, extras, notificationId)
         )
     }
