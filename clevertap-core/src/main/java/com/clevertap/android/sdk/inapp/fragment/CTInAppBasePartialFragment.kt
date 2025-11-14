@@ -17,8 +17,8 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
         registerInAppDisplayListener()
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         unregisterInAppDisplayListener()
     }
 
@@ -45,11 +45,19 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
     }
 
     private fun registerInAppDisplayListener() {
-        CleverTapAPI.instanceWithConfig(requireContext(), config).coreState.inAppController.registerInAppDisplayListener(this)
+        context?.let {
+            CleverTapAPI.instanceWithConfig(it, config)
+                .coreState.inAppController
+                .registerInAppDisplayListener(this)
+        }
     }
 
     private fun unregisterInAppDisplayListener() {
-        CleverTapAPI.instanceWithConfig(requireContext(), config).coreState.inAppController.unregisterInAppDisplayListener()
+        context?.let {
+            CleverTapAPI.instanceWithConfig(it, config)
+                .coreState.inAppController
+                .unregisterInAppDisplayListener()
+        }
     }
 
     override fun hideInApp() {

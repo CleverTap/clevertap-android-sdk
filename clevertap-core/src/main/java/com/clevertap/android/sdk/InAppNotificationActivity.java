@@ -493,19 +493,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         super.onDestroy();
 
         if (config != null) {
-            try {
-                CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, config);
-                if (cleverTapAPI != null) {
-                    CoreState ctState = cleverTapAPI.getCoreState();
-                    if (ctState != null) {
-                        ctState.getInAppController().unregisterInAppDisplayListener();
-                    }
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, config);
+            if (cleverTapAPI != null) {
+                CoreState ctState = cleverTapAPI.getCoreState();
+                if (ctState != null) {
+                    ctState.getInAppController().unregisterInAppDisplayListener();
                 }
-            } catch (Throwable t) {
-                Logger.v("Error unregistering InAppDisplayListener", t);
             }
         }
-
         if (!isChangingConfigurations()) {
             didDismiss(null, false);
         }

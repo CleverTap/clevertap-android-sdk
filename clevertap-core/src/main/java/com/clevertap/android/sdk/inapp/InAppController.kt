@@ -17,7 +17,6 @@ import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.InAppNotificationActivity
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.Utils
@@ -310,7 +309,7 @@ internal class InAppController(
                     HashMap<String, Any>()
                 }
 
-                Logger.v("Calling the in-app listener on behalf of ${coreMetaData.source}")
+                logger.verbose("Calling the in-app listener on behalf of ${coreMetaData.source}")
 
                 if (formData != null) {
                     listener.onDismissed(notifKVS, Utils.convertBundleObjectToHashMap(formData))
@@ -341,7 +340,7 @@ internal class InAppController(
         try {
             callbackManager.getInAppNotificationListener()?.onShow(inAppNotification)
         } catch (t: Throwable) {
-            Logger.v(defaultLogTag, "Failed to call the in-app notification listener", t)
+            logger.verbose(defaultLogTag, "Failed to call the in-app notification listener", t)
         }
     }
 
@@ -498,7 +497,7 @@ internal class InAppController(
     private fun _showNotificationIfAvailable() {
         try {
             if (!canShowInAppOnCurrentActivity()) {
-                Logger.v("Not showing notification on blacklisted activity")
+                logger.verbose("Not showing notification on blacklisted activity")
                 return
             }
 
@@ -632,7 +631,7 @@ internal class InAppController(
     }
 
     private fun checkPendingNotifications(): Boolean {
-        Logger.v(defaultLogTag, "checking Pending Notifications")
+        logger.verbose(defaultLogTag, "checking Pending Notifications")
         synchronized(pendingNotifications) {
             if (pendingNotifications.isEmpty()) {
                 return false
@@ -645,7 +644,7 @@ internal class InAppController(
     }
 
     private fun inAppDidDismiss(inAppNotification: CTInAppNotification) {
-        Logger.v(defaultLogTag, "Running inAppDidDismiss")
+        logger.verbose(defaultLogTag, "Running inAppDidDismiss")
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp?.campaignId == inAppNotification.campaignId)) {
             currentlyDisplayingInApp = null
             checkPendingNotifications()
@@ -775,13 +774,13 @@ internal class InAppController(
         }
 
         if ((clock.currentTimeMillis() / 1000) > inAppNotification.timeToLive) {
-            Logger.d("InApp has elapsed its time to live, not showing the InApp")
+            logger.debug("InApp has elapsed its time to live, not showing the InApp")
             return
         }
 
         val isHtmlType = Constants.KEY_CUSTOM_HTML == inAppNotification.type
         if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
-            Logger.d(
+            logger.debug(
                 defaultLogTag,
                 "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp"
             )
@@ -811,14 +810,14 @@ internal class InAppController(
                     if (activity == null) {
                         throw IllegalStateException("Current activity reference not found")
                     }
-                    Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
+                    logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
                     InAppNotificationActivity.launchForInAppNotification(
                         activity,
                         inAppNotification,
                         config
                     )
                 } catch (t: Throwable) {
-                    Logger.v(
+                    logger.verbose(
                         "Please verify the integration of your app. It is not setup to support in-app notifications yet.",
                         t
                     )
@@ -849,14 +848,14 @@ internal class InAppController(
             }
 
             else -> {
-                Logger.d(defaultLogTag, "Unknown InApp Type found: $type")
+                logger.debug(defaultLogTag, "Unknown InApp Type found: $type")
                 currentlyDisplayingInApp = null
                 return
             }
         }
 
         if (inAppFragment != null) {
-            Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
+            logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
             val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
                 inAppFragment,
                 activity,
