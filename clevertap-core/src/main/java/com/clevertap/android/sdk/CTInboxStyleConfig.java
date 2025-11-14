@@ -71,7 +71,7 @@ public class CTInboxStyleConfig implements Parcelable {
         this.firstTabTitle = "ALL";
     }
 
-    CTInboxStyleConfig(CTInboxStyleConfig config) {
+    public CTInboxStyleConfig(CTInboxStyleConfig config) {
         this.navBarColor = config.navBarColor;
         this.navBarTitle = config.navBarTitle;
         this.navBarTitleColor = config.navBarTitleColor;

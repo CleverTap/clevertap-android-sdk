@@ -1,14 +1,20 @@
 package com.clevertap.android.sdk.features
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CTInboxListener
+import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
+import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.inbox.CTInboxActivity
 import com.clevertap.android.sdk.inbox.CTInboxController
+import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.response.InboxResponse
+import com.clevertap.android.sdk.task.Task
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -31,7 +37,8 @@ import org.json.JSONObject
  *                    Defaults to using [Utils.runOnUiThread].
  */
 internal class InboxFeature(
-    private val mainPost: (() -> Unit) -> Unit = { func -> Utils.runOnUiThread { func } }
+    private val mainPost: (() -> Unit) -> Unit = { func -> Utils.runOnUiThread { func } },
+    private val currentActivityProvider: () -> Activity? = { CoreMetaData.getCurrentActivity() }
 ) : CleverTapFeature, InboxLiveCallbacks {
     
     var ctInboxController: CTInboxController? = null
@@ -157,6 +164,243 @@ internal class InboxFeature(
             initialize()
         }
     }
+
+    // ========== PUBLIC API FACADE ==========
+    // These methods provide direct delegation from CleverTapAPI to Inbox functionality
+    // Signature matches CleverTapAPI public methods for 1:1 mapping
+
+    /**
+     * Initializes the inbox controller and sends a callback to the CTInboxListener
+     */
+    fun initializeInbox() {
+        coreContract.executors().postAsyncSafelyTask<Unit>().execute("initializeInbox") {
+            initialize()
+        }
+    }
+
+    /**
+     * Returns an ArrayList of all CTInboxMessage objects
+     */
+    fun getAllInboxMessages(): ArrayList<CTInboxMessage> {
+        Logger.d("InboxFeature:getAllInboxMessages: called")
+        val inboxMessageArrayList = ArrayList<CTInboxMessage>()
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            if (ctInboxController != null) {
+                val messageDAOArrayList = ctInboxController!!.messages
+                for (messageDAO in messageDAOArrayList) {
+                    Logger.v("CTMessage Dao - ${messageDAO.toJSON()}")
+                    inboxMessageArrayList.add(CTInboxMessage(messageDAO.toJSON()))
+                }
+                return inboxMessageArrayList
+            } else {
+                logger.debug(accountId, "Notification Inbox not initialized")
+                return inboxMessageArrayList // return empty list to avoid null pointer exceptions
+            }
+        }
+    }
+
+    /**
+     * Returns an ArrayList of unread CTInboxMessage objects
+     */
+    fun getUnreadInboxMessages(): ArrayList<CTInboxMessage> {
+        val inboxMessageArrayList = ArrayList<CTInboxMessage>()
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            if (ctInboxController != null) {
+                val messageDAOArrayList = ctInboxController!!.unreadMessages
+                for (messageDAO in messageDAOArrayList) {
+                    inboxMessageArrayList.add(CTInboxMessage(messageDAO.toJSON()))
+                }
+                return inboxMessageArrayList
+            } else {
+                logger.debug(accountId, "Notification Inbox not initialized")
+                return inboxMessageArrayList // return empty list to avoid null pointer exceptions
+            }
+        }
+    }
+
+    /**
+     * Returns the CTInboxMessage object that belongs to the given message id
+     */
+    fun getInboxMessageForId(messageId: String?): CTInboxMessage? {
+        Logger.d("InboxFeature:getInboxMessageForId() called with: messageId = [$messageId]")
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            if (ctInboxController != null) {
+                val message = ctInboxController!!.getMessageForId(messageId)
+                return if (message != null) CTInboxMessage(message.toJSON()) else null
+            } else {
+                logger.debug(accountId, "Notification Inbox not initialized")
+                return null
+            }
+        }
+    }
+
+    /**
+     * Returns the count of all inbox messages for the user
+     */
+    fun getInboxMessageCount(): Int {
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            if (ctInboxController != null) {
+                return ctInboxController!!.count()
+            } else {
+                logger.debug(accountId, "Notification Inbox not initialized")
+                return -1
+            }
+        }
+    }
+
+    /**
+     * Returns the count of total number of unread inbox messages for the user
+     */
+    fun getInboxMessageUnreadCount(): Int {
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            if (ctInboxController != null) {
+                return ctInboxController!!.unreadCount()
+            } else {
+                logger.debug(accountId, "Notification Inbox not initialized")
+                return -1
+            }
+        }
+    }
+
+    /**
+     * Deletes the given CTInboxMessage object
+     */
+    fun deleteInboxMessage(message: CTInboxMessage?) {
+        if (ctInboxController != null) {
+            ctInboxController!!.deleteInboxMessage(message)
+        } else {
+            logger.debug(accountId, "Notification Inbox not initialized")
+        }
+    }
+
+    /**
+     * Deletes the CTInboxMessage object for given messageId
+     */
+    fun deleteInboxMessage(messageId: String?) {
+        val message = getInboxMessageForId(messageId)
+        deleteInboxMessage(message)
+    }
+
+    /**
+     * Deletes multiple CTInboxMessage objects for given list of messageIDs
+     */
+    fun deleteInboxMessagesForIDs(messageIDs: ArrayList<String>?) {
+        if (ctInboxController != null) {
+            ctInboxController!!.deleteInboxMessagesForIDs(messageIDs)
+        } else {
+            logger.debug(accountId, "Notification Inbox not initialized")
+        }
+    }
+
+    /**
+     * Marks the given CTInboxMessage object as read
+     */
+    fun markReadInboxMessage(message: CTInboxMessage?) {
+        if (ctInboxController != null) {
+            ctInboxController!!.markReadInboxMessage(message)
+        } else {
+            logger.debug(accountId, "Notification Inbox not initialized")
+        }
+    }
+
+    /**
+     * Marks the given messageId of CTInboxMessage object as read
+     */
+    fun markReadInboxMessage(messageId: String?) {
+        val message = getInboxMessageForId(messageId)
+        markReadInboxMessage(message)
+    }
+
+    /**
+     * Marks multiple CTInboxMessage objects as read for given list of messageIDs
+     */
+    fun markReadInboxMessagesForIDs(messageIDs: ArrayList<String>?) {
+        if (ctInboxController != null) {
+            ctInboxController!!.markReadInboxMessagesForIDs(messageIDs)
+        } else {
+            logger.debug(accountId, "Notification Inbox not initialized")
+        }
+    }
+
+    /**
+     * Opens CTInboxActivity to display Inbox Messages without a custom style
+     */
+    fun showAppInbox() {
+        showAppInbox(CTInboxStyleConfig())
+    }
+
+    /**
+     * Opens CTInboxActivity to display Inbox Messages
+     */
+    fun showAppInbox(styleConfig: CTInboxStyleConfig) {
+        synchronized(coreContract.ctLockManager().inboxControllerLock) {
+            if (ctInboxController == null) {
+                logger.debug(accountId, "Notification Inbox not initialized")
+                return
+            }
+        }
+
+        // make styleConfig immutable
+        val _styleConfig = CTInboxStyleConfig(styleConfig)
+
+        val intent = android.content.Intent(coreContract.context(), CTInboxActivity::class.java)
+        intent.putExtra("styleConfig", _styleConfig)
+        val configBundle = Bundle()
+        configBundle.putParcelable("config", coreContract.config())
+        intent.putExtra("configBundle", configBundle)
+        try {
+            val currentActivity = currentActivityProvider()
+            if (currentActivity == null) {
+                throw IllegalStateException("Current activity reference not found")
+            }
+            currentActivity.startActivity(intent)
+            Logger.d("Displaying Notification Inbox")
+
+        } catch (t: Throwable) {
+            Logger.v(
+                "Please verify the integration of your app." +
+                        " It is not setup to support Notification Inbox yet.", t
+            )
+        }
+    }
+
+    /**
+     * Dismisses the App Inbox Activity if already opened
+     */
+    fun dismissAppInbox() {
+        try {
+            val appInboxActivity = coreContract.coreMetaData().appInboxActivity
+            if (appInboxActivity == null) {
+                throw IllegalStateException("AppInboxActivity reference not found")
+            }
+            if (!appInboxActivity.isFinishing) {
+                logger.verbose(accountId, "Finishing the App Inbox")
+                appInboxActivity.finish()
+            }
+        } catch (t: Throwable) {
+            logger.verbose(
+                accountId, "Can't dismiss AppInbox, please ensure to call this method after the usage of " +
+                        "cleverTapApiInstance.showAppInbox(). \n$t"
+            )
+        }
+    }
+
+    fun messageDidShow(
+        inboxMessage: CTInboxMessage,
+        data: Bundle?
+    ) {
+        val task: Task<Unit> = coreContract.executors().postAsyncSafelyTask<Unit>()
+        task.execute("handleMessageDidShow") {
+            Logger.d("CleverTapAPI:messageDidShow() called  in async with: messageId = [" + inboxMessage.messageId + "]")
+            val message = getInboxMessageForId(inboxMessage.messageId)
+            if (!message!!.isRead) {
+                markReadInboxMessage(inboxMessage)
+                coreContract.analytics().pushInboxMessageStateEvent(false, inboxMessage, data)
+            }
+        }
+    }
+
+    // ========== PUBLIC API FACADE END ==========
 }
 
 internal interface InboxLiveCallbacks {

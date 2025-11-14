@@ -503,23 +503,6 @@ internal open class CoreState(
         }
     }
 
-    /**
-     * Phase 2: Delegating to InboxFeature
-     */
-    @AnyThread
-    fun initializeInbox() {
-        if (core.config.isAnalyticsOnly) {
-            core.config.getLogger()
-                .debug(
-                    accountId,
-                    "Instance is analytics only, not initializing Notification Inbox"
-                )
-            return
-        }
-        val task = core.executors.postAsyncSafelyTask<Unit>()
-        task.execute("initializeInbox") { inbox.initialize() }
-    }
-
     override fun handleSendQueueResponse(
         response: Response,
         isFullResponse: Boolean,
