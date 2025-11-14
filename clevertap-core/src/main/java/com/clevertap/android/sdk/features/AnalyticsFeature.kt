@@ -4,6 +4,7 @@ import android.os.Bundle
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ProfileValueHandler
 import com.clevertap.android.sdk.SessionManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
@@ -25,6 +26,24 @@ internal class AnalyticsFeature(
     private val profileValueHandler: ProfileValueHandler,
     private val loginInfoProvider: LoginInfoProvider
 ) : CleverTapFeature {
+
+    companion object {
+        fun fetchRequestAsJson(fetchType: Int): JSONObject {
+            val event = JSONObject()
+            val notif = JSONObject()
+            try {
+                notif.put(Constants.KEY_T, fetchType)
+                event.put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH)
+                event.put(Constants.KEY_EVT_DATA, notif)
+            } catch (e: JSONException) {
+                Logger.v(
+                    Constants.CLEVERTAP_LOG_TAG,
+                    "Failed while parsing fetch request as json:", e
+                )
+            }
+            return event
+        }
+    }
 
     lateinit var coreContract: CoreContract
 

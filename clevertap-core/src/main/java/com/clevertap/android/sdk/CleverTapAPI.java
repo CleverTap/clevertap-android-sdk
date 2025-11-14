@@ -1134,10 +1134,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CustomTemplateContext getActiveContextForTemplate(@NonNull String templateName) {
-        if (coreState == null || coreState.getInApp().getTemplatesManager() == null) {
+        if (coreState == null) {
             return null;
         }
-        return coreState.getInApp().getTemplatesManager().getActiveContextForTemplate(templateName);
+        return coreState.getInApp().getActiveContextForTemplate(templateName);
     }
 
     /**
@@ -1159,16 +1159,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        if (coreState.getNetwork().getNetworkManager() == null) {
-            getConfigLogger().debug("CustomTemplates", "networkManager is null, templates cannot be synced");
-            return;
-        }
-
-        if (coreState.getInApp().getTemplatesManager() == null) {
-            getConfigLogger().debug("CustomTemplates", "templateManager is null, templates cannot be synced");
-            return;
-        }
-
         TemplatesManager templatesManager = coreState.getInApp().getTemplatesManager();
         NetworkManager networkManager = coreState.getNetwork().getNetworkManager();
 
@@ -1187,7 +1177,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @return boolean Returns true/false based on whether permission is granted or denied.
      */
     public boolean isPushPermissionGranted() {
-        return coreState.getInApp().getInAppController().isPushPermissionGranted();
+        return coreState.getInApp().isPushPermissionGranted();
     }
 
     /**
@@ -1195,7 +1185,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param jsonObject JSONObject - Accepts jsonObject created by {@link CTLocalInApp} object
      */
     public void promptPushPrimer(JSONObject jsonObject) {
-        coreState.getInApp().getInAppController().promptPushPrimer(jsonObject);
+        coreState.getInApp().promptPushPrimer(jsonObject);
     }
 
     /**
@@ -1204,7 +1194,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                             dialog which routes to app's notification settings page.
      */
     public void promptForPushPermission(boolean showFallbackSettings) {
-        coreState.getInApp().getInAppController().promptPermission(showFallbackSettings);
+        coreState.getInApp().promptPermission(showFallbackSettings);
     }
 
     // Initialize
@@ -1330,7 +1320,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().debug(getAccountId(), "Discarding InApp Notifications...");
             getConfigLogger().debug(getAccountId(),
                     "Please Note - InApp Notifications will be dropped till resumeInAppNotifications() is not called again");
-            coreState.getInApp().getInAppController().discardInApps();
+            coreState.getInApp().discardInApps();
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot discard InApp Notifications.");
@@ -1835,7 +1825,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public InAppNotificationListener getInAppNotificationListener() {
-        return coreState.getInApp().getInAppCallbackManager().getInAppNotificationListener();
+        return coreState.getInApp().getInAppNotificationListener();
     }
 
     /**
@@ -1845,7 +1835,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener) {
-        coreState.getInApp().getInAppCallbackManager().setInAppNotificationListener(inAppNotificationListener);
+        coreState.getInApp().setInAppNotificationListener(inAppNotificationListener);
     }
 
     /**
@@ -1857,14 +1847,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param pushPermissionResponseListener An {@link PushPermissionResponseListener} object
      */
     @SuppressWarnings({"unused"})
-    public void unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener
-                                                                           pushPermissionResponseListener) {
-        if (pushPermissionResponseListener == null) {
-            Logger.v("Passing null PushPermissionResponseListener to unregister is not allowed");
-            return;
-        }
-        coreState.getInApp().getInAppCallbackManager().
-                unregisterPushPermissionResponseListener(pushPermissionResponseListener);
+    public void unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener pushPermissionResponseListener) {
+        coreState.getInApp().unregisterPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
     /**
@@ -1879,12 +1863,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void registerPushPermissionNotificationResponseListener(PushPermissionResponseListener
                                                                           pushPermissionResponseListener) {
-        if (pushPermissionResponseListener == null) {
-            Logger.v("Passing null PushPermissionResponseListener to register is not allowed");
-            return;
-        }
-        coreState.getInApp().getInAppCallbackManager().
-                registerPushPermissionResponseListener(pushPermissionResponseListener);
+        coreState.getInApp().registerPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
     /**
@@ -2617,7 +2596,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void resumeInAppNotifications() {
         if (!coreState.getCore().getConfig().isAnalyticsOnly()) {
             getConfigLogger().debug(getAccountId(), "Resuming InApp Notifications...");
-            coreState.getInApp().getInAppController().resumeInApps();
+            coreState.getInApp().resumeInApps();
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot resume InApp Notifications.");
@@ -2689,7 +2668,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("unused")
     public void setInAppNotificationButtonListener(InAppNotificationButtonListener listener) {
-        coreState.getInApp().getInAppCallbackManager().setInAppNotificationButtonListener(listener);
+        coreState.getInApp().setInAppNotificationButtonListener(listener);
     }
 
     @SuppressWarnings("unused")
@@ -2923,7 +2902,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().debug(getAccountId(), "Suspending InApp Notifications...");
             getConfigLogger().debug(getAccountId(),
                     "Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called again");
-            coreState.getInApp().getInAppController().suspendInApps();
+            coreState.getInApp().suspendInApps();
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot suspend InApp Notifications.");
@@ -3419,21 +3398,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param callback Callback instance {@link FetchInAppsCallback} to be invoked when fetching is done.
      */
     public void fetchInApps(FetchInAppsCallback callback) {
-        if (coreState.getCore().getConfig().isAnalyticsOnly()) {
-            return;
-        }
-        Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...");
-
-        if (callback != null) {
-            coreState.getInApp().getInAppCallbackManager().setFetchInAppsCallback(callback);
-        }
-
-        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS);
-        coreState.getAnalytics().sendFetchEvent(event);
+        coreState.getInApp().fetchInApps(callback);
     }
 
     @NonNull
-    JSONObject getFetchRequestAsJson(int fetchType) {
+    public static JSONObject getFetchRequestAsJson(int fetchType) {
+        // todo remove me, use AnalyticsFeature.fetchRequestAsJson
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();
         try {
@@ -3592,23 +3562,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public void clearInAppResources(boolean expiredOnly) {
-
-        Logger logger = getConfigLogger();
-
-        StoreRegistry storeRegistry = coreState.getInApp().getStoreRegistry();
-        if (storeRegistry == null) {
-            logger.info(
-                    "There was a problem clearing resources because instance is not completely initialised, please try again after some time");
-            return;
-        }
-
-        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
-
-        if (expiredOnly) {
-            impl.cleanupExpiredResources(CtCacheType.IMAGE);
-        } else {
-            impl.cleanupAllResources(CtCacheType.IMAGE);
-        }
+        coreState.getInApp().clearInAppResources(expiredOnly);
     }
 
     /**
@@ -3621,23 +3575,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @WorkerThread
     public void clearFileResources(boolean expiredOnly) {
-
-        Logger logger = getConfigLogger();
-
-        StoreRegistry storeRegistry = coreState.getInApp().getStoreRegistry();
-        if (storeRegistry == null) {
-            logger.info(
-                    "There was a problem clearing file resources because instance is not completely initialised, please try again after some time");
-            return;
-        }
-
-        FileResourcesRepoImpl impl = FileResourcesRepoFactory.createFileResourcesRepo(context, logger, storeRegistry);
-
-        if (expiredOnly) {
-            impl.cleanupExpiredResources(CtCacheType.FILES);
-        } else {
-            impl.cleanupAllResources(CtCacheType.FILES);
-        }
+        coreState.getInApp().clearFileResources(expiredOnly);
     }
 
     /**

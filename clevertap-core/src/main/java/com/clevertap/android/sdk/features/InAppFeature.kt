@@ -6,9 +6,12 @@ import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.InAppFCManager
+import com.clevertap.android.sdk.InAppNotificationButtonListener
+import com.clevertap.android.sdk.InAppNotificationListener
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.PushPermissionHandler
+import com.clevertap.android.sdk.PushPermissionResponseListener
 import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.events.EventMediator
@@ -19,7 +22,9 @@ import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppNotificationInflater
 import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateContext
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
 import com.clevertap.android.sdk.inapp.data.CtCacheType
@@ -35,7 +40,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
-import kotlin.text.split
 
 /**
  * In-app messaging feature
@@ -501,6 +505,198 @@ internal class InAppFeature(
             dataFeature.localDataStore.persistUserEventLog(eventName)
         }
     }
+
+    // ========== PUBLIC API FACADE ==========
+    // These methods provide direct delegation from CleverTapAPI to InApp functionality
+    // Signature matches CleverTapAPI public methods for 1:1 mapping
+
+    /**
+     * Suspends display of InApp Notifications.
+     * The InApp Notifications are queued once this method is called.
+     */
+    fun suspendInApps() {
+        if (!coreContract.config().isAnalyticsOnly) {
+            coreContract.logger().debug(coreContract.config().accountId, "Suspending InApp Notifications...")
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called again"
+            )
+            inAppController.suspendInApps()
+        } else {
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "CleverTap instance is set for Analytics only! Cannot suspend InApp Notifications."
+            )
+        }
+    }
+
+    /**
+     * Resumes display of InApp Notifications.
+     * Shows all queued InApp Notifications and resumes InApp on events raised after this method.
+     */
+    fun resumeInApps() {
+        if (!coreContract.config().isAnalyticsOnly) {
+            coreContract.logger().debug(coreContract.config().accountId, "Resuming InApp Notifications...")
+            inAppController.resumeInApps()
+        } else {
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "CleverTap instance is set for Analytics only! Cannot resume InApp Notifications."
+            )
+        }
+    }
+
+    /**
+     * Suspends display of InApp Notifications and discards any new InApp Notifications.
+     * InApp Notifications will be displayed only once resumeInAppNotifications() is called.
+     */
+    fun discardInApps() {
+        if (!coreContract.config().isAnalyticsOnly) {
+            coreContract.logger().debug(coreContract.config().accountId, "Discarding InApp Notifications...")
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "Please Note - InApp Notifications will be dropped till resumeInAppNotifications() is not called again"
+            )
+            inAppController.discardInApps()
+        } else {
+            coreContract.logger().debug(
+                coreContract.config().accountId,
+                "CleverTap instance is set for Analytics only! Cannot discard InApp Notifications."
+            )
+        }
+    }
+
+    /**
+     * Checks whether notification permission is granted or denied for Android 13 and above devices.
+     */
+    fun isPushPermissionGranted(): Boolean {
+        return inAppController.isPushPermissionGranted()
+    }
+
+    /**
+     * Calls the push primer flow for Android 13 and above devices.
+     */
+    fun promptPushPrimer(jsonObject: JSONObject) {
+        inAppController.promptPushPrimer(jsonObject)
+    }
+
+    /**
+     * Calls directly hard permission dialog, if push primer is not required.
+     */
+    fun promptPermission(showFallbackSettings: Boolean) {
+        inAppController.promptPermission(showFallbackSettings)
+    }
+
+    /**
+     * Returns the InAppNotificationListener object
+     */
+    fun getInAppNotificationListener(): InAppNotificationListener? {
+        return inAppCallbackManager.getInAppNotificationListener()
+    }
+
+    /**
+     * Sets the InAppNotificationListener
+     */
+    fun setInAppNotificationListener(listener: InAppNotificationListener?) {
+        inAppCallbackManager.setInAppNotificationListener(listener)
+    }
+
+    /**
+     * Sets the InAppNotificationButtonListener
+     */
+    fun setInAppNotificationButtonListener(listener: InAppNotificationButtonListener?) {
+        inAppCallbackManager.setInAppNotificationButtonListener(listener)
+    }
+
+    /**
+     * Registers PushPermissionResponseListener
+     */
+    fun registerPushPermissionResponseListener(listener: PushPermissionResponseListener?) {
+        if (listener == null) {
+            Logger.v("Passing null PushPermissionResponseListener to register is not allowed")
+            return
+        }
+        inAppCallbackManager.registerPushPermissionResponseListener(listener)
+    }
+
+    /**
+     * Unregisters PushPermissionResponseListener
+     */
+    fun unregisterPushPermissionResponseListener(listener: PushPermissionResponseListener?) {
+        if (listener == null) {
+            Logger.v("Passing null PushPermissionResponseListener to unregister is not allowed")
+            return
+        }
+        inAppCallbackManager.unregisterPushPermissionResponseListener(listener)
+    }
+
+    /**
+     * Retrieve a CustomTemplateContext for a template that is currently displaying.
+     */
+    fun getActiveContextForTemplate(templateName: String): CustomTemplateContext? {
+        return templatesManager.getActiveContextForTemplate(templateName)
+    }
+
+    /**
+     * Deletes all images and gifs which are preloaded for inapps in cs mode
+     */
+    @WorkerThread
+    fun clearInAppResources(expiredOnly: Boolean) {
+        val impl = FileResourcesRepoFactory.createFileResourcesRepo(
+            coreContract.context(),
+            coreContract.logger(),
+            storeRegistry
+        )
+
+        if (expiredOnly) {
+            impl.cleanupExpiredResources(CtCacheType.IMAGE)
+        } else {
+            impl.cleanupAllResources(CtCacheType.IMAGE)
+        }
+    }
+
+    /**
+     * Deletes all types of files which are preloaded for SDK features
+     */
+    @WorkerThread
+    fun clearFileResources(expiredOnly: Boolean) {
+        val impl = FileResourcesRepoFactory.createFileResourcesRepo(
+            coreContract.context(),
+            coreContract.logger(),
+            storeRegistry
+        )
+
+        if (expiredOnly) {
+            impl.cleanupExpiredResources(CtCacheType.FILES)
+        } else {
+            impl.cleanupAllResources(CtCacheType.FILES)
+        }
+    }
+
+    /**
+     * Fetches in-app notifications from the server.
+     * This method is asynchronous and the result of the fetch operation
+     * will be delivered to the [com.clevertap.android.sdk.FetchInAppsCallback] if it has been set.
+     *
+     * @param callback An optional [com.clevertap.android.sdk.FetchInAppsCallback] to be notified
+     *                 of the fetch result. If provided, this callback will be triggered once,
+     *                 either on success or failure. It is then discarded.
+     */
+    fun fetchInApps(callback: FetchInAppsCallback?) {
+        if (coreContract.config().isAnalyticsOnly) {
+            return
+        }
+        Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...")
+
+        if (callback != null) {
+            inAppCallbackManager.setFetchInAppsCallback(callback)
+        }
+
+        val event = AnalyticsFeature.fetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS)
+        coreContract.analytics().sendFetchEvent(event)
+    }
+
+    // ========== PUBLIC API FACADE END ==========
 }
 
 internal interface InAppFeatureMethods {
