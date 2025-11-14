@@ -1874,7 +1874,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public Location getLocation() {
-        return coreState.getProfileFeat().getLocationManager()._getLocation();
+        return coreState.getProfileFeat().getLocation();
     }
 
     /**
@@ -1885,7 +1885,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void setLocation(Location location) {
-        coreState.getProfileFeat().getLocationManager()._setLocation(location);
+        coreState.getProfileFeat().setLocation(location);
     }
 
     /**
@@ -2592,9 +2592,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public Future<?> setLocationForGeofences(Location location, int sdkVersion) {
-        coreState.getCore().getCoreMetaData().setLocationForGeofence(true);
-        coreState.getCore().getCoreMetaData().setGeofenceSDKVersion(sdkVersion);
-        return coreState.getProfileFeat().getLocationManager()._setLocation(location);
+        return coreState.getProfileFeat().setLocationForGeofences(location, sdkVersion);
     }
 
     /**

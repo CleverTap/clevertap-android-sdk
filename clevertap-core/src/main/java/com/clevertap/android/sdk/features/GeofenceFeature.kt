@@ -12,7 +12,7 @@ import org.json.JSONObject
 internal class GeofenceFeature() : CleverTapFeature {
 
     lateinit var coreContract: CoreContract
-    var geofenceCallback: GeofenceCallback? = null
+    private var geofenceCallback: GeofenceCallback? = null
 
     // Lazy-initialized Geofence dependencies (initialized after coreContract is set)
     val geofenceResponse: GeofenceResponse by lazy {
@@ -36,4 +36,24 @@ internal class GeofenceFeature() : CleverTapFeature {
         }
         geofenceResponse.processResponse(response, geofenceCallback)
     }
+
+    // ========== PUBLIC API FACADES ==========
+    // These methods provide direct delegation from CleverTapAPI to Geofence functionality
+    // Signature matches CleverTapAPI public methods for 1:1 mapping
+
+    /**
+     * Returns the GeofenceCallback object
+     */
+    fun getGeofenceCallback(): GeofenceCallback? {
+        return geofenceCallback
+    }
+
+    /**
+     * Sets the geofence callback
+     */
+    fun setGeofenceCallback(callback: GeofenceCallback?) {
+        this.geofenceCallback = callback
+    }
+
+    // ========== PUBLIC API FACADES END ==========
 }

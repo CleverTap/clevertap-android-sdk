@@ -23,4 +23,31 @@ internal class ProfileFeature(
             analyticsManager = coreContract.analytics()
         )
     }
+
+    // ========== PUBLIC API FACADES ==========
+    // These methods provide direct delegation from CleverTapAPI to Profile functionality
+    // Signature matches CleverTapAPI public methods for 1:1 mapping
+
+    /**
+     * Get the current device location
+     */
+    fun getLocation(): android.location.Location? {
+        return locationManager._getLocation()
+    }
+
+    /**
+     * Set the user profile location in CleverTap
+     */
+    fun setLocation(location: android.location.Location?): java.util.concurrent.Future<*>? {
+        return locationManager._setLocation(location)
+    }
+
+    /**
+     * Set location for geofences
+     */
+    fun setLocationForGeofences(location: android.location.Location?, sdkVersion: Int): java.util.concurrent.Future<*>? {
+        coreContract.coreMetaData().setLocationForGeofence(true)
+        coreContract.coreMetaData().setGeofenceSDKVersion(sdkVersion)
+        return locationManager._setLocation(location)
+    }
 }
