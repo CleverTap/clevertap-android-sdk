@@ -30,6 +30,7 @@ import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -684,9 +685,7 @@ public class PushProviders implements CTPushProviderListener {
         task.execute("createOrResetWorker", new Callable<Void>() {
             @Override
             public Void call() {
-                if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                    stopJobScheduler(context);
-                }
+                stopJobScheduler(context);
                 if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
                     createOrResetWorker(false);
                 } else {
@@ -861,8 +860,11 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(channelIdError);
             }
 
+            boolean silenceInForeground = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_SILENCE_IN_FOREGROUND));
+            boolean hideHeadsUp = CoreMetaData.isAppForeground() && silenceInForeground;
+
             // get channel using channel id from push payload. If channel id is null or empty then create default
-            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context);
+            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context, hideHeadsUp);
 
             // if no channel gets created then do not render push
             if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
