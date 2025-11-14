@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
+import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.AnalyticsManager
@@ -16,7 +17,6 @@ import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.InAppNotificationActivity
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.Utils
@@ -55,6 +55,7 @@ import com.clevertap.android.sdk.utils.filterObjects
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.util.Collections
 
 internal class InAppController(
@@ -80,6 +81,17 @@ internal class InAppController(
         DISCARDED,
         SUSPENDED,
         RESUMED
+    }
+
+    private var inAppDisplayListener: WeakReference<InAppDisplayListener>? = null
+
+    fun registerInAppDisplayListener(display: InAppDisplayListener) {
+        inAppDisplayListener = WeakReference(display)
+    }
+
+    fun unregisterInAppDisplayListener() {
+        logger.verbose("Unregistering InAppDisplay Listener")
+        inAppDisplayListener = null
     }
 
     companion object {
@@ -116,7 +128,10 @@ internal class InAppController(
 
     private val logger = config.logger
     private val defaultLogTag = config.accountId
+
+    @Volatile
     private var inAppState = InAppState.RESUMED
+
     private val inAppExcludedActivityNames = getExcludedActivitiesSet(manifestInfo)
 
     /**
@@ -294,7 +309,7 @@ internal class InAppController(
                     HashMap<String, Any>()
                 }
 
-                Logger.v("Calling the in-app listener on behalf of ${coreMetaData.source}")
+                logger.verbose("Calling the in-app listener on behalf of ${coreMetaData.source}")
 
                 if (formData != null) {
                     listener.onDismissed(notifKVS, Utils.convertBundleObjectToHashMap(formData))
@@ -325,13 +340,27 @@ internal class InAppController(
         try {
             callbackManager.getInAppNotificationListener()?.onShow(inAppNotification)
         } catch (t: Throwable) {
-            Logger.v(defaultLogTag, "Failed to call the in-app notification listener", t)
+            logger.verbose(defaultLogTag, "Failed to call the in-app notification listener", t)
         }
     }
 
-    fun discardInApps() {
+    @MainThread
+    fun discardInApps(hideInAppIfVisible: Boolean) {
         inAppState = InAppState.DISCARDED
         logger.verbose(defaultLogTag, "InAppState is DISCARDED")
+
+        if (hideInAppIfVisible) {
+            logger.verbose(defaultLogTag, "Hiding InApp if visible")
+            Utils.runOnUiThread { hideCurrentlyDisplayingInApp() }
+        }
+    }
+
+    @MainThread
+    private fun hideCurrentlyDisplayingInApp() {
+        val inApp = currentlyDisplayingInApp ?: return
+
+        logger.verbose(defaultLogTag, "Hiding currently displaying InApp: ${inApp.campaignId}")
+        inAppDisplayListener?.get()?.hideInApp()
     }
 
     fun resumeInApps() {
@@ -468,7 +497,7 @@ internal class InAppController(
     private fun _showNotificationIfAvailable() {
         try {
             if (!canShowInAppOnCurrentActivity()) {
-                Logger.v("Not showing notification on blacklisted activity")
+                logger.verbose("Not showing notification on blacklisted activity")
                 return
             }
 
@@ -602,7 +631,7 @@ internal class InAppController(
     }
 
     private fun checkPendingNotifications(): Boolean {
-        Logger.v(defaultLogTag, "checking Pending Notifications")
+        logger.verbose(defaultLogTag, "checking Pending Notifications")
         synchronized(pendingNotifications) {
             if (pendingNotifications.isEmpty()) {
                 return false
@@ -615,7 +644,7 @@ internal class InAppController(
     }
 
     private fun inAppDidDismiss(inAppNotification: CTInAppNotification) {
-        Logger.v(defaultLogTag, "Running inAppDidDismiss")
+        logger.verbose(defaultLogTag, "Running inAppDidDismiss")
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp?.campaignId == inAppNotification.campaignId)) {
             currentlyDisplayingInApp = null
             checkPendingNotifications()
@@ -706,43 +735,60 @@ internal class InAppController(
             return
         }
 
-        Logger.v(defaultLogTag, "Attempting to show next In-App")
+        if (inAppState == InAppState.DISCARDED) {
+            logger.verbose(
+                defaultLogTag,
+                "InApp Notifications are set to be discarded at main thread check, not showing the InApp Notification"
+            )
+            return
+        }
 
         if (!CoreMetaData.isAppForeground()) {
             pendingNotifications.add(inAppNotification)
-            Logger.v(defaultLogTag, "Not in foreground, queueing this In App")
+            logger.verbose(defaultLogTag, "Not in foreground, queueing this In App")
             return
         }
 
         if (currentlyDisplayingInApp != null) {
             pendingNotifications.add(inAppNotification)
-            Logger.v(defaultLogTag, "In App already displaying, queueing this In App")
+            logger.verbose(defaultLogTag, "In App already displaying, queueing this In App")
             return
         }
 
         if (!canShowInAppOnActivity(activity)) {
             pendingNotifications.add(inAppNotification)
-            Logger.v(
+            logger.verbose(
                 defaultLogTag,
                 "Not showing In App on blacklisted activity, queuing this In App"
             )
             return
         }
 
+        if (inAppState == InAppState.SUSPENDED) {
+            pendingNotifications.add(inAppNotification)
+            logger.verbose(
+                defaultLogTag,
+                "InApp Notifications are set to be suspended at main thread check, queuing the In App"
+            )
+            return
+        }
+
         if ((clock.currentTimeMillis() / 1000) > inAppNotification.timeToLive) {
-            Logger.d("InApp has elapsed its time to live, not showing the InApp")
+            logger.debug("InApp has elapsed its time to live, not showing the InApp")
             return
         }
 
         val isHtmlType = Constants.KEY_CUSTOM_HTML == inAppNotification.type
         if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
-            Logger.d(
+            logger.debug(
                 defaultLogTag,
                 "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp"
             )
             showNotificationIfAvailable()
             return
         }
+
+        logger.verbose(defaultLogTag, "Attempting to show next In-App")
 
         currentlyDisplayingInApp = inAppNotification
 
@@ -764,14 +810,14 @@ internal class InAppController(
                     if (activity == null) {
                         throw IllegalStateException("Current activity reference not found")
                     }
-                    Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
+                    logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
                     InAppNotificationActivity.launchForInAppNotification(
                         activity,
                         inAppNotification,
                         config
                     )
                 } catch (t: Throwable) {
-                    Logger.v(
+                    logger.verbose(
                         "Please verify the integration of your app. It is not setup to support in-app notifications yet.",
                         t
                     )
@@ -802,14 +848,14 @@ internal class InAppController(
             }
 
             else -> {
-                Logger.d(defaultLogTag, "Unknown InApp Type found: $type")
+                logger.debug(defaultLogTag, "Unknown InApp Type found: $type")
                 currentlyDisplayingInApp = null
                 return
             }
         }
 
         if (inAppFragment != null) {
-            Logger.d("Displaying In-App: ${inAppNotification.jsonDescription}")
+            logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
             val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
                 inAppFragment,
                 activity,

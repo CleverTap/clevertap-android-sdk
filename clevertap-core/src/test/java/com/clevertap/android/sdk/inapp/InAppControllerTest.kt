@@ -401,7 +401,7 @@ class InAppControllerTest {
     @Test
     fun `discardInApps should drop all in apps until resumeInApps is called`() {
         val inAppController = createInAppController()
-        inAppController.discardInApps()
+        inAppController.discardInApps(false)
 
         // TODO verify when multiple inApps are added to the queue only the first is discarded
 //        val inApps =
@@ -412,6 +412,46 @@ class InAppControllerTest {
 
         inAppController.resumeInApps()
         assertNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
+    fun `discardInApps should not hideInApp when nothing is displayed`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+
+        inAppController.discardInApps(true)
+
+        verify(exactly = 0) { mockDisplayListener.hideInApp() }
+
+        inAppController.unregisterInAppDisplayListener()
+    }
+
+    @Test
+    fun `discardInApps should hideInApp when inapp is displayed`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+        val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
+        inAppController.addInAppNotificationsToQueue(inApps)
+
+        inAppController.discardInApps(true)
+
+        verify { mockDisplayListener.hideInApp() }
+    }
+
+    @Test
+    fun `discardInApps should not hideInApp when inapp is displayed and listener is not set`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+        val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
+        inAppController.addInAppNotificationsToQueue(inApps)
+        inAppController.unregisterInAppDisplayListener()
+
+        inAppController.discardInApps(true)
+
+        verify(exactly = 0) { mockDisplayListener.hideInApp() }
     }
 
     @Test
