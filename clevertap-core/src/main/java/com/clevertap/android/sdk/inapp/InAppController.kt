@@ -352,7 +352,7 @@ internal class InAppController(
 
         if (hideInAppIfVisible) {
             logger.verbose(defaultLogTag, "Hiding InApp if visible")
-            hideCurrentlyDisplayingInApp()
+            Utils.runOnUiThread { hideCurrentlyDisplayingInApp() }
         }
     }
 
@@ -746,19 +746,19 @@ internal class InAppController(
 
         if (!CoreMetaData.isAppForeground()) {
             pendingNotifications.add(inAppNotification)
-            Logger.v(defaultLogTag, "Not in foreground, queueing this In App")
+            logger.verbose(defaultLogTag, "Not in foreground, queueing this In App")
             return
         }
 
         if (currentlyDisplayingInApp != null) {
             pendingNotifications.add(inAppNotification)
-            Logger.v(defaultLogTag, "In App already displaying, queueing this In App")
+            logger.verbose(defaultLogTag, "In App already displaying, queueing this In App")
             return
         }
 
         if (!canShowInAppOnActivity(activity)) {
             pendingNotifications.add(inAppNotification)
-            Logger.v(
+            logger.verbose(
                 defaultLogTag,
                 "Not showing In App on blacklisted activity, queuing this In App"
             )
@@ -789,7 +789,7 @@ internal class InAppController(
             return
         }
 
-        Logger.v(defaultLogTag, "Attempting to show next In-App")
+        logger.verbose(defaultLogTag, "Attempting to show next In-App")
 
         currentlyDisplayingInApp = inAppNotification
 

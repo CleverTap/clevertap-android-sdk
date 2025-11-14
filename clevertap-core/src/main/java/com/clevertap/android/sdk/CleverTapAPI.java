@@ -23,7 +23,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.text.TextUtils;
-import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -1374,7 +1373,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * The InApp Notifications will be displayed only once resumeInAppNotifications() is called.
      * @noinspection unused
      */
-    @MainThread
     public void discardInAppNotifications() {
         discardInAppNotifications(false);
     }
@@ -1389,7 +1387,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                              if false, allows the currently visible InApp to remain displayed
      * @noinspection unused
      */
-    @MainThread
     public void discardInAppNotifications(boolean dismissInAppIfVisible) {
         if (!coreState.getConfig().isAnalyticsOnly()) {
             getConfigLogger().debug(getAccountId(), "Discarding InApp Notifications...");
