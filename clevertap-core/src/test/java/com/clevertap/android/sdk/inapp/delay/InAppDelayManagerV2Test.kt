@@ -4,6 +4,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.testing.TestLifecycleOwner
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.utils.Clock
@@ -50,7 +51,7 @@ class InAppDelayManagerV2Test {
     private lateinit var delayManager: InAppDelayManagerV2
     private lateinit var mockLogger: Logger
     private lateinit var mockStore: DelayedLegacyInAppStore
-    private lateinit var mockClock: Clock
+    private lateinit var testClock: TestClock
     private lateinit var testScope: TestScope
     private lateinit var testLifecycleOwner: TestLifecycleOwner
 
@@ -61,10 +62,7 @@ class InAppDelayManagerV2Test {
         // Mock dependencies
         mockLogger = mockk(relaxed = true)
         mockStore = mockk(relaxed = true)
-        mockClock = mockk(relaxed = true)
-
-        // Default clock behavior - returns incrementing time
-        every { mockClock.currentTimeMillis() } returns 1000L
+        testClock = TestClock(1000L)
 
         testScope = TestScope()
         // Create test scope
@@ -79,7 +77,7 @@ class InAppDelayManagerV2Test {
 
     private fun createDelayManager(
         store: DelayedLegacyInAppStore? = mockStore,
-        clock: Clock = mockClock,
+        clock: Clock = testClock,
     ): InAppDelayManagerV2 {
         return InAppDelayManagerV2(
             accountId = accountId,
@@ -155,9 +153,12 @@ class InAppDelayManagerV2Test {
         assertEquals(inapp.toString(), (callbackResult as DelayedInAppResult.Success).inApp.toString())
 
         // Verify store interactions
-        verify { mockStore.saveDelayedInAppsBatch(any()) }
-        verify { mockStore.getDelayedInApp("inapp-1") }
-        verify { mockStore.removeDelayedInApp("inapp-1") }
+        verifyOrder {
+            mockStore.saveDelayedInAppsBatch(any())
+            mockStore.getDelayedInApp("inapp-1")
+            mockStore.removeDelayedInApp("inapp-1")
+        }
+        confirmVerified(mockStore)
     }
 
     private fun TestScope.handleLifecycleStates() {
@@ -477,10 +478,6 @@ class InAppDelayManagerV2Test {
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp("inapp-1") } returns inapp
 
-        // Mock clock to track time
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
-
         delayManager = createDelayManager()
         moveAppToForeground()// let pending coroutine for foreground start executing
 
@@ -491,13 +488,13 @@ class InAppDelayManagerV2Test {
 
         // Fast forward 3 seconds
         advanceTimeBy(3000)
-        currentTime += 3000
+        testClock.advanceTime(3000)
 
         // App goes to background (at 3 seconds)
         moveAppToBackground(runPendingCoroutines = false)
 
         // Time passes in background (but timer cancelled!)
-        currentTime += 5000 // 5 seconds pass in real time
+        testClock.advanceTime(5000) // 5 seconds pass in real time
 
         moveAppToForeground(runPendingCoroutines = false)
 
@@ -522,8 +519,6 @@ class InAppDelayManagerV2Test {
         val inapp = createMockInApp(id = "inapp-1", delay = 10)
         var callbackResult: DelayedInAppResult? = null
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.removeDelayedInApp("inapp-1") } returns true
 
@@ -537,13 +532,13 @@ class InAppDelayManagerV2Test {
 
         // Fast forward 3 seconds
         advanceTimeBy(3000)
-        currentTime += 3000
+        testClock.advanceTime(3000)
 
         // App goes to background
         moveAppToBackground(runPendingCoroutines = false)
 
         // Time passes in background (15 seconds - more than remaining 7 seconds)
-        currentTime += 15000
+        testClock.advanceTime(15000)
 
         // App comes to foreground
         moveAppToForeground(runPendingCoroutines = false)
@@ -565,8 +560,6 @@ class InAppDelayManagerV2Test {
         val inapp = createMockInApp(id = "inapp-1", delay = 30) // 30 second delay
         var callbackResult: DelayedInAppResult? = null
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp("inapp-1") } returns inapp
 
@@ -580,33 +573,33 @@ class InAppDelayManagerV2Test {
 
         // Cycle 1: 5s foreground
         advanceTimeBy(5000)  // Coroutine time advances
-        currentTime += 5000  // Clock time advances
+        testClock.advanceTime(5000)  // Clock time advances
         // Total elapsed: 5s, Remaining: 25s
 
         moveAppToBackground(runPendingCoroutines = false)
-        currentTime += 3000  // 3s in background (only clock time advances, no coroutine time)
+        testClock.advanceTime(3000)  // 3s in background (only clock time advances, no coroutine time)
         // Total elapsed: 8s, Remaining: 22s
 
         // Cycle 2: 6s foreground
         moveAppToForeground(runPendingCoroutines = false)
         // Note: Timer reschedules with remaining 22s
         advanceTimeBy(6000)  // Coroutine time advances
-        currentTime += 6000  // Clock time advances
+        testClock.advanceTime(6000)  // Clock time advances
         // Total elapsed: 14s, Remaining: 16s
 
         moveAppToBackground(runPendingCoroutines = false)
-        currentTime += 4000  // 4s in background
+        testClock.advanceTime(4000)  // 4s in background
         // Total elapsed: 18s, Remaining: 12s
 
         // Cycle 3: 7s foreground
         moveAppToForeground(runPendingCoroutines = false)
         // Note: Timer reschedules with remaining 12s
         advanceTimeBy(7000)  // Coroutine time advances
-        currentTime += 7000  // Clock time advances
+        testClock.advanceTime(7000)  // Clock time advances
         // Total elapsed: 25s, Remaining: 5s
 
         moveAppToBackground(runPendingCoroutines = false)
-        currentTime += 2000  // 2s in background
+        testClock.advanceTime(2000)  // 2s in background
         // Total elapsed: 27s, Remaining: 3s
 
         // Final foreground
@@ -638,9 +631,6 @@ class InAppDelayManagerV2Test {
         val inapp3 = createMockInApp(id = "inapp-3", delay = 25)  // 25s total
 
         val callbackResults = mutableListOf<DelayedInAppResult>()
-
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp("inapp-2") } returns inapp2
         every { mockStore.getDelayedInApp("inapp-3") } returns inapp3
@@ -662,7 +652,7 @@ class InAppDelayManagerV2Test {
         // FOREGROUND: Run for 3 seconds
         // ========================================
         advanceTimeBy(3000)
-        currentTime += 3000  // currentTime = 4000ms
+        testClock.advanceTime(3000)  // currentTime = 4000ms
 
         // Elapsed from scheduledAt:
         // - inapp1: 4000 - 1000 = 3000ms elapsed, 5000ms remaining (8000 - 3000)
@@ -675,7 +665,7 @@ class InAppDelayManagerV2Test {
         // BACKGROUND: 7 seconds pass (only clock time, no coroutine time)
         // ========================================
         moveAppToBackground(runPendingCoroutines = false)
-        currentTime += 7000  // currentTime = 11000ms
+        testClock.advanceTime(7000)  // currentTime = 11000ms
 
         // Total elapsed from scheduledAt (both foreground + background):
         // - inapp1: 11000 - 1000 = 10000ms elapsed (EXCEEDED 8000ms delay) → EXPIRED
@@ -727,8 +717,6 @@ class InAppDelayManagerV2Test {
         val inapp = createMockInApp(id = "inapp-1", delay = 10)  // 10 second delay
         var callbackResult: DelayedInAppResult? = null
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.removeDelayedInApp("inapp-1") } returns true
 
@@ -746,7 +734,7 @@ class InAppDelayManagerV2Test {
         // FOREGROUND: 6 seconds
         // ========================================
         advanceTimeBy(6000)
-        currentTime += 6000  // currentTime = 7000ms
+        testClock.advanceTime(6000)  // currentTime = 7000ms
 
         // Elapsed: 7000 - 1000 = 6000ms
         // Remaining: 10000 - 6000 = 4000ms (4s left)
@@ -757,7 +745,7 @@ class InAppDelayManagerV2Test {
         // BACKGROUND: Exactly 4 seconds pass
         // ========================================
         moveAppToBackground(runPendingCoroutines = false)
-        currentTime += 4000  // currentTime = 11000ms
+        testClock.advanceTime(4000)  // currentTime = 11000ms
 
         // Total elapsed: 11000 - 1000 = 10000ms
         // Remaining: 10000 - 10000 = 0ms (EXACTLY EXPIRED)
@@ -787,8 +775,6 @@ class InAppDelayManagerV2Test {
         val inapp = createMockInApp(id = "inapp-1", delay = 10)  // 10 second delay
         var callbackResult: DelayedInAppResult? = null
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp("inapp-1") } returns inapp
 
@@ -806,7 +792,7 @@ class InAppDelayManagerV2Test {
         // FOREGROUND: 7 seconds
         // ========================================
         advanceTimeBy(7000)
-        currentTime += 7000  // currentTime = 8000ms
+        testClock.advanceTime(7000)  // currentTime = 8000ms
 
         // Elapsed: 8000 - 1000 = 7000ms
         // Remaining: 10000 - 7000 = 3000ms (3s left)
@@ -817,7 +803,7 @@ class InAppDelayManagerV2Test {
         // BACKGROUND: 2.6 seconds pass
         // ========================================
         moveAppToBackground(runPendingCoroutines = false)
-        currentTime += 2600  // currentTime = 10600ms
+        testClock.advanceTime(2600)  // currentTime = 10600ms
 
         // Total elapsed: 10600 - 1000 = 9600ms
         // Remaining: 10000 - 9600 = 400ms (0.4s left - very short!)
@@ -854,8 +840,6 @@ class InAppDelayManagerV2Test {
         val inapp = createMockInApp(id = "inapp-1", delay = 10)  // 10 second delay
         var callbackResult: DelayedInAppResult? = null
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp("inapp-1") } returns inapp
 
@@ -879,7 +863,7 @@ class InAppDelayManagerV2Test {
         // Elapsed: 1000 - 1000 = 0ms
         // Remaining: 10000 - 0 = 10000ms (full delay still needed)
 
-        currentTime += 2000  // currentTime = 3000ms (2s in background)
+        testClock.advanceTime(2000)  // currentTime = 3000ms (2s in background)
 
         // Total elapsed: 3000 - 1000 = 2000ms (2s elapsed in background)
         // Remaining: 10000 - 2000 = 8000ms (8s left)
@@ -1082,8 +1066,6 @@ class InAppDelayManagerV2Test {
         val inapp1 = createMockInApp(id = "inapp-1", delay = 20)
         val inapp2 = createMockInApp(id = "inapp-2", delay = 25)
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp(any()) } returns inapp1
 
@@ -1101,7 +1083,7 @@ class InAppDelayManagerV2Test {
 
         // Foreground for 5s
         advanceTimeBy(5000)
-        currentTime += 5000
+        testClock.advanceTime(5000)
 
         // Background
         moveAppToBackground(runPendingCoroutines = false)
@@ -1111,7 +1093,7 @@ class InAppDelayManagerV2Test {
         assertEquals(2, delayManager.getCancelledJobsCount())
 
         // 3s in background
-        currentTime += 3000
+        testClock.advanceTime(3000)
 
         // Act - Foreground again (both have remaining time, will be rescheduled)
         moveAppToForeground(runPendingCoroutines = false)
@@ -1179,8 +1161,6 @@ class InAppDelayManagerV2Test {
         val inapp1 = createMockInApp(id = "inapp-1", delay = 5)  // Will expire
         val inapp2 = createMockInApp(id = "inapp-2", delay = 20) // Will remain
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp("inapp-2") } returns inapp2
         every { mockStore.removeDelayedInApp("inapp-1") } returns true
@@ -1199,7 +1179,7 @@ class InAppDelayManagerV2Test {
 
         // Foreground 2s
         advanceTimeBy(2000)
-        currentTime += 2000
+        testClock.advanceTime(2000)
 
         // Background
         moveAppToBackground(runPendingCoroutines = false)
@@ -1208,7 +1188,7 @@ class InAppDelayManagerV2Test {
         assertEquals(2, delayManager.getCancelledJobsCount())
 
         // 10s in background (inapp1 expires: 2+10 = 12s > 5s)
-        currentTime += 10000
+        testClock.advanceTime(10000)
 
         // Act - Foreground (inapp1 expired, inapp2 has time left)
         moveAppToForeground(runPendingCoroutines = false)
@@ -1231,8 +1211,6 @@ class InAppDelayManagerV2Test {
         // Arrange
         val inapp = createMockInApp(id = "inapp-1", delay = 30)
 
-        var currentTime = 1000L
-        every { mockClock.currentTimeMillis() } answers { currentTime }
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
         every { mockStore.getDelayedInApp("inapp-1") } returns inapp
 
@@ -1248,7 +1226,7 @@ class InAppDelayManagerV2Test {
 
         // Cycle 1: Foreground 5s → Background
         advanceTimeBy(5000)
-        currentTime += 5000
+        testClock.advanceTime(5000)
         moveAppToBackground(runPendingCoroutines = false)
         advanceTimeBy(1)
 
@@ -1256,7 +1234,7 @@ class InAppDelayManagerV2Test {
         assertEquals(0, delayManager.getActiveCallbackCount())
         assertEquals(1, delayManager.getCancelledJobsCount())
 
-        currentTime += 2000
+        testClock.advanceTime(2000)
 
         // Cycle 2: Foreground 5s → Background
         moveAppToForeground(runPendingCoroutines = false)
@@ -1267,7 +1245,7 @@ class InAppDelayManagerV2Test {
         assertEquals(1, delayManager.getCancelledJobsCount())
 
         advanceTimeBy(5000)
-        currentTime += 5000
+        testClock.advanceTime(5000)
         moveAppToBackground(runPendingCoroutines = false)
         advanceTimeBy(1)
 
@@ -1275,7 +1253,7 @@ class InAppDelayManagerV2Test {
         assertEquals(0, delayManager.getActiveCallbackCount())
         assertEquals(1, delayManager.getCancelledJobsCount())
 
-        currentTime += 3000
+        testClock.advanceTime(3000)
 
         // Final foreground
         moveAppToForeground(runPendingCoroutines = false)

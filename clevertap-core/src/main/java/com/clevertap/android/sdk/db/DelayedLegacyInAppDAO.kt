@@ -5,10 +5,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.Utils
-import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_OUT_OF_MEMORY_ERROR
-import com.clevertap.android.sdk.db.DBAdapter.Companion.DB_UPDATE_ERROR
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
+import com.clevertap.android.sdk.utils.Clock
 
 /**
  * Data class representing a delayed legacy in-app entry for batch operations
@@ -63,7 +61,8 @@ internal interface DelayedLegacyInAppDAO {
 internal class DelayedLegacyInAppDAOImpl(
     private val db: DatabaseHelper,
     private val logger: Logger,
-    private val table: Table
+    private val table: Table,
+    private val clock: Clock = Clock.SYSTEM,
 ) : DelayedLegacyInAppDAO {
 
     @WorkerThread
@@ -83,7 +82,7 @@ internal class DelayedLegacyInAppDAOImpl(
 
         return try {
             db.writableDatabase.beginTransaction()
-            val now = Utils.getNowInMillis()
+            val now = clock.currentTimeMillis()
 
             delayedInApps.forEach { delayedInApp ->
                 logger.verbose("DelayedLegacyInAppDAO: Batch inserting ${delayedInApp.inAppId}")

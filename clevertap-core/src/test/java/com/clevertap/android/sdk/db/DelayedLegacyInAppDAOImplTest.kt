@@ -4,10 +4,11 @@ import android.content.Context
 import android.database.sqlite.SQLiteException
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.Utils
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
@@ -25,6 +26,7 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class DelayedLegacyInAppDAOImplTest {
 
+    private lateinit var testClock: TestClock
     private lateinit var delayedInAppDAO: DelayedLegacyInAppDAO
     private lateinit var databaseHelper: DatabaseHelper
     private lateinit var logger: Logger
@@ -58,11 +60,8 @@ class DelayedLegacyInAppDAOImplTest {
         )
 
         databaseHelper = DatabaseHelper(context, config, "test_ct_delayed_inapps", logger)
-        delayedInAppDAO = DelayedLegacyInAppDAOImpl(databaseHelper, logger, table)
-
-        // Mock Utils.getNowInMillis() for consistent timestamps
-        mockkStatic(Utils::class)
-        every { Utils.getNowInMillis() } returns MOCK_TIME
+        testClock = spyk(TestClock(MOCK_TIME))
+        delayedInAppDAO = DelayedLegacyInAppDAOImpl(databaseHelper, logger, table, testClock)
     }
 
     @After
@@ -116,10 +115,7 @@ class DelayedLegacyInAppDAOImplTest {
         // When
         delayedInAppDAO.insertBatch(batchData)
 
-        // Then
-        verify(exactly = 1) {
-            Utils.getNowInMillis()
-        }
+        verify { testClock.currentTimeMillis() }
     }
 
     @Test
