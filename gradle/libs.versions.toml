@@ -1,11 +1,10 @@
 [versions]
 # Project
-android_compileSdk = "35"
-android_gradle_plugin = "8.6.0"
+android_compileSdk = "36"
+android_gradle_plugin = "8.9.3"
 android_minSdk = "21"
 kotlin_plugin = "2.0.10"
 sonarqube_plugin = "3.3"
-android_buildTools = "34.0.0"
 detekt_gradle_plugin = "1.23.3"
 firebase_gradle_crashlytics = "3.0.2"
 vanniktech_maven_pulish_plugin = "0.32.0"
@@ -26,6 +25,7 @@ lifecycleProcess = "2.9.4"
 
 #UI
 material = "1.12.0"
+android_gif_drawable = "1.2.29"
 
 #Test
 espresso_core = "3.6.1"
@@ -47,11 +47,11 @@ lifecycleRuntimeTesting = "2.9.4"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "7.5.2"
+clevertap_android_sdk = "7.6.0"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.4.0"
 clevertap_hms_sdk = "1.5.1"
-clevertap_push_templates_sdk = "2.1.0"
+clevertap_push_templates_sdk = "2.2.0"
 
 # Glide
 glide = "4.12.0"
@@ -81,6 +81,7 @@ push = "6.11.0.300"
 
 [libraries]
 # Project
+android-gif-drawable = { module = "pl.droidsonroids.gif:android-gif-drawable", version.ref = "android_gif_drawable" }
 android_gradle_plugin = { module = "com.android.tools.build:gradle", version.ref = "android_gradle_plugin" }
 kotlin_gradle_plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin_plugin" }
 detekt_gradle_plugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin" , version.ref= "detekt_gradle_plugin"}

@@ -30,6 +30,9 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
 import androidx.core.app.RemoteInput;
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
+import com.clevertap.android.pushtemplates.media.GifDecoderImpl;
+import com.clevertap.android.pushtemplates.media.TemplateMediaManager;
+import com.clevertap.android.pushtemplates.media.TemplateRepository;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -244,15 +247,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 contentViewManualCarousel.setOnClickPendingIntent(R.id.rightArrowPos0, PendingIntentFactory
                         .getPendingIntent(context, notificationId, extras, false,
-                                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT, null));
+                                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT));
 
                 contentViewManualCarousel.setOnClickPendingIntent(R.id.leftArrowPos0, PendingIntentFactory
                         .getPendingIntent(context, notificationId, extras, false,
-                                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT, null));
+                                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT));
 
                 PendingIntent pIntent = PendingIntentFactory.getPendingIntent(context, notificationId, extras, true,
-                        MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, null
-                );
+                        MANUAL_CAROUSEL_CONTENT_PENDING_INTENT);
 
                 NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
 
@@ -737,7 +739,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                               NotificationCompat.Builder notificationBuilder, String altText) {
         if (imgUrl != null && imgUrl.startsWith("http")) {
             try {
-                Bitmap bpMap = Utils.getNotificationBitmap(imgUrl, false, context);
+                TemplateMediaManager templateMediaManager = new TemplateMediaManager(new TemplateRepository(context, config), new GifDecoderImpl());
+                Bitmap bpMap = templateMediaManager.getNotificationBitmap(imgUrl, false, context);
 
                 if (bpMap == null) {
                     throw new Exception("Failed to fetch big picture!");

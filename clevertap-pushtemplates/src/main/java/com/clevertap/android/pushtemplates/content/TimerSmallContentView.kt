@@ -3,40 +3,47 @@ package com.clevertap.android.pushtemplates.content
 import android.content.Context
 import android.os.Build
 import android.os.SystemClock
+import android.view.View
+import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.TimerTemplateData
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
 internal open class TimerSmallContentView(
     context: Context,
-    timer_end: Int?,
+    timer_end: Long?,
     renderer: TemplateRenderer,
+    data: TimerTemplateData,
     layoutId: Int = R.layout.timer_collapsed
 ) :
-    ActionButtonsContentView(context, layoutId, renderer) {
+    ActionButtonsContentView(context, renderer, layoutId) {
 
     init {
-        setCustomContentViewBasicKeys()
-        setCustomContentViewTitle(renderer.pt_title)
-        setCustomContentViewMessage(renderer.pt_msg)
-        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_small)
-        setCustomBackgroundColour(renderer.pt_bg, R.id.chronometer)
-        setCustomTextColour(renderer.pt_title_clr, R.id.title)
+        setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
+        setCustomContentViewTitle(data.baseContent.textData.title)
+        setCustomContentViewMessage(data.baseContent.textData.message)
+        setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_small)
+        setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.chronometer)
+        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomContentViewChronometerTitleColour(
-            renderer.pt_chrono_title_clr,
-            renderer.pt_title_clr
+            data.chronometerTitleColor,
+            data.baseContent.colorData.titleColor
         )
-        setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
+        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+        remoteView.setViewVisibility(R.id.large_icon, View.GONE)
+
+        // Add a 3 second buffer to prevent negative timer values
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timer_end!!,
+            SystemClock.elapsedRealtime() + timer_end!! + 3 * PTConstants.ONE_SECOND_LONG,
             null,
             true
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             remoteView.setChronometerCountDown(R.id.chronometer, true)
         }
-        setCustomContentViewSmallIcon()
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
     }
 
     private fun setCustomContentViewChronometerTitleColour(
