@@ -1397,15 +1397,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
-
-        CTDisplayUnitController displayUnitController = coreState.getDisplayUnitF().getController();
-        if (displayUnitController != null) {
-            return displayUnitController.getAllDisplayUnits();
-        } else {
-            getConfigLogger()
-                    .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
-            return null;
-        }
+        return coreState.getDisplayUnitF().getAllDisplayUnits();
     }
 
     /**
@@ -1703,14 +1695,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        CTDisplayUnitController dc = coreState.getDisplayUnitF().getController();
-        if (dc != null) {
-            return dc.getDisplayUnitForID(unitID);
-        } else {
-            getConfigLogger().verbose(getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
-            return null;
-        }
+        return coreState.getDisplayUnitF().getDisplayUnitForId(unitID);
     }
 
     /**

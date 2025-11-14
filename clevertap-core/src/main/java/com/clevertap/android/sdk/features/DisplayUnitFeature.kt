@@ -21,8 +21,8 @@ import java.lang.ref.WeakReference
  * Manages display units and content fetching for display units
  */
 internal class DisplayUnitFeature(
-    var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null),
-    var controller: CTDisplayUnitController? = null,
+    private var displayUnitListener: WeakReference<DisplayUnitListener> = WeakReference(null),
+    private var controller: CTDisplayUnitController? = null,
     private val packageNameFetcher: (Context) -> String = { context -> context.packageName }
 ) : CleverTapFeature, DisplayUnitContract {
 
@@ -194,6 +194,38 @@ internal class DisplayUnitFeature(
             )
         }
     }
+
+    // ========== PUBLIC API FACADES ==========
+    // These methods provide direct delegation from CleverTapAPI to DisplayUnit functionality
+    // Signature matches CleverTapAPI public methods for 1:1 mapping
+
+    /**
+     * Get all Display Units
+     */
+    fun getAllDisplayUnits(): ArrayList<CleverTapDisplayUnit>? {
+        return controller?.getAllDisplayUnits() ?: run {
+            coreContract.logger().verbose(
+                coreContract.config().accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to get all Display Units"
+            )
+            null
+        }
+    }
+
+    /**
+     * Get Display Unit for a specific unit ID
+     */
+    fun getDisplayUnitForId(unitID: String?): CleverTapDisplayUnit? {
+        return controller?.getDisplayUnitForID(unitID) ?: run {
+            coreContract.logger().verbose(
+                coreContract.config().accountId,
+                "${Constants.FEATURE_DISPLAY_UNIT}Failed to get Display Unit for id: $unitID"
+            )
+            null
+        }
+    }
+
+    // ========== PUBLIC API FACADES END ==========
 }
 
 interface DisplayUnitContract {
