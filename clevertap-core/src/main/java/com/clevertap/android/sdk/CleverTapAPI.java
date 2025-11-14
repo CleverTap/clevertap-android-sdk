@@ -308,7 +308,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public static void processPushNotification(Context context, Bundle extras) {
         CleverTapAPI instance = fromBundle(context, extras);
         if (instance != null) {
-            instance.coreState.getPush().getPushProviders().processCustomPushNotification(extras);
+            instance.coreState.getPush().processPushNotification(extras);
         }
     }
 
@@ -1633,7 +1633,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public String getDevicePushToken(final PushType type) {
-        return coreState.getPush().getPushProviders().getCachedToken(type);
+        return coreState.getPush().getDevicePushToken(type);
     }
 
     /**
@@ -1643,7 +1643,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public DevicePushTokenRefreshListener getDevicePushTokenRefreshListener() {
-        return coreState.getPush().getPushProviders().getDevicePushTokenRefreshListener();
+        return coreState.getPush().getDevicePushTokenRefreshListener();
     }
 
     /**
@@ -1653,7 +1653,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void setDevicePushTokenRefreshListener(DevicePushTokenRefreshListener tokenRefreshListener) {
-        coreState.getPush().getPushProviders().setDevicePushTokenRefreshListener(tokenRefreshListener);
+        coreState.getPush().setDevicePushTokenRefreshListener(tokenRefreshListener);
 
     }
 
@@ -1967,7 +1967,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @noinspection unused
      */
     public String getPushToken(@NonNull PushType pushType) {
-        return coreState.getPush().getPushProviders().getCachedToken(pushType);
+        return coreState.getPush().getPushToken(pushType);
     }
 
     /**
@@ -2290,7 +2290,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
-        coreState.getPush().getPushProviders().handleToken(fcmId, PushConstants.FCM, register);
+        coreState.getPush().pushFcmRegistrationId(fcmId, register);
     }
 
     /**
@@ -3020,61 +3020,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     //TODO: start synchronizing entire flow from here
     public Future<?> renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
             Bundle extras) {
-
-        CleverTapInstanceConfig config = coreState.getCore().getConfig();
-        Future<?> future = null;
-
-        try {
-            Task<Void> task = coreState.getCore().getExecutors().postAsyncSafelyTask();
-            future = task.submit("CleverTapAPI#renderPushNotification",
-                    () -> {
-                        synchronized (coreState.getPush().getPushProviders().getPushRenderingLock()) {
-                            coreState.getPush().getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
-
-                            if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
-                                coreState.getPush().getPushProviders()
-                                        ._createNotification(context, extras,
-                                                extras.getInt(Constants.PT_NOTIF_ID));
-                            } else {
-                                coreState.getPush().getPushProviders()
-                                        ._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
-                            }
-                        }
-                        return null;
-                    });
-        } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
-        }
-
-        return future;
-
+        return coreState.getPush().renderPushNotification(iNotificationRenderer, context, extras);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public void renderPushNotificationOnCallerThread(@NonNull INotificationRenderer iNotificationRenderer, Context context,
             Bundle extras) {
-
-        CleverTapInstanceConfig config = coreState.getCore().getConfig();
-
-        try {
-            synchronized (coreState.getPush().getPushProviders().getPushRenderingLock()) {
-                config.getLogger().verbose(config.getAccountId(),
-                        "rendering push on caller thread with id = " + Thread.currentThread().getId());
-                coreState.getPush().getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
-
-                if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
-                    coreState.getPush().getPushProviders()
-                            ._createNotification(context, extras,
-                                    extras.getInt(Constants.PT_NOTIF_ID));
-                } else {
-                    coreState.getPush().getPushProviders()
-                            ._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
-                }
-            }
-        } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
-        }
-
+        coreState.getPush().renderPushNotificationOnCallerThread(iNotificationRenderer, context, extras);
     }
 
     /**
@@ -3455,6 +3407,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushRegistrationToken(String token, PushType pushType, boolean register) {
-        coreState.getPush().getPushProviders().handleToken(token, pushType, register);
+        coreState.getPush().pushRegistrationToken(token, pushType, register);
     }
 }

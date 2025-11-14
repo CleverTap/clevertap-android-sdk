@@ -6,8 +6,11 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
+import com.clevertap.android.sdk.pushnotification.INotificationRenderer
+import com.clevertap.android.sdk.pushnotification.PushConstants
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import com.clevertap.android.sdk.pushnotification.PushProviders
+import com.clevertap.android.sdk.pushnotification.PushType
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.PushAmpResponse
@@ -117,5 +120,168 @@ internal class PushFeature(
             coreContract.config().accountId,
             "push notification viewed event sent successfully"
         )
+    }
+
+    // ========== PUBLIC API FACADES ==========
+    // These methods provide direct delegation from CleverTapAPI to Push functionality
+    // Signature matches CleverTapAPI public methods for 1:1 mapping
+
+    /**
+     * Sends the FCM registration ID to CleverTap
+     */
+    fun pushFcmRegistrationId(fcmId: String?, register: Boolean) {
+        pushProviders.handleToken(fcmId, PushConstants.FCM, register)
+    }
+
+    /**
+     * Sends push registration token for the given push type
+     */
+    fun pushRegistrationToken(
+        token: String?,
+        pushType: PushType?,
+        register: Boolean
+    ) {
+        pushProviders.handleToken(token, pushType, register)
+    }
+
+    /**
+     * Returns the device push token or null
+     */
+    fun getPushToken(pushType: PushType): String? {
+        return pushProviders.getCachedToken(pushType)
+    }
+
+    /**
+     * Returns the device push token or null (for backward compatibility)
+     */
+    fun getDevicePushToken(type: PushType): String? {
+        return pushProviders.getCachedToken(type)
+    }
+
+    /**
+     * Returns the DevicePushTokenRefreshListener
+     */
+    fun getDevicePushTokenRefreshListener(): CleverTapAPI.DevicePushTokenRefreshListener? {
+        return pushProviders.devicePushTokenRefreshListener
+    }
+
+    /**
+     * Sets the DevicePushTokenRefreshListener object
+     */
+    fun setDevicePushTokenRefreshListener(tokenRefreshListener: CleverTapAPI.DevicePushTokenRefreshListener?) {
+        pushProviders.devicePushTokenRefreshListener = tokenRefreshListener
+    }
+
+    /**
+     * Sets the RequestDevicePushTokenListener object
+     */
+    fun setRequestDevicePushTokenListener(requestTokenListener: CleverTapAPI.RequestDevicePushTokenListener?) {
+        try {
+            coreContract.logger().verbose(
+                PushConstants.LOG_TAG,
+                PushConstants.FCM_LOG_TAG + "Requesting FCM token using googleservices.json"
+            )
+            com.google.firebase.messaging.FirebaseMessaging
+                .getInstance()
+                .token
+                .addOnCompleteListener { task ->
+                    if (!task.isSuccessful) {
+                        coreContract.logger().verbose(
+                            PushConstants.LOG_TAG,
+                            PushConstants.FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                            task.exception
+                        )
+                        requestTokenListener?.onDevicePushToken(null, PushConstants.FCM)
+                        return@addOnCompleteListener
+                    }
+                    val token = task.result
+                    coreContract.logger().verbose(
+                        PushConstants.LOG_TAG,
+                        PushConstants.FCM_LOG_TAG + "FCM token using googleservices.json - $token"
+                    )
+                    requestTokenListener?.onDevicePushToken(token, PushConstants.FCM)
+                }
+
+        } catch (t: Throwable) {
+            coreContract.logger().verbose(
+                PushConstants.LOG_TAG,
+                PushConstants.FCM_LOG_TAG + "Error requesting FCM token", t
+            )
+            requestTokenListener?.onDevicePushToken(null, PushConstants.FCM)
+        }
+    }
+
+    /**
+     * Renders push notification with custom renderer
+     */
+    fun renderPushNotification(
+        iNotificationRenderer: INotificationRenderer,
+        context: android.content.Context,
+        extras: Bundle?
+    ): java.util.concurrent.Future<*>? {
+        val config = coreContract.config()
+        var future: java.util.concurrent.Future<*>? = null
+
+        try {
+            val task = coreContract.executors().postAsyncSafelyTask<Void>()
+            future = task.submit("CleverTapAPI#renderPushNotification") {
+                synchronized(pushProviders.pushRenderingLock) {
+                    pushProviders.pushNotificationRenderer = iNotificationRenderer
+
+                    if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
+                        pushProviders._createNotification(
+                            context, extras,
+                            extras.getInt(Constants.PT_NOTIF_ID)
+                        )
+                    } else {
+                        pushProviders._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID)
+                    }
+                }
+                null
+            }
+        } catch (t: Throwable) {
+            config.logger.debug(config.accountId, "Failed to process renderPushNotification()", t)
+        }
+
+        return future
+    }
+
+    /**
+     * Renders push notification on caller thread with custom renderer
+     */
+    fun renderPushNotificationOnCallerThread(
+        iNotificationRenderer: INotificationRenderer,
+        context: android.content.Context,
+        extras: Bundle?
+    ) {
+        val config = coreContract.config()
+
+        try {
+            synchronized(pushProviders.pushRenderingLock) {
+                config.logger.verbose(
+                    config.accountId,
+                    "rendering push on caller thread with id = ${Thread.currentThread().id}"
+                )
+                pushProviders.pushNotificationRenderer = iNotificationRenderer
+
+                if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
+                    pushProviders._createNotification(
+                        context, extras,
+                        extras.getInt(Constants.PT_NOTIF_ID)
+                    )
+                } else {
+                    pushProviders._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID)
+                }
+            }
+        } catch (t: Throwable) {
+            config.logger.debug(config.accountId, "Failed to process renderPushNotification()", t)
+        }
+    }
+
+    /**
+     * Process custom push notification
+     */
+    fun processPushNotification(extras: Bundle?) {
+        pushProviders.processCustomPushNotification(extras)
     }
 }
