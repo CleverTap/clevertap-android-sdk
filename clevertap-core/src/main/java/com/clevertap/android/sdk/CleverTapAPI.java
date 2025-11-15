@@ -29,7 +29,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import com.clevertap.android.sdk.cryption.ICryptHandler;
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -44,11 +44,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatePresenter;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplateProducer;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
-import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -71,7 +68,6 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.Var;
@@ -935,7 +931,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final CleverTapAPI finalInstance = instance;
         } else if (instance.getConfig().getEnableCustomCleverTapId() && Utils
                 .validateCTID(cleverTapID) && instance.isErrorDeviceId()) {
-            instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
+            instance.coreState.asyncProfileSwitchUser(null, null, cleverTapID);
         }
         Logger.v(config.getAccountId() + ":async_deviceID", "CleverTapAPI instance = " + instance);
         return instance;
@@ -971,7 +967,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             try {
                 if (instance != null) {
-                    instance.coreState.getActivityLifeCycleManager().activityPaused();
+                    instance.coreState.activityPaused();
                 }
             } catch (Throwable t) {
                 // Ignore
@@ -979,7 +975,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static void onActivityResumed(Activity activity) {
         onActivityResumed(activity, null);
     }
@@ -1016,14 +1012,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             try {
                 if (instance != null) {
-                    instance.coreState.getActivityLifeCycleManager().activityResumed(activity);
+                    instance.coreState.activityResumed(activity);
                 }
             } catch (Throwable t) {
                 Logger.v("Throwable - " + t.getLocalizedMessage());
             }
         }
     }
-    private static CleverTapAPI fromBundle(final Context context, final Bundle extras) {
+    private static CleverTapAPI fromBundle(final Context context, @NonNull final Bundle extras) {
         String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
         return fromAccountId(context, _accountId);
     }
@@ -1231,52 +1227,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         this.coreState = coreState;
         CleverTapAPI.clevertapClock = clock;
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "CoreState is set");
-        asyncStartup();
         Logger.i("CleverTap SDK initialized with accountId: " + config.getAccountId() + " accountToken: " + config
                 .getAccountToken() + " accountRegion: " + config.getAccountRegion());
-    }
-
-    private void asyncStartup() {
-        Task<Void> task = coreState.getExecutors().postAsyncSafelyTask();
-        task.execute("CleverTapAPI#initializeDeviceInfo", () -> {
-            if (getConfig().isDefaultInstance()) {
-                ManifestValidator.validate(context, coreState.getDeviceInfo(), coreState.getPushProviders());
-            }
-            return null;
-        });
-
-        int now = clevertapClock.currentTimeSecondsInt();
-        if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
-            coreState.getConfig().setCreatedPostAppLaunch();
-        }
-
-        task = coreState.getExecutors().postAsyncSafelyTask();
-        task.execute("setStatesAsync", () -> {
-            coreState.getSessionManager().setLastVisitTime();
-            coreState.getSessionManager().setUserLastVisitTs();
-            coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
-            coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
-            coreState.getDeviceInfo().setSystemEventsAllowedStateFromStorage();
-            return null;
-        });
-
-        task = coreState.getExecutors().postAsyncSafelyTask();
-        task.execute("saveConfigtoSharedPrefs", () -> {
-            String configJson = getConfig().toJSONString();
-            if (configJson == null) {
-                Logger.v("Unable to save config to SharedPrefs, config Json is null");
-                return null;
-            }
-            StorageHelper.putString(context, getConfig().getAccountId(), "instance", configJson);
-            return null;
-        });
-        task = coreState.getExecutors().postAsyncSafelyTask();
-        task.execute("recordDeviceIDErrors", () -> {
-            if (coreState.getDeviceInfo().getDeviceID() != null) {
-                coreState.getLoginController().recordDeviceIDErrors();
-            }
-            return null;
-        });
     }
 
     /**
@@ -1327,8 +1279,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void deleteInboxMessage(final CTInboxMessage message) {
-        if (coreState.getControllerManager().getCTInboxController() != null) {
-            coreState.getControllerManager().getCTInboxController().deleteInboxMessage(message);
+        if (coreState.getCTInboxController() != null) {
+            coreState.getCTInboxController().deleteInboxMessage(message);
         } else {
             getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
         }
@@ -1351,8 +1303,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
      */
     public void deleteInboxMessagesForIDs(final ArrayList<String> messageIDs){
-        if (coreState.getControllerManager().getCTInboxController() != null) {
-            coreState.getControllerManager().getCTInboxController().deleteInboxMessagesForIDs(messageIDs);
+        if (coreState.getCTInboxController() != null) {
+            coreState.getCTInboxController().deleteInboxMessagesForIDs(messageIDs);
         } else {
             getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
         }
@@ -1418,7 +1370,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfig().getLogger()
                     .debug(getAccountId(), "Feature flag is not supported with analytics only configuration");
         }
-        return coreState.getControllerManager().getCTFeatureFlagsController();
+        return coreState.getFeatureFlagF().getCtFeatureFlagsController();
     }
 
     /**
@@ -1441,14 +1393,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @RestrictTo(Scope.LIBRARY_GROUP)
     @WorkerThread
     public void setSCDomainListener(SCDomainListener scDomainListener) {
-        coreState.getCallbackManager().setSCDomainListener(scDomainListener);
-
-        if (coreState.getNetworkManager() != null) {
+        try {
+            coreState.getCore().getCoreCallbacks().setScDomainListener(scDomainListener);
             NetworkManager networkManager = coreState.getNetworkManager();
             String domain = networkManager.getDomain(EventGroup.REGULAR);
             if (domain != null) {
                 scDomainListener.onSCDomainAvailable(getSCDomain(domain));
             }
+        } catch (Exception e) {
+            // unreachable code.
         }
     }
 
@@ -1464,8 +1417,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
 
-        if (coreState.getControllerManager().getCTDisplayUnitController() != null) {
-            return coreState.getControllerManager().getCTDisplayUnitController().getAllDisplayUnits();
+        CTDisplayUnitController displayUnitController = coreState.getDisplayUnitF().getController();
+        if (displayUnitController != null) {
+            return displayUnitController.getAllDisplayUnits();
         } else {
             getConfigLogger()
                     .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
@@ -1483,9 +1437,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         Logger.d("CleverTapAPI:getAllInboxMessages: called" );
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
-            if (coreState.getControllerManager().getCTInboxController() != null) {
+            if (coreState.getCTInboxController() != null) {
                 ArrayList<CTMessageDAO> messageDAOArrayList =
-                        coreState.getControllerManager().getCTInboxController().getMessages();
+                        coreState.getCTInboxController().getMessages();
                 for (CTMessageDAO messageDAO : messageDAOArrayList) {
                     Logger.v("CTMessage Dao - " + messageDAO.toJSON().toString());
                     inboxMessageArrayList.add(new CTInboxMessage(messageDAO.toJSON()));
@@ -1505,7 +1459,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public CTInboxListener getCTNotificationInboxListener() {
-        return coreState.getCallbackManager().getInboxListener();
+        return coreState.getInbox().getInboxListener();
     }
 
     /**
@@ -1515,7 +1469,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void setCTNotificationInboxListener(CTInboxListener notificationInboxListener) {
-        coreState.getCallbackManager().setInboxListener(notificationInboxListener);
+        coreState.getInbox().setInboxListener(notificationInboxListener);
     }
 
     //Debug
@@ -1528,7 +1482,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("WeakerAccess")
     public CTPushAmpListener getCTPushAmpListener() {
-        return coreState.getCallbackManager().getPushAmpListener();
+        return coreState.getPush().getPushAmpListener();
     }
 
     /**
@@ -1538,7 +1492,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void setCTPushAmpListener(CTPushAmpListener pushAmpListener) {
-        coreState.getCallbackManager().setPushAmpListener(pushAmpListener);
+        coreState.getPush().setPushAmpListener(pushAmpListener);
     }
 
     /**
@@ -1549,7 +1503,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("WeakerAccess")
     public CTPushNotificationListener getCTPushNotificationListener() {
-        return coreState.getCallbackManager().getPushNotificationListener();
+        return coreState.getPush().getPushNotificationListener();
     }
 
     /**
@@ -1559,7 +1513,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void setCTPushNotificationListener(CTPushNotificationListener pushNotificationListener) {
-        coreState.getCallbackManager().setPushNotificationListener(pushNotificationListener);
+        coreState.getPush().setPushNotificationListener(pushNotificationListener);
     }
 
     /**
@@ -1783,8 +1737,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        if (coreState.getControllerManager().getCTDisplayUnitController() != null) {
-            return coreState.getControllerManager().getCTDisplayUnitController().getDisplayUnitForID(unitID);
+        CTDisplayUnitController dc = coreState.getDisplayUnitF().getController();
+        if (dc != null) {
+            return dc.getDisplayUnitForID(unitID);
         } else {
             getConfigLogger().verbose(getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
@@ -1818,7 +1773,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public GeofenceCallback getGeofenceCallback() {
-        return coreState.getCallbackManager().getGeofenceCallback();
+        return coreState.getGeofenceF().getGeofenceCallback();
     }
 
     /**
@@ -1831,7 +1786,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("unused")
     public void setGeofenceCallback(GeofenceCallback geofenceCallback) {
-        coreState.getCallbackManager().setGeofenceCallback(geofenceCallback);
+        coreState.getGeofenceF().setGeofenceCallback(geofenceCallback);
     }
 
     /**
@@ -1880,7 +1835,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public InAppNotificationListener getInAppNotificationListener() {
-        return coreState.getCallbackManager().getInAppNotificationListener();
+        return coreState.getInApp().getInAppCallbackManager().getInAppNotificationListener();
     }
 
     /**
@@ -1890,7 +1845,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener) {
-        coreState.getCallbackManager().setInAppNotificationListener(inAppNotificationListener);
+        coreState.getInApp().getInAppCallbackManager().setInAppNotificationListener(inAppNotificationListener);
     }
 
     /**
@@ -1904,7 +1859,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener
                                                                            pushPermissionResponseListener) {
-        coreState.getCallbackManager().
+        if (pushPermissionResponseListener == null) {
+            Logger.v("Passing null PushPermissionResponseListener to unregister is not allowed");
+            return;
+        }
+        coreState.getInApp().getInAppCallbackManager().
                 unregisterPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
@@ -1920,7 +1879,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void registerPushPermissionNotificationResponseListener(PushPermissionResponseListener
                                                                           pushPermissionResponseListener) {
-        coreState.getCallbackManager().
+        if (pushPermissionResponseListener == null) {
+            Logger.v("Passing null PushPermissionResponseListener to register is not allowed");
+            return;
+        }
+        coreState.getInApp().getInAppCallbackManager().
                 registerPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
@@ -1932,8 +1895,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public int getInboxMessageCount() {
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
-            if (coreState.getControllerManager().getCTInboxController() != null) {
-                return coreState.getControllerManager().getCTInboxController().count();
+            if (coreState.getCTInboxController() != null) {
+                return coreState.getCTInboxController().count();
             } else {
                 getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
                 return -1;
@@ -1951,8 +1914,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public CTInboxMessage getInboxMessageForId(String messageId) {
         Logger.d("CleverTapAPI:getInboxMessageForId() called with: messageId = [" + messageId + "]");
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
-            if (coreState.getControllerManager().getCTInboxController() != null) {
-                CTMessageDAO message = coreState.getControllerManager().getCTInboxController()
+            if (coreState.getCTInboxController() != null) {
+                CTMessageDAO message = coreState.getCTInboxController()
                         .getMessageForId(messageId);
                 return (message != null) ? new CTInboxMessage(message.toJSON()) : null;
             } else {
@@ -1970,8 +1933,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public int getInboxMessageUnreadCount() {
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
-            if (coreState.getControllerManager().getCTInboxController() != null) {
-                return coreState.getControllerManager().getCTInboxController().unreadCount();
+            if (coreState.getCTInboxController() != null) {
+                return coreState.getCTInboxController().unreadCount();
             } else {
                 getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
                 return -1;
@@ -2087,27 +2050,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns the SyncListener object
-     *
-     * @return The {@link SyncListener} object
-     * @noinspection unused
-     */
-    @SuppressWarnings("WeakerAccess")
-    public SyncListener getSyncListener() {
-        return coreState.getCallbackManager().getSyncListener();
-    }
-
-    /**
-     * This method is used to set the SyncListener
-     *
-     * @param syncListener The {@link SyncListener} object
-     */
-    @SuppressWarnings("unused")
-    public void setSyncListener(SyncListener syncListener) {
-        coreState.getCallbackManager().setSyncListener(syncListener);
-    }
-
-    /**
      * Returns the time elapsed by the user on the app
      *
      * @return Time elapsed by user on the app in int
@@ -2185,9 +2127,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public ArrayList<CTInboxMessage> getUnreadInboxMessages() {
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
-            if (coreState.getControllerManager().getCTInboxController() != null) {
+            if (coreState.getCTInboxController() != null) {
                 ArrayList<CTMessageDAO> messageDAOArrayList =
-                        coreState.getControllerManager().getCTInboxController().getUnreadMessages();
+                        coreState.getCTInboxController().getUnreadMessages();
                 for (CTMessageDAO messageDAO : messageDAOArrayList) {
                     inboxMessageArrayList.add(new CTInboxMessage(messageDAO.toJSON()));
                 }
@@ -2205,7 +2147,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void initializeInbox() {
-        coreState.getControllerManager().initializeInbox();
+        coreState.initializeInbox();
     }
 
     /**
@@ -2216,8 +2158,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     //marks the message as read
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void markReadInboxMessage(final CTInboxMessage message) {
-        if (coreState.getControllerManager().getCTInboxController() != null) {
-            coreState.getControllerManager().getCTInboxController().markReadInboxMessage(message);
+        if (coreState.getCTInboxController() != null) {
+            coreState.getCTInboxController().markReadInboxMessage(message);
         } else {
             getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
         }
@@ -2240,8 +2182,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param messageIDs {@link ArrayList} with String values - list of messageIDs of {@link CTInboxMessage} public object of inbox message
      */
     public void markReadInboxMessagesForIDs(final ArrayList<String> messageIDs){
-        if (coreState.getControllerManager().getCTInboxController() != null) {
-            coreState.getControllerManager().getCTInboxController().markReadInboxMessagesForIDs(messageIDs);
+        if (coreState.getCTInboxController() != null) {
+            coreState.getCTInboxController().markReadInboxMessagesForIDs(messageIDs);
         } else {
             getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
         }
@@ -2316,7 +2258,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
-        coreState.getLoginController().onUserLogin(profile, cleverTapID);
+        coreState.onUserLogin(profile, cleverTapID);
     }
 
     /**
@@ -2403,7 +2345,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushDisplayUnitClickedEventForID(String unitID) {
-        coreState.getAnalyticsManager().pushDisplayUnitClickedEventForID(unitID);
+        coreState.getDisplayUnitF().pushDisplayUnitClickedEventForID(unitID);
     }
 
     /**
@@ -2413,7 +2355,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushDisplayUnitViewedEventForID(String unitID) {
-        coreState.getAnalyticsManager().pushDisplayUnitViewedEventForID(unitID);
+        coreState.getDisplayUnitF().pushDisplayUnitViewedEventForID(unitID);
     }
 
     /**
@@ -2571,7 +2513,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationClickedEvent(final Bundle extras) {
-        coreState.getAnalyticsManager().pushNotificationClickedEvent(extras);
+        coreState.pushNotificationClickedEvent(extras);
     }
 
     /**
@@ -2716,7 +2658,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     @Deprecated
     public void setCTFeatureFlagsListener(CTFeatureFlagsListener featureFlagsListener) {
-        coreState.getCallbackManager().setFeatureFlagListener(featureFlagsListener);
+        coreState.getFeatureFlagF().attachListener(featureFlagsListener);
     }
 
     /**
@@ -2731,7 +2673,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     @Deprecated
     public void setCTProductConfigListener(CTProductConfigListener listener) {
-        coreState.getCallbackManager().setProductConfigListener(listener);
+        coreState.getProductConfig().getCallbacks().setProductConfigListener(listener);
     }
 
     /**
@@ -2740,14 +2682,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param listener- {@link DisplayUnitListener}
      */
     public void setDisplayUnitListener(DisplayUnitListener listener) {
-        coreState.getCallbackManager().setDisplayUnitListener(listener);
+        coreState.getDisplayUnitF().attachListener(listener);
     }
 
     //Listener
 
     @SuppressWarnings("unused")
     public void setInAppNotificationButtonListener(InAppNotificationButtonListener listener) {
-        coreState.getCallbackManager().setInAppNotificationButtonListener(listener);
+        coreState.getInApp().getInAppCallbackManager().setInAppNotificationButtonListener(listener);
     }
 
     @SuppressWarnings("unused")
@@ -2913,7 +2855,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void showAppInbox(CTInboxStyleConfig styleConfig) {
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
-            if (coreState.getControllerManager().getCTInboxController() == null) {
+            if (coreState.getCTInboxController() == null) {
                 getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
                 return;
             }
@@ -3000,89 +2942,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getCoreMetaData().setCustomSdkVersion(customSdkName,customSdkVersion);
     }
 
-    //To be called from DeviceInfo AdID GUID generation
-    void deviceIDCreated(String deviceId) {
-
-        String accountId = coreState.getConfig().getAccountId();
-
-        if (coreState.getControllerManager() == null) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "ControllerManager not set yet! Returning from deviceIDCreated()");
-            return;
-        }
-
-        StoreRegistry storeRegistry = coreState.getStoreRegistry();
-        ICryptHandler cryptHandler = coreState.getCryptHandler();
-        StoreProvider storeProvider = StoreProvider.getInstance();
-        EvaluationManager evaluationManager = coreState.getEvaluationManager();
-
-        // Inflate the local profile here as deviceId is required
-        coreState.getLocalDataStore().inflateLocalProfileAsync(context);
-
-        // must move initStores task to async executor due to addChangeUserCallback synchronization
-        Task<Void> task = coreState.getExecutors().ioTask();
-        task.execute("initStores", () -> {
-            if (storeRegistry.getInAppStore() == null) {
-                InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,
-                        accountId);
-                storeRegistry.setInAppStore(inAppStore);
-                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
-                // can cause ANR if called from main thread
-                coreState.getCallbackManager().addChangeUserCallback(inAppStore);
-            }
-            if (storeRegistry.getImpressionStore() == null) {
-                ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceId,
-                        accountId);
-                storeRegistry.setImpressionStore(impStore);
-                // can cause ANR if called from main thread
-                coreState.getCallbackManager().addChangeUserCallback(impStore);
-            }
-            return null;
-        });
-
-
-        /*
-          Reinitialising InAppFCManager with device id, if it's null
-          during first initialisation from CleverTapFactory.getCoreState()
-         */
-        if (coreState.getControllerManager().getInAppFCManager() == null) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "Initializing InAppFC after Device ID Created = " + deviceId);
-            coreState.getControllerManager()
-                    .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId,
-                            coreState.getStoreRegistry(), coreState.getImpressionManager(),
-                            coreState.getExecutors(), clevertapClock));
-        }
-
-        //todo : replace with variables
-        /*
-          Reinitialising product config & Feature Flag controllers with device id, if it's null
-          during first initialisation from CleverTapFactory.getCoreState()
-         */
-        CTFeatureFlagsController ctFeatureFlagsController = coreState.getControllerManager()
-                .getCTFeatureFlagsController();
-
-        if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "Initializing Feature Flags after Device ID Created = " + deviceId);
-            ctFeatureFlagsController.setGuidAndInit(deviceId);
-        }
-        //todo: replace with variables
-        CTProductConfigController ctProductConfigController = coreState.getControllerManager()
-                .getCTProductConfigController();
-
-        if (ctProductConfigController != null && TextUtils
-                .isEmpty(ctProductConfigController.getSettings().getGuid())) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "Initializing Product Config after Device ID Created = " + deviceId);
-            ctProductConfigController.setGuidAndInit(deviceId);
-        }
-        getConfigLogger().verbose(accountId + ":async_deviceID",
-                "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
-        coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
-        coreState.getCallbackManager().notifyCleverTapIDChanged(deviceId);
-    }
-
     private CleverTapInstanceConfig getConfig() {
         return coreState.getConfig();
     }
@@ -3095,6 +2954,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return coreState.getDeviceInfo().isErrorDeviceId();
     }
 
+    // static lifecycle callbacks
+    @SuppressWarnings("unused")
     static void onActivityCreated(Activity activity) {
         onActivityCreated(activity, null);
     }
@@ -3111,61 +2972,61 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        boolean alreadyProcessedByCleverTap = false;
-        Bundle notification = null;
-        Uri deepLink = null;
-        String _accountId = null;
+        handleNotificationClicked(activity);
+        handleDeepLink(activity);
+    }
 
-        // check for launch deep link
+    private static void handleDeepLink(Activity activity) {
+        final Uri deepLink;
         try {
             Intent intent = activity.getIntent();
+            if (intent == null || intent.getData() == null) {
+                return; // Nothing to do, there is no deeplink to handle.
+            }
             deepLink = intent.getData();
-            if (deepLink != null) {
-                Bundle queryArgs = UriHelper.getAllKeyValuePairs(deepLink.toString(), true);
-                _accountId = queryArgs.getString(Constants.WZRK_ACCT_ID_KEY);
-            }
         } catch (Throwable t) {
-            // Ignore
+            Logger.v("Throwable trying to process deep link", t);
+            return; // Ignore and return
         }
 
-        // check for launch via notification click
+        Bundle queryArgs = UriHelper.getAllKeyValuePairs(deepLink.toString(), true);
+
+        // match from payload to find correct clevertap instance
+        // if payload does not contain any acc id then try with default
+        CleverTapAPI eligibleCtApi = fromBundle(activity.getApplicationContext(), queryArgs);
+        if (eligibleCtApi != null) {
+            eligibleCtApi.coreState.analytics().pushDeepLink(deepLink, false);
+        }
+    }
+
+    private static void handleNotificationClicked(Activity activity) {
+        final Bundle notification;
         try {
-            notification = activity.getIntent().getExtras();
-            if (notification != null && !notification.isEmpty()) {
-                try {
-                    alreadyProcessedByCleverTap = (notification.containsKey(Constants.WZRK_FROM_KEY)
-                            && Constants.WZRK_FROM.equals(notification.get(Constants.WZRK_FROM_KEY)));
-                    if (alreadyProcessedByCleverTap) {
-                        Logger.v("ActivityLifecycleCallback: Notification Clicked already processed for "
-                                + notification + ", dropping duplicate.");
-                    }
-                    if (notification.containsKey(Constants.WZRK_ACCT_ID_KEY)) {
-                        _accountId = (String) notification.get(Constants.WZRK_ACCT_ID_KEY);
-                    }
-                } catch (Throwable t) {
-                    // no-op
-                }
+            Intent intent = activity.getIntent();
+            if (intent == null || intent.getExtras() == null || intent.getExtras().isEmpty()) {
+                return;
             }
+            notification = intent.getExtras();
         } catch (Throwable t) {
-            // Ignore
-        }
-
-        if (alreadyProcessedByCleverTap && deepLink == null) {
+            Logger.v("Throwable trying to process notification", t);
             return;
         }
 
-        try {
-            for (String accountId : CleverTapAPI.instances.keySet()) {
-                CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-                if (instance != null) {
-                    instance.coreState.getActivityLifeCycleManager()
-                            .onActivityCreated(notification, deepLink, _accountId);
-                }
-            }
-        } catch (Throwable t) {
-            Logger.v("Throwable - " + t.getLocalizedMessage());
+        if (notification.containsKey(Constants.WZRK_FROM_KEY) && Constants.WZRK_FROM
+                .equals(notification.get(Constants.WZRK_FROM_KEY))) {
+            Logger.v("ActivityLifecycleCallback: Notification Clicked already processed for "
+                    + notification + ", dropping duplicate.");
+            return;
+        }
+
+        // match from payload to find correct clevertap instance
+        // if payload does not contain any acc id then try with default
+        CleverTapAPI eligibleCtApi = CleverTapAPI.fromBundle(activity.getApplicationContext(), notification);
+        if (eligibleCtApi != null) {
+            eligibleCtApi.pushNotificationClickedEvent(notification);
         }
     }
+
 
     private static CleverTapAPI createInstanceIfAvailable(Context context, String _accountId) {
         return createInstanceIfAvailable(context, _accountId, null);
@@ -3295,7 +3156,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             if (deviceID != null) {
                 runOnUiThread(() -> onInitCleverTapIDListener.onInitCleverTapID(deviceID));
             }
-            coreState.getCallbackManager().addOnInitCleverTapIDListener(onInitCleverTapIDListener);
+            coreState.getCore().getCoreCallbacks().addOnInitCleverTapIDListener(onInitCleverTapIDListener);
             return null;
         });
     }
@@ -3309,9 +3170,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @noinspection unused
      */
     public void removeCleverTapIDListener(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
-        if (coreState != null && coreState.getCallbackManager() != null) {
-            coreState.getCallbackManager().removeOnInitCleverTapIDListener(onInitCleverTapIDListener);
-        }
+        coreState.getCore().getCoreCallbacks().removeOnInitCleverTapIDListener(onInitCleverTapIDListener);
     }
 
     //TODO: start synchronizing entire flow from here
@@ -3566,7 +3425,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...");
 
         if (callback != null) {
-            coreState.getCallbackManager().setFetchInAppsCallback(callback);
+            coreState.getInApp().getInAppCallbackManager().setFetchInAppsCallback(callback);
         }
 
         JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS);
@@ -3601,7 +3460,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
         Logger.v("variables", "Fetching  variables");
         if (callback != null) {
-            coreState.getCallbackManager().setFetchVariablesCallback(callback);
+            coreState.getVariables().setFetchVariablesCallback(callback);
         }
 
         JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES);

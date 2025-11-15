@@ -25,6 +25,7 @@ class LocationManagerTest : BaseTestCase() {
     private lateinit var locationManager: LocationManager
     private lateinit var eventQueueManager: BaseEventQueueManager
     private lateinit var location: Location
+    private lateinit var clock: TestClock
 
     @Before
     @Throws(Exception::class)
@@ -32,12 +33,15 @@ class LocationManagerTest : BaseTestCase() {
         super.setUp()
         coreMetaData = CoreMetaData()
         eventQueueManager = mockk<EventQueueManager>(relaxed = true)
+        clock = TestClock()
         locationManager = spyk(
             LocationManager(
                 application,
                 cleverTapInstanceConfig,
                 coreMetaData,
-                eventQueueManager
+                eventQueueManager,
+
+                clock
             )
         )
         location = Location("").apply {
@@ -66,7 +70,7 @@ class LocationManagerTest : BaseTestCase() {
 
     @Test
     fun test_setLocation_returns_null_when_Location_is_for_geofence_and_last_location_geofence_ping_is_less_than_10_secs() {
-        every { locationManager.now } returns 100
+        clock.setCurrentTime(100)
         CoreMetaData.setAppForeground(true)
         coreMetaData.isLocationForGeofence = true
         locationManager.lastLocationPingTimeForGeofence = 100
@@ -81,7 +85,7 @@ class LocationManagerTest : BaseTestCase() {
     fun test_setLocation_returns_future_when_Location_is_for_geofence_and_last_location_geofence_ping_is_greater_than_10_secs() {
         val future = mockk<Future<*>>(relaxed = true)
 
-        every { locationManager.now } returns 150
+        clock.setCurrentTime(150)
         every { eventQueueManager.queueEvent(any(), any(), any()) } returns future
 
         CoreMetaData.setAppForeground(true)
@@ -97,7 +101,7 @@ class LocationManagerTest : BaseTestCase() {
 
     @Test
     fun test_setLocation_returns_null_when_Location_is_not_for_geofence_and_last_location_ping_is_less_than_10_secs() {
-        every { locationManager.now } returns 100
+        clock.setCurrentTime(100)
         CoreMetaData.setAppForeground(true)
         coreMetaData.isLocationForGeofence = false
         locationManager.lastLocationPingTime = 100
@@ -112,7 +116,7 @@ class LocationManagerTest : BaseTestCase() {
     fun test_setLocation_returns_future_when_Location_is_not_for_geofence_and_last_location_ping_is_greater_than_10_secs() {
         val future = mockk<Future<*>>(relaxed = true)
 
-        every { locationManager.now } returns 150
+        clock.setCurrentTime(150)
         every { eventQueueManager.queueEvent(any(), any(), any()) } returns future
 
         CoreMetaData.setAppForeground(true)

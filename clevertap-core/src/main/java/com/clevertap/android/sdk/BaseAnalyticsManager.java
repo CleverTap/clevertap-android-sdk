@@ -23,9 +23,9 @@ public abstract class BaseAnalyticsManager {
 
     public abstract void pushDefineVarsEvent(JSONObject data);
 
-    public abstract void pushDisplayUnitClickedEventForID(String unitID);
+    public abstract void pushDisplayUnitClickedEvent(JSONObject data);
 
-    public abstract void pushDisplayUnitViewedEventForID(String unitID);
+    public abstract void pushDisplayUnitViewedEvent(JSONObject data);
 
     @SuppressWarnings({"unused"})
     public abstract void pushError(String errorMessage, int errorCode);
@@ -40,7 +40,7 @@ public abstract class BaseAnalyticsManager {
 
     public abstract void pushInstallReferrer(String source, String medium, String campaign);
 
-    public abstract void pushNotificationClickedEvent(Bundle extras);
+    public abstract boolean pushNotificationClickedEvent(Bundle extras);
 
     @SuppressWarnings({"unused", "WeakerAccess"})
     public abstract void pushNotificationViewedEvent(Bundle extras);

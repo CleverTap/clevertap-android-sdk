@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.ImpressionManager;
@@ -45,13 +46,15 @@ public class InAppFCManager {
     private final CTExecutors executors;
     private final Clock clock;
 
-    InAppFCManager(Context context,
-                   CleverTapInstanceConfig config,
-                   String deviceId,
-                   StoreRegistry storeRegistry,
-                   ImpressionManager impressionManager,
-                   CTExecutors executors,
-                   Clock clock) {
+    InAppFCManager(
+            Context context,
+            CleverTapInstanceConfig config,
+            String deviceId,
+            StoreRegistry storeRegistry,
+            ImpressionManager impressionManager,
+            CTExecutors executors,
+            Clock clock
+    ) {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;
@@ -59,14 +62,7 @@ public class InAppFCManager {
         this.impressionManager = impressionManager;
         this.executors = executors;
         this.clock = clock;
-
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("initInAppFCManager", () -> {
-            init(deviceId);
-            return null;
-        });
     }
-
 
     public boolean canShow(CTInAppNotification inapp,
             Function2<JSONObject, String, Boolean> hasInAppFrequencyLimitsMaxedOut) {
@@ -360,7 +356,8 @@ public class InAppFCManager {
         StorageHelper.persist(editor);
     }
 
-    private void init(String deviceId) {
+    @WorkerThread
+    void init(String deviceId) {
         getConfigLogger()
                 .verbose(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
         try {

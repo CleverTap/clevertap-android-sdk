@@ -7,24 +7,17 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
-import com.clevertap.android.sdk.response.CleverTapResponse;
-import com.clevertap.android.sdk.response.DisplayUnitResponse;
-import com.clevertap.android.sdk.response.InAppResponse;
-import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,19 +28,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class AnalyticsManager extends BaseAnalyticsManager {
-
-    private final CTLockManager ctLockManager;
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
     private final BaseEventQueueManager baseEventQueueManager;
-    private final BaseCallbackManager callbackManager;
     private final CleverTapInstanceConfig config;
     private final Context context;
-    private final ControllerManager controllerManager;
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
     private final ValidationResultStack validationResultStack;
     private final Validator validator;
-    private final InAppResponse inAppResponse;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
@@ -63,9 +51,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
-            BaseCallbackManager callbackManager, ControllerManager controllerManager,
-            final CTLockManager ctLockManager,
-            InAppResponse inAppResponse,
             Clock currentTimeProvider,
             CTExecutors executors
     ) {
@@ -76,10 +61,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.validationResultStack = validationResultStack;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
-        this.callbackManager = callbackManager;
-        this.ctLockManager = ctLockManager;
-        this.controllerManager = controllerManager;
-        this.inAppResponse = inAppResponse;
         this.currentTimeProvider = currentTimeProvider;
         this.executors = executors;
     }
@@ -166,29 +147,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     @Override
-    public void pushDisplayUnitClickedEventForID(String unitID) {
+    public void pushDisplayUnitClickedEvent(JSONObject data) {
         JSONObject event = new JSONObject();
 
         try {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
-
-            //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
-                        .getDisplayUnitForID(unitID);
-                if (displayUnit != null) {
-                    JSONObject eventExtraData = displayUnit.getWZRKFields();
-                    if (eventExtraData != null) {
-                        event.put("evtData", eventExtraData);
-                        try {
-                            coreMetaData.setWzrkParams(eventExtraData);
-                        } catch (Throwable t) {
-                            // no-op
-                        }
-                    }
-                }
+            event.put("evtData", data);
+            try {
+                coreMetaData.setWzrkParams(data);
+            } catch (Throwable t) {
+                // no-op
             }
-
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
@@ -198,23 +167,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     @Override
-    public void pushDisplayUnitViewedEventForID(String unitID) {
+    public void pushDisplayUnitViewedEvent(JSONObject data) {
         JSONObject event = new JSONObject();
 
         try {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
-
-            //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
-                        .getDisplayUnitForID(unitID);
-                if (displayUnit != null) {
-                    JSONObject eventExtras = displayUnit.getWZRKFields();
-                    if (eventExtras != null) {
-                        event.put("evtData", eventExtras);
-                    }
-                }
-            }
+            event.put("evtData", data); // wzrk fields
 
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
@@ -433,19 +391,19 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     @Override
-    public void pushNotificationClickedEvent(final Bundle extras) {
+    public boolean pushNotificationClickedEvent(final Bundle extras) {
 
         if (config.isAnalyticsOnly()) {
             config.getLogger()
                     .debug(config.getAccountId(),
                             "is Analytics Only - will not process Notification Clicked event.");
-            return;
+            return false;
         }
 
         if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
             config.getLogger().debug(config.getAccountId(),
                     "Push notification not from CleverTap - will not process Notification Clicked event.");
-            return;
+            return false;
         }
 
         String accountId = null;
@@ -461,28 +419,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         if (!shouldProcess) {
             config.getLogger().debug(config.getAccountId(),
                     "Push notification not targeted at this instance, not processing Notification Clicked Event");
-            return;
-        }
-
-        if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleInAppPreview(extras);
-            return;
-        }
-
-        if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleInboxPreview(extras);
-            return;
-        }
-
-        if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleSendTestForDisplayUnits(extras);
-            return;
+            return false;
         }
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             config.getLogger().debug(config.getAccountId(),
                     "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras);
-            return;
+            return false;
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (5 secs) don't process
@@ -495,7 +438,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Clicked event for " + extras
                             + ", dropping duplicate.");
-            return;
+            return false;
         }
 
         try {
@@ -507,112 +450,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable t) {
             // We won't get here
         }
-        if (callbackManager.getPushNotificationListener() != null) {
-            callbackManager.getPushNotificationListener()
-                    .onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
-        } else {
-            Logger.d("CTPushNotificationListener is not set");
-        }
-    }
-
-    private void handleInboxPreview(Bundle extras) {
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("testInboxNotification", () -> {
-            try {
-                Logger.v("Received inbox via push payload: " + extras
-                        .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                JSONObject r = new JSONObject();
-                JSONArray inboxNotifs = new JSONArray();
-                r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
-                JSONObject testPushObject = new JSONObject(
-                        extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
-                inboxNotifs.put(testPushObject);
-
-                CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
-                cleverTapResponse.processResponse(r, null, context);
-            } catch (Throwable t) {
-                Logger.v("Failed to process inbox message from push notification payload", t);
-            }
-            return null;
-        });
-    }
-
-    private void handleInAppPreview(Bundle extras) {
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("testInappNotification", () -> {
-            try {
-                String inappPreviewPayloadType = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY);
-                String inappPreviewString = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY);
-                JSONObject inappPreviewPayload = new JSONObject(inappPreviewString);
-
-                JSONArray inappNotifs = new JSONArray();
-                if (Constants.INAPP_IMAGE_INTERSTITIAL_TYPE.equals(inappPreviewPayloadType)
-                        || Constants.INAPP_ADVANCED_BUILDER_TYPE.equals(inappPreviewPayloadType)) {
-                    inappNotifs.put(getHalfInterstitialInApp(inappPreviewPayload));
-                } else {
-                    inappNotifs.put(inappPreviewPayload);
-                }
-
-                JSONObject inAppResponseJson = new JSONObject();
-                inAppResponseJson.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
-
-                inAppResponse.processResponse(inAppResponseJson, null, context);
-            } catch (Throwable t) {
-                Logger.v("Failed to display inapp notification from push notification payload", t);
-            }
-            return null;
-        });
-    }
-
-    private JSONObject getHalfInterstitialInApp(final JSONObject inapp) throws JSONException {
-        String inAppConfig = inapp.optString(Constants.INAPP_IMAGE_INTERSTITIAL_CONFIG);
-        String htmlContent = wrapImageInterstitialContent(inAppConfig);
-
-        if (htmlContent != null) {
-            inapp.put(Constants.KEY_TYPE, Constants.KEY_CUSTOM_HTML);
-            Object data = inapp.opt(Constants.INAPP_DATA_TAG);
-
-            if (data instanceof JSONObject) {
-                JSONObject dataObject = (JSONObject) data;
-                dataObject = new JSONObject(dataObject.toString()); // Create a mutable copy
-                // Update the html
-                dataObject.put(Constants.INAPP_HTML_TAG, htmlContent);
-                inapp.put(Constants.INAPP_DATA_TAG, dataObject);
-            } else {
-                // If data key is not present or it is not a JSONObject,
-                // set it and overwrite it
-                JSONObject newData = new JSONObject();
-                newData.put(Constants.INAPP_HTML_TAG, htmlContent);
-                inapp.put(Constants.INAPP_DATA_TAG, newData);
-            }
-        } else {
-            config.getLogger().debug(config.getAccountId(), "Failed to parse the image-interstitial notification");
-            return null;
-        }
-
-        return inapp;
-    }
-
-    /**
-     * Wraps the provided content with HTML obtained from the image-interstitial file.
-     *
-     * @param content The content to be wrapped within the image-interstitial HTML.
-     * @return The wrapped content, or null if an error occurs during HTML retrieval or processing.
-     */
-    public String wrapImageInterstitialContent(String content) {
-        try {
-            String html = Utils.readAssetFile(context, Constants.INAPP_IMAGE_INTERSTITIAL_HTML_NAME);
-            if (html != null && content != null) {
-                String[] parts = html.split(Constants.INAPP_HTML_SPLIT);
-                if (parts.length == 2) {
-                    return parts[0] + content + parts[1];
-                }
-            }
-        } catch (IOException e) {
-            config.getLogger().debug(config.getAccountId(), "Failed to read the image-interstitial HTML file");
-        }
-        return null;
+        return true;
     }
 
     /**
@@ -1186,23 +1024,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     public void sendFetchEvent(final JSONObject eventObject) {
         baseEventQueueManager
                 .queueEvent(context, eventObject, Constants.FETCH_EVENT);
-    }
-
-    /**
-     * This method handles send Test flow for Display Units
-     *
-     * @param extras - bundled data of notification payload
-     */
-    private void handleSendTestForDisplayUnits(Bundle extras) {
-        try {
-            JSONObject r = CTJsonConverter.displayUnitFromExtras(extras);
-
-            CleverTapResponse cleverTapResponse = new DisplayUnitResponse(config, callbackManager, controllerManager);
-            cleverTapResponse.processResponse(r, null, context);
-
-        } catch (Throwable t) {
-            Logger.v("Failed to process Display Unit from push notification payload", t);
-        }
     }
 
     /**

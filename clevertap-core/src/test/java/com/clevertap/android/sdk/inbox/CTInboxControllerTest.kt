@@ -3,12 +3,11 @@ package com.clevertap.android.sdk.inbox
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.db.DBAdapter
-import com.clevertap.android.sdk.task.CTExecutorFactory
+import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
 import org.json.JSONObject
@@ -27,6 +26,7 @@ class CTInboxControllerTest : BaseTestCase() {
     private lateinit var callbackManager: CallbackManager
     private lateinit var controller: CTInboxController
     private val videoSupported = true
+    private lateinit var executors: CTExecutors
 
     @Before
     @Throws(Exception::class)
@@ -36,6 +36,7 @@ class CTInboxControllerTest : BaseTestCase() {
         dbAdapter = mockk(relaxed = true)
         ctLockManager = mockk(relaxed = true)
         callbackManager = mockk(relaxed = true)
+        executors = MockCTExecutors(cleverTapInstanceConfig)
 
         val messageDAOList =
             arrayListOf(getCtMsgDao("msg_1", userId, false), getCtMsgDao("msg_2", userId, false))
@@ -46,18 +47,13 @@ class CTInboxControllerTest : BaseTestCase() {
     fun `deleteInboxMessagesForIDs should call _deleteMessagesForIDs and not notify callback manager when all messages are invalid`() {
         // given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
-        mockkStatic(CTExecutorFactory::class) {
-            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
-                cleverTapInstanceConfig
-            )
-
             val spyController = spyk(controller)
             messageIDs = arrayListOf("msg_3", "msg_4")
             val lock = Object()
@@ -70,25 +66,19 @@ class CTInboxControllerTest : BaseTestCase() {
             verify { ctLockManager.inboxControllerLock }
             verify { spyController._deleteMessagesForIds(messageIDs) }
             verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
-        }
     }
 
     @Test
     fun `deleteInboxMessagesForIDs should call _deleteMessagesForIds and notify callback manager when some messages are valid`() {
         // Given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
-        mockkStatic(CTExecutorFactory::class) {
-            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
-                cleverTapInstanceConfig
-            )
-
             val spyController = spyk(controller)
             messageIDs = arrayListOf("msg_1", "msg_2")
             val lock = Object()
@@ -101,19 +91,18 @@ class CTInboxControllerTest : BaseTestCase() {
             verify { ctLockManager.inboxControllerLock }
             verify { spyController._deleteMessagesForIds(messageIDs) }
             verify { callbackManager._notifyInboxMessagesDidUpdate() }
-        }
     }
 
     @Test
     fun `_deleteMessagesForIDs should return false when all messageIDs are invalid`() {
         //Given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
         messageIDs = arrayListOf("msg_3", "msg_4")
 
@@ -128,20 +117,14 @@ class CTInboxControllerTest : BaseTestCase() {
     fun `_deleteMessagesForIDs should return true when some messageIDs are valid`() {
         // Given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
         messageIDs = arrayListOf("msg_1", "msg_2")
-
-
-        mockkStatic(CTExecutorFactory::class) {
-            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
-                cleverTapInstanceConfig
-            )
 
             // When
             val result = controller._deleteMessagesForIds(messageIDs)
@@ -151,19 +134,18 @@ class CTInboxControllerTest : BaseTestCase() {
             verify { dbAdapter.deleteMessagesForIDs(messageIDs, userId) }
             assertTrue(result)
             assertEquals(0, controller.messages.size)
-        }
     }
 
     @Test
     fun `_markReadMessagesForIDs should return false when all messageIDs are invalid`() {
         // Given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
         messageIDs = arrayListOf("msg_3", "msg_4")
 
@@ -178,20 +160,14 @@ class CTInboxControllerTest : BaseTestCase() {
     fun `_markReadForMessagesWithIDs should return true when some messageIDs are valid`() {
         // Given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
         messageIDs = arrayListOf("msg_1", "msg_2")
-
-
-        mockkStatic(CTExecutorFactory::class) {
-            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
-                cleverTapInstanceConfig
-            )
 
             // When
             val result = controller._markReadForMessagesWithIds(messageIDs)
@@ -202,25 +178,19 @@ class CTInboxControllerTest : BaseTestCase() {
             assertTrue(result)
             assertEquals(1, controller.messages[0].isRead)
             assertEquals(1, controller.messages[1].isRead)
-        }
     }
 
     @Test
     fun `markReadInboxMessagesForIDs should call _markReadForMessagesWithIds and not notify callback manager when all messages are invalid`() {
         // Given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
-        mockkStatic(CTExecutorFactory::class) {
-            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
-                cleverTapInstanceConfig
-            )
-
             val spyController = spyk(controller)
             messageIDs = arrayListOf("msg_3", "msg_4")
             val lock = Object()
@@ -233,25 +203,19 @@ class CTInboxControllerTest : BaseTestCase() {
             verify { ctLockManager.inboxControllerLock }
             verify { spyController._markReadForMessagesWithIds(messageIDs) }
             verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
-        }
     }
 
     @Test
     fun `markReadInboxMessagesForIDs should call _markReadForMessagesWithIds and notify callback manager when some messages are valid`() {
         // Given
         controller = CTInboxController(
-            cleverTapInstanceConfig,
             userId,
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            executors
         )
-        mockkStatic(CTExecutorFactory::class) {
-            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
-                cleverTapInstanceConfig
-            )
-
             val spyController = spyk(controller)
             messageIDs = arrayListOf("msg_1", "msg_2")
             val lock = Object()
@@ -264,7 +228,6 @@ class CTInboxControllerTest : BaseTestCase() {
             verify { ctLockManager.inboxControllerLock }
             verify { spyController._markReadForMessagesWithIds(messageIDs) }
             verify(exactly = 2) { callbackManager._notifyInboxMessagesDidUpdate() }
-        }
     }
 
     private fun getCtMsgDao(

@@ -1,12 +1,12 @@
 package com.clevertap.android.sdk.network
 
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Response
-import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
@@ -25,9 +25,8 @@ import org.json.JSONObject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ContentFetchManager(
-    config: CleverTapInstanceConfig,
+    private val logger: ILogger,
     private val coreMetaData: CoreMetaData,
-    private val queueHeaderBuilder: QueueHeaderBuilder,
     private val ctApiWrapper: CtApiWrapper,
     private val parallelRequests: Int = DEFAULT_PARALLEL_REQUESTS,
     private val clock: Clock = Clock.SYSTEM,
@@ -35,17 +34,16 @@ internal class ContentFetchManager(
 ) {
     companion object {
         private const val DEFAULT_PARALLEL_REQUESTS = 5
-        private const val TAG = "ContentFetch"
+        const val TAG = "ContentFetch"
     }
 
-    var clevertapResponseHandler: ClevertapResponseHandler? = null
+    lateinit var coreContract: CoreContract
 
     var parentJob = SupervisorJob()
 
     private var scope = CoroutineScope(
         parentJob + dispatchers.io().limitedParallelism(parallelRequests)
     )
-    private val logger = config.logger
 
     fun handleContentFetch(contentFetchItems: JSONArray, packageName: String) {
         scope.launch {
@@ -101,7 +99,7 @@ internal class ContentFetchManager(
     }
 
     private suspend fun sendContentFetchRequest(content: JSONArray): Boolean {
-        val header = queueHeaderBuilder.buildHeader(null) ?: return false
+        val header = coreContract.networkHeaderForQueue(EndpointId.CONTENT_FETCH, null) ?: return false
         val body = ContentFetchRequestBody(header, content)
         logger.debug(TAG, "Fetching Content: $body")
 
@@ -117,7 +115,6 @@ internal class ContentFetchManager(
 
     /**
      * Handles the response from content fetch requests
-     * Processes through normal ResponseDecorator route
      */
     private fun handleContentFetchResponse(response: Response, isUserSwitching: Boolean): Boolean {
         if (response.isSuccess()) {
@@ -131,7 +128,7 @@ internal class ContentFetchManager(
                 return true
             }
 
-            clevertapResponseHandler?.handleResponse(false, bodyJson, bodyString, isUserSwitching)
+            coreContract.handleContentResponseData(bodyJson, isUserSwitching)
             return true
         } else {
             when (response.code) {

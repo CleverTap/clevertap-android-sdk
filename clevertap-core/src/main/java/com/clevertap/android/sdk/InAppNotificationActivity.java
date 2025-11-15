@@ -120,7 +120,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
             pushPermissionHandler = new PushPermissionHandler(
                     config,
-                    ctState.getCallbackManager().getPushPermissionResponseListenerList(),
+                    ctState.getInApp().getInAppCallbackManager().getPushPermissionResponseListenerList(),
                     this);
 
             boolean showHardNotificationPermission = intentExtras.getBoolean(

@@ -1,45 +1,34 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.network.IJRepo;
 import org.json.JSONObject;
 
-public class MetadataResponse extends CleverTapResponseDecorator {
+public class MetadataResponse {
 
-    private final CleverTapInstanceConfig config;
-
-    private final DeviceInfo deviceInfo;
-
-    private final Logger logger;
-    private final IJRepo ijRepo;
+    private final String accountId;
+    private final ILogger logger;
 
     public MetadataResponse(
-            CleverTapInstanceConfig config,
-            DeviceInfo deviceInfo,
-            IJRepo ijRepo
+            String accountId,
+            ILogger logger
     ) {
-        this.config = config;
-        logger = this.config.getLogger();
-        this.deviceInfo = deviceInfo;
-        this.ijRepo = ijRepo;
+        this.accountId = accountId;
+        this.logger = logger;
     }
 
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(final JSONObject response, final Context context, final IJRepo ijRepo, final DeviceInfo deviceInfo) {
         // Always look for a GUID in the response, and if present, then perform a force update
         try {
             if (response.has("g")) {
                 final String deviceID = response.getString("g");
                 deviceInfo.forceUpdateDeviceId(deviceID);
-                logger.verbose(config.getAccountId(), "Got a new device ID: " + deviceID);
+                logger.verbose(accountId, "Got a new device ID: " + deviceID);
             }
         } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to update device ID!", t);
+            logger.verbose(accountId, "Failed to update device ID!", t);
         }
 
         // Handle i

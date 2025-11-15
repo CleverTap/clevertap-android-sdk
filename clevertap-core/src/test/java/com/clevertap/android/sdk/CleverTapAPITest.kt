@@ -8,10 +8,10 @@ import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.Constant
-import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import org.json.JSONObject
@@ -34,7 +34,7 @@ class CleverTapAPITest : BaseTestCase() {
     private lateinit var testClock: TestClock
 
     private fun initializeCleverTapAPI() {
-        cleverTapAPI = CleverTapAPI(application, cleverTapInstanceConfig, corestate, testClock)
+        cleverTapAPI = CleverTapAPI(application, cleverTapInstanceConfig, spyk(corestate), testClock)
 
         // we need to do this for static methods of CleverTapAPI tests to work correctly.
         CleverTapAPI.setInstances(hashMapOf(Constant.ACC_ID to cleverTapAPI))
@@ -45,7 +45,7 @@ class CleverTapAPITest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         CleverTapAPI.setInstances(null) // clear existing CleverTapAPI instances
-        corestate = MockCoreStateKotlin(cleverTapInstanceConfig)
+        corestate = MockCoreStateKotlin(cleverTapInstanceConfig, appCtx)
         testClock = TestClock()
     }
 
@@ -360,51 +360,18 @@ class CleverTapAPITest : BaseTestCase() {
     }
 
     @Test
-    fun deleteInboxMessagesForIDs_inboxControllerNull_logsError() {
-        // Arrange
-        val messageIDs = arrayListOf("1", "2", "3")
-        val inboxController = null
-
-        // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
-        initializeCleverTapAPI()
-        cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
-
-        // Assert
-        verify { corestate.controllerManager.ctInboxController }
-        confirmVerified(corestate.controllerManager)
-    }
-
-    @Test
     fun deleteInboxMessagesForIDs_inboxControllerNotNull_deletesMessages() {
         // Arrange
         val messageIDs = arrayListOf("1", "2", "3")
         val inboxController = mockk<CTInboxController>(relaxed = true)
+        corestate.ctInboxController =  inboxController
 
         // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
         initializeCleverTapAPI()
         cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { corestate.controllerManager.ctInboxController }
         verify { inboxController.deleteInboxMessagesForIDs(messageIDs) }
-    }
-
-    @Test
-    fun markReadInboxMessagesForIDs_inboxControllerNull_logsError() {
-        // Arrange
-        val messageIDs = arrayListOf("1", "2", "3")
-        val inboxController = null
-
-        // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
-        initializeCleverTapAPI()
-        cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
-
-        // Assert
-        verify { corestate.controllerManager.ctInboxController }
-        confirmVerified(corestate.controllerManager)
     }
 
     @Test
@@ -412,14 +379,13 @@ class CleverTapAPITest : BaseTestCase() {
         // Arrange
         val messageIDs = arrayListOf("1", "2", "3")
         val inboxController = mockk<CTInboxController>(relaxed = true)
+        corestate.ctInboxController = inboxController
 
         // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
         initializeCleverTapAPI()
         cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { corestate.controllerManager.ctInboxController }
         verify { inboxController.markReadInboxMessagesForIDs(messageIDs) }
     }
 
@@ -793,7 +759,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, null)
+            corestate.onUserLogin(profile, null)
         }
     }
 
@@ -812,7 +778,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, cleverTapID)
+            corestate.onUserLogin(profile, cleverTapID)
         }
     }
 
@@ -823,11 +789,11 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Act
         initializeCleverTapAPI()
-        cleverTapAPI.onUserLogin(profile)
+        cleverTapAPI.onUserLogin(profile, null)
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, null)
+            corestate.onUserLogin(profile, null)
         }
     }
 

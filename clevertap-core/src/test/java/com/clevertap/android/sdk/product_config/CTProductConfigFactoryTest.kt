@@ -24,7 +24,12 @@ internal class CTProductConfigFactoryTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         coreMetaData = CoreMetaData()
-        deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
+        deviceInfo = MockDeviceInfo(
+            context = application,
+            config = cleverTapInstanceConfig,
+            cleverTapID = guid,
+            coreMetaData = coreMetaData
+        )
         analyticsManager = MockAnalyticsManager()
         callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
     }

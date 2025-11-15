@@ -4,6 +4,7 @@ import android.content.Context
 import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.login.IdentityRepoFactory
+import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import org.json.JSONException
@@ -16,7 +17,6 @@ internal class QueueHeaderBuilder(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val coreMetaData: CoreMetaData,
-    private val controllerManager: ControllerManager,
     private val deviceInfo: DeviceInfo,
     private val arpRepo: ArpRepo,
     private val ijRepo: IJRepo,
@@ -24,8 +24,11 @@ internal class QueueHeaderBuilder(
     private val validationResultStack: ValidationResultStack,
     private val firstRequestTs: () -> Int,
     private val lastRequestTs: () -> Int,
-    private val logger: ILogger
+    private val logger: ILogger,
 ) {
+
+    var inAppFCManager: InAppFCManager? = null
+    var pushProviders: PushProviders? = null
     fun buildHeader(caller: String?): JSONObject? {
         val accountId = config.accountId
         val token = config.accountToken
@@ -113,7 +116,7 @@ internal class QueueHeaderBuilder(
     }
 
     private fun addDoNotDisturb(header: JSONObject) {
-        header.put("ddnd", !(context.areAppNotificationsEnabled() && (controllerManager.pushProviders == null || controllerManager.pushProviders.isNotificationSupported)))
+        header.put("ddnd", !(context.areAppNotificationsEnabled() && pushProviders?.isNotificationSupported ?: true))
     }
 
     private fun addBackgroundPing(header: JSONObject) {
@@ -181,10 +184,10 @@ internal class QueueHeaderBuilder(
     }
 
     private fun addInAppFC(header: JSONObject) {
-        controllerManager.inAppFCManager?.let {
+        inAppFCManager?.let {
             Logger.v("Attaching InAppFC to Header")
             header.put("imp", it.shownTodayCount)
             header.put("tlc", it.getInAppsCount(context))
-        } ?: logger.verbose(config.accountId, "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header")
+        } ?: logger.verbose(config.accountId, "inAppFCManager is NULL, not Attaching InAppFC to Header")
     }
 }

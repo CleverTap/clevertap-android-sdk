@@ -95,7 +95,6 @@ class AnalyticsManagerTest {
             coreState.coreMetaData,
             coreState.deviceInfo,
             coreState.callbackManager,
-            coreState.controllerManager,
             coreState.cTLockManager,
             inAppResponse,
             timeProvider,
@@ -1011,7 +1010,7 @@ class AnalyticsManagerTest {
         val displayUnitJson = JSONObject()
         val displayUnit = CleverTapDisplayUnit.toDisplayUnit(displayUnitJson)
         every { displayController.getDisplayUnitForID(any()) } returns displayUnit
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.callbackManager.ctDisplayUnitController } returns displayController
 
         val eventName: String
         if (isClicked) {
@@ -1628,7 +1627,7 @@ class AnalyticsManagerTest {
             putString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY, "{\"msg\":[]}")
         }
         val inboxController = mockk<CTInboxController>(relaxed = true)
-        every { coreState.controllerManager.ctInboxController } returns inboxController
+        every { coreState.callbackManager.ctInboxController } returns inboxController
 
         analyticsManagerSUT.pushNotificationClickedEvent(extras)
 

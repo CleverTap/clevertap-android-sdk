@@ -28,7 +28,12 @@ class CtApiWrapperTest : BaseTestCase() {
         super.setUp()
         guid = "1212121221"
         coreMetaData = CoreMetaData()
-        deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
+        deviceInfo = MockDeviceInfo(
+            context = application,
+            config = cleverTapInstanceConfig,
+            cleverTapID = guid,
+            coreMetaData = coreMetaData
+        )
         networkRepo = NetworkRepo(application, cleverTapInstanceConfig)
         ctApiWrapper = CtApiWrapper(networkRepo, cleverTapInstanceConfig, deviceInfo)
     }

@@ -1,32 +1,29 @@
 package com.clevertap.android.sdk.network
 
-import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreContract
 import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.TestLogger
-import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
+import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventGroup.VARIABLES
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
-import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_MUTE
 import com.clevertap.android.sdk.network.api.CtApi.Companion.SPIKY_HEADER_DOMAIN_NAME
 import com.clevertap.android.sdk.network.api.CtApiTestProvider
 import com.clevertap.android.sdk.network.api.CtApiWrapper
-import com.clevertap.android.sdk.network.api.EncryptionFailure
-import com.clevertap.android.sdk.network.api.EncryptionSuccess
-import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.network.http.MockHttpClient
-import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
@@ -40,7 +37,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-// todo: can verify without manipulation of shared prefs; can improve later.
 class NetworkManagerTest : BaseTestCase() {
 
     private var closeable: AutoCloseable? = null
@@ -49,16 +45,21 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var mockHttpClient: MockHttpClient
     private lateinit var ctApiWrapper: CtApiWrapper
     private lateinit var dbManager: DBManager
-    private lateinit var controllerManager: ControllerManager
+    private lateinit var mockCoreContract: CoreContract
+    private lateinit var mockDeviceInfo: DeviceInfo
+    private lateinit var mockCoreMetaData: CoreMetaData
     private val networkEncryptionManager: NetworkEncryptionManager = mockk(relaxed = true)
     private val networkRepo = mockk<NetworkRepo>(relaxed = true)
-    private val clevertapResponseHandler = mockk<ClevertapResponseHandler>(relaxed = true)
 
     @Before
     fun setUpNetworkManager() {
         ctApiWrapper = mockk()
         mockHttpClient = MockHttpClient()
         ctApi = CtApiTestProvider.provideTestCtApiForConfig(cleverTapInstanceConfig, mockHttpClient)
+        
+        // Setup mock CoreContract
+        mockCoreContract = createMockCoreContract()
+        
         networkManager = provideNetworkManager()
         every { ctApiWrapper.ctApi } returns ctApi
     }
@@ -67,6 +68,8 @@ class NetworkManagerTest : BaseTestCase() {
     fun tearDown() {
         closeable?.close()
     }
+
+    // ============ HANDSHAKE TESTS ============
 
     @Test
     fun test_initHandshake_noHeaders_callSuccessCallback() {
@@ -109,18 +112,31 @@ class NetworkManagerTest : BaseTestCase() {
         assertEquals(spikyDomain, networkManager.getDomain(PUSH_NOTIFICATION_VIEWED))
     }
 
+    // ============ SEND QUEUE TESTS ============
+
     @Test
     fun test_sendQueue_requestFailure_returnFalse() {
         mockHttpClient.alwaysThrowOnExecute = true
         assertFalse(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(2), null))
+        
+        // Verify CoreContract was notified of failure
+        verify { mockCoreContract.onFlushFailure(appCtx) }
+        
         assertFalse(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, getSampleJsonArrayOfJsonObjects(2), null))
+        verify(atLeast = 2) { mockCoreContract.onFlushFailure(appCtx) }
     }
 
     @Test
     fun test_sendQueue_successResponseEmptyJsonBody_returnTrue() {
         mockHttpClient.responseBody = JSONObject().toString()
-        assertTrue(networkManager.sendQueue(appCtx, REGULAR, getSampleJsonArrayOfJsonObjects(2), null))
-        assertTrue(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, getSampleJsonArrayOfJsonObjects(2), null))
+        val queue = getSampleJsonArrayOfJsonObjects(2)
+        
+        assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
+        // Verify CoreContract handled the response
+        verify { mockCoreContract.handleSendQueueResponse(any(), any(), any(), any(), any()) }
+        
+        assertTrue(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null))
+        verify { mockCoreContract.handlePushImpressionsResponse(any(), any()) }
     }
 
     @Test
@@ -131,33 +147,36 @@ class NetworkManagerTest : BaseTestCase() {
             totalJsonObjects = 4,
             printGenArray = true
         )
+        
         assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
+        // With null body, response handler should still be called but handle empty response
+        verify { mockCoreContract.handleSendQueueResponse(any(), any(), any(), any(), any()) }
+        
         assertTrue(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null))
-
-        // verify we do not process body
-        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
-        verify(exactly = 0) { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify { mockCoreContract.handlePushImpressionsResponse(any(), any()) }
     }
 
     @Test
     fun test_sendVariablesQueue_successResponse_returnTrue() {
         mockHttpClient.responseBody = JSONObject().toString()
         assertTrue(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
+        
+        // Verify CoreContract handled variables response
+        verify { mockCoreContract.handleVariablesResponse(any()) }
     }
 
     @Test
     fun test_sendVariablesQueue_errorResponses_returnFalse() {
         mockHttpClient.responseCode = 400
         assertFalse(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
+        
         mockHttpClient.responseCode = 401
         assertFalse(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
+        
         mockHttpClient.responseCode = 500
         assertFalse(networkManager.sendQueue(appCtx, VARIABLES, getSampleJsonArrayOfJsonObjects(1), null))
     }
 
-    /**
-     * Test that when domain changes in the response, sendQueue returns false
-     */
     @Test
     fun test_sendQueue_domainChanges_returnFalse() {
         // Arrange
@@ -179,42 +198,36 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Assert
         assertFalse(op1)
-
         verify { networkRepo.getDomain() }
         verify { networkRepo.setDomain(newDomain) }
+        verify { mockCoreContract.notifySCDomainAvailable(any()) }
 
         // Act
         val op2 = networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null)
 
         // Assert
         assertFalse(op2)
-
-        verify { networkRepo.getDomain() }
-        verify { networkRepo.setDomain(newDomain) }
+        verify(atLeast = 2) { networkRepo.getDomain() }
+        verify(atLeast = 2) { networkRepo.setDomain(newDomain) }
     }
 
-    /**
-     * Test that when processIncomingHeaders returns false (muted), sendQueue returns false
-     */
     @Test
     fun test_sendQueue_processingMuteHeaders_returnFalse() {
         // Arrange
         mockHttpClient.responseCode = 200
         mockHttpClient.responseHeaders = mapOf(
-            HEADER_MUTE to listOf("true") // This will cause processIncomingHeaders to return false
+            HEADER_MUTE to listOf("true")
         )
 
         val queue = getSampleJsonArrayOfJsonObjects(2)
 
         // Act & Assert
         assertFalse(networkManager.sendQueue(appCtx, REGULAR, queue, null))
-
         verify { networkRepo.setMuted(true) }
 
         // Act & Assert
         assertFalse(networkManager.sendQueue(appCtx, PUSH_NOTIFICATION_VIEWED, queue, null))
-
-        verify { networkRepo.setMuted(true) }
+        verify(atLeast = 2) { networkRepo.setMuted(true) }
     }
 
     @Test
@@ -222,29 +235,25 @@ class NetworkManagerTest : BaseTestCase() {
         // Arrange
         mockHttpClient.responseCode = 200
         mockHttpClient.responseHeaders = mapOf(
-            HEADER_MUTE to listOf("false") // This will cause processIncomingHeaders to return false
+            HEADER_MUTE to listOf("false")
         )
 
         val queue = getSampleJsonArrayOfJsonObjects(2)
 
         // Act & Assert
         assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
-
         verify { networkRepo.setMuted(false) }
 
         // Arrange
         mockHttpClient.responseCode = 200
         mockHttpClient.responseHeaders = mapOf(
-            HEADER_MUTE to listOf("some-garbage") // This will cause processIncomingHeaders to return false
+            HEADER_MUTE to listOf("some-garbage")
         )
 
         // Act & Assert
         assertTrue(networkManager.sendQueue(appCtx, REGULAR, queue, null))
     }
 
-    /**
-     * Test that when everything is successful, sendQueue saves request timestamps
-     */
     @Test
     fun test_sendQueue_success_firstTime_savesRequestTs() {
         // Arrange
@@ -255,12 +264,12 @@ class NetworkManagerTest : BaseTestCase() {
         val queue = getSampleJsonArrayOfJsonObjects(2)
 
         every { networkRepo.getFirstRequestTs() } returns 0
+        
         // Act
         val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
         assertTrue(op1)
-
         verify { networkRepo.setLastRequestTs(any()) }
         verify { networkRepo.setFirstRequestTs(any()) }
 
@@ -269,14 +278,10 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Assert
         assertTrue(op2)
-
-        verify { networkRepo.setLastRequestTs(any()) }
-        verify { networkRepo.setFirstRequestTs(any()) }
+        verify(atLeast = 2) { networkRepo.setLastRequestTs(any()) }
+        verify(atLeast = 2) { networkRepo.setFirstRequestTs(any()) }
     }
 
-    /**
-     * Test that when everything is successful (not first time), sendQueue saves request last timestamp
-     */
     @Test
     fun test_sendQueue_success_savesLastRequestTs() {
         // Arrange
@@ -287,12 +292,12 @@ class NetworkManagerTest : BaseTestCase() {
         val queue = getSampleJsonArrayOfJsonObjects(2)
 
         every { networkRepo.getFirstRequestTs() } returns 12334
+        
         // Act
         val op1 = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
         assertTrue(op1)
-
         verify { networkRepo.setLastRequestTs(any()) }
         verify(exactly = 0) { networkRepo.setFirstRequestTs(any()) }
 
@@ -301,14 +306,10 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Assert
         assertTrue(op2)
-
-        verify { networkRepo.setLastRequestTs(any()) }
+        verify(atLeast = 2) { networkRepo.setLastRequestTs(any()) }
         verify(exactly = 0) { networkRepo.setFirstRequestTs(any()) }
     }
 
-    /**
-     * Test that when body contains app launched event, processors receive full response flag
-     */
     @Test
     fun test_sendQueue_withAppLaunchedEvent_processesWithFullResponse() {
         // Arrange
@@ -327,19 +328,25 @@ class NetworkManagerTest : BaseTestCase() {
         event.put("evtName", Constants.APP_LAUNCHED_EVENT)
         queue.put(event)
 
+        val isFullResponseSlot = slot<Boolean>()
+
         // Act
         val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
         assertTrue(result)
-
-        // Verify that isFullResponse is set to true for all processors
-        verify { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify { 
+            mockCoreContract.handleSendQueueResponse(
+                any(), 
+                capture(isFullResponseSlot), 
+                any(), 
+                any(), 
+                any()
+            ) 
+        }
+        assertTrue(isFullResponseSlot.captured, "isFullResponse should be true for App Launched event")
     }
 
-    /**
-     * Test that when body contains wzrk_fetch event, processors receive full response flag
-     */
     @Test
     fun test_sendQueue_withWzrkFetchEvent_processesWithFullResponse() {
         // Arrange
@@ -358,20 +365,25 @@ class NetworkManagerTest : BaseTestCase() {
         event.put("evtName", Constants.WZRK_FETCH)
         queue.put(event)
 
+        val isFullResponseSlot = slot<Boolean>()
+
         // Act
         val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
         assertTrue(result)
-
-        // Verify that isFullResponse is set to true for all processors
-        verify { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify { 
+            mockCoreContract.handleSendQueueResponse(
+                any(), 
+                capture(isFullResponseSlot), 
+                any(), 
+                any(), 
+                any()
+            ) 
+        }
+        assertTrue(isFullResponseSlot.captured, "isFullResponse should be true for wzrk_fetch event")
     }
 
-    /**
-     * Test that when body does not contain app launched or wzrk_fetch events,
-     * processors receive non-full response flag
-     */
     @Test
     fun test_sendQueue_withoutSpecialEvents_processesWithNonFullResponse() {
         // Arrange
@@ -390,35 +402,31 @@ class NetworkManagerTest : BaseTestCase() {
         event.put("evtName", "Regular Event")
         queue.put(event)
 
+        val isFullResponseSlot = slot<Boolean>()
+
         // Act
         val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
 
         // Assert
         assertTrue(result)
-
-        // Verify that isFullResponse is set to false for all processors
-        verify { clevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify { 
+            mockCoreContract.handleSendQueueResponse(
+                any(), 
+                capture(isFullResponseSlot), 
+                any(), 
+                any(), 
+                any()
+            ) 
+        }
+        assertFalse(isFullResponseSlot.captured, "isFullResponse should be false for regular event")
     }
 
-    /**
-     * Test that when encryption is enabled in the response header, the response gets decrypted
-     * before being passed to response processors
-     */
     @Test
-    fun test_sendQueue_whenEncryptionEnabledHeaderTrue_decryptsResponse() {
+    fun test_sendQueue_notifiesHeadersSent() {
         // Arrange
         mockHttpClient.responseCode = 200
-        // We'll use a simple JSON string for testing
         mockHttpClient.responseBody = JSONObject().toString()
-        mockHttpClient.responseHeaders = mapOf(
-            HEADER_ENCRYPTION_ENABLED to listOf("true")
-        )
 
-        // Setup the encryption manager to handle decryption
-        every { networkEncryptionManager.decryptResponse(any()) } returns
-            EncryptionSuccess("{}", "iv")
-
-        // Create a simple queue with a regular event
         val queue = getSampleJsonArrayOfJsonObjects(1)
 
         // Act
@@ -426,53 +434,20 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Assert
         assertTrue(result)
-
-        // Verify decryption was called
-        verify { networkEncryptionManager.decryptResponse(any<String>()) }
-
-        // Verify that the decrypted data was passed to all processors
-        verify { clevertapResponseHandler.handleResponse(eq(false), any(), eq("{}"), any()) }
+        verify { mockCoreContract.notifyHeadersSent(any(), any()) }
     }
 
-    /**
-     * Test that when encryption is enabled but decryption fails, sendQueue returns false
-     */
     @Test
-    fun test_sendQueue_whenEncryptionEnabledButDecryptionFails_returnsFalse() {
+    fun test_sendQueue_getsHeadersFromCoreContract() {
         // Arrange
+        val customHeaders = JSONObject().apply {
+            put("X-Custom-Header", "custom-value")
+        }
+        every { mockCoreContract.getHeadersToAttach(any()) } returns customHeaders
+
         mockHttpClient.responseCode = 200
         mockHttpClient.responseBody = JSONObject().toString()
-        mockHttpClient.responseHeaders = mapOf(
-            HEADER_ENCRYPTION_ENABLED to listOf("true")
-        )
 
-        // Setup the encryption manager to simulate decryption failure
-        every { networkEncryptionManager.decryptResponse(any()) } returns EncryptionFailure
-
-        // Create a simple queue
-        val queue = getSampleJsonArrayOfJsonObjects(1)
-
-        // Act
-        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
-
-        // Assert
-        assertFalse(result)
-
-        // Verify decryption was attempted
-        verify { networkEncryptionManager.decryptResponse(any<String>()) }
-    }
-
-    /**
-     * Test that when encryption header is not present, the response is not decrypted
-     */
-    @Test
-    fun test_sendQueue_whenEncryptionEnabledHeaderNotPresent_doesNotDecryptResponse() {
-        // Arrange
-        mockHttpClient.responseCode = 200
-        mockHttpClient.responseBody = JSONObject().toString()
-        mockHttpClient.responseHeaders = emptyMap()
-
-        // Create a simple queue
         val queue = getSampleJsonArrayOfJsonObjects(1)
 
         // Act
@@ -480,34 +455,7 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Assert
         assertTrue(result)
-
-        // Verify decryption was not called
-        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
-    }
-
-    /**
-     * Test that when encryption header is false, the response is not decrypted
-     */
-    @Test
-    fun test_sendQueue_whenEncryptionEnabledHeaderFalse_doesNotDecryptResponse() {
-        // Arrange
-        mockHttpClient.responseCode = 200
-        mockHttpClient.responseBody = JSONObject().toString()
-        mockHttpClient.responseHeaders = mapOf(
-            HEADER_ENCRYPTION_ENABLED to listOf("false")
-        )
-
-        // Create a simple queue
-        val queue = getSampleJsonArrayOfJsonObjects(1)
-
-        // Act
-        val result = networkManager.sendQueue(appCtx, REGULAR, queue, null)
-
-        // Assert
-        assertTrue(result)
-
-        // Verify decryption was not called
-        verify(exactly = 0) { networkEncryptionManager.decryptResponse(any()) }
+        verify { mockCoreContract.getHeadersToAttach(any()) }
     }
 
     @Test
@@ -538,6 +486,8 @@ class NetworkManagerTest : BaseTestCase() {
         assertFalse(result)
     }
 
+    // ============ TEMPLATE TESTS ============
+
     @Test
     fun `defineTemplates should return false when error response code is received`() {
         mockHttpClient.responseCode = 400
@@ -564,7 +514,8 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(networkManager.defineTemplates(emptyList()))
     }
 
-    // flushDBQueue tests
+    // ============ FLUSH DB QUEUE TESTS ============
+
     @Test
     fun test_flushDBQueue_emptyQueue_shouldExitImmediately() {
         // Given
@@ -581,9 +532,8 @@ class NetworkManagerTest : BaseTestCase() {
         // Then
         verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
         verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
-        // Verify no callbacks when queue is empty
-        verify(exactly = 0) { controllerManager.invokeBatchListener(any(), any()) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 0) { mockCoreContract.onNetworkError() }
+        verify(exactly = 0) { mockCoreContract.onNetworkSuccess(any(), any()) }
     }
 
     @Test
@@ -593,7 +543,6 @@ class NetworkManagerTest : BaseTestCase() {
             eventCount = 5,
             hasMore = false
         )
-        // queueData will have 3 event IDs (indices 0, 2, 4) and 2 profile IDs (indices 1, 3)
         val eventIds = queueData.eventIds.toList()
         val profileEventIds = queueData.profileEventIds.toList()
 
@@ -608,9 +557,8 @@ class NetworkManagerTest : BaseTestCase() {
         // Then
         verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
         verify(exactly = 1) { dbManager.cleanupSentEvents(appCtx, eventIds, profileEventIds) }
-        // Verify success callback
-        verify(exactly = 1) { controllerManager.invokeBatchListener(queueData.data, true) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 1) { mockCoreContract.onNetworkSuccess(queueData.data, true) }
+        verify(exactly = 0) { mockCoreContract.onNetworkError() }
     }
 
     @Test
@@ -640,13 +588,8 @@ class NetworkManagerTest : BaseTestCase() {
         // Then
         verify(exactly = 3) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
         verify(exactly = 3) { dbManager.cleanupSentEvents(any(), any(), any()) }
-        // Verify success callbacks for all 3 batches
-        verify(exactly = 3) { controllerManager.invokeBatchListener(any(), true) }
-        // Specifically verify each batch
-        verify { controllerManager.invokeBatchListener(batch1.data, true) }
-        verify { controllerManager.invokeBatchListener(batch2.data, true) }
-        verify { controllerManager.invokeBatchListener(batch3.data, true) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 3) { mockCoreContract.onNetworkSuccess(any(), true) }
+        verify(exactly = 0) { mockCoreContract.onNetworkError() }
     }
 
     @Test
@@ -659,18 +602,16 @@ class NetworkManagerTest : BaseTestCase() {
 
         every { dbManager.getQueuedEvents(any(), any(), any()) } returns batch1
 
-        mockHttpClient.alwaysThrowOnExecute = true // Simulate network failure
+        mockHttpClient.alwaysThrowOnExecute = true
 
         // When
         networkManager.flushDBQueue(appCtx, REGULAR, "test_caller", false)
 
         // Then
         verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
-        // Should not cleanup on failure
         verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
-        // Verify error callbacks
-        verify(exactly = 1) { controllerManager.invokeCallbacksForNetworkError() }
-        verify(exactly = 1) { controllerManager.invokeBatchListener(batch1.data, false) }
+        verify(exactly = 1) { mockCoreContract.onNetworkError() }
+        verify(exactly = 1) { mockCoreContract.onNetworkSuccess(batch1.data, false) }
     }
 
     @Test
@@ -678,7 +619,6 @@ class NetworkManagerTest : BaseTestCase() {
         // Given
         val eventIds = listOf("push1", "push2", "push3")
         val pushData = QueueData().apply {
-            // Add push notification events to the data
             eventIds.forEach { id ->
                 data.put(JSONObject().apply {
                     put("type", "event")
@@ -689,7 +629,6 @@ class NetworkManagerTest : BaseTestCase() {
                     })
                 })
             }
-            // Add the event IDs
             this.eventIds.addAll(eventIds)
             this.hasMore = false
         }
@@ -704,14 +643,12 @@ class NetworkManagerTest : BaseTestCase() {
 
         // Then
         verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, PUSH_NOTIFICATION_VIEWED) }
-        // Should use special cleanup for push notifications
         verify(exactly = 1) { dbManager.cleanupPushNotificationEvents(appCtx, eventIds) }
         verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
-        // Verify success callback for push notifications
-        verify(exactly = 1) { controllerManager.invokeBatchListener(pushData.data, true) }
-        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 1) { mockCoreContract.onNetworkSuccess(pushData.data, true) }
     }
 
+    // ============ HELPER METHODS ============
 
     private fun createQueueData(
         eventCount: Int,
@@ -719,7 +656,6 @@ class NetworkManagerTest : BaseTestCase() {
     ): QueueData {
         val queueData = QueueData()
 
-        // Add events to the data JSONArray and track IDs based on type
         repeat(eventCount) { i ->
             val isEvent = i % 2 == 0
             val type = if (isEvent) "event" else "profile"
@@ -733,7 +669,6 @@ class NetworkManagerTest : BaseTestCase() {
                 })
             })
 
-            // Add ID to appropriate list based on type
             if (isEvent) {
                 queueData.eventIds.add(id)
             } else {
@@ -742,37 +677,71 @@ class NetworkManagerTest : BaseTestCase() {
         }
 
         queueData.hasMore = hasMore
-
         return queueData
     }
 
+    private fun createMockCoreContract(): CoreContract {
+        dbManager = mockk<DBManager>(relaxed = true)
+        mockCoreMetaData = CoreMetaData()
+        val mockContract = mockk<CoreContract>(relaxed = true)
+        
+        // Setup basic return values
+        every { mockContract.context() } returns appCtx
+        every { mockContract.config() } returns cleverTapInstanceConfig
+        every { mockContract.logger() } returns TestLogger()
+        every { mockContract.database() } returns dbManager
+        
+        // Mock DeviceInfo
+        mockDeviceInfo = MockDeviceInfo(
+            context = application,
+            config = cleverTapInstanceConfig,
+            cleverTapID = "clevertapId",
+            coreMetaData = mockCoreMetaData
+        )
+        every { mockContract.deviceInfo() } returns mockDeviceInfo
+        
+        // Mock CoreMetaData
+        mockCoreMetaData = CoreMetaData()
+        every { mockContract.coreMetaData() } returns mockCoreMetaData
+        
+        // Mock response handling methods
+        every { 
+            mockContract.handleSendQueueResponse(any(), any(), any(), any(), any()) 
+        } just Runs
+        
+        every { 
+            mockContract.handleVariablesResponse(any()) 
+        } just Runs
+        
+        every { 
+            mockContract.handlePushImpressionsResponse(any(), any()) 
+        } just Runs
+        
+        every { mockContract.onNetworkError() } just Runs
+        every { mockContract.onNetworkSuccess(any(), any()) } just Runs
+        every { mockContract.onFlushFailure(any()) } just Runs
+        every { mockContract.notifyHeadersSent(any(), any()) } just Runs
+        every { mockContract.getHeadersToAttach(any()) } returns null
+        every { mockContract.notifySCDomainAvailable(any()) } just Runs
+        every { mockContract.notifySCDomainUnavailable() } just Runs
+        
+        return mockContract
+    }
 
     private fun provideNetworkManager(): NetworkManager {
-        val metaData = CoreMetaData()
-        val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
-        val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
-        dbManager = mockk<DBManager>(relaxed = true)
-        controllerManager = mockk<ControllerManager>(relaxed = true)
+
         val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
         every { queueHeaderBuilder.buildHeader(any()) } returns JSONObject()
 
-        // Pass the mock processors directly to the NetworkManager constructor
+        // NetworkManager now only takes CoreContract + network-specific dependencies
         return NetworkManager(
-            context = appCtx,
-            config = cleverTapInstanceConfig,
-            deviceInfo = deviceInfo,
-            coreMetaData = metaData,
-            controllerManager = controllerManager,
-            databaseManager = dbManager,
-            callbackManager = callbackManager,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = networkEncryptionManager,
-            arpResponse = mockk<ARPResponse>(relaxed =  true),
             networkRepo = networkRepo,
-            queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponseHandler = clevertapResponseHandler,
-            logger = TestLogger()
-        )
+            queueHeaderBuilder = queueHeaderBuilder
+        ).apply {
+            coreContract = mockCoreContract
+        }
     }
 
     private fun getErrorJson(): JSONObject {

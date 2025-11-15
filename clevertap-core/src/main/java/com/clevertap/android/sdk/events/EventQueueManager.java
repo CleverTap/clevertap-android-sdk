@@ -3,16 +3,14 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
-import android.location.Location;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
+import com.clevertap.android.sdk.CoreContract;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.FailureFlushListener;
@@ -25,7 +23,7 @@ import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -36,7 +34,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -71,27 +68,30 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final ValidationResultStack validationResultStack;
 
-    private Runnable pushNotificationViewedRunnable = null;
+    private final CTExecutors executors;
 
-    private final ControllerManager controllerManager;
+    private Runnable pushNotificationViewedRunnable = null;
 
     private final LoginInfoProvider loginInfoProvider;
 
-    public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
+    private CoreContract coreContract;
+
+    public EventQueueManager(
+            final BaseDatabaseManager baseDatabaseManager,
             Context context,
             CleverTapInstanceConfig config,
             EventMediator eventMediator,
             SessionManager sessionManager,
-            BaseCallbackManager callbackManager,
             MainLooperHandler mainLooperHandler,
             DeviceInfo deviceInfo,
             ValidationResultStack validationResultStack,
             NetworkManager networkManager,
             CoreMetaData coreMetaData,
             CTLockManager ctLockManager,
-            final LocalDataStore localDataStore,
-            ControllerManager controllerManager,
-            LoginInfoProvider loginInfoProvider) {
+            LocalDataStore localDataStore,
+            LoginInfoProvider loginInfoProvider,
+            CTExecutors executors
+    ) {
         this.baseDatabaseManager = baseDatabaseManager;
         this.context = context;
         this.config = config;
@@ -102,13 +102,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         this.validationResultStack = validationResultStack;
         this.networkManager = networkManager;
         this.localDataStore = localDataStore;
-        logger = this.config.getLogger();
-        cleverTapMetaData = coreMetaData;
+        this.logger = this.config.getLogger();
+        this.cleverTapMetaData = coreMetaData;
         this.ctLockManager = ctLockManager;
-        this.controllerManager = controllerManager;
         this.loginInfoProvider = loginInfoProvider;
-
-        callbackManager.setFailureFlushListener(this);
+        this.executors = executors;
     }
 
     // only call async
@@ -142,7 +140,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     @Override
     public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("CommsManager#flushQueueAsync", new Callable<Void>() {
             @Override
             public Void call() {
@@ -187,8 +185,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         // Check if network connectivity is available
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
-            controllerManager.invokeCallbacksForNetworkError();
-            controllerManager.invokeBatchListener(new JSONArray(), false);
+            coreContract.didNotFlush();
             return;
         }
 
@@ -196,8 +193,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (cleverTapMetaData.isOffline()) {
             logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
-            controllerManager.invokeCallbacksForNetworkError();
-            controllerManager.invokeBatchListener(new JSONArray(), false);
+            coreContract.didNotFlush();
             return;
         }
 
@@ -303,38 +299,12 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 localDataStore.setDataSyncFlag(event);
                 baseDatabaseManager.queueEventToDB(context, event, eventType);
 
-                initInAppEvaluation(context, event, eventType);
+                coreContract.evaluateInAppForEvent(context, event, eventType);
 
                 scheduleQueueFlush(context);
             } catch (Throwable e) {
                 config.getLogger().verbose(config.getAccountId(), "Failed to queue event: " + event.toString(), e);
             }
-        }
-    }
-
-    public void initInAppEvaluation(Context context, JSONObject event, int eventType) {
-        String eventName = eventMediator.getEventName(event);
-        Location userLocation = cleverTapMetaData.getLocationFromUser();
-        updateLocalStore(eventName, eventType);
-
-        if (eventMediator.isChargedEvent(event)) {
-            controllerManager.getInAppController()
-                    .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
-                            eventMediator.getChargedEventItemDetails(event), userLocation);
-        } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
-            // in case device is offline just evaluate all events
-            controllerManager.getInAppController().onQueueEvent(eventName,
-                    eventMediator.getEventProperties(event), userLocation);
-        } else if (eventType == Constants.PROFILE_EVENT) {
-            // in case profile event, evaluate for user attribute changes
-            Map<String, Map<String, Object>> userAttributeChangedProperties
-                    = eventMediator.computeUserAttributeChangeProperties(event);
-            controllerManager.getInAppController()
-                    .onQueueProfileEvent(userAttributeChangedProperties, userLocation);
-        } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
-            // in case device is online only evaluate non-appLaunched events
-            controllerManager.getInAppController().onQueueEvent(eventName,
-                    eventMediator.getEventProperties(event), userLocation);
         }
     }
 
@@ -352,7 +322,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 }
                 config.getLogger().verbose(config.getAccountId(), "Pushing Notification Viewed event onto DB");
                 baseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
-                initInAppEvaluation(context, event, eventType);
+                coreContract.evaluateInAppForEvent(context, event, eventType);
                 config.getLogger()
                         .verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue flush");
                 schedulePushNotificationViewedQueueFlush(context);
@@ -445,7 +415,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void pushInitialEventsAsync() {
         if (!cleverTapMetaData.inCurrentSession()) {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            Task<Void> task = executors.postAsyncSafelyTask();
             task.execute("CleverTapAPI#pushInitialEventsAsync", new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -470,7 +440,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        Task<Void> task = executors.postAsyncSafelyTask();
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
             @WorkerThread
@@ -482,7 +452,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     config.getLogger().debug(config.getAccountId(),
                             "App Launched not yet processed, re-queuing event " + event + "after 2s");
                     mainLooperHandler.postDelayed(() -> {
-                        Task<Void> task1 = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+                        Task<Void> task1 = executors.postAsyncSafelyTask();
                         task1.execute("queueEventWithDelay", new Callable<Void>() {
                             @Override
                             @WorkerThread
@@ -580,11 +550,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         mainLooperHandler.post(pushNotificationViewedRunnable);
     }
 
-    @WorkerThread
-    private void updateLocalStore(final String eventName, final int type) {
-        if (type == Constants.RAISED_EVENT) {
-            localDataStore.persistUserEventLog(eventName);
-        }
+    public void setCoreContract(CoreContract coreContract) {
+        this.coreContract = coreContract;
     }
-
 }

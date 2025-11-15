@@ -5,7 +5,7 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.text.TextUtils;
 import com.clevertap.android.sdk.BaseAnalyticsManager;
-import com.clevertap.android.sdk.BaseCallbackManager;
+import com.clevertap.android.sdk.CTFeatureFlagsListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -13,6 +13,8 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.FileUtils;
+
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +31,7 @@ import org.json.JSONObject;
 @Deprecated
 public class CTFeatureFlagsController {
 
+    private WeakReference<CTFeatureFlagsListener> listener = new WeakReference<>(null);
     final CleverTapInstanceConfig config;
 
     /**
@@ -47,8 +50,6 @@ public class CTFeatureFlagsController {
 
     final BaseAnalyticsManager mAnalyticsManager;
 
-    final BaseCallbackManager mCallbackManager;
-
     FileUtils mFileUtils;
 
     private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
@@ -60,10 +61,9 @@ public class CTFeatureFlagsController {
      */
     @Deprecated
     CTFeatureFlagsController(String guid, CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager, BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
+                             BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
         this.guid = guid;
         this.config = config;
-        mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
         mFileUtils = fileUtils;
         init();
@@ -291,14 +291,14 @@ public class CTFeatureFlagsController {
     }
 
     private void notifyFeatureFlagUpdate() {
-        if (mCallbackManager.getFeatureFlagListener() != null) {
+        if (listener.get() != null) {
             Task<Void> task = CTExecutorFactory.executors(config).mainTask();
             task.execute("notifyFeatureFlagUpdate", new Callable<Void>() {
                 @Override
                 public Void call() {
                     try {
-                        if (mCallbackManager.getFeatureFlagListener() != null) {
-                            mCallbackManager.getFeatureFlagListener().featureFlagsUpdated();
+                        if (listener.get() != null) {
+                            listener.get().featureFlagsUpdated();
                         }
                     } catch (Exception e) {
                         getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
@@ -307,5 +307,14 @@ public class CTFeatureFlagsController {
                 }
             });
         }
+    }
+
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    public void setFeatureFlagListener(WeakReference<CTFeatureFlagsListener> listener) {
+        this.listener = listener;
     }
 }

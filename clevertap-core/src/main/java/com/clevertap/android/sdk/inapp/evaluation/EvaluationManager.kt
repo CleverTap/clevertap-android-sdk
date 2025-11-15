@@ -12,7 +12,6 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
-import com.clevertap.android.sdk.network.NetworkHeadersListener
 import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
@@ -47,7 +46,7 @@ internal class EvaluationManager(
     private val limitsMatcher: LimitsMatcher,
     private val storeRegistry: StoreRegistry,
     private val templatesManager: TemplatesManager
-) : NetworkHeadersListener {
+) {
 
     // Internal list to track server-side evaluated campaign IDs. This map is used to identify the evaluatedIDs for raised and profile events together.
     @VisibleForTesting
@@ -489,7 +488,7 @@ internal class EvaluationManager(
      * @param endpointId The endpoint ID representing the target of the network request.
      * @return A JSONObject containing additional headers, or null if no headers need to be attached.
      */
-    override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
+    fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
         // Initialize a JSONObject to hold additional headers.
         val header = JSONObject()
         // Check if the network request is targeting a specific endpoint (e.g., ENDPOINT_A1).
@@ -520,7 +519,7 @@ internal class EvaluationManager(
      * @param allHeaders The JSONObject containing all headers that were sent in the network request.
      * @param endpointId The endpoint ID representing the target of the network request.
      */
-    override fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId) {
+    fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId) {
         // Check if the network request is targeting a specific endpoint (e.g., ENDPOINT_A1).
         if (endpointId == ENDPOINT_A1) {
             // Remove evaluated server-side campaign IDs that have been sent successfully.

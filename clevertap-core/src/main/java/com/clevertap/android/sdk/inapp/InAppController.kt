@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp
 
-
 import android.app.Activity
 import android.content.Context
 import android.location.Location
@@ -9,17 +8,17 @@ import android.os.Looper
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.AnalyticsManager
-import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.InAppFCManager
 import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.features.callbacks.InAppCallbackManager
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeAlert
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeCover
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeCoverHTML
@@ -55,12 +54,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Collections
 
-internal class InAppController(
+internal class InAppController constructor(
     private val context: Context,
     private val config: CleverTapInstanceConfig,
     private val executors: CTExecutors,
-    private val controllerManager: ControllerManager,
-    private val callbackManager: BaseCallbackManager,
+    private val callbackManager: InAppCallbackManager,
     private val analyticsManager: AnalyticsManager,
     private val coreMetaData: CoreMetaData,
     manifestInfo: ManifestInfo,
@@ -72,6 +70,16 @@ internal class InAppController(
     private val inAppNotificationInflater: InAppNotificationInflater,
     private val clock: Clock
 ) : InAppListener {
+
+    private var inAppFCManager: InAppFCManager? = null
+
+    fun setInAppFCManager(inAppFCManager: InAppFCManager) {
+        this.inAppFCManager = inAppFCManager
+    }
+
+    fun getInAppFCManager() : InAppFCManager? {
+        return inAppFCManager
+    }
 
     private enum class InAppState {
         DISCARDED,
@@ -97,7 +105,7 @@ internal class InAppController(
         }
     }
 
-    val onAppLaunchEventSent: () -> Unit = {
+    fun evaluateAppLaunchedInApps() {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         val clientSideInAppsToDisplay =
             evaluationManager.evaluateOnAppLaunchedClientSide(
@@ -183,10 +191,7 @@ internal class InAppController(
             InAppActionType.KEY_VALUES -> {
                 val keyValues = action.keyValues
                 if (keyValues?.isNotEmpty() == true) {
-                    if (callbackManager.getInAppNotificationButtonListener() != null) {
-                        callbackManager.getInAppNotificationButtonListener()
-                            .onInAppButtonClick(keyValues)
-                    }
+                    callbackManager.notifyButtonClick(keyValues)
                 }
             }
 
@@ -221,7 +226,7 @@ internal class InAppController(
         formData: Bundle?
     ) {
 
-        if (controllerManager.inAppFCManager != null) {
+        if (inAppFCManager != null) {
             val templateName = inAppNotification.customTemplateData?.templateName ?: ""
             logger.verbose(
                 defaultLogTag,
@@ -234,22 +239,7 @@ internal class InAppController(
             )
         }
         try {
-            val listener = callbackManager.getInAppNotificationListener()
-            if (listener != null) {
-                val notifKVS = if (inAppNotification.customExtras != null) {
-                    Utils.convertJSONObjectToHashMap(inAppNotification.customExtras)
-                } else {
-                    HashMap<String, Any>()
-                }
-
-                Logger.v("Calling the in-app listener on behalf of ${coreMetaData.source}")
-
-                if (formData != null) {
-                    listener.onDismissed(notifKVS, Utils.convertBundleObjectToHashMap(formData))
-                } else {
-                    listener.onDismissed(notifKVS, null)
-                }
-            }
+            callbackManager.notifyInAppDismissed(inAppNotification.customExtras, formData)
         } catch (t: Throwable) {
             logger.verbose(defaultLogTag, "Failed to call the in-app notification listener", t)
         }
@@ -266,12 +256,12 @@ internal class InAppController(
         inAppNotification: CTInAppNotification,
         formData: Bundle?
     ) {
-        controllerManager.inAppFCManager?.didShow(context, inAppNotification)
+        inAppFCManager?.didShow(context, inAppNotification)
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData)
 
         //Fire onShow() callback when InApp is shown.
         try {
-            callbackManager.getInAppNotificationListener()?.onShow(inAppNotification)
+            callbackManager.notifyInAppShown(inAppNotification)
         } catch (t: Throwable) {
             Logger.v(defaultLogTag, "Failed to call the in-app notification listener", t)
         }
@@ -570,7 +560,6 @@ internal class InAppController(
         }
 
         task.execute("checkLimitsBeforeShowing") {
-            val inAppFCManager = controllerManager.inAppFCManager
             if (inAppFCManager != null) {
                 val hasInAppFrequencyLimitsMaxedOut: (JSONObject, String) -> Boolean =
                     { inAppJSON, inAppId ->
@@ -581,7 +570,7 @@ internal class InAppController(
                         )
                     }
 
-                if (!inAppFCManager.canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut)) {
+                if (inAppFCManager!!.canShow(inAppNotification, hasInAppFrequencyLimitsMaxedOut).not()) {
                     logger.verbose(
                         defaultLogTag,
                         "InApp has been rejected by FC, not showing ${inAppNotification.campaignId}"
@@ -600,19 +589,7 @@ internal class InAppController(
     }
 
     private fun checkBeforeShowApprovalBeforeDisplay(inAppNotification: CTInAppNotification): Boolean {
-        val listener = callbackManager.getInAppNotificationListener()
-
-        return if (listener != null) {
-            val kvs = if (inAppNotification.customExtras != null) {
-                Utils.convertJSONObjectToHashMap(inAppNotification.customExtras)
-            } else {
-                HashMap<String, Any>()
-            }
-
-            listener.beforeShow(kvs)
-        } else {
-            true
-        }
+        return callbackManager.clientBeforeShow(inAppNotification.customExtras)
     }
 
     private fun showInApp(inAppNotification: CTInAppNotification) {

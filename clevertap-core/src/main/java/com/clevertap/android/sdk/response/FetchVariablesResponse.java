@@ -1,32 +1,25 @@
 package com.clevertap.android.sdk.response;
 
-import android.content.Context;
-
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
 import org.json.JSONObject;
 
-public class FetchVariablesResponse extends CleverTapResponseDecorator {
+public class FetchVariablesResponse {
 
     private final CleverTapInstanceConfig config;
-
-
-    private final ControllerManager controllerManager;
-    private final BaseCallbackManager callbackMgr;
+    private final CTVariables ctVariables;
+    private FetchVariablesCallback fetchVariablesCallback;
 
     public FetchVariablesResponse(
             CleverTapInstanceConfig config,
-            ControllerManager controllerManager,
-            BaseCallbackManager mgr
+            CTVariables ctVariables
     ) {
         this.config = config;
-        this.controllerManager = controllerManager;
-        this.callbackMgr = mgr;
+        this.ctVariables = ctVariables;
     }
 
     private  void logD(String m){
@@ -39,10 +32,9 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
         Logger.i("variables", m, t);
     }
 
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(final JSONObject response) {
         logI("Processing Variable response...");
-        logD("processResponse() called with: response = [" + response + "], stringBody = [" + stringBody + "], context = [" + context + "]");
+        logD("processResponse() called with: response = " + response);
 
         if (config.isAnalyticsOnly()) {
             logI("CleverTap instance is configured to analytics only, not processing Variable response");
@@ -65,15 +57,8 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
             logI("Processing Request Variables response");
 
             JSONObject kvJson = response.getJSONObject(varsKey);
-
-            if (controllerManager.getCtVariables() != null) {
-                FetchVariablesCallback callback = callbackMgr.getFetchVariablesCallback();
-                controllerManager.getCtVariables().handleVariableResponse(kvJson,callback);
-                callbackMgr.setFetchVariablesCallback(null);
-            }
-            else {
-                logI("Can't parse Variable Response, CTVariables is null");
-            }
+            ctVariables.handleVariableResponse(kvJson, fetchVariablesCallback);
+            fetchVariablesCallback = null;
 
         } catch (Throwable t) {
             logI("Failed to parse response", t);

@@ -11,10 +11,10 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.BaseAnalyticsManager;
-import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.features.callbacks.ProductConfigClientCallbacks;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
@@ -65,7 +65,7 @@ public class CTProductConfigController {
 
     private final BaseAnalyticsManager analyticsManager;
 
-    private final BaseCallbackManager callbackManager;
+    private final ProductConfigClientCallbacks callbackManager;
 
     private final CoreMetaData coreMetaData;
 
@@ -88,9 +88,9 @@ public class CTProductConfigController {
      */
     @Deprecated
     CTProductConfigController(Context context, CleverTapInstanceConfig config,
-            final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
-            final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings,
-            FileUtils fileUtils) {
+                              final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
+                              final ProductConfigClientCallbacks callbackManager, ProductConfigSettings productConfigSettings,
+                              FileUtils fileUtils) {
         this.context = context;
         this.config = config;
         this.coreMetaData = coreMetaData;
@@ -572,7 +572,7 @@ public class CTProductConfigController {
         return analyticsManager;
     }
 
-    BaseCallbackManager getCallbackManager() {
+    ProductConfigClientCallbacks getCallbackManager() {
         return callbackManager;
     }
 

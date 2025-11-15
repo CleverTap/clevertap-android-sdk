@@ -21,7 +21,6 @@ import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.InboxMessageButtonListener
 import com.clevertap.android.sdk.InboxMessageListener
-import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
@@ -113,16 +112,6 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
         // attach necessary/needed listeners
         ctInstance?.apply {
-            syncListener = object : SyncListener {
-                override fun profileDataUpdated(updates: JSONObject?) {//no op
-                }
-
-                override fun profileDidInitialize(CleverTapID: String?) {
-                    println(
-                        "CleverTap DeviceID from Application class= $CleverTapID"
-                    )
-                }
-            }
 
             setInboxMessageButtonListener(this@MyApplication)
             setCTInboxMessageListener(this@MyApplication)

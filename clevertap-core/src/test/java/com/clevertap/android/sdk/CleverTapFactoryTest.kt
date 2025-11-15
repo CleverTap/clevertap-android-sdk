@@ -101,12 +101,6 @@ class CleverTapFactoryTest : BaseTestCase() {
     }
 
     @Test
-    fun test_getCoreState_ReturnedObjectMustHaveNonNullControllerManager(){
-        val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-        assertNotNull(coreState.controllerManager)
-    }
-
-    @Test
     fun test_getCoreState_ReturnedObjectMustHaveNonNullInAppFCManagerInsideControllerManager(){
         // Create instance first to avoid stackoverflow error
         CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
@@ -115,7 +109,7 @@ class CleverTapFactoryTest : BaseTestCase() {
                 cleverTapInstanceConfig
             )
             val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-            assertNotNull(coreState.controllerManager.inAppFCManager)
+            assertNotNull(coreState.inAppFCManager)
         }
     }
 
@@ -153,7 +147,7 @@ class CleverTapFactoryTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-            assertNotNull(coreState.controllerManager.inAppController)
+            assertNotNull(coreState.inAppController)
         }
     }
 
@@ -167,7 +161,7 @@ class CleverTapFactoryTest : BaseTestCase() {
                     cleverTapInstanceConfig
                 )
             val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-            assertNotNull(coreState.controllerManager.ctFeatureFlagsController)
+            assertNotNull(coreState.callbackManager.ctFeatureFlagsController)
         }
     }
 
@@ -187,12 +181,6 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullActivityLifeCycleManager(){
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
         assertNotNull(coreState.activityLifeCycleManager)
-    }
-
-    @Test
-    fun test_getCoreState_ReturnedObjectMustHaveNonNullLoginController(){
-        val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-        assertNotNull(coreState.loginController)
     }
     @Test
     fun test_getCoreState_ReturnedObjectMustHaveNonNullCryptHandler(){

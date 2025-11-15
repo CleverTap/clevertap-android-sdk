@@ -50,7 +50,12 @@ class LocalDataStoreTest : BaseTestCase() {
             mockk<CryptRepository>(relaxed = true),
             mockk<CryptFactory>(relaxed = true),
         )
-        deviceInfo = MockDeviceInfo(appCtx, defConfig, "id", metaData)
+        deviceInfo = MockDeviceInfo(
+            context = appCtx,
+            config = defConfig,
+            cleverTapID = "id",
+            coreMetaData = metaData
+        )
         baseDatabaseManager = mockk<DBManager>(relaxed = true)
         dbAdapter = mockk<DBAdapter>(relaxed = true)
         userEventLogDaoMock = mockk<UserEventLogDAOImpl>(relaxed = true)

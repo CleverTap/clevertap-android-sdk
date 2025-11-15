@@ -6,16 +6,13 @@ import com.clevertap.android.sdk.StoreProvider.Companion.getInstance
 import com.clevertap.android.sdk.cryption.CTKeyGenerator
 import com.clevertap.android.sdk.cryption.CryptFactory
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.cryption.CryptMigrator
 import com.clevertap.android.sdk.cryption.CryptRepository
-import com.clevertap.android.sdk.cryption.DataMigrationRepository
 import com.clevertap.android.sdk.cryption.EncryptionLevel.Companion.fromInt
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
@@ -29,28 +26,17 @@ import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
-import com.clevertap.android.sdk.login.LoginController
 import com.clevertap.android.sdk.login.LoginInfoProvider
-import com.clevertap.android.sdk.network.AppLaunchListener
 import com.clevertap.android.sdk.network.ArpRepo
-import com.clevertap.android.sdk.network.CompositeBatchListener
 import com.clevertap.android.sdk.network.ContentFetchManager
-import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkRepo
-import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
-import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.CleverTapResponse
-import com.clevertap.android.sdk.response.ClevertapResponseHandler
-import com.clevertap.android.sdk.response.ConsoleResponse
 import com.clevertap.android.sdk.response.ContentFetchResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
@@ -58,7 +44,6 @@ import com.clevertap.android.sdk.response.FetchVariablesResponse
 import com.clevertap.android.sdk.response.GeofenceResponse
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.response.InboxResponse
-import com.clevertap.android.sdk.response.MetadataResponse
 import com.clevertap.android.sdk.response.ProductConfigResponse
 import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
@@ -70,6 +55,20 @@ import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
+import com.clevertap.android.sdk.features.AnalyticsFeature
+import com.clevertap.android.sdk.features.CoreFeature
+import com.clevertap.android.sdk.features.DataFeature
+import com.clevertap.android.sdk.features.DisplayUnitFeature
+import com.clevertap.android.sdk.features.FeatureFlagFeature
+import com.clevertap.android.sdk.features.GeofenceFeature
+import com.clevertap.android.sdk.features.InAppFeature
+import com.clevertap.android.sdk.features.InboxFeature
+import com.clevertap.android.sdk.features.NetworkFeature
+import com.clevertap.android.sdk.features.ProductConfigFeature
+import com.clevertap.android.sdk.features.ProfileFeature
+import com.clevertap.android.sdk.features.PushFeature
+import com.clevertap.android.sdk.features.VariablesFeature
+import com.clevertap.android.sdk.features.callbacks.InAppCallbackManager
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -104,11 +103,6 @@ internal object CleverTapFactory {
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
-
-        val fileResourceProviderInit = executors.ioTask<Unit>()
-        fileResourceProviderInit.execute("initFileResourceProvider") {
-            FileResourceProvider.getInstance(context, config.logger)
-        }
 
         val repository = CryptRepository(
             context = context,
@@ -149,29 +143,7 @@ internal object CleverTapFactory {
             clearLastRequestTs = networkRepo::clearLastRequestTs
         )
 
-        val task = executors.postAsyncSafelyTask<Unit>()
-        task.execute("migratingEncryption") {
-            val dbAdapter = databaseManager.loadDBAdapter(context)
-            val dataMigrationRepository = DataMigrationRepository(
-                context = context,
-                config = config,
-                dbAdapter = dbAdapter
-            )
-            val cryptMigrator = CryptMigrator(
-                logPrefix = config.accountId,
-                configEncryptionLevel = config.encryptionLevel,
-                logger = config.logger,
-                cryptHandler = cryptHandler,
-                cryptRepository = repository,
-                dataMigrationRepository = dataMigrationRepository,
-                variablesRepo = variablesRepo,
-                dbAdapter = dbAdapter
-            )
-            cryptMigrator.migrateEncryption()
-        }
-
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
-        deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val localDataStore =
             LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager)
@@ -183,29 +155,21 @@ internal object CleverTapFactory {
 
         getInstance(context, config)
 
-        val callbackManager: BaseCallbackManager = CallbackManager(config, deviceInfo)
-
         val sessionManager = SessionManager(config, coreMetaData, validator, localDataStore)
-
-        val controllerManager = ControllerManager(
-            context,
-            config,
-            ctLockManager,
-            callbackManager,
-            deviceInfo,
-            databaseManager
-        )
 
         val triggersMatcher = TriggersMatcher(localDataStore)
         val triggersManager = TriggerManager(context, config.accountId, deviceInfo)
         val impressionManager = ImpressionManager(storeRegistry)
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
 
-
+        val inAppCallbackManager = InAppCallbackManager()
         val inAppActionHandler = InAppActionHandler(
-            context,
-            config,
-            PushPermissionHandler(config, callbackManager.pushPermissionResponseListenerList)
+            context = context,
+            ctConfig = config,
+            pushPermissionHandler = PushPermissionHandler(
+                config = config,
+                ctListeners = inAppCallbackManager.getPushPermissionResponseListenerList()
+            )
         )
         val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
         val templatesManager = TemplatesManager.createInstance(config, systemTemplates)
@@ -217,54 +181,6 @@ internal object CleverTapFactory {
             storeRegistry = storeRegistry,
             templatesManager = templatesManager
         )
-
-        val taskInitStores = executors.ioTask<Unit>()
-        taskInitStores.execute("initStores") {
-            if (deviceInfo.getDeviceID() != null) {
-                if (storeRegistry.inAppStore == null) {
-                    val inAppStore: InAppStore = storeProvider.provideInAppStore(
-                        context = context,
-                        cryptHandler = cryptHandler,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.inAppStore = inAppStore
-                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-                    callbackManager.addChangeUserCallback(inAppStore)
-                }
-                if (storeRegistry.impressionStore == null) {
-                    val impStore: ImpressionStore = storeProvider.provideImpressionStore(
-                        context = context,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.impressionStore = impStore
-                    callbackManager.addChangeUserCallback(impStore)
-                }
-            }
-        }
-
-        //Get device id should be async to avoid strict mode policy.
-        val taskInitFCManager = executors.ioTask<Unit>()
-        taskInitFCManager.execute("initFCManager") {
-            val deviceId = deviceInfo.deviceID
-            if (deviceId != null && controllerManager.inAppFCManager == null) {
-                config.logger
-                    .verbose(
-                        config.accountId + ":async_deviceID",
-                        "Initializing InAppFC with device Id = $deviceId"
-                    )
-                controllerManager.inAppFCManager = InAppFCManager(
-                    context,
-                    config,
-                    deviceId,
-                    storeRegistry,
-                    impressionManager,
-                    executors,
-                    SYSTEM
-                )
-            }
-        }
 
         val impl = createFileResourcesRepo(
             context = context,
@@ -280,24 +196,8 @@ internal object CleverTapFactory {
         )
 
         val ctVariables = CTVariables(varCache)
-        controllerManager.ctVariables = ctVariables
 
         val parser = Parser(ctVariables)
-
-        val taskVariablesInit = executors.ioTask<Unit>()
-        taskVariablesInit.execute("initCTVariables") {
-            ctVariables.init()
-        }
-
-        val inAppResponse = InAppResponse(
-            config,
-            controllerManager,
-            false,
-            storeRegistry,
-            triggersManager,
-            templatesManager,
-            coreMetaData
-        )
 
         val ctApiWrapper = CtApiWrapper(
             networkRepo = networkRepo,
@@ -313,71 +213,20 @@ internal object CleverTapFactory {
             logger = config.logger,
             deviceInfo = deviceInfo
         )
-        val queueHeaderBuilder = QueueHeaderBuilder(
-            context = context,
-            config = config,
-            coreMetaData = coreMetaData,
-            controllerManager = controllerManager,
-            deviceInfo = deviceInfo,
-            arpRepo = arpRepo,
-            ijRepo = ijRepo,
-            databaseManager = databaseManager,
-            validationResultStack = validationResultStack,
-            firstRequestTs = networkRepo::getFirstRequestTs,
-            lastRequestTs = networkRepo::getLastRequestTs,
-            logger = config.logger
-        )
 
-        val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
         val contentFetchManager = ContentFetchManager(
-            config,
+            config.logger,
             coreMetaData,
-            queueHeaderBuilder,
             ctApiWrapper
         )
-        val contentFetchResponse = ContentFetchResponse(config, contentFetchManager)
-        val cleverTapResponses = listOf<CleverTapResponse>(
-            inAppResponse,
-            MetadataResponse(config, deviceInfo, ijRepo),
-            arpResponse,
-            ConsoleResponse(config),
-            InboxResponse(
-                config, ctLockManager,
-                callbackManager,
-                controllerManager
-            ),
-            PushAmpResponse(
-                context,
-                config,
-                databaseManager,
-                callbackManager,
-                controllerManager
-            ),
-            FetchVariablesResponse(config, controllerManager, callbackManager),
-            DisplayUnitResponse(config, callbackManager, controllerManager),
-            FeatureFlagResponse(config, controllerManager),
-            ProductConfigResponse(config, coreMetaData, controllerManager),
-            GeofenceResponse(config, callbackManager),
-            contentFetchResponse
+        val pushAmpResponse = PushAmpResponse(
+            accountId,
+            config.logger,
         )
-
-        val responseHandler = ClevertapResponseHandler(context, cleverTapResponses)
-        contentFetchManager.clevertapResponseHandler = responseHandler
-
         val networkManager = NetworkManager(
-            context = context,
-            config = config,
-            deviceInfo = deviceInfo,
-            coreMetaData = coreMetaData,
-            controllerManager = controllerManager,
-            databaseManager = databaseManager,
-            callbackManager = callbackManager,
             ctApiWrapper = ctApiWrapper,
             encryptionManager = encryptionManager,
-            arpResponse = arpResponse,
-            networkRepo = networkRepo,
-            queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponseHandler = responseHandler
+            networkRepo = networkRepo
         )
 
         val loginInfoProvider = LoginInfoProvider(
@@ -392,7 +241,6 @@ internal object CleverTapFactory {
             config,
             eventMediator,
             sessionManager,
-            callbackManager,
             mainLooperHandler,
             deviceInfo,
             validationResultStack,
@@ -400,18 +248,8 @@ internal object CleverTapFactory {
             coreMetaData,
             ctLockManager,
             localDataStore,
-            controllerManager,
-            loginInfoProvider
-        )
-
-        val inAppResponseForSendTestInApp = InAppResponse(
-            config,
-            controllerManager,
-            true,
-            storeRegistry,
-            triggersManager,
-            templatesManager,
-            coreMetaData
+            loginInfoProvider,
+            executors
         )
 
         val analyticsManager = AnalyticsManager(
@@ -422,10 +260,6 @@ internal object CleverTapFactory {
             validationResultStack,
             coreMetaData,
             deviceInfo,
-            callbackManager,
-            controllerManager,
-            ctLockManager,
-            inAppResponseForSendTestInApp,
             SYSTEM,
             executors
         )
@@ -437,13 +271,11 @@ internal object CleverTapFactory {
             { FileResourceProvider.getInstance(context, config.logger) }
         )
 
-        networkManager.addNetworkHeadersListener(evaluationManager)
         val inAppController = InAppController(
             context,
             config,
             executors,
-            controllerManager,
-            callbackManager,
+            inAppCallbackManager,
             analyticsManager,
             coreMetaData,
             ManifestInfo.getInstance(context),
@@ -455,113 +287,143 @@ internal object CleverTapFactory {
             inAppNotificationInflater,
             SYSTEM
         )
-        controllerManager.inAppController = inAppController
-
-        val batchListener = CompositeBatchListener()
-        val appLaunchListener = AppLaunchListener()
-        appLaunchListener.addListener(inAppController.onAppLaunchEventSent)
-        batchListener.addListener(appLaunchListener)
-        batchListener.addListener(FetchInAppListener(callbackManager))
-        callbackManager.batchListener = batchListener
-
-        val taskInitFeatureFlags = executors.ioTask<Unit>()
-        taskInitFeatureFlags.execute("initFeatureFlags") {
-            initFeatureFlags(
-                context,
-                controllerManager,
-                config,
-                deviceInfo,
-                callbackManager,
-                analyticsManager
-            )
-        }
 
         val locationManager = LocationManager(context, config, coreMetaData, baseEventQueueManager)
 
         val ctWorkManager = CTWorkManager(context, config)
 
-        val pushProviders = PushProviders
-            .load(
-                context, config, databaseManager, validationResultStack,
-                analyticsManager, controllerManager, ctWorkManager, SYSTEM
-            )
-
-        val activityLifeCycleManager = ActivityLifeCycleManager(
+        val pushProviders = PushProviders(
             context,
             config,
+            databaseManager,
+            validationResultStack,
             analyticsManager,
-            coreMetaData,
-            sessionManager,
-            pushProviders,
-            callbackManager,
-            inAppController,
-            baseEventQueueManager,
+            ctWorkManager,
             executors,
             SYSTEM
         )
 
-        val loginController = LoginController(
-            context, config, deviceInfo,
-            validationResultStack, baseEventQueueManager, analyticsManager,
-            coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
+        // ========== Build Feature Groups ==========
+        
+        // Core infrastructure
+        val coreFeature = CoreFeature(
+            context = context,
+            config = config,
+            deviceInfo = deviceInfo,
+            coreMetaData = coreMetaData,
+            executors = executors,
+            mainLooperHandler = mainLooperHandler,
+            validationResultStack = validationResultStack,
+            cryptHandler = cryptHandler,
+            clock = SYSTEM,
+            arpRepo = arpRepo
+        )
+        
+        // Data layer
+        val dataFeature = DataFeature(
+            databaseManager = databaseManager,
+            localDataStore = localDataStore
+        )
+        
+        // Network layer
+        val networkFeature = NetworkFeature(
+            networkManager = networkManager,
+            encryptionManager = encryptionManager,
+            networkRepo = networkRepo,
         )
 
-        return CoreState(
-            locationManager = locationManager,
-            config = config,
-            coreMetaData = coreMetaData,
-            databaseManager = databaseManager,
-            deviceInfo = deviceInfo,
-            eventMediator = eventMediator,
-            localDataStore = localDataStore,
-            activityLifeCycleManager = activityLifeCycleManager,
+        // Analytics
+        val analyticsFeature = AnalyticsFeature(
             analyticsManager = analyticsManager,
             baseEventQueueManager = baseEventQueueManager,
-            cTLockManager = ctLockManager,
-            callbackManager = callbackManager,
-            controllerManager = controllerManager,
+            eventMediator = eventMediator,
+            sessionManager = sessionManager,
+            validator = validator
+        )
+        
+        // Profile
+        val profileFeature = ProfileFeature(
+            loginInfoProvider = loginInfoProvider,
+            profileValueHandler = profileValueHandler,
+            locationManager = locationManager
+        )
+        
+        // InApp
+        val inAppFeature = InAppFeature(
             inAppController = inAppController,
             evaluationManager = evaluationManager,
             impressionManager = impressionManager,
-            loginController = loginController,
-            sessionManager = sessionManager,
-            validationResultStack = validationResultStack,
-            mainLooperHandler = mainLooperHandler,
-            networkManager = networkManager,
-            pushProviders = pushProviders,
+            templatesManager = templatesManager,
+            inAppResponse = InAppResponse(accountId, config.logger, false, templatesManager),
+            inAppCallbackManager = inAppCallbackManager,
+            storeRegistry = storeRegistry,
+            executors = executors,
+            triggerManager = triggersManager,
+            storeProvider = storeProvider
+        )
+        
+        // Inbox
+        val inboxFeature = InboxFeature(
+            cTLockManager = ctLockManager,
+            inboxResponse = InboxResponse(
+                accountId,
+                config.logger,
+                ctLockManager
+            )
+        )
+        
+        // Variables
+        val variablesFeature = VariablesFeature(
+            cTVariables = ctVariables,
             varCache = varCache,
             parser = parser,
-            cryptHandler = cryptHandler,
-            storeRegistry = storeRegistry,
-            templatesManager = templatesManager,
-            profileValueHandler = profileValueHandler,
-            cTVariables = ctVariables,
-            executors = executors
+            variablesRepository = variablesRepo,
+            fetchVariablesResponse = FetchVariablesResponse(config, ctVariables)
         )
-    }
+        
+        // Push
+        val pushFeature = PushFeature(
+            pushProviders = pushProviders,
+            pushAmpResponse = pushAmpResponse
+        )
 
-    private fun initFeatureFlags(
-        context: Context?,
-        controllerManager: ControllerManager,
-        config: CleverTapInstanceConfig,
-        deviceInfo: DeviceInfo,
-        callbackManager: BaseCallbackManager?,
-        analyticsManager: AnalyticsManager?
-    ) {
-        config.logger.verbose(
-            config.accountId + ":async_deviceID",
-            "Initializing Feature Flags with device Id = " + deviceInfo.deviceID
+        // DisplayUnit
+        val displayUnitFeature = DisplayUnitFeature(
+            contentFetchManager = contentFetchManager,
+            contentFetchResponse = ContentFetchResponse(accountId, config.logger),
+            displayUnitResponse = DisplayUnitResponse(accountId, config.logger)
         )
-        if (config.isAnalyticsOnly) {
-            config.logger.debug(config.accountId, "Feature Flag is not enabled for this instance")
-        } else {
-            controllerManager.ctFeatureFlagsController = CTFeatureFlagsFactory.getInstance(
-                context,
-                deviceInfo.deviceID,
-                config, callbackManager, analyticsManager
-            )
-            config.logger.verbose(config.accountId + ":async_deviceID", "Feature Flags initialized")
-        }
+
+        // Geofence
+        val geofenceFeature = GeofenceFeature(
+            locationManager = locationManager,
+            geofenceResponse = GeofenceResponse(accountId, config.logger)
+        )
+
+        // FeatureFlag
+        val featureFlagFeature = FeatureFlagFeature(
+            featureFlagResponse = FeatureFlagResponse(accountId, config.logger)
+        )
+        
+        // ========== Create CoreState with Feature Groups ==========
+        val state = CoreState(
+            core = coreFeature,
+            data = dataFeature,
+            network = networkFeature,
+            analytics = analyticsFeature,
+            profileFeat = profileFeature,
+            inApp = inAppFeature,
+            inbox = inboxFeature,
+            variables = variablesFeature,
+            push = pushFeature,
+            productConfig = ProductConfigFeature(
+                productConfigResponse = ProductConfigResponse(accountId, config.logger)
+            ),
+            displayUnitF = displayUnitFeature,
+            featureFlagF = featureFlagFeature,
+            geofenceF = geofenceFeature
+        )
+        state.asyncStartup()
+        return state
     }
 }

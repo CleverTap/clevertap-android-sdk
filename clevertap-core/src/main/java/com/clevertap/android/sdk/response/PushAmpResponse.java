@@ -4,68 +4,55 @@ import static com.clevertap.android.sdk.utils.CTJsonConverter.pushIdsToJSONArray
 
 import android.content.Context;
 import android.os.Bundle;
-import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
+import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
+
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class PushAmpResponse extends CleverTapResponseDecorator {
+public class PushAmpResponse {
 
-    private final BaseCallbackManager callbackManager;
+    private final String accountId;
 
-    private final CleverTapInstanceConfig config;
-
-    private final Context context;
-
-    private final Logger logger;
-
-    private final ControllerManager controllerManager;
-
-    private final BaseDatabaseManager baseDatabaseManager;
+    private final ILogger logger;
 
     public PushAmpResponse(
-            Context context,
-            CleverTapInstanceConfig config,
-            BaseDatabaseManager dbManager,
-            BaseCallbackManager callbackManager,
-            ControllerManager controllerManager
+            String accountId,
+            ILogger logger
     ) {
-        this.context = context;
-        this.config = config;
-        logger = this.config.getLogger();
-        this.baseDatabaseManager = dbManager;
-        this.callbackManager = callbackManager;
-        this.controllerManager = controllerManager;
+        this.accountId = accountId;
+        this.logger = logger;
     }
 
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    public void processResponse(
+            final JSONObject response,
+            final Context context,
+            final BaseDatabaseManager baseDatabaseManager,
+            final PushProviders pushProviders,
+            final CTPushAmpListener pushAmpListener
+    ) {
         //Handle Pull Notifications response
-        if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
-                    "CleverTap instance is configured to analytics only, not processing push amp response");
-            return;
-        }
         try {
             if (response.has("pushamp_notifs")) {
-                logger.verbose(config.getAccountId(), "Processing pushamp messages...");
+                logger.verbose(accountId, "Processing pushamp messages...");
                 JSONObject pushAmpObject = response.getJSONObject("pushamp_notifs");
                 final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
                 if (pushNotifications.length() > 0) {
-                    logger.verbose(config.getAccountId(), "Handling Push payload locally");
-                    handlePushNotificationsInResponse(pushNotifications);
+                    logger.verbose(accountId, "Handling Push payload locally");
+                    handlePushNotificationsInResponse(pushNotifications, context, baseDatabaseManager, pushAmpListener);
                 }
                 if (pushAmpObject.has("pf")) {
                     try {
                         int frequency = pushAmpObject.getInt("pf");
-                        controllerManager.getPushProviders().updatePingFrequencyIfNeeded(context, frequency);
+                        if (pushProviders != null) {
+                            pushProviders.updatePingFrequencyIfNeeded(context, frequency);
+                        }
                     } catch (Throwable t) {
                         logger
                                 .verbose("Error handling ping frequency in response : " + t.getMessage());
@@ -93,7 +80,12 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     //PN
     @SuppressWarnings("rawtypes")
-    private void handlePushNotificationsInResponse(JSONArray pushNotifications) {
+    private void handlePushNotificationsInResponse(
+            JSONArray pushNotifications,
+            Context context,
+            BaseDatabaseManager baseDatabaseManager,
+            CTPushAmpListener pushAmpListener
+    ) {
         try {
             for (int i = 0; i < pushNotifications.length(); i++) {
                 Bundle pushBundle = new Bundle();
@@ -110,20 +102,20 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                 if (!pushBundle.isEmpty() && !baseDatabaseManager.loadDBAdapter(context)
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     logger.verbose("Creating Push Notification locally");
-                    if (callbackManager.getPushAmpListener() != null) {
-                        callbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
+                    if (pushAmpListener != null) {
+                        pushAmpListener.onPushAmpPayloadReceived(pushBundle);
                     } else {
                         PushNotificationHandler.getPushNotificationHandler()
                                 .onMessageReceived(context, pushBundle, PushConstants.FCM.toString());
                     }
                 } else {
-                    logger.verbose(config.getAccountId(),
+                    logger.verbose(accountId,
                             "Push Notification already shown, ignoring local notification :" + pushObject
                                     .getString("wzrk_pid"));
                 }
             }
         } catch (JSONException e) {
-            logger.verbose(config.getAccountId(), "Error parsing push notification JSON");
+            logger.verbose(accountId, "Error parsing push notification JSON");
         }
     }
 }

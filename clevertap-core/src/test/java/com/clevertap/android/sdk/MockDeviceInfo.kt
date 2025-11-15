@@ -3,8 +3,10 @@ package com.clevertap.android.sdk
 import android.content.Context
 import org.json.JSONObject
 
-class MockDeviceInfo(
-    context: Context?, config: CleverTapInstanceConfig?, cleverTapID: String?,
+class MockDeviceInfo constructor(
+    context: Context?,
+    config: CleverTapInstanceConfig?,
+    cleverTapID: String?,
     coreMetaData: CoreMetaData?
 ) : DeviceInfo(
     context, config,
@@ -19,9 +21,6 @@ class MockDeviceInfo(
 
     override fun getDeviceID(): String? {
         return ctId
-    }
-
-    override fun onInitDeviceInfo(cleverTapID: String?) {
     }
 
     override fun getAttributionID(): String {

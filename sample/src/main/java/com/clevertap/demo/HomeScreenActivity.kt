@@ -44,7 +44,7 @@ import java.util.HashMap
 private const val TAG = "HomeScreenActivity"
 
 class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
-    CTFeatureFlagsListener, SyncListener, InAppNotificationListener,
+    CTFeatureFlagsListener, InAppNotificationListener,
     PushPermissionResponseListener,
     InAppNotificationButtonListener {
 
@@ -198,7 +198,6 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     private fun cleverTapListeners() {
 
         cleverTapDefaultInstance?.apply {
-            syncListener = this@HomeScreenActivity
             enableDeviceNetworkInfoReporting(true)
             //Set the Notification Inbox Listener
             ctNotificationInboxListener = this@HomeScreenActivity
@@ -273,14 +272,6 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun featureFlagsUpdated() {
         Log.i(TAG, "featureFlagsUpdated() called")
-    }
-
-    override fun profileDataUpdated(updates: JSONObject?) {
-        Log.i(TAG, "profileDataUpdated() called")
-    }
-
-    override fun profileDidInitialize(CleverTapID: String?) {
-        Log.i(TAG, "profileDidInitialize() called")
     }
 
     private fun showLocationPermissionPolicyDialog(success : () -> Unit) {
