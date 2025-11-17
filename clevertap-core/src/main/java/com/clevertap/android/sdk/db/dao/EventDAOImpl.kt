@@ -67,7 +67,7 @@ internal class EventDAOImpl(
                 null, null, null, null,
                 "${Column.CREATED_AT} ASC",
                 (limit + 1).toString()
-            )?.use { cursor ->
+            ).use { cursor ->
                 val rowCount = cursor.count
                 queueData.hasMore = rowCount > limit
 
@@ -165,39 +165,7 @@ internal class EventDAOImpl(
         try {
             dbHelper.writableDatabase.delete(tName, "${Column.ID} <= ?", arrayOf(lastId))
         } catch (e: SQLiteException) {
-            logger.verbose("Error removing sent data from table $tName Recreating DB")
-            dbHelper.deleteDatabase()
-        }
-    }
-
-    /**
-     * Cleans up events from the profileEvents table by their IDs
-     *
-     * @param events List of profile event IDs to delete
-     */
-    @WorkerThread
-    @Synchronized
-    fun cleanupEventsByIds(table: Table, events: List<String>) {
-        if (events.isEmpty()) {
-            return
-        }
-
-        val tName = table.tableName
-
-        try {
-            // Process in chunks if the list is too large
-            val chunkSize = 100
-            events.chunked(chunkSize).forEach { chunk ->
-                val placeholders = chunk.joinToString(",") { "?" }
-                val deletedCount = dbHelper.writableDatabase.delete(
-                    tName,
-                    "${Column.ID} IN ($placeholders)",
-                    chunk.toTypedArray()
-                )
-                logger.verbose("Deleted $deletedCount events from $tName")
-            }
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing events from $tName", e)
+            logger.verbose("Error removing sent data from table $tName Recreating DB", e)
             dbHelper.deleteDatabase()
         }
     }
