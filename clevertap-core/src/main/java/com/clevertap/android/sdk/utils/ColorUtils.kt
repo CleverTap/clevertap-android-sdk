@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.utils
 
 import androidx.core.graphics.toColorInt
+import com.clevertap.android.sdk.Constants
 
 /**
  * Safely validates a color string and returns a valid color string.
@@ -25,7 +26,7 @@ fun String?.toValidColorOrFallback(fallback: String): String {
             } catch (_: Exception) {
                 null
             }
-        } ?: "#FFFFFF"
+        } ?: Constants.FALLBACK_COLOR
 
     // Validate main input
     val value = this ?: return safeFallback
