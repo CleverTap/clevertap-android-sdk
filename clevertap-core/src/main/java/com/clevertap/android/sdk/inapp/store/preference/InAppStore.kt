@@ -35,12 +35,14 @@ internal class InAppStore(
 
     private var clientSideInApps: JSONArray? = null
     private var serverSideInApps: JSONArray? = null
+    private var clientSideDelayedInApps: JSONArray? = null
 
     companion object {
 
         const val CLIENT_SIDE_MODE = "CS"
         const val SERVER_SIDE_MODE = "SS"
         const val NO_MODE = "NO_MODE"
+        const val PREFS_DELAYED_INAPP_KEY_CS = "delayed_inapp_notifs_cs"
     }
 
     /**
@@ -60,10 +62,14 @@ internal class InAppStore(
 
             when (value) {
                 CLIENT_SIDE_MODE -> removeServerSideInAppsMetaData()
-                SERVER_SIDE_MODE -> removeClientSideInApps()
+                SERVER_SIDE_MODE -> {
+                    removeClientSideInApps()
+                    removeClientSideDelayedInApps()
+                }
                 NO_MODE -> {
                     removeServerSideInAppsMetaData()
                     removeClientSideInApps()
+                    removeClientSideDelayedInApps()
                 }
             }
         }
@@ -286,6 +292,43 @@ internal class InAppStore(
         }
 
         return serverSideInApps as JSONArray
+    }
+
+    /**
+     * Store Client-side delayed In-App messages in encrypted format
+     */
+    fun storeClientSideDelayedInApps(delayedInApps: JSONArray) {
+        this.clientSideDelayedInApps = delayedInApps
+        val encryptedString = cryptHandler.encrypt(delayedInApps.toString())
+        encryptedString?.apply {
+            ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, this)
+        }
+    }
+
+    /**
+     * Read Client-side delayed In-App messages
+     */
+    fun readClientSideDelayedInApps(): JSONArray {
+        if (clientSideDelayedInApps != null)
+            return clientSideDelayedInApps as JSONArray
+
+        val csDelayedInAppsEncrypted = ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, "")
+        clientSideDelayedInApps = if (csDelayedInAppsEncrypted.isNullOrBlank()) {
+            JSONArray()
+        } else {
+            try {
+                JSONArray(cryptHandler.decrypt(csDelayedInAppsEncrypted))
+            } catch (e: Exception) {
+                JSONArray()
+            }
+        }
+        return clientSideDelayedInApps as JSONArray
+    }
+
+
+    fun removeClientSideDelayedInApps() {
+        ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS)
+        clientSideDelayedInApps = null
     }
 
     /**

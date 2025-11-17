@@ -27,7 +27,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class CleverTapAPITest : BaseTestCase() {
 
     private lateinit var corestate: MockCoreStateKotlin
@@ -1096,7 +1095,7 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.discardInAppNotifications()
 
         // Assert
-        verify(exactly = 0) { corestate.inAppController.discardInApps() }
+        verify(exactly = 0) { corestate.inAppController.discardInApps(any()) }
 
         // Arrange
         corestate.config.isAnalyticsOnly = false
@@ -1105,7 +1104,7 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.discardInAppNotifications()
 
         // Assert
-        verify{ corestate.inAppController.discardInApps() }
+        verify{ corestate.inAppController.discardInApps(any()) }
     }
 
     @Test

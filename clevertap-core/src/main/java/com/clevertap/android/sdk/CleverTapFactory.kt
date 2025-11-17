@@ -20,15 +20,18 @@ import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppNotificationInflater
+import com.clevertap.android.sdk.inapp.InAppPreviewHandler
 import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
+import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
+import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
@@ -104,6 +107,7 @@ internal object CleverTapFactory {
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
+        val inAppDelayManager = InAppDelayManager(accountId, config.logger)
 
         val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
@@ -168,6 +172,15 @@ internal object CleverTapFactory {
                 dbAdapter = dbAdapter
             )
             cryptMigrator.migrateEncryption()
+        }
+        val inAppDaoLoaderTask = executors.postAsyncSafelyTask<Unit>()
+        inAppDaoLoaderTask.execute("loadInAppsDao") {
+            inAppDelayManager.delayedLegacyInAppStore = DelayedLegacyInAppStore(
+                databaseManager.loadDBAdapter(context).delayedLegacyInAppDAO(),
+                cryptHandler,
+                config.logger,
+                accountId
+            )
         }
 
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
@@ -414,6 +427,14 @@ internal object CleverTapFactory {
             coreMetaData
         )
 
+        val inAppPreviewHandler = InAppPreviewHandler(
+            executors,
+            networkManager,
+            inAppResponseForSendTestInApp,
+            context,
+            config.logger
+        )
+
         val analyticsManager = AnalyticsManager(
             context,
             config,
@@ -425,9 +446,9 @@ internal object CleverTapFactory {
             callbackManager,
             controllerManager,
             ctLockManager,
-            inAppResponseForSendTestInApp,
             SYSTEM,
-            executors
+            executors,
+            inAppPreviewHandler
         )
 
         val inAppNotificationInflater = InAppNotificationInflater(
@@ -438,6 +459,7 @@ internal object CleverTapFactory {
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
+
         val inAppController = InAppController(
             context,
             config,
@@ -453,6 +475,7 @@ internal object CleverTapFactory {
             templatesManager,
             inAppActionHandler,
             inAppNotificationInflater,
+            inAppDelayManager,
             SYSTEM
         )
         controllerManager.inAppController = inAppController

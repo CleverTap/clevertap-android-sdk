@@ -51,6 +51,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.installreferrer)
     implementation(libs.androidx.work.runtime)
 
@@ -68,6 +69,7 @@ dependencies {
     androidTestImplementation(libs.rules)
     androidTestImplementation(libs.test.espresso.core)
     androidTestImplementation(libs.test.work.testing)
+    testImplementation(libs.androidx.lifecycle.runtime.testing)
 }
 
 sonarqube {

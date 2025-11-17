@@ -4,6 +4,7 @@ import android.location.Location
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
 import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.INAPP_OPERATOR
 import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.INAPP_PROPERTYNAME
 import com.clevertap.android.sdk.inapp.evaluation.TriggerAdapter.Companion.KEY_PROPERTY_VALUE
@@ -67,7 +68,13 @@ class EvaluationManagerTest : BaseTestCase() {
         // Capture the created EventAdapter
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
+        // Mock both immediate and delayed client-side evaluations
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
+            JSONObject(mapOf("resultKey" to "immediateValue"))
+        )
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().put(
+            JSONObject(mapOf("delayKey" to "delayedValue"))
+        )
 
         // Act
         val result = evaluationManager.evaluateOnEvent(eventName, eventProperties, userLocation)
@@ -80,14 +87,23 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(userLocation, capturedEventAdapter.userLocation)
 
         assertNotNull(result)
-        assertTrue(result.length() > 0)
 
-        // Perform more detailed assertions on the content of the JSONArray if needed
-        val firstResultObject = result.getJSONObject(0)
-        assertEquals("resultValue", firstResultObject.getString("resultKey"))
+        // Verify immediate in-apps (first element of Pair)
+        val immediateInApps = result.first
+        assertTrue(immediateInApps.length() > 0)
+        val firstImmediateObject = immediateInApps.getJSONObject(0)
+        assertEquals("immediateValue", firstImmediateObject.getString("resultKey"))
 
+        // Verify delayed in-apps (second element of Pair)
+        val delayedInApps = result.second
+        assertTrue(delayedInApps.length() > 0)
+        val firstDelayedObject = delayedInApps.getJSONObject(0)
+        assertEquals("delayedValue", firstDelayedObject.getString("delayKey"))
+
+        // Verify method calls
         verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
         verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateDelayedClientSide(any()) }
     }
 
     @Test
@@ -102,9 +118,10 @@ class EvaluationManagerTest : BaseTestCase() {
                 mapOf("resultKey" to "resultValue")
             )
         )
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
 
         // Act
-        evaluationManager.evaluateOnAppLaunchedClientSide(emptyMap(), userLocation)
+        val result = evaluationManager.evaluateOnAppLaunchedClientSide(emptyMap(), userLocation)
 
         // Assert
         // Verify that the captured EventAdapter has the expected properties for app launched event
@@ -114,6 +131,7 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(userLocation, capturedEventAdapter.userLocation)
 
         verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateDelayedClientSide(any()) }
         verify(exactly = 0) { evaluationManager.evaluateServerSide(any()) }
     }
 
@@ -127,7 +145,10 @@ class EvaluationManagerTest : BaseTestCase() {
         // Capture the created EventAdapter
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(JSONObject(mapOf("resultKey" to "resultValue")))
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
+            JSONObject(mapOf("resultKey" to "resultValue"))
+        )
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
 
         // Act
         val result = evaluationManager.evaluateOnChargedEvent(details, items, userLocation)
@@ -138,14 +159,16 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(Constants.CHARGED_EVENT, capturedEventAdapter.eventName)
 
         assertNotNull(result)
-        assertTrue(result.length() > 0)
 
-        // Perform more detailed assertions on the content of the JSONArray if needed
-        val firstResultObject = result.getJSONObject(0)
+        // Access immediate in-apps from Pair
+        val immediateInApps = result.first
+        assertTrue(immediateInApps.length() > 0)
+        val firstResultObject = immediateInApps.getJSONObject(0)
         assertEquals("resultValue", firstResultObject.getString("resultKey"))
 
         verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
         verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateDelayedClientSide(any()) }
     }
 
     @Test
@@ -1605,6 +1628,997 @@ class EvaluationManagerTest : BaseTestCase() {
         verify(exactly = 1) { limitsMatcher.matchWhenLimits(any(), any()) }
     }
 
+    @Test
+    fun `test evaluateDelayedClientSide returns empty when store is null`() {
+        // Arrange
+        val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
+        every { storeRegistry.inAppStore } returns null
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(0, result.length())
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide returns empty when no delayed in-apps in store`() {
+        // Arrange
+        val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(0, result.length())
+        verify(exactly = 1) { mockInAppStore.readClientSideDelayedInApps() }
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide returns empty when evaluate returns empty list`() {
+        // Arrange
+        val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp)
+        every { evaluationManager.evaluate(any(), any()) } returns emptyList()
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(0, result.length())
+        verify(exactly = 1) { evaluationManager.evaluate(event, listOf(delayedInApp)) }
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide returns single in-app when not suppressed`() {
+        // Arrange
+        val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp)
+        every { evaluationManager.evaluate(any(), any()) } returns listOf(delayedInApp)
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(1, result.length())
+        assertEquals("delayed123", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide groups by delay and returns one per delay group`() {
+        // Arrange
+        val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
+
+        val inApp10s_high = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_high")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 300)
+
+        val inApp10s_low = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_low")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 100)
+
+        val inApp20s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "20s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 200)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val allInApps = listOf(inApp10s_high, inApp10s_low, inApp20s)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().apply {
+            allInApps.forEach { put(it) }
+        }
+        every { evaluationManager.evaluate(any(), any()) } returns allInApps
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        // Should return 2 in-apps: one from 10s group (highest priority) + one from 20s group
+        assertEquals(2, result.length())
+
+        val resultIds = (0 until result.length()).map {
+            result.getJSONObject(it).getString(Constants.INAPP_ID_IN_PAYLOAD)
+        }
+        assertTrue(resultIds.contains("10s_high"))
+        assertTrue(resultIds.contains("20s"))
+        assertFalse(resultIds.contains("10s_low"))
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide suppresses in-apps with INAPP_SUPPRESSED true`() {
+        // Arrange
+        val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
+
+        val suppressedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, true)
+            .put(Constants.INAPP_PRIORITY, 300)
+
+        val normalInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "normal")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 200)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val allInApps = listOf(suppressedInApp, normalInApp)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().apply {
+            allInApps.forEach { put(it) }
+        }
+        every { evaluationManager.evaluate(any(), any()) } returns allInApps
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "suppressed_wzrk_id"
+
+        // Act - clear any existing suppressed items first
+        evaluationManager.suppressedClientSideInApps.clear()
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(1, result.length())
+        assertEquals("normal", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+        assertEquals(1, evaluationManager.suppressedClientSideInApps.size)
+        verify(exactly = 1) { mockInAppStore.storeSuppressedClientSideInAppIds(any()) }
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide returns empty when all in-apps suppressed`() {
+        // Arrange
+        val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
+
+        val suppressedInApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed1")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val suppressedInApp2 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed2")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val allInApps = listOf(suppressedInApp1, suppressedInApp2)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().apply {
+            allInApps.forEach { put(it) }
+        }
+        every { evaluationManager.evaluate(any(), any()) } returns allInApps
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
+
+        // Act
+        evaluationManager.suppressedClientSideInApps.clear()
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(0, result.length())
+        assertEquals(2, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+
+    @Test
+    fun `test evaluateDelayedClientSide handles profile event with same oldValue and newValue`() {
+        // Arrange
+        val event = EventAdapter(
+            "attribute_CTChange",
+            mapOf(Constants.KEY_OLD_VALUE to "same", Constants.KEY_NEW_VALUE to "same"),
+            userLocation = null,
+            profileAttrName = "attribute"
+        )
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(0, result.length())
+        // Verify evaluate was NOT called because oldValue == newValue
+        verify(exactly = 0) { evaluationManager.evaluate(any(), any()) }
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide handles profile event with different oldValue and newValue`() {
+        // Arrange
+        val event = EventAdapter(
+            "attribute_CTChange",
+            mapOf(Constants.KEY_OLD_VALUE to "old", Constants.KEY_NEW_VALUE to "new"),
+            userLocation = null,
+            profileAttrName = "attribute"
+        )
+
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp)
+        every { evaluationManager.evaluate(any(), any()) } returns listOf(delayedInApp)
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(1, result.length())
+        verify(exactly = 1) { evaluationManager.evaluate(event, listOf(delayedInApp)) }
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide handles profile event with null newValue`() {
+        // Arrange - newValue is null means attribute was deleted
+        val event = EventAdapter(
+            "attribute_CTChange",
+            mapOf(Constants.KEY_OLD_VALUE to "old"),
+            userLocation = null,
+            profileAttrName = "attribute"
+        )
+
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp)
+        every { evaluationManager.evaluate(any(), any()) } returns listOf(delayedInApp)
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
+
+        // Assert
+        assertEquals(1, result.length())
+        verify(exactly = 1) { evaluationManager.evaluate(event, listOf(delayedInApp)) }
+    }
+
+    @Test
+    fun `test evaluateDelayedClientSide handles multiple events and aggregates results`() {
+        // Arrange
+        val event1 = EventAdapter("event1", emptyMap(), userLocation = null)
+        val event2 = EventAdapter("event2", emptyMap(), userLocation = null)
+
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp1")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp2 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp2")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray()
+            .put(inApp1)
+            .put(inApp2)
+
+        // event1 evaluates to inApp1, event2 evaluates to inApp2
+        every { evaluationManager.evaluate(event1, any()) } returns listOf(inApp1)
+        every { evaluationManager.evaluate(event2, any()) } returns listOf(inApp2)
+
+        // Act
+        val result = evaluationManager.evaluateDelayedClientSide(listOf(event1, event2))
+
+        // Assert
+        assertEquals(2, result.length())
+        verify(exactly = 1) { evaluationManager.evaluate(event1, any()) }
+        verify(exactly = 1) { evaluationManager.evaluate(event2, any()) }
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide returns empty when evaluate returns empty`() {
+        // Arrange
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+
+        every { evaluationManager.evaluate(any(), any()) } returns emptyList()
+
+        // Act
+        val result = evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            listOf(delayedInApp),
+            emptyMap(),
+            null
+        )
+
+        // Assert
+        assertEquals(0, result.length())
+        verify(exactly = 1) { evaluationManager.evaluate(any(), listOf(delayedInApp)) }
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide returns single in-app when not suppressed`() {
+        // Arrange
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        every { evaluationManager.evaluate(any(), any()) } returns listOf(delayedInApp)
+
+        // Act
+        val result = evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            listOf(delayedInApp),
+            emptyMap(),
+            null
+        )
+
+        // Assert
+        assertEquals(1, result.length())
+        assertEquals("delayed123", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide groups by delay and selects one per group`() {
+        // Arrange
+        val inApp10s_high = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_high")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 300)
+
+        val inApp10s_low = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_low")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 100)
+
+        val inApp20s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "20s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 200)
+
+        val allInApps = listOf(inApp10s_high, inApp10s_low, inApp20s)
+        every { evaluationManager.evaluate(any(), any()) } returns allInApps
+
+        // Act
+        val result = evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            allInApps,
+            emptyMap(),
+            null
+        )
+
+        // Assert
+        assertEquals(2, result.length())
+        val resultIds = (0 until result.length()).map {
+            result.getJSONObject(it).getString(Constants.INAPP_ID_IN_PAYLOAD)
+        }
+        assertTrue(resultIds.contains("10s_high"))
+        assertTrue(resultIds.contains("20s"))
+        assertFalse(resultIds.contains("10s_low"))
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide suppresses and adds to suppression list`() {
+        // Arrange
+        val suppressedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, true)
+            .put(Constants.INAPP_PRIORITY, 300)
+
+        val normalInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "normal")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 200)
+
+        val allInApps = listOf(suppressedInApp, normalInApp)
+        every { evaluationManager.evaluate(any(), any()) } returns allInApps
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "suppressed_wzrk_id"
+
+        // Act
+        evaluationManager.suppressedClientSideInApps.clear()
+        val result = evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            allInApps,
+            emptyMap(),
+            null
+        )
+
+        // Assert
+        assertEquals(1, result.length())
+        assertEquals("normal", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+        assertTrue(evaluationManager.suppressedClientSideInApps.size > 0)
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide returns empty when all suppressed`() {
+        // Arrange
+        val suppressedInApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed1")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val suppressedInApp2 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed2")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val allInApps = listOf(suppressedInApp1, suppressedInApp2)
+        every { evaluationManager.evaluate(any(), any()) } returns allInApps
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
+
+        // Act
+        evaluationManager.suppressedClientSideInApps.clear()
+        val result = evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            allInApps,
+            emptyMap(),
+            null
+        )
+
+        // Assert
+        assertEquals(0, result.length())
+        assertEquals(2, evaluationManager.suppressedClientSideInApps.size)
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide saves suppressed IDs when updated`() {
+        // Arrange
+        val suppressedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        every { evaluationManager.evaluate(any(), any()) } returns listOf(suppressedInApp)
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
+
+        // Act
+        evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            listOf(suppressedInApp),
+            emptyMap(),
+            null
+        )
+
+        // Assert
+        verify(exactly = 1) { mockInAppStore.storeSuppressedClientSideInAppIds(any()) }
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide creates correct EventAdapter`() {
+        // Arrange
+        val eventProperties = mapOf("key" to "value")
+        val userLocation = mockk<Location>()
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val eventAdapterSlot = slot<EventAdapter>()
+        every { evaluationManager.evaluate(capture(eventAdapterSlot), any()) } returns listOf(delayedInApp)
+
+        // Act
+        evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            listOf(delayedInApp),
+            eventProperties,
+            userLocation
+        )
+
+        // Assert
+        val capturedEventAdapter = eventAdapterSlot.captured
+        assertEquals(Constants.APP_LAUNCHED_EVENT, capturedEventAdapter.eventName)
+        assertEquals(eventProperties, capturedEventAdapter.eventProperties)
+        assertEquals(userLocation, capturedEventAdapter.userLocation)
+    }
+
+    @Test
+    fun `test evaluateOnAppLaunchedDelayedServerSide handles multiple delay groups correctly`() {
+        // Arrange
+        val inApp5s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "5s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 5)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp10s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp15s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "15s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 15)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val allInApps = listOf(inApp5s, inApp10s, inApp15s)
+        every { evaluationManager.evaluate(any(), any()) } returns allInApps
+
+        // Act
+        val result = evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
+            allInApps,
+            emptyMap(),
+            null
+        )
+
+        // Assert - Should return 3 in-apps, one from each delay group
+        assertEquals(3, result.length())
+        val resultIds = (0 until result.length()).map {
+            result.getJSONObject(it).getString(Constants.INAPP_ID_IN_PAYLOAD)
+        }
+        assertTrue(resultIds.contains("5s"))
+        assertTrue(resultIds.contains("10s"))
+        assertTrue(resultIds.contains("15s"))
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps with Immediate strategy returns first non-suppressed in-app`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val suppressedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed")
+            .put(Constants.INAPP_PRIORITY, 300)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val normalInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "normal")
+            .put(Constants.INAPP_PRIORITY, 200)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        val eligibleInApps = listOf(suppressedInApp, normalInApp)
+
+        // Act
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        assertEquals(1, result.length())
+        assertEquals("normal", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps with Delayed strategy returns one per delay group`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Delayed
+
+        // Delay group 10s
+        val inApp10s_high = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_high")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_PRIORITY, 300)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        val inApp10s_low = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_low")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_PRIORITY, 200)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        // Delay group 20s
+        val inApp20s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "20s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_PRIORITY, 100)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        val eligibleInApps = listOf(inApp10s_high, inApp10s_low, inApp20s)
+
+        // Act
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert - Should return 2 in-apps: highest priority from each delay group
+        assertEquals(2, result.length())
+        val resultIds = (0 until result.length()).map {
+            result.getJSONObject(it).getString(Constants.INAPP_ID_IN_PAYLOAD)
+        }
+        assertTrue(resultIds.contains("10s_high"))
+        assertTrue(resultIds.contains("20s"))
+        assertFalse(resultIds.contains("10s_low"))
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps calls sortByPriority before selection`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val lowPriority = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "low")
+            .put(Constants.INAPP_PRIORITY, 100)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val highPriority = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "high")
+            .put(Constants.INAPP_PRIORITY, 300)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        // Intentionally pass in wrong order
+        val eligibleInApps = listOf(lowPriority, highPriority)
+        every { evaluationManager.sortByPriority(any()) } answers { callOriginal() }
+
+        // Act
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert - Should select high priority even though it was second in the list
+        assertEquals(1, result.length())
+        assertEquals("high", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+        verify(exactly = 1) { evaluationManager.sortByPriority(eligibleInApps) }
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps calls suppress for suppressed in-apps`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val suppressedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed")
+            .put(Constants.INAPP_PRIORITY, 300)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val normalInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "normal")
+            .put(Constants.INAPP_PRIORITY, 200)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val eligibleInApps = listOf(suppressedInApp, normalInApp)
+        every { evaluationManager.suppress(any()) } just Runs
+
+        // Act
+        evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        verify(exactly = 1) { evaluationManager.suppress(suppressedInApp) }
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps updates TTL when shouldUpdateTTLForThisContext is true and strategy allows`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate // Immediate strategy should update TTL
+
+        val inApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp1")
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        val eligibleInApps = listOf(inApp)
+        every { evaluationManager.updateTTL(any(), any()) } just Runs
+
+        // Act
+        evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        verify(exactly = 1) { evaluationManager.updateTTL(inApp, any()) }
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps does not update TTL when shouldUpdateTTLForThisContext is false`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val inApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp1")
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val eligibleInApps = listOf(inApp)
+        every { evaluationManager.updateTTL(any(), any()) } just Runs
+
+        // Act
+        evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = false // SS context: no TTL update
+        )
+
+        // Assert
+        verify(exactly = 0) { evaluationManager.updateTTL(any(), any()) }
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps saves suppressed IDs when suppression occurs`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val suppressedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed")
+            .put(Constants.INAPP_SUPPRESSED, true)
+            .put(Constants.INAPP_PRIORITY, 100)
+
+        val normalInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "normal")
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.INAPP_PRIORITY, 99)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        every { storeRegistry.inAppStore } returns mockInAppStore
+        val eligibleInApps = listOf(suppressedInApp, normalInApp)
+
+
+        // Act
+        evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        verify(exactly = 1) { mockInAppStore.storeSuppressedClientSideInAppIds(any()) }
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps does not save when no suppression occurs`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val normalInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "normal")
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val eligibleInApps = listOf(normalInApp)
+
+        every { storeRegistry.inAppStore } returns mockInAppStore
+
+        // Act
+        evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        verify(exactly = 0) { mockInAppStore.storeSuppressedClientSideInAppIds(any()) }
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps returns empty when all in-apps are suppressed`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val suppressed1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed1")
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val suppressed2 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed2")
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val eligibleInApps = listOf(suppressed1, suppressed2)
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
+
+        // Act
+        evaluationManager.suppressedClientSideInApps.clear()
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        assertEquals(0, result.length())
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps with Delayed strategy handles multiple delay groups correctly`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Delayed
+
+        // Create 3 different delay groups
+        val inApp5s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "5s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 5)
+            .put(Constants.INAPP_PRIORITY, 100)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp10s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_PRIORITY, 200)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp15s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "15s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 15)
+            .put(Constants.INAPP_PRIORITY, 300)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val eligibleInApps = listOf(inApp5s, inApp10s, inApp15s)
+
+        // Act
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert - Should return all 3 (one per delay group)
+        assertEquals(3, result.length())
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps with Delayed strategy suppresses lower priority in same delay group`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Delayed
+
+        val inApp10s_suppressed = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_suppressed")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_PRIORITY, 300)
+            .put(Constants.INAPP_SUPPRESSED, true)
+
+        val inApp10s_high = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_high")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_PRIORITY, 200)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp10s_low = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s_low")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_PRIORITY, 100)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val eligibleInApps = listOf(inApp10s_suppressed, inApp10s_high, inApp10s_low)
+        every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
+
+        // Act
+        evaluationManager.suppressedClientSideInApps.clear()
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        assertEquals(1, result.length())
+        assertEquals("10s_high", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+
+        // Verify suppression occurred for the suppressed in-app
+        assertTrue(evaluationManager.suppressedClientSideInApps.size > 0)
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps builds JSONArray in correct order`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Delayed
+
+        val inApp10s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp20s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "20s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val eligibleInApps = listOf(inApp10s, inApp20s)
+
+        // Act
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert
+        assertEquals(2, result.length())
+        // Verify order is maintained
+        assertEquals("10s", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+        assertEquals("20s", result.getJSONObject(1).getString(Constants.INAPP_ID_IN_PAYLOAD))
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps with Delayed strategy does not update TTL for each selected in-app`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Delayed
+
+        val inApp10s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "10s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        val inApp20s = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "20s")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 20)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
+
+        val eligibleInApps = listOf(inApp10s, inApp20s)
+        every { evaluationManager.updateTTL(any(), any()) } just Runs
+
+        // Act
+        evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert - TTL should not be updated for both selected in-apps
+        verify(exactly = 0) { evaluationManager.updateTTL(inApp10s, any()) }
+        verify(exactly = 0) { evaluationManager.updateTTL(inApp20s, any()) }
+    }
+
+    @Test
+    fun `test selectAndProcessEligibleInApps with Immediate strategy stops after first non-suppressed`() {
+        // Arrange
+        val strategy = InAppSelectionStrategy.Immediate
+
+        val inApp1 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp1")
+            .put(Constants.INAPP_PRIORITY, 300)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp2 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp2")
+            .put(Constants.INAPP_PRIORITY, 200)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val inApp3 = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp3")
+            .put(Constants.INAPP_PRIORITY, 100)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val eligibleInApps = listOf(inApp1, inApp2, inApp3)
+        every { evaluationManager.updateTTL(any(), any()) } just Runs
+
+        // Act
+        val result = evaluationManager.selectAndProcessEligibleInApps(
+            eligibleInApps,
+            strategy,
+            shouldUpdateTTLForThisContext = true
+        )
+
+        // Assert - Should return only first one
+        assertEquals(1, result.length())
+        assertEquals("inapp1", result.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+
+        // Should only update TTL for the selected one
+        verify(exactly = 1) { evaluationManager.updateTTL(inApp1, any()) }
+        verify(exactly = 0) { evaluationManager.updateTTL(inApp2, any()) }
+        verify(exactly = 0) { evaluationManager.updateTTL(inApp3, any()) }
+    }
     class FakeClock : Clock {
 
         override fun currentTimeMillis(): Long {

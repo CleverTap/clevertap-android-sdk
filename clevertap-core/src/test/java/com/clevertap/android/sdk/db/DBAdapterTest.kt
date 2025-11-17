@@ -299,6 +299,17 @@ class DBAdapterTest : BaseTestCase() {
         dbAdapter.cleanupStaleEvents(Table.EVENTS)
     }
 
+    @Test
+    fun `test delayedLegacyInAppDAO returns singleton instance`() {
+        // When
+        val dao1 = dbAdapter.delayedLegacyInAppDAO()
+        val dao2 = dbAdapter.delayedLegacyInAppDAO()
+
+        // Then
+        assertNotNull(dao1)
+        assertSame(dao1, dao2) // Verify same instance is returned
+    }
+
     // =====================================================
     // HELPER METHODS
     // =====================================================

@@ -53,6 +53,8 @@ internal class DBAdapter constructor(
 
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
+    @Volatile
+    private var delayedLegacyInAppDao: DelayedLegacyInAppDAO? = null
 
     // =====================================================
     // EVENT-RELATED OPERATIONS
@@ -198,6 +200,14 @@ internal class DBAdapter constructor(
             userEventLogDao ?: UserEventLogDAOImpl(
                 dbHelper, logger, Table.USER_EVENT_LOGS_TABLE
             ).also { userEventLogDao = it }
+        }
+    }
+    @WorkerThread
+    fun delayedLegacyInAppDAO(): DelayedLegacyInAppDAO {
+        return delayedLegacyInAppDao ?: synchronized(this) {
+            delayedLegacyInAppDao ?: DelayedLegacyInAppDAOImpl(
+                dbHelper, logger, Table.DELAYED_LEGACY_INAPPS
+            ).also { delayedLegacyInAppDao = it }
         }
     }
 
