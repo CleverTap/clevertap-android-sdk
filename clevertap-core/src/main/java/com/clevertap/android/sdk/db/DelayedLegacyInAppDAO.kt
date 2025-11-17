@@ -4,7 +4,7 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.utils.Clock
 
@@ -60,7 +60,7 @@ internal interface DelayedLegacyInAppDAO {
 
 internal class DelayedLegacyInAppDAOImpl(
     private val db: DatabaseHelper,
-    private val logger: Logger,
+    private val logger: ILogger,
     private val table: Table,
     private val clock: Clock = Clock.SYSTEM,
 ) : DelayedLegacyInAppDAO {
