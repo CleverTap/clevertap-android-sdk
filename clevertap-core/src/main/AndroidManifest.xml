@@ -39,5 +39,10 @@
             </intent-filter>
         </receiver>
 
+        <!-- todo : this is test specific, remove me later.-->
+        <meta-data
+            android:name="CLEVERTAP_BATCH_TIME"
+            android:value="200" />
+
     </application>
 </manifest>

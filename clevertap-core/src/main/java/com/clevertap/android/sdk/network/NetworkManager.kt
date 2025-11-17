@@ -81,7 +81,7 @@ internal class NetworkManager constructor(
 
     private var networkRetryCount = 0
 
-    private var minDelayFrequency = 0
+    private var minDelayFrequency: Long = 0
 
     private val mNetworkHeadersListeners: MutableList<NetworkHeadersListener> = ArrayList()
 
@@ -183,7 +183,7 @@ internal class NetworkManager constructor(
         )
     }
 
-    fun getDelayFrequency(): Int {
+    fun getDelayFrequency(): Long {
         minDelayFrequency = networkRepo.getMinDelayFrequency(minDelayFrequency, networkRetryCount)
         logger.debug(
             config.accountId,

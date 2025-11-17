@@ -148,9 +148,9 @@ internal class NetworkRepo(
     }
 
     fun getMinDelayFrequency(
-        currentDelay: Int,
+        currentDelay: Long,
         networkRetryCount: Int
-    ) : Int {
+    ) : Long {
         config.logger.debug(config.accountId, "Network retry #$networkRetryCount")
 
         //Retry with delay as 1s for first 10 retries
@@ -159,13 +159,13 @@ internal class NetworkRepo(
                 config.accountId,
                 "Failure count is $networkRetryCount. Setting delay frequency to 1s"
             )
-            return PUSH_DELAY_MS
+            return config.batchCollectionMs
         }
 
         if (config.accountRegion == null) {
             //Retry with delay as 1s if region is null in case of eu1
             config.logger.debug(config.accountId, "Setting delay frequency to 1s")
-            return PUSH_DELAY_MS
+            return config.batchCollectionMs
         } else {
             //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
             val  delayBy = currentDelay + generateRandomDelay()
@@ -176,7 +176,7 @@ internal class NetworkRepo(
                 )
                 return delayBy
             } else {
-                return PUSH_DELAY_MS
+                return config.batchCollectionMs
             }
         }
     }

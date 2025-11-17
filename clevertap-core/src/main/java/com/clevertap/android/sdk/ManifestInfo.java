@@ -41,6 +41,7 @@ public class ManifestInfo {
     private static final String LABEL_PUSH_PROVIDER_2 = "CLEVERTAP_PROVIDER_2";
 
     private static final String LABEL_ENCRYPTION_IN_TRANSIT = "CLEVERTAP_ENCRYPTION_IN_TRANSIT";
+    private static final String LABEL_BATCHING_COLLECTOR = "CLEVERTAP_BATCH_TIME";
 
     private static ManifestInfo instance; // singleton
 
@@ -97,6 +98,7 @@ public class ManifestInfo {
     private final String provider1;
     private final String provider2;
     private final String encryptionInTransit;
+    private final long batchingCollectionBuffer;
 
     private ManifestInfo(Context context) {
         Bundle metaData = null;
@@ -171,6 +173,23 @@ public class ManifestInfo {
         provider1 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_1);
         provider2 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_2);
         encryptionInTransit = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ENCRYPTION_IN_TRANSIT);
+
+        // parse batch collector time
+        long batchingBufferTemp;
+        try {
+            String batchingBufferStr = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_BATCHING_COLLECTOR);
+            if (batchingBufferStr != null) {
+                batchingBufferTemp = Long.parseLong(batchingBufferStr);
+            } else {
+                // Not found in Manifest, assign default
+                batchingBufferTemp = 1000L;
+            }
+        } catch (NumberFormatException e) {
+            // Found in Manifest but couldn't be parsed, assign default and log
+            batchingBufferTemp = 1000L;
+            Logger.v("Cannot parse batching buffer time from Manifest, using default of 1000ms", e);
+        }
+        batchingCollectionBuffer = batchingBufferTemp;
     }
 
     ManifestInfo(
@@ -236,6 +255,7 @@ public class ManifestInfo {
         this.provider1 = provider1;
         this.provider2 = provider2;
         this.encryptionInTransit = encryptionInTransit;
+        this.batchingCollectionBuffer = 1000;
     }
 
     public String getAccountId() {
@@ -358,5 +378,9 @@ public class ManifestInfo {
 
     public String getEncryptionInTransit() {
         return encryptionInTransit;
+    }
+
+    public long getBatchingCollectionBuffer() {
+        return batchingCollectionBuffer;
     }
 }
