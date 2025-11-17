@@ -194,7 +194,7 @@ class CTInAppNotification : Parcelable {
         type = parcel.readString()
         title = parcel.readString()
         titleColor = (parcel.readString() ?: titleColor).toValidColorOrFallback(Constants.BLACK);
-        backgroundColor = (parcel.readString() ?: backgroundColor).toValidColorOrFallback(Constants.BLACK);
+        backgroundColor = (parcel.readString() ?: backgroundColor).toValidColorOrFallback(Constants.WHITE);
         message = parcel.readString()
         messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(Constants.BLACK);
         try {
@@ -356,7 +356,7 @@ class CTInAppNotification : Parcelable {
             maxPerSession = jsonObject.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1)
             inAppType = CTInAppType.fromString(type)
             isTablet = jsonObject.optBoolean(Constants.KEY_IS_TABLET, false)
-            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(Constants.BLACK);
+            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(Constants.WHITE);
             isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(
                 Constants.KEY_PORTRAIT
             )
