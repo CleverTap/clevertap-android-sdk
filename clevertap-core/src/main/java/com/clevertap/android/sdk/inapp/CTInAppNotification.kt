@@ -193,10 +193,10 @@ class CTInAppNotification : Parcelable {
         }
         type = parcel.readString()
         title = parcel.readString()
-        titleColor = (parcel.readString() ?: titleColor).toValidColorOrFallback(titleColor);
-        backgroundColor = (parcel.readString() ?: backgroundColor).toValidColorOrFallback(backgroundColor);
+        titleColor = (parcel.readString() ?: titleColor).toValidColorOrFallback(Constants.BLACK);
+        backgroundColor = (parcel.readString() ?: backgroundColor).toValidColorOrFallback(Constants.BLACK);
         message = parcel.readString()
-        messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(messageColor);
+        messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(Constants.BLACK);
         try {
             _buttons =
                 parcel.createTypedArrayList<CTInAppNotificationButton>(CTInAppNotificationButton.CREATOR)
@@ -310,6 +310,7 @@ class CTInAppNotification : Parcelable {
             notificationJson.put(Constants.KEY_EFC, 1)
             notificationJson.put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, 1)
             notificationJson.put(Constants.KEY_WZRK_TTL, timeToLive)
+
             if (_jsonDescription.has(Constants.INAPP_WZRK_PIVOT)) {
                 notificationJson.put(
                     Constants.INAPP_WZRK_PIVOT, _jsonDescription.optString(
@@ -317,6 +318,7 @@ class CTInAppNotification : Parcelable {
                     )
                 )
             }
+
             if (_jsonDescription.has(Constants.INAPP_WZRK_CGID)) {
                 notificationJson.put(
                     Constants.INAPP_WZRK_CGID, _jsonDescription.optString(
@@ -324,6 +326,7 @@ class CTInAppNotification : Parcelable {
                     )
                 )
             }
+
             val notification = CTInAppNotification(notificationJson, isVideoSupported)
             notification.setCustomTemplateData(actionData)
             return notification
@@ -353,7 +356,7 @@ class CTInAppNotification : Parcelable {
             maxPerSession = jsonObject.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1)
             inAppType = CTInAppType.fromString(type)
             isTablet = jsonObject.optBoolean(Constants.KEY_IS_TABLET, false)
-            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(backgroundColor);
+            backgroundColor = jsonObject.optString(Constants.BLACK, backgroundColor).toValidColorOrFallback(Constants.BLACK);
             isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(
                 Constants.KEY_PORTRAIT
             )
@@ -363,13 +366,13 @@ class CTInAppNotification : Parcelable {
             val titleObject = jsonObject.optJSONObject(Constants.KEY_TITLE)
             if (titleObject != null) {
                 title = titleObject.optString(Constants.KEY_TEXT, "")
-                titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor).toValidColorOrFallback(titleColor);
+                titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor).toValidColorOrFallback(Constants.BLACK);
             }
 
             val msgObject = jsonObject.optJSONObject(Constants.KEY_MESSAGE)
             if (msgObject != null) {
                 message = msgObject.optString(Constants.KEY_TEXT, "")
-                messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(messageColor);
+                messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(Constants.BLACK);
             }
 
             isHideCloseButton = jsonObject.optBoolean(Constants.KEY_HIDE_CLOSE, false)
