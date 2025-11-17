@@ -23,9 +23,6 @@ def (major,minor,patch) = libraryVersion.split("\\.")
 
 android {
     compileSdk libs.versions.android.compileSdk.get().toInteger()
-    buildFeatures {
-        buildConfig = true
-    }
 
     defaultConfig {
         minSdkVersion libs.versions.android.minSdk.get().toInteger()
@@ -62,7 +59,7 @@ android {
         }
     }
 
-    lint {
+    lintOptions {
         abortOnError false
     }
 
