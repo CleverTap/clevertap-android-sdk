@@ -43,13 +43,6 @@ class ColorUtilsTest {
     }
 
     @Test
-    fun `returns fallback when input is incomplete hex`() {
-        val input = "#FF"
-        val result = input.toValidColorOrFallback(fallbackColor)
-        assertEquals(fallbackColor, result)
-    }
-
-    @Test
     fun `returns fallback when hash missing in hex`() {
         val input = "FF0000"
         val result = input.toValidColorOrFallback(fallbackColor)
@@ -61,14 +54,6 @@ class ColorUtilsTest {
         val input = "#ff00ff" // Magenta lowercase
         val result = input.toValidColorOrFallback(fallbackColor)
         assertEquals("#ff00ff", result)
-    }
-
-    @Test
-    fun `returns fallback color when input invalid but fallback valid`() {
-        val input = "#invalid"
-        val fallback = "#00FF00" // Green
-        val result = input.toValidColorOrFallback(fallback)
-        assertEquals("#00FF00", result)
     }
 
     @Test

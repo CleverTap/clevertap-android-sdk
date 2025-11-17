@@ -14,28 +14,26 @@ import androidx.core.graphics.toColorInt
  * @return A valid color string (guaranteed non-null).
  */
 fun String?.toValidColorOrFallback(fallback: String?): String {
-    // Validate fallback safely
-    val safeFallback = fallback?.takeIf {
-        it.startsWith("#") && (it.length == 7 || it.length == 9)
-    }?.let { candidate ->
-        try {
-            candidate.toColorInt() // Will throw if invalid
-            candidate
-        } catch (e: Exception) {
-            null
-        }
-    } ?: "#FFFFFF"
+
+    // Validate fallback using toColorInt()
+    val safeFallback = fallback
+        ?.takeIf { it.startsWith("#") }  // minimal structure check
+        ?.let { candidate ->
+            try {
+                candidate.toColorInt()   // authoritative validation
+                candidate
+            } catch (_: Exception) {
+                null
+            }
+        } ?: "#FFFFFF"
 
     // Validate main input
-    if (this.isNullOrBlank()) return safeFallback
-
-    if (!this.startsWith("#") || (this.length != 7 && this.length != 9)) {
-        return safeFallback
-    }
+    val value = this ?: return safeFallback
+    if (!value.startsWith("#")) return safeFallback
 
     return try {
-        this.toColorInt()
-        this
+        value.toColorInt()
+        value
     } catch (e: Exception) {
         safeFallback
     }
