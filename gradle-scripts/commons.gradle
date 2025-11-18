@@ -59,8 +59,22 @@ android {
         }
     }
 
-    lintOptions {
+    // Modern lint configuration with baseline support
+    lint {
         abortOnError false
+        checkDependencies false          // Don't lint dependencies (huge speedup)
+        checkGeneratedSources false      // Skip generated code
+        checkReleaseBuilds false         // Only check debug in CI
+
+        // Baseline support - ignores existing issues, only flags new ones
+        // baseline = file("lint-baseline.xml")  // Temporarily disabled - uncomment after generating baselines
+
+        // Performance optimizations
+        warningsAsErrors = false
+        ignoreWarnings = false
+
+        // Disable slow checks (optional - uncomment if needed)
+        // disable 'UnusedResources', 'IconMissingDensityFolder', 'IconDensities'
     }
 
     libraryVariants.all { variant ->
