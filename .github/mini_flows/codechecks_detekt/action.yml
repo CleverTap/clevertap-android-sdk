@@ -2,56 +2,26 @@ runs:
   using: "composite"
   steps:
 
-    - name: detekt-clevertap-core
+    - name: Run Detekt on All Modules (Parallel)
       if: always()
       shell: bash
-      run: ./gradlew :clevertap-core:detekt
+      run: |
+        ./gradlew \
+          :clevertap-core:detekt \
+          :clevertap-geofence:detekt \
+          :clevertap-hms:detekt \
+          :clevertap-pushtemplates:detekt \
+          --parallel \
+          --max-workers=4 \
+          --build-cache
 
-    - name: Upload AAR and apk files
+    - name: Upload All Detekt Reports
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: detekt-clevertap-core
-        path: clevertap-core/build/reports/detekt
-
-    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
-
-    - name: detekt-clevertap-geofence
-      if: always()
-      shell: bash
-      run: ./gradlew :clevertap-geofence:detekt
-
-    - name: Upload AAR and apk files
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: detekt-clevertap-geofence
-        path: clevertap-geofence/build/reports/detekt
-
-    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
-
-    - name: detekt-clevertap-hms
-      if: always()
-      shell: bash
-      run: ./gradlew :clevertap-hms:detekt
-
-    - name: Upload AAR and apk files
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: detekt-clevertap-hms
-        path: clevertap-hms/build/reports/detekt
-
-    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
-
-    - name: detekt-clevertap-pushTemplates
-      if: always()
-      shell: bash
-      run: ./gradlew :clevertap-pushtemplates:detekt
-
-    - name: Upload AAR and apk files
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: detekt-clevertap-pushTemplates
-        path:  clevertap-pushtemplates/build/reports/detekt
+        name: detekt-reports
+        path: |
+          clevertap-core/build/reports/detekt
+          clevertap-geofence/build/reports/detekt
+          clevertap-hms/build/reports/detekt
+          clevertap-pushtemplates/build/reports/detekt

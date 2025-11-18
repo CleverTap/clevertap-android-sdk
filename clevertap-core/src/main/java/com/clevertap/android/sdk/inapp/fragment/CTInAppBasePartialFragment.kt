@@ -2,9 +2,10 @@ package com.clevertap.android.sdk.inapp.fragment
 
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.inapp.InAppDisplayListener
 import java.util.concurrent.atomic.AtomicBoolean
 
-internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment() {
+internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAppDisplayListener {
 
     private val isCleanedUp = AtomicBoolean()
 
@@ -13,6 +14,12 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment() {
         if (isCleanedUp.get()) {
             cleanup()
         }
+        registerInAppDisplayListener()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterInAppDisplayListener()
     }
 
     override fun cleanup() {
@@ -35,5 +42,25 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment() {
         setListener(
             CleverTapAPI.instanceWithConfig(requireContext(), config).coreState.inAppController
         )
+    }
+
+    private fun registerInAppDisplayListener() {
+        context?.let {
+            CleverTapAPI.instanceWithConfig(it, config)
+                .coreState.inAppController
+                .registerInAppDisplayListener(this)
+        }
+    }
+
+    private fun unregisterInAppDisplayListener() {
+        context?.let {
+            CleverTapAPI.instanceWithConfig(it, config)
+                .coreState.inAppController
+                .unregisterInAppDisplayListener()
+        }
+    }
+
+    override fun hideInApp() {
+        didDismiss(null)
     }
 }
