@@ -11,18 +11,12 @@ concurrency:
 
 jobs:
   # Code Quality Checks (Run in Parallel)
-  code-quality:
+  lint:
     if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        check: [lint, detekt, checkstyle]
-    
-    name: Code Quality - ${{ matrix.check }}
-    
+    name: Code Quality - lint
     steps:
       - name: Checkout the code from Repo
         uses: actions/checkout@v4
@@ -30,8 +24,40 @@ jobs:
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
 
-      - name: Run ${{ matrix.check }}
-        uses: ./.github/mini_flows/${{ matrix.check == 'lint' && 'lint' || matrix.check == 'detekt' && 'codechecks_detekt' || 'codechecks_checkstyle' }}
+      - name: Run lint
+        uses: ./.github/mini_flows/lint
+
+  detekt:
+    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - detekt
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Run detekt
+        uses: ./.github/mini_flows/codechecks_detekt
+
+  checkstyle:
+    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - checkstyle
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Run checkstyle
+        uses: ./.github/mini_flows/codechecks_checkstyle
 
   # Unit Tests and Coverage
   test:
@@ -41,7 +67,7 @@ jobs:
       contents: read
       packages: write
       pull-requests: write
-    
+
     steps:
       - name: Checkout the code from Repo
         uses: actions/checkout@v4
@@ -63,7 +89,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout the code from Repo
         uses: actions/checkout@v4
