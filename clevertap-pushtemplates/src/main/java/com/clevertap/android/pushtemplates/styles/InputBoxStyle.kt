@@ -8,15 +8,17 @@ import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
+import com.clevertap.android.pushtemplates.InputBoxTemplateData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.TemplateDataFactory.toBaseContent
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
+import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 
-internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
+internal class InputBoxStyle(private val data: InputBoxTemplateData, private val renderer: TemplateRenderer) : Style(data.toBaseContent(), renderer) {
 
     private val actionButtonsHandler = ActionButtonsHandler(renderer)
 
@@ -31,7 +33,7 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
         return super.setNotificationBuilderBasics(
             notificationBuilder, contentViewSmall,
             contentViewBig, pt_title, pIntent, dIntent
-        ).setContentText(renderer.pt_msg)
+        ).setContentText(data.textData.message)
     }
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
@@ -56,22 +58,22 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
         )
 
         inputBoxNotificationBuilder = setStandardViewBigImageStyle(
-            renderer.pt_big_img, context, inputBoxNotificationBuilder
-        )
-        if (renderer.pt_input_label != null && renderer.pt_input_label!!.isNotEmpty()) {
+            context, inputBoxNotificationBuilder
+        ).setSubText(data.textData.subtitle)
+
+        if (data.inputLabel.isNotNullAndEmpty()) {
             //Initialise RemoteInput
             val remoteInput = RemoteInput.Builder(PTConstants.PT_INPUT_KEY)
-                .setLabel(renderer.pt_input_label)
+                .setLabel(data.inputLabel)
                 .build()
 
-            val replyIntent: PendingIntent
-            replyIntent = PendingIntentFactory.getPendingIntent(
+            val replyIntent: PendingIntent = PendingIntentFactory.getPendingIntent(
                 context, notificationId, extras, false,
-                INPUT_BOX_REPLY_PENDING_INTENT, renderer
+                INPUT_BOX_REPLY_PENDING_INTENT, data.deepLinkList.getOrNull(0), data.inputFeedback, data.inputAutoOpen, renderer.config
             )!!
             //Notification Action with RemoteInput instance added.
             val replyAction = NotificationCompat.Action.Builder(
-                android.R.drawable.sym_action_chat, renderer.pt_input_label, replyIntent
+                android.R.drawable.sym_action_chat, data.inputLabel, replyIntent
             )
                 .addRemoteInput(remoteInput)
                 .setAllowGeneratedReplies(true)
@@ -80,34 +82,33 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
             //Notification.Action instance added to Notification Builder.
             inputBoxNotificationBuilder.addAction(replyAction)
         }
-        if (renderer.pt_dismiss_on_click != null && renderer.pt_dismiss_on_click!!.isNotEmpty()) {
-            extras.putString(PTConstants.PT_DISMISS_ON_CLICK, renderer.pt_dismiss_on_click)
+        if (data.dismissOnClick.isNotNullAndEmpty()) {
+            extras.putString(PTConstants.PT_DISMISS_ON_CLICK, data.dismissOnClick)
         }
         return inputBoxNotificationBuilder
     }
 
     private fun setStandardViewBigImageStyle(
-        pt_big_img: String?,
         context: Context,
         notificationBuilder: NotificationCompat.Builder
     ): NotificationCompat.Builder {
         var bigPictureStyle: NotificationCompat.Style
-        if (pt_big_img != null && pt_big_img.startsWith("http")) {
+        if (data.imageData.url.isNotNullAndEmpty() && data.imageData.url.startsWith("http")) {
             try {
-                val bpMap = Utils.getNotificationBitmap(pt_big_img, false, context)
+                val bpMap = renderer.templateMediaManager.getNotificationBitmap(data.imageData.url, false, context)
                     ?: throw Exception("Failed to fetch big picture!")
 
-                val summaryText = renderer.pt_msg_summary ?: renderer.pt_msg
+                val summaryText = data.textData.messageSummary ?: data.textData.message
                 bigPictureStyle = NotificationCompat.BigPictureStyle()
                     .setSummaryText(summaryText)
                     .bigPicture(bpMap)
 
                 if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
-                    bigPictureStyle.setContentDescription(renderer.pt_big_img_alt_text)
+                    bigPictureStyle.setContentDescription(data.imageData.altText)
                 }
             } catch (t: Throwable) {
                 bigPictureStyle = NotificationCompat.BigTextStyle()
-                    .bigText(renderer.pt_msg)
+                    .bigText(data.textData.message)
                 PTLog.verbose(
                     "Falling back to big text notification, couldn't fetch big picture",
                     t
@@ -115,7 +116,7 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
             }
         } else {
             bigPictureStyle = NotificationCompat.BigTextStyle()
-                .bigText(renderer.pt_msg)
+                .bigText(data.textData.message)
         }
         notificationBuilder.setStyle(bigPictureStyle)
         return notificationBuilder
@@ -128,7 +129,7 @@ internal class InputBoxStyle(private var renderer: TemplateRenderer) : Style(ren
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            INPUT_BOX_CONTENT_PENDING_INTENT, renderer
+            INPUT_BOX_CONTENT_PENDING_INTENT, data.deepLinkList.getOrNull(0)
         )
     }
 

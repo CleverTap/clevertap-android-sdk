@@ -3,21 +3,28 @@ package com.clevertap.android.sdk.inapp.data
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
-import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
-import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgument
-import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DEFAULT_DELAY_SECONDS
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MAX_DELAY_SECONDS
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MIN_DELAY_SECONDS
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
 import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
+import com.clevertap.android.sdk.partition
 import com.clevertap.android.sdk.safeGetJSONArray
 import com.clevertap.android.sdk.safeGetJSONArrayOrNullIfEmpty
 import com.clevertap.android.sdk.toList
-import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
+object InAppDelayConstants{
+    const val INAPP_DELAY_AFTER_TRIGGER = "delayAfterTrigger"
+    const val INAPP_DEFAULT_DELAY_SECONDS = 0
+    const val INAPP_MIN_DELAY_SECONDS = 1
+    const val INAPP_MAX_DELAY_SECONDS = 1200
+}
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
@@ -42,14 +49,17 @@ internal class InAppResponseAdapter(
         }
     }
 
-    val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
-    val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
+    private val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
+    val partitionedLegacyInApps = partitionInAppsByDelay(legacyInApps.second)
+    private val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
+    val partitionedClientSideInApps = partitionInAppsByDelay(clientSideInApps.second)
     val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
-    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    private val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    val partitionedAppLaunchServerSideInApps = partitionInAppsByDelay(appLaunchServerSideInApps.second)
 
-    val preloadImages: List<String>
-    val preloadGifs: List<String>
-    val preloadFiles: List<String>
+    private val preloadImages: List<String>
+    private val preloadGifs: List<String>
+    private val preloadFiles: List<String>
     val preloadAssets: List<String>
     val preloadAssetsMeta: List<Pair<String, CtCacheType>>
 
@@ -136,6 +146,50 @@ internal class InAppResponseAdapter(
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
+
+    /**
+     * Core partitioning logic that separates in-apps based on delay
+     */
+    private fun partitionInAppsByDelay(inAppsArray: JSONArray?): PartitionedInApps {
+        if (inAppsArray == null) {
+            return PartitionedInApps.empty()
+        }
+        val (immediateList, delayedList) = inAppsArray.partition<JSONObject> { inApp ->
+            hasNoDelay(inApp)
+        }
+
+        return PartitionedInApps(
+            immediateInApps = immediateList,
+            delayedInApps = delayedList
+        )
+    }
+
+    /**
+     * Helper function to determine if an in-app has no delay or delay is 0
+     * An in-app is considered immediate if:
+     * 1. It doesn't have a delayAfterTrigger field, OR
+     * 2. The delayAfterTrigger field is 0 or negative, OR
+     * 3. The delayAfterTrigger field is outside valid range (1-1200)
+     *
+     * @param inApp JSONObject representing the in-app notification
+     * @return true if immediate, false if delayed
+     */
+    private fun hasNoDelay(inApp: JSONObject): Boolean = getValidatedInAppDelay(inApp) == INAPP_DEFAULT_DELAY_SECONDS
+
+
+    /**
+     * Helper function to get the delay value in seconds for a delayed in-app
+     * @param inApp JSONObject representing the in-app notification
+     * @return delay in seconds, 0 if no delay or invalid delay
+     */
+    private fun getValidatedInAppDelay(inApp: JSONObject): Int {
+        val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
+        return if (delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) {
+            delaySeconds
+        } else {
+            INAPP_DEFAULT_DELAY_SECONDS
+        }
+    }
 }
 
 enum class CtCacheType {

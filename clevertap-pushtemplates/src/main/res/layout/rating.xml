@@ -15,8 +15,8 @@
         android:orientation="vertical"
         android:layout_below="@id/rel_lyt">
 
-        <include layout="@layout/image_view_dynamic"
-            android:id="@+id/big_image_configurable"/>
+        <include layout="@layout/image_media_dynamic_linear"
+            android:id="@+id/big_media_configurable"/>
 
         <LinearLayout
             android:id="@+id/rating_lyt"

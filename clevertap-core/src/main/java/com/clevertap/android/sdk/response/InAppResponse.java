@@ -6,10 +6,12 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
+import com.clevertap.android.sdk.inapp.data.PartitionedInApps;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.FileStore;
@@ -135,19 +137,33 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
-            Pair<Boolean, JSONArray> legacyInApps = res.getLegacyInApps();
-            if (legacyInApps.getFirst()) {
-                displayInApp(legacyInApps.getSecond());
+            PartitionedInApps partitionedLegacyInApps = res.getPartitionedLegacyInApps();
+            if (partitionedLegacyInApps.getHasImmediateInApps()) {
+                displayInApp(partitionedLegacyInApps.getImmediateInApps());
+            }
+            if (partitionedLegacyInApps.getHasDelayedInApps()) {
+                scheduleDelayedLegacyInApps(partitionedLegacyInApps.getDelayedInApps());
             }
 
-            Pair<Boolean, JSONArray> appLaunchInApps = res.getAppLaunchServerSideInApps();
-            if (appLaunchInApps.getFirst()) {
-                handleAppLaunchServerSide(appLaunchInApps.getSecond());
+            PartitionedInApps partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
+            if (partitionedAppLaunchServerSideInApps.getHasImmediateInApps()) {
+                controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
+                        partitionedAppLaunchServerSideInApps.getImmediateInApps(),
+                        coreMetaData.getLocationFromUser());
+            }
+            if (partitionedAppLaunchServerSideInApps.getHasDelayedInApps()) {
+                controllerManager.getInAppController().onAppLaunchServerSideDelayedInAppsResponse(
+                        partitionedAppLaunchServerSideInApps.getDelayedInApps(),
+                        coreMetaData.getLocationFromUser()
+                );
             }
 
-            Pair<Boolean, JSONArray> csInApps = res.getClientSideInApps();
-            if (csInApps.getFirst()) {
-                inAppStore.storeClientSideInApps(csInApps.getSecond());
+            PartitionedInApps partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+            if (partitionedClientSideInApps.getHasImmediateInApps()) {
+                inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
+            }
+            if (partitionedClientSideInApps.getHasDelayedInApps()) {
+                inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
             }
 
             Pair<Boolean, JSONArray> ssInApps = res.getServerSideInApps();
@@ -185,15 +201,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void handleAppLaunchServerSide(JSONArray inappNotifsApplaunched) {
-        try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, coreMetaData.getLocationFromUser());
-        } catch (Throwable e) {
-            logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
-            logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
-        }
-    }
-
     private void displayInApp(JSONArray inappNotifsArray) {
         // Fire the first notification, if any
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
@@ -204,6 +211,18 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return null;
             }
         });
+    }
+
+    private void scheduleDelayedLegacyInApps(JSONArray delayedLegacyInApps) {
+        InAppController inAppController = controllerManager.getInAppController();
+
+        // Schedule using delay functionality
+        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps);
+
+        logger.verbose(config.getAccountId(),
+                "InApp: scheduling " + delayedLegacyInApps.length() +
+                        " delayed in-apps. Active delays: " +
+                        inAppController.getActiveDelayedInAppsCount());
     }
 
 }

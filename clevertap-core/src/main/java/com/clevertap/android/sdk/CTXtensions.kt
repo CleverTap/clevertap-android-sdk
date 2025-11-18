@@ -56,77 +56,154 @@ fun Context.areAppNotificationsEnabled() = try {
 }
 
 /**
- * Retrieves or creates the notification channel based on the given channel ID.
- * If the given channel ID is not registered, it falls back to the manifest channel ID.
- * If the manifest channel ID is not registered or not available, it creates and returns the default channel ID.
+ * Retrieves or creates an appropriate notification channel for displaying push notifications.
  *
- * @param msgChannel The channel ID received in the push payload.
- * @param context The context of the application.
- * @return The channel ID of the notification channel to be used.
+ * This function implements a fallback strategy to ensure notifications can always be displayed:
+ * 1. Uses the channel ID from the push payload if it exists and is registered
+ * 2. Falls back to the channel ID defined in AndroidManifest if available and registered
+ * 3. Creates and returns a default fallback channel if neither of the above are available
+ *
+ * When [hideHeadsUp] is true, the function ensures notifications use a low importance channel
+ * to prevent heads-up display. Existing channels with higher importance levels are skipped
+ * in favor of creating a dedicated low importance fallback channel.
+ *
+ * @param msgChannel The channel ID received in the push notification payload. May be null or empty.
+ * @param context The application context, used to access manifest metadata and string resources.
+ * @param hideHeadsUp When true, ensures the returned channel has [NotificationManager.IMPORTANCE_LOW]
+ *                    to suppress heads-up notifications. Defaults to false.
+ * @return The channel ID to use for the notification, or null if an unexpected error occurs
+ *         during channel retrieval or creation.
+ *
+ * @see NotificationManager.tryGetChannel
+ * @see NotificationManager.createFallbackChannel
  */
 @RequiresApi(VERSION_CODES.O)
 @WorkerThread
 fun NotificationManager.getOrCreateChannel(
-    msgChannel: String?, context: Context
+    msgChannel: String?,
+    context: Context,
+    hideHeadsUp: Boolean = false
 ): String? {
+    return try {
+        // Try payload channel first
+        tryGetChannel(msgChannel, hideHeadsUp, "Payload")?.let { return it }
 
-    try {
-        /**
-         * if channel id is present in push payload and registered by an app then return the payload channel id
-         */
-        if (!msgChannel.isNullOrEmpty() && getNotificationChannel(msgChannel) != null) {
-            return msgChannel
-        }
+        // Try manifest channel second
+        val manifestChannel = ManifestInfo.getInstance(context).devDefaultPushChannelId
+        tryGetChannel(manifestChannel, hideHeadsUp, "Manifest")?.let { return it }
 
-        val manifestMetadata = ManifestInfo.getInstance(context)
-        val manifestChannel = manifestMetadata.devDefaultPushChannelId
-
-        /**
-         * if channel id is present in manifest and registered by an app then return the manifest channel id
-         */
-        if (!manifestChannel.isNullOrEmpty() && getNotificationChannel(manifestChannel) != null) {
-            return manifestChannel
-        }
-
-        if (manifestChannel.isNullOrEmpty()) {
-            Logger.d(
-                Constants.CLEVERTAP_LOG_TAG,
-                "Missing Default CleverTap Notification Channel metadata in AndroidManifest."
-            )
-        } else {
-            Logger.d(
-                Constants.CLEVERTAP_LOG_TAG,
-                "Notification Channel set in AndroidManifest.xml has not been created by the app."
-            )
-        }
-
-        /**
-         * create fallback channel
-         */
-        if (getNotificationChannel(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID) == null) {
-
-            val defaultChannelName = try {
-                  context.getString(R.string.ct_fcm_fallback_notification_channel_label)
-            } catch (e: Exception) {
-                Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME
-            }
-
-            createNotificationChannel(
-                NotificationChannel(
-                    Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID,
-                    defaultChannelName,
-                    NotificationManager.IMPORTANCE_DEFAULT
-                ).also {
-                    Logger.d(Constants.CLEVERTAP_LOG_TAG, "created default channel: $it")
-                }
-            )
-        }
-
-        return Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID
+        // Create appropriate fallback channel
+        createFallbackChannel(context, hideHeadsUp)
     } catch (e: Exception) {
-        e.printStackTrace()
+        Logger.v(Constants.CLEVERTAP_LOG_TAG, "Error getting or creating notification channel", e)
+        null
     }
-    return null
+}
+
+/**
+ * Attempts to retrieve an existing channel if it exists and meets the heads-up display requirements.
+ *
+ * @param channelId The channel ID to check.
+ * @param hideHeadsUp Whether heads-up notifications should be suppressed.
+ * @return The channel ID if valid and meets requirements, null otherwise.
+ */
+@RequiresApi(VERSION_CODES.O)
+private fun NotificationManager.tryGetChannel(
+    channelId: String?,
+    hideHeadsUp: Boolean,
+    channelSource: String
+): String? {
+    if (channelId.isNullOrEmpty()) {
+        Logger.d(Constants.CLEVERTAP_LOG_TAG, "channelID from $channelSource is null or empty")
+        return null
+    }
+
+    val channel = getNotificationChannel(channelId) ?: return null
+
+    // If we need to hide heads-up but channel has high importance, skip it
+    val shouldSkip = hideHeadsUp && channel.importance != NotificationManager.IMPORTANCE_LOW
+
+    if (shouldSkip) {
+        Logger.d(
+            Constants.CLEVERTAP_LOG_TAG,
+            "Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}"
+        )
+        return null
+    }
+    return channelId
+}
+
+/**
+ * Creates and returns the appropriate fallback notification channel.
+ *
+ * @param context The application context.
+ * @param hideHeadsUp Whether to create a low importance channel.
+ * @return The ID of the created fallback channel.
+ */
+@RequiresApi(VERSION_CODES.O)
+private fun NotificationManager.createFallbackChannel(
+    context: Context,
+    hideHeadsUp: Boolean
+): String {
+    if (hideHeadsUp) {
+        return createLowImportanceFallback()
+    }
+    return createDefaultFallbackChannel(context)
+}
+
+/**
+ * Creates a low importance channel for suppressing heads-up notifications.
+ *
+ * @return The ID of the created low importance channel.
+ */
+@RequiresApi(VERSION_CODES.O)
+private fun NotificationManager.createLowImportanceFallback(): String {
+    val channelId = Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW
+    if (getNotificationChannel(channelId) != null) {
+        return channelId
+    }
+
+    createNotificationChannel(
+        NotificationChannel(
+            channelId,
+            Constants.LOW_IMPORTANCE_FALLBACK_NOTIFICATION_CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_LOW
+        )
+    )
+
+    Logger.d(Constants.CLEVERTAP_LOG_TAG, "Created low importance fallback channel: $channelId")
+    return channelId
+}
+
+/**
+ * Creates the default fallback notification channel if it doesn't exist.
+ *
+ * @param context The application context.
+ * @return The ID of the default fallback channel.
+ */
+@RequiresApi(VERSION_CODES.O)
+private fun NotificationManager.createDefaultFallbackChannel(context: Context): String {
+    val channelId = Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID
+
+    if (getNotificationChannel(channelId) == null) {
+        val channelName = try {
+            context.getString(R.string.ct_fcm_fallback_notification_channel_label)
+        } catch (e: Exception) {
+            Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME
+        }
+
+        createNotificationChannel(
+            NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+        )
+
+        Logger.d(Constants.CLEVERTAP_LOG_TAG, "Created default fallback channel: $channelId")
+    }
+
+    return channelId
 }
 
 /**
@@ -190,7 +267,7 @@ fun JSONArray?.orEmptyArray(): JSONArray {
  * @return A List of elements of type [T] extracted from the JSONArray.
  * @reified T The expected type of elements in the list.
  */
-inline fun <reified T> JSONArray.toList(): List<T> {
+inline fun <reified T> JSONArray.toList(): MutableList<T> {
     val list = mutableListOf<T>()
     for (index in 0 until length()) {
         val element = get(index)
@@ -359,3 +436,21 @@ fun View.applyInsetsWithMarginAdjustment(marginAdjuster : (insets:Insets, mlp:Ma
     }
 }
 
+inline fun <reified T> JSONArray.partition(
+    predicate: (T) -> Boolean
+): Pair<JSONArray, JSONArray> {
+    val first = JSONArray()
+    val second = JSONArray()
+
+    for (i in 0 until this.length()) {
+        val element = this.get(i)
+        if (element is T) {
+            if (predicate(element)) {
+                first.put(element)
+            } else {
+                second.put(element)
+            }
+        }
+    }
+    return first to second
+}

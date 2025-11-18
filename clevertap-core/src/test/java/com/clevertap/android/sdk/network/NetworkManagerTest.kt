@@ -1,11 +1,9 @@
 package com.clevertap.android.sdk.network
 
-import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.MockCoreStateKotlin
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.db.DBManager
@@ -21,15 +19,14 @@ import com.clevertap.android.sdk.network.api.CtApiTestProvider
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
+import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.network.http.MockHttpClient
 import com.clevertap.android.sdk.response.ARPResponse
-import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.mockk.spyk
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
@@ -50,6 +47,8 @@ class NetworkManagerTest : BaseTestCase() {
     private lateinit var ctApi: CtApi
     private lateinit var mockHttpClient: MockHttpClient
     private lateinit var ctApiWrapper: CtApiWrapper
+    private lateinit var dbManager: DBManager
+    private lateinit var controllerManager: ControllerManager
     private val networkEncryptionManager: NetworkEncryptionManager = mockk(relaxed = true)
     private val networkRepo = mockk<NetworkRepo>(relaxed = true)
     private val clevertapResponseHandler = mockk<ClevertapResponseHandler>(relaxed = true)
@@ -564,24 +563,197 @@ class NetworkManagerTest : BaseTestCase() {
         assertTrue(networkManager.defineTemplates(emptyList()))
     }
 
+    // flushDBQueue tests
+    @Test
+    fun test_flushDBQueue_emptyQueue_shouldExitImmediately() {
+        // Given
+        val emptyQueueData = createQueueData(
+            eventCount = 0,
+            hasMore = false
+        )
+        
+        every { dbManager.getQueuedEvents(any(), any(), any()) } returns emptyQueueData
+        
+        // When
+        networkManager.flushDBQueue(appCtx, REGULAR, "test_caller", false)
+        
+        // Then
+        verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
+        verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
+        // Verify no callbacks when queue is empty
+        verify(exactly = 0) { controllerManager.invokeBatchListener(any(), any()) }
+        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+    }
+    
+    @Test
+    fun test_flushDBQueue_singleBatch_successfulSend() {
+        // Given
+        val queueData = createQueueData(
+            eventCount = 5,
+            hasMore = false
+        )
+        // queueData will have 3 event IDs (indices 0, 2, 4) and 2 profile IDs (indices 1, 3)
+        val eventIds = queueData.eventIds.toList()
+        val profileEventIds = queueData.profileEventIds.toList()
+        
+        every { dbManager.getQueuedEvents(any(), any(), any()) } returns queueData
+        
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        
+        // When
+        networkManager.flushDBQueue(appCtx, REGULAR, "test_caller", false)
+        
+        // Then
+        verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
+        verify(exactly = 1) { dbManager.cleanupSentEvents(appCtx, eventIds, profileEventIds) }
+        // Verify success callback
+        verify(exactly = 1) { controllerManager.invokeBatchListener(queueData.data, true) }
+        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+    }
+    
+    @Test
+    fun test_flushDBQueue_multipleBatches_shouldProcessAll() {
+        // Given
+        val batch1 = createQueueData(
+            eventCount = 50,
+            hasMore = true
+        )
+        val batch2 = createQueueData(
+            eventCount = 50,
+            hasMore = true
+        )
+        val batch3 = createQueueData(
+            eventCount = 25,
+            hasMore = false
+        )
+        
+        every { dbManager.getQueuedEvents(any(), any(), any()) } returnsMany listOf(batch1, batch2, batch3)
+        
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        
+        // When
+        networkManager.flushDBQueue(appCtx, REGULAR, "test_caller", false)
+        
+        // Then
+        verify(exactly = 3) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
+        verify(exactly = 3) { dbManager.cleanupSentEvents(any(), any(), any()) }
+        // Verify success callbacks for all 3 batches
+        verify(exactly = 3) { controllerManager.invokeBatchListener(any(), true) }
+        // Specifically verify each batch
+        verify { controllerManager.invokeBatchListener(batch1.data, true) }
+        verify { controllerManager.invokeBatchListener(batch2.data, true) }
+        verify { controllerManager.invokeBatchListener(batch3.data, true) }
+        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+    }
+    
+    @Test
+    fun test_flushDBQueue_networkFailure_shouldStopProcessing() {
+        // Given
+        val batch1 = createQueueData(
+            eventCount = 50,
+            hasMore = true
+        )
+        
+        every { dbManager.getQueuedEvents(any(), any(), any()) } returns batch1
+        
+        mockHttpClient.alwaysThrowOnExecute = true // Simulate network failure
+        
+        // When
+        networkManager.flushDBQueue(appCtx, REGULAR, "test_caller", false)
+        
+        // Then
+        verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, REGULAR) }
+        // Should not cleanup on failure
+        verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
+        // Verify error callbacks
+        verify(exactly = 1) { controllerManager.invokeCallbacksForNetworkError() }
+        verify(exactly = 1) { controllerManager.invokeBatchListener(batch1.data, false) }
+    }
+    
+    @Test
+    fun test_flushDBQueue_pushNotificationEvents_shouldUseSpecialCleanup() {
+        // Given
+        val eventIds = listOf("push1", "push2", "push3")
+        val pushData = QueueData().apply {
+            // Add push notification events to the data
+            eventIds.forEach { id ->
+                data.put(JSONObject().apply {
+                    put("type", "event")
+                    put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
+                    put("evtData", JSONObject().apply {
+                        put(Constants.WZRK_PUSH_ID, "push_$id")
+                        put(Constants.WZRK_ACCT_ID_KEY, "account_$id")
+                    })
+                })
+            }
+            // Add the event IDs
+            this.eventIds.addAll(eventIds)
+            this.hasMore = false
+        }
+        
+        every { dbManager.getQueuedEvents(any(), any(), any()) } returns pushData
+        
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = JSONObject().toString()
+        
+        // When
+        networkManager.flushDBQueue(appCtx, PUSH_NOTIFICATION_VIEWED, "push_caller", false)
+        
+        // Then
+        verify(exactly = 1) { dbManager.getQueuedEvents(appCtx, 50, PUSH_NOTIFICATION_VIEWED) }
+        // Should use special cleanup for push notifications
+        verify(exactly = 1) { dbManager.cleanupPushNotificationEvents(appCtx, eventIds) }
+        verify(exactly = 0) { dbManager.cleanupSentEvents(any(), any(), any()) }
+        // Verify success callback for push notifications
+        verify(exactly = 1) { controllerManager.invokeBatchListener(pushData.data, true) }
+        verify(exactly = 0) { controllerManager.invokeCallbacksForNetworkError() }
+    }
+
+    
+    private fun createQueueData(
+        eventCount: Int,
+        hasMore: Boolean = false
+    ): QueueData {
+        val queueData = QueueData()
+        
+        // Add events to the data JSONArray and track IDs based on type
+        repeat(eventCount) { i ->
+            val isEvent = i % 2 == 0
+            val type = if (isEvent) "event" else "profile"
+            val id = "${type}_id_$i"
+            
+            queueData.data.put(JSONObject().apply {
+                put("type", type)
+                put("evtName", "test_${type}_$i")
+                put("evtData", JSONObject().apply {
+                    put("key", "value_$i")
+                })
+            })
+            
+            // Add ID to appropriate list based on type
+            if (isEvent) {
+                queueData.eventIds.add(id)
+            } else {
+                queueData.profileEventIds.add(id)
+            }
+        }
+        
+        queueData.hasMore = hasMore
+        
+        return queueData
+    }
+
+
     private fun provideNetworkManager(): NetworkManager {
         val metaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "clevertapId", metaData)
-        val coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
         val callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
-        val lockManager = CTLockManager()
-        val dbManager = DBManager(cleverTapInstanceConfig, lockManager, IJRepo(cleverTapInstanceConfig))
-        val controllerManager =
-            ControllerManager(appCtx, cleverTapInstanceConfig, lockManager, callbackManager, deviceInfo, dbManager)
+        dbManager = mockk<DBManager>(relaxed = true)
+        controllerManager = mockk<ControllerManager>(relaxed = true)
         val queueHeaderBuilder = mockk<QueueHeaderBuilder>()
         every { queueHeaderBuilder.buildHeader(any()) } returns JSONObject()
-
-        // Create 10 spy processors for response handling tests
-        val responses = ArrayList<CleverTapResponse>()
-        for (i in 1..10) {
-            val spyProcessor = spyk<CleverTapResponse>()
-            responses.add(spyProcessor)
-        }
 
         // Pass the mock processors directly to the NetworkManager constructor
         return NetworkManager(
@@ -606,5 +778,128 @@ class NetworkManagerTest : BaseTestCase() {
         return JSONObject().apply {
             put("error", "Error")
         }
+    }
+
+    // fetchInAppPreviewPayloadFromUrl tests
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_successResponse_returnsJsonObject() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        val expectedJson = JSONObject().apply {
+            put("type", "custom-html")
+            put("layout_type", "half-interstitial")
+            put("adonis", false)
+            put("inlineHtml", true)
+            put("format", "custom-html")
+            put("d", JSONObject().apply {
+                put("html", "<!DOCTYPE html>\n<html>\n<head>\n<title> </title>\n</head>\n<body> hello </body>\n</html>")
+            })
+        }
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = expectedJson.toString()
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(expectedJson.toString(), result.toString())
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_successResponseEmptyJson_returnsEmptyJsonObject() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = "{}"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals("{}", result.toString())
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_errorResponse_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 404
+        mockHttpClient.responseBody = "Not Found"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_error500_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 500
+        mockHttpClient.responseBody = "Internal Server Error"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_invalidJsonResponse_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = "This is not valid JSON {]"
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_nullResponseBody_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = null
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_emptyResponseBody_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.responseCode = 200
+        mockHttpClient.responseBody = ""
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun test_fetchInAppPreviewPayloadFromUrl_networkException_returnsNull() {
+        // Given
+        val testUrl = "https://example.com/inapp/preview.json"
+        mockHttpClient.alwaysThrowOnExecute = true
+
+        // When
+        val result = networkManager.fetchInAppPreviewPayloadFromUrl(testUrl)
+
+        // Then
+        assertEquals(null, result)
     }
 }

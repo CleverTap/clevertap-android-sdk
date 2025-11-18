@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:2.1.0"
-implementation "com.clevertap.android:clevertap-android-sdk:7.5.0" // 4.4.0 and above
+implementation "com.clevertap.android:push-templates:2.2.0"
+implementation "com.clevertap.android:clevertap-android-sdk:7.6.0" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -51,39 +51,6 @@ public class PushTemplateMessagingService extends FirebaseMessagingService {
         //no-op
     }
 }
-```
-
-### Migration from v0.0.8 to v1.0.0 and above
-
-Remove the following Receivers and Services from your `AndroidManifest.xml` and follow the steps given above
-
-```xml
-<service
-    android:name="com.clevertap.pushtemplates.PushTemplateMessagingService">
-    <intent-filter>
-        <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-    </intent-filter>
-</service>
-
-<service
-    android:name="com.clevertap.pushtemplates.PTNotificationIntentService"
-    android:exported="false">
-        <intent-filter>
-            <action android:name="com.clevertap.PT_PUSH_EVENT"/>
-        </intent-filter>
-</service>
-
-<receiver
-android:name="com.clevertap.pushtemplates.PTPushNotificationReceiver"
-android:exported="false"
-android:enabled="true">
-</receiver>
-
-<receiver
-android:name="com.clevertap.pushtemplates.PushTemplateReceiver"
-android:exported="false"
-android:enabled="true">
-</receiver>
 ```
 
 # Dashboard Usage
@@ -311,12 +278,16 @@ pt_subtitle | Optional  | Subtitle
 pt_bg | Optional | Background Color in HEX
 pt_big_img | Optional | Image
 pt_big_img_alt_text | Optional | Alt Text for Image
+pt_gif | Optional | GIF
+pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
 ### Auto Carousel Template
@@ -343,6 +314,8 @@ pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
 ### Manual Carousel Template
@@ -371,6 +344,8 @@ pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 pt_manual_carousel_type | Optional | `filmstrip`
 
@@ -382,6 +357,8 @@ pt_id | Required  | Value - `pt_rating`
 pt_title | Required  | Title
 pt_msg | Required  | Message
 pt_big_img | Optional | Image
+pt_gif | Optional | GIF
+pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_msg_summary | Optional | Message line when Notification is expanded
@@ -397,6 +374,8 @@ pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
 ### Product Catalog Template
@@ -433,6 +412,8 @@ pt_product_display_action_clr | Required  | Action Button Background Color in HE
 pt_title_clr | Optional  | Title Color in HEX
 pt_msg_clr | Optional  | Message Color in HEX
 pt_small_icon_clr | Optional  | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional  | Above keys in JSON format
 
 ### Five Icons Template
@@ -457,6 +438,8 @@ pt_dl4 | Optional  | Deep Link for fourth icon
 pt_dl5 | Optional  | Deep Link for fifth icon
 pt_bg | Optional  | Background Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
 ### Timer Template
@@ -473,9 +456,13 @@ pt_msg_summary_alt | Optional | Message summary to show after timer expires
 pt_subtitle | Optional | Subtitle
 pt_dl1 | Required | Deep Link
 pt_big_img | Optional | Image
+pt_gif | Optional | GIF
+pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_big_img_alt | Optional | Image to show when timer expires
+pt_gif_alt | Optional | GIF to show when timer expires
+pt_gif_frames_alt | Optional | Number of frames to extract from the alternate GIF
 pt_big_img_alt_alt_text | Optional | Alt Text for Image to show when timer expires
 pt_bg | Optional | Background Color in HEX
 pt_chrono_title_clr | Optional | Color for timer text in HEX
@@ -485,6 +472,8 @@ pt_render_terminal | Optional | Should terminal notification be rendered? ("true
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
 ### Zero Bezel Template
@@ -497,14 +486,23 @@ pt_msg | Required | Message
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_big_img | Required | Image
+pt_gif | Optional | GIF
+pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_big_img_collapsed | Optional | Image for the collapsed view
+pt_gif_collapsed | Optional | GIF for the collapsed view
+pt_gif_frames_collapsed | Optional | Number of frames to extract from the GIF for the collapsed view
+pt_big_img_collapsed_alt_text | Optional | Alt Text for Image in the collapsed view
+pt_scale_type_collapsed | Optional | ScaleType for the image in the collapsed View ("center_crop"/"fit_center")
 pt_small_view | Optional | Select text-only small view layout (`text_only`)
 pt_dl1 | Optional | Deep Link
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_ico | Optional | Large Icon
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
 ### Input Box Template
@@ -533,6 +531,8 @@ pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_ico | Optional | Large Icon
 pt_dismiss_on_click | Optional | Dismiss notification on click
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
 
@@ -575,6 +575,16 @@ Ensure images for the following templates meet the specified size guidelines:
 | Product Catalogue Template | 225 x 225 px           |
 
 - For Text over Image Template, ensure the text is center-aligned within the image for devices running OS version 12 and above.
+
+## GIF Guidelines
+
+To use GIFs in the Push Templates, ensure you are using Push Templates SDK version `2.2.0` and above. Also make sure gifs meet the specified size guidelines. You can use [this tool](https://ezgif.com/resize) to resize the GIF.
+
+| GIF Size                   | Recommended Number of Frames |
+|:---------------------------|:-----------------------------|
+| 180 x 120 px               | 15                           |
+| 240 x 160 px               | 10                           |
+| 300 x 200 px               | 6                            |
 
 ## Dark Mode
 To use the Dark mode feature, ensure you are using Push Templates SDK version 2.1.0 and above.

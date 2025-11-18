@@ -2,14 +2,12 @@ package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.inapp.evaluation.EventType
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore.Companion.PREFS_DELAYED_INAPP_KEY_CS
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
-import org.skyscreamer.jsonassert.JSONAssert
-import org.skyscreamer.jsonassert.JSONCompareMode.STRICT
 import kotlin.test.assertEquals
 
 class InAppStoreTest {
@@ -112,138 +110,42 @@ class InAppStoreTest {
     @Test
     fun `storeEvaluatedServerSideInAppIds writes JSONObject to ctPreference`() {
         // Arrange
-        val evaluatedServerSideInAppIds = JSONObject()
-            .put(EventType.PROFILE.key, listOf(100000,1000002,100000001))
-            .put(EventType.RAISED.key, listOf(200000,2000002,200000001))
+        val evaluatedServerSideInAppIds = JSONArray().apply {
+            put(100000)
+            put(1000002)
+            put(100000001)
+        }
         every { ctPreference.writeString(any(), any()) } just Runs
 
         // Act
         inAppStore.storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds)
 
         // Assert
-        verify { ctPreference.writeString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, """{"profile":"[100000, 1000002, 100000001]","raised":"[200000, 2000002, 200000001]"}""") }
+        verify { ctPreference.writeString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, "[100000,1000002,100000001]") }
     }
 
     @Test
     fun `storeSuppressedClientSideInAppIds writes JSONObject to ctPreference`() {
-        // Arrange
-        val evaluatedServerSideInAppIds = JSONObject()
-            .put(EventType.PROFILE.key, listOf(mapOf(Constants.NOTIFICATION_ID_TAG to "id1"), mapOf(Constants.NOTIFICATION_ID_TAG to "id2")))
-            .put(EventType.RAISED.key, listOf(mapOf(Constants.NOTIFICATION_ID_TAG to "id2")))
+
+        val evaluatedServerSideInAppIds = JSONArray().apply {
+            put(
+                JSONObject().apply {
+                    put(Constants.NOTIFICATION_ID_TAG, "id1")
+                }
+            )
+            put(
+                JSONObject().apply {
+                    put(Constants.NOTIFICATION_ID_TAG, "id2")
+                }
+            )
+        }
         every { ctPreference.writeString(any(), any()) } just Runs
 
         // Act
         inAppStore.storeSuppressedClientSideInAppIds(evaluatedServerSideInAppIds)
 
         // Assert
-        verify { ctPreference.writeString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, """{"profile":"[{wzrk_id=id1}, {wzrk_id=id2}]","raised":"[{wzrk_id=id2}]"}""") }
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns JSONObject from ctPreference when saved value`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = """{"profile":"[100000, 1000002, 100000001]","raised":"[200000, 2000002, 200000001]"}"""
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        assertEquals(evaluatedServerSideInAppIdsString, result.toString())
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns empty JSONObject from ctPreference when saved value is null`()
-    {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = null
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns empty JSONObject from ctPreference when saved value is empty`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = ""
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readEvaluatedServerSideInAppIds returns populated JSONObject from ctPreference when saved value is legacy JSoNArray`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = "[100000, 1000002, 100000001]"
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_INAPP_KEY_SS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readEvaluatedServerSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject().put(EventType.RAISED.key, JSONArray("[100000, 1000002, 100000001]")), result, STRICT)
-    }
-
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns JSONObject from ctPreference when saved value`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = """{"profile":"[{wzrk_id=id1}, {wzrk_id=id2}]","raised":"[{wzrk_id=id2}]"}"""
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        assertEquals(evaluatedServerSideInAppIdsString, result.toString())
-    }
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns empty JSONObject from ctPreference when saved value is null`()
-    {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = null
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns empty JSONObject from ctPreference when saved value is empty`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = ""
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject(), result, STRICT)
-    }
-
-    @Test
-    fun `readSuppressedClientSideInAppIds() returns populated JSONObject from ctPreference when saved value is legacy JSoNArray`() {
-        // Arrange
-        val evaluatedServerSideInAppIdsString = "[{wzrk_id=id1}, {wzrk_id=id2}]"
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, any()) } returns evaluatedServerSideInAppIdsString
-
-        // Act
-        val result = inAppStore.readSuppressedClientSideInAppIds()
-
-        // Assert
-        JSONAssert.assertEquals(JSONObject().put(EventType.RAISED.key, JSONArray("[{wzrk_id=id1}, {wzrk_id=id2}]")), result, STRICT)
+        verify { ctPreference.writeString(Constants.PREFS_SUPPRESSED_INAPP_KEY_CS, evaluatedServerSideInAppIds.toString()) }
     }
 
     @Test
@@ -417,5 +319,195 @@ class InAppStoreTest {
 
         // Assert
         verify { ctPreference.changePreferenceName(newPrefName) }
+    }
+
+    @Test
+    fun `readEvaluatedServerSideInAppIds returns data correctly from current format`() {
+        // Arrange
+        val savedData = "[100000,1000002,100000001]"
+        every { ctPreference.readString(any(), any()) } returns savedData
+        val expectedData = JSONArray(savedData)
+
+        // Act
+        val data: JSONArray = inAppStore.readEvaluatedServerSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
+
+    @Test
+    fun `readEvaluatedServerSideInAppIds returns data correctly from older format pre 70501 SDK version`() {
+        // Arrange - legacy data
+        val savedData = """
+            {"profile": [100000, 1000002, 100000001],"raised": [200000, 2000002, 200000001]}
+        """.trimIndent()
+        every { ctPreference.readString(any(), any()) } returns savedData
+        val expectedData = JSONArray().apply {
+            put(200000)
+            put(2000002)
+            put(200000001)
+            put(100000)
+            put(1000002)
+            put(100000001)
+        }
+
+        // Act
+        val data: JSONArray = inAppStore.readEvaluatedServerSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
+
+    @Test
+    fun `readSuppressedClientSideInAppIds returns data correctly from current format`() {
+        // Arrange
+        val savedData = """
+            [{"wzrk_id":"id1"}, {"wzrk_id":"id2"}]
+        """.trimIndent()
+        every { ctPreference.readString(any(), any()) } returns savedData
+
+        val expectedData = JSONArray().apply {
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id1")
+            })
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id2")
+            })
+        }
+
+        // Act
+        val data: JSONArray = inAppStore.readSuppressedClientSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
+
+    @Test
+    fun `readSuppressedClientSideInAppIds returns data correctly from older format pre 70501 SDK version`() {
+        // Arrange
+        val savedData = """
+            {"profile":[{"wzrk_id":"id1"}, {"wzrk_id":"id2"}],"raised":[{"wzrk_id":"id3"}]}
+        """.trimIndent()
+        every { ctPreference.readString(any(), any()) } returns savedData
+
+        val expectedData = JSONArray().apply {
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id3")
+            })
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id1")
+            })
+            put(JSONObject().apply {
+                put(Constants.NOTIFICATION_ID_TAG, "id2")
+            })
+        }
+
+        // Act
+        val data: JSONArray = inAppStore.readSuppressedClientSideInAppIds()
+
+        assertEquals(expectedData.toString(), data.toString())
+    }
+
+    // ==================== DELAYED CLIENT SIDE IN-APPS TESTS ====================
+
+    @Test
+    fun `storeClientSideDelayedInApps writes encrypted JSONArray to ctPreference`() {
+        // Arrange
+        val clientSideDelayedInApps = JSONArray("[{\"id\":1},{\"id\":2}]")
+        every { cryptHandler.encrypt(any()) } returns "encryptedString"
+        every { ctPreference.writeString(any(), any()) } just Runs
+
+        // Act
+        inAppStore.storeClientSideDelayedInApps(clientSideDelayedInApps)
+
+        // Assert
+        assertEquals(clientSideDelayedInApps.toString(), inAppStore.readClientSideDelayedInApps().toString())
+        verify { ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, "encryptedString") }
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns decrypted JSONArray from ctPreference`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = "encryptedString"
+        val decryptedClientSideDelayedInApps = JSONArray("[{\"id\":3},{\"id\":4}]")
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+        every { cryptHandler.decrypt(csDelayedInAppsEncrypted) } returns decryptedClientSideDelayedInApps.toString()
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(decryptedClientSideDelayedInApps.toString(), result.toString())
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns empty JSONArray when ctPreference returns null encrypted string`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = null
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(JSONArray().toString(), result.toString())
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns empty JSONArray when ctPreference does not contain PREFS_DELAYED_INAPP_KEY_CS`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = ""
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(JSONArray().toString(), result.toString())
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns empty JSONArray when decryption fails`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = "encryptedString"
+        val csDelayedInAppsDecrypted = null
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+        every { cryptHandler.decrypt(csDelayedInAppsEncrypted) } returns csDelayedInAppsDecrypted
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(JSONArray().toString(), result.toString())
+    }
+
+    @Test
+    fun `mode change to SERVER_SIDE_MODE also removes delayed client-side in-apps`() {
+        // Arrange - Store delayed in-apps first
+        val delayedInApps = JSONArray().put(JSONObject().put("ti", "delayed1"))
+        every { cryptHandler.encrypt(any()) } returns "encrypted"
+        every { ctPreference.writeString(any(), any()) } just Runs
+        inAppStore.storeClientSideDelayedInApps(delayedInApps)
+
+        // Act
+        inAppStore.mode = InAppStore.SERVER_SIDE_MODE
+
+        // Assert
+        verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
+        verify { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
+    }
+
+    @Test
+    fun `mode change to NO_MODE also removes delayed client-side in-apps`() {
+        // Arrange - Store delayed in-apps first
+        val delayedInApps = JSONArray().put(JSONObject().put("ti", "delayed1"))
+        every { cryptHandler.encrypt(any()) } returns "encrypted"
+        every { ctPreference.writeString(any(), any()) } just Runs
+        inAppStore.storeClientSideDelayedInApps(delayedInApps)
+
+        // Act
+        inAppStore.mode = InAppStore.NO_MODE
+
+        // Assert
+        verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
+        verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_SS) }
+        verify { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
     }
 }

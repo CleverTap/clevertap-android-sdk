@@ -34,12 +34,14 @@ internal class InAppStore(
 
     private var clientSideInApps: JSONArray? = null
     private var serverSideInApps: JSONArray? = null
+    private var clientSideDelayedInApps: JSONArray? = null
 
     companion object {
 
         const val CLIENT_SIDE_MODE = "CS"
         const val SERVER_SIDE_MODE = "SS"
         const val NO_MODE = "NO_MODE"
+        const val PREFS_DELAYED_INAPP_KEY_CS = "delayed_inapp_notifs_cs"
     }
 
     /**
@@ -59,10 +61,14 @@ internal class InAppStore(
 
             when (value) {
                 CLIENT_SIDE_MODE -> removeServerSideInAppsMetaData()
-                SERVER_SIDE_MODE -> removeClientSideInApps()
+                SERVER_SIDE_MODE -> {
+                    removeClientSideInApps()
+                    removeClientSideDelayedInApps()
+                }
                 NO_MODE -> {
                     removeServerSideInAppsMetaData()
                     removeClientSideInApps()
+                    removeClientSideDelayedInApps()
                 }
             }
         }
@@ -120,18 +126,18 @@ internal class InAppStore(
     /**
      * Stores evaluated Server-side In-App IDs.
      *
-     * @param evaluatedServerSideInAppIds  The JSoNObject representing the map of EventType - evaluated Server-side In-App IDs.
+     * @param evaluatedServerSideInAppIds The array of evaluated Server-side In-App IDs.
      */
-    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONObject) {
+    fun storeEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds: JSONArray) {
         ctPreference.writeString(PREFS_EVALUATED_INAPP_KEY_SS, evaluatedServerSideInAppIds.toString())
     }
 
     /**
      * Stores suppressed Client-side In-App IDs.
      *
-     * @param suppressedClientSideInAppIds The JSoNObject representing the map of EventType - suppressed Client-side In-App IDs.
+     * @param suppressedClientSideInAppIds The array of suppressed Client-side In-App IDs.
      */
-    fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONObject) {
+    fun storeSuppressedClientSideInAppIds(suppressedClientSideInAppIds: JSONArray) {
         ctPreference.writeString(PREFS_SUPPRESSED_INAPP_KEY_CS, suppressedClientSideInAppIds.toString())
     }
 
@@ -173,32 +179,58 @@ internal class InAppStore(
     /**
      * Reads evaluated Server-side In-App IDs.
      *
-     * @return A JSoNObject representing the map of EventType - evaluated Server-side In-App IDs
+     * @return An array of evaluated Server-side In-App IDs.
      */
-    fun readEvaluatedServerSideInAppIds(): JSONObject {
+    fun readEvaluatedServerSideInAppIds(): JSONArray {
         val evaluatedServerSideInAppIds = ctPreference.readString(PREFS_EVALUATED_INAPP_KEY_SS, "")
-        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONObject()
+        if (evaluatedServerSideInAppIds.isNullOrBlank()) return JSONArray()
 
         return try {
-            // Try to convert the string to a JSONObject which signifies already migrated
-            JSONObject(evaluatedServerSideInAppIds)
-        } catch (jsonException: JSONException) {
-            migrateInAppHeaderPrefsForEventType(evaluatedServerSideInAppIds)
+            JSONArray(evaluatedServerSideInAppIds)
+        } catch (e: JSONException) {
+            migrateEvaluatedServerSideInAppIds(evaluatedServerSideInAppIds)
+        }
+    }
+
+    fun migrateEvaluatedServerSideInAppIds(evaluatedIds: String): JSONArray {
+        try {
+            val oldFormatted = JSONObject(evaluatedIds)
+            val raisedArray = oldFormatted.optJSONArray(Constants.RAISED)
+            val profileArray = oldFormatted.optJSONArray(Constants.PROFILE)
+
+            return JSONArray().apply {
+                if (raisedArray != null) {
+                    for (count in 0 until raisedArray.length())  {
+                        put(raisedArray.get(count))
+                    }
+                }
+                if (profileArray != null) {
+                    for (count in 0 until profileArray.length())  {
+                        put(profileArray.get(count))
+                    }
+                }
+            }
+
+        } catch (e: JSONException) {
+            // Not legacy-object or invalid JSON: return empty
+            return JSONArray()
         }
     }
 
     /**
      * Reads suppressed Client-side In-App IDs.
      *
-     * @return A JSoNObject representing the map of EventType - suppressed Client-side In-App IDs.
+     * @return A JSONArray representing suppressed Client-side In-App IDs.
      */
-    fun readSuppressedClientSideInAppIds(): JSONObject {
+    fun readSuppressedClientSideInAppIds(): JSONArray {
         val suppressedClientSideInAppIds = ctPreference.readString(PREFS_SUPPRESSED_INAPP_KEY_CS, "")
-        if (suppressedClientSideInAppIds.isNullOrBlank()) return JSONObject()
+        if (suppressedClientSideInAppIds.isNullOrBlank()) {
+            return JSONArray()
+        }
 
         return try {
-            // Try to convert the string to a JSONObject which signifies already migrated
-            JSONObject(suppressedClientSideInAppIds)
+            // Try to convert the string to a JSONArray which signifies already migrated
+            JSONArray(suppressedClientSideInAppIds)
         } catch (jsonException: JSONException) {
             migrateInAppHeaderPrefsForEventType(suppressedClientSideInAppIds)
         }
@@ -206,18 +238,36 @@ internal class InAppStore(
 
     /**
      * Migrates suppressed_ss and evaluated_ss after reading from the prefs.
-     * The older format was a JSONArray. This JSoNArray represented the list of all inapps suppressed/evaluated
-     * The migrated format is a JSONObject. This JSoNObject has the key as EvenType and the
-     * value as the corresponding list of inapps suppressed/evaluated
      *
      * @param - inAppIds to be migrated
-     * @return - JSoNObject in the migrated format
+     * @return - JSONArray in the migrated format
      */
-    private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONObject {
-        // If it fails, convert the string to a JSONArray
-        val jsonArray = JSONArray(inAppIds)
-        // Wrap the JSONArray in a JSONObject
-        return JSONObject().put(Constants.RAISED, jsonArray)
+    private fun migrateInAppHeaderPrefsForEventType(inAppIds: String): JSONArray {
+        try {
+            // Old format data from 6.2.1 -> 7.5.1
+            // {"raised":[123],"profile":[456]}
+            // New format => [123, 456]
+            val oldJsonObject = JSONObject(inAppIds)
+
+            val raisedArray = oldJsonObject.optJSONArray(Constants.RAISED)
+            val profileArray = oldJsonObject.optJSONArray(Constants.PROFILE)
+
+            return JSONArray().apply {
+                if (raisedArray != null) {
+                    for (count in 0 until raisedArray.length())  {
+                        put(raisedArray.get(count))
+                    }
+                }
+                if (profileArray != null) {
+                    for (count in 0 until profileArray.length())  {
+                        put(profileArray.get(count))
+                    }
+                }
+            }
+        } catch (_: JSONException) {
+            // Not a legacy-object: return empty to avoid errors.
+            return JSONArray()
+        }
     }
 
     /**
@@ -241,6 +291,43 @@ internal class InAppStore(
         }
 
         return serverSideInApps as JSONArray
+    }
+
+    /**
+     * Store Client-side delayed In-App messages in encrypted format
+     */
+    fun storeClientSideDelayedInApps(delayedInApps: JSONArray) {
+        this.clientSideDelayedInApps = delayedInApps
+        val encryptedString = cryptHandler.encrypt(delayedInApps.toString())
+        encryptedString?.apply {
+            ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, this)
+        }
+    }
+
+    /**
+     * Read Client-side delayed In-App messages
+     */
+    fun readClientSideDelayedInApps(): JSONArray {
+        if (clientSideDelayedInApps != null)
+            return clientSideDelayedInApps as JSONArray
+
+        val csDelayedInAppsEncrypted = ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, "")
+        clientSideDelayedInApps = if (csDelayedInAppsEncrypted.isNullOrBlank()) {
+            JSONArray()
+        } else {
+            try {
+                JSONArray(cryptHandler.decrypt(csDelayedInAppsEncrypted))
+            } catch (e: Exception) {
+                JSONArray()
+            }
+        }
+        return clientSideDelayedInApps as JSONArray
+    }
+
+
+    fun removeClientSideDelayedInApps() {
+        ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS)
+        clientSideDelayedInApps = null
     }
 
     /**
