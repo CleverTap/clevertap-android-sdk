@@ -1,32 +1,53 @@
 name: validate PR raised from task/** branched to develop branch
+
 on:
   pull_request:
     branches: [ develop ]
 
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-staticChecks-test-build:
+  # Code Quality Checks (Run in Parallel)
+  code-quality:
+    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [lint, detekt, checkstyle]
+    
+    name: Code Quality - ${{ matrix.check }}
+    
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Run ${{ matrix.check }}
+        uses: ./.github/mini_flows/${{ matrix.check == 'lint' && 'lint' || matrix.check == 'detekt' && 'codechecks_detekt' || 'codechecks_checkstyle' }}
+
+  # Unit Tests and Coverage
+  test:
     if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       pull-requests: write
-
+    
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup JDK 17.
+      - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
-
-      - name: Run lint tests and Upload results
-        uses: ./.github/mini_flows/lint
-
-      - name: Static Code Check Via detekt
-        uses: ./.github/mini_flows/codechecks_detekt
-
-      - name: Static Code Check Via checkstyle
-        uses: ./.github/mini_flows/codechecks_checkstyle
 
       - name: Unit Tests and Jacoco Coverage (DEBUG)
         uses: ./.github/mini_flows/test_and_coverage_debug
@@ -34,6 +55,21 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           baseline-branch: develop
 
+  # Build (Only after tests pass)
+  build:
+    needs: [test]
+    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
       - name: Build AARs (RELEASE)
         uses: ./.github/mini_flows/build_code_release
-
