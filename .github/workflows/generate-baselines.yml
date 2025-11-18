@@ -1,0 +1,44 @@
+name: Generate Lint Baselines
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  generate-baselines:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Generate Lint Baselines
+        run: |
+          ./gradlew \
+            :clevertap-core:lintDebug \
+            :clevertap-geofence:lintDebug \
+            :clevertap-hms:lintDebug \
+            :clevertap-pushtemplates:lintDebug \
+            -Dlint.baselines.continue=true \
+            --continue || true
+
+      - name: Check Generated Files
+        run: |
+          echo "Checking for baseline files..."
+          for module in clevertap-core clevertap-geofence clevertap-hms clevertap-pushtemplates; do
+            if [ -f "$module/lint-baseline.xml" ]; then
+              echo "✅ $module/lint-baseline.xml created"
+            fi
+          done
+
+      - name: Commit Baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add */lint-baseline.xml
+          git diff --staged --quiet || git commit -m "Generate lint baselines [skip ci]"
+          git push
