@@ -11,11 +11,15 @@ import com.clevertap.android.sdk.inapp.CTLocalInApp
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
+import com.clevertap.demo.MyApplication
 import java.util.Date
 
 private const val TAG = "HomeScreenViewModel"
 
-class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
+class HomeScreenViewModel(
+    private val cleverTapAPI: CleverTapAPI?,
+    private val ctMultiInstance: CleverTapAPI? = MyApplication.ctMultiInstance
+) : ViewModel() {
 
     val clickCommand: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
@@ -29,8 +33,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
         when (commandPosition) {
             "0-0" -> {
-                cleverTapAPI?.pushEvent("Product viewed")
-//                cleverTapAPI?.pushEvent("BlockBRTesting")
+                cleverTapAPI?.pushEvent("BlockBRTesting")
+                ctMultiInstance?.pushEvent("icon-inbox")
             }
 
             "0-1" -> {
@@ -75,12 +79,25 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "0-3" -> cleverTapAPI?.recordScreen("Cart Screen Viewed")
+            "0-4" -> {
+                cleverTapAPI?.let { ct ->
+                    ct.pushEvent("App Inbox Carousel")
+                    ct.pushEvent("App Inbox Deeplink")
+                    ct.pushEvent("Add Inbox message with links")
+
+                }
+            }
             "1-0" -> {
                 //Record a profile
                 pushProfile(cleverTapAPI!!)
             }
 
             "1-1" -> {
+                // Append more data to profile.
+                pushProfileRichData(cleverTapAPI!!)
+            }
+
+            "1-2" -> {
                 //Update(Replace) Single-Value User Profile Properties
                 val profileUpdate = HashMap<String, Any>()
                 profileUpdate["Name"] = "Updated User Name" // String
@@ -94,14 +111,14 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.pushProfile(profileUpdate)
             }
 
-            "1-2" -> {
+            "1-3" -> {
                 //Update(Add) Single-Value User Profile Properties
                 val profileUpdate =
                     mapOf("Customer Type" to "Silver", "Preferred Language" to "English")
                 cleverTapAPI?.pushProfile(profileUpdate)
             }
 
-            "1-3" -> {
+            "1-4" -> {
                 //Update(Remove) Single-Value User Profile Properties or
                 //Update(Remove) Can be used to remove PII data(for eg. Email,Phone,Name), locally
                 cleverTapAPI?.removeValueForKey("Customer Type")
@@ -110,7 +127,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 //                cleverTapAPI?.removeValueForKey("Name")
             }
 
-            "1-4" -> {
+            "1-5" -> {
                 // Update(Replace) Multi-Value property
                 cleverTapAPI?.setMultiValuesForKey(
                     "MyStuffList",
@@ -118,38 +135,38 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 )
             }
 
-            "1-5" -> {
+            "1-6" -> {
                 // Update(Add) Multi-Value property
                 cleverTapAPI?.addMultiValueForKey("MyStuffList", "Coat")
                 // or
                 cleverTapAPI?.addMultiValuesForKey("MyStuffList", arrayListOf("Socks", "Scarf"))
             }
 
-            "1-6" -> {
+            "1-7" -> {
                 // Update(Remove) Multi-Value property
                 cleverTapAPI?.removeMultiValueForKey("MyStuffList", "Coat")
                 // or
                 cleverTapAPI?.removeMultiValuesForKey("MyStuffList", arrayListOf("Socks", "Scarf"))
             }
 
-            "1-7" -> {
+            "1-8" -> {
                 //Update(Add) Increment Value
                 cleverTapAPI?.incrementValue("score", 50)
             }
 
-            "1-8" -> {
+            "1-9" -> {
                 // Update(Add) Decrement Value
                 cleverTapAPI?.decrementValue("score", 30)
             }
 
-            "1-9" -> {
+            "1-10" -> {
                 // Profile location
                 cleverTapAPI?.location = cleverTapAPI?.location
             }
 
-            "1-10" -> {
+            "1-11" -> {
                 // Get Profile Info
-                Log.i(TAG, "Profile Name = ${cleverTapAPI?.getProperty("Name")}")
+                logAllProfileProperties()
                 Log.i(TAG, "Profile CleverTapId = ${cleverTapAPI?.cleverTapID}")
                 Log.i(
                     TAG,
@@ -157,17 +174,9 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 )
             }
 
-            "1-11" -> {
-                // onUserLogin
-                val newProfile = HashMap<String, Any>()
-                val n = (0..10_000).random()
-                val p = (10_000..99_999).random()
-                newProfile["Name"] = "Don Joe $n" // String
-                newProfile["Email"] = "donjoe$n@gmail.com" // Email address of the user
-                newProfile["Phone"] = "+141566$p" // Phone (with the country code, starting with +)
-                newProfile["Identity"] = "00002" // Identity of the user
-                // add any other key value pairs.....
-                cleverTapAPI?.onUserLogin(newProfile)
+            "1-12" -> {
+                onUserLogin(cleverTapAPI)
+                onUserLogin(ctMultiInstance)
             }
 
             "2-0" -> {
@@ -588,7 +597,6 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             }
 
             "13-2" -> {
-                pushProfile(cleverTapAPI!!)
                 cleverTapAPI?.fetchVariables { isSuccess ->
                     Log.i(
                         TAG,
@@ -610,21 +618,14 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 Log.i(TAG, "onChildClick: 13-5")
 
                 val builder = buildString {
-                    append("Printing variables (basic types) :")
-                    appendLine()
-                    append(cleverTapAPI!!.getVariable<Int>("var_int"))
-                    appendLine()
-                    append(cleverTapAPI.getVariable<Long>("var_long"))
-                    appendLine()
-                    append(cleverTapAPI.getVariable<Short>("var_short"))
-                    appendLine()
-                    append(cleverTapAPI.getVariable<Float>("var_float"))
-                    appendLine()
-                    append(cleverTapAPI.getVariable<Double>("var_double"))
-                    appendLine()
-                    append(cleverTapAPI.getVariable<String>("var_string"))
-                    appendLine()
-                    append(cleverTapAPI.getVariable<Boolean>("var_boolean"))
+                    appendLine("Printing variables (basic types) :")
+                    appendLine(cleverTapAPI!!.getVariable<Int>("var_int"))
+                    appendLine(cleverTapAPI.getVariable<Long>("var_long"))
+                    appendLine(cleverTapAPI.getVariable<Short>("var_short"))
+                    appendLine(cleverTapAPI.getVariable<Float>("var_float"))
+                    appendLine(cleverTapAPI.getVariable<Double>("var_double"))
+                    appendLine(cleverTapAPI.getVariable<String>("var_string"))
+                    appendLine(cleverTapAPI.getVariable<Boolean>("var_boolean"))
                 }
 
                 Log.i(TAG, builder)
@@ -635,22 +636,14 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 Log.i(TAG, "onChildClick: 13-6")
 
                 val builder = buildString {
-                    append("Printing variables Values (basic types) :")
-                    appendLine()
-                    append(cleverTapAPI!!.getVariableValue("var_int"))
-                    appendLine()
-                    append(cleverTapAPI.getVariableValue("var_long"))
-                    appendLine()
-                    append(cleverTapAPI.getVariableValue("var_short"))
-                    appendLine()
-                    append(cleverTapAPI.getVariableValue("var_float"))
-                    appendLine()
-                    append(cleverTapAPI.getVariableValue("var_double"))
-                    appendLine()
-                    append(cleverTapAPI.getVariableValue("var_string"))
-                    appendLine()
-                    append(cleverTapAPI.getVariableValue("var_boolean"))
-                    appendLine()
+                    appendLine("Printing variables Values (basic types) :")
+                    appendLine(cleverTapAPI!!.getVariableValue("var_int"))
+                    appendLine(cleverTapAPI.getVariableValue("var_long"))
+                    appendLine(cleverTapAPI.getVariableValue("var_short"))
+                    appendLine(cleverTapAPI.getVariableValue("var_float"))
+                    appendLine(cleverTapAPI.getVariableValue("var_double"))
+                    appendLine(cleverTapAPI.getVariableValue("var_string"))
+                    appendLine(cleverTapAPI.getVariableValue("var_boolean"))
                 }
                 Log.i(TAG, builder)
 
@@ -691,6 +684,16 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
             "13-10" -> {
                 cleverTapAPI?.removeOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
+            }
+            "13-11" -> {
+                defineTestAccVars()
+                cleverTapAPI?.fetchVariables { isSuccess ->
+                    Log.i(
+                        TAG,
+                        "Test Variables Fetched = $isSuccess"
+                    )
+                    printTestVars()
+                }
             }
             "14-0" -> {
                 Log.i(TAG, "onChildClick: 14-0")
@@ -775,26 +778,135 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         }
     }
 
+    private fun defineTestAccVars() {
+        val map: Map<String, Any> = mapOf(
+            "int" to 12,
+            "str" to "factory str"
+        )
+        cleverTapAPI?.let { ct ->
+            ct.defineVariable("factory_var_int", 11)
+            ct.defineVariable("factory_var_map", map)
+            ct.defineVariable("group.factory_var_in_group", 13.toByte())
+            ct.defineVariable("streaming.quality_auto", true)
+            ct.defineVariable("streaming.max_bitrate", 8000)
+            ct.defineVariable("streaming.protocol", "HLS")
+
+            ct.defineVariable("var_int", 1)
+            ct.defineVariable("var_long", 1L)
+            ct.defineVariable("var_short", 1)
+            ct.defineVariable("var_float", 1.1)
+            ct.defineVariable("var_double", 1.1111)
+            ct.defineVariable("var_string", "default")
+            ct.defineVariable("var_boolean", false)
+
+            ct.defineFileVariable("factory_var_file")
+            ct.defineFileVariable("group.factory_var_file_in_group")
+            ct.defineFileVariable("factory_file_jpeg")
+            ct.defineFileVariable("factory_file_png")
+            ct.defineFileVariable("factory_file_gif")
+            ct.defineFileVariable("documents.factory_file_pdf")
+            ct.defineFileVariable("audio.factory_file_mp3")
+            ct.defineFileVariable("video.factory_file_mp4")
+        }
+    }
+
+    private fun printTestVars() {
+        cleverTapAPI?.let { ct ->
+            val builder = StringBuilder().apply {
+                appendLine("Test variables are ")
+                appendLine(ct.getVariableValue("factory_var_int"))
+                appendLine(ct.getVariableValue("factory_var_map"))
+                appendLine(ct.getVariableValue("group.factory_var_in_group"))
+                appendLine(ct.getVariableValue("streaming.quality_auto"))
+                appendLine(ct.getVariableValue("streaming.max_bitrate"))
+                appendLine(ct.getVariableValue("streaming.protocol"))
+                appendLine(ct.getVariableValue("var_int"))
+                appendLine(ct.getVariableValue("var_long"))
+                appendLine(ct.getVariableValue("var_short"))
+                appendLine(ct.getVariableValue("var_float"))
+                appendLine(ct.getVariableValue("var_double"))
+                appendLine(ct.getVariableValue("var_string"))
+                appendLine(ct.getVariableValue("var_boolean"))
+            }.toString()
+
+            Log.i(TAG, builder)
+        }
+    }
+
+    private fun onUserLogin(cleverTapAPI: CleverTapAPI?) {
+        if (cleverTapAPI == null) {
+            return
+        }
+        // onUserLogin
+        val n = (0..10_000).random()
+        val p = (10_000..99_999).random()
+        val newProfile = buildMap<String, Any> {
+            put("Name", "Don Joe $n") // String
+            put("Email", "donjoe$n@gmail.com") // Email address of the user
+            put("Phone", "+141566$p") // Phone (with the country code, starting with +)
+            // add any other key value pairs.....
+        }
+        cleverTapAPI.onUserLogin(newProfile)
+    }
+
     fun pushProfile(cleverTapAPI: CleverTapAPI) {
-        val profileUpdate = HashMap<String, Any>()
-        profileUpdate["Name"] = "User Name" // String
-        profileUpdate["Email"] = "User@gmail.com" // Email address of the user
-        profileUpdate["Phone"] =
-            "+14155551234" // Phone (with the country code, starting with +)
-        profileUpdate["Gender"] = "M" // Can be either M or F
-        profileUpdate["Employed"] = "Y" // Can be either Y or N
-        profileUpdate["Education"] = "Graduate" // Can be either Graduate, College or School
-        profileUpdate["Married"] = "Y" // Can be either Y or N
-        profileUpdate["DOB"] =
-            Date() // Date of Birth. Set the Date object to the appropriate value first
-        profileUpdate["Age"] = 28 // Not required if DOB is set
-        profileUpdate["MSG-email"] = false // Disable email notifications
-        profileUpdate["MSG-push"] = true // Enable push notifications
-        profileUpdate["MSG-sms"] = false // Disable SMS notifications
-
-        profileUpdate["MyStuffList"] = arrayListOf("bag", "shoes") //ArrayList of Strings
-        profileUpdate["MyStuffArray"] = arrayOf("Jeans", "Perfume")
-
+        val profileUpdate = buildMap<String, Any> {
+            put("Name", "User Name") // String
+            put("Email", "User@gmail.com") // Email address of the user
+            put("Phone", "+14155559999") // Phone (with the country code, starting with +)
+            put("Gender", "M") // Can be either M or F
+            put("Employed", "Y") // Can be either Y or N
+            put("Education", "Graduate") // Can be either Graduate, College or School
+            put("Married", "Y") // Can be either Y or N
+            put("DOB", Date()) // Date of Birth. Set the Date object to the appropriate value first
+            put("Age", 28) // Not required if DOB is set
+            put("MSG-email", false) // Disable email notifications
+            put("MSG-push", true) // Enable push notifications
+            put("MSG-sms", false) // Disable SMS notifications
+            put("MyStuffList", arrayListOf("bag", "shoes")) //ArrayList of Strings
+            put("MyStuffArray", arrayOf("Jeans", "Perfume"))
+        }
         cleverTapAPI.pushProfile(profileUpdate)
+    }
+
+    fun pushProfileRichData(cleverTapAPI: CleverTapAPI) {
+        val profileUpdate = buildMap<String, Any> {
+            put("HeightCm", 180) // Integer
+            put("HairColor", "Black") // String
+            put("Race", "Human") // String
+            put("County", "Atlantis") // String
+            put("Sport", "Football") // String
+            put("MyCarsList", arrayListOf("Honda", "BMW", "Ford")) //ArrayList of Strings
+        }
+        cleverTapAPI.pushProfile(profileUpdate)
+    }
+
+
+    fun logAllProfileProperties() {
+        val profilePropertiesString = buildString {
+            appendLine("Profile Properties:")
+            appendLine("Name: ${cleverTapAPI?.getProperty("Name")}")
+            appendLine("Email: ${cleverTapAPI?.getProperty("Email")}")
+            appendLine("Phone: ${cleverTapAPI?.getProperty("Phone")}")
+            appendLine("Gender: ${cleverTapAPI?.getProperty("Gender")}")
+            appendLine("Employed: ${cleverTapAPI?.getProperty("Employed")}")
+            appendLine("Education: ${cleverTapAPI?.getProperty("Education")}")
+            appendLine("Married: ${cleverTapAPI?.getProperty("Married")}")
+            appendLine("DOB: ${cleverTapAPI?.getProperty("DOB")}")
+            appendLine("Age: ${cleverTapAPI?.getProperty("Age")}")
+            appendLine("MSG-email: ${cleverTapAPI?.getProperty("MSG-email")}")
+            appendLine("MSG-push: ${cleverTapAPI?.getProperty("MSG-push")}")
+            appendLine("MSG-sms: ${cleverTapAPI?.getProperty("MSG-sms")}")
+            appendLine("MyStuffList: ${cleverTapAPI?.getProperty("MyStuffList")}")
+            appendLine("MyStuffArray: ${cleverTapAPI?.getProperty("MyStuffArray")}")
+
+            appendLine("HeightCm: ${cleverTapAPI?.getProperty("HeightCm")}")
+            appendLine("HairColor: ${cleverTapAPI?.getProperty("HairColor")}")
+            appendLine("Race: ${cleverTapAPI?.getProperty("Race")}")
+            appendLine("County: ${cleverTapAPI?.getProperty("County")}")
+            appendLine("Sport: ${cleverTapAPI?.getProperty("Sport")}")
+            appendLine("MyCarsList: ${cleverTapAPI?.getProperty("MyCarsList")}")
+        }
+        Log.i(TAG, profilePropertiesString)
     }
 }

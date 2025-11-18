@@ -7,14 +7,13 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.variables.repo.VariablesRepo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +37,7 @@ public class VarCache {
     private final Context variablesCtx;
     private final FileResourcesRepoImpl fileResourcesRepoImpl;
     private final CleverTapInstanceConfig instanceConfig;
+    private final VariablesRepo variablesRepo;
     public Object merged = null;
     private Runnable globalCallbacksRunnable = null;
 
@@ -47,11 +47,13 @@ public class VarCache {
     public VarCache(
             CleverTapInstanceConfig config,
             Context ctx,
-            FileResourcesRepoImpl fileResourcesRepoImpl
+            FileResourcesRepoImpl fileResourcesRepoImpl,
+            VariablesRepo variablesRepo
     ) {
         this.variablesCtx = ctx;
         this.instanceConfig = config;
         this.fileResourcesRepoImpl = fileResourcesRepoImpl;
+        this.variablesRepo = variablesRepo;
     }
 
     private static void log(String msg) {
@@ -60,23 +62,6 @@ public class VarCache {
 
     private static void log(String msg, Throwable t) {
         Logger.d("variables", msg, t);
-    }
-
-    private void storeDataInCache(@NonNull String data) {
-        log("storeDataInCache() called with: data = [" + data + "]");
-        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
-        try {
-            StorageHelper.putString(variablesCtx, cacheKey, data);
-        } catch (Throwable t) {
-            log("storeDataInCache failed", t);
-        }
-    }
-
-    private String loadDataFromCache() {
-        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
-        String cache = StorageHelper.getString(variablesCtx, cacheKey, "{}");
-        log("VarCache loaded cache data:\n" + cache);
-        return cache;
     }
 
     /**
@@ -174,7 +159,7 @@ public class VarCache {
 
     public synchronized void loadDiffs(Function0<Unit> func) {
         try {
-            String variablesFromCache = loadDataFromCache();
+            String variablesFromCache = variablesRepo.loadDataFromCache();
             Map<String, Object> variablesAsMap = JsonUtil.fromJson(variablesFromCache);
 
             // Update variables with new values. Have to copy the dictionary because a
@@ -220,7 +205,7 @@ public class VarCache {
     private void saveDiffs() {
         log("saveDiffs() called");
         String variablesCipher = JsonUtil.toJson(diffs);
-        storeDataInCache(variablesCipher);
+        variablesRepo.storeDataInCache(variablesCipher);
     }
 
     /**

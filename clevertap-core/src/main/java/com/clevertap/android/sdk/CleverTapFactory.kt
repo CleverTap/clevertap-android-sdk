@@ -10,6 +10,8 @@ import com.clevertap.android.sdk.cryption.CryptMigrator
 import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.cryption.DataMigrationRepository
 import com.clevertap.android.sdk.cryption.EncryptionLevel.Companion.fromInt
+import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
@@ -70,6 +72,7 @@ import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -111,13 +114,6 @@ internal object CleverTapFactory {
             FileResourceProvider.getInstance(context, config.logger)
         }
 
-        val databaseManager = DBManager(
-            config = config,
-            ctLockManager = ctLockManager,
-            ijRepo = ijRepo,
-            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
-            clearLastRequestTs = networkRepo::clearLastRequestTs
-        )
         val repository = CryptRepository(
             context = context,
             accountId = config.accountId
@@ -128,27 +124,52 @@ internal object CleverTapFactory {
             ctKeyGenerator = ctKeyGenerator
         )
         val cryptHandler = CryptHandler(
-            encryptionLevel = fromInt(value = config.encryptionLevel),
-            accountID = config.accountId,
             repository = repository,
             cryptFactory = cryptFactory
         )
+
+        val dbEncryptionHandler = DBEncryptionHandler(
+            crypt = cryptHandler,
+            logger = config.logger,
+            encryptionLevel = fromInt(config.encryptionLevel)
+        )
+
+        val variablesRepo = VariablesRepo(
+            context = context,
+            accountId = config.accountId,
+            dbEncryptionHandler = dbEncryptionHandler
+        )
+
+        val databaseName = DBAdapter.getDatabaseName(config)
+
+        val databaseManager = DBManager(
+            accountId = config.accountId,
+            logger = config.logger,
+            databaseName = databaseName,
+            ctLockManager = ctLockManager,
+            ijRepo = ijRepo,
+            dbEncryptionHandler = dbEncryptionHandler,
+            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
+            clearLastRequestTs = networkRepo::clearLastRequestTs
+        )
+
         val task = executors.postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
-
+            val dbAdapter = databaseManager.loadDBAdapter(context)
             val dataMigrationRepository = DataMigrationRepository(
                 context = context,
                 config = config,
-                dbAdapter = databaseManager.loadDBAdapter(context)
+                dbAdapter = dbAdapter
             )
-
             val cryptMigrator = CryptMigrator(
                 logPrefix = config.accountId,
                 configEncryptionLevel = config.encryptionLevel,
                 logger = config.logger,
                 cryptHandler = cryptHandler,
                 cryptRepository = repository,
-                dataMigrationRepository = dataMigrationRepository
+                dataMigrationRepository = dataMigrationRepository,
+                variablesRepo = variablesRepo,
+                dbAdapter = dbAdapter
             )
             cryptMigrator.migrateEncryption()
         }
@@ -267,7 +288,8 @@ internal object CleverTapFactory {
         val varCache = VarCache(
             config,
             context,
-            impl
+            impl,
+            variablesRepo
         )
 
         val ctVariables = CTVariables(varCache)
@@ -484,7 +506,7 @@ internal object CleverTapFactory {
         val pushProviders = PushProviders
             .load(
                 context, config, databaseManager, validationResultStack,
-                analyticsManager, controllerManager, ctWorkManager
+                analyticsManager, controllerManager, ctWorkManager, SYSTEM
             )
 
         val activityLifeCycleManager = ActivityLifeCycleManager(

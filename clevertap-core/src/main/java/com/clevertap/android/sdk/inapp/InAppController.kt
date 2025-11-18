@@ -660,7 +660,8 @@ internal class InAppController(
             val task = executors.ioTask<Unit>()
             task.execute("InAppController#incrementLocalInAppCountInPersistentStore") {
                 StorageHelper.putIntImmediate(
-                    context, LOCAL_INAPP_COUNT,
+                    context,
+                    LOCAL_INAPP_COUNT,
                     deviceInfo.localInAppCount
                 )// update disk with cache
             }

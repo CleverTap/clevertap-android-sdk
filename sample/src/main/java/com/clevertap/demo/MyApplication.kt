@@ -22,6 +22,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.InboxMessageButtonListener
 import com.clevertap.android.sdk.InboxMessageListener
 import com.clevertap.android.sdk.SyncListener
+import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
@@ -45,6 +46,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             private const val TAG = "MyApplication"
 
             var ctInstance: CleverTapAPI? = null
+            var ctMultiInstance: CleverTapAPI? = null
 
             private val BAIDU_PUSH_TYPE = PushType(
                 "bps",
@@ -105,6 +107,10 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
         ctInstance = buildCtInstance(useDefaultInstance = true)
 
+        if (BuildConfig.ENABLE_MULTI_INSTANCE) {
+            ctMultiInstance = buildCustomCtInstance()
+        }
+
         // attach necessary/needed listeners
         ctInstance?.apply {
             syncListener = object : SyncListener {
@@ -149,7 +155,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         useDefaultInstance: Boolean = true,
         changeCredentials: Boolean = false,
         handshakeDomain: String? = null
-    ): CleverTapAPI {
+    ): CleverTapAPI? {
         val ctInstance = if (useDefaultInstance) {
 
             // Different ways of creating default instance
@@ -157,7 +163,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             val defaultConfig = CleverTapInstanceConfig.getDefaultInstance(this)
             CleverTapAPI.instanceWithConfig(this, defaultConfig)
             // Type 2
-            CleverTapAPI.getDefaultInstance(this)!!
+            CleverTapAPI.getDefaultInstance(this)
         } else {
             val config = CleverTapInstanceConfig.createInstance(
                 applicationContext,
@@ -184,6 +190,18 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         }
 
         return ctInstance
+    }
+
+    private fun buildCustomCtInstance() : CleverTapAPI {
+        val config = CleverTapInstanceConfig.createInstance(
+            applicationContext,
+            BuildConfig.MULTI_CLEVERTAP_ACCOUNT_ID,
+            BuildConfig.MULTI_CLEVERTAP_TOKEN,
+            BuildConfig.MULTI_CLEVERTAP_REGION,
+        ).apply {
+            setEncryptionLevel(EncryptionLevel.FULL_DATA)
+        }
+        return CleverTapAPI.instanceWithConfig(this, config)
     }
 
     private fun createNotificationChannels() {

@@ -29,7 +29,7 @@ internal class DataMigrationRepository(
 ) : IDataMigrationRepository {
 
     override fun cachedGuidString(): String? {
-        return StorageHelper.getStringFromPrefs(context, config, CACHED_GUIDS_KEY, null)
+        return StorageHelper.getStringFromPrefs(context, config.accountId, CACHED_GUIDS_KEY, null)
     }
     override fun cachedGuidJsonObject(): JSONObject {
         val json = cachedGuidString()
@@ -40,7 +40,8 @@ internal class DataMigrationRepository(
     override fun saveCachedGuidJson(json: String?) {
         StorageHelper.putString(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
+            config.accountId,
+            CACHED_GUIDS_KEY,
             json
         )
     }
@@ -48,14 +49,16 @@ internal class DataMigrationRepository(
     override fun removeCachedGuidJson() {
         StorageHelper.remove(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, CACHED_GUIDS_KEY),
+            config.accountId,
+            CACHED_GUIDS_KEY,
         )
     }
 
     override fun saveCachedGuidJsonLength(length: Int) {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.CACHED_GUIDS_LENGTH_KEY),
+            config.accountId,
+            Constants.CACHED_GUIDS_LENGTH_KEY,
             length
         )
     }

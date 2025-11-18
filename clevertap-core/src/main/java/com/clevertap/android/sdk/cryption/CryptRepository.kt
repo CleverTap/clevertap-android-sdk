@@ -29,30 +29,32 @@ class CryptRepository(
     private var migrationFailureCount: Int = 0
 
     override fun isSSInAppDataMigrated() =
-        StorageHelper.getBoolean(
+        StorageHelper.getBooleanFromPrefs(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, SS_IN_APP_MIGRATED),
-            false
+            accountId, SS_IN_APP_MIGRATED
         )
 
     override fun updateIsSSInAppDataMigrated(migrated: Boolean) {
         StorageHelper.putBoolean(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, SS_IN_APP_MIGRATED),
+            accountId,
+            SS_IN_APP_MIGRATED,
             migrated
         )
     }
 
     override fun storedEncryptionLevel() =
-        StorageHelper.getInt(
+        StorageHelper.getIntFromPrefs(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, KEY_ENCRYPTION_LEVEL),
+            accountId,
+            KEY_ENCRYPTION_LEVEL,
             UNKNOWN_LEVEL
         )
 
-    override fun migrationFailureCount() = StorageHelper.getInt(
+    override fun migrationFailureCount() = StorageHelper.getIntFromPrefs(
         context,
-        StorageHelper.storageKeyWithSuffix(accountId, MIGRATION_FAILURE_COUNT_KEY),
+        accountId,
+        MIGRATION_FAILURE_COUNT_KEY,
         MIGRATION_FIRST_UPGRADE
     )
 
@@ -68,7 +70,8 @@ class CryptRepository(
     override fun updateEncryptionLevel(configEncryptionLevel: Int) {
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, KEY_ENCRYPTION_LEVEL),
+            accountId,
+            KEY_ENCRYPTION_LEVEL,
             configEncryptionLevel
         )
     }
@@ -87,7 +90,8 @@ class CryptRepository(
 
         StorageHelper.putInt(
             context,
-            StorageHelper.storageKeyWithSuffix(accountId, MIGRATION_FAILURE_COUNT_KEY),
+            accountId,
+            MIGRATION_FAILURE_COUNT_KEY,
             migrationFailureCount
         )
     }

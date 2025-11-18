@@ -75,10 +75,16 @@ public class CleverTapInstanceConfig implements Parcelable {
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig getDefaultInstance(Context context) {
         ManifestInfo info = ManifestInfo.getInstance(context);
+        String accountId = info.getAccountId();
+        String accountToken = info.getAccountToken();
+        if (accountId == null || accountToken == null) {
+            Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default CleverTapInstanceConfig");
+            return null;
+        }
         return CleverTapInstanceConfig.createInstanceWithManifest(
                 info,
-                info.getAccountId(),
-                info.getAccountToken(),
+                accountId,
+                accountToken,
                 info.getAccountRegion(),
                 true
         );

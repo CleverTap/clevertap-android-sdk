@@ -29,7 +29,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -1267,7 +1267,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.v("Unable to save config to SharedPrefs, config Json is null");
                 return null;
             }
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(getConfig(), "instance"), configJson);
+            StorageHelper.putString(context, getConfig().getAccountId(), "instance", configJson);
             return null;
         });
         task = coreState.getExecutors().postAsyncSafelyTask();
@@ -3026,7 +3026,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
-        CryptHandler cryptHandler = coreState.getCryptHandler();
+        ICryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
         EvaluationManager evaluationManager = coreState.getEvaluationManager();
 
