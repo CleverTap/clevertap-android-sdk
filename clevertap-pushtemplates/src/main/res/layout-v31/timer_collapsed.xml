@@ -8,7 +8,10 @@
 
     <include
         android:id="@+id/rel_lyt"
-        layout="@layout/content_view_small_single_line_msg" />
+        layout="@layout/content_view_small_single_line_msg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@id/chronometer" />
 
     <Chronometer
         android:id="@+id/chronometer"

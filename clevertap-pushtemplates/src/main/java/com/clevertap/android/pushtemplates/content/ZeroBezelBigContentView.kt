@@ -1,37 +1,40 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
-import android.os.Build
-import android.text.Html
+import android.view.View
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.isNotNullAndEmpty
+import com.clevertap.android.pushtemplates.ZeroBezelTemplateData
 
-internal class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer) :
-    ActionButtonsContentView(context, R.layout.zero_bezel, renderer) {
+internal class ZeroBezelBigContentView(
+    context: Context,
+    renderer: TemplateRenderer,
+    data: ZeroBezelTemplateData
+) :
+    ActionButtonsContentView(context, renderer, R.layout.zero_bezel) {
 
     init {
-        setCustomContentViewBasicKeys()
-        setCustomContentViewTitle(renderer.pt_title)
-        setCustomContentViewMessage(renderer.pt_msg)
-        setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-        setCustomTextColour(renderer.pt_title_clr, R.id.title)
-        setCustomBackgroundColour(renderer.pt_bg, R.id.content_view_big)
-        setCustomTextColour(renderer.pt_msg_clr, R.id.msg)
-        setCustomContentViewBigImage(renderer.pt_big_img, renderer.pt_scale_type, renderer.pt_big_img_alt_text)
-        setCustomContentViewSmallIcon()
-    }
+        setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
+        setCustomContentViewTitle(data.baseContent.textData.title)
+        setCustomContentViewMessage(data.baseContent.textData.message)
+        setCustomContentViewMessageSummary(data.baseContent.textData.messageSummary)
+        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
+        setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
+        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
 
-    private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
-        if (pt_msg_summary.isNotNullAndEmpty()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                remoteView.setTextViewText(
-                    R.id.msg,
-                    Html.fromHtml(pt_msg_summary, Html.FROM_HTML_MODE_LEGACY)
-                )
-            } else {
-                remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
-            }
+        val isMediaLoaded = setCustomContentViewMedia(
+            R.layout.image_view_dynamic_relative,
+            data.mediaData.gif.url,
+            data.mediaData.bigImage.url,
+            data.mediaData.scaleType,
+            data.mediaData.bigImage.altText,
+            data.mediaData.gif.numberOfFrames
+        )
+        if (!isMediaLoaded) {
+            PTLog.debug("Download failed for all media in ZeroBezel Expanded Notification. Not showing the image")
+            remoteView.setViewVisibility(R.id.zero_bezel_scrim, View.GONE)
         }
     }
 }

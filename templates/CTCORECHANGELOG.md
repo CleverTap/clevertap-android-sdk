@@ -1,4 +1,26 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.6.0 (October 17, 2025)
+
+#### New Features
+* Adds an option to configure a notification as sticky on `Android 14+` devices using `wzrk_sticky: true/false`.
+* Adds an option to configure automatic dismissal of the notification after a set time on `Android 8+` devices using `wzrk_dismiss (value in seconds)`.
+
+#### Bug Fixes
+* Fixes [#873](https://github.com/CleverTap/clevertap-android-sdk/issues/873) - removes unintended padding around the Toolbar in `CTInboxActivity` for edge-to-edge layouts.
+
+### Version 7.5.2 (September 11, 2025)
+
+#### Improvements
+* Optimises queuing behaviour of various type of clevertap events in a single batch.
+
+#### Bug Fixes
+* Fixes a bug where the updated values of variables were not fetched right after a profile push.
+
+### Version 7.5.1 (August 28, 2025)
+
+#### Bug Fixes
+* Fixes an `OutOfMemoryError` that occurred when parsing large encrypted cipher text in `AESCrypt.parseCipherText()`. The issue was caused by using `Regex.split()` on large byte array string representations, which created excessive memory allocations. The data is recovered through apis eventually.
+
 ### Version 7.5.0 (July 11, 2025)
 
 #### New Features
