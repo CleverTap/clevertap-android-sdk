@@ -1,6 +1,7 @@
 name: validate PR raised from task/** branched to develop branch
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [ develop ]
 
