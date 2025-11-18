@@ -166,9 +166,9 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 "YOUR CLEVERTAP REGION",
             ).apply {
                 customHandshakeDomain = handshakeDomain
-
                 // enable push types other than FCM
                 addPushType(HmsConstants.HPS)
+                batchCollectionMs = 1000 // (example) sets 1000ms which is default batch collection time
             }
             CleverTapAPI.instanceWithConfig(this, config)
         }
