@@ -59,7 +59,7 @@ class DelayedLegacyInAppDAOImplTest {
             accRegion
         )
 
-        databaseHelper = DatabaseHelper(context, config, "test_ct_delayed_inapps", logger)
+        databaseHelper = DatabaseHelper(context, config.accountId, "test_ct_delayed_inapps", logger)
         testClock = spyk(TestClock(MOCK_TIME))
         delayedInAppDAO = DelayedLegacyInAppDAOImpl(databaseHelper, logger, table, testClock)
     }
