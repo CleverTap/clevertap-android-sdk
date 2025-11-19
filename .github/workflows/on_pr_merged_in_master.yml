@@ -30,11 +30,8 @@ jobs:
       - name: Static Code Check Via checkstyle
         uses: ./.github/mini_flows/codechecks_checkstyle
 
-      - name: Unit Tests and Jacoco Coverage (DEBUG)
+      - name: Unit Tests and Jacoco Coverage
         uses: ./.github/mini_flows/test_and_coverage_debug
-
-      - name: Unit Tests and Jacoco Coverage (RELEASE)
-        uses: ./.github/mini_flows/test_and_coverage_release
 
       - name: Build AARs (RELEASE)
         uses: ./.github/mini_flows/build_code_release
