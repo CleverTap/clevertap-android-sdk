@@ -1,4 +1,4 @@
-name: validate master branch after PR is Merged
+name: Release Sanity (Main branch updated)
 
 # using https://stackoverflow.com/a/67833464/7500651
 on:

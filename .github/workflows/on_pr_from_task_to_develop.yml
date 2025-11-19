@@ -1,4 +1,4 @@
-name: validate PR raised from task/** branched to develop branch
+name: PR - Feature, Task or Bug branch Runner
 
 on:
   pull_request:

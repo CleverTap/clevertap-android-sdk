@@ -1,4 +1,4 @@
-name: validate PR raised from develop branched to master branch
+name: Develop -> Master (SDK Release)
 on:
   pull_request:
     branches: [ master ]
