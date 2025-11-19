@@ -68,6 +68,7 @@ jobs:
       contents: read
       packages: write
       pull-requests: write
+    name: Unit test and Jacoco Reporting
     
     steps:
       - name: Checkout the code from Repo
