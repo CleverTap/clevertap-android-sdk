@@ -67,7 +67,7 @@ android {
         checkReleaseBuilds false         // Only check debug in CI
 
         // Baseline support - ignores existing issues, only flags new ones
-        // baseline = file("lint-baseline.xml")  // Temporarily disabled - uncomment after generating baselines
+        baseline = file("lint-baseline.xml")
 
         // Performance optimizations
         warningsAsErrors = false
