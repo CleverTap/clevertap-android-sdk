@@ -257,6 +257,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         Log.i(TAG, "onNotificationClickedPayloadReceived = $payload")
     }
 
+    // attaches base context, android method.
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
         MultiDex.install(this)
