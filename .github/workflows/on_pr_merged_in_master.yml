@@ -1,4 +1,4 @@
-name: validate master branch after PR is Merged
+name: Release Sanity (Main branch updated)
 
 # using https://stackoverflow.com/a/67833464/7500651
 on:
@@ -6,36 +6,95 @@ on:
     branches: [master]
     types: [closed]
 
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-static_checks-test-build:
+  # Code Quality Checks (Run in Parallel)
+  lint:
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - lint
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Run lint
+        uses: ./.github/mini_flows/lint
+
+  detekt:
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - detekt
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Static Code Check Via detekt
+        uses: ./.github/mini_flows/codechecks_detekt
+
+  checkstyle:
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - checkstyle
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Static Code Check Via checkstyle
+        uses: ./.github/mini_flows/codechecks_checkstyle
+
+  # Unit Tests and Coverage (Only after quality checks pass)
+  test:
+    needs: [lint, detekt, checkstyle]
     if: ${{ github.event.pull_request.merged }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
+    name: Unit Tests and Coverage
     steps:
       - name: Checkout the code from Repo
         uses: actions/checkout@v3
 
-      - name: Setup JDK 17.
+      - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
-
-      - name: Run lint tests and Upload results
-        uses: ./.github/mini_flows/lint
-
-      - name: Static Code Check Via detekt
-        uses: ./.github/mini_flows/codechecks_detekt
-
-      - name: Static Code Check Via checkstyle
-        uses: ./.github/mini_flows/codechecks_checkstyle
 
       - name: Unit Tests and Jacoco Coverage (DEBUG)
         uses: ./.github/mini_flows/test_and_coverage_debug
 
-      - name: Unit Tests and Jacoco Coverage (RELEASE)
-        uses: ./.github/mini_flows/test_and_coverage_release
+  # Build (Only after tests pass)
+  build:
+    needs: [test]
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    name: Build Release AARs
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
 
       - name: Build AARs (RELEASE)
         uses: ./.github/mini_flows/build_code_release
-

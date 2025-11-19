@@ -1,41 +1,121 @@
-name: validate PR raised from develop branched to master branch
+name: Develop -> Master (SDK Release)
 on:
   pull_request:
     branches: [ master ]
 
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-static_checks-test-build:
+  # Mandatory file changes check (must pass first)
+  mandatory-checks:
+    if: github.head_ref == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Mandatory File Changes
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Mandatory File Changes
+        uses: ./.github/mini_flows/mandatory_filechanges
+
+  # Code Quality Checks (Run in Parallel after mandatory checks)
+  lint:
+    needs: [mandatory-checks]
+    if: github.head_ref == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - lint
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Run lint
+        uses: ./.github/mini_flows/lint
+
+  detekt:
+    needs: [mandatory-checks]
+    if: github.head_ref == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - detekt
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Static Code Check Via detekt
+        uses: ./.github/mini_flows/codechecks_detekt
+
+  checkstyle:
+    needs: [mandatory-checks]
+    if: github.head_ref == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Code Quality - checkstyle
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Static Code Check Via checkstyle
+        uses: ./.github/mini_flows/codechecks_checkstyle
+
+  # Unit Tests and Coverage (Only after quality checks pass)
+  test:
+    needs: [lint, detekt, checkstyle]
     if: github.head_ref == 'develop'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       pull-requests: write
-
+    name: Unit Tests and Coverage
     steps:
       - name: Checkout the code from Repo
         uses: actions/checkout@v3
 
-      - name: Setup JDK 17.
+      - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
 
-      - name: Mandatory File Changes
-        uses: ./.github/mini_flows/mandatory_filechanges
-
-      - name: Run lint tests and Upload results
-        uses: ./.github/mini_flows/lint
-
-      - name: Static Code Check Via detekt
-        uses: ./.github/mini_flows/codechecks_detekt
-
-      - name: Static Code Check Via checkstyle
-        uses: ./.github/mini_flows/codechecks_checkstyle
-
-      - name: Unit Tests and Jacoco Coverage (RELEASE)
-        uses: ./.github/mini_flows/test_and_coverage_release
+      - name: Unit Tests and Jacoco Coverage (DEBUG)
+        uses: ./.github/mini_flows/test_and_coverage_debug
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           baseline-branch: master
+
+  # Build (Only after tests pass)
+  build:
+    needs: [test]
+    if: github.head_ref == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    name: Build Release AARs
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 17
+        uses: ./.github/mini_flows/setup_jdk
 
       - name: Build AARs (RELEASE)
         uses: ./.github/mini_flows/build_code_release

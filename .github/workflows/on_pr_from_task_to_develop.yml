@@ -1,4 +1,4 @@
-name: validate PR raised from task/** branched to develop branch
+name: PR - Feature, Task or Bug branch Runner
 
 on:
   workflow_dispatch:
@@ -62,6 +62,7 @@ jobs:
 
   # Unit Tests and Coverage
   test:
+    needs: [lint, detekt, checkstyle]
     if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
