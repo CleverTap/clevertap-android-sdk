@@ -31,8 +31,8 @@ jobs:
       - name: Static Code Check Via checkstyle
         uses: ./.github/mini_flows/codechecks_checkstyle
 
-      - name: Unit Tests and Jacoco Coverage (RELEASE)
-        uses: ./.github/mini_flows/test_and_coverage_release
+      - name: Unit Tests and Jacoco Coverage
+        uses: ./.github/mini_flows/test_and_coverage_debug
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           baseline-branch: master
