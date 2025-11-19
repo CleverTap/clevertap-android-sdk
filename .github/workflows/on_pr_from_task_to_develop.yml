@@ -1,4 +1,4 @@
-name: PR - Feat/Task/Bug branch Runner
+name: PR - Task/Bug Runner
 
 on:
   pull_request:
