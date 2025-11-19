@@ -54,7 +54,7 @@ jobs:
         run: echo "${{ toJSON(inputs) }}"
 
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17.
         uses: ./.github/mini_flows/setup_jdk
