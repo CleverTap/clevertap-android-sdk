@@ -1,107 +1,26 @@
 name: Trigger Automation from PR Comment
 
 on:
-  # Original PR comment trigger for production
   issue_comment:
     types: [created]
 
-  # TESTING: Add push trigger for testing changes without merging to main
-  # TODO: Remove after testing is complete
-  push:
-    branches:
-      - 'test/**'      # For testing branches like test/workflow-fixes
-      - 'action/**'    # Consistent with other workflows
-    paths:
-      - '.github/workflows/trigger-automation-from-comment.yml'
-
 jobs:
   parse-and-trigger:
-    # Enhanced condition to handle different trigger types
-    if: |
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, 'run test automation')) ||
-      (github.event_name == 'push')
+    # Only run on PR comments (not regular issues)
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'run test automation')
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
-      - name: Set testing context
-        id: set_context
-        run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
-            echo "🧪 TESTING MODE: Push trigger detected"
-            echo "testing_mode=true" >> $GITHUB_OUTPUT
-            echo "trigger_type=push" >> $GITHUB_OUTPUT
-          
-            # Set all default test values for push trigger
-            echo "COMMENT_BODY=run test automation on debug build, variables tests" >> $GITHUB_ENV
-            echo "PR_NUMBER=999" >> $GITHUB_ENV
-            echo "PR_BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV  # Use actual push branch
-            echo "PR_TITLE=Test PR from push trigger - ${{ github.ref_name }}" >> $GITHUB_ENV
-            echo "PR_AUTHOR=${{ github.actor }}" >> $GITHUB_ENV
-            # Create a long comment ID for testing (simulating real GitHub comment ID)
-            LONG_COMMENT_ID="${{ github.run_id }}${{ github.run_number }}999"
-            echo "COMMENT_ID=$LONG_COMMENT_ID" >> $GITHUB_ENV
-
-            # Derive QA_VERSION from comment ID using same logic as production
-            QA_VERSION_INT="${LONG_COMMENT_ID: -6}"  # Last 6 digits
-            echo "QA_VERSION=$QA_VERSION_INT" >> $GITHUB_ENV
-
-            echo "🔢 Testing conversion: COMMENT_ID $LONG_COMMENT_ID → QA_VERSION $QA_VERSION_INT"
-            echo "COMMENT_AUTHOR=${{ github.actor }}" >> $GITHUB_ENV
-            echo "COMMENT_URL=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
-            echo "TRIGGERED_AT=${{ github.event.head_commit.timestamp }}" >> $GITHUB_ENV
-          
-            echo "🤖 Using default values for push trigger:"
-            echo "  Comment: run test automation on debug build, variables tests"
-            echo "  PR Number: 999 (test)"
-            echo "  PR Branch: ${{ github.ref_name }}"
-            echo "  PR Author: ${{ github.actor }}"
-            echo "  Comment ID: $LONG_COMMENT_ID"
-            echo "  QA Version: $QA_VERSION_INT (derived from comment ID)"
-          
-          else
-            echo "🚀 PRODUCTION MODE: PR comment trigger"
-            echo "testing_mode=false" >> $GITHUB_OUTPUT
-            echo "trigger_type=pr_comment" >> $GITHUB_OUTPUT
-          
-            # Use actual PR comment data - safer approach with printf
-            # Convert long comment ID to 6-digit QA version
-            COMMENT_ID_LONG='${{ github.event.comment.id }}'
-            QA_VERSION_INT="${COMMENT_ID_LONG: -6}"  # Last 6 digits
-          
-            # Use printf for safer handling of user input
-            printf "COMMENT_BODY=%s\n" '${{ github.event.comment.body }}' >> $GITHUB_ENV
-            printf "PR_NUMBER=%s\n" '${{ github.event.issue.number }}' >> $GITHUB_ENV
-            printf "COMMENT_ID=%s\n" "$COMMENT_ID_LONG" >> $GITHUB_ENV
-            printf "QA_VERSION=%s\n" "$QA_VERSION_INT" >> $GITHUB_ENV
-            printf "COMMENT_AUTHOR=%s\n" '${{ github.event.comment.user.login }}' >> $GITHUB_ENV
-            printf "COMMENT_URL=%s\n" '${{ github.event.comment.html_url }}' >> $GITHUB_ENV
-            printf "TRIGGERED_AT=%s\n" '${{ github.event.comment.created_at }}' >> $GITHUB_ENV
-          
-            echo "🔢 Converted COMMENT_ID $COMMENT_ID_LONG to QA_VERSION: $QA_VERSION_INT"
-          fi
-          
-          echo "📋 Context: ${{ github.event_name }} trigger"
-
       - name: Check comment format and extract parameters
         id: parse_comment
         env:
-          COMMENT_BODY: ${{ env.COMMENT_BODY }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           echo "📝 Processing comment (length: ${#COMMENT_BODY})"
-          echo "🔍 Trigger type: ${{ steps.set_context.outputs.trigger_type }}"
-          
-          # Add testing mode indicator
-          if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
-            echo "⚠️  TESTING MODE: Using default comment data"
-            echo "💬 Comment: $COMMENT_BODY"
-          fi
           
           # Sanitize input - only allow alphanumeric, spaces, hyphens, and basic punctuation
           if echo "$COMMENT_BODY" | grep -q '[^a-zA-Z0-9 \-,.]'; then
-            echo "❌ Comment contains invalid characters."
+            echo "❌ Comment contains invalid characters"
             echo "valid_comment=false" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -127,7 +46,7 @@ jobs:
                 exit 0
                 ;;
             esac
-          
+            
             case "$TEST_SUITE" in
               "all"|"variables"|"push-notifications"|"app-inbox")
                 echo "✅ Valid test suite extracted: $TEST_SUITE"
@@ -143,11 +62,6 @@ jobs:
               echo "✅ Valid automation trigger comment detected!"
               echo "🔧 Build Type: $BUILD_TYPE"
               echo "🧪 Test Suite: $TEST_SUITE"
-          
-              # Add testing mode context
-              if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
-                echo "⚠️  TESTING: This is a simulated trigger for workflow testing"
-              fi
           
               echo "valid_comment=true" >> $GITHUB_OUTPUT
               echo "build_type=$BUILD_TYPE" >> $GITHUB_OUTPUT
@@ -166,55 +80,39 @@ jobs:
         id: pr_info
         if: steps.parse_comment.outputs.valid_comment == 'true'
         run: |
-          if [ "${{ steps.set_context.outputs.trigger_type }}" == "pr_comment" ]; then
-            # Production mode: Get real PR details using GitHub API
-            PR_NUMBER="${{ env.PR_NUMBER }}"
-            REPO_OWNER="${{ github.repository_owner }}"
-            REPO_NAME="${{ github.event.repository.name }}"
+          # Get PR details using GitHub API
+          PR_NUMBER="${{ github.event.issue.number }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
           
-            echo "📋 Fetching real PR #$PR_NUMBER details..."
+          echo "📋 Fetching PR #$PR_NUMBER details..."
           
-            # Get PR information
-            PR_DATA=$(curl -s \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER")
+          # Get PR information
+          PR_DATA=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER")
           
-            # Extract branch name
-            BRANCH_NAME=$(echo "$PR_DATA" | jq -r '.head.ref')
-            PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
-            PR_AUTHOR=$(echo "$PR_DATA" | jq -r '.user.login')
+          # Extract branch name
+          BRANCH_NAME=$(echo "$PR_DATA" | jq -r '.head.ref')
+          PR_TITLE=$(echo "$PR_DATA" | jq -r '.title')
+          PR_AUTHOR=$(echo "$PR_DATA" | jq -r '.user.login')
           
-            if [ "$BRANCH_NAME" == "null" ] || [ -z "$BRANCH_NAME" ]; then
-              echo "❌ Could not extract branch name from PR"
-              exit 1
-            fi
-          else
-            # Testing mode: Use simulated data
-            BRANCH_NAME="${{ env.PR_BRANCH }}"
-            PR_TITLE="${{ env.PR_TITLE }}"
-            PR_AUTHOR="${{ env.PR_AUTHOR }}"
-          
-            echo "🧪 Using simulated PR data for testing:"
+          if [ "$BRANCH_NAME" == "null" ] || [ -z "$BRANCH_NAME" ]; then
+            echo "❌ Could not extract branch name from PR"
+            exit 1
           fi
           
           echo "pr_branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
           echo "pr_author=$PR_AUTHOR" >> $GITHUB_OUTPUT
-          echo "comment_id=${{ env.COMMENT_ID }}" >> $GITHUB_OUTPUT
+          echo "comment_id=${{ github.event.comment.id }}" >> $GITHUB_OUTPUT
           
           echo "✅ PR Information extracted:"
           echo "🌿 Branch: $BRANCH_NAME"
           echo "📝 Title: $PR_TITLE" 
           echo "👤 Author: $PR_AUTHOR"
-          echo "💬 Comment ID: ${{ env.COMMENT_ID }}"
-          echo "🔢 QA Version: ${{ env.QA_VERSION }}"
-          
-          # Add testing context
-          if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
-            echo "⚠️  TESTING MODE: Using simulated PR information"
-            echo "🔄 Trigger type: ${{ steps.set_context.outputs.trigger_type }}"
-          fi
+          echo "💬 Comment ID: ${{ github.event.comment.id }}"
 
       - name: Validate build parameters
         id: validate_params
@@ -225,11 +123,6 @@ jobs:
           BRANCH_NAME="${{ steps.pr_info.outputs.pr_branch }}"
           
           echo "🔍 Validating extracted parameters..."
-          
-          # Add testing mode indicator
-          if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
-            echo "🧪 TESTING MODE: Validating simulated parameters"
-          fi
           
           # Validate buildType
           case $BUILD_TYPE in
@@ -267,15 +160,15 @@ jobs:
           echo "valid_params=true" >> $GITHUB_OUTPUT
           echo "🎯 All parameters validated successfully!"
 
-      - name: Add reaction to comment (skip in testing mode)
-        if: steps.parse_comment.outputs.valid_comment == 'true' && steps.set_context.outputs.trigger_type == 'pr_comment'
+      - name: Add reaction to comment
+        if: steps.parse_comment.outputs.valid_comment == 'true'
         run: |
           # Add 🚀 reaction to indicate we're processing the comment
           curl -s \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ env.COMMENT_ID }}/reactions" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ steps.pr_info.outputs.comment_id }}/reactions" \
             -d '{"content":"rocket"}'
           
           echo "🚀 Added rocket reaction to comment"
@@ -287,41 +180,29 @@ jobs:
           PR_BRANCH: ${{ steps.pr_info.outputs.pr_branch }}
           PR_TITLE: ${{ steps.pr_info.outputs.pr_title }}
           PR_AUTHOR: ${{ steps.pr_info.outputs.pr_author }}
-          COMMENT_AUTHOR: ${{ env.COMMENT_AUTHOR }}
-          COMMENT_URL: ${{ env.COMMENT_URL }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
           BUILD_TYPE: ${{ steps.parse_comment.outputs.build_type }}
           TEST_SUITE: ${{ steps.parse_comment.outputs.test_suite }}
           SOURCE_REPO: ${{ github.repository }}
-          TRIGGERED_AT: ${{ env.TRIGGERED_AT }}
+          TRIGGERED_AT: ${{ github.event.comment.created_at }}
         run: |
-          # Add testing mode indicator to payload
-          if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
-            TESTING_FLAG=true
-            TRIGGER_TYPE="${{ steps.set_context.outputs.trigger_type }}"
-            echo "🧪 TESTING MODE: Including testing flags in payload"
-          else
-            TESTING_FLAG=false
-            TRIGGER_TYPE="pr_comment"
-          fi
-          
           # Construct JSON payload safely using jq to handle escaping
           PAYLOAD=$(jq -n \
             --arg sdkRepoBranch "$PR_BRANCH" \
             --arg buildOutput "apk" \
             --arg buildType "$BUILD_TYPE" \
-            --argjson qaVersion "${{ env.QA_VERSION }}" \
+            --argjson qaVersion "${{ github.event.comment.id }}" \
             --argjson triggerAutomation true \
             --arg testSuite "$TEST_SUITE" \
             --arg sourceRepo "$SOURCE_REPO" \
-            --argjson prNumber "${{ env.PR_NUMBER }}" \
+            --argjson prNumber "${{ github.event.issue.number }}" \
             --arg prTitle "$PR_TITLE" \
             --arg prAuthor "$PR_AUTHOR" \
             --arg commentAuthor "$COMMENT_AUTHOR" \
-            --argjson commentId "${{ env.COMMENT_ID }}" \
+            --argjson commentId "${{ github.event.comment.id }}" \
             --arg commentUrl "$COMMENT_URL" \
             --arg triggeredAt "$TRIGGERED_AT" \
-            --argjson testingMode "$TESTING_FLAG" \
-            --arg triggerType "$TRIGGER_TYPE" \
             '{
               "workflow_inputs": {
                 "sdkRepoBranch": $sdkRepoBranch,
@@ -339,9 +220,7 @@ jobs:
                 "comment_author": $commentAuthor,
                 "comment_id": $commentId,
                 "comment_url": $commentUrl,
-                "triggered_at": $triggeredAt,
-                "testing_mode": $testingMode,
-                "trigger_type": $triggerType
+                "triggered_at": $triggeredAt
               }
             }')
           
@@ -367,48 +246,31 @@ jobs:
         run: |
           echo "## 🚀 Automation Triggered from SDK PR Comment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Add testing mode indicator
-          if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
-            echo "### ⚠️ TESTING MODE" >> $GITHUB_STEP_SUMMARY
-            echo "This workflow was triggered in **testing mode** via **${{ steps.set_context.outputs.trigger_type }}**" >> $GITHUB_STEP_SUMMARY
-            echo "Using simulated PR data for testing workflow changes." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-          
           echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Trigger Type** | ${{ steps.set_context.outputs.trigger_type }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Testing Mode** | ${{ steps.set_context.outputs.testing_mode }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **PR Number** | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **PR Number** | #${{ github.event.issue.number }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **PR Branch** | \`${{ steps.pr_info.outputs.pr_branch }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **PR Author** | ${{ steps.pr_info.outputs.pr_author }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Comment Author** | ${{ env.COMMENT_AUTHOR }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Comment Author** | ${{ github.event.comment.user.login }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Build Type** | ${{ steps.parse_comment.outputs.build_type }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Test Suite** | ${{ steps.parse_comment.outputs.test_suite }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **QA Version** | ${{ env.QA_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Comment ID** | ${{ env.COMMENT_ID }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **QA Version** | ${{ github.event.comment.id }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Build Output** | apk |" >> $GITHUB_STEP_SUMMARY
           echo "| **Trigger Automation** | true |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ **Successfully triggered Bearded Robot build workflow!**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 Monitor the build progress in the [Bearded Robot repository](https://github.com/CleverTap/CT-Apps/actions)" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 Monitor the build progress in the [Bearded Robot repository](https://github.com/CleverTap/BeardedRobot/actions)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ steps.set_context.outputs.testing_mode }}" == "true" ]; then
-            echo "**Testing Context:** This was a simulated trigger using test data" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**Original Comment:** ${{ env.COMMENT_URL }}" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "**Original Comment:** ${{ github.event.comment.html_url }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: Comment on PR with trigger confirmation (skip in testing mode)
-        if: steps.validate_params.outputs.valid_params == 'true' && steps.set_context.outputs.trigger_type == 'pr_comment'
+      - name: Comment on PR with trigger confirmation
+        if: steps.validate_params.outputs.valid_params == 'true'
         env:
           PR_BRANCH: ${{ steps.pr_info.outputs.pr_branch }}
           BUILD_TYPE: ${{ steps.parse_comment.outputs.build_type }}
           TEST_SUITE: ${{ steps.parse_comment.outputs.test_suite }}
-          COMMENT_AUTHOR: ${{ env.COMMENT_AUTHOR }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
         run: |
           # Create comment body safely
           COMMENT_BODY="🚀 **Automation Triggered Successfully!**
@@ -417,7 +279,7 @@ jobs:
           - **SDK Branch**: \`$PR_BRANCH\`
           - **Build Type**: \`$BUILD_TYPE\`
           - **Test Suite**: \`$TEST_SUITE\`
-          - **QA Version**: \`${{ env.QA_VERSION }}\`
+          - **QA Version**: \`${{ github.event.comment.id }}\`
 
           **Next Steps:**
           1. 🏗️ [Bearded Robot build](https://github.com/CleverTap/CT-Apps/actions) will start with your SDK branch
@@ -438,7 +300,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Content-Type: application/json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
             -d "$COMMENT_PAYLOAD" \
             --fail-with-body
           
@@ -448,10 +310,10 @@ jobs:
             echo "❌ Failed to post confirmation comment"
           fi
 
-      - name: Handle invalid comment format (skip in testing mode)
-        if: steps.parse_comment.outputs.valid_comment == 'false' && steps.set_context.outputs.trigger_type == 'pr_comment'
+      - name: Handle invalid comment format
+        if: steps.parse_comment.outputs.valid_comment == 'false'
         env:
-          COMMENT_BODY: ${{ env.COMMENT_BODY }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           # Only respond if the comment contained "run test automation" but was malformed
           # Use printf for safe string handling
@@ -472,20 +334,20 @@ jobs:
             - \`run test automation on debug build, variables tests\`
             - \`run test automation on release build, all tests\`
             - \`run test automation on debug build, push-notifications tests\`
-          
+            
             Please correct your comment format and try again.
 
             _Note: Comment parsing is case-insensitive_"
 
             # Use jq to safely construct JSON payload
             HELP_PAYLOAD=$(jq -n --arg body "$HELP_COMMENT" '{"body": $body}')
-          
+            
             curl -s \
               -X POST \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Content-Type: application/json" \
-              "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments" \
               -d "$HELP_PAYLOAD" \
               --fail-with-body
           
@@ -495,28 +357,3 @@ jobs:
               echo "❌ Failed to post help comment"
             fi
           fi
-
-      - name: Testing mode summary
-        if: always() && steps.set_context.outputs.testing_mode == 'true'
-        run: |
-          echo "## 🧪 Testing Mode Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "This workflow was executed in **TESTING MODE**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Testing Detail | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Trigger Type** | ${{ steps.set_context.outputs.trigger_type }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Branch** | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Comment** | \`${{ env.COMMENT_BODY }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **PR Number** | #${{ env.PR_NUMBER }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **QA Version** | ${{ env.QA_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Comment ID** | ${{ env.COMMENT_ID }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Next Steps for Production:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. ✅ Test the workflow logic" >> $GITHUB_STEP_SUMMARY
-          echo "2. 🔄 Remove testing triggers when satisfied" >> $GITHUB_STEP_SUMMARY
-          echo "3. 🚀 Deploy to main branch" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Remember to:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Remove the \`push\` trigger after testing" >> $GITHUB_STEP_SUMMARY

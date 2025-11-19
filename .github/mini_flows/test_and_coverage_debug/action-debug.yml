@@ -1,0 +1,84 @@
+inputs:
+  github-token:
+    description: 'Github token to post JaCoCo report in a PR comment'
+    required: false
+    default: ''
+  baseline-branch:
+    description: 'The branch to compare the JaCoCo report against'
+    required: false
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Run All JaCoCo Test Reports (Parallel) - WITH DEBUG
+      if: always()
+      shell: bash
+      run: |
+        echo "=========================================="
+        echo "DEBUG: Starting parallel test execution"
+        echo "Gradle version:"
+        ./gradlew --version
+        echo "=========================================="
+        echo "Parallel settings:"
+        grep -E "org.gradle.parallel|org.gradle.caching" gradle.properties || echo "Not found in gradle.properties"
+        echo "=========================================="
+        echo "Starting tests with parallel execution..."
+        date
+        
+        ./gradlew \
+          :clevertap-core:jacocoTestReportDebug \
+          :clevertap-geofence:jacocoTestReportDebug \
+          :clevertap-hms:jacocoTestReportDebug \
+          :clevertap-pushtemplates:jacocoTestReportDebug \
+          -Pcoverage='true' \
+          --parallel \
+          --max-workers=4 \
+          --build-cache \
+          --info | tee gradle-output.log
+        
+        echo "=========================================="
+        echo "Test execution completed"
+        date
+        echo "=========================================="
+        echo "Checking for parallel execution evidence:"
+        grep -i "parallel" gradle-output.log | head -10 || echo "No parallel mentions found"
+        echo "=========================================="
+
+    - name: Upload All Test Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-reports-debug
+        path: |
+          clevertap-core/build/reports/tests
+          clevertap-geofence/build/reports/tests
+          clevertap-hms/build/reports/tests
+          clevertap-pushtemplates/build/reports/tests
+
+    - name: Upload All JaCoCo Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: jacoco-reports-debug
+        path: |
+          clevertap-core/build/reports/jacoco
+          clevertap-geofence/build/reports/jacoco
+          clevertap-hms/build/reports/jacoco
+          clevertap-pushtemplates/build/reports/jacoco
+
+    - name: Upload Gradle Log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: gradle-execution-log
+        path: gradle-output.log
+
+    - name: Post JaCoCo Report in PR comment
+      if: ${{ inputs.github-token != '' }}
+      uses: ./.github/mini_flows/test_coverage_report
+      with:
+        github-token: ${{ inputs.github-token }}
+        baseline-branch: ${{ inputs.baseline-branch }}
+        comment-title: 'Code Coverage Debug'
