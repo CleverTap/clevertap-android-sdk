@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Mandatory File Changes
         if: ${{ inputs.check_mandatory }}

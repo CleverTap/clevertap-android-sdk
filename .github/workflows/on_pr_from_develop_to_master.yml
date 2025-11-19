@@ -18,7 +18,7 @@ jobs:
     name: Mandatory File Changes
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
@@ -36,7 +36,7 @@ jobs:
     name: Code Quality - lint
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
@@ -53,7 +53,7 @@ jobs:
     name: Code Quality - detekt
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
@@ -70,7 +70,7 @@ jobs:
     name: Code Quality - checkstyle
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
@@ -90,7 +90,7 @@ jobs:
     name: Unit Tests and Coverage
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
@@ -112,7 +112,7 @@ jobs:
     name: Build Release AARs
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
