@@ -1,4 +1,16 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.7.0 (November 20, 2025)
+
+#### New Features
+* Adds support for complete encryption of all data stored in the SDK. See [EXAMPLES.md](EXAMPLES.md#encryption-of-data-stored-in-the-sdk) for instructions on enabling complete encryption.
+* Adds support for delayed InApp notifications.
+* Adds support for previewing all types of InApps from the dashboard.
+* Adds support for non-disruptive notifications when the app is in foreground using `wzrk_sif: true/false`
+* * Extends `discardInAppNotifications()` to support an optional `dismissInAppIfVisible` parameter to control whether an active InApp notification should be immediately dismissed.
+
+#### Bug Fixes
+* Fixes [#888](https://github.com/CleverTap/clevertap-android-sdk/issues/888) - a `StringIndexOutOfBoundsException` triggered by invalid colour values in the InApp payload.
+
 ### Version 7.6.0 (October 17, 2025)
 
 #### New Features
