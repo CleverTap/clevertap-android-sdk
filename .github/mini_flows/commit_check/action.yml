@@ -1,3 +1,6 @@
+name: 'Commit Check'
+description: 'Validates commit message format and enforces commit rules'
+
 # step to call :
 #      - name: Commit Rules Enforcement
 #        uses: ./.github/mini_flows/ss2_commit_check

@@ -1,3 +1,6 @@
+name: 'Build Debug'
+description: 'Assembles debug builds for all modules and uploads AAR artifacts'
+
 runs:
   using: "composite"
   steps:
