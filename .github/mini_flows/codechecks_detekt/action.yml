@@ -1,3 +1,6 @@
+name: 'Detekt Code Analysis'
+description: 'Runs Detekt static code analysis on all modules and uploads reports'
+
 runs:
   using: "composite"
   steps:

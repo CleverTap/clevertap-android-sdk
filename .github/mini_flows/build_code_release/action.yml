@@ -1,3 +1,6 @@
+name: 'Build Release'
+description: 'Assembles release builds for all modules in parallel and uploads AAR artifacts'
+
 runs:
   using: "composite"
   steps:

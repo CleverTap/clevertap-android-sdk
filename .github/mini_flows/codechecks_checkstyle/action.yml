@@ -1,3 +1,6 @@
+name: 'Checkstyle Code Analysis'
+description: 'Runs Checkstyle code analysis on all modules and uploads reports'
+
 runs:
   using: "composite"
   steps:

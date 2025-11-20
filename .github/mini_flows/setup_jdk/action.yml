@@ -1,3 +1,6 @@
+name: 'Setup JDK'
+description: 'Sets up JDK 17 with Temurin distribution and Gradle caching'
+
 runs:
   using: "composite"
   steps:

@@ -1,3 +1,6 @@
+name: 'Android Lint'
+description: 'Runs Android Lint checks on all modules and uploads lint reports'
+
 runs:
   using: "composite"
   steps:

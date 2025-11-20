@@ -1,3 +1,6 @@
+name: 'Test and Coverage (Release)'
+description: 'Runs unit tests and generates JaCoCo coverage reports for release builds, with optional PR comment'
+
 inputs:
   github-token:
     description: 'Github token to post JaCoCo report in a PR comment'

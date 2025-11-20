@@ -1,3 +1,6 @@
+name: 'Test Release'
+description: 'Runs unit tests for debug and release builds and uploads test reports'
+
 runs:
   using: "composite"
   steps:
