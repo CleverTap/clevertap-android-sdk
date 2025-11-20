@@ -5,7 +5,7 @@
 * Adds support for complete encryption of all data stored in the SDK. See [EXAMPLES.md](EXAMPLES.md#encryption-of-data-stored-in-the-sdk) for instructions on enabling complete encryption.
 * Adds support for delayed InApp notifications.
 * Adds support for previewing all types of InApps from the dashboard.
-* Adds an option to configure a notification as non-disruptive when the app is in foreground using `wzrk_sif: true/false`
+* Adds an option to configure a push notification as non-disruptive when the app is in foreground using `wzrk_sif: true/false`
 * Extends `discardInAppNotifications()` to support an optional `dismissInAppIfVisible` parameter to control whether an active InApp notification should be immediately dismissed.
   * Adds a new overloaded API `discardInAppNotifications(dismissInappIfVisible : Boolean)`
 
@@ -15,8 +15,8 @@
 ### Version 7.6.0 (October 17, 2025)
 
 #### New Features
-* Adds an option to configure a notification as sticky on `Android 14+` devices using `wzrk_sticky: true/false`.
-* Adds an option to configure automatic dismissal of the notification after a set time on `Android 8+` devices using `wzrk_dismiss (value in seconds)`.
+* Adds an option to configure a push notification as sticky on `Android 14+` devices using `wzrk_sticky: true/false`.
+* Adds an option to configure automatic dismissal of the push notification after a set time on `Android 8+` devices using `wzrk_dismiss (value in seconds)`.
 
 #### Bug Fixes
 * Fixes [#873](https://github.com/CleverTap/clevertap-android-sdk/issues/873) - removes unintended padding around the Toolbar in `CTInboxActivity` for edge-to-edge layouts.
