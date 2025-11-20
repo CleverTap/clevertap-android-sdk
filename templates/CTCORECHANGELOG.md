@@ -5,7 +5,7 @@
 * Adds support for complete encryption of all data stored in the SDK. See [EXAMPLES.md](EXAMPLES.md#encryption-of-data-stored-in-the-sdk) for instructions on enabling complete encryption.
 * Adds support for delayed InApp notifications.
 * Adds support for previewing all types of InApps from the dashboard.
-* Adds support for non-disruptive notifications when the app is in foreground using `wzrk_sif: true/false`
+* Adds an option to configure a notification as non-disruptive when the app is in foreground using `wzrk_sif: true/false`
 * Extends `discardInAppNotifications()` to support an optional `dismissInAppIfVisible` parameter to control whether an active InApp notification should be immediately dismissed.
   * Adds a new overloaded API `discardInAppNotifications(dismissInappIfVisible : Boolean)`
 
