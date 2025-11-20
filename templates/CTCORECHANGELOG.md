@@ -6,7 +6,8 @@
 * Adds support for delayed InApp notifications.
 * Adds support for previewing all types of InApps from the dashboard.
 * Adds support for non-disruptive notifications when the app is in foreground using `wzrk_sif: true/false`
-* * Extends `discardInAppNotifications()` to support an optional `dismissInAppIfVisible` parameter to control whether an active InApp notification should be immediately dismissed.
+* Extends `discardInAppNotifications()` to support an optional `dismissInAppIfVisible` parameter to control whether an active InApp notification should be immediately dismissed.
+  * Adds a new overloaded API `discardInAppNotifications(dismissInappIfVisible : Boolean)`
 
 #### Bug Fixes
 * Fixes [#888](https://github.com/CleverTap/clevertap-android-sdk/issues/888) - a `StringIndexOutOfBoundsException` triggered by invalid colour values in the InApp payload.
