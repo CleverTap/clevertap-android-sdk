@@ -162,7 +162,11 @@ internal object StorageHelper {
     }
 
     fun putLong(context: Context, key: String, value: Long) {
-        val prefs = getPreferences(context)
+        putLong(context, null, key, value)
+    }
+
+    fun putLong(context: Context, namespace: String?, key: String, value: Long) {
+        val prefs = getPreferences(context, namespace)
         val editor = prefs.edit().putLong(key, value)
         persist(editor)
     }

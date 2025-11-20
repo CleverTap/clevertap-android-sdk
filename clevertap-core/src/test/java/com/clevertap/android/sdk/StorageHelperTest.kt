@@ -269,6 +269,15 @@ class StorageHelperTest: BaseTestCase() {
         assertEquals(21, value)
     }
 
+    @Test
+    fun test_long_operations_on_a_different_sp_file() {
+        val someAugKey = "some-aug-key"
+        val data = 55L
+        StorageHelper.putLong(appCtx, someAugKey, "putKeyLong", data)
+        val value = StorageHelper.getLong(appCtx, someAugKey, "putKeyLong", -1)
+        assertEquals(data, value)
+    }
+
     //=====================================================================================================================================
 
     @Test

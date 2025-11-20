@@ -37,8 +37,7 @@ class SharedPreferencesMigration<T>(
         val editor = newSharedPreferences.edit()
 
         for ((key, value) in oldData) {
-            if (valueType.isInstance(value) && condition(value as T)
-            ) {
+            if (valueType.isInstance(value) && condition(value as T)) {
                 when (valueType) {
                     Boolean::class.javaObjectType -> editor.putBoolean(key, value as Boolean)
                     Int::class.javaObjectType ->
