@@ -557,6 +557,10 @@ class HomeScreenViewModel(
                 cleverTapAPI?.resumeInAppNotifications()
             }
 
+            "11-3" -> {
+                cleverTapAPI?.discardInAppNotifications(true)
+            }
+
             "12-0" -> {
                 cleverTapAPI?.fetchInApps(object : FetchInAppsCallback {
                     override fun onInAppsFetched(isSuccess: Boolean) {

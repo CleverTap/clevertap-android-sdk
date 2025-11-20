@@ -344,7 +344,6 @@ internal class InAppController(
         }
     }
 
-    @MainThread
     fun discardInApps(hideInAppIfVisible: Boolean) {
         inAppState = InAppState.DISCARDED
         logger.verbose(defaultLogTag, "InAppState is DISCARDED")
@@ -724,6 +723,7 @@ internal class InAppController(
         }
     }
 
+    @MainThread
     private fun showInApp(inAppNotification: CTInAppNotification) {
         val activity = CoreMetaData.getCurrentActivity()
         val goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification)
