@@ -2,12 +2,12 @@
 ### Version 7.7.0 (November 20, 2025)
 
 #### New Features
-* Adds support for complete encryption of all data stored in the SDK. See [EXAMPLES.md](EXAMPLES.md#encryption-of-data-stored-in-the-sdk) for instructions on enabling complete encryption.
-* Adds support for delayed InApp notifications.
-* Adds support for previewing all types of InApps from the dashboard.
-* Adds an option to configure a push notification as non-disruptive when the app is in foreground using `wzrk_sif: true/false`
-* Extends `discardInAppNotifications()` to support an optional `dismissInAppIfVisible` parameter to control whether an active InApp notification should be immediately dismissed.
-  * Adds a new overloaded API `discardInAppNotifications(dismissInappIfVisible : Boolean)`
+*   **Complete Data Encryption:** You can now enable full encryption for all data stored by the SDK, enhancing security and privacy. For setup instructions, refer to the guide on [Data Encryption](EXAMPLES.md#encryption-of-data-stored-in-the-sdk).
+*   **Delayed In-App Notifications:** Schedule In-App notifications to appear after a specific delay for more flexible and context-aware user engagement.
+*   **Universal In-App Previews:** Preview all types of In-App notifications directly from the dashboard to ensure they look and behave as expected before launching a campaign.
+*   **Non-Disruptive Foreground Push Notifications:** Control how push notifications are displayed when your app is in the foreground. By adding the custom key-value pair `wzrk_sif: false` to your push payload, the notification will be delivered silently to the tray instead of appearing as a heads-up notification.
+*   **Enhanced In-App Dismissal Control:** The `discardInAppNotifications()` method has been updated with a new overloaded function: `discardInAppNotifications(dismissInAppIfVisible: Boolean)`. Calling this with `true` will immediately dismiss any currently visible In-App notification in addition to clearing the queue of pending messages.
+
 
 #### Bug Fixes
 * Fixes [#888](https://github.com/CleverTap/clevertap-android-sdk/issues/888) - a `StringIndexOutOfBoundsException` triggered by invalid colour values in the InApp payload.
