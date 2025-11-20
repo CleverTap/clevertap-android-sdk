@@ -1,3 +1,6 @@
+name: 'GitHub Release'
+description: 'Creates a GitHub release with artifacts'
+
 #step for calling ::
 #      - name: Relase to github
 #        uses: ./.github/mini_flows/s9_git_release
