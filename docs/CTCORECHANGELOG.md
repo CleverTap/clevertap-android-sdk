@@ -1,13 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
-### Version 7.7.0 (November 20, 2025)
+### Version 7.7.0 (November 21, 2025)
 
 #### New Features
-* Adds support for complete encryption of all data stored in the SDK. See [EXAMPLES.md](EXAMPLES.md#encryption-of-data-stored-in-the-sdk) for instructions on enabling complete encryption.
-* Adds support for delayed InApp notifications.
-* Adds support for previewing all types of InApps from the dashboard.
-* Adds an option to configure a push notification as non-disruptive when the app is in foreground using `wzrk_sif: true/false`
-* Extends `discardInAppNotifications()` to support an optional `dismissInAppIfVisible` parameter to control whether an active InApp notification should be immediately dismissed.
-  * Adds a new overloaded API `discardInAppNotifications(dismissInappIfVisible : Boolean)`
+*   **Complete Data Encryption:** Adds support for full encryption of all data stored by the SDK, enhancing security and privacy. For setup instructions, refer to the guide on [Data Encryption](EXAMPLES.md#encryption-of-data-stored-in-the-sdk).
+*   **Delayed In-App Notifications:** Adds support for configuring a delay (1-1200 seconds) before displaying In-App messages after a trigger event. This feature enhances user experience by showing campaigns at the specified moment—for example, displaying a discount code 5 seconds after a user views a product, or showing an upgrade offer 15 seconds after content consumption begins.
+*   **Universal In-App Previews:** Adds ability to preview all types of In-App notifications directly from the dashboard to ensure they look and behave as expected before launching a campaign.
+*   **Non-Disruptive Foreground Push Notifications:** Adds support to control how push notifications are displayed when the app is in the foreground. By adding the custom key-value pair `wzrk_sif: true` to the push payload, the notification will be delivered silently to the tray instead of appearing as a heads-up notification (non-intrusive to user).
+*   **Enhanced In-App Dismissal Control:** Updates the `discardInAppNotifications()` method with a new overloaded function: `discardInAppNotifications(dismissInAppIfVisible: Boolean)`. Calling this with `true` immediately dismisses any currently visible In-App notification in addition to clearing the queue of pending messages.
 
 #### Bug Fixes
 * Fixes [#888](https://github.com/CleverTap/clevertap-android-sdk/issues/888) - a `StringIndexOutOfBoundsException` triggered by invalid colour values in the InApp payload.
