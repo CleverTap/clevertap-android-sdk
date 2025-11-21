@@ -1,5 +1,5 @@
 ## CleverTap Android SDK CHANGE LOG
-### Version 7.7.0 (November 20, 2025)
+### Version 7.7.0 (November 21, 2025)
 
 #### New Features
 *   **Complete Data Encryption:** You can now enable full encryption for all data stored by the SDK, enhancing security and privacy. For setup instructions, refer to the guide on [Data Encryption](EXAMPLES.md#encryption-of-data-stored-in-the-sdk).
