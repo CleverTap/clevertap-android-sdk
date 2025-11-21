@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.cryption.EncryptionState.ENCRYPTED_AES
 import com.clevertap.android.sdk.cryption.EncryptionState.ENCRYPTED_AES_GCM
 import com.clevertap.android.sdk.cryption.EncryptionState.PLAIN_TEXT
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.getStringOrNull
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import org.json.JSONObject
@@ -139,7 +140,10 @@ internal data class CryptMigrator(
      * Updates all the rows in events table to correct encryption level.
      */
     private fun migrateEventsData() {
-        dataMigrationRepository.migrateEventsToCorrectLevel()
+        dbAdapter.run {
+            migrateEventsData(Table.EVENTS)
+            migrateEventsData(Table.PROFILE_EVENTS)
+        }
     }
 
     /**

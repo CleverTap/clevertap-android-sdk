@@ -7,10 +7,10 @@ import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
 import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBAdapter
-import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
+import androidx.core.content.edit
 
 interface IDataMigrationRepository {
     fun cachedGuidJsonObject(): JSONObject
@@ -72,11 +72,6 @@ internal class DataMigrationRepository(
         return dbAdapter.storeUserProfile(config.accountId, deviceID, profile)
     }
 
-    fun migrateEventsToCorrectLevel() {
-        dbAdapter.migrateEventsData(Table.EVENTS)
-        dbAdapter.migrateEventsData(Table.PROFILE_EVENTS)
-    }
-
     override fun inAppDataFiles(
         keysToMigrate: List<String>,
         migrate: (String) -> String?
@@ -92,7 +87,7 @@ internal class DataMigrationRepository(
             keysToMigrate.forEach { key ->
                 sp.getString(key, null)?.let { data ->
                     val encryptedData = migrate(data)
-                    sp.edit().putString(key, encryptedData).apply()
+                    sp.edit { putString(key, encryptedData) }
                 }
             }
         }
