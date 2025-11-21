@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.cryption.EncryptionState.ENCRYPTED_AES
 import com.clevertap.android.sdk.cryption.EncryptionState.ENCRYPTED_AES_GCM
 import com.clevertap.android.sdk.cryption.EncryptionState.PLAIN_TEXT
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.getStringOrNull
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import org.json.JSONObject
@@ -107,17 +108,15 @@ internal data class CryptMigrator(
         val inAppMigrationSuccess = migrateInAppData(level = level)
 
         if (EncryptionLevel.FULL_DATA == storedLevel || EncryptionLevel.FULL_DATA == level) {
-            migrateVariablesData(level = level, storedLevel = storedLevel)
-            migrateInboxData(level = level, storedLevel = storedLevel)
+            migrateVariablesData()
+            migrateInboxData()
+            migrateEventsData()
         }
 
         return cgkMigrationSuccess && dbMigrationSuccess && inAppMigrationSuccess
     }
 
-    private fun migrateVariablesData(
-        level: EncryptionLevel,
-        storedLevel: EncryptionLevel
-    ) : Boolean {
+    private fun migrateVariablesData() : Boolean {
         val variablesData = variablesRepo.loadDataFromCache()
         if (variablesData != null) {
             // Automatically internally saved to correct level and state
@@ -128,16 +127,23 @@ internal data class CryptMigrator(
         return true
     }
 
-    private fun migrateInboxData(
-        level: EncryptionLevel,
-        storedLevel: EncryptionLevel
-    ) : Boolean {
+    private fun migrateInboxData() : Boolean {
         for (id in dataMigrationRepository.userProfilesInAccount().map { it.key }) {
             val messages = dbAdapter.getMessages(id)
             // Save function will automatically save it in encrypted form.
             dbAdapter.upsertMessages(messages)
         }
         return true
+    }
+
+    /**
+     * Updates all the rows in events table to correct encryption level.
+     */
+    private fun migrateEventsData() {
+        dbAdapter.run {
+            migrateEventsData(Table.EVENTS)
+            migrateEventsData(Table.PROFILE_EVENTS)
+        }
     }
 
     /**

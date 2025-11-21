@@ -2,6 +2,8 @@ package com.clevertap.android.sdk.db
 
 import com.clevertap.android.sdk.BuildConfig
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.cryption.CryptHandler.Companion.isTextAESGCMEncrypted
+import com.clevertap.android.sdk.cryption.CryptHandler.Companion.isTextEncrypted
 import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import kotlin.system.measureTimeMillis
@@ -65,6 +67,16 @@ internal class DBEncryptionHandler(
             } else {
                 data
             }
+        }
+    }
+
+    /**
+     * Checks if the given data string can be successfully decrypted, indicating it's in the correct format.
+     */
+    fun isInCorrectEncryptionFormat(data: String) : Boolean {
+        return when (encryptionLevel) {
+            EncryptionLevel.NONE, EncryptionLevel.MEDIUM -> isTextEncrypted(data).not()
+            EncryptionLevel.FULL_DATA -> isTextAESGCMEncrypted(data)
         }
     }
 

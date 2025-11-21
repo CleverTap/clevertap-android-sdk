@@ -23,4 +23,7 @@ internal interface EventDAO {
     
     @WorkerThread
     fun removeAllEvents(table: Table)
+    
+    @WorkerThread
+    fun updateAllEvents(table: Table): Int
 }

@@ -47,10 +47,11 @@ internal class ArpRepo(
                 //checking whether new namespace is empty or not
                 //if not empty, using prefs of new namespace to send ARP
                 //if empty, checking for old prefs
+                val newPrefsFile = StorageHelper.getPreferences(context, nameSpaceKey)
                 val prefs =
-                    if (StorageHelper.getPreferences(context, nameSpaceKey).all.isNotEmpty()) {
+                    if (newPrefsFile.all.isNotEmpty()) {
                         //prefs point to new namespace
-                        StorageHelper.getPreferences(context, nameSpaceKey)
+                        newPrefsFile
                     } else {
                         //prefs point to new namespace migrated from old namespace
                         migrateARPToNewNameSpace(context, nameSpaceKey, namespaceARPKey)

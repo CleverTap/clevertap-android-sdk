@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
+import androidx.core.content.edit
 
 interface IDataMigrationRepository {
     fun cachedGuidJsonObject(): JSONObject
@@ -86,7 +87,7 @@ internal class DataMigrationRepository(
             keysToMigrate.forEach { key ->
                 sp.getString(key, null)?.let { data ->
                     val encryptedData = migrate(data)
-                    sp.edit().putString(key, encryptedData).apply()
+                    sp.edit { putString(key, encryptedData) }
                 }
             }
         }

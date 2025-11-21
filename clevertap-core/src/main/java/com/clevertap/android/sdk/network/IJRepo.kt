@@ -4,28 +4,32 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.StorageHelper
+import androidx.core.content.edit
 
 private const val NAMESPACE_IJ = "IJ"
 private const val KEY_I = "comms_i"
 private const val KEY_J = "comms_j"
 
-// TODO lp fix shared prefs stuff
 internal class IJRepo(private val config: CleverTapInstanceConfig) {
 
     @SuppressLint("CommitPrefEdits")
     fun setI(context: Context, i: Long) {
-        val prefs = StorageHelper.getPreferences(context, NAMESPACE_IJ)
-        val editor = prefs.edit()
-        editor.putLong("$KEY_I:${config.accountId}", i)
-        StorageHelper.persist(editor)
+        StorageHelper.putLong(
+            context = context,
+            namespace = NAMESPACE_IJ,
+            key = "$KEY_I:${config.accountId}",
+            value = i
+        )
     }
 
     @SuppressLint("CommitPrefEdits")
     fun setJ(context: Context, j: Long) {
-        val prefs = StorageHelper.getPreferences(context, NAMESPACE_IJ)
-        val editor = prefs.edit()
-        editor.putLong("$KEY_J:${config.accountId}", j)
-        StorageHelper.persist(editor)
+        StorageHelper.putLong(
+            context = context,
+            namespace = NAMESPACE_IJ,
+            key = "$KEY_J:${config.accountId}",
+            value = j
+        )
     }
 
     fun getI(context: Context): Long {
@@ -49,8 +53,6 @@ internal class IJRepo(private val config: CleverTapInstanceConfig) {
     }
 
     fun clearIJ(context: Context) {
-        val editor = StorageHelper.getPreferences(context, NAMESPACE_IJ).edit()
-        editor.clear()
-        StorageHelper.persist(editor)
+        StorageHelper.getPreferences(context, NAMESPACE_IJ).edit { clear() }
     }
 }
