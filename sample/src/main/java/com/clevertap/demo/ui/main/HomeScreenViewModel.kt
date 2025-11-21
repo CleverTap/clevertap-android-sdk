@@ -833,6 +833,7 @@ class HomeScreenViewModel(
             0 -> suspendInAppNotifications()
             1 -> discardInAppNotifications()
             2 -> resumeInAppNotifications()
+            3 -> discardInAppNotifications(true)
         }
     }
 
@@ -841,9 +842,13 @@ class HomeScreenViewModel(
         cleverTapAPI?.suspendInAppNotifications()
     }
 
-    private fun discardInAppNotifications() {
+    private fun discardInAppNotifications(override: Boolean? = null) {
         logStep("IN-APP", "Discarding in-app notifications")
-        cleverTapAPI?.discardInAppNotifications()
+        if (override != null) {
+            cleverTapAPI?.discardInAppNotifications(override)
+        } else {
+            cleverTapAPI?.discardInAppNotifications()
+        }
     }
 
     private fun resumeInAppNotifications() {
