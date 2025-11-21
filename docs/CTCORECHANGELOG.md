@@ -5,7 +5,7 @@
 *   **Complete Data Encryption:** You can now enable full encryption for all data stored by the SDK, enhancing security and privacy. For setup instructions, refer to the guide on [Data Encryption](EXAMPLES.md#encryption-of-data-stored-in-the-sdk).
 *   **Delayed In-App Notifications:** Schedule In-App notifications to appear after a specific delay for more flexible and context-aware user engagement.
 *   **Universal In-App Previews:** Preview all types of In-App notifications directly from the dashboard to ensure they look and behave as expected before launching a campaign.
-*   **Non-Disruptive Foreground Push Notifications:** Control how push notifications are displayed when your app is in the foreground. By adding the custom key-value pair `wzrk_sif: false` to your push payload, the notification will be delivered silently to the tray instead of appearing as a heads-up notification.
+*   **Non-Disruptive Foreground Push Notifications:** Control how push notifications are displayed when your app is in the foreground. By adding the custom key-value pair `wzrk_sif: true` to your push payload, the notification will be delivered silently to the tray instead of appearing as a heads-up notification.
 *   **Enhanced In-App Dismissal Control:** The `discardInAppNotifications()` method has been updated with a new overloaded function: `discardInAppNotifications(dismissInAppIfVisible: Boolean)`. Calling this with `true` will immediately dismiss any currently visible In-App notification in addition to clearing the queue of pending messages.
 
 
