@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
+import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.network.NetworkManager
@@ -47,6 +48,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class InAppControllerTest {
 
+    private lateinit var mockInAppDelayManager: InAppDelayManager
     private lateinit var mockControllerManager: ControllerManager
     private lateinit var mockInAppFCManager: InAppFCManager
     private lateinit var mockCallbackManager: CallbackManager
@@ -119,6 +121,8 @@ class InAppControllerTest {
                 CTInAppNotification(args[0] as JSONObject, true)
             )
         }
+
+        mockInAppDelayManager = mockk<InAppDelayManager>()
         fakeInAppQueue = FakeInAppQueue()
     }
 
@@ -397,7 +401,7 @@ class InAppControllerTest {
     @Test
     fun `discardInApps should drop all in apps until resumeInApps is called`() {
         val inAppController = createInAppController()
-        inAppController.discardInApps()
+        inAppController.discardInApps(false)
 
         // TODO verify when multiple inApps are added to the queue only the first is discarded
 //        val inApps =
@@ -411,10 +415,54 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `discardInApps should not hideInApp when nothing is displayed`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+
+        inAppController.discardInApps(true)
+
+        verify(exactly = 0) { mockDisplayListener.hideInApp() }
+
+        inAppController.unregisterInAppDisplayListener()
+    }
+
+    @Test
+    fun `discardInApps should hideInApp when inapp is displayed`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+        val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
+        inAppController.addInAppNotificationsToQueue(inApps)
+
+        inAppController.discardInApps(true)
+
+        verify { mockDisplayListener.hideInApp() }
+    }
+
+    @Test
+    fun `discardInApps should not hideInApp when inapp is displayed and listener is not set`() {
+        val mockDisplayListener =  mockk<InAppDisplayListener>(relaxed = true)
+        val inAppController = createInAppController()
+        inAppController.registerInAppDisplayListener(mockDisplayListener)
+        val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
+        inAppController.addInAppNotificationsToQueue(inApps)
+        inAppController.unregisterInAppDisplayListener()
+
+        inAppController.discardInApps(true)
+
+        verify(exactly = 0) { mockDisplayListener.hideInApp() }
+    }
+
+    @Test
     fun `onQueueEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns inApps
+        val delayedInApps = JSONArray()
+        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns Pair(
+            inApps,
+            delayedInApps
+        )
 
         val inAppController = createInAppController()
         inAppController.onQueueEvent("event", emptyMap<String, Any>(), mockk())
@@ -429,7 +477,11 @@ class InAppControllerTest {
     fun `onQueueChargedEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns inApps
+        val delayedInApps = JSONArray()
+        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns Pair(
+            inApps,
+            delayedInApps
+        )
 
         val inAppController = createInAppController()
         inAppController.onQueueChargedEvent(
@@ -448,13 +500,14 @@ class InAppControllerTest {
     fun `onQueueProfileEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
+        val delayedInApps = JSONArray()
         every {
             mockEvaluationManager.evaluateOnUserAttributeChange(
                 any(),
                 any(),
                 any()
             )
-        } returns inApps
+        } returns Pair(inApps, delayedInApps)
 
         val inAppController = createInAppController()
         inAppController.onQueueProfileEvent(
@@ -749,6 +802,7 @@ class InAppControllerTest {
             templatesManager = mockTemplatesManager,
             inAppActionHandler = mockInAppActionHandler,
             inAppNotificationInflater = mockInAppInflater,
+            inAppDelayManager = mockInAppDelayManager,
             clock = fakeClock
         )
     }

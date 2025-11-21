@@ -285,6 +285,259 @@ class CTXtensionsTest : BaseTestCase() {
         }
     }
 
+    // Tests for hideHeadsUp = true
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_low_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_LOW, true, 30, "LowImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("LowImportanceChannel", application, hideHeadsUp = true)
+        assertEquals("LowImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_high_importance_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_HIGH, true, 30, "HighImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("HighImportanceChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_default_importance_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_DEFAULT, true, 30, "DefaultImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DefaultImportanceChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_max_importance_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_MAX, true, 30, "MaxImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("MaxImportanceChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_has_low_importance_then_return_manifestChannel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestLowImportanceChannel"
+
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_LOW, true, 30,
+                "ManifestLowImportanceChannel", "ManifestLowImportanceChannel"
+            )
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals("ManifestLowImportanceChannel", actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_has_high_importance_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestHighImportanceChannel"
+
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_HIGH, true, 30,
+                "ManifestHighImportanceChannel", "ManifestHighImportanceChannel"
+            )
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_null_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_not_registered_and_manifestChannel_null_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_not_registered_and_manifestChannel_not_registered_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "NonRegisteredManifestChannel"
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_low_importance_fallback_channel_already_exists_then_return_it() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            // Create the low importance fallback channel first
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_LOW, true, 30,
+                channelID = Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW
+            )
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    // Tests for hideHeadsUp = false (default behavior)
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_high_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_HIGH, true, 30, "HighImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("HighImportanceChannel", application, hideHeadsUp = false)
+        assertEquals("HighImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_low_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_LOW, true, 30, "LowImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("LowImportanceChannel", application, hideHeadsUp = false)
+        assertEquals("LowImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_default_importance_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_DEFAULT, true, 30, "DefaultImportanceChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DefaultImportanceChannel", application, hideHeadsUp = false)
+        assertEquals("DefaultImportanceChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_null_and_manifestChannel_registered_then_return_manifestChannel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestChannelId"
+
+            configureTestNotificationChannel(
+                NotificationManager.IMPORTANCE_DEFAULT, true, 30,
+                "ManifestChannelId", "ManifestChannelName"
+            )
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = false)
+            assertEquals("ManifestChannelId", actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_null_and_manifestChannel_null_then_return_default_fallback_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = false)
+            assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_not_registered_then_return_default_fallback_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel("NonExistentChannel", application, hideHeadsUp = false)
+            assertEquals(Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_ID, actual)
+        }
+    }
+
+    // Edge case tests
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_empty_string_then_return_fallback_low_importance_channel() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns null
+
+            val actual = nm.getOrCreateChannel("", application, hideHeadsUp = true)
+            assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+        }
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_has_importance_none_then_return_fallback_low_importance_channel() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_NONE, true, 30, "DisabledChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DisabledChannel", application, hideHeadsUp = true)
+        assertEquals(Constants.CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW, actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_has_importance_none_then_return_its_channelID() {
+        configureTestNotificationChannel(NotificationManager.IMPORTANCE_NONE, true, 30, "DisabledChannel")
+        val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val actual = nm.getOrCreateChannel("DisabledChannel", application, hideHeadsUp = false)
+        assertEquals("DisabledChannel", actual)
+    }
+
+    @Test
+    fun test_getOrCreateChannel_when_hideHeadsUp_true_and_getNotificationChannel_throws_exception_return_null() {
+        mockkStatic(ManifestInfo::class) {
+            val nm = mockk<NotificationManager>(relaxed = true)
+            val manifestInfo = mockk<ManifestInfo>()
+
+            every { ManifestInfo.getInstance(application) } returns manifestInfo
+            every { manifestInfo.devDefaultPushChannelId } returns "ManifestChannelId"
+
+            // Throw an exception from the `getNotificationChannel()` method
+            every { nm.getNotificationChannel("ManifestChannelId") } throws RuntimeException()
+
+            val actual = nm.getOrCreateChannel(null, application, hideHeadsUp = true)
+            assertEquals(null, actual)
+        }
+    }
+
     @Test
     fun `test isInvalidIndex with null JSONArray`() {
         val jsonArray: JSONArray? = null
@@ -1047,6 +1300,369 @@ class CTXtensionsTest : BaseTestCase() {
 
         // Assert
         assertFalse(result)
+    }
+
+    @Test
+    fun `partition should return two empty arrays when source array is empty`() {
+        // Arrange
+        val emptyArray = JSONArray()
+
+        // Act
+        val (first, second) = emptyArray.partition<JSONObject> { true }
+
+        // Assert
+        assertEquals(0, first.length())
+        assertEquals(0, second.length())
+    }
+
+    @Test
+    fun `partition should put all elements in first array when predicate is always true`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("id", 1))
+            put(JSONObject().put("id", 2))
+            put(JSONObject().put("id", 3))
+        }
+
+        // Act
+        val (first, second) = jsonArray.partition<JSONObject> { true }
+
+        // Assert
+        assertEquals(3, first.length())
+        assertEquals(0, second.length())
+    }
+
+    @Test
+    fun `partition should put all elements in second array when predicate is always false`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("id", 1))
+            put(JSONObject().put("id", 2))
+            put(JSONObject().put("id", 3))
+        }
+
+        // Act
+        val (first, second) = jsonArray.partition<JSONObject> { false }
+
+        // Assert
+        assertEquals(0, first.length())
+        assertEquals(3, second.length())
+    }
+
+    @Test
+    fun `partition should correctly split array based on predicate`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("value", 10))
+            put(JSONObject().put("value", 25))
+            put(JSONObject().put("value", 5))
+            put(JSONObject().put("value", 30))
+            put(JSONObject().put("value", 15))
+        }
+
+        // Act - partition based on value > 15
+        val (first, second) = jsonArray.partition<JSONObject> {
+            it.getInt("value") > 15
+        }
+
+        // Assert
+        assertEquals(2, first.length())
+        assertEquals(3, second.length())
+
+        // Verify first array contains values > 15
+        assertEquals(25, (first.get(0) as JSONObject).getInt("value"))
+        assertEquals(30, (first.get(1) as JSONObject).getInt("value"))
+
+        // Verify second array contains values <= 15
+        assertEquals(10, (second.get(0) as JSONObject).getInt("value"))
+        assertEquals(5, (second.get(1) as JSONObject).getInt("value"))
+        assertEquals(15, (second.get(2) as JSONObject).getInt("value"))
+    }
+
+    @Test
+    fun `partition should handle mixed types and only process matching type`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("type", "A"))
+            put("string_value") // Different type
+            put(JSONObject().put("type", "B"))
+            put(123) // Different type
+            put(JSONObject().put("type", "A"))
+        }
+
+        // Act - partition JSONObjects by type == "A"
+        val (first, second) = jsonArray.partition<JSONObject> {
+            it.getString("type") == "A"
+        }
+
+        // Assert - only JSONObjects should be processed
+        assertEquals(2, first.length())
+        assertEquals(1, second.length())
+    }
+
+    @Test
+    fun `partition should work with delayAfterTrigger field for InApp use case`() {
+        // Arrange - simulating InApp notifications with delay field
+        val inApps = JSONArray().apply {
+            put(JSONObject().apply {
+                put("ti", 1001)
+                put("delayAfterTrigger", 0) // immediate
+            })
+            put(JSONObject().apply {
+                put("ti", 1002)
+                put("delayAfterTrigger", 5) // delayed
+            })
+            put(JSONObject().apply {
+                put("ti", 1003)
+                // no delayAfterTrigger field - treat as immediate
+            })
+            put(JSONObject().apply {
+                put("ti", 1004)
+                put("delayAfterTrigger", 10) // delayed
+            })
+        }
+
+        // Act - partition based on delay (immediate vs delayed)
+        val (immediate, delayed) = inApps.partition<JSONObject> { inApp ->
+            val delay = inApp.optInt("delayAfterTrigger", 0)
+            delay == 0 || delay < 1 || delay > 1000
+        }
+
+        // Assert
+        assertEquals(2, immediate.length())
+        assertEquals(2, delayed.length())
+
+        // Verify immediate array
+        assertEquals(1001, (immediate.get(0) as JSONObject).getInt("ti"))
+        assertEquals(1003, (immediate.get(1) as JSONObject).getInt("ti"))
+
+        // Verify delayed array
+        assertEquals(1002, (delayed.get(0) as JSONObject).getInt("ti"))
+        assertEquals(1004, (delayed.get(1) as JSONObject).getInt("ti"))
+    }
+
+    @Test
+    fun `partition should handle invalid delay values correctly`() {
+        // Arrange - simulating InApp notifications with various delay values
+        val inApps = JSONArray().apply {
+            put(JSONObject().apply {
+                put("ti", 1001)
+                put("delayAfterTrigger", -5) // invalid - negative
+            })
+            put(JSONObject().apply {
+                put("ti", 1002)
+                put("delayAfterTrigger", 1500) // invalid - exceeds 1000
+            })
+            put(JSONObject().apply {
+                put("ti", 1003)
+                put("delayAfterTrigger", 500) // valid
+            })
+            put(JSONObject().apply {
+                put("ti", 1004)
+                put("delayAfterTrigger", 1) // valid - minimum
+            })
+            put(JSONObject().apply {
+                put("ti", 1005)
+                put("delayAfterTrigger", 1000) // valid - maximum
+            })
+        }
+
+        // Act - partition based on valid delay range (1-1000)
+        val (immediate, delayed) = inApps.partition<JSONObject> { inApp ->
+            val delay = inApp.optInt("delayAfterTrigger", 0)
+            delay < 1 || delay > 1000
+        }
+
+        // Assert
+        assertEquals(2, immediate.length()) // invalid delays treated as immediate
+        assertEquals(3, delayed.length()) // valid delays
+
+        // Verify immediate array contains invalid delays
+        assertEquals(1001, (immediate.get(0) as JSONObject).getInt("ti"))
+        assertEquals(1002, (immediate.get(1) as JSONObject).getInt("ti"))
+    }
+
+    @Test
+    fun `partition should maintain order of elements in both arrays`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("id", 1).put("even", false))
+            put(JSONObject().put("id", 2).put("even", true))
+            put(JSONObject().put("id", 3).put("even", false))
+            put(JSONObject().put("id", 4).put("even", true))
+            put(JSONObject().put("id", 5).put("even", false))
+            put(JSONObject().put("id", 6).put("even", true))
+        }
+
+        // Act - partition by even property
+        val (evenNumbers, oddNumbers) = jsonArray.partition<JSONObject> {
+            it.getBoolean("even")
+        }
+
+        // Assert - verify order is maintained
+        assertEquals(3, evenNumbers.length())
+        assertEquals(2, (evenNumbers.get(0) as JSONObject).getInt("id"))
+        assertEquals(4, (evenNumbers.get(1) as JSONObject).getInt("id"))
+        assertEquals(6, (evenNumbers.get(2) as JSONObject).getInt("id"))
+
+        assertEquals(3, oddNumbers.length())
+        assertEquals(1, (oddNumbers.get(0) as JSONObject).getInt("id"))
+        assertEquals(3, (oddNumbers.get(1) as JSONObject).getInt("id"))
+        assertEquals(5, (oddNumbers.get(2) as JSONObject).getInt("id"))
+    }
+
+    @Test
+    fun `partition should handle array with single element matching predicate`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("match", true))
+        }
+
+        // Act
+        val (first, second) = jsonArray.partition<JSONObject> {
+            it.getBoolean("match")
+        }
+
+        // Assert
+        assertEquals(1, first.length())
+        assertEquals(0, second.length())
+    }
+
+    @Test
+    fun `partition should handle array with single element not matching predicate`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("match", false))
+        }
+
+        // Act
+        val (first, second) = jsonArray.partition<JSONObject> {
+            it.getBoolean("match")
+        }
+
+        // Assert
+        assertEquals(0, first.length())
+        assertEquals(1, second.length())
+    }
+
+    @Test
+    fun `partition should work with String type elements`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put("apple")
+            put("banana")
+            put("apricot")
+            put("blueberry")
+            put("avocado")
+        }
+
+        // Act - partition strings starting with 'a'
+        val (startsWithA, others) = jsonArray.partition<String> {
+            it.startsWith("a", ignoreCase = true)
+        }
+
+        // Assert
+        assertEquals(3, startsWithA.length())
+        assertEquals(2, others.length())
+        assertEquals("apple", startsWithA.get(0))
+        assertEquals("apricot", startsWithA.get(1))
+        assertEquals("avocado", startsWithA.get(2))
+    }
+
+    @Test
+    fun `partition should work with Integer type elements`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(1)
+            put(2)
+            put(3)
+            put(4)
+            put(5)
+            put(6)
+        }
+
+        // Act - partition even numbers
+        val (even, odd) = jsonArray.partition<Int> { it % 2 == 0 }
+
+        // Assert
+        assertEquals(3, even.length())
+        assertEquals(3, odd.length())
+        assertEquals(2, even.get(0))
+        assertEquals(4, even.get(1))
+        assertEquals(6, even.get(2))
+    }
+
+    @Test
+    fun `partition should handle complex predicate with multiple conditions`() {
+        // Arrange - simulating InApp notifications
+        val inApps = JSONArray().apply {
+            put(JSONObject().apply {
+                put("ti", 1001)
+                put("priority", 1)
+                put("delayAfterTrigger", 5)
+            })
+            put(JSONObject().apply {
+                put("ti", 1002)
+                put("priority", 2)
+                put("delayAfterTrigger", 0)
+            })
+            put(JSONObject().apply {
+                put("ti", 1003)
+                put("priority", 1)
+                put("delayAfterTrigger", 10)
+            })
+        }
+
+        // Act - partition high priority (priority >= 2) OR immediate (delay == 0)
+        val (highPriorityOrImmediate, others) = inApps.partition<JSONObject> { inApp ->
+            val priority = inApp.getInt("priority")
+            val delay = inApp.getInt("delayAfterTrigger")
+            priority >= 2 || delay == 0
+        }
+
+        // Assert
+        assertEquals(1, highPriorityOrImmediate.length())
+        assertEquals(2, others.length())
+        assertEquals(1002, (highPriorityOrImmediate.get(0) as JSONObject).getInt("ti"))
+    }
+
+    @Test
+    fun `partition should not modify original array`() {
+        // Arrange
+        val originalArray = JSONArray().apply {
+            put(JSONObject().put("id", 1))
+            put(JSONObject().put("id", 2))
+            put(JSONObject().put("id", 3))
+        }
+        val originalLength = originalArray.length()
+
+        // Act
+        val (first, second) = originalArray.partition<JSONObject> {
+            it.getInt("id") > 1
+        }
+
+        // Assert - original array unchanged
+        assertEquals(originalLength, originalArray.length())
+        assertEquals(3, originalArray.length())
+    }
+
+    @Test
+    fun `partition should handle null values in predicate gracefully`() {
+        // Arrange
+        val jsonArray = JSONArray().apply {
+            put(JSONObject().put("name", "test"))
+            put(JSONObject()) // no "name" field
+            put(JSONObject().put("name", "example"))
+        }
+
+        // Act - using optString to handle missing fields
+        val (hasName, noName) = jsonArray.partition<JSONObject> {
+            it.optString("name", "").isNotEmpty()
+        }
+
+        // Assert
+        assertEquals(2, hasName.length())
+        assertEquals(1, noName.length())
     }
 
     private fun configureTestNotificationChannel(

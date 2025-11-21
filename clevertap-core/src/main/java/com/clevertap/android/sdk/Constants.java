@@ -25,7 +25,9 @@ public interface Constants {
     String TYPE_PHONE = "Phone";
 
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
+    String CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW = "ct_fallback_notification_channel_low_importance";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Misc";
+    String LOW_IMPORTANCE_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Silent Misc";
     String CLEVERTAP_OPTOUT = "ct_optout";
     String CLEVERTAP_ALLOW_SYSTEM_EVENTS = "ct_allow_sys_events_and_communication";
     String CLEVERTAP_STORAGE_TAG = "WizRocket";
@@ -56,6 +58,7 @@ public interface Constants {
     String WZRK_URL_SCHEMA = "wzrk://";
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
+    String INAPP_PREVIEW_S3_URL_KEY = "wzrk_inapp_s3_url";
     String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";
     String INAPP_ADVANCED_BUILDER_TYPE = "advanced-builder";
     String INAPP_IMAGE_INTERSTITIAL_CONFIG = "imageInterstitialConfig";
@@ -150,7 +153,7 @@ public interface Constants {
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
             NOTIFICATION_VIEWED_EVENT_NAME, GEOFENCE_ENTERED_EVENT_NAME,
             GEOFENCE_EXITED_EVENT_NAME};
-    long DEFAULT_PUSH_TTL = 1000L * 60 * 60 * 24 * 4;// 4 days
+    long DEFAULT_PUSH_TTL_SECONDS = 60 * 60 * 24 * 4;// 4 days
     long ONE_MIN_IN_MILLIS = 60 * 1000L;
     long ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000L;
     String COPY_TYPE = "copy";
@@ -219,6 +222,7 @@ public interface Constants {
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_DISMISS = "wzrk_dismiss";
     String WZRK_STICKY = "wzrk_sticky";
+    String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";
     String WZRK_SOUND = "wzrk_sound";
     String WZRK_TIME_TO_LIVE = "wzrk_ttl";
     String WZRK_TIME_TO_LIVE_OFFSET = "wzrk_ttl_offset";
@@ -251,6 +255,7 @@ public interface Constants {
     String BLUE = "#0000FF";
     String GREEN = "#00FF00";
     String LIGHT_BLUE = "#818ce5";
+    String FALLBACK_COLOR = "#FFFFFF";
     /**
      * Profile command constants.
      */

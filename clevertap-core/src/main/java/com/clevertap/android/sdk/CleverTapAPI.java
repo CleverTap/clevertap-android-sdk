@@ -29,7 +29,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import com.clevertap.android.sdk.cryption.CryptHandler;
+import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -1267,7 +1267,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.v("Unable to save config to SharedPrefs, config Json is null");
                 return null;
             }
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(getConfig(), "instance"), configJson);
+            StorageHelper.putString(context, getConfig().getAccountId(), "instance", configJson);
             return null;
         });
         task = coreState.getExecutors().postAsyncSafelyTask();
@@ -1374,11 +1374,25 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @noinspection unused
      */
     public void discardInAppNotifications() {
+        discardInAppNotifications(false);
+    }
+
+    /**
+     * Suspends the display of InApp Notifications and discards any new InApp Notifications to be shown
+     * after this method is called.
+     * <p>
+     * The InApp Notifications will be displayed only once resumeInAppNotifications() is called.
+     *
+     * @param dismissInAppIfVisible if true, dismisses the currently visible InApp (if any) immediately;
+     *                              if false, allows the currently visible InApp to remain displayed
+     * @noinspection unused
+     */
+    public void discardInAppNotifications(boolean dismissInAppIfVisible) {
         if (!coreState.getConfig().isAnalyticsOnly()) {
             getConfigLogger().debug(getAccountId(), "Discarding InApp Notifications...");
             getConfigLogger().debug(getAccountId(),
                     "Please Note - InApp Notifications will be dropped till resumeInAppNotifications() is not called again");
-            coreState.getInAppController().discardInApps();
+            coreState.getInAppController().discardInApps(dismissInAppIfVisible);
         } else {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot discard InApp Notifications.");
@@ -3012,7 +3026,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         StoreRegistry storeRegistry = coreState.getStoreRegistry();
-        CryptHandler cryptHandler = coreState.getCryptHandler();
+        ICryptHandler cryptHandler = coreState.getCryptHandler();
         StoreProvider storeProvider = StoreProvider.getInstance();
         EvaluationManager evaluationManager = coreState.getEvaluationManager();
 

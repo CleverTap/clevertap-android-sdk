@@ -8,10 +8,11 @@ object HomeScreenModel {
                 "Record Event",
                 "Record event with properties",
                 "Record Charged Event",
-                "Record Screen Event"
+                "Record Screen Event",
+                "Fire Inbox events"
             ),
             "USER PROFILE" to listOf(
-                "Push profile", "Update(Replace) Single-Value properties",
+                "Push profile", "Push rich profile data", "Update(Replace) Single-Value properties",
                 "Update(Add) Single-Value properties", "Update(Remove) Single-Value properties",
                 "Update(Replace) Multi-Value property", "Update(Add) Multi-Value property",
                 "Update(Remove) Multi-Value property", "Update(Add) Increment Value",
@@ -87,7 +88,7 @@ object HomeScreenModel {
                 "Hard permission dialog with fallbackToSettings - false",
                 "Hard permission dialog with fallbackToSettings - true"
             ),
-            "INAPP" to listOf("Suspend", "Discard", "Resume"),
+            "INAPP Control" to listOf("Suspend", "Discard", "Resume", "Discard and Dismiss"),
             "CS INAPP" to listOf("Fetch CS InApps", "Clear all CS InApp Resources", "Clear expired only InAPP Resources"),
             "VARIABLES" to listOf(
                 "Define Variable",
@@ -100,7 +101,8 @@ object HomeScreenModel {
                 "Add Variables Changed Callback",
                 "Remove Variables Changed Callback",
                 "Add One Time Variables Changed Callback",
-                "Remove One Time Variables Changed Callback"
+                "Remove One Time Variables Changed Callback",
+                "Define Multiple vars, fetch and print"
             ),
             "FILE TYPE VARIABLES" to listOf(
                 "Define file Variables listeners \n adds file variables with fileReady() listeners",

@@ -1,784 +1,224 @@
 package com.clevertap.android.sdk.db
 
-import android.content.ContentValues
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteException
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
-import com.clevertap.android.sdk.db.Table.PUSH_NOTIFICATIONS
-import com.clevertap.android.sdk.db.Table.UNINSTALL_TS
-import com.clevertap.android.sdk.db.Table.USER_EVENT_LOGS_TABLE
-import com.clevertap.android.sdk.db.Table.USER_PROFILES
+import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.db.dao.*
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
-import org.json.JSONArray
-import org.json.JSONException
+import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONObject
 
-//TODO: Introduce Clock or a time provider instead of depending on the static currentTimeMillis()
-internal class DBAdapter(context: Context, config: CleverTapInstanceConfig) {
+/**
+ * Refactored DBAdapter following Single Responsibility Principle
+ * Each table now has its own dedicated DAO for better maintainability
+ */
+internal class DBAdapter constructor(
+    context: Context,
+    databaseName: String,
+    private val accountId: String,
+    private val logger: ILogger,
+    private val dbEncryptionHandler: DBEncryptionHandler,
+    private val clock: Clock = Clock.SYSTEM
+) {
 
     companion object {
-
-        private const val DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5
-
-        //Notification Inbox Messages Table fields
-
         internal const val DB_UPDATE_ERROR = -1L
-
         internal const val DB_OUT_OF_MEMORY_ERROR = -2L
-
-        @Suppress("unused")
-        private const val DB_UNDEFINED_CODE = -3L
-
-        private const val DATABASE_NAME = "clevertap"
-
         internal const val NOT_ENOUGH_SPACE_LOG =
             "There is not enough space left on the device to store data, data discarded"
+        private const val DATABASE_NAME = "clevertap"
+
+        fun getDatabaseName(config: CleverTapInstanceConfig): String {
+            return if (config.isDefaultInstance) DATABASE_NAME else DATABASE_NAME + "_" + config.accountId
+        }
     }
+
+    private val dbHelper: DatabaseHelper = DatabaseHelper(
+        context = context,
+        accountId = accountId,
+        dbName = databaseName,
+        logger = logger
+    )
+
+    // DAO instances - lazy initialization for better performance
+    private val eventDAO: EventDAO by lazy { EventDAOImpl(dbHelper, logger, dbEncryptionHandler, clock) }
+    private val inboxMessageDAO: InboxMessageDAO by lazy { InboxMessageDAOImpl(dbHelper, logger, dbEncryptionHandler) }
+    private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger, dbEncryptionHandler) }
+    private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
+    private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
 
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
-    private val logger = config.logger
+    @Volatile
+    private var delayedLegacyInAppDao: DelayedLegacyInAppDAO? = null
 
-    private val dbHelper: DatabaseHelper = DatabaseHelper(context, config, getDatabaseName(config), logger)
+    // =====================================================
+    // EVENT-RELATED OPERATIONS
+    // =====================================================
 
-    private var rtlDirtyFlag = true
+    @WorkerThread
+    @Synchronized
+    fun storeObject(obj: JSONObject, table: Table): Long = eventDAO.storeEvent(obj, table)
 
-    /**
-     * Deletes the inbox message for given messageId
-     *
-     * @param messageId String messageId
-     * @return boolean value based on success of operation
-     */
+    @WorkerThread
+    @Synchronized
+    fun fetchEvents(table: Table, limit: Int): QueueData = eventDAO.fetchEvents(table, limit)
+
+    @WorkerThread
+    @Synchronized
+    fun fetchCombinedEvents(batchSize: Int): QueueData = eventDAO.fetchCombinedEvents(batchSize)
+
+    @WorkerThread
+    @Synchronized
+    fun cleanupEventsFromLastId(lastId: String, table: Table) = eventDAO.cleanupEventsFromLastId(lastId, table)
+
+    @Synchronized
+    fun cleanupStaleEvents(table: Table) = eventDAO.cleanupStaleEvents(table)
+
+    @Synchronized
+    fun removeEvents(table: Table) = eventDAO.removeAllEvents(table)
+
+    fun migrateEventsData(table: Table) = eventDAO.updateAllEvents(table)
+
+    // =====================================================
+    // INBOX MESSAGE OPERATIONS
+    // =====================================================
+
+    @WorkerThread
+    @Synchronized
+    fun getMessages(userId: String): ArrayList<CTMessageDAO> = inboxMessageDAO.getMessages(userId)
+
+    @WorkerThread
+    @Synchronized
+    fun upsertMessages(inboxMessages: List<CTMessageDAO>) = inboxMessageDAO.upsertMessages(inboxMessages)
+
     @WorkerThread
     @Synchronized
     fun deleteMessageForId(messageId: String?, userId: String?): Boolean {
-        if (messageId == null || userId == null) {
-            return false
-        }
-        val tName = INBOX_MESSAGES.tableName
-        return try {
-            dbHelper.writableDatabase.delete(
-                tName, Column.ID + " = ? AND " + Column.USER_ID + " = ?", arrayOf(messageId, userId)
-            )
-            true
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing stale records from $tName", e)
-            false
-        }
+        return if (messageId != null && userId != null) {
+            inboxMessageDAO.deleteMessage(messageId, userId)
+        } else false
     }
 
-    /**
-     * Deletes multiple inbox messages for given list of messageIDs
-     *
-     * @param messageIDs ArrayList of type String
-     * @param userId     String userId
-     * @return boolean value depending on success of operation
-     */
     @WorkerThread
     @Synchronized
     fun deleteMessagesForIDs(messageIDs: List<String?>?, userId: String?): Boolean {
-        if (messageIDs == null || userId == null) {
-            return false
-        }
-        val tName = INBOX_MESSAGES.tableName
-        val idsTemplateGroup = getTemplateMarkersList(messageIDs.size)
-        val whereArgs = messageIDs.toMutableList()
-        //Append userID as last element of arguments
-        whereArgs.add(userId)
-
-        return try {
-            dbHelper.writableDatabase.delete(
-                tName, "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?", whereArgs.toTypedArray()
-            )
-
-            true
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing stale records from $tName", e)
-            false
-        }
+        return if (messageIDs != null && userId != null) {
+            val validIds = messageIDs.filterNotNull()
+            if (validIds.isNotEmpty()) {
+                inboxMessageDAO.deleteMessages(validIds, userId)
+            } else false
+        } else false
     }
 
-    @Synchronized
-    fun doesPushNotificationIdExist(id: String): Boolean {
-        return id == fetchPushNotificationId(id)
-    }
-
-    @Synchronized
-    fun fetchPushNotificationIds(): Array<String?> {
-        if (!rtlDirtyFlag) {
-            return emptyArray()
-        }
-        val tName = PUSH_NOTIFICATIONS.tableName
-        val pushIds: MutableList<String?> = ArrayList()
-
-        try {
-            dbHelper.readableDatabase.query(tName, null, "${Column.IS_READ} = 0", null, null, null, null)
-                ?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val dataIndex = cursor.getColumnIndex(Column.DATA)
-                        if (dataIndex >= 0) {
-                            val data = cursor.getString(dataIndex)
-                            logger.verbose("Fetching PID - $data")
-                            pushIds.add(data)
-                        }
-                    }
-                }
-        } catch (e: SQLiteException) {
-            logger.verbose("Could not fetch records out of database $tName.", e)
-        }
-        return pushIds.toTypedArray<String?>()
-    }
-
-    /**
-     * Retrieves all user profiles based on the accountId.
-     * Returns an emptyMap if no corresponding profile is found
-     *
-     * @param accountId String userId
-     * @return Map representing the fetched profile, keys of this map will be the deviceIDs and the values will be the corresponding profiles
-     */
-    @Synchronized
-    fun fetchUserProfilesByAccountId(accountId: String?): Map<String,JSONObject> {
-        if (accountId == null) {
-            return emptyMap()
-        }
-
-        val profiles = mutableMapOf<String, JSONObject>()
-        val tName = USER_PROFILES.tableName
-
-        try {
-            dbHelper.readableDatabase.query(tName, null, "${Column.ID} = ?", arrayOf(accountId), null, null, null)
-                ?.use { cursor ->
-                    val dataIndex = cursor.getColumnIndex(Column.DATA)
-                    val deviceId = cursor.getColumnIndex(Column.DEVICE_ID)
-                    if (dataIndex >= 0) {
-                        while (cursor.moveToNext()) {
-                            val profileString = cursor.getString(dataIndex)
-                            val deviceIdString = cursor.getString(deviceId)
-                            profileString?.let {
-                                try {
-                                    val jsonObject = JSONObject(it)
-                                    profiles.put(deviceIdString, jsonObject)
-                                } catch (e: JSONException) {
-                                    logger.verbose("Error parsing JSON for profile", e)
-                                }
-                            }
-                        }
-                    }
-                }
-        } catch (e: SQLiteException) {
-            logger.verbose("Could not fetch records out of database $tName.", e)
-        }
-
-        return profiles
-    }
-
-    /**
-     * Retrieves a user profile based on the accountId and deviceId
-     * Returns null if no profile is found
-     *
-     * @param accountId String userId
-     * @param deviceId String deviceId
-     * @return JSONObject representing the fetched profile
-     */
-    @Synchronized
-    fun fetchUserProfileByAccountIdAndDeviceID(accountId: String?, deviceId: String?): JSONObject? {
-        if (accountId == null || deviceId == null) {
-            return null
-        }
-        val tName = USER_PROFILES.tableName
-        var profileString: String? = null
-        try {
-            dbHelper.readableDatabase.query(
-                tName,
-                null,
-                "${Column.ID} = ? AND ${Column.DEVICE_ID} = ?",
-                arrayOf(accountId, deviceId),
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val dataIndex = cursor.getColumnIndex(Column.DATA)
-                    if (dataIndex >= 0) {
-                        profileString = cursor.getString(dataIndex)
-                    }
-                }
-            }
-        } catch (e: SQLiteException) {
-            logger.verbose("Could not fetch records out of database $tName.", e)
-        }
-        return profileString?.let {
-            try {
-                JSONObject(it)
-            } catch (e: JSONException) {
-                null
-            }
-        }
-    }
-
-    @Synchronized
-    fun getLastUninstallTimestamp(): Long {
-        val tName = UNINSTALL_TS.tableName
-        var timestamp: Long = 0
-        try {
-            dbHelper.readableDatabase.query(tName, null, null, null, null, null, "${Column.CREATED_AT} DESC", "1")
-                ?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
-                    }
-                }
-        } catch (e: Exception) { // SQLiteException | IllegalArgumentException
-            logger.verbose("Could not fetch records out of database $tName.", e)
-        }
-        return timestamp
-    }
-
-    /**
-     * Retrieves list of inbox messages based on given userId
-     *
-     * @param userId String userid
-     * @return ArrayList of [CTMessageDAO]
-     */
-    @WorkerThread
-    @Synchronized
-    fun getMessages(userId: String): ArrayList<CTMessageDAO> {
-        val tName = INBOX_MESSAGES.tableName
-        val messageDAOArrayList = ArrayList<CTMessageDAO>()
-        try {
-            dbHelper.readableDatabase.query(
-                tName, null, "${Column.USER_ID} = ?", arrayOf(userId), null, null, "${Column.CREATED_AT} DESC"
-            )?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    val ctMessageDAO = CTMessageDAO()
-                    ctMessageDAO.id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                    ctMessageDAO.jsonData = JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA)))
-                    ctMessageDAO.wzrkParams =
-                        JSONObject(cursor.getString(cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)))
-                    ctMessageDAO.date = cursor.getLong(cursor.getColumnIndexOrThrow(Column.CREATED_AT))
-                    ctMessageDAO.expires = cursor.getLong(cursor.getColumnIndexOrThrow(Column.EXPIRES))
-                    ctMessageDAO.isRead = cursor.getInt(cursor.getColumnIndexOrThrow(Column.IS_READ))
-                    ctMessageDAO.userId = cursor.getString(cursor.getColumnIndexOrThrow(Column.USER_ID))
-                    ctMessageDAO.tags = cursor.getString(cursor.getColumnIndexOrThrow(Column.TAGS))
-                    ctMessageDAO.campaignId = cursor.getString(cursor.getColumnIndexOrThrow(Column.CAMPAIGN))
-                    messageDAOArrayList.add(ctMessageDAO)
-                }
-            }
-        } catch (e: Exception) { //SQLiteException | IllegalArgumentException | JSONException
-            logger.verbose("Error retrieving records from $tName", e)
-        }
-        return messageDAOArrayList
-    }
-
-    /**
-     * Marks inbox message as read for given messageId
-     *
-     * @param messageId String messageId
-     * @return boolean value depending on success of operation
-     */
     @WorkerThread
     @Synchronized
     fun markReadMessageForId(messageId: String?, userId: String?): Boolean {
-        if (messageId == null || userId == null) {
-            return false
-        }
-        val tName = INBOX_MESSAGES.tableName
-        val cv = ContentValues()
-        cv.put(Column.IS_READ, 1)
-        return try {
-            dbHelper.writableDatabase.update(
-                INBOX_MESSAGES.tableName, cv, "${Column.ID} = ? AND ${Column.USER_ID} = ?", arrayOf(messageId, userId)
-            )
-            true
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing stale records from $tName", e)
-            false
-        }
+        return if (messageId != null && userId != null) {
+            inboxMessageDAO.markMessageAsRead(messageId, userId)
+        } else false
     }
 
-    /**
-     * Marks multiple inbox messages as read for given list of messageIDs
-     *
-     * @param messageIDs ArrayList of type String
-     * @param userId     String userId
-     * @return boolean value depending on success of operation
-     */
     @WorkerThread
     @Synchronized
     fun markReadMessagesForIds(messageIDs: List<String?>?, userId: String?): Boolean {
-        if (messageIDs == null || userId == null) {
-            return false
-        }
-        val tName = INBOX_MESSAGES.tableName
-        val idsTemplateGroup = getTemplateMarkersList(messageIDs.size)
-        val whereArgs = messageIDs.toMutableList()
-
-        //Append userID as last element of array to be used by query builder
-        whereArgs.add(userId)
-        val cv = ContentValues()
-        cv.put(Column.IS_READ, 1)
-        return try {
-            dbHelper.writableDatabase.update(
-                INBOX_MESSAGES.tableName,
-                cv,
-                "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?",
-                whereArgs.toTypedArray()
-            )
-            true
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing stale records from $tName", e)
-            false
-        }
+        return if (messageIDs != null && userId != null) {
+            val validIds = messageIDs.filterNotNull()
+            if (validIds.isNotEmpty()) {
+                inboxMessageDAO.markMessagesAsRead(validIds, userId)
+            } else false
+        } else false
     }
 
-    /**
-     * removes all the user profiles with given account id from the db.
-     *
-     * @param id the accountId for which the profiles are to be removed
-     */
-    @Synchronized
-    fun removeUserProfilesForAccountId(id: String?) {
-        if (id == null) {
-            return
-        }
-        val tableName = USER_PROFILES.tableName
-        try {
-            dbHelper.writableDatabase.delete(tableName, "${Column.ID} = ?", arrayOf(id))
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing user profile from $tableName Recreating DB")
-            deleteDB()
-        }
-    }
+    // =====================================================
+    // USER PROFILE OPERATIONS
+    // =====================================================
 
-    /**
-     * Adds a String timestamp representing uninstall flag to the DB.
-     */
-    @Synchronized
-    fun storeUninstallTimestamp() {
-        if (!belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return
-        }
-        val tableName = UNINSTALL_TS.tableName
-        val cv = ContentValues()
-        cv.put(Column.CREATED_AT, System.currentTimeMillis())
-        try {
-            dbHelper.writableDatabase.insert(tableName, null, cv)
-        } catch (e: SQLiteException) {
-            logger.verbose("Error adding data to table $tableName Recreating DB")
-            deleteDB()
-        }
-    }
-
-    /**
-     * Adds a JSON string representing the profile to the DB.
-     *
-     * @param id the accountId for this profile
-     * @param deviceId the deviceId for this profile
-     * @param obj the JSON to record
-     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
-     */
     @WorkerThread
     @Synchronized
     fun storeUserProfile(id: String?, deviceId: String?, obj: JSONObject): Long {
-        if (id == null || deviceId == null) {
-            return DB_UPDATE_ERROR
-        }
-        if (!belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return DB_OUT_OF_MEMORY_ERROR
-        }
-        val tableName = USER_PROFILES.tableName
-
-        logger.verbose("Inserting or updating userProfile for accountID = $id + deviceID = $deviceId")
-        val cv = ContentValues()
-        cv.put(Column.DATA, obj.toString())
-        cv.put(Column.ID, id)
-        cv.put(Column.DEVICE_ID, deviceId)
-
-        return try {
-            dbHelper.writableDatabase.insertWithOnConflict(tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
-        } catch (e: SQLiteException) {
-            logger.verbose("Error adding data to table $tableName Recreating DB")
-            deleteDB()
-            DB_UPDATE_ERROR
-        }
-    }
-
-    /**
-     * Stores a list of inbox messages
-     *
-     * @param inboxMessages ArrayList of type [CTMessageDAO]
-     */
-    @WorkerThread
-    @Synchronized
-    fun upsertMessages(inboxMessages: List<CTMessageDAO>) {
-        if (!belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return
-        }
-
-        for (messageDAO in inboxMessages) {
-            val cv = ContentValues()
-            cv.put(Column.ID, messageDAO.id)
-            cv.put(Column.DATA, messageDAO.jsonData.toString())
-            cv.put(Column.WZRKPARAMS, messageDAO.wzrkParams.toString())
-            cv.put(Column.CAMPAIGN, messageDAO.campaignId)
-            cv.put(Column.TAGS, messageDAO.tags)
-            cv.put(Column.IS_READ, messageDAO.isRead())
-            cv.put(Column.EXPIRES, messageDAO.expires)
-            cv.put(Column.CREATED_AT, messageDAO.date)
-            cv.put(Column.USER_ID, messageDAO.userId)
-            try {
-                dbHelper.writableDatabase.insertWithOnConflict(
-                    INBOX_MESSAGES.tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE
-                )
-            } catch (e: SQLiteException) {
-                logger.verbose("Error adding data to table " + INBOX_MESSAGES.tableName)
-            }
-        }
+        return if (id != null && deviceId != null) {
+            userProfileDAO.storeUserProfile(id, deviceId, obj)
+        } else DB_UPDATE_ERROR
     }
 
     @Synchronized
-    fun cleanUpPushNotifications() {
-        //In Push_Notifications, KEY_CREATED_AT is stored as a future epoch, i.e. currentTimeMillis() + ttl,
-        //so comparing to the current time for removal is correct
-        cleanInternal(PUSH_NOTIFICATIONS, 0)
+    fun fetchUserProfilesByAccountId(accountId: String?): Map<String, JSONObject> {
+        return if (accountId != null) {
+            userProfileDAO.fetchUserProfilesByAccountId(accountId)
+        } else emptyMap()
     }
 
     @Synchronized
-    fun storePushNotificationId(id: String?, ttl: Long) {
-        if (id == null) {
-            return
-        }
-        if (!belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return
-        }
-        val tableName = PUSH_NOTIFICATIONS.tableName
-        val createdAtTime = if (ttl > 0) {
-            ttl
-        } else {
-            System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL
-        }
-        val cv = ContentValues()
-        cv.put(Column.DATA, id)
-        cv.put(Column.CREATED_AT, createdAtTime)
-        cv.put(Column.IS_READ, 0)
-        try {
-            dbHelper.writableDatabase.insert(tableName, null, cv)
-            rtlDirtyFlag = true
-            logger.verbose("Stored PN - $id with TTL - $createdAtTime")
-        } catch (e: SQLiteException) {
-            logger.verbose("Error adding data to table $tableName Recreating DB")
-            deleteDB()
-        }
+    fun fetchUserProfileByAccountIdAndDeviceID(accountId: String?, deviceId: String?): JSONObject? {
+        return if (accountId != null && deviceId != null) {
+            userProfileDAO.fetchUserProfile(accountId, deviceId)
+        } else null
     }
 
-    /**
-     * Removes stale events.
-     *
-     * @param table the table to remove events
-     */
+    // =====================================================
+    // PUSH NOTIFICATION OPERATIONS
+    // =====================================================
+
     @Synchronized
-    fun cleanupStaleEvents(table: Table) {
-        cleanInternal(table, DATA_EXPIRATION)
+    fun storePushNotificationId(id: String, ttlInSeconds: Long) {
+        pushNotificationDAO.storePushNotificationId(id, ttlInSeconds)
     }
 
-    /**
-     * Returns a JSONObject keyed with the lastId retrieved and a value of a JSONArray of the retrieved JSONObject
-     * events
-     *
-     * @param table the table to read from
-     * @return JSONObject containing the max row ID and a JSONArray of the JSONObject events or null
-     */
     @Synchronized
-    fun fetchEvents(table: Table, limit: Int): QueueData {
-        val queueData = QueueData()
+    fun fetchPushNotificationIds(): Array<String> = pushNotificationDAO.fetchPushNotificationIds()
 
-        val tName = table.tableName
-        try {
-            dbHelper.readableDatabase.query(
-                tName,
-                arrayOf(Column.ID, Column.DATA, Column.CREATED_AT),
-                null, null, null, null,
-                "${Column.CREATED_AT} ASC",
-                (limit + 1).toString()
-            )?.use { cursor ->
-                val rowCount = cursor.count
-                queueData.hasMore = rowCount > limit
-
-                var pos = 0
-                while (cursor.moveToNext()) {
-                    if (pos == limit) {
-                        break
-                    }
-                    val id = cursor.getString(cursor.getColumnIndexOrThrow(Column.ID))
-                    val eventData = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
-
-                    try {
-                        val jsonEvent = JSONObject(eventData)
-                        queueData.data.put(jsonEvent)
-
-                        if (table == Table.PROFILE_EVENTS) {
-                            queueData.profileEventIds.add(id)
-                        } else {
-                            queueData.eventIds.add(id)
-                        }
-
-                    } catch (e: JSONException) {
-                        logger.verbose("Error parsing event data for id: $id from table: $tName", e)
-                    }
-                    pos++
-                }
-            }
-        } catch (e: Exception) {
-            logger.verbose("Could not fetch records from table $tName", e)
-        }
-
-        val size = if (table == Table.PROFILE_EVENTS) {
-            queueData.profileEventIds.size
-        } else {
-            queueData.eventIds.size
-        }
-        logger.verbose("Fetched $size events from $tName")
-        return queueData
-    }
-
-    /**
-     * Fetches a combined batch of events from both events and profileEvents tables
-     * Prioritizes profileEvents table first, then fills remaining slots from events
-     *
-     * @param batchSize The maximum number of events to fetch (typically 50)
-     * @return QueueData containing the events and their IDs for cleanup
-     */
     @Synchronized
-    fun fetchCombinedEvents(batchSize: Int): QueueData {
-        val combinedQueueData = QueueData()
-
-        // First priority: Fetch from profileEvents table using the base fetchEvents method
-        val profileData = fetchEvents(Table.PROFILE_EVENTS, batchSize)
-
-        // Add profile events to combined data
-            for (i in 0 until profileData.data.length()) {
-                combinedQueueData.data.put(profileData.data.getJSONObject(i))
-            }
-            combinedQueueData.profileEventIds.addAll(profileData.profileEventIds)
-            combinedQueueData.hasMore = profileData.hasMore
-
-        // Calculate remaining slots for normal events
-        val eventsNeeded = batchSize - combinedQueueData.profileEventIds.size
-
-        // Second priority: Fill remaining slots from events table
-        if (eventsNeeded > 0 || combinedQueueData.hasMore.not()) {
-            val eventsData = fetchEvents(Table.EVENTS, eventsNeeded)
-
-            // Add events to combined data
-                for (i in 0 until eventsData.data.length()) {
-                    combinedQueueData.data.put(eventsData.data.getJSONObject(i))
-                }
-                combinedQueueData.eventIds.addAll(eventsData.eventIds)
-            combinedQueueData.hasMore = eventsData.hasMore
-        }
-
-        logger.verbose("Fetched combined batch: ${combinedQueueData.profileEventIds.size} profile events, ${combinedQueueData.eventIds.size} events")
-
-        return combinedQueueData
-    }
-
-    /**
-     * Removes sent events with an _id <= last_id from table
-     *
-     * @param lastId the last id to delete
-     * @param table  the table to remove events
-     */
-    @WorkerThread
-    @Synchronized
-    fun cleanupEventsFromLastId(lastId: String, table: Table) {
-        val tName = table.tableName
-        try {
-            dbHelper.writableDatabase.delete(tName, "${Column.ID} <= ?", arrayOf(lastId))
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing sent data from table $tName Recreating DB")
-            deleteDB()
-        }
-    }
-
-    /**
-     * Cleans up events from the profileEvents table by their IDs
-     *
-     * @param events List of profile event IDs to delete
-     */
-    @WorkerThread
-    @Synchronized
-    fun cleanupEventsByIds(table: Table, events: List<String>) {
-        if (events.isEmpty()) {
-            return
-        }
-
-        val tName = table.tableName
-
-        try {
-            // Process in chunks if the list is too large
-            val chunkSize = 100
-            events.chunked(chunkSize).forEach { chunk ->
-                val placeholders = chunk.joinToString(",") { "?" }
-                val deletedCount = dbHelper.writableDatabase.delete(
-                    tName,
-                    "${Column.ID} IN ($placeholders)",
-                    chunk.toTypedArray()
-                )
-                logger.verbose("Deleted $deletedCount events from $tName")
-            }
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing events from $tName", e)
-            deleteDB()
-        }
-    }
+    fun doesPushNotificationIdExist(id: String): Boolean = pushNotificationDAO.doesPushNotificationIdExist(id)
 
     @WorkerThread
     @Synchronized
-    fun updatePushNotificationIds(ids: Array<String?>) {
-        if (ids.isEmpty()) {
-            return
-        }
-        if (!belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return
-        }
-        val tableName = PUSH_NOTIFICATIONS.tableName
-        val cv = ContentValues()
-        cv.put(Column.IS_READ, 1)
-        val idsTemplateGroup = getTemplateMarkersList(ids.size)
-        try {
-            dbHelper.writableDatabase.update(tableName, cv, "${Column.DATA} IN ($idsTemplateGroup)", ids)
-            rtlDirtyFlag = false
-        } catch (e: SQLiteException) {
-            logger.verbose("Error adding data to table $tableName Recreating DB")
-            deleteDB()
-        }
-    }
+    fun updatePushNotificationIds(ids: Array<String>) = pushNotificationDAO.updatePushNotificationIds(ids)
 
-    /**
-     * Adds a JSON string to the DB.
-     *
-     * @param obj   the JSON to record
-     * @param table the table to insert into
-     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
-     */
-    @WorkerThread
     @Synchronized
-    fun storeObject(obj: JSONObject, table: Table): Long {
-        if (!belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return DB_OUT_OF_MEMORY_ERROR
-        }
-        val tableName = table.tableName
-        val cv = ContentValues()
-        cv.put(Column.DATA, obj.toString())
-        cv.put(Column.CREATED_AT, System.currentTimeMillis())
+    fun cleanUpPushNotifications() = pushNotificationDAO.cleanUpPushNotifications()
 
-        return try {
-            dbHelper.writableDatabase.insert(tableName, null, cv)
-            val sql = "SELECT COUNT(*) FROM $tableName"
-            val statement = dbHelper.writableDatabase.compileStatement(sql)
-            statement.simpleQueryForLong()
-        } catch (e: SQLiteException) {
-            logger.verbose("Error adding data to table $tableName Recreating DB")
-            deleteDB()
-            DB_UPDATE_ERROR
-        }
-    }
+    // =====================================================
+    // UNINSTALL TIMESTAMP OPERATIONS
+    // =====================================================
 
-    /**
-     * Removes all events from table
-     *
-     * @param table the table to remove events
-     */
     @Synchronized
-    fun removeEvents(table: Table) {
-        val tName = table.tableName
-        try {
-            dbHelper.writableDatabase.delete(tName, null, null)
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing all events from table $tName Recreating DB")
-            deleteDB()
-        }
-    }
+    fun storeUninstallTimestamp() = uninstallTimestampDAO.storeUninstallTimestamp()
 
-    /**
-     * -----------------------------
-     * -----------DAO---------------
-     * -----------------------------
-     */
+    @Synchronized
+    fun getLastUninstallTimestamp(): Long = uninstallTimestampDAO.getLastUninstallTimestamp()
+
+    // =====================================================
+    // USER EVENT LOG OPERATIONS
+    // =====================================================
+
     @WorkerThread
     fun userEventLogDAO(): UserEventLogDAO {
         return userEventLogDao ?: synchronized(this) {
             userEventLogDao ?: UserEventLogDAOImpl(
-                dbHelper,
-                logger,
-                USER_EVENT_LOGS_TABLE
+                dbHelper, logger, Table.USER_EVENT_LOGS_TABLE
             ).also { userEventLogDao = it }
-
         }
     }
-
     @WorkerThread
-    private fun belowMemThreshold(): Boolean {
-        return dbHelper.belowMemThreshold()
-    }
-
-    private fun cleanInternal(table: Table, expiration: Long) {
-        val time = (System.currentTimeMillis() - expiration) / 1000
-        val tName = table.tableName
-        try {
-            dbHelper.writableDatabase.delete(tName, "${Column.CREATED_AT} <= $time", null)
-        } catch (e: SQLiteException) {
-            logger.verbose("Error removing stale event records from $tName. Recreating DB.", e)
-            deleteDB()
+    fun delayedLegacyInAppDAO(): DelayedLegacyInAppDAO {
+        return delayedLegacyInAppDao ?: synchronized(this) {
+            delayedLegacyInAppDao ?: DelayedLegacyInAppDAOImpl(
+                dbHelper, logger, Table.DELAYED_LEGACY_INAPPS
+            ).also { delayedLegacyInAppDao = it }
         }
     }
+
+    // =====================================================
+    // UTILITY METHODS
+    // =====================================================
 
     @VisibleForTesting
     internal fun deleteDB() {
         dbHelper.deleteDatabase()
-    }
-
-    private fun fetchPushNotificationId(id: String): String {
-        val tName = PUSH_NOTIFICATIONS.tableName
-        var pushId = "" // TODO: fix dupe failing
-        try {
-            dbHelper.readableDatabase.query(tName, null, "${Column.DATA} =?", arrayOf(id), null, null, null)
-                ?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        pushId = cursor.getString(cursor.getColumnIndexOrThrow(Column.DATA))
-                    }
-                    logger.verbose("Fetching PID for check - $pushId")
-                }
-        } catch (e: Exception) { // SQLiteException | IllegalArgumentException
-            logger.verbose("Could not fetch records out of database $tName.", e)
-        }
-        return pushId
-    }
-
-    private fun getDatabaseName(config: CleverTapInstanceConfig): String {
-        return if (config.isDefaultInstance) DATABASE_NAME else DATABASE_NAME + "_" + config.accountId
-    }
-
-    private fun getTemplateMarkersList(count: Int): String {
-        return buildString {
-            if (count > 0) {
-                append("?")
-                repeat(count - 1) {
-                    append(", ?")
-                }
-            }
-        }
     }
 }

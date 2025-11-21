@@ -80,7 +80,7 @@ class ActivityLifeCycleManager {
                         final int now = (int) (System.currentTimeMillis() / 1000);
                         if (coreMetaData.inCurrentSession()) {
                             try {
-                                StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.LAST_SESSION_EPOCH), now);
+                                StorageHelper.putInt(context, config.getAccountId(), Constants.LAST_SESSION_EPOCH, now);
                                 config.getLogger().verbose(config.getAccountId(), "Updated session time: " + now);
                             } catch (Throwable t) {
                                 config.getLogger().verbose(config.getAccountId(), "Failed to update session time time: " + t.getMessage());

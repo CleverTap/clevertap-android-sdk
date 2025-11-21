@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore.Companion.PREFS_DELAYED_INAPP_KEY_CS
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import io.mockk.*
 import org.json.JSONArray
@@ -402,5 +403,111 @@ class InAppStoreTest {
         val data: JSONArray = inAppStore.readSuppressedClientSideInAppIds()
 
         assertEquals(expectedData.toString(), data.toString())
+    }
+
+    // ==================== DELAYED CLIENT SIDE IN-APPS TESTS ====================
+
+    @Test
+    fun `storeClientSideDelayedInApps writes encrypted JSONArray to ctPreference`() {
+        // Arrange
+        val clientSideDelayedInApps = JSONArray("[{\"id\":1},{\"id\":2}]")
+        every { cryptHandler.encrypt(any()) } returns "encryptedString"
+        every { ctPreference.writeString(any(), any()) } just Runs
+
+        // Act
+        inAppStore.storeClientSideDelayedInApps(clientSideDelayedInApps)
+
+        // Assert
+        assertEquals(clientSideDelayedInApps.toString(), inAppStore.readClientSideDelayedInApps().toString())
+        verify { ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, "encryptedString") }
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns decrypted JSONArray from ctPreference`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = "encryptedString"
+        val decryptedClientSideDelayedInApps = JSONArray("[{\"id\":3},{\"id\":4}]")
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+        every { cryptHandler.decrypt(csDelayedInAppsEncrypted) } returns decryptedClientSideDelayedInApps.toString()
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(decryptedClientSideDelayedInApps.toString(), result.toString())
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns empty JSONArray when ctPreference returns null encrypted string`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = null
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(JSONArray().toString(), result.toString())
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns empty JSONArray when ctPreference does not contain PREFS_DELAYED_INAPP_KEY_CS`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = ""
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(JSONArray().toString(), result.toString())
+    }
+
+    @Test
+    fun `readClientSideDelayedInApps returns empty JSONArray when decryption fails`() {
+        // Arrange
+        val csDelayedInAppsEncrypted = "encryptedString"
+        val csDelayedInAppsDecrypted = null
+        every { ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, any()) } returns csDelayedInAppsEncrypted
+        every { cryptHandler.decrypt(csDelayedInAppsEncrypted) } returns csDelayedInAppsDecrypted
+
+        // Act
+        val result = inAppStore.readClientSideDelayedInApps()
+
+        // Assert
+        assertEquals(JSONArray().toString(), result.toString())
+    }
+
+    @Test
+    fun `mode change to SERVER_SIDE_MODE also removes delayed client-side in-apps`() {
+        // Arrange - Store delayed in-apps first
+        val delayedInApps = JSONArray().put(JSONObject().put("ti", "delayed1"))
+        every { cryptHandler.encrypt(any()) } returns "encrypted"
+        every { ctPreference.writeString(any(), any()) } just Runs
+        inAppStore.storeClientSideDelayedInApps(delayedInApps)
+
+        // Act
+        inAppStore.mode = InAppStore.SERVER_SIDE_MODE
+
+        // Assert
+        verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
+        verify { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
+    }
+
+    @Test
+    fun `mode change to NO_MODE also removes delayed client-side in-apps`() {
+        // Arrange - Store delayed in-apps first
+        val delayedInApps = JSONArray().put(JSONObject().put("ti", "delayed1"))
+        every { cryptHandler.encrypt(any()) } returns "encrypted"
+        every { ctPreference.writeString(any(), any()) } just Runs
+        inAppStore.storeClientSideDelayedInApps(delayedInApps)
+
+        // Act
+        inAppStore.mode = InAppStore.NO_MODE
+
+        // Assert
+        verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
+        verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_SS) }
+        verify { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
     }
 }

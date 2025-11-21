@@ -27,7 +27,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class CleverTapAPITest : BaseTestCase() {
 
     private lateinit var corestate: MockCoreStateKotlin
@@ -229,7 +228,10 @@ class CleverTapAPITest : BaseTestCase() {
         val expectedAccountId = "acct123"
         val expectedToken = "token123"
         val expectedRegion = "eu"
+
+        // reset needed due to the fact we init CleverTapAPI in base test class
         CleverTapAPI.defaultConfig = null
+        ManifestInfo.clearPreloadedManifestInfo()
 
         // Act
         CleverTapAPI.changeCredentials(expectedAccountId, expectedToken, expectedRegion)
@@ -1093,7 +1095,7 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.discardInAppNotifications()
 
         // Assert
-        verify(exactly = 0) { corestate.inAppController.discardInApps() }
+        verify(exactly = 0) { corestate.inAppController.discardInApps(any()) }
 
         // Arrange
         corestate.config.isAnalyticsOnly = false
@@ -1102,7 +1104,7 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.discardInAppNotifications()
 
         // Assert
-        verify{ corestate.inAppController.discardInApps() }
+        verify{ corestate.inAppController.discardInApps(any()) }
     }
 
     @Test

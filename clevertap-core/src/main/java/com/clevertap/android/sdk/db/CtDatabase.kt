@@ -4,12 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.COMMAND_ADD
 import com.clevertap.android.sdk.Constants.COMMAND_SET
 import com.clevertap.android.sdk.Constants.DATE_PREFIX
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.Table.EVENTS
 import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
@@ -23,13 +22,17 @@ import org.json.JSONObject
 import java.io.File
 import kotlin.math.max
 
-class DatabaseHelper internal constructor(val context: Context, val config: CleverTapInstanceConfig, dbName: String?, private val logger: Logger) :
-    SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
+class DatabaseHelper internal constructor(
+    val context: Context,
+    val accountId: String,
+    dbName: String?,
+    private val logger: ILogger,
+) : SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
 
     companion object {
 
-        private const val DATABASE_VERSION = 5
-        private const val DB_LIMIT = 20 * 1024 * 1024 //20mb
+        private const val DATABASE_VERSION = 6
+        private const val DB_LIMIT = 24 * 1024 * 1024 //24mb
     }
 
     private val databaseFile: File
@@ -48,6 +51,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
         executeStatement(db, CREATE_PUSH_NOTIFICATIONS_TABLE)
         executeStatement(db, CREATE_UNINSTALL_TS_TABLE)
         executeStatement(db, CREATE_NOTIFICATION_VIEWED_TABLE)
+        executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
         executeStatement(db, EVENTS_TIME_INDEX)
         executeStatement(db, PROFILE_EVENTS_TIME_INDEX)
         executeStatement(db, UNINSTALL_TS_INDEX)
@@ -92,6 +96,9 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
         if (oldVersion < 5) {
             executeStatement(db, CREATE_USER_EVENT_LOGS_TABLE)// when app updates [1,2,3,4] to 5
         }
+        if (oldVersion < 6) {
+            executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
+        }
     }
 
     private fun getDeviceIdForAccountIdFromPrefs(accountId: String): String {
@@ -99,8 +106,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
         val fallbackKey = Constants.FALLBACK_ID_TAG + ":" + accountId
 
         return StorageHelper.getString(context, baseKey, null)
-            ?: if (config.isDefaultInstance) StorageHelper.getString(context, baseKey, null) else null
-                ?: StorageHelper.getString(context, fallbackKey, "")
+            ?: StorageHelper.getString(context, fallbackKey, "") ?: ""
     }
 
     /**
@@ -113,7 +119,7 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     private fun migrateUserProfilesTable(db: SQLiteDatabase) {
         executeStatement(db, CREATE_TEMP_USER_PROFILES_TABLE)
 
-        val deviceId = getDeviceIdForAccountIdFromPrefs(config.accountId)
+        val deviceId = getDeviceIdForAccountIdFromPrefs(accountId)
 
         // Query to select all data from the old user profiles table
         val selectQuery = "SELECT ${Column.ID}, ${Column.DATA} FROM ${USER_PROFILES.tableName};"
@@ -203,7 +209,8 @@ class DatabaseHelper internal constructor(val context: Context, val config: Clev
     PUSH_NOTIFICATIONS("pushNotifications"),
     UNINSTALL_TS("uninstallTimestamp"),
     PUSH_NOTIFICATION_VIEWED("notificationViewed"),
-    USER_EVENT_LOGS_TABLE("userEventLogs")
+    USER_EVENT_LOGS_TABLE("userEventLogs"),
+    DELAYED_LEGACY_INAPPS("delayedLegacyInApps")
 }
 
 object Column {
@@ -223,6 +230,8 @@ object Column {
     const val FIRST_TS = "firstTs"
     const val LAST_TS = "lastTs"
     const val COUNT = "count"
+    const val INAPP_ID = "inAppId"
+    const val DELAY = "delay"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -242,6 +251,15 @@ private val CREATE_USER_EVENT_LOGS_TABLE = """
         ${Column.LAST_TS} INTEGER NOT NULL,
         ${Column.COUNT} INTEGER NOT NULL,
         PRIMARY KEY (${Column.DEVICE_ID}, ${Column.NORMALIZED_EVENT_NAME})
+    );
+"""
+
+private val CREATE_DELAYED_LEGACY_INAPPS_TABLE = """
+    CREATE TABLE ${Table.DELAYED_LEGACY_INAPPS.tableName} (
+        ${Column.INAPP_ID} STRING PRIMARY KEY,
+        ${Column.DELAY} INTEGER NOT NULL,
+        ${Column.DATA} TEXT NOT NULL,
+        ${Column.CREATED_AT} INTEGER NOT NULL
     );
 """
 
