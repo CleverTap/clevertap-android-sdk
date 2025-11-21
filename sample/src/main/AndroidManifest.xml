@@ -105,7 +105,7 @@
             android:value="HomeScreenActivity" />
         <meta-data
             android:name="CLEVERTAP_ENCRYPTION_LEVEL"
-            android:value="1" /> <!-- Add meta and set to 1 enable encryption of PII data -->
+            android:value="2" /> <!-- Add meta and set to 1 enable encryption of PII data -->
 
         <!-- Builds push provider for clevertap other than firebase, add csv string 4 values, please refer docs to integrate different push providers in clevertap -->
         <meta-data

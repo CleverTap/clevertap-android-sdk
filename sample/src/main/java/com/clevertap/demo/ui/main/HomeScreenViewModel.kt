@@ -25,7 +25,7 @@ class HomeScreenViewModel(
 ) : ViewModel() {
 
     val clickCommand: MutableLiveData<String> by lazy { MutableLiveData<String>() }
-    
+
     private val exampleVariables by lazy { ExampleVariables() }
 
     /**
@@ -36,9 +36,9 @@ class HomeScreenViewModel(
     fun onChildClick(groupPosition: Int = 0, childPosition: Int = 0) {
         val commandPosition = "$groupPosition-$childPosition"
         log("Child clicked: Section=$groupPosition, Item=$childPosition, Command=$commandPosition")
-        
+
         clickCommand.value = commandPosition
-        
+
         executeCommand(groupPosition, childPosition)
     }
 
@@ -82,16 +82,16 @@ class HomeScreenViewModel(
 
     private fun recordEventWithProperties() {
         logStep("EVENTS", "Recording event with properties")
-        
+
         val prodViewedAction = mapOf(
             "Product Name" to "Casio Chronograph Watch",
             "Category" to "Mens Accessories",
             "Price" to 59.99,
             "Date" to Date()
         )
-        
+
         printMap("Event Properties", prodViewedAction)
-        
+
         cleverTapAPI?.apply {
             pushEvent("Product viewed", prodViewedAction)
             pushEvent("caurousel-inapp")
@@ -101,13 +101,13 @@ class HomeScreenViewModel(
 
     private fun recordChargedEvent() {
         logStep("EVENTS", "Recording charged (transactional) event")
-        
+
         val chargeDetails = hashMapOf<String, Any>(
             "Amount" to 300,
             "Payment Mode" to "Credit card",
             "Charged ID" to 24052013
         )
-        
+
         val items = arrayListOf<HashMap<String, Any>>(
             hashMapOf(
                 "Product category" to "books",
@@ -125,10 +125,10 @@ class HomeScreenViewModel(
                 "Quantity" to 5
             )
         )
-        
+
         printMap("Charge Details", chargeDetails)
         printList("Items", items)
-        
+
         cleverTapAPI?.pushChargedEvent(chargeDetails, items)
     }
 
@@ -167,7 +167,7 @@ class HomeScreenViewModel(
 
     private fun pushProfile() {
         logStep("USER PROFILE", "Pushing user profile")
-        
+
         cleverTapAPI?.let { ct ->
             val profileUpdate = buildMap {
                 put("Name", "User Name")
@@ -185,7 +185,7 @@ class HomeScreenViewModel(
                 put("MyStuffList", arrayListOf("bag", "shoes"))
                 put("MyStuffArray", arrayOf("Jeans", "Perfume"))
             }
-            
+
             printMap("Profile Update", profileUpdate)
             ct.pushProfile(profileUpdate)
         }
@@ -193,7 +193,7 @@ class HomeScreenViewModel(
 
     private fun pushRichProfileData() {
         logStep("USER PROFILE", "Pushing rich profile data")
-        
+
         cleverTapAPI?.let { ct ->
             val profileUpdate = buildMap {
                 put("HeightCm", 180)
@@ -203,7 +203,7 @@ class HomeScreenViewModel(
                 put("Sport", "Football")
                 put("MyCarsList", arrayListOf("Honda", "BMW", "Ford"))
             }
-            
+
             printMap("Rich Profile Update", profileUpdate)
             ct.pushProfile(profileUpdate)
         }
@@ -211,7 +211,7 @@ class HomeScreenViewModel(
 
     private fun updateSingleValuePropertiesReplace() {
         logStep("USER PROFILE", "Updating (replacing) single-value properties")
-        
+
         val profileUpdate = hashMapOf<String, Any>(
             "Name" to "Updated User Name",
             "Email" to "UpdatedUser@gmail.com",
@@ -221,19 +221,19 @@ class HomeScreenViewModel(
             "Married" to "N",
             "MSG-push" to false
         )
-        
+
         printMap("Profile Update", profileUpdate)
         cleverTapAPI?.pushProfile(profileUpdate)
     }
 
     private fun updateSingleValuePropertiesAdd() {
         logStep("USER PROFILE", "Updating (adding) single-value properties")
-        
+
         val profileUpdate = mapOf(
             "Customer Type" to "Silver",
             "Preferred Language" to "English"
         )
-        
+
         printMap("Profile Update", profileUpdate)
         cleverTapAPI?.pushProfile(profileUpdate)
     }
@@ -246,36 +246,36 @@ class HomeScreenViewModel(
 
     private fun updateMultiValuePropertiesReplace() {
         logStep("USER PROFILE", "Updating (replacing) multi-value property")
-        
+
         val values = arrayListOf("Updated Bag", "Updated Shoes")
         printVar("Key", "MyStuffList")
         printList("Values", values)
-        
+
         cleverTapAPI?.setMultiValuesForKey("MyStuffList", values)
     }
 
     private fun updateMultiValuePropertiesAdd() {
         logStep("USER PROFILE", "Updating (adding) multi-value property")
-        
+
         val singleValue = "Coat"
         val multipleValues = arrayListOf("Socks", "Scarf")
-        
+
         printVar("Adding Single Value", singleValue)
         cleverTapAPI?.addMultiValueForKey("MyStuffList", singleValue)
-        
+
         printList("Adding Multiple Values", multipleValues)
         cleverTapAPI?.addMultiValuesForKey("MyStuffList", multipleValues)
     }
 
     private fun updateMultiValuePropertiesRemove() {
         logStep("USER PROFILE", "Removing multi-value property")
-        
+
         val singleValue = "Coat"
         val multipleValues = arrayListOf("Socks", "Scarf")
-        
+
         printVar("Removing Single Value", singleValue)
         cleverTapAPI?.removeMultiValueForKey("MyStuffList", singleValue)
-        
+
         printList("Removing Multiple Values", multipleValues)
         cleverTapAPI?.removeMultiValuesForKey("MyStuffList", multipleValues)
     }
@@ -337,10 +337,10 @@ class HomeScreenViewModel(
 
     private fun openInboxWithTabs() {
         logStep("INBOX", "Opening inbox with tabs")
-        
+
         val inboxTabs = arrayListOf("Promotions", "Offers", "Others")
         printList("Inbox Tabs", inboxTabs)
-        
+
         CTInboxStyleConfig().apply {
             tabs = inboxTabs
             tabBackgroundColor = "#FF0000"
@@ -359,7 +359,7 @@ class HomeScreenViewModel(
 
     private fun openInboxWithoutTabs() {
         logStep("INBOX", "Opening inbox without tabs")
-        
+
         CTInboxStyleConfig().apply {
             tabBackgroundColor = "#FF0000"
             selectedTabIndicatorColor = "#0000FF"
@@ -400,9 +400,9 @@ class HomeScreenViewModel(
 
     private fun getInboxMessageById() {
         logStep("INBOX", "Getting inbox message by ID")
-        
+
         val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
-        
+
         firstMessageId?.also { id ->
             val message = cleverTapAPI?.getInboxMessageForId(id)
             printVar("Message ID", id)
@@ -412,7 +412,7 @@ class HomeScreenViewModel(
 
     private fun deleteInboxMessageById() {
         logStep("INBOX", "Deleting inbox message by ID")
-        
+
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId?.also { id ->
             cleverTapAPI?.deleteInboxMessage(id)
             printVar("Deleted Message ID", id)
@@ -421,7 +421,7 @@ class HomeScreenViewModel(
 
     private fun deleteInboxMessageByObject() {
         logStep("INBOX", "Deleting inbox message by object")
-        
+
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.also { message ->
             cleverTapAPI?.deleteInboxMessage(message)
             printVar("Deleted Message ID", message.messageId)
@@ -430,16 +430,16 @@ class HomeScreenViewModel(
 
     private fun deleteMultipleInboxMessages() {
         logStep("INBOX", "Deleting multiple inbox messages")
-        
+
         val messageIDs = cleverTapAPI?.unreadInboxMessages?.map { it.messageId } ?: emptyList()
         printList("Message IDs to Delete", messageIDs)
-        
+
         cleverTapAPI?.deleteInboxMessagesForIDs(ArrayList(messageIDs))
     }
 
     private fun markMessageAsReadById() {
         logStep("INBOX", "Marking message as read by ID")
-        
+
         cleverTapAPI?.unreadInboxMessages?.firstOrNull()?.messageId?.also { id ->
             cleverTapAPI?.markReadInboxMessage(id)
             printVar("Marked Read - Message ID", id)
@@ -448,7 +448,7 @@ class HomeScreenViewModel(
 
     private fun markMessageAsReadByObject() {
         logStep("INBOX", "Marking message as read by object")
-        
+
         cleverTapAPI?.unreadInboxMessages?.firstOrNull()?.also { message ->
             cleverTapAPI?.markReadInboxMessage(message)
             printVar("Marked Read - Message ID", message.messageId)
@@ -457,16 +457,16 @@ class HomeScreenViewModel(
 
     private fun markMultipleMessagesAsRead() {
         logStep("INBOX", "Marking multiple messages as read")
-        
+
         val messageIDs = cleverTapAPI?.unreadInboxMessages?.map { it.messageId } ?: emptyList()
         printList("Message IDs to Mark Read", messageIDs)
-        
+
         cleverTapAPI?.markReadInboxMessagesForIDs(ArrayList(messageIDs))
     }
 
     private fun raiseNotificationViewedEvent() {
         logStep("INBOX", "Raising notification viewed event")
-        
+
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId?.also { id ->
             cleverTapAPI?.pushInboxNotificationViewedEvent(id)
             printVar("Viewed Event - Message ID", id)
@@ -475,7 +475,7 @@ class HomeScreenViewModel(
 
     private fun raiseNotificationClickedEvent() {
         logStep("INBOX", "Raising notification clicked event")
-        
+
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId?.also { id ->
             cleverTapAPI?.pushInboxNotificationClickedEvent(id)
             printVar("Clicked Event - Message ID", id)
@@ -484,7 +484,7 @@ class HomeScreenViewModel(
 
     private fun getCustomKVData() {
         logStep("INBOX", "Getting custom KV data")
-        
+
         val customData = cleverTapAPI?.allInboxMessages?.firstOrNull()?.customData
         printVar("Custom Data", customData.toString())
     }
@@ -501,7 +501,7 @@ class HomeScreenViewModel(
 
     private fun getDisplayUnitById() {
         logStep("DISPLAY UNITS", "Getting display unit by ID")
-        
+
         cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID?.also { id ->
             val displayUnit = cleverTapAPI?.getDisplayUnitForId(id)
             printVar("Display Unit ID", id)
@@ -516,7 +516,7 @@ class HomeScreenViewModel(
 
     private fun raiseDisplayUnitViewedEvent() {
         logStep("DISPLAY UNITS", "Raising display unit viewed event")
-        
+
         cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID?.also { id ->
             cleverTapAPI?.pushDisplayUnitViewedEventForID(id)
             printVar("Viewed Event - Display Unit ID", id)
@@ -525,7 +525,7 @@ class HomeScreenViewModel(
 
     private fun raiseDisplayUnitClickedEvent() {
         logStep("DISPLAY UNITS", "Raising display unit clicked event")
-        
+
         cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID?.also { id ->
             cleverTapAPI?.pushDisplayUnitClickedEventForID(id)
             printVar("Clicked Event - Display Unit ID", id)
@@ -548,7 +548,7 @@ class HomeScreenViewModel(
 
     private fun setDefaultProductConfigs() {
         logStep("PRODUCT CONFIGS", "Setting default product configs")
-        
+
         val defaults = hashMapOf<String, Any>(
             "text color" to "red",
             "msg count" to 100,
@@ -556,7 +556,7 @@ class HomeScreenViewModel(
             "is shown" to true,
             "json" to """{"key":"val","key2":50}"""
         )
-        
+
         printMap("Default Configs", defaults)
         cleverTapAPI?.productConfig()?.setDefaults(defaults)
     }
@@ -589,7 +589,7 @@ class HomeScreenViewModel(
 
     private fun getProductConfigValues() {
         logStep("PRODUCT CONFIGS", "Getting all product config values")
-        
+
         cleverTapAPI?.productConfig()?.apply {
             printVar("text color (String)", getString("text color"))
             printVar("is shown (Boolean)", getBoolean("is shown"))
@@ -601,7 +601,7 @@ class HomeScreenViewModel(
 
     private fun getLastFetchTimestamp() {
         logStep("PRODUCT CONFIGS", "Getting last fetch timestamp")
-        
+
         val timestamp = cleverTapAPI?.productConfig()?.lastFetchTimeStampInMillis ?: 0
         printVar("Last Fetch Timestamp (ms)", timestamp)
     }
@@ -615,7 +615,7 @@ class HomeScreenViewModel(
 
     private fun getFeatureFlag() {
         logStep("FEATURE FLAGS", "Getting feature flag value")
-        
+
         val isShown = cleverTapAPI?.featureFlag()?.get("is shown", true) ?: true
         printVar("is shown (Boolean)", isShown)
     }
@@ -635,7 +635,7 @@ class HomeScreenViewModel(
 
     private fun fetchCleverTapID() {
         logStep("DEVICE IDENTIFIERS", "Fetching CleverTap ID")
-        
+
         cleverTapAPI?.getCleverTapID { deviceId ->
             val threadType = if (Looper.myLooper() == Looper.getMainLooper()) "Main Thread" else "Background Thread"
             printVar("CleverTap Device ID", deviceId.orEmpty())
@@ -667,7 +667,7 @@ class HomeScreenViewModel(
             "Send Input Box Reminder DOC false",
             "Send Three CTA Notification"
         )
-        
+
         if (item < eventNames.size) {
             logStep("PUSH TEMPLATES", "Pushing event: ${eventNames[item]}")
             cleverTapAPI?.pushEvent(eventNames[item])
@@ -690,7 +690,7 @@ class HomeScreenViewModel(
 
     private fun showHalfInterstitialLocalIAM() {
         logStep("PROMPT LOCAL IAM", "Showing half-interstitial local in-app message")
-        
+
         val builder = CTLocalInApp.builder()
             .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
             .setTitleText("Get Notified")
@@ -705,16 +705,16 @@ class HomeScreenViewModel(
             .setBtnTextColor(Constants.WHITE)
             .setBtnBackgroundColor(Constants.BLUE)
             .build()
-        
+
         cleverTapAPI?.promptPushPrimer(builder)
     }
 
     private fun showHalfInterstitialWithImage() {
         logStep("PROMPT LOCAL IAM", "Showing half-interstitial with image URL")
-        
+
         val imageUrl = "https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png"
         printVar("Image URL", imageUrl)
-        
+
         val builder = CTLocalInApp.builder()
             .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
             .setTitleText("Get Notified")
@@ -730,14 +730,14 @@ class HomeScreenViewModel(
             .setImageUrl(imageUrl, "Clevertap Camera")
             .setBtnBackgroundColor(Constants.BLUE)
             .build()
-        
+
         cleverTapAPI?.promptPushPrimer(builder)
     }
 
     private fun showHalfInterstitialWithFallback() {
         logStep("PROMPT LOCAL IAM", "Showing half-interstitial with fallback to settings")
         printVar("Fallback to Settings", true)
-        
+
         val builder = CTLocalInApp.builder()
             .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
             .setTitleText("Get Notified")
@@ -753,13 +753,13 @@ class HomeScreenViewModel(
             .setBtnBackgroundColor(Constants.BLUE)
             .setFallbackToSettings(true)
             .build()
-        
+
         cleverTapAPI?.promptPushPrimer(builder)
     }
 
     private fun showAlertLocalIAM() {
         logStep("PROMPT LOCAL IAM", "Showing alert local in-app message")
-        
+
         val builder = CTLocalInApp.builder()
             .setInAppType(CTLocalInApp.InAppType.ALERT)
             .setTitleText("Get Notified")
@@ -768,14 +768,14 @@ class HomeScreenViewModel(
             .setPositiveBtnText("Allow")
             .setNegativeBtnText("Cancel")
             .build()
-        
+
         cleverTapAPI?.promptPushPrimer(builder)
     }
 
     private fun showAlertWithoutOrientation() {
         logStep("PROMPT LOCAL IAM", "Showing alert without device orientation")
         printVar("Follow Device Orientation", false)
-        
+
         val builder = CTLocalInApp.builder()
             .setInAppType(CTLocalInApp.InAppType.ALERT)
             .setTitleText("Get Notified")
@@ -784,14 +784,14 @@ class HomeScreenViewModel(
             .setPositiveBtnText("Allow")
             .setNegativeBtnText("Cancel")
             .build()
-        
+
         cleverTapAPI?.promptPushPrimer(builder)
     }
 
     private fun showAlertWithFallback() {
         logStep("PROMPT LOCAL IAM", "Showing alert with fallback to settings")
         printVar("Fallback to Settings", true)
-        
+
         val builder = CTLocalInApp.builder()
             .setInAppType(CTLocalInApp.InAppType.ALERT)
             .setTitleText("Get Notified")
@@ -801,14 +801,14 @@ class HomeScreenViewModel(
             .setNegativeBtnText("Cancel")
             .setFallbackToSettings(true)
             .build()
-        
+
         cleverTapAPI?.promptPushPrimer(builder)
     }
 
     private fun showHardPermissionDialogNoFallback() {
         logStep("PROMPT LOCAL IAM", "Showing hard permission dialog (no fallback)")
         printVar("Fallback to Settings", false)
-        
+
         if (cleverTapAPI?.isPushPermissionGranted == false) {
             cleverTapAPI.promptForPushPermission(false)
         } else {
@@ -819,7 +819,7 @@ class HomeScreenViewModel(
     private fun showHardPermissionDialogWithFallback() {
         logStep("PROMPT LOCAL IAM", "Showing hard permission dialog (with fallback)")
         printVar("Fallback to Settings", true)
-        
+
         if (cleverTapAPI?.isPushPermissionGranted == false) {
             cleverTapAPI.promptForPushPermission(true)
         } else {
@@ -833,6 +833,7 @@ class HomeScreenViewModel(
             0 -> suspendInAppNotifications()
             1 -> discardInAppNotifications()
             2 -> resumeInAppNotifications()
+            3 -> discardInAppNotifications(true)
         }
     }
 
@@ -841,9 +842,13 @@ class HomeScreenViewModel(
         cleverTapAPI?.suspendInAppNotifications()
     }
 
-    private fun discardInAppNotifications() {
+    private fun discardInAppNotifications(override: Boolean? = null) {
         logStep("IN-APP", "Discarding in-app notifications")
-        cleverTapAPI?.discardInAppNotifications()
+        if (override != null) {
+            cleverTapAPI?.discardInAppNotifications(override)
+        } else {
+            cleverTapAPI?.discardInAppNotifications()
+        }
     }
 
     private fun resumeInAppNotifications() {
@@ -862,7 +867,7 @@ class HomeScreenViewModel(
 
     private fun fetchCSInApps() {
         logStep("CS IN-APP", "Fetching client-side in-apps")
-        
+
         cleverTapAPI?.fetchInApps(object : FetchInAppsCallback {
             override fun onInAppsFetched(isSuccess: Boolean) {
                 printVar("InApps Fetched", isSuccess)
@@ -902,7 +907,7 @@ class HomeScreenViewModel(
 
     private fun defineBasicVariables() {
         logStep("VARIABLES", "Defining basic type variables")
-        
+
         cleverTapAPI?.apply {
             defineVariable("var_int", 3)
             defineVariable("var_long", 4L)
@@ -912,22 +917,22 @@ class HomeScreenViewModel(
             defineVariable("var_string", "str")
             defineVariable("var_boolean", true)
         }
-        
+
         log("Defined variables: var_int, var_long, var_short, var_float, var_double, var_string, var_boolean")
     }
 
     private fun defineFileVariablesWithListeners() {
         logStep("VARIABLES", "Defining file variables with listeners")
-        
+
         FileVarsData.defineFileVars(cleverTapAPI!!)
-        
+
         log("Printing file variables values (may be null if not yet fetched):")
         FileVarsData.printFileVariables(cleverTapAPI!!)
     }
 
     private fun fetchVariables() {
         logStep("VARIABLES", "Fetching variables")
-        
+
         cleverTapAPI?.fetchVariables { isSuccess ->
             printVar("Variables Fetched", isSuccess)
         }
@@ -945,7 +950,7 @@ class HomeScreenViewModel(
 
     private fun getVariables() {
         logStep("VARIABLES", "Getting variable objects (basic types)")
-        
+
         cleverTapAPI?.let { ct ->
             buildString {
                 appendLine("Variable Objects:")
@@ -957,14 +962,14 @@ class HomeScreenViewModel(
                 appendLine("var_string: ${ct.getVariable<String>("var_string")}")
                 appendLine("var_boolean: ${ct.getVariable<Boolean>("var_boolean")}")
             }.also { log(it) }
-            
+
             FileVarsData.printFileVariables(ct)
         }
     }
 
     private fun getVariableValues() {
         logStep("VARIABLES", "Getting variable values (basic types)")
-        
+
         cleverTapAPI?.let { ct ->
             buildString {
                 appendLine("Variable Values:")
@@ -976,14 +981,14 @@ class HomeScreenViewModel(
                 appendLine("var_string: ${ct.getVariableValue("var_string")}")
                 appendLine("var_boolean: ${ct.getVariableValue("var_boolean")}")
             }.also { log(it) }
-            
+
             FileVarsData.printFileVariablesValues(ct, TAG)
         }
     }
 
     private fun addVariablesChangedCallback() {
         logStep("VARIABLES", "Adding variables changed callback")
-        
+
         cleverTapAPI?.apply {
             addVariablesChangedCallback(exampleVariables.variablesChangedCallback)
             onVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
@@ -1003,7 +1008,7 @@ class HomeScreenViewModel(
 
     private fun addOneTimeVariablesChangedCallback() {
         logStep("VARIABLES", "Adding one-time variables changed callback")
-        
+
         cleverTapAPI?.apply {
             addOneTimeVariablesChangedCallback(exampleVariables.oneTimeVariablesChangedCallback)
             onceVariablesChangedAndNoDownloadsPending(object : VariablesChangedCallback() {
@@ -1021,9 +1026,9 @@ class HomeScreenViewModel(
 
     private fun defineMultipleVarsAndFetch() {
         logStep("VARIABLES", "Defining multiple test variables and fetching")
-        
+
         defineTestAccountVariables()
-        
+
         cleverTapAPI?.fetchVariables { isSuccess ->
             printVar("Test Variables Fetched", isSuccess)
             if (isSuccess) {
@@ -1046,9 +1051,9 @@ class HomeScreenViewModel(
 
     private fun defineFileVariablesWithSingleListener() {
         logStep("FILE TYPE VARIABLES", "Defining file variables with single listener")
-        
+
         FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG)
-        
+
         log("Printing file variables values (may be null if not yet fetched):")
         FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
     }
@@ -1056,16 +1061,16 @@ class HomeScreenViewModel(
     private fun defineFileVariablesWithMultipleListeners() {
         logStep("FILE TYPE VARIABLES", "Defining file variables with multiple listeners (3)")
         printVar("Listener Count", 3)
-        
+
         FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG, fileReadyListenerCount = 3)
-        
+
         log("Printing file variables values (may be null if not yet fetched):")
         FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
     }
 
     private fun defineGlobalListenersThenFileVars() {
         logStep("FILE TYPE VARIABLES", "Adding global listeners then defining file variables")
-        
+
         FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG)
         FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG)
     }
@@ -1073,7 +1078,7 @@ class HomeScreenViewModel(
     private fun defineMultipleGlobalListenersThenFileVars() {
         logStep("FILE TYPE VARIABLES", "Adding multiple global listeners (3) then defining file variables")
         printVar("Listener Count", 3)
-        
+
         FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG, listenerCount = 3)
         FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG, fileReadyListenerCount = 3)
     }
@@ -1125,14 +1130,14 @@ class HomeScreenViewModel(
             Triple(true, null, "userOptOut=true (single param)"),
             Triple(false, null, "userOptOut=false (single param)")
         )
-        
+
         if (item < optOutConfigs.size) {
             val (userOptOut, allowSystemEvents, description) = optOutConfigs[item]
             logStep("OPT OUT", "Setting opt out: $description")
-            
+
             printVar("User Opt Out", userOptOut)
             allowSystemEvents?.let { printVar("Allow System Events", it) }
-            
+
             if (allowSystemEvents != null) {
                 cleverTapAPI?.setOptOut(userOptOut, allowSystemEvents)
             } else {
@@ -1142,19 +1147,19 @@ class HomeScreenViewModel(
     }
 
     // ========== HELPER METHODS ==========
-    
+
     private fun onUserLogin(cleverTapAPI: CleverTapAPI?) {
         cleverTapAPI ?: return
-        
+
         val randomN = (0..10_000).random()
         val randomP = (10_000..99_999).random()
-        
+
         val newProfile = buildMap {
             put("Name", "Don Joe $randomN")
             put("Email", "donjoe$randomN@gmail.com")
             put("Phone", "+141566$randomP")
         }
-        
+
         printMap("Login Profile", newProfile)
         cleverTapAPI.onUserLogin(newProfile)
     }
@@ -1164,7 +1169,7 @@ class HomeScreenViewModel(
             "int" to 12,
             "str" to "factory str"
         )
-        
+
         cleverTapAPI?.apply {
             // Factory variables
             defineVariable("factory_var_int", 11)
@@ -1173,7 +1178,7 @@ class HomeScreenViewModel(
             defineVariable("streaming.quality_auto", true)
             defineVariable("streaming.max_bitrate", 8000)
             defineVariable("streaming.protocol", "HLS")
-            
+
             // Basic variables
             defineVariable("var_int", 1)
             defineVariable("var_long", 1L)
@@ -1182,7 +1187,7 @@ class HomeScreenViewModel(
             defineVariable("var_double", 1.1111)
             defineVariable("var_string", "default")
             defineVariable("var_boolean", false)
-            
+
             // File variables
             defineFileVariable("factory_var_file")
             defineFileVariable("group.factory_var_file_in_group")
@@ -1193,7 +1198,7 @@ class HomeScreenViewModel(
             defineFileVariable("audio.factory_file_mp3")
             defineFileVariable("video.factory_file_mp4")
         }
-        
+
         log("Defined test account variables")
     }
 
@@ -1245,7 +1250,7 @@ class HomeScreenViewModel(
     }
 
     // ========== LOGGING UTILITIES ==========
-    
+
     /**
      * Logs a step with section and description
      */
@@ -1255,21 +1260,21 @@ class HomeScreenViewModel(
         Log.i(TAG, "STEP: $description")
         Log.i(TAG, "═══════════════════════════════════════════════════════")
     }
-    
+
     /**
      * Logs a simple message
      */
     private fun log(message: String) {
         Log.i(TAG, message)
     }
-    
+
     /**
      * Prints a single variable with its value
      */
     private fun printVar(name: String, value: Any?) {
         Log.i(TAG, "  ▶ $name: $value")
     }
-    
+
     /**
      * Prints a map of variables
      */
@@ -1279,7 +1284,7 @@ class HomeScreenViewModel(
             Log.i(TAG, "      • $key = $value")
         }
     }
-    
+
     /**
      * Prints a list of items
      */

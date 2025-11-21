@@ -779,34 +779,64 @@ clevertap.setOptOut(true, false)
 clevertap.setOptOut(false, true)
 ```
 
-#### Encryption of PII data 
+#### Encryption of data stored in the SDK
 
-PII data is stored across the SDK and could be sensitive information. 
-From CleverTap SDK v5.2.0 onwards, you can enable encryption for PII data wiz. **Email, Identity, Name and Phone**.  
-  
-Currently 2 levels of encryption are supported i.e None(0) and Medium(1). Encryption level is None by default.  
+The SDK might contain PII data which could be sensitive information.
+From CleverTap SDK v5.2.0 onwards, you can enable encryption for PII data wiz. **Email, Identity, Name and Phone** at the app storage level.
+From CleverTap SDK v7.7.0 onwards, a new **Full_Data** encryption level is introduced that encrypts all data including content and profile information.
+
+Currently 3 levels of encryption are supported i.e None(0), Medium(1) and Full_Data(2). If not specified, the encryption level defaults to None(0).  
 **None** - All stored data is in plaintext    
-**Medium** - PII data is encrypted completely. 
-   
+**Medium** - PII data is encrypted completely (PII keys mentioned above).
+**Full_Data** (v7.7.0+) - All client data including content and profile information is encrypted. Metadata might still be visible.
+
 The only way to set encryption level for default instance is from the `AndroidManifest.xml`
 
 * Add the following to `AndroidManifest.xml` file
 ```xml
 <meta-data
     android:name="CLEVERTAP_ENCRYPTION_LEVEL"
-    android:value="1" />
+    android:value="2" />
+    <!-- Use value="1" for Medium encryption level -->
+    <!-- If not specified, default is 0 (None) -->
 ```
 
 * Different instances can have different encryption levels. To set an encryption level for an additional instance
-```kotlin
-val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
-    applicationContext,
-    "ADDITIONAL_CLEVERTAP_ACCOUNT_ID",
-    "ADDITIONAL_CLEVERTAP_ACCOUNT_TOKEN"
-)
 
-clevertapAdditionalInstanceConfig.setEncryptionLevel(CryptHandler.EncryptionLevel.MEDIUM)
-val clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(applicationContext, clevertapAdditionalInstanceConfig)
+**Java**
+```java
+CleverTapInstanceConfig config = CleverTapInstanceConfig.createInstance(
+        applicationContext,
+        "CLEVERTAP_ACCOUNT_ID",
+        "CLEVERTAP_ACCOUNT_TOKEN",
+        "CLEVERTAP_ACCOUNT_REGION"
+);
+
+// For Medium encryption
+config.setEncryptionLevel(EncryptionLevel.MEDIUM);
+
+// For High encryption (v7.7.0+)
+config.setEncryptionLevel(EncryptionLevel.FULL_DATA);
+
+CleverTapAPI clevertap = CleverTapAPI.instanceWithConfig(applicationContext, config);
+```
+
+**Kotlin**
+```kotlin
+val clevertap = CleverTapInstanceConfig.createInstance(
+    applicationContext,
+    "CLEVERTAP_ACCOUNT_ID",
+    "CLEVERTAP_ACCOUNT_TOKEN",
+    "CLEVERTAP_ACCOUNT_REGION"
+).apply {
+    // For Medium encryption
+    setEncryptionLevel(EncryptionLevel.MEDIUM)
+
+    // For High encryption (v7.7.0+)
+    setEncryptionLevel(EncryptionLevel.FULL_DATA)
+}.let { config ->
+    CleverTapAPI.instanceWithConfig(applicationContext, config)
+}
 ```
 
 #### Encryption over Network
@@ -827,9 +857,10 @@ To enable encryption in transit, add the following to your `AndroidManifest.xml`
 ```kotlin
 // 1. Create a configuration object for your additional instance
 val clevertapAdditionalInstanceConfig = CleverTapInstanceConfig.createInstance(
-applicationContext,
-"YOUR_ADDITIONAL_ACCOUNT_ID", // Replace with your actual Account ID
-"YOUR_ADDITIONAL_ACCOUNT_TOKEN" // Replace with your actual Account Token
+    applicationContext,
+    "YOUR_ADDITIONAL_ACCOUNT_ID", // Replace with your actual Account ID
+    "YOUR_ADDITIONAL_ACCOUNT_TOKEN", // Replace with your actual Account Token
+    "YOUR_ADDITIONAL_ACCOUNT_REGION"
 )
 
 // 2. Enable encryption in transit for this specific instance
