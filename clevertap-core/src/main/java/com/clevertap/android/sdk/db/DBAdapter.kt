@@ -82,6 +82,8 @@ internal class DBAdapter constructor(
     @Synchronized
     fun removeEvents(table: Table) = eventDAO.removeAllEvents(table)
 
+    fun migrateEventsData(table: Table) = eventDAO.updateAllEvents(table)
+
     // =====================================================
     // INBOX MESSAGE OPERATIONS
     // =====================================================

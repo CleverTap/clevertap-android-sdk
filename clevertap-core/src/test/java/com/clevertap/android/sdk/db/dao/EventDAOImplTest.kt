@@ -1,15 +1,18 @@
 package com.clevertap.android.sdk.db.dao
 
 import TestCryptHandler
+import android.content.ContentValues
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.cryption.EncryptionLevel
+import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.RunWith
@@ -340,5 +343,104 @@ class EventDAOImplTest : BaseTestCase() {
         assertEquals(2, profileResult.data.length())
         assertEquals("old_profile_event", (profileResult.data[0] as JSONObject).getString("name"))
         assertEquals("recent_profile_event", (profileResult.data[1] as JSONObject).getString("name"))
+    }
+
+    @Test
+    fun test_updateAllEvents_when_encryptionLevelFullData_should_encryptAllPlainRows() {
+        val table = Table.EVENTS
+
+        // Insert plain text data (not encrypted)
+        eventDAO.storeEvent(JSONObject().apply { put("name", "event1") }, table)
+        eventDAO.storeEvent(JSONObject().apply { put("name", "event2") }, table)
+        eventDAO.storeEvent(JSONObject().apply { put("name", "event3") }, table)
+
+        // Mock to verify wrap calls
+        val mockEncryptionHandler = spyk(DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.FULL_DATA))
+        val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
+        
+        // Update all events
+        val updatedCount = testEventDAO.updateAllEvents(table)
+        
+        // Verify all 3 rows were updated
+        assertEquals(3, updatedCount)
+        // Verify wrap was called 3 times (once per row)
+        verify(exactly = 3) { mockEncryptionHandler.wrapDbData(any()) }
+    }
+
+    @Test
+    fun test_updateAllEvents_when_encryptionLevelFullData_andAlreadyEncrypted_should_skipAllRows() {
+        val table = Table.EVENTS
+        
+        // Insert encrypted data (already correct format)
+        dbHelper.writableDatabase.insert(table.tableName, null, ContentValues().apply {
+            put(Column.DATA, "<ct<encrypted_data_1>ct>")
+            put(Column.CREATED_AT, testClock.currentTimeMillis())
+        })
+        dbHelper.writableDatabase.insert(table.tableName, null, ContentValues().apply {
+            put(Column.DATA, "<ct<encrypted_data_2>ct>")
+            put(Column.CREATED_AT, testClock.currentTimeMillis())
+        })
+        
+        // Mock to verify wrap calls
+        val mockEncryptionHandler = spyk(DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.FULL_DATA))
+        val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
+        
+        // Update all events
+        val updatedCount = testEventDAO.updateAllEvents(table)
+        
+        // Verify no rows were updated
+        assertEquals(0, updatedCount)
+        // Verify wrap was never called (all rows skipped)
+        verify(exactly = 0) { mockEncryptionHandler.wrapDbData(any()) }
+    }
+
+    @Test
+    fun test_updateAllEvents_when_encryptionLevelFullData_withMixedData_should_encryptOnlyPlainRows() {
+        val table = Table.EVENTS
+        
+        // Insert mix: plain text and encrypted data
+        dbHelper.writableDatabase.insert(table.tableName, null, ContentValues().apply {
+            put(Column.DATA, "{\"name\":\"event1\"}")
+            put(Column.CREATED_AT, testClock.currentTimeMillis())
+        })
+        dbHelper.writableDatabase.insert(table.tableName, null, ContentValues().apply {
+            put(Column.DATA, "<ct<encrypted_data>ct>")
+            put(Column.CREATED_AT, testClock.currentTimeMillis())
+        })
+        dbHelper.writableDatabase.insert(table.tableName, null, ContentValues().apply {
+            put(Column.DATA, "{\"name\":\"event3\"}")
+            put(Column.CREATED_AT, testClock.currentTimeMillis())
+        })
+        
+        // Mock to verify wrap calls
+        val mockEncryptionHandler = spyk(DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.FULL_DATA))
+        val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
+        
+        // Update all events
+        val updatedCount = testEventDAO.updateAllEvents(table)
+        
+        // Verify only 2 rows were updated (the plain text ones)
+        assertEquals(2, updatedCount)
+        // Verify wrap was called 2 times (once per plain text row)
+        verify(exactly = 2) { mockEncryptionHandler.wrapDbData(any()) }
+    }
+
+    @Test
+    fun test_updateAllEvents_when_noEventsExist_should_returnZero() {
+        val table = Table.EVENTS
+        
+        // Don't insert any events
+        
+        // Mock to verify wrap calls
+        val mockEncryptionHandler = spyk(dbEncryptionHandler)
+        val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
+        
+        // Update all events
+        val updatedCount = testEventDAO.updateAllEvents(table)
+        
+        // Verify no rows were updated
+        assertEquals(0, updatedCount)
+        // Verify wrap was never called
+        verify(exactly = 0) { mockEncryptionHandler.wrapDbData(any()) }
     }
 }

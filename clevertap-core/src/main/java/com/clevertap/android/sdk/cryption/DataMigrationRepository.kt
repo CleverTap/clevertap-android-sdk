@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Constants.CACHED_GUIDS_KEY
 import com.clevertap.android.sdk.Constants.INAPP_KEY
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import org.json.JSONObject
 import java.io.File
@@ -69,6 +70,11 @@ internal class DataMigrationRepository(
 
     override fun saveUserProfile(deviceID: String, profile: JSONObject): Long {
         return dbAdapter.storeUserProfile(config.accountId, deviceID, profile)
+    }
+
+    fun migrateEventsToCorrectLevel() {
+        dbAdapter.migrateEventsData(Table.EVENTS)
+        dbAdapter.migrateEventsData(Table.PROFILE_EVENTS)
     }
 
     override fun inAppDataFiles(
