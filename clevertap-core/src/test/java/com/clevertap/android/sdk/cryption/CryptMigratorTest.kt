@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.cryption
 
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import io.mockk.*
@@ -630,6 +631,8 @@ class CryptMigratorTest {
             dataMigrationRepository.userProfilesInAccount()
             dbAdapter.getMessages(userId)
             dbAdapter.upsertMessages(listOfMessages)
+            dbAdapter.migrateEventsData(Table.EVENTS)
+            dbAdapter.migrateEventsData(Table.PROFILE_EVENTS)
 
             // verify status of migrations for success
             cryptRepository.updateEncryptionLevel(EncryptionLevel.FULL_DATA.intValue())

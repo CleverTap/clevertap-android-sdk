@@ -12,6 +12,8 @@ import io.mockk.verify
 import org.junit.After
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 internal class DBEncryptionHandlerTest {
 
@@ -100,5 +102,23 @@ internal class DBEncryptionHandlerTest {
         val op3 = dbEncryptionHandler.wrapDbData(plainText)
         assertEquals(op3, encryptedText)
         verify(exactly = 1) { cryptHandler.encryptSafe(plainText) }
+    }
+
+    @Test
+    fun `isInCorrectEncryptionFormat returns right value for different encryption levels`() {
+        val plainText = "plainTextData"
+        val encryptedText = "${Constants.AES_GCM_PREFIX}some-encrypted-text${Constants.AES_GCM_SUFFIX}"
+
+        initHandler(EncryptionLevel.NONE)
+        assertTrue(dbEncryptionHandler.isInCorrectEncryptionFormat(plainText))
+        assertFalse(dbEncryptionHandler.isInCorrectEncryptionFormat(encryptedText))
+
+        initHandler(EncryptionLevel.MEDIUM)
+        assertTrue(dbEncryptionHandler.isInCorrectEncryptionFormat(plainText))
+        assertFalse(dbEncryptionHandler.isInCorrectEncryptionFormat(encryptedText))
+
+        initHandler(EncryptionLevel.FULL_DATA)
+        assertFalse(dbEncryptionHandler.isInCorrectEncryptionFormat(plainText))
+        assertTrue(dbEncryptionHandler.isInCorrectEncryptionFormat(encryptedText))
     }
 }

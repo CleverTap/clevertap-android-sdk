@@ -192,4 +192,74 @@ internal class EventDAOImpl(
             dbHelper.deleteDatabase()
         }
     }
+
+    /**
+     * Updates all event rows in the specified table based on current encryption level.
+     * - FULL_DATA: Transforms plain text data to encrypted format
+     * - NONE/MEDIUM: Transforms encrypted data to plain text format
+     * Useful for migrating data when encryption level changes.
+     *
+     * @param table the table to update events in
+     * @return the number of rows successfully updated, or DB_UPDATE_ERROR on failure
+     */
+    @WorkerThread
+    @Synchronized
+    override fun updateAllEvents(table: Table): Int {
+        val tName = table.tableName
+        var rowsUpdated = 0
+
+        try {
+            // First, read all rows
+            dbHelper.readableDatabase.query(
+                tName,
+                arrayOf(Column.ID, Column.DATA),
+                null, null, null, null, null
+            ).use { cursor ->
+                val colId = cursor.getColumnIndexOrThrow(Column.ID)
+                val colData = cursor.getColumnIndexOrThrow(Column.DATA)
+
+                // Process each row
+                while (cursor.moveToNext()) {
+                    val id = cursor.getString(colId)
+                    val eventData = cursor.getString(colData)
+
+                    if (eventData != null && dbEncryptionHandler.isInCorrectEncryptionFormat(eventData)) {
+                        continue
+                    }
+                    // Decrypt the existing data
+                    val decryptedData = dbEncryptionHandler.unwrapDbData(eventData)
+                    if (decryptedData == null) {
+                        logger.verbose("Error decrypting data for id: $id from table: $tName, skipping")
+                        continue
+                    }
+
+                    // Re-encrypt with current encryption settings
+                    val reEncryptedData = dbEncryptionHandler.wrapDbData(decryptedData)
+
+                    // Update the row with re-encrypted data
+                    val cv = ContentValues().apply {
+                        put(Column.DATA, reEncryptedData)
+                    }
+
+                    val updated = dbHelper.writableDatabase.update(
+                        tName,
+                        cv,
+                        "${Column.ID} = ?",
+                        arrayOf(id)
+                    )
+
+                    if (updated > 0) {
+                        rowsUpdated++
+                    }
+                }
+            }
+
+            logger.verbose("Successfully migrated $rowsUpdated rows in table $tName")
+            return rowsUpdated
+        } catch (e: Exception) {
+            logger.verbose("Error updating all events in table $tName. Recreating DB", e)
+            dbHelper.deleteDatabase()
+            return DB_UPDATE_ERROR.toInt()
+        }
+    }
 }
