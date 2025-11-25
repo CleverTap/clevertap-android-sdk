@@ -1,6 +1,10 @@
 package com.clevertap.android.sdk.variables;
 
 import android.text.Editable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.Logger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,7 +77,14 @@ public class JsonUtil {
     return result;
   }
 
-  public static <T> List<T> listFromJson(JSONArray json) {
+  @NonNull
+  public static <T> List<T> listFromJsonFromDefault(@Nullable JSONArray json) {
+    List<Object> objects = listFromJson(json);
+    return uncheckedCast(objects != null ? objects : new ArrayList<>());
+  }
+
+  @Nullable
+  public static <T> List<T> listFromJson(@Nullable JSONArray json) {
     if (json == null) {
       return null;
     }
@@ -125,6 +136,18 @@ public class JsonUtil {
       return mapToJsonObject(map).toString();
     } catch (JSONException e) {
       Logger.v("Error converting " + map + " to JSON", e);
+      return null;
+    }
+  }
+  @Nullable
+  public static String toJson(List<?> list) {
+    if (list == null) {
+      return null;
+    }
+    try {
+      return listToJsonArray(list).toString();
+    } catch (JSONException e) {
+      Logger.v("Error converting " + list + " to JSON", e);
       return null;
     }
   }
