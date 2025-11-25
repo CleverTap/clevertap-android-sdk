@@ -357,6 +357,7 @@ public class VarCache {
 
         // 2. reset server values for previous user
         applyVariableDiffs(new HashMap<>(), clientRegisteredVars);
+        abVariants = new ArrayList<>();
 
         // 3. reset data in shared prefs
         saveDiffsAsync();
