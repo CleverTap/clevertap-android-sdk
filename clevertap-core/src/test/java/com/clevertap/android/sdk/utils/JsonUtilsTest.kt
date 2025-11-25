@@ -59,6 +59,16 @@ class JsonUtilsTest {
 
         assertEquals(arrWithJsonTokenizer.toString(), op.toString())
     }
+
+    @Test
+    fun `JsonUtil-listFromJsonFromDefault check for non null return`() {
+
+        // Act
+        val op = JsonUtil.listFromJsonFromDefault<String>(null)
+
+        // Assert
+        assertEquals(emptyList<String>(), op)
+    }
 }
 
 class SomeJavaClassForTest{
