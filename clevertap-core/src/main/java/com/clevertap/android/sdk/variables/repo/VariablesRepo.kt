@@ -39,4 +39,32 @@ internal class VariablesRepo(
         Logger.d("VarCache loaded cache data:\n$cache")
         return cache
     }
+
+    fun storeVariantsInCache(data: String) {
+        Logger.d("storeVariantsInCache() called with: data = [$data]")
+        try {
+            val encryptedData: String = dbEncryptionHandler.wrapDbData(data)
+            putString(
+                context,
+                accountId,
+                Constants.CACHED_VARIANTS_KEY,
+                encryptedData
+            )
+        } catch (t: Throwable) {
+            Logger.d("storeVariantsInCache failed", t)
+        }
+    }
+
+    fun loadVariantsFromCache(): String? {
+        var cache = getStringFromPrefs(
+            context,
+            accountId,
+            Constants.CACHED_VARIANTS_KEY,
+            "[]"
+        )
+        cache = dbEncryptionHandler.unwrapDbData(cache)
+        Logger.d("VarCache loaded variants cache data:\n$cache")
+        // getStringFromPrefs returns non null default.
+        return cache
+    }
 }

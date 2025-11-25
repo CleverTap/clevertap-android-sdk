@@ -58,4 +58,31 @@ class VariablesRepoTest {
         verify { dbEncryptionHandler.unwrapDbData(data = any()) }
         assertEquals(expected = returnData, actual = varsCachedData)
     }
+
+    @Test
+    fun `storeVariantsInCache - verify correct method calls`() {
+        val inputData = "some-input-json-for-storing-vars"
+        val encryptedData = "some-encrypted-data"
+        every { dbEncryptionHandler.wrapDbData(data = any()) } returns encryptedData
+        every { dbEncryptionHandler.unwrapDbData(data = any()) } returns inputData
+
+        // Act
+        variablesRepo.storeVariantsInCache(inputData)
+        verify { dbEncryptionHandler.wrapDbData(data = inputData) }
+
+        val loadedData = variablesRepo.loadDataFromCache()
+        verify { dbEncryptionHandler.unwrapDbData(data = any()) }
+        assertEquals(expected = inputData, actual = loadedData)
+    }
+
+    @Test
+    fun `loadVariantsFromCache - verify correct method calls`() {
+        val returnData = "some-decrypted-vars-data"
+        every { dbEncryptionHandler.unwrapDbData(any()) } returns returnData
+
+        // Act
+        val abVariantsCachedData = variablesRepo.loadVariantsFromCache()
+        verify { dbEncryptionHandler.unwrapDbData(data = any()) }
+        assertEquals(expected = returnData, actual = abVariantsCachedData)
+    }
 }
