@@ -458,6 +458,37 @@ class VarCacheTest : BaseTestCase() {
     }
 
     @Test
+    fun `test clearUserContent for ab variants data`() {
+        val list: List<Map<String, Any>> = listOf(
+            buildMap {
+                "abTestName" to "My Test"
+                "name" to "Variant A"
+                "abTestId" to 123L
+                "id" to 1234L
+            },
+            buildMap {
+                "abTestName" to "My Test 2"
+                "name" to "Variant C"
+                "abTestId" to 100L
+                "id" to 12344L
+            }
+        )
+
+        // Setup
+        varCache.updateAbVariants(list)
+
+        // Act
+        varCache.clearUserContent()
+
+        // Verify and Assert
+        assertEquals(varCache.variants(), emptyList<Map<String, Any>>())
+        verifyOrder {
+            variablesRepo.storeDataInCache(any())
+            variablesRepo.storeVariantsInCache(any())
+        }
+    }
+
+    @Test
     fun `test fileVarUpdated when file is cached`() {
         // set initial value which will be considered as the "new" value when
         // fileVarUpdated is triggered
