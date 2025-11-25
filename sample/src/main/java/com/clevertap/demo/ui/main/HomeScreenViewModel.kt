@@ -902,6 +902,7 @@ class HomeScreenViewModel(
             9 -> addOneTimeVariablesChangedCallback()
             10 -> removeOneTimeVariablesChangedCallback()
             11 -> defineMultipleVarsAndFetch()
+            12 -> printAbVariants()
         }
     }
 
@@ -1035,6 +1036,12 @@ class HomeScreenViewModel(
                 printTestVariables()
             }
         }
+    }
+
+    private fun printAbVariants() {
+        logStep("VARIABLES", "Printing AB Variants")
+        val variants = cleverTapAPI?.variants()
+        printVar("AB Variants", variants)
     }
 
     // ========== FILE TYPE VARIABLES SECTION ==========
