@@ -1174,4 +1174,17 @@ class CleverTapAPITest : BaseTestCase() {
         }
         assertEquals(expectedJson.toString(), jsonSlot.captured.toString())
     }
+
+    @Test
+    fun test_delegation_for_variants_method() {
+
+        // do not test actual data it is handled in underlying test classes.
+        // act
+        cleverTapAPI.variants()
+
+        // verify delegation
+        verify {
+            corestate.varCache.variants()
+        }
+    }
 }

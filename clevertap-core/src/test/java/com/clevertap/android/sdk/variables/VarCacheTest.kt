@@ -11,8 +11,14 @@ import com.clevertap.android.sdk.variables.VariableDefinitions.NullDefaultValue
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
-import org.junit.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.verify
+import io.mockk.verifyOrder
+import org.junit.Before
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -63,16 +69,63 @@ class VarCacheTest : BaseTestCase() {
         val var2 = Var.define("group.var2", 2, ctVariables)
 
 
-        varCache.updateDiffsAndTriggerHandlers(
-            mapOf(
-                "var1" to 10,
-                "group" to mapOf("var2" to 20, "var3" to 30),
-            ), func
+        val diffs = mapOf<String, Any>(
+            "var1" to 10,
+            "group" to mapOf("var2" to 20, "var3" to 30),
         )
+        varCache.updateDiffsAndTriggerHandlers(diffs, func)
 
         assertEquals(10, var1.value())
         assertEquals(20, var2.value())
         assertEquals(30, varCache.getMergedValue("group.var3"))
+        verifyOrder {
+            variablesRepo.storeDataInCache(JsonUtil.toJson(diffs))
+            variablesRepo.storeVariantsInCache(any())
+        }
+    }
+
+    @Test
+    fun `test updateAbVariants method - some data`() {
+        val list: List<Map<String, Any>> = listOf(
+            buildMap {
+               "abTestName" to "My Test"
+               "name" to "Variant A"
+                "abTestId" to 123L
+                "id" to 1234L
+            },
+            buildMap {
+                "abTestName" to "My Test 2"
+                "name" to "Variant C"
+                "abTestId" to 100L
+                "id" to 12344L
+            }
+        )
+        varCache.updateAbVariants(list)
+
+        // Act
+        varCache.updateDiffsAndTriggerHandlers(
+            mapOf(
+                "var1" to "http://example.com/file2",
+            )
+        ) {}
+
+        // Verify
+        verify(exactly = 1) { variablesRepo.storeVariantsInCache(JsonUtil.toJson(list)!!) }
+
+        assertEquals(list, varCache.variants())
+    }
+
+    @Test
+    fun `test updateAbVariants method - empty data`() {
+        val list: List<Map<String, Any>> = emptyList()
+        varCache.updateAbVariants(list)
+
+        // Act
+        varCache.updateDiffsAndTriggerHandlers(mapOf("var1" to 1,)) {}
+
+        // Verify no calls to save
+        verify(exactly = 1) { variablesRepo.storeVariantsInCache(JsonUtil.toJson(list)!!) }
+        assertEquals(list, varCache.variants())
     }
 
     @Test
@@ -360,7 +413,10 @@ class VarCacheTest : BaseTestCase() {
         varCache.loadDiffs { }
 
         assertEquals(2, var1.value())
-        verify { variablesRepo.loadDataFromCache() }
+        verifyOrder {
+            variablesRepo.loadDataFromCache()
+            variablesRepo.loadVariantsFromCache()
+        }
     }
 
     @Test
@@ -387,6 +443,7 @@ class VarCacheTest : BaseTestCase() {
 
         assertEquals(2, var1.value())
         verify { variablesRepo.loadDataFromCache() }
+        verify { variablesRepo.loadVariantsFromCache() }
         verify { globalCallbackRunnable.run() }
     }
 

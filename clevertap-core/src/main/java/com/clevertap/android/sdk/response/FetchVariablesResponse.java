@@ -7,15 +7,15 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
-
-
     private final ControllerManager controllerManager;
     private final BaseCallbackManager callbackMgr;
 
@@ -54,6 +54,11 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
             return;
         }
 
+        extractAbVariantsFromServer(response);
+        extractVarsFromServer(response);
+    }
+
+    private void extractVarsFromServer(JSONObject response) {
         String varsKey = Constants.REQUEST_VARIABLES_JSON_RESPONSE_KEY;
 
         if (!response.has(varsKey)) {
@@ -79,4 +84,30 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
             logI("Failed to parse response", t);
         }
     }
+
+    private void extractAbVariantsFromServer(JSONObject response) {
+        String variantsKey = Constants.REQUEST_VARIANTS_JSON_RESPONSE_KEY;
+
+        if (!response.has(variantsKey)) {
+            logI("JSON object doesn't contain the " + variantsKey + " key");
+            return;
+        }
+
+        try {
+            logI("Processing Variants response");
+
+            JSONArray abVariantsJson = response.optJSONArray(variantsKey);
+
+            CTVariables ctVariables = controllerManager.getCtVariables();
+            if (ctVariables != null) {
+                ctVariables.handleAbVariantsResponse(abVariantsJson);
+            } else {
+                logI("Can't parse Variant Response, CTVariables is null");
+            }
+
+        } catch (Throwable t) {
+            logI("Failed to parse variants response", t);
+        }
+    }
+
 }
