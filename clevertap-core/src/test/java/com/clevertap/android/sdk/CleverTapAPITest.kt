@@ -1178,6 +1178,9 @@ class CleverTapAPITest : BaseTestCase() {
     @Test
     fun test_delegation_for_variants_method() {
 
+        // Arrange
+        initializeCleverTapAPI()
+
         // do not test actual data it is handled in underlying test classes.
         // act
         cleverTapAPI.variants()
