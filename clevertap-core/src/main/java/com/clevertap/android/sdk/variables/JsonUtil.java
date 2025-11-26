@@ -88,6 +88,11 @@ public class JsonUtil {
     if (json == null) {
       return null;
     }
+    return listFromJsonSafe(json);
+  }
+
+  @NonNull
+  public static <T> List<T> listFromJsonSafe(@NonNull JSONArray json) {
     List<Object> result = new ArrayList<>(json.length());
     for (int i = 0; i < json.length(); i++) {
       Object value = json.opt(i);
