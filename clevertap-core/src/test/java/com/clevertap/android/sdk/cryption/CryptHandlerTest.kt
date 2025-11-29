@@ -2,12 +2,13 @@ package com.clevertap.android.sdk.cryption
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Constants.AES_PREFIX
-import com.clevertap.android.sdk.Constants.AES_SUFFIX
+import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm
 import io.mockk.MockKAnnotations
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -235,6 +236,44 @@ class CryptHandlerTest {
         val invalidAesGcmEncryptedText = "${Constants.AES_GCM_PREFIX}testEncryptedText"
 
         assertFalse(CryptHandler.isTextAESGCMEncrypted(invalidAesGcmEncryptedText))
+    }
+
+    @Test
+    fun encryptSafe_defaultValues_checkCorrectEncryptionTypes() {
+        val aesGcmEncryptedText = "${Constants.AES_GCM_PREFIX}testEncryptedText${Constants.AES_GCM_SUFFIX}"
+
+        mockkObject(CryptHandler.Companion)
+
+        cryptHandler.encryptSafe(aesGcmEncryptedText, true)
+        verify { CryptHandler.isTextAESEncrypted(aesGcmEncryptedText) }
+        verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
+        verify(exactly = 0) { crypt.encryptInternal(aesGcmEncryptedText) }
+
+        cryptHandler.encryptSafe(aesGcmEncryptedText, false)
+        verify { CryptHandler.isTextAESGCMEncrypted(aesGcmEncryptedText) }
+        verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
+        verify(exactly = 0) { crypt.encryptInternal(aesGcmEncryptedText) }
+
+        unmockkObject(CryptHandler.Companion)
+    }
+
+    @Test
+    fun decryptSafe_defaultValues_checkCorrectEncryptionTypes() {
+        val testPlainText = "testPlainText"
+
+        mockkObject(CryptHandler.Companion)
+
+        cryptHandler.decryptSafe(testPlainText, true)
+        verify { CryptHandler.isTextAESEncrypted(testPlainText) }
+        verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
+        verify(exactly = 0) { crypt.encryptInternal(testPlainText) }
+
+        cryptHandler.decryptSafe(testPlainText, false)
+        verify { CryptHandler.isTextAESGCMEncrypted(testPlainText) }
+        verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
+        verify(exactly = 0) { crypt.encryptInternal(testPlainText) }
+
+        unmockkObject(CryptHandler.Companion)
     }
 
 }
