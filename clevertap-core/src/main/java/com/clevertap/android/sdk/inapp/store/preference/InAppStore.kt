@@ -8,7 +8,6 @@ import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_SUPPRESSED_INAPP_KEY_CS
 import com.clevertap.android.sdk.STORE_TYPE_INAPP
 import com.clevertap.android.sdk.StoreProvider
-import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
