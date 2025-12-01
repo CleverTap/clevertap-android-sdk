@@ -16,13 +16,15 @@ import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
+import com.clevertap.android.sdk.profile.ProfileStateMerger;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
+import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 
-//import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +45,7 @@ public class LocalDataStore {
 
     private static long EXECUTOR_THREAD_ID = 0;
 
-    private final HashMap<String, Object> PROFILE_FIELDS_IN_THIS_SESSION = new HashMap<>();
+    private final JSONObject PROFILE_FIELDS_IN_THIS_SESSION = new JSONObject();
 
     private final CleverTapInstanceConfig config;
 
@@ -60,13 +62,18 @@ public class LocalDataStore {
     private final Set<String> userNormalizedEventLogKeys = Collections.synchronizedSet(new HashSet<>());
     private final Map<String, String> normalizedEventNames = new HashMap<>();
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
+    private final ProfileStateMerger profileStateMerger;
+    private final NestedJsonBuilder nestedJsonBuilder;
+
+    LocalDataStore(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager, ProfileStateMerger profileStateMerger, NestedJsonBuilder nestedJsonBuilder) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
         this.cryptHandler = cryptHandler;
         this.deviceInfo = deviceInfo;
         this.baseDatabaseManager = baseDatabaseManager;
+        this.profileStateMerger = profileStateMerger;
+        this.nestedJsonBuilder = nestedJsonBuilder;
     }
 
     @WorkerThread
@@ -394,12 +401,15 @@ public class LocalDataStore {
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             try {
-                Object property = PROFILE_FIELDS_IN_THIS_SESSION.get(key);
+                if (!PROFILE_FIELDS_IN_THIS_SESSION.has(key)) {
+                    return null;
+                }
+                Object property = PROFILE_FIELDS_IN_THIS_SESSION.opt(key);
                 if (property instanceof String && CryptHandler.isTextEncrypted((String) property)) {
                     getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property because it wasn't decrypted");
                     return null;
                 }
-                return PROFILE_FIELDS_IN_THIS_SESSION.get(key);
+                return property;
             } catch (Throwable t) {
                 getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property", t);
                 return null;
@@ -569,35 +579,50 @@ public class LocalDataStore {
             @Override
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                    HashMap<String, Object> profile = new HashMap<>(PROFILE_FIELDS_IN_THIS_SESSION);
+                    JSONObject profile = new JSONObject();
                     boolean passFlag = true;
+
+                    // Copy all fields from PROFILE_FIELDS_IN_THIS_SESSION to profile
+                    try {
+                        Iterator<String> keys = PROFILE_FIELDS_IN_THIS_SESSION.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            profile.put(key, PROFILE_FIELDS_IN_THIS_SESSION.get(key));
+                        }
+                    } catch (JSONException e) {
+                        getConfigLogger().verbose(getConfigAccountId(), "Failed to copy profile fields", e);
+                    }
+
+
                     // Encrypts only the pii keys before storing to DB
 
                     boolean isMediumEncryption = EncryptionLevel.fromInt(config.getEncryptionLevel()) == EncryptionLevel.MEDIUM;
                     for (String piiKey : piiDBKeys) {
-                        if (profile.get(piiKey) != null) {
-                            Object value = profile.get(piiKey);
-                            if (value instanceof String) {
+                        try {
+                            if (profile.has(piiKey)) {
+                                Object value = profile.opt(piiKey);
+                                if (value instanceof String) {
 
-                                if (isMediumEncryption) {
-                                    value = cryptHandler.encryptSafe((String) value);
+                                    if (isMediumEncryption) {
+                                        value = cryptHandler.encryptSafe((String) value);
+                                    }
+                                    if (value == null) {
+                                        passFlag = false;
+                                        continue;
+                                    }
+                                    profile.put(piiKey, value);
                                 }
-                                if (value == null) {
-                                    passFlag = false;
-                                    continue;
-                                }
-                                profile.put(piiKey, value);
                             }
+                        } catch (JSONException e) {
+                            getConfigLogger().verbose(getConfigAccountId(), "Failed to encrypt pii key: " + piiKey, e);
+                        }
+
+                        if (!passFlag) {
+                            cryptHandler.updateMigrationFailureCount(false);
                         }
                     }
-                    JSONObject jsonObjectEncrypted = new JSONObject(profile);
-
-                    if (!passFlag) {
-                        cryptHandler.updateMigrationFailureCount(false);
-                    }
-
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-                    long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);
+                    long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), profile);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }
@@ -659,12 +684,19 @@ public class LocalDataStore {
 
     private void resetLocalProfileSync() {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            PROFILE_FIELDS_IN_THIS_SESSION.clear();
+            // Better way to remove all keys
+            Iterator<String> keys = PROFILE_FIELDS_IN_THIS_SESSION.keys();
+            List<String> keysToRemove = new ArrayList<>();
+            while (keys.hasNext()) {
+                keysToRemove.add(keys.next());
+            }
+            for (String key : keysToRemove) {
+                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
+            }
         }
 
         // Load the older profile from cache into the db
         inflateLocalProfileAsync(context);
-
     }
 
     private void _removeProfileField(String key) {
@@ -733,5 +765,36 @@ public class LocalDataStore {
 
     private String stringify(Object value) {
         return (value == null) ? "" : value.toString();
+    }
+
+    @WorkerThread
+    public Map<String, ProfileStateMerger.ProfileChange> mergeJson(
+            String dotNotationKey,
+            Object value,
+            ProfileStateMerger.MergeOperation operation
+    ) throws JSONException {
+        JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
+        return mergeJson(nestedProfile, operation);
+    }
+
+
+    @WorkerThread
+    public Map<String, ProfileStateMerger.ProfileChange> mergeJson(
+            JSONObject newJson,
+            ProfileStateMerger.MergeOperation operation
+    ) throws JSONException {
+        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+            ProfileStateMerger.MergeResult result = profileStateMerger.merge(
+                    PROFILE_FIELDS_IN_THIS_SESSION,
+                    newJson,
+                    operation
+            );
+
+            // Persist after successful merge
+            persistLocalProfileAsync();
+
+            // Return the changes map
+            return result.getChanges();
+        }
     }
 }
