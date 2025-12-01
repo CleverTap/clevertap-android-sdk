@@ -88,16 +88,16 @@ class VarCacheTest : BaseTestCase() {
     fun `test updateAbVariants method - some data`() {
         val list: List<Map<String, Any>> = listOf(
             buildMap {
-               "abTestName" to "My Test"
-               "name" to "Variant A"
-                "abTestId" to 123L
-                "id" to 1234L
+                put("abTestName", "My Test")
+                put("name", "Variant A")
+                put("abTestId", 123L)
+                put("id", 1234L)
             },
             buildMap {
-                "abTestName" to "My Test 2"
-                "name" to "Variant C"
-                "abTestId" to 100L
-                "id" to 12344L
+                put("abTestName", "My Test 2")
+                put("name", "Variant C")
+                put("abTestId", 100L)
+                put("id", 12344L)
             }
         )
         varCache.updateAbVariants(list)
@@ -461,16 +461,16 @@ class VarCacheTest : BaseTestCase() {
     fun `test clearUserContent for ab variants data`() {
         val list: List<Map<String, Any>> = listOf(
             buildMap {
-                "abTestName" to "My Test"
-                "name" to "Variant A"
-                "abTestId" to 123L
-                "id" to 1234L
+                put("abTestName", "My Test")
+                put("name", "Variant A")
+                put("abTestId", 123L)
+                put("id", 1234L)
             },
             buildMap {
-                "abTestName" to "My Test 2"
-                "name" to "Variant C"
-                "abTestId" to 100L
-                "id" to 12344L
+                put("abTestName", "My Test 2")
+                put("name", "Variant C")
+                put("abTestId", 100L)
+                put("id", 12344L)
             }
         )
 
