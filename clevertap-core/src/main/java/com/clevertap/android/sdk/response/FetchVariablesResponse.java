@@ -98,6 +98,11 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
             JSONArray abVariantsJson = response.optJSONArray(variantsKey);
 
+            if (abVariantsJson == null) {
+                logI("Not handing AB variants cache as response is null");
+                return;
+            }
+
             CTVariables ctVariables = controllerManager.getCtVariables();
             if (ctVariables != null) {
                 ctVariables.handleAbVariantsResponse(abVariantsJson);

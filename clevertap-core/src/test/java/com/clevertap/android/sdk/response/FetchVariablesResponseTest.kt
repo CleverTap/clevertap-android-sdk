@@ -116,13 +116,23 @@ class FetchVariablesResponseTest : BaseTestCase() {
     }
 
     @Test
-    fun `processResponse should handle abVariantInfo when value is not JSONArray`() {
+    fun `processResponse should handle abVariantInfo when value is not JSONArray (invalid data)`() {
         val jsonBody = JSONObject().put(Constants.REQUEST_VARIANTS_JSON_RESPONSE_KEY, "invalid_string")
 
         fetchVariablesResponse.processResponse(jsonBody, null, mockContext)
 
         // optJSONArray returns null for non-array values
-        verify(exactly = 1) { mockCtVariables.handleAbVariantsResponse(null) }
+        verify(exactly = 0) { mockCtVariables.handleAbVariantsResponse(any()) }
+    }
+
+    @Test
+    fun `processResponse should not handle abVariantInfo when value is null`() {
+        val jsonBody = JSONObject()
+
+        fetchVariablesResponse.processResponse(jsonBody, null, mockContext)
+
+        // optJSONArray returns null for non-array values
+        verify(exactly = 0) { mockCtVariables.handleAbVariantsResponse(any()) }
     }
 
     // ==================== Both Keys Present ====================
