@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +37,7 @@ public final class Validator {
 
     private static final String[] eventNameCharsNotAllowed = {".", ":", "$", "'", "\"", "\\"};
 
-    private static final String[] objectKeyCharsNotAllowed = {".", ":", "$", "'", "\"", "\\"};
+    private static final String[] objectKeyCharsNotAllowed = {":", "$", "'", "\"", "\\"};
 
     private static final String[] objectValueCharsNotAllowed = {"'", "\"", "\\"};
 
@@ -274,6 +275,7 @@ public final class Validator {
                 for (String value : values) {
                     jsonArray.put(value);
                 }
+                // todo fix this. $set is no more needed
                 try {
                     jsonObject.put(Constants.COMMAND_SET, jsonArray);
                 } catch (JSONException e) {
@@ -288,8 +290,14 @@ public final class Validator {
                 vr.setErrorCode(error.getErrorCode());
             }
             return vr;
+        } else if(o instanceof Map){
+            // todo add validations
+            vr.setObject(new JSONObject((Map) o));
+            return vr;
+//            throw new IllegalArgumentException("Not a String, Boolean, Long, Integer, Float, Double, or Date");
         } else {
-            throw new IllegalArgumentException("Not a String, Boolean, Long, Integer, Float, Double, or Date");
+            vr.setObject(o);
+            return vr;
         }
     }
 
