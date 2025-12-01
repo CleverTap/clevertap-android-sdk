@@ -99,7 +99,7 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
             JSONArray abVariantsJson = response.optJSONArray(variantsKey);
 
             if (abVariantsJson == null) {
-                logI("Not handing AB variants cache as response is null");
+                logI("Not handling AB variants cache as response is null");
                 return;
             }
 

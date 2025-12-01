@@ -70,7 +70,7 @@ class VariablesRepoTest {
         variablesRepo.storeVariantsInCache(inputData)
         verify { dbEncryptionHandler.wrapDbData(data = inputData) }
 
-        val loadedData = variablesRepo.loadDataFromCache()
+        val loadedData = variablesRepo.loadVariantsFromCache()
         verify { dbEncryptionHandler.unwrapDbData(data = any()) }
         assertEquals(expected = inputData, actual = loadedData)
     }
