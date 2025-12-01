@@ -266,12 +266,12 @@ class CryptHandlerTest {
         cryptHandler.decryptSafe(testPlainText, true)
         verify { CryptHandler.isTextAESEncrypted(testPlainText) }
         verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
-        verify(exactly = 0) { crypt.encryptInternal(testPlainText) }
+        verify(exactly = 0) { crypt.decryptInternal(testPlainText) }
 
         cryptHandler.decryptSafe(testPlainText, false)
         verify { CryptHandler.isTextAESGCMEncrypted(testPlainText) }
         verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
-        verify(exactly = 0) { crypt.encryptInternal(testPlainText) }
+        verify(exactly = 0) { crypt.decryptInternal(testPlainText) }
 
         unmockkObject(CryptHandler.Companion)
     }

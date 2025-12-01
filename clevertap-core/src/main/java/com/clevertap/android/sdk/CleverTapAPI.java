@@ -3573,7 +3573,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * an "id" key mapping to the numeric ID of the variant.
      */
     public List<Map<String, Object>> variants() {
-        return coreState.getVarCache().variants();
+        List<Map<String, Object>> originalVariants = coreState.getVarCache().variants();
+        return Collections.unmodifiableList(new ArrayList<>(originalVariants));
     }
 
     /**
