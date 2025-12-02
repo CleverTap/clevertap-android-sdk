@@ -19,7 +19,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 import kotlin.Pair;
 import kotlin.Unit;
@@ -43,6 +46,9 @@ public class VarCache {
 
     // README: Do not forget reset the value of new fields in the reset() method.
     private Map<String, Object> diffs = new HashMap<>();
+
+    @NonNull
+    private List<Map<String, Object>> abVariants = new ArrayList<>();
 
     public VarCache(
             CleverTapInstanceConfig config,
@@ -158,6 +164,11 @@ public class VarCache {
     }
 
     public synchronized void loadDiffs(Function0<Unit> func) {
+        handleVariablesData(func);
+        handleAbVariantsData();
+    }
+
+    private void handleVariablesData(Function0<Unit> func) {
         try {
             String variablesFromCache = variablesRepo.loadDataFromCache();
             Map<String, Object> variablesAsMap = JsonUtil.fromJson(variablesFromCache);
@@ -174,9 +185,28 @@ public class VarCache {
         }
     }
 
+    private void handleAbVariantsData() {
+        try {
+            String variantsFromCache = variablesRepo.loadVariantsFromCache();
+            JSONArray variants;
+            if (variantsFromCache == null) {
+                variants = new JSONArray();
+            } else {
+                variants = new JSONArray(variantsFromCache);
+            }
+            abVariants = Objects.requireNonNull(JsonUtil.listFromJson(variants));
+        } catch (Exception e) {
+            log("Could not load variants", e);
+        }
+    }
+
     public synchronized void loadDiffsAndTriggerHandlers(Function0<Unit> func) {
         loadDiffs(func);
         triggerGlobalCallbacks();
+    }
+
+    public synchronized void updateAbVariants(@NonNull List<Map<String, Object>> variants) {
+        abVariants = variants;
     }
 
     public synchronized void updateDiffsAndTriggerHandlers(
@@ -197,6 +227,7 @@ public class VarCache {
         Task<Void> task = CTExecutorFactory.executors(instanceConfig).postAsyncSafelyTask();
         task.execute("VarCache#saveDiffsAsync", () -> {
             saveDiffs();
+            saveAbVariants();
             return null;
         });
     }
@@ -205,7 +236,18 @@ public class VarCache {
     private void saveDiffs() {
         log("saveDiffs() called");
         String variablesCipher = JsonUtil.toJson(diffs);
-        variablesRepo.storeDataInCache(variablesCipher);
+        if (variablesCipher != null) {
+            variablesRepo.storeDataInCache(variablesCipher);
+        }
+    }
+
+    @WorkerThread
+    private void saveAbVariants() {
+        log("saveAbVariables() called");
+        String variantsCipher = JsonUtil.toJson(abVariants);
+        if (variantsCipher != null) {
+            variablesRepo.storeVariantsInCache(variantsCipher);
+        }
     }
 
     /**
@@ -315,6 +357,7 @@ public class VarCache {
 
         // 2. reset server values for previous user
         applyVariableDiffs(new HashMap<>(), clientRegisteredVars);
+        abVariants = new ArrayList<>();
 
         // 3. reset data in shared prefs
         saveDiffsAsync();
@@ -356,5 +399,9 @@ public class VarCache {
             }
         });
         task.execute("isFileCached", () -> url == null || FileResourceProvider.getInstance(variablesCtx, instanceConfig.getLogger()).isFileCached(url));
+    }
+
+    public List<Map<String, Object>> variants() {
+        return abVariants;
     }
 }

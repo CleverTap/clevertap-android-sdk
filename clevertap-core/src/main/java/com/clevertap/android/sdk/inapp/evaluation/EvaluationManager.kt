@@ -637,9 +637,8 @@ internal class EvaluationManager(
     @WorkerThread
     fun loadSuppressedCSAndEvaluatedSSInAppsIds() {
         storeRegistry.inAppStore?.let { store ->
-            evaluatedServerSideCampaignIds =
-                store.readEvaluatedServerSideInAppIds().toList<Long>()
-            suppressedClientSideInApps = JsonUtil.listFromJson(store.readSuppressedClientSideInAppIds())
+            evaluatedServerSideCampaignIds = store.readEvaluatedServerSideInAppIds().toList<Long>()
+            suppressedClientSideInApps = JsonUtil.listFromJsonSafe(store.readSuppressedClientSideInAppIds())
         }
     }
 

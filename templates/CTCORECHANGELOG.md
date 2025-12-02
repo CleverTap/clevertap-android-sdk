@@ -1,4 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.7.1 (December 2, 2025)
+
+#### New Features
+* Adds public method variants to fetch A/B experiment variants for the user, enabling easier access to experiment data for custom implementations.
+
+#### Bug Fixes
+* Fixes an issue where gradient backgrounds and other HTML send test flows were not rendering correctly.
+
 ### Version 7.7.0 (November 21, 2025)
 
 #### New Features

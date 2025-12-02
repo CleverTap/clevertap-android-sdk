@@ -50,7 +50,7 @@ lifecycleRuntimeTesting = "2.9.4"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "7.7.0"
+clevertap_android_sdk = "7.7.1"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.4.0"
 clevertap_hms_sdk = "1.5.1"
