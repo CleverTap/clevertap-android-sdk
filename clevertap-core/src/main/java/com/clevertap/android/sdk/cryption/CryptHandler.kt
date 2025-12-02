@@ -42,7 +42,7 @@ internal class CryptHandler constructor(
      */
     override fun encryptSafe(plainText: String): String? {
 
-        if (isTextEncrypted(plainText)) {
+        if (isTextAESGCMEncrypted(plainText)) {
             return plainText
         }
 
@@ -58,7 +58,7 @@ internal class CryptHandler constructor(
      * @return The decrypted text, or the original cipher text if decryption is not required.
      */
     override fun decryptSafe(cipherText: String): String? {
-        if (!isTextEncrypted(cipherText)) {
+        if (!isTextAESGCMEncrypted(cipherText)) {
             return cipherText
         }
         return cryptFactory.getCryptInstance(DEFAULT_ALGORITHM).decryptInternal(cipherText)

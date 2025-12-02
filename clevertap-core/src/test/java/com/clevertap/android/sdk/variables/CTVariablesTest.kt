@@ -1,13 +1,16 @@
 package com.clevertap.android.sdk.variables
 
-import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
@@ -243,4 +246,24 @@ class CTVariablesTest : BaseTestCase() {
     assertEquals(mapOf("var1" to 1, "var2" to 222), group.value())
   }
 
+  @Test
+  fun `test delegation for handleAbVariantsResponse`() {
+    val abVariants = JSONArray()
+    ctVariables.handleAbVariantsResponse(abVariants)
+
+    val nullAbVariants = null
+    ctVariables.handleAbVariantsResponse(nullAbVariants)
+    verify { varCache.updateAbVariants(JsonUtil.listFromJsonFromDefault(nullAbVariants)) }
+
+    val someJsonArray = JSONArray(
+      listOf<Map<String, Any>>(
+        buildMap {
+          "id" to "uqid"
+          "name" to "some-name"
+        }
+      )
+    )
+    ctVariables.handleAbVariantsResponse(someJsonArray)
+    verify { varCache.updateAbVariants(JsonUtil.listFromJsonFromDefault(someJsonArray)) }
+  }
 }

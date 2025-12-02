@@ -719,6 +719,30 @@ Please note if using Google Ad Id for apps targeting Android 13+, will have to d
 
 From CleverTap SDK v5.0.0 onwards, you can use Remote Config Variables in your app. Please refer to the [Remote Config Variables doc](Variables.md) to read more on how to integrate this to your app.
 
+#### A/B Experiment Variants
+
+From CleverTap SDK v7.7.1 onwards, you can retrieve information about the active A/B experiment variants for the current user. This is useful when you need to access variant data for custom implementations or analytics.
+
+The `variants()` method returns a list of active variants, where each variant contains an `id` key mapping to the numeric ID of the variant.
+
+**Java**
+```java
+CleverTapAPI clevertap = CleverTapAPI.getDefaultInstance(getApplicationContext());
+if (clevertap != null) {
+    List<Map<String, Object>> activeVariants = clevertap.variants();
+}
+```
+
+**Kotlin**
+```kotlin
+val clevertap = CleverTapAPI.getDefaultInstance(applicationContext)
+clevertap?.let {
+    val activeVariants: List<Map<String, Any>> = it.variants()
+}
+```
+
+> **Note:** The returned list is unmodifiable. If no variants are active for the current user, an empty list is returned.
+
 #### User Privacy & Opt-Out
 
 ##### setOptOut(boolean userOptOut)
