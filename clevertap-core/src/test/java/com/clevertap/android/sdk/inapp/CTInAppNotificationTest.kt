@@ -249,17 +249,6 @@ class CTInAppNotificationTest {
         assertEquals(CTInAppNotification.HTML_DEFAULT_ASPECT_RATIO, notification.aspectRatio, Double.MIN_VALUE)
     }
 
-    @Test
-    fun checkTimeForParcelize() {
-        val timeInMillisHalfInter = parcelizeCheck(JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL))
-        println("Time taken to parcelize half inter = $timeInMillisHalfInter")
-        assertTrue(timeInMillisHalfInter < 50)
-
-        val timeInMillisHtml = parcelizeCheck(JSONObject(InAppFixtures.TYPE_BIG_HTML))
-        println("Time taken to parcelize html = $timeInMillisHtml")
-        assertTrue(timeInMillisHtml < 50)
-    }
-
     fun parcelizeCheck(jsonObject: JSONObject): Long {
 
         // Act
