@@ -15,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -62,6 +63,7 @@ class CryptHandlerTest {
     }
 
     @Test
+    @Ignore("We have made sure to never call this method on AES legacy encrypted text, so this use case is not needed")
     fun `encryptSafe - already AES encrypted text - returns same text without re-encryption`() {
         val encryptedText = "${Constants.AES_PREFIX}alreadyEncrypted${Constants.AES_SUFFIX}"
 
@@ -244,12 +246,7 @@ class CryptHandlerTest {
 
         mockkObject(CryptHandler.Companion)
 
-        cryptHandler.encryptSafe(aesGcmEncryptedText, true)
-        verify { CryptHandler.isTextAESEncrypted(aesGcmEncryptedText) }
-        verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
-        verify(exactly = 0) { crypt.encryptInternal(aesGcmEncryptedText) }
-
-        cryptHandler.encryptSafe(aesGcmEncryptedText, false)
+        cryptHandler.encryptSafe(aesGcmEncryptedText)
         verify { CryptHandler.isTextAESGCMEncrypted(aesGcmEncryptedText) }
         verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
         verify(exactly = 0) { crypt.encryptInternal(aesGcmEncryptedText) }
@@ -263,12 +260,7 @@ class CryptHandlerTest {
 
         mockkObject(CryptHandler.Companion)
 
-        cryptHandler.decryptSafe(testPlainText, true)
-        verify { CryptHandler.isTextAESEncrypted(testPlainText) }
-        verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
-        verify(exactly = 0) { crypt.decryptInternal(testPlainText) }
-
-        cryptHandler.decryptSafe(testPlainText, false)
+        cryptHandler.decryptSafe(testPlainText)
         verify { CryptHandler.isTextAESGCMEncrypted(testPlainText) }
         verify(exactly = 0) { cryptFactory.getCryptInstance(EncryptionAlgorithm.AES_GCM) }
         verify(exactly = 0) { crypt.decryptInternal(testPlainText) }

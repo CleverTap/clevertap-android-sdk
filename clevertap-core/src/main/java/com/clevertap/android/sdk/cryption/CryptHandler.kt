@@ -6,13 +6,9 @@ import com.clevertap.android.sdk.Constants.AES_SUFFIX
 import com.clevertap.android.sdk.Constants.AES_PREFIX
 
 internal interface ICryptHandler {
-    fun encryptSafe(plainText: String): String? = encryptSafe(plainText, true)
+    fun encryptSafe(plainText: String): String?
 
-    fun encryptSafe(plainText: String, isLegacy: Boolean): String?
-
-    fun decryptSafe(cipherText: String): String? = decryptSafe(cipherText, true)
-
-    fun decryptSafe(cipherText: String, isLegacy: Boolean): String?
+    fun decryptSafe(cipherText: String): String?
 
     fun encrypt(plainText: String): String?
 
@@ -44,16 +40,10 @@ internal class CryptHandler constructor(
      * @param plainText - The text to encrypt.
      * @return The encrypted text, or the original plain text if encryption is not required.
      */
-    override fun encryptSafe(plainText: String, isLegacy: Boolean): String? {
+    override fun encryptSafe(plainText: String): String? {
 
-        if (isLegacy) {
-            if (isTextEncrypted(plainText)) {
-                return plainText
-            }
-        } else {
-            if (isTextAESGCMEncrypted(plainText)) {
-                return plainText
-            }
+        if (isTextAESGCMEncrypted(plainText)) {
+            return plainText
         }
 
         // Use AES_GCM algorithm by default.
@@ -67,15 +57,9 @@ internal class CryptHandler constructor(
      * @param cipherText - The text to decrypt.
      * @return The decrypted text, or the original cipher text if decryption is not required.
      */
-    override fun decryptSafe(cipherText: String, isLegacy: Boolean): String? {
-        if (isLegacy) {
-            if (!isTextEncrypted(cipherText)) {
-                return cipherText
-            }
-        } else {
-            if (!isTextAESGCMEncrypted(cipherText)) {
-                return cipherText
-            }
+    override fun decryptSafe(cipherText: String): String? {
+        if (!isTextAESGCMEncrypted(cipherText)) {
+            return cipherText
         }
         return cryptFactory.getCryptInstance(DEFAULT_ALGORITHM).decryptInternal(cipherText)
     }

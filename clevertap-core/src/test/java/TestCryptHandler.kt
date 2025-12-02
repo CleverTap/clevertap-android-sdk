@@ -4,14 +4,12 @@ import com.clevertap.android.sdk.cryption.ICryptHandler
 internal class TestCryptHandler : ICryptHandler {
     override fun encryptSafe(
         plainText: String,
-        isLegacy: Boolean
     ): String? {
         return plainText
     }
 
     override fun decryptSafe(
         cipherText: String,
-        isLegacy: Boolean
     ): String? {
         return cipherText
     }

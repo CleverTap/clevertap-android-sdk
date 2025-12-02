@@ -44,7 +44,7 @@ internal class DBEncryptionHandler(
             if (data == null) {
                 data
             } else {
-                val op = crypt.decryptSafe(data, false)
+                val op = crypt.decryptSafe(data)
                 if (op == null) {
                     logger.verbose(TAG, "unwrapDbData: Decryption failed for $data")
                 }
@@ -59,7 +59,7 @@ internal class DBEncryptionHandler(
     fun wrapDbData(data: String) : String {
         return measureTimeInMillisAndLog(TAG, "wrapDbData") {
             if (encryptionLevel == EncryptionLevel.FULL_DATA) {
-                val op = crypt.encryptSafe(data, false)
+                val op = crypt.encryptSafe(data)
                 if (op == null) {
                     logger.verbose(TAG, "wrapDbData: Encryption failed for $data")
                 }
