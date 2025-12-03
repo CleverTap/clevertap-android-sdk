@@ -440,7 +440,7 @@ class ProfileStateMerger {
     }
 
     /**
-     * Adds string values to array (skips duplicates).
+     * Adds string values to array (allows duplicates).
      */
     private fun handleArrayAdd(
         oldArray: JSONArray,
@@ -453,7 +453,7 @@ class ProfileStateMerger {
 
         for (i in 0 until newArray.length()) {
             val item = newArray.get(i)
-            if (item is String && !arrayContainsString(oldArray, item)) {
+            if (item is String) {
                 oldArray.put(item)
                 modified = true
             }
