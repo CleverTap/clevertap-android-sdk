@@ -2489,6 +2489,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                           event properties regarding Signed Call event
      */
     @SuppressWarnings("unused")
+    @Deprecated
     public Future<?> pushSignedCallEvent(String eventName, JSONObject eventProperties) {
         return coreState.getAnalyticsManager()
                 .raiseEventForSignedCall(eventName, eventProperties);
@@ -2716,6 +2717,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void incrementValue(final String key, final Number value) {
         coreState.getAnalyticsManager().incrementValue(key, value);
     }
+
+//    public void incrementValue(JSONObject value) {
+//        coreState.getAnalyticsManager().incrementValue(key, value);
+//    }
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >

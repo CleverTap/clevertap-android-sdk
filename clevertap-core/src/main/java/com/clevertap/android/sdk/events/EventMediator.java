@@ -170,85 +170,86 @@ public class EventMediator {
         }
     }
 
-    /**
-     * This function computes the newValue and the oldValue for each user attribute of the event
-     * It also updates the user properties in the local cache and db
-     *
-     * @param event - profile event
-     * @return - a map representing the oldValue and newValue of each user-attribute in event
-     */
-    public Map<String, Map<String, Object>> computeUserAttributeChangeProperties(final JSONObject event) {
-        Map<String, Map<String, Object>> userAttributesChangeProperties = new HashMap<>();
-        Map<String, Object> fieldsToPersistLocally = new HashMap<>();
-        JSONObject profile = event.optJSONObject(Constants.PROFILE);
-
-        if (profile == null) {
-            return userAttributesChangeProperties;
-        }
-
-        Iterator<String> keys = profile.keys();
-
-        while (keys.hasNext()) {
-            String key = keys.next();
-
-            try {
-                if (keysToSkipForUserAttributesEvaluation.contains(key)) {
-                    continue;
-                }
-                Object oldValue = localDataStore.getProfileProperty(key);
-                Object newValue = profile.get(key);
-
-                // if newValue is a JSONObject, it will have a structure of {"$command":value}.
-                // In such a case handle this command to compute newValue
-                if (newValue instanceof JSONObject) {
-                    JSONObject obj = (JSONObject) newValue;
-                    String commandIdentifier = obj.keys().next();
-                    switch (commandIdentifier) {
-                        case Constants.COMMAND_INCREMENT:
-                        case Constants.COMMAND_DECREMENT:
-                            newValue = profileValueHandler.handleIncrementDecrementValues(
-                                    (Number) obj.get(commandIdentifier), commandIdentifier, (Number) oldValue);
-                            break;
-                        case Constants.COMMAND_DELETE:
-                            newValue = null;
-                            break;
-                        case Constants.COMMAND_SET:
-                        case Constants.COMMAND_ADD:
-                        case Constants.COMMAND_REMOVE:
-                            newValue = profileValueHandler.handleMultiValues(key,
-                                    ((JSONArray) obj.get(commandIdentifier)), commandIdentifier, oldValue);
-                            break;
-                    }
-                } else if (newValue instanceof String) {
-                    // Remove the date prefix before evaluation and persisting
-                    if (((String) newValue).startsWith(DATE_PREFIX)) {
-                        newValue = Long.parseLong(((String) newValue).substring(DATE_PREFIX.length()));
-                    }
-                }
-
-                Map<String, Object> properties = new HashMap<>();
-
-                // Skip multivalued user attributes for evaluation
-                if (oldValue != null && !(oldValue instanceof JSONArray)) {
-                    properties.put(KEY_OLD_VALUE, oldValue);
-                }
-                if (newValue != null && !(newValue instanceof JSONArray)) {
-                    properties.put(KEY_NEW_VALUE, newValue);
-                }
-
-                // Skip evaluation if both newValue or oldValue are null
-                if (!properties.isEmpty()) {
-                    userAttributesChangeProperties.put(key, properties);
-                }
-
-                fieldsToPersistLocally.put(key, newValue);
-            } catch (JSONException e) {
-                config.getLogger()
-                        .debug(config.getAccountId(), "Error getting user attribute changes for key: " + key + e);
-            }
-        }
-
-        localDataStore.updateProfileFields(fieldsToPersistLocally);
-        return userAttributesChangeProperties;
-    }
+//    /**
+//     * This function computes the newValue and the oldValue for each user attribute of the event
+//     * It also updates the user properties in the local cache and db
+//     *
+//     * @param event - profile event
+//     * @return - a map representing the oldValue and newValue of each user-attribute in event
+//     */
+    //todo remove this
+//    public Map<String, Map<String, Object>> computeUserAttributeChangeProperties(final JSONObject event) {
+//        Map<String, Map<String, Object>> userAttributesChangeProperties = new HashMap<>();
+//        Map<String, Object> fieldsToPersistLocally = new HashMap<>();
+//        JSONObject profile = event.optJSONObject(Constants.PROFILE);
+//
+//        if (profile == null) {
+//            return userAttributesChangeProperties;
+//        }
+//
+//        Iterator<String> keys = profile.keys();
+//
+//        while (keys.hasNext()) {
+//            String key = keys.next();
+//
+//            try {
+//                if (keysToSkipForUserAttributesEvaluation.contains(key)) {
+//                    continue;
+//                }
+//                Object oldValue = localDataStore.getProfileProperty(key);
+//                Object newValue = profile.get(key);
+//
+//                // if newValue is a JSONObject, it will have a structure of {"$command":value}.
+//                // In such a case handle this command to compute newValue
+//                if (newValue instanceof JSONObject) {
+//                    JSONObject obj = (JSONObject) newValue;
+//                    String commandIdentifier = obj.keys().next();
+//                    switch (commandIdentifier) {
+//                        case Constants.COMMAND_INCREMENT:
+//                        case Constants.COMMAND_DECREMENT:
+//                            newValue = profileValueHandler.handleIncrementDecrementValues(
+//                                    (Number) obj.get(commandIdentifier), commandIdentifier, (Number) oldValue);
+//                            break;
+//                        case Constants.COMMAND_DELETE:
+//                            newValue = null;
+//                            break;
+//                        case Constants.COMMAND_SET:
+//                        case Constants.COMMAND_ADD:
+//                        case Constants.COMMAND_REMOVE:
+//                            newValue = profileValueHandler.handleMultiValues(key,
+//                                    ((JSONArray) obj.get(commandIdentifier)), commandIdentifier, oldValue);
+//                            break;
+//                    }
+//                } else if (newValue instanceof String) {
+//                    // Remove the date prefix before evaluation and persisting
+//                    if (((String) newValue).startsWith(DATE_PREFIX)) {
+//                        newValue = Long.parseLong(((String) newValue).substring(DATE_PREFIX.length()));
+//                    }
+//                }
+//
+//                Map<String, Object> properties = new HashMap<>();
+//
+//                // Skip multivalued user attributes for evaluation
+//                if (oldValue != null && !(oldValue instanceof JSONArray)) {
+//                    properties.put(KEY_OLD_VALUE, oldValue);
+//                }
+//                if (newValue != null && !(newValue instanceof JSONArray)) {
+//                    properties.put(KEY_NEW_VALUE, newValue);
+//                }
+//
+//                // Skip evaluation if both newValue or oldValue are null
+//                if (!properties.isEmpty()) {
+//                    userAttributesChangeProperties.put(key, properties);
+//                }
+//
+//                fieldsToPersistLocally.put(key, newValue);
+//            } catch (JSONException e) {
+//                config.getLogger()
+//                        .debug(config.getAccountId(), "Error getting user attribute changes for key: " + key + e);
+//            }
+//        }
+//
+//        localDataStore.updateProfileFields(fieldsToPersistLocally);
+//        return userAttributesChangeProperties;
+//    }
 }

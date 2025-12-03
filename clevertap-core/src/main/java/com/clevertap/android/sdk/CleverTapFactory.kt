@@ -48,6 +48,7 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
+import com.clevertap.android.sdk.profile.ProfileStateMerger
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
@@ -67,6 +68,7 @@ import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
+import com.clevertap.android.sdk.utils.NestedJsonBuilder
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.variables.CTVariables
@@ -186,8 +188,11 @@ internal object CleverTapFactory {
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
+        val profileStateMerger = ProfileStateMerger()
+        val nestedJsonBuilder = NestedJsonBuilder()
+
         val localDataStore =
-            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager)
+            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager, profileStateMerger, nestedJsonBuilder)
 
         val profileValueHandler = ProfileValueHandler(validator, validationResultStack)
 
@@ -448,6 +453,7 @@ internal object CleverTapFactory {
             ctLockManager,
             SYSTEM,
             executors,
+            localDataStore,
             inAppPreviewHandler
         )
 

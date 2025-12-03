@@ -11,14 +11,17 @@ public abstract class BaseEventQueueManager {
     @AnyThread
     public abstract Future<?> queueEvent(final Context context, final JSONObject event, final int eventType);
 
+    @AnyThread
+    public abstract Future<?> queueEvent(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData);
+
     @WorkerThread
-    public abstract void addToQueue(final Context context, final JSONObject event, final int eventType);
+    public abstract void addToQueue(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData);
 
     public abstract void flush();
 
     public abstract void flushQueueAsync(final Context context, final EventGroup eventGroup);
 
-    public abstract void pushBasicProfile(JSONObject baseProfile, boolean removeFromSharedPrefs);
+    public abstract void pushBasicProfile(JSONObject baseProfile, boolean removeFromSharedPrefs, FlattenedEventData profileChanges);
 
     public abstract void pushInitialEventsAsync();
     @WorkerThread

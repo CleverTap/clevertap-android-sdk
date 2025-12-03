@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.profile.ProfileStateMerger;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -113,15 +114,15 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     // only call async
     @Override
-    public void addToQueue(final Context context, final JSONObject event, final int eventType) {
+    public void addToQueue(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData) {
         if (eventType == Constants.NV_EVENT) {
             config.getLogger()
                     .verbose(config.getAccountId(), "Pushing Notification Viewed event onto separate queue");
-            processPushNotificationViewedEvent(context, event, eventType);
+            processPushNotificationViewedEvent(context, event, eventType, flattenedEventData);
         } else if(eventType == Constants.DEFINE_VARS_EVENT) {
             processDefineVarsEvent(context, event);
         } else {
-            processEvent(context, event, eventType);
+            processEvent(context, event, eventType, flattenedEventData);
         }
     }
 
@@ -247,7 +248,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         return (int) (System.currentTimeMillis() / 1000);
     }
 
-    public void processEvent(final Context context, final JSONObject event, final int eventType) {
+    public void processEvent(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData) {
         synchronized (ctLockManager.getEventLock()) {
             try {
                 if (CoreMetaData.getActivityCount() == 0) {
@@ -303,7 +304,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 localDataStore.setDataSyncFlag(event);
                 baseDatabaseManager.queueEventToDB(context, event, eventType);
 
-                initInAppEvaluation(context, event, eventType);
+                initInAppEvaluation(context, event, eventType, flattenedEventData);
 
                 scheduleQueueFlush(context);
             } catch (Throwable e) {
@@ -312,7 +313,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         }
     }
 
-    public void initInAppEvaluation(Context context, JSONObject event, int eventType) {
+    public void initInAppEvaluation(Context context, JSONObject event, int eventType, FlattenedEventData flattenedEventData) {
         String eventName = eventMediator.getEventName(event);
         Location userLocation = cleverTapMetaData.getLocationFromUser();
         updateLocalStore(eventName, eventType);
@@ -323,22 +324,19 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                             eventMediator.getChargedEventItemDetails(event), userLocation);
         } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
             // in case device is offline just evaluate all events
-            controllerManager.getInAppController().onQueueEvent(eventName,
-                    eventMediator.getEventProperties(event), userLocation);
-        } else if (eventType == Constants.PROFILE_EVENT) {
-            // in case profile event, evaluate for user attribute changes
-            Map<String, Map<String, Object>> userAttributeChangedProperties
-                    = eventMediator.computeUserAttributeChangeProperties(event);
-            controllerManager.getInAppController()
-                    .onQueueProfileEvent(userAttributeChangedProperties, userLocation);
-        } else if (!eventMediator.isAppLaunchedEvent(event) && eventMediator.isEvent(event)) {
+            Map<String, Object> flattenedEventProps = ((FlattenedEventData.EventProperties) flattenedEventData).getProperties();
+            controllerManager.getInAppController().onQueueEvent(eventName, flattenedEventProps, userLocation);
+        } else if (flattenedEventData instanceof FlattenedEventData.ProfileChanges) {
+            Map<String, ProfileStateMerger.ProfileChange> flattenedProfileChanges = ((FlattenedEventData.ProfileChanges) flattenedEventData).getChanges();
+            controllerManager.getInAppController().onQueueProfileEvent(flattenedProfileChanges, userLocation);
+        } else if (!eventMediator.isAppLaunchedEvent(event) && flattenedEventData instanceof FlattenedEventData.EventProperties) {
             // in case device is online only evaluate non-appLaunched events
-            controllerManager.getInAppController().onQueueEvent(eventName,
-                    eventMediator.getEventProperties(event), userLocation);
+            Map<String, Object> flattenedEventProps = ((FlattenedEventData.EventProperties) flattenedEventData).getProperties();
+            controllerManager.getInAppController().onQueueEvent(eventName, flattenedEventProps, userLocation);
         }
     }
 
-    public void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType) {
+    public void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData) {
         synchronized (ctLockManager.getEventLock()) {
             try {
                 int session = cleverTapMetaData.getCurrentSessionId();
@@ -352,7 +350,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 }
                 config.getLogger().verbose(config.getAccountId(), "Pushing Notification Viewed event onto DB");
                 baseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
-                initInAppEvaluation(context, event, eventType);
+                initInAppEvaluation(context, event, eventType, flattenedEventData);
                 config.getLogger()
                         .verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue flush");
                 schedulePushNotificationViewedQueueFlush(context);
@@ -366,7 +364,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     //Profile
     @Override
-    public void pushBasicProfile(JSONObject baseProfile, boolean removeFromSharedPrefs) {
+    public void pushBasicProfile(JSONObject baseProfile, boolean removeFromSharedPrefs, FlattenedEventData profileChanges) {
         try {
             String guid = getCleverTapID();
 
@@ -432,7 +430,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                 JSONObject event = new JSONObject();
                 event.put("profile", profileEvent);
-                queueEvent(context, event, Constants.PROFILE_EVENT);
+                queueEvent(context, event, Constants.PROFILE_EVENT, profileChanges);
             } catch (JSONException e) {
                 config.getLogger()
                         .verbose(config.getAccountId(), "FATAL: Creating basic profile update event failed!");
@@ -451,7 +449,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 public Void call() {
                     try {
                         config.getLogger().verbose(config.getAccountId(), "Queuing daily events");
-                        pushBasicProfile(null, false);
+                        pushBasicProfile(null, false, FlattenedEventData.NoData.INSTANCE);
                     } catch (Throwable t) {
                         config.getLogger().verbose(config.getAccountId(), "Daily profile sync failed", t);
                     }
@@ -470,6 +468,19 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
+        return queueEvent(context, event, eventType, FlattenedEventData.NoData.INSTANCE);
+    }
+
+    /**
+     * Adds a new event to the queue, to be sent later.
+     *
+     * @param context   The Android context
+     * @param event     The event to be queued
+     * @param eventType The type of event to be queued
+     * @param flattenedEventData eventData to be used for InApp evaluation
+     */
+    @Override
+    public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData) {
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
@@ -489,18 +500,18 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                             public Void call() {
                                 sessionManager.lazyCreateSession(context);
                                 pushInitialEventsAsync();
-                                addToQueue(context, event, eventType);
+                                addToQueue(context, event, eventType, flattenedEventData);
                                 return null;
                             }
                         });
                     }, 2000);
                 } else {
                     if (eventType == Constants.FETCH_EVENT || eventType == Constants.NV_EVENT) {
-                        addToQueue(context, event, eventType);
+                        addToQueue(context, event, eventType, flattenedEventData);
                     } else {
                         sessionManager.lazyCreateSession(context);
                         pushInitialEventsAsync();
-                        addToQueue(context, event, eventType);
+                        addToQueue(context, event, eventType, flattenedEventData);
                     }
                 }
                 return null;

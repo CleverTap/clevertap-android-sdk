@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getWzrkFields;
 
@@ -9,9 +10,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
+import com.clevertap.android.sdk.events.FlattenedEventData;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.profile.ProfileCommand;
+import com.clevertap.android.sdk.profile.ProfileStateMerger;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
@@ -19,6 +23,8 @@ import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
+import com.clevertap.android.sdk.utils.JsonFlattener;
+import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
@@ -49,6 +55,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
+    private final LocalDataStore localDataStore;
     private final InAppPreviewHandler inAppPreviewHandler;
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
@@ -66,6 +73,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             final CTLockManager ctLockManager,
             Clock currentTimeProvider,
             CTExecutors executors,
+            LocalDataStore localDataStore,
             InAppPreviewHandler inAppPreviewHandler
     ) {
         this.context = context;
@@ -80,6 +88,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.controllerManager = controllerManager;
         this.currentTimeProvider = currentTimeProvider;
         this.executors = executors;
+        this.localDataStore = localDataStore;
         this.inAppPreviewHandler = inAppPreviewHandler;
     }
 
@@ -87,20 +96,19 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("addMultiValuesForKey", () -> {
-            final String command = Constants.COMMAND_ADD;
-            _handleMultiValues(values, key, command);
+            _handleMultiValues(values, key, ProfileCommand.ADD);
             return null;
         });
     }
 
     @Override
     public void incrementValue(String key, Number value) {
-        _constructIncrementDecrementValues(value,key,Constants.COMMAND_INCREMENT);
+        _constructIncrementDecrementValues(value,key, ProfileCommand.INCREMENT);
     }
 
     @Override
     public void decrementValue(String key, Number value) {
-        _constructIncrementDecrementValues(value,key,Constants.COMMAND_DECREMENT);
+        _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT);
     }
 
     /**
@@ -156,6 +164,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable t) {
             // We won't get here
         }
+
+        // Flattened data is not needed since AppLaunched fields are attached separately before inapp evaluation. AppLaunched Fields never have nesting
         baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
     }
 
@@ -184,11 +194,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         } catch (Throwable t) {
                             // no-op
                         }
+                        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(eventExtraData));
                     }
                 }
             }
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
             config.getLogger().verbose(config.getAccountId(),
@@ -211,11 +221,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
                     if (eventExtras != null) {
                         event.put("evtData", eventExtras);
+                        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(eventExtras));
                     }
                 }
             }
-
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
             config.getLogger().verbose(config.getAccountId(),
@@ -312,7 +321,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", eventName);
             event.put("evtData", actions);
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(actions));
         } catch (Throwable t) {
             // We won't get here
         }
@@ -355,7 +364,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             event.put("evtData", notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
         } catch (Throwable ignored) {
             // We won't get here
         }
@@ -499,10 +508,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         try {
             // convert bundle to json
-            JSONObject event = AnalyticsManagerBundler.notificationClickedJson(extras);
+            JSONObject notif = wzrkBundleToJson(extras);
+            JSONObject event = AnalyticsManagerBundler.notificationClickedJson(notif);
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
-            coreMetaData.setWzrkParams(AnalyticsManagerBundler.wzrkBundleToJson(extras));
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
+            coreMetaData.setWzrkParams(notif);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -575,8 +585,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras);
 
-        JSONObject event = AnalyticsManagerBundler.notificationViewedJson(extras);
-        baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT);
+        try {
+            JSONObject notif = wzrkBundleToJson(extras);
+            JSONObject event = AnalyticsManagerBundler.notificationViewedJson(notif);
+            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
+
+        } catch (JSONException e) {
+            config.getLogger().debug("Failed to recording Notification Viewed " + e);
+        }
     }
 
     @Override
@@ -595,7 +611,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("removeMultiValuesForKey", () -> {
-            _handleMultiValues(values, key, Constants.COMMAND_REMOVE);
+            _handleMultiValues(values, key, ProfileCommand.REMOVE);
             return null;
         });
     }
@@ -740,6 +756,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    @Deprecated
     Future<?> raiseEventForSignedCall(String eventName, JSONObject dcEventProperties) {
 
         Future<?> future = null;
@@ -777,7 +794,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             coreMetaData.setLocationFromUser(location);
 
-            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(geofenceProperties));
         } catch (JSONException e) {
             config.getLogger().debug(config.getAccountId(), Constants.LOG_TAG_GEOFENCES +
                     "JSON Exception when raising GeoFence event "
@@ -811,7 +828,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     void setMultiValuesForKey(final String key, final ArrayList<String> values) {
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("setMultiValuesForKey", () -> {
-            _handleMultiValues(values, key, Constants.COMMAND_SET);
+            _handleMultiValues(values, key, ProfileCommand.SET);
             return null;
         });
     }
@@ -823,7 +840,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 "Invalid multi-value property key " + key + " profile multi value operation aborted");
     }
 
-    private void _handleMultiValues(ArrayList<String> values, String key, String command) {
+    private void _handleMultiValues(ArrayList<String> values, String key, ProfileCommand command) {
         if (key == null) {
             return;
         }
@@ -857,7 +874,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         _pushMultiValue(values, key, command);
     }
 
-    private void _constructIncrementDecrementValues(Number value, String key, String command) {
+    private void _constructIncrementDecrementValues(Number value, String key, ProfileCommand command) {
         try {
             if (key == null || value == null) {
                 return;
@@ -890,11 +907,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (vr.getErrorCode() != 0) {
                 validationResultStack.pushValidationResult(vr);
             }
+            JSONObject profileCommand = new JSONObject().put(command.getCommandString(), value);
+            JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
-            // push to server
-            JSONObject commandObj = new JSONObject().put(command, value);
-            JSONObject updateObj = new JSONObject().put(key, commandObj);
-            baseEventQueueManager.pushBasicProfile(updateObj, false);
+            ProfileStateMerger.MergeOperation operation = command.getOperation();
+
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, value, operation));
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key "
                     + key, t);
@@ -978,7 +996,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile);
 
-            baseEventQueueManager.pushBasicProfile(customProfile, false);
+            baseEventQueueManager.pushBasicProfile(customProfile, false, getFlattenedProfileChanges(customProfile, ProfileStateMerger.MergeOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -1017,11 +1035,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             // send the delete command
-            JSONObject command = new JSONObject().put(Constants.COMMAND_DELETE, true);
-            JSONObject update = new JSONObject().put(key, command);
+            ProfileCommand command = ProfileCommand.DELETE;
+            JSONObject profileCommand = new JSONObject().put(command.getCommandString(), true);
+            JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
             //Set removeFromSharedPrefs to true to remove PII keys from shared prefs.
-            baseEventQueueManager.pushBasicProfile(update,true);
+            baseEventQueueManager.pushBasicProfile(profileUpdate, true, getFlattenedProfileChanges(key, NestedJsonBuilder.DELETE_MARKER, command.getOperation()));
 
             config.getLogger()
                     .verbose(config.getAccountId(), "removing value for key " + key + " from user profile");
@@ -1031,19 +1050,20 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private void _pushMultiValue(ArrayList<String> originalValues, String key, String command) {
+    private void _pushMultiValue(ArrayList<String> originalValues, String key, ProfileCommand command) {
         try {
             // push to server
-            JSONObject commandObj = new JSONObject();
-            commandObj.put(command, new JSONArray(originalValues));
+            JSONObject profileCommand = new JSONObject();
+            profileCommand.put(command.getCommandString(), new JSONArray(originalValues));
 
-            JSONObject fields = new JSONObject();
-            fields.put(key, commandObj);
+            JSONObject profileUpdate = new JSONObject();
+            profileUpdate.put(key, profileCommand);
 
-            baseEventQueueManager.pushBasicProfile(fields, false);
+            ProfileStateMerger.MergeOperation operation = command.getOperation();
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, originalValues, operation));
 
             config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed multi-value profile push: " + fields);
+                    .verbose(config.getAccountId(), "Constructed multi-value profile push: " + profileUpdate);
 
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error pushing multiValue for key " + key, t);
@@ -1163,9 +1183,23 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             event.put("evtData", notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
         } catch (Throwable ignored) {
             // We won't get here
         }
+    }
+
+    private FlattenedEventData getFlattenedEventProperties(JSONObject properties) {
+        return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
+    }
+
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, ProfileStateMerger.MergeOperation operation) throws JSONException {
+        Map<String, ProfileStateMerger.ProfileChange> profileChanges = localDataStore.mergeJson(key, originalValues, operation);
+        return new FlattenedEventData.ProfileChanges(profileChanges);
+    }
+
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, ProfileStateMerger.MergeOperation operation) throws JSONException {
+        Map<String, ProfileStateMerger.ProfileChange> profileChanges = localDataStore.mergeJson(originalValues, operation);
+        return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 }
