@@ -33,9 +33,9 @@ import com.clevertap.android.sdk.validation.NormalizationResult;
 import com.clevertap.android.sdk.validation.ValidationOutcome;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationError;
-import com.clevertap.android.sdk.validation.ValidationResultFactory2;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
-import com.clevertap.android.sdk.validation.Validator4;
+import com.clevertap.android.sdk.validation.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,7 +58,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
     private final ValidationResultStack validationResultStack;
-    private final Validator4 validator;
+    private final Validator validator;
     private final EventDataNormalizer eventDataNormalizer;
     private final EventNameNormalizer eventNameNormalizer;
     private final Clock currentTimeProvider;
@@ -74,7 +74,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             Context context,
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
-            Validator4 validator,
+            Validator validator,
             EventDataNormalizer eventDataNormalizer,
             EventNameNormalizer eventNameNormalizer,
             ValidationResultStack validationResultStack,
@@ -611,7 +611,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     void _generateEmptyMultiValueError(String key) {
-        ValidationResult error = ValidationResultFactory2.create(ValidationError.INVALID_MULTI_VALUE, key);
+        ValidationResult error = ValidationResultFactory.create(ValidationError.INVALID_MULTI_VALUE, key);
         validationResultStack.pushValidationResult(error);
         config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
     }
@@ -624,7 +624,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         if (items.size() > 50) {
-            ValidationResult error = ValidationResultFactory2.create(ValidationError.CHARGED_EVENT_TOO_MANY_ITEMS);
+            ValidationResult error = ValidationResultFactory.create(ValidationError.CHARGED_EVENT_TOO_MANY_ITEMS);
             config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
             validationResultStack.pushValidationResult(error);
         }
@@ -800,7 +800,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             key = knr.getCleanedKey();
 
             if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0){
-                ValidationResult error = ValidationResultFactory2.create(ValidationError.INVALID_INCREMENT_DECREMENT_VALUE, key);
+                ValidationResult error = ValidationResultFactory.create(ValidationError.INVALID_INCREMENT_DECREMENT_VALUE, key);
                 validationResultStack.pushValidationResult(error);
                 config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                 // Abort

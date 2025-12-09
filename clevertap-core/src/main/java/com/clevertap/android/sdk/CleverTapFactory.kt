@@ -73,7 +73,7 @@ import com.clevertap.android.sdk.validation.EventDataNormalizer
 import com.clevertap.android.sdk.validation.EventNameNormalizer
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
-import com.clevertap.android.sdk.validation.Validator4
+import com.clevertap.android.sdk.validation.Validator
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
@@ -191,7 +191,7 @@ internal object CleverTapFactory {
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }
-        val validator = Validator4(validationConfig)
+        val validator = Validator(validationConfig)
         val eventDataNormalizer = EventDataNormalizer(validationConfig)
         val eventNameNormalizer = EventNameNormalizer(validationConfig)
 

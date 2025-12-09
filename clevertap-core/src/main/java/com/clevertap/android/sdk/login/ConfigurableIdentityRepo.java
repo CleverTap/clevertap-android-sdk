@@ -8,7 +8,7 @@ import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.validation.ValidationResultFactory2;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -135,7 +135,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
      */
     private void handleError(final IdentitySet prefKeySet, final IdentitySet configKeySet) {
         if (prefKeySet.isValid() && configKeySet.isValid() && !prefKeySet.equals(configKeySet)) {
-            ValidationResult error = ValidationResultFactory2.create(ValidationError.PROFILE_IDENTIFIERS_MISMATCH);
+            ValidationResult error = ValidationResultFactory.create(ValidationError.PROFILE_IDENTIFIERS_MISMATCH);
             validationResultStack.pushValidationResult(error);
             config.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "pushing error due to mismatch [Pref:" + prefKeySet + "], [Config:" + configKeySet + "]");

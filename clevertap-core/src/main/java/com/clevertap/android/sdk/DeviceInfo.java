@@ -39,7 +39,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.validation.ValidationResultFactory2;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -964,7 +964,7 @@ public class DeviceInfo {
     }
 
     private String recordDeviceError(ValidationError error, String... varargs) {
-        ValidationResult validationResult = ValidationResultFactory2.create(error, varargs);
+        ValidationResult validationResult = ValidationResultFactory.create(error, varargs);
         validationResults.add(validationResult);
         return validationResult.getErrorDesc();
     }

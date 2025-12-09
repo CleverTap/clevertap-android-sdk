@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo
  * Factory for creating validation results with proper error codes and messages.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-object ValidationResultFactory2 {
+object ValidationResultFactory {
 
     /**
      * Creates a ValidationResult for the given error type.

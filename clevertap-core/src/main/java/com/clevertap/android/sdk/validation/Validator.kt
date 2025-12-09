@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.Utils
 /**
  * Validator checks the metrics against configured limits and reports errors.
  */
-class Validator4(private val config: ValidationConfig) {
+class Validator(private val config: ValidationConfig) {
     
     /**
      * Checks if the provided metrics violate any configured limits.
@@ -18,7 +18,7 @@ class Validator4(private val config: ValidationConfig) {
         // Check structural limits
         config.maxDepth?.let { limit ->
             if (metrics.maxDepth > limit) {
-                val error = ValidationResultFactory2.create(
+                val error = ValidationResultFactory.create(
                     ValidationError.DEPTH_LIMIT_EXCEEDED,
                     metrics.maxDepth.toString(),
                     limit.toString()
@@ -29,7 +29,7 @@ class Validator4(private val config: ValidationConfig) {
         
         config.maxArrayKeyCount?.let { limit ->
             if (metrics.maxArrayKeyCount > limit) {
-                val error = ValidationResultFactory2.create(
+                val error = ValidationResultFactory.create(
                     ValidationError.ARRAY_KEY_COUNT_LIMIT_EXCEEDED,
                     metrics.maxArrayKeyCount.toString(),
                     limit.toString()
@@ -40,7 +40,7 @@ class Validator4(private val config: ValidationConfig) {
         
         config.maxObjectKeyCount?.let { limit ->
             if (metrics.maxObjectKeyCount > limit) {
-                val error = ValidationResultFactory2.create(
+                val error = ValidationResultFactory.create(
                     ValidationError.OBJECT_KEY_COUNT_LIMIT_EXCEEDED,
                     metrics.maxObjectKeyCount.toString(),
                     limit.toString()
@@ -51,7 +51,7 @@ class Validator4(private val config: ValidationConfig) {
         
         config.maxArrayLength?.let { limit ->
             if (metrics.maxArrayLength > limit) {
-                val error = ValidationResultFactory2.create(
+                val error = ValidationResultFactory.create(
                     ValidationError.ARRAY_LENGTH_LIMIT_EXCEEDED,
                     metrics.maxArrayLength.toString(),
                     limit.toString()
@@ -62,7 +62,7 @@ class Validator4(private val config: ValidationConfig) {
         
         config.maxKVPairCount?.let { limit ->
             if (metrics.maxKVPairCount > limit) {
-                val error = ValidationResultFactory2.create(
+                val error = ValidationResultFactory.create(
                     ValidationError.KV_PAIR_COUNT_LIMIT_EXCEEDED,
                     metrics.maxKVPairCount.toString(),
                     limit.toString()
@@ -76,7 +76,7 @@ class Validator4(private val config: ValidationConfig) {
             mod.reasons.forEach { reason ->
                 when (reason) {
                     KeyModificationReason.INVALID_CHARACTERS_REMOVED -> {
-                        val error = ValidationResultFactory2.create(
+                        val error = ValidationResultFactory.create(
                             ValidationError.KEY_INVALID_CHARACTERS,
                             mod.originalKey
                         )
@@ -84,7 +84,7 @@ class Validator4(private val config: ValidationConfig) {
                     }
                     KeyModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
                         config.maxKeyLength?.let { limit ->
-                            val error = ValidationResultFactory2.create(
+                            val error = ValidationResultFactory.create(
                                 ValidationError.KEY_LENGTH_EXCEEDED,
                                 mod.originalKey,
                                 limit.toString()
@@ -102,7 +102,7 @@ class Validator4(private val config: ValidationConfig) {
                 when (reason) {
                     // todo pass correct values to validation error
                     ValueModificationReason.INVALID_CHARACTERS_REMOVED -> {
-                        val error = ValidationResultFactory2.create(
+                        val error = ValidationResultFactory.create(
                             ValidationError.VALUE_INVALID_CHARACTERS,
                             mod.key
                         )
@@ -111,7 +111,7 @@ class Validator4(private val config: ValidationConfig) {
                     // todo pass correct values to validation error
                     ValueModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
                         config.maxValueLength?.let { limit ->
-                            val error = ValidationResultFactory2.create(
+                            val error = ValidationResultFactory.create(
                                 ValidationError.VALUE_CHARS_LIMIT_EXCEEDED,
                                 mod.originalValue,
                                 limit.toString()
@@ -127,14 +127,14 @@ class Validator4(private val config: ValidationConfig) {
         metrics.itemsRemoved.forEach { item ->
             when (item.reason) {
                 RemovalReason.NULL_VALUE -> {
-                    val error = ValidationResultFactory2.create(
+                    val error = ValidationResultFactory.create(
                         ValidationError.NULL_VALUE_REMOVED,
                         item.key
                     )
                     errors.add(error)
                 }
                 RemovalReason.EMPTY_VALUE -> {
-                    val error = ValidationResultFactory2.create(
+                    val error = ValidationResultFactory.create(
                         ValidationError.EMPTY_VALUE_REMOVED,
                         item.key
                     )
@@ -142,14 +142,14 @@ class Validator4(private val config: ValidationConfig) {
                 }
 
                 RemovalReason.EMPTY_KEY -> {
-                    val error = ValidationResultFactory2.create(
+                    val error = ValidationResultFactory.create(
                         ValidationError.EMPTY_KEY,
                         item.key
                     )
                     errors.add(error)
                 }
                 RemovalReason.NON_PRIMITIVE_VALUE -> {
-                    val error = ValidationResultFactory2.create(
+                    val error = ValidationResultFactory.create(
                         ValidationError.PROP_VALUE_NOT_PRIMITIVE,
                         item.key,
                         item.originalValue?.let { it::class.simpleName } ?: "null"
@@ -159,7 +159,7 @@ class Validator4(private val config: ValidationConfig) {
                 }
 
                 RemovalReason.INVALID_PHONE_NUMBER -> {
-                    val error = ValidationResultFactory2.create(
+                    val error = ValidationResultFactory.create(
                         ValidationError.INVALID_PHONE,
                     )
                     errors.add(error)
@@ -168,7 +168,7 @@ class Validator4(private val config: ValidationConfig) {
 
                 // todo should not be removal reason
                 RemovalReason.INVALID_COUNTRY_CODE -> {
-                    val error = ValidationResultFactory2.create(
+                    val error = ValidationResultFactory.create(
                         ValidationError.INVALID_COUNTRY_CODE,
                     )
                     errors.add(error)
@@ -197,7 +197,7 @@ class Validator4(private val config: ValidationConfig) {
         
         // Check if event name is null
         if (eventName == null) {
-            val error = ValidationResultFactory2.create(ValidationError.EVENT_NAME_NULL)
+            val error = ValidationResultFactory.create(ValidationError.EVENT_NAME_NULL)
             errors.add(error)
             return ValidationOutcome.Drop(
                 errors = errors,
@@ -211,7 +211,7 @@ class Validator4(private val config: ValidationConfig) {
         } ?: false
         
         if (isRestricted) {
-            val error = ValidationResultFactory2.create(
+            val error = ValidationResultFactory.create(
                 ValidationError.RESTRICTED_EVENT_NAME,
                 eventName
             )
@@ -228,7 +228,7 @@ class Validator4(private val config: ValidationConfig) {
         } ?: false
         
         if (isDiscarded) {
-            val error = ValidationResultFactory2.create(
+            val error = ValidationResultFactory.create(
                 ValidationError.DISCARDED_EVENT_NAME,
                 eventName
             )
@@ -258,14 +258,14 @@ class Validator4(private val config: ValidationConfig) {
             modification.reasons.forEach { reason ->
                 val error = when (reason) {
                     KeyModificationReason.INVALID_CHARACTERS_REMOVED -> {
-                        ValidationResultFactory2.create(
+                        ValidationResultFactory.create(
                             ValidationError.KEY_INVALID_CHARACTERS,
                             modification.originalKey,
                             modification.cleanedKey
                         )
                     }
                     KeyModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
-                        ValidationResultFactory2.create(
+                        ValidationResultFactory.create(
                             ValidationError.KEY_LENGTH_EXCEEDED,
                             modification.originalKey,
                             modification.cleanedKey
@@ -277,7 +277,7 @@ class Validator4(private val config: ValidationConfig) {
         }
 
         result.removals.forEach { removals ->
-            val error = ValidationResultFactory2.create(ValidationError.EMPTY_KEY_ABORT)
+            val error = ValidationResultFactory.create(ValidationError.EMPTY_KEY_ABORT)
             errors.add(error)
             return ValidationOutcome.Drop(
                 errors = errors,
@@ -309,7 +309,7 @@ class Validator4(private val config: ValidationConfig) {
         } ?: false
 
         if (isRestrictedMultiValue) {
-            val error = ValidationResultFactory2.create(
+            val error = ValidationResultFactory.create(
                 ValidationError.RESTRICTED_MULTI_VALUE_KEY,
                 cleanedKey
             )
@@ -341,7 +341,7 @@ class Validator4(private val config: ValidationConfig) {
         // Check if name was truncated due to length
         // todo - pass correct values
         if (metrics.modifications.contains(EventNameModificationReason.TRUNCATED_TO_MAX_LENGTH)) {
-            val error = ValidationResultFactory2.create(
+            val error = ValidationResultFactory.create(
                 ValidationError.EVENT_NAME_TOO_LONG,
                 metrics.originalLength.toString(),
                 metrics.maxLength?.toString() ?: "unknown"

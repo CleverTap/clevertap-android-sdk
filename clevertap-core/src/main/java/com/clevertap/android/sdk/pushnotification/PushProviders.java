@@ -45,7 +45,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationError;
-import com.clevertap.android.sdk.validation.ValidationResultFactory2;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
@@ -867,7 +867,7 @@ public class PushProviders implements CTPushProviderListener {
                 value = channelId;
             }
             if (error != null) {
-                ValidationResult channelIdError = ValidationResultFactory2.create(error, value);
+                ValidationResult channelIdError = ValidationResultFactory.create(error, value);
                 config.getLogger().debug(config.getAccountId(), channelIdError.getErrorDesc());
                 validationResultStack.pushValidationResult(channelIdError);
             }
@@ -1033,7 +1033,7 @@ public class PushProviders implements CTPushProviderListener {
 
             boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
             if (!notificationViewedEnabled) {
-                ValidationResult notificationViewedError = ValidationResultFactory2
+                ValidationResult notificationViewedError = ValidationResultFactory
                         .create(ValidationError.NOTIFICATION_VIEWED_DISABLED, extras.toString());
                 config.getLogger().debug(notificationViewedError.getErrorDesc());
                 validationResultStack.pushValidationResult(notificationViewedError);
