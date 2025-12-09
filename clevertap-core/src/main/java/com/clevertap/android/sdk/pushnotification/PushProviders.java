@@ -44,7 +44,8 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.validation.ValidationResultFactory;
+import com.clevertap.android.sdk.validation.ValidationError;
+import com.clevertap.android.sdk.validation.ValidationResultFactory2;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
@@ -855,18 +856,18 @@ public class PushProviders implements CTPushProviderListener {
         final boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
 
         if (requiresChannelId) {
-            int messageCode = -1;
+            ValidationError error = null;
             String value = "";
 
             if (channelId.isEmpty()) {
-                messageCode = Constants.CHANNEL_ID_MISSING_IN_PAYLOAD;
+                error = ValidationError.CHANNEL_ID_MISSING_IN_PAYLOAD;
                 value = extras.toString();
             } else if (notificationManager.getNotificationChannel(channelId) == null) {
-                messageCode = Constants.CHANNEL_ID_NOT_REGISTERED;
+                error = ValidationError.CHANNEL_ID_NOT_REGISTERED;
                 value = channelId;
             }
-            if (messageCode != -1) {
-                ValidationResult channelIdError = ValidationResultFactory.create(512, messageCode, value);
+            if (error != null) {
+                ValidationResult channelIdError = ValidationResultFactory2.create(error, value);
                 config.getLogger().debug(config.getAccountId(), channelIdError.getErrorDesc());
                 validationResultStack.pushValidationResult(channelIdError);
             }
@@ -1032,8 +1033,8 @@ public class PushProviders implements CTPushProviderListener {
 
             boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
             if (!notificationViewedEnabled) {
-                ValidationResult notificationViewedError = ValidationResultFactory
-                        .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
+                ValidationResult notificationViewedError = ValidationResultFactory2
+                        .create(ValidationError.NOTIFICATION_VIEWED_DISABLED, extras.toString());
                 config.getLogger().debug(notificationViewedError.getErrorDesc());
                 validationResultStack.pushValidationResult(notificationViewedError);
                 return;

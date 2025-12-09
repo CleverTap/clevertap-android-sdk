@@ -7,6 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Constants {
@@ -320,39 +321,8 @@ public interface Constants {
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";
-    // error message codes
-    int INVALID_MULTI_VALUE = 1;
-    int PUSH_KEY_EMPTY = 2;
-    int OBJECT_VALUE_NOT_PRIMITIVE_PROFILE = 3;
-    int INVALID_COUNTRY_CODE = 4;
-    int INVALID_PHONE = 5;
-    int KEY_EMPTY = 6;
-    int PROP_VALUE_NOT_PRIMITIVE = 7;
-    int CHANNEL_ID_MISSING_IN_PAYLOAD = 8;
-    int CHANNEL_ID_NOT_REGISTERED = 9;
-    int NOTIFICATION_VIEWED_DISABLED = 10;
-    int VALUE_CHARS_LIMIT_EXCEEDED = 11;
-    int MULTI_VALUE_CHARS_LIMIT_EXCEEDED = 12;
-    int INVALID_PROFILE_PROP_ARRAY_COUNT = 13;
-    int EVENT_NAME_NULL = 14;
-    int OBJECT_VALUE_NOT_PRIMITIVE = 15;
-    int RESTRICTED_EVENT_NAME = 16;
-    int DISCARDED_EVENT_NAME = 17;
-    int USE_CUSTOM_ID_FALLBACK = 18;
-    int USE_CUSTOM_ID_MISSING_IN_MANIFEST = 19;
-    int UNABLE_TO_SET_CT_CUSTOM_ID = 20;
-    int INVALID_CT_CUSTOM_ID = 21;
-    int INVALID_MULTI_VALUE_KEY = 23;
-    int RESTRICTED_MULTI_VALUE_KEY = 24;
-    int INVALID_INCREMENT_DECREMENT_VALUE = 25;
-    int ENCRYPTION_FLAG_FAIL = 0b00;
-    int ENCRYPTION_FLAG_CGK_SUCCESS = 0b01;
-    int ENCRYPTION_FLAG_DB_SUCCESS = 0b10;
-    int ENCRYPTION_FLAG_ALL_SUCCESS = 0b11;
-
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
-    String EMPTY_STRING = "";
     String AUTH = "auth";
     String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
 
