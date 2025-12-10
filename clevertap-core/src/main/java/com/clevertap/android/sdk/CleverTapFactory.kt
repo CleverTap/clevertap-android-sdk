@@ -69,11 +69,9 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
 import com.clevertap.android.sdk.utils.NestedJsonBuilder
-import com.clevertap.android.sdk.validation.EventDataNormalizer
-import com.clevertap.android.sdk.validation.EventNameNormalizer
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
-import com.clevertap.android.sdk.validation.Validator
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineFactory
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
@@ -191,9 +189,10 @@ internal object CleverTapFactory {
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }
-        val validator = Validator(validationConfig)
-        val eventDataNormalizer = EventDataNormalizer(validationConfig)
-        val eventNameNormalizer = EventNameNormalizer(validationConfig)
+
+        val eventNamePipeline = ValidationPipelineFactory.createEventNamePipeline(validationConfig)
+        val eventPropertyKeyPipeline = ValidationPipelineFactory.createPropertyKeyPipeline(validationConfig)
+        val eventDataPipeline = ValidationPipelineFactory.createEventDataPipeline(validationConfig)
 
         val profileStateMerger = ProfileStateMerger()
         val nestedJsonBuilder = NestedJsonBuilder()
@@ -449,9 +448,9 @@ internal object CleverTapFactory {
             context,
             config,
             baseEventQueueManager,
-            validator,
-            eventDataNormalizer,
-            eventNameNormalizer,
+            eventDataPipeline,
+            eventNamePipeline,
+            eventPropertyKeyPipeline,
             validationResultStack,
             coreMetaData,
             deviceInfo,

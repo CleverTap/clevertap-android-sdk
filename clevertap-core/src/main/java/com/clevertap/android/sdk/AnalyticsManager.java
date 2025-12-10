@@ -25,17 +25,17 @@ import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.JsonFlattener;
 import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.validation.EventDataNormalizer;
-import com.clevertap.android.sdk.validation.EventNameNormalizationResult;
-import com.clevertap.android.sdk.validation.EventNameNormalizer;
-import com.clevertap.android.sdk.validation.KeyNormalizationResult;
-import com.clevertap.android.sdk.validation.NormalizationResult;
-import com.clevertap.android.sdk.validation.ValidationOutcome;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
-import com.clevertap.android.sdk.validation.Validator;
+import com.clevertap.android.sdk.validation.eventdata.EventDataValidationPipeline;
+import com.clevertap.android.sdk.validation.eventdata.EventDataValidationResult;
+import com.clevertap.android.sdk.validation.eventname.EventNameValidationPipeline;
+import com.clevertap.android.sdk.validation.eventname.EventNameValidationResult;
+import com.clevertap.android.sdk.validation.propertykey.EventPropertyKeyValidationPipeline;
+import com.clevertap.android.sdk.validation.propertykey.PropertyKeyValidationInput;
+import com.clevertap.android.sdk.validation.propertykey.PropertyKeyValidationResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,9 +58,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
     private final ValidationResultStack validationResultStack;
-    private final Validator validator;
-    private final EventDataNormalizer eventDataNormalizer;
-    private final EventNameNormalizer eventNameNormalizer;
+    private final EventDataValidationPipeline eventDataValidationPipeline;
+    private final EventNameValidationPipeline eventNameValidationPipeline;
+    private final EventPropertyKeyValidationPipeline eventPropertyKeyValidationPipeline;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
@@ -74,9 +74,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             Context context,
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
-            Validator validator,
-            EventDataNormalizer eventDataNormalizer,
-            EventNameNormalizer eventNameNormalizer,
+            EventDataValidationPipeline eventDataValidationPipeline,
+            EventNameValidationPipeline eventNameValidationPipeline,
+            EventPropertyKeyValidationPipeline eventPropertyKeyValidationPipeline,
             ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
@@ -90,9 +90,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
-        this.validator = validator;
-        this.eventDataNormalizer = eventDataNormalizer;
-        this.eventNameNormalizer = eventNameNormalizer;
+        this.eventDataValidationPipeline = eventDataValidationPipeline;
+        this.eventNameValidationPipeline = eventNameValidationPipeline;
+        this.eventPropertyKeyValidationPipeline = eventPropertyKeyValidationPipeline;
         this.validationResultStack = validationResultStack;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
@@ -269,39 +269,30 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
-
-        ValidationOutcome eventNameValidation = validator.validateEventName(eventName);
-        if (eventNameValidation instanceof ValidationOutcome.Drop) {
-            validationResultStack.pushValidationResult(eventNameValidation.getErrors());
-            return;
-        }
-
-        if (eventActions == null) {
-            eventActions = new HashMap<>();
-        }
-
         JSONObject event = new JSONObject();
         try {
             // Validate
-            EventNameNormalizationResult result = eventNameNormalizer.normalize(eventName);
-            ValidationOutcome eventNameMetricsValidation = validator.validateEventNameMetrics(result.getMetrics());
+            EventNameValidationResult nameValidationResult = eventNameValidationPipeline.execute(eventName);
+            validationResultStack.pushValidationResult(nameValidationResult.getOutcome().getErrors());
 
             // Check for an error
-            if (eventNameMetricsValidation instanceof ValidationOutcome.Warning) {
-                validationResultStack.pushValidationResult(eventNameMetricsValidation.getErrors());
+            if (nameValidationResult.shouldDrop()) {
+                return;
             }
 
-            NormalizationResult eventData = eventDataNormalizer.normalizeMap(eventActions);
-            ValidationOutcome outcome = validator.checkLimits(eventData.getMetrics());
+            EventDataValidationResult dataValidationResult = eventDataValidationPipeline.execute(eventActions);
+            validationResultStack.pushValidationResult(dataValidationResult.getOutcome().getErrors());
 
-            if (outcome instanceof ValidationOutcome.Warning) {
-                validationResultStack.pushValidationResult(outcome.getErrors());
+            if (dataValidationResult.shouldDrop()) {
+                return;
             }
 
-            event.put("evtName", result.getCleanedName());
-            event.put("evtData", eventData.getCleanedData());
+            JSONObject eventData = dataValidationResult.getCleanedData();
+            FlattenedEventData flattenedData = getFlattenedEventProperties(eventData);
+            event.put("evtName", nameValidationResult.getCleanedName());
+            event.put("evtData", eventData);
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(eventData.getCleanedData()));
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, flattenedData);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -631,26 +622,34 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         JSONObject chargedEvent = new JSONObject();
         try {
-            NormalizationResult eventData = eventDataNormalizer.normalizeMap(chargeDetails);
-            ValidationOutcome detailsOutcome = validator.checkLimits(eventData.getMetrics());
-            validationResultStack.pushValidationResult(detailsOutcome.getErrors());
-            JSONObject evtData = eventData.getCleanedData();
+            // Validate charged event details
+            EventDataValidationResult detailsResult = eventDataValidationPipeline.execute(chargeDetails);
+            validationResultStack.pushValidationResult(detailsResult.getOutcome().getErrors());
+            
+            if (detailsResult.shouldDrop()) {
+                return;
+            }
+            
+            JSONObject evtData = detailsResult.getCleanedData();
 
+            // Validate each item
             JSONArray jsonItemsArray = new JSONArray();
             for (HashMap<String, Object> map : items) {
-                NormalizationResult itemData = eventDataNormalizer.normalizeMap(map);
-                ValidationOutcome itemsOutcome = validator.checkLimits(itemData.getMetrics());
-                validationResultStack.pushValidationResult(itemsOutcome.getErrors());
+                EventDataValidationResult itemResult = eventDataValidationPipeline.execute(map);
+                validationResultStack.pushValidationResult(itemResult.getOutcome().getErrors());
 
-                JSONObject itemDetails = itemData.getCleanedData();
-                jsonItemsArray.put(itemDetails);
+                if (!itemResult.shouldDrop()) {
+                    JSONObject itemDetails = itemResult.getCleanedData();
+                    jsonItemsArray.put(itemDetails);
+                }
             }
             evtData.put("Items", jsonItemsArray);
 
             chargedEvent.put("evtName", Constants.CHARGED_EVENT);
             chargedEvent.put("evtData", evtData);
 
-            baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT);
+            FlattenedEventData flattenedData = getFlattenedEventProperties(evtData);
+            baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT, flattenedData);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -763,47 +762,45 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
 
     private void _handleMultiValues(ArrayList<String> values, String key, ProfileCommand command) {
-        key = (key == null) ? "" : key; // so we will generate a validation error later on
-
-        if (values == null || values.isEmpty()) {
+            if (values == null || values.isEmpty()) {
             _generateEmptyMultiValueError(key);
             return;
         }
 
-        KeyNormalizationResult knr = eventDataNormalizer.normalizePropertyKey(key);
-        ValidationOutcome outcome = validator.validateMultiValuePropertyKey(knr);
+        // Validate multi-value property key
+        PropertyKeyValidationResult keyResult = eventPropertyKeyValidationPipeline.execute(
+            new PropertyKeyValidationInput(key, true)
+        );
+        validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
-        validationResultStack.pushValidationResult(outcome.getErrors());
-
-        if (outcome instanceof ValidationOutcome.Drop) {
+        if (keyResult.shouldDrop()) {
             return;
         }
 
-        key = knr.getCleanedKey();
+        key = keyResult.getCleanedKey();
         _pushMultiValue(values, key, command);
     }
 
     private void _constructIncrementDecrementValues(Number value, String key, ProfileCommand command) {
-
-        if (key == null || value == null) {
+        if (value == null) {
             return;
         }
         try {
-            KeyNormalizationResult knr = eventDataNormalizer.normalizePropertyKey(key);
-            ValidationOutcome outcome = validator.validatePropertyKey(knr);
-            validationResultStack.pushValidationResult(outcome.getErrors());
+            PropertyKeyValidationResult keyResult = eventPropertyKeyValidationPipeline.execute(
+                new PropertyKeyValidationInput(key, false)
+            );
+            validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
-            if (outcome instanceof ValidationOutcome.Drop) {
+            if (keyResult.shouldDrop()) {
                 return;
             }
 
-            key = knr.getCleanedKey();
+            key = keyResult.getCleanedKey();
 
-            if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0){
+            if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0) {
                 ValidationResult error = ValidationResultFactory.create(ValidationError.INVALID_INCREMENT_DECREMENT_VALUE, key);
                 validationResultStack.pushValidationResult(error);
                 config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                // Abort
                 return;
             }
 
@@ -814,10 +811,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, value, operation));
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key "
-                    + key, t);
+            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key " + key, t);
         }
-
     }
 
     private void _push(Map<String, Object> profile) {
@@ -826,20 +821,19 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         try {
-            JSONObject customProfile = new JSONObject();
-            NormalizationResult nr = eventDataNormalizer.normalizeMap(profile);
-            ValidationOutcome outcome = validator.checkLimits(nr.getMetrics());
+            // Validate profile data
+            EventDataValidationResult profileResult = eventDataValidationPipeline.execute(profile);
+            validationResultStack.pushValidationResult(profileResult.getOutcome().getErrors());
 
-            validationResultStack.pushValidationResult(outcome.getErrors());
-
-            if (outcome instanceof ValidationOutcome.Drop) {
+            if (profileResult.shouldDrop()) {
                 return;
             }
 
+            JSONObject cleanedProfile = profileResult.getCleanedData();
             config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed custom profile: " + nr.getCleanedData());
+                    .verbose(config.getAccountId(), "Constructed custom profile: " + cleanedProfile);
 
-            baseEventQueueManager.pushBasicProfile(customProfile, false, getFlattenedProfileChanges(nr.getCleanedData(), ProfileStateMerger.MergeOperation.UPDATE));
+            baseEventQueueManager.pushBasicProfile(cleanedProfile, false, getFlattenedProfileChanges(cleanedProfile, ProfileStateMerger.MergeOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -849,46 +843,45 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private void _removeValueForKey(String key) {
         try {
-            key = (key == null) ? "" : key; // so we will generate a validation error later on
+            // Validate property key (not multi-value)
+            PropertyKeyValidationResult keyValidationResult = eventPropertyKeyValidationPipeline.execute(
+                new PropertyKeyValidationInput(key, false)
+            );
+            validationResultStack.pushValidationResult(keyValidationResult.getOutcome().getErrors());
 
-            KeyNormalizationResult knr = eventDataNormalizer.normalizePropertyKey(key);
-            ValidationOutcome outcome = validator.validatePropertyKey(knr);
-
-            validationResultStack.pushValidationResult(outcome.getErrors());
-
-            if(outcome instanceof ValidationOutcome.Drop) {
+            if (keyValidationResult.shouldDrop()) {
                 return;
             }
 
-            key = knr.getCleanedKey();
+            key = keyValidationResult.getCleanedKey();
 
-            //If key contains "Identity" then do not remove from SQLDb and shared prefs
+            // If key contains "Identity" then do not remove from SQLDb and shared prefs
             if (key.toLowerCase().contains("identity")) {
-                config.getLogger()
-                        .verbose(config.getAccountId(), "Cannot remove value for key " +
-                                key + " from user profile");
+                config.getLogger().verbose(config.getAccountId(), 
+                    "Cannot remove value for key " + key + " from user profile");
                 return;
             }
 
-            // send the delete command
+            // Send the delete command
             ProfileCommand command = ProfileCommand.DELETE;
             JSONObject profileCommand = new JSONObject().put(command.getCommandString(), true);
             JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
-            //Set removeFromSharedPrefs to true to remove PII keys from shared prefs.
-            baseEventQueueManager.pushBasicProfile(profileUpdate, true, getFlattenedProfileChanges(key, NestedJsonBuilder.DELETE_MARKER, command.getOperation()));
+            // Set removeFromSharedPrefs to true to remove PII keys from shared prefs
+            baseEventQueueManager.pushBasicProfile(profileUpdate, true, 
+                getFlattenedProfileChanges(key, NestedJsonBuilder.DELETE_MARKER, command.getOperation()));
 
-            config.getLogger()
-                    .verbose(config.getAccountId(), "removing value for key " + key + " from user profile");
+            config.getLogger().verbose(config.getAccountId(), 
+                "removing value for key " + key + " from user profile");
 
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to remove profile value for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(), 
+                "Failed to remove profile value for key " + key, t);
         }
     }
 
     private void _pushMultiValue(ArrayList<String> originalValues, String key, ProfileCommand command) {
         try {
-            // push to server
             JSONObject profileCommand = new JSONObject();
             profileCommand.put(command.getCommandString(), new JSONArray(originalValues));
 
@@ -896,13 +889,15 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             profileUpdate.put(key, profileCommand);
 
             ProfileStateMerger.MergeOperation operation = command.getOperation();
-            baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, originalValues, operation));
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, 
+                getFlattenedProfileChanges(key, originalValues, operation));
 
-            config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed multi-value profile push: " + profileUpdate);
+            config.getLogger().verbose(config.getAccountId(), 
+                "Constructed multi-value profile push: " + profileUpdate);
 
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error pushing multiValue for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(), 
+                "Error pushing multiValue for key " + key, t);
         }
     }
 

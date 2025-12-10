@@ -1,16 +1,36 @@
-package com.clevertap.android.sdk.validation
+package com.clevertap.android.sdk.validation.eventdata
 
+import com.clevertap.android.sdk.validation.ValidationConfig
+import com.clevertap.android.sdk.validation.pipeline.EventDataMetrics
+import com.clevertap.android.sdk.validation.pipeline.EventDataNormalizationResult
+import com.clevertap.android.sdk.validation.pipeline.KeyModification
+import com.clevertap.android.sdk.validation.pipeline.ModificationReason
+import com.clevertap.android.sdk.validation.pipeline.Normalizer
+import com.clevertap.android.sdk.validation.pipeline.RemovalReason
+import com.clevertap.android.sdk.validation.pipeline.RemovedItem
+import com.clevertap.android.sdk.validation.pipeline.ValueModification
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.Date
+import kotlin.collections.iterator
 import kotlin.math.max
 
 /**
- * Normalizes event data according to ValidationConfig.
- * Reports what was found (including violations) THEN cleans the data.
+ * Normalizes event data (property key-value pairs) according to ValidationConfig.
+ * Only performs normalization - does not validate.
+ *
+ * Normalization includes:
+ * - Cleaning all keys and values
+ * - Removing null values
+ * - Removing empty keys/values
+ * - Converting dates to standard format
+ * - Validating phone numbers
+ * - Tracking structural metrics
  */
-class EventDataNormalizer(private val config: ValidationConfig) {
+class EventDataNormalizer(
+    private val config: ValidationConfig
+) : Normalizer<Map<*, *>, EventDataNormalizationResult> {
 
     companion object {
         private const val DATE_PREFIX = "\$D_"
@@ -28,18 +48,18 @@ class EventDataNormalizer(private val config: ValidationConfig) {
     private val valuesModified = mutableListOf<ValueModification>()
     private val itemsRemoved = mutableListOf<RemovedItem>()
 
-    /**
-     * Normalizes a Map and returns cleaned data with detailed metrics.
-     */
-    @Throws(JSONException::class)
-    fun normalizeMap(map: Map<*, *>): NormalizationResult {
+    override fun normalize(input: Map<*, *>): EventDataNormalizationResult {
         resetTracking()
 
-        val cleaned = cleanMapInternal(map, depth = 0)
+        val cleaned = try {
+            cleanMapInternal(input, depth = 0)
+        } catch (e: JSONException) {
+            JSONObject() // Return empty object on error
+        }
 
-        return NormalizationResult(
-            cleanedData = if (cleaned.length() == 0) null else cleaned,
-            metrics = PropertyValidationMetrics(
+        return EventDataNormalizationResult(
+            cleanedData = if (cleaned.length() == 0) JSONObject() else cleaned,
+            metrics = EventDataMetrics(
                 maxDepth = maxDepth,
                 maxArrayKeyCount = maxArrayKeyCount,
                 maxObjectKeyCount = maxObjectKeyCount,
@@ -49,28 +69,6 @@ class EventDataNormalizer(private val config: ValidationConfig) {
                 valuesModified = valuesModified.toList(),
                 itemsRemoved = itemsRemoved.toList()
             )
-        )
-    }
-
-    /**
-     * Normalizes a single property key and returns the result.
-     * Useful for validating individual keys outside of full map normalization.
-     *
-     * @param key The property key to normalize
-     * @return KeyNormalizationResult containing cleaned key and any modifications
-     */
-    fun normalizePropertyKey(key: String): KeyNormalizationResult {
-        resetTracking()
-        val cleanedKey = cleanKey(key)
-
-        if (cleanedKey.isEmpty()) {
-            itemsRemoved.add((RemovedItem(key, RemovalReason.EMPTY_VALUE, "")))
-        }
-
-        return KeyNormalizationResult(
-            cleanedKey = cleanedKey,
-            modifications = keysModified.toList(),
-            removals = itemsRemoved
         )
     }
 
@@ -115,7 +113,7 @@ class EventDataNormalizer(private val config: ValidationConfig) {
 
             // Special validation for Phone key
             if (cleanedKey.equals("Phone", ignoreCase = true)) {
-                cleanPhoneNumber(cleanedKey, value)
+                validatePhoneNumber(cleanedKey, value)
             }
 
             when (value) {
@@ -138,30 +136,18 @@ class EventDataNormalizer(private val config: ValidationConfig) {
         return cleaned
     }
 
-    /**
-     * Validates and cleans a phone number value.
-     * Returns true if the phone number is valid and should be kept, false if it should be removed.
-     */
-    private fun cleanPhoneNumber(cleanedKey: String, value: Any?) {
+    private fun validatePhoneNumber(key: String, value: Any?) {
         if (value !is String) {
-            recordRemoval(
-                cleanedKey,
-                RemovalReason.INVALID_PHONE_NUMBER,
-                value
-            )
+            recordRemoval(key, RemovalReason.INVALID_PHONE_NUMBER, value)
             return
         }
 
         val phoneValue = value.trim()
 
-        // If no country code is available, require phone to start with '+'
+        // If no country code available, require phone to start with '+'
         if (config.deviceCountryCodeProvider().isNullOrEmpty()) {
             if (!phoneValue.startsWith("+")) {
-                recordRemoval(
-                    cleanedKey,
-                    RemovalReason.INVALID_COUNTRY_CODE,
-                    phoneValue
-                )
+                recordRemoval(key, RemovalReason.INVALID_COUNTRY_CODE, phoneValue)
             }
         }
     }
@@ -211,7 +197,6 @@ class EventDataNormalizer(private val config: ValidationConfig) {
             }
 
             val cleanedValue = cleanAnyValue(value, parentKey, depth)
-
             if (cleanedValue != null) {
                 cleaned.put(cleanedValue)
             }
@@ -282,7 +267,6 @@ class EventDataNormalizer(private val config: ValidationConfig) {
             }
 
             val cleanedValue = cleanAnyValue(value, parentKey, depth)
-
             if (cleanedValue != null) {
                 cleaned.put(cleanedValue)
             }
@@ -291,10 +275,6 @@ class EventDataNormalizer(private val config: ValidationConfig) {
         return cleaned
     }
 
-    /**
-     * Cleans a key according to config rules.
-     * Reports the original key BEFORE cleaning, then cleans it.
-     */
     private fun cleanKey(key: String): String {
         val original = key
         var cleaned = key.trim()
@@ -303,29 +283,28 @@ class EventDataNormalizer(private val config: ValidationConfig) {
             return ""
         }
 
-        val reasons = mutableListOf<KeyModificationReason>()
+        val reasons = mutableListOf<ModificationReason>()
 
-        // Remove disallowed characters if configured
+        // Remove disallowed characters
         config.keyCharsNotAllowed?.let { notAllowed ->
-            val filtered = cleaned.filterNot { char -> char in notAllowed }
-
+            val filtered = cleaned.filterNot { it in notAllowed }
             if (filtered != cleaned) {
                 cleaned = filtered
-                reasons.add(KeyModificationReason.INVALID_CHARACTERS_REMOVED)
+                reasons.add(ModificationReason.INVALID_CHARACTERS_REMOVED)
             }
         }
 
-        // Truncate if exceeds max length (if configured)
+        // Truncate if exceeds max length
         config.maxKeyLength?.let { maxLength ->
             if (cleaned.length > maxLength) {
-                reasons.add(KeyModificationReason.TRUNCATED_TO_MAX_LENGTH)
+                reasons.add(ModificationReason.TRUNCATED_TO_MAX_LENGTH)
                 cleaned = cleaned.substring(0, maxLength)
             }
         }
 
         val result = cleaned.trim()
 
-        // Record modification if key changed and we have reasons
+        // Record modification if key changed
         if (result != original && result.isNotEmpty() && reasons.isNotEmpty()) {
             keysModified.add(
                 KeyModification(
@@ -339,10 +318,6 @@ class EventDataNormalizer(private val config: ValidationConfig) {
         return result
     }
 
-    /**
-     * Cleans a primitive value according to config rules.
-     * Reports the original value BEFORE cleaning, then cleans it.
-     */
     private fun cleanPrimitiveValue(value: Any?, key: String): Any? {
         return when (value) {
             is Int, is Long, is Float, is Double, is Boolean -> value
@@ -350,7 +325,6 @@ class EventDataNormalizer(private val config: ValidationConfig) {
             is Char -> cleanPrimitiveValue(value.toString(), key)
             is Date -> "$DATE_PREFIX${value.time / 1000}"
             else -> {
-                // Any other object type is not allowed
                 recordRemoval(key, RemovalReason.NON_PRIMITIVE_VALUE, value)
                 null
             }
@@ -366,22 +340,21 @@ class EventDataNormalizer(private val config: ValidationConfig) {
             return null
         }
 
-        val reasons = mutableListOf<ValueModificationReason>()
+        val reasons = mutableListOf<ModificationReason>()
 
-        // Remove disallowed characters if configured
+        // Remove disallowed characters
         config.valueCharsNotAllowed?.let { notAllowed ->
             val filtered = cleaned.filterNot { it in notAllowed }
-
             if (filtered != cleaned) {
                 cleaned = filtered
-                reasons.add(ValueModificationReason.INVALID_CHARACTERS_REMOVED)
+                reasons.add(ModificationReason.INVALID_CHARACTERS_REMOVED)
             }
         }
 
-        // Truncate if exceeds max length (if configured)
+        // Truncate if exceeds max length
         config.maxValueLength?.let { maxLength ->
             if (cleaned.length > maxLength) {
-                reasons.add(ValueModificationReason.TRUNCATED_TO_MAX_LENGTH)
+                reasons.add(ModificationReason.TRUNCATED_TO_MAX_LENGTH)
                 cleaned = cleaned.substring(0, maxLength)
             }
         }
@@ -393,7 +366,7 @@ class EventDataNormalizer(private val config: ValidationConfig) {
             return null
         }
 
-        // Record modification if value changed and we have reasons
+        // Record modification
         if (result != original && reasons.isNotEmpty()) {
             valuesModified.add(
                 ValueModification(
@@ -412,14 +385,3 @@ class EventDataNormalizer(private val config: ValidationConfig) {
         itemsRemoved.add(RemovedItem(key, reason, originalValue))
     }
 }
-
-data class NormalizationResult(
-    val cleanedData: JSONObject?,
-    val metrics: PropertyValidationMetrics
-)
-
-data class KeyNormalizationResult(
-    val cleanedKey: String,
-    val modifications: List<KeyModification>,
-    val removals: List<RemovedItem>
-)

@@ -28,7 +28,8 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     // Event name validation errors (510)
     EVENT_NAME_NULL(510, "Event Name is null"),
     EVENT_NAME_TOO_LONG(510, "%s... exceeds the limit of %s characters. Trimmed"),
-    
+    EVENT_NAME_INVALID_CHARACTERS(510, "Key '%s' contains invalid characters. Cleaned"),
+
     // Profile validation errors (512)
     INVALID_MULTI_VALUE(512, "Invalid multi value for key %s, profile multi value operation aborted."),
     INVALID_INCREMENT_DECREMENT_VALUE(512, "Increment/Decrement value for profile key %s, cannot be zero or negative"),
