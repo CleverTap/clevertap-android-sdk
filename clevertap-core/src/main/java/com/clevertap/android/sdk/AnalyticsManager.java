@@ -807,7 +807,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed custom profile: " + cleanedProfile);
 
-            baseEventQueueManager.pushBasicProfile(cleanedProfile, false, getFlattenedProfileChanges(cleanedProfile, ProfileStateMerger.MergeOperation.UPDATE));
+            baseEventQueueManager.pushBasicProfile(cleanedProfile, false, getFlattenedProfileChanges(cleanedProfile, MergeOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -858,7 +858,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileUpdate = new JSONObject();
             profileUpdate.put(key, profileCommand);
 
-            ProfileStateMerger.MergeOperation operation = command.getOperation();
+            MergeOperation operation = command.getOperation();
             baseEventQueueManager.pushBasicProfile(profileUpdate, false,
                 getFlattenedProfileChanges(key, originalValues, operation));
 
