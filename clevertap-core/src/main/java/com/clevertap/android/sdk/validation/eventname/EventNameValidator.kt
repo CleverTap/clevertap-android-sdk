@@ -31,7 +31,7 @@ class EventNameValidator(
         }
 
         // Check for empty cleaned name (became empty after normalization)
-        if (input.cleanedName.isNullOrEmpty()) {
+        if (input.cleanedName.isEmpty()) {
             val error = ValidationResultFactory.create(ValidationError.EVENT_NAME_NULL)
             errors.add(error)
             return ValidationOutcome.Drop(
@@ -47,7 +47,7 @@ class EventNameValidator(
         validateNotDiscarded(input.cleanedName, errors)?.let { return it }
 
         // Check for modifications during normalization
-        validateModifications(input.metrics.modifications, input.originalName, errors)
+        validateModifications(input.modifications, input.originalName, errors)
 
         return if (errors.isEmpty()) {
             ValidationOutcome.Success()

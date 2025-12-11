@@ -2,6 +2,8 @@ package com.clevertap.android.sdk.validation.eventdata
 
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationOutcome
+import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
 import org.json.JSONObject
 
 /**
@@ -15,18 +17,16 @@ import org.json.JSONObject
  */
 class EventDataValidationPipeline(
     config: ValidationConfig
-) : com.clevertap.android.sdk.validation.pipeline.ValidationPipeline<Map<*, *>?, EventDataValidationResult> {
+) : ValidationPipeline<Map<*, *>?, EventDataValidationResult> {
     
     private val normalizer = EventDataNormalizer(config)
-    private val validator =
-        EventDataValidator(config)
+    private val validator = EventDataValidator(config)
     
     override fun execute(input: Map<*, *>?): EventDataValidationResult {
         if (input == null) {
             return EventDataValidationResult(
                 cleanedData = JSONObject(),
                 outcome = ValidationOutcome.Success(),
-                metrics = null
             )
         }
         
@@ -39,18 +39,6 @@ class EventDataValidationPipeline(
         return EventDataValidationResult(
             cleanedData = normalizationResult.cleanedData,
             outcome = outcome,
-            metrics = normalizationResult.metrics
         )
     }
-}
-
-/**
- * Result of event data validation.
- */
-data class EventDataValidationResult(
-    val cleanedData: JSONObject,
-    val outcome: ValidationOutcome,
-    val metrics: com.clevertap.android.sdk.validation.pipeline.EventDataMetrics?
-) {
-    fun shouldDrop(): Boolean = outcome is ValidationOutcome.Drop
 }

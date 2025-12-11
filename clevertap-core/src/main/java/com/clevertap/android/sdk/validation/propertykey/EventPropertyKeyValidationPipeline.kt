@@ -1,7 +1,8 @@
 package com.clevertap.android.sdk.validation.propertykey
 
 import com.clevertap.android.sdk.validation.ValidationConfig
-import com.clevertap.android.sdk.validation.ValidationOutcome
+import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationInput
+import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult
 
 /**
  * Pipeline for validating property keys.
@@ -17,10 +18,7 @@ class EventPropertyKeyValidationPipeline(
 ) : com.clevertap.android.sdk.validation.pipeline.ValidationPipeline<PropertyKeyValidationInput, PropertyKeyValidationResult> {
     
     private val normalizer = EventPropertyKeyNormalizer(config)
-    private val validator =
-        EventPropertyKeyValidator(
-            config
-        )
+    private val validator = EventPropertyKeyValidator(config)
     
     override fun execute(input: PropertyKeyValidationInput): PropertyKeyValidationResult {
         // Normalize
@@ -34,31 +32,8 @@ class EventPropertyKeyValidationPipeline(
         }
         
         return PropertyKeyValidationResult(
-            originalKey = input.key,
             cleanedKey = normalizationResult.cleanedKey,
-            outcome = outcome,
+            outcome = outcome
         )
     }
-}
-
-/**
- * Input for property key validation.
- *
- * @param key The property key to validate
- * @param isMultiValue Whether to check multi-value restrictions
- */
-data class PropertyKeyValidationInput(
-    val key: String?,
-    val isMultiValue: Boolean = false
-)
-
-/**
- * Result of property key validation.
- */
-data class PropertyKeyValidationResult(
-    val originalKey: String?,
-    val cleanedKey: String,
-    val outcome: ValidationOutcome,
-) {
-    fun shouldDrop(): Boolean = outcome is ValidationOutcome.Drop
 }

@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.validation.eventname
 
 import com.clevertap.android.sdk.validation.ValidationConfig
-import com.clevertap.android.sdk.validation.pipeline.EventNameMetrics
 import com.clevertap.android.sdk.validation.pipeline.EventNameNormalizationResult
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
 import com.clevertap.android.sdk.validation.pipeline.Normalizer
@@ -23,12 +22,8 @@ class EventNameNormalizer(
         if (input == null) {
             return EventNameNormalizationResult(
                 originalName = null,
-                cleanedName = null,
-                metrics = EventNameMetrics(
-                    originalLength = 0,
-                    cleanedLength = 0,
-                    modifications = emptySet()
-                )
+                cleanedName = "",
+                modifications = emptySet()
             )
         }
 
@@ -58,11 +53,7 @@ class EventNameNormalizer(
         return EventNameNormalizationResult(
             originalName = original,
             cleanedName = result,
-            metrics = EventNameMetrics(
-                originalLength = original.length,
-                cleanedLength = result.length,
-                modifications = modifications
-            )
+            modifications = modifications
         )
     }
 }

@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.validation.eventname
 
 import com.clevertap.android.sdk.validation.ValidationConfig
-import com.clevertap.android.sdk.validation.ValidationOutcome
+import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult
 
 /**
  * Pipeline for validating event names.
@@ -16,29 +16,15 @@ class EventNameValidationPipeline(
 ) : com.clevertap.android.sdk.validation.pipeline.ValidationPipeline<String?, EventNameValidationResult> {
     
     private val normalizer = EventNameNormalizer(config)
-    private val validator =
-        EventNameValidator(config)
+    private val validator = EventNameValidator(config)
     
     override fun execute(input: String?): EventNameValidationResult {
         val normalizationResult = normalizer.normalize(input)
         val validationOutcome = validator.validate(normalizationResult)
         
         return EventNameValidationResult(
-            originalName = input,
             cleanedName = normalizationResult.cleanedName,
             outcome = validationOutcome
         )
     }
 }
-
-/**
- * Result of event name validation.
- */
-data class EventNameValidationResult(
-    val originalName: String?,
-    val cleanedName: String?,
-    val outcome: ValidationOutcome,
-) {
-    fun shouldDrop(): Boolean = outcome is ValidationOutcome.Drop
-}
-

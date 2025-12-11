@@ -30,12 +30,12 @@ import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.eventdata.EventDataValidationPipeline;
-import com.clevertap.android.sdk.validation.eventdata.EventDataValidationResult;
 import com.clevertap.android.sdk.validation.eventname.EventNameValidationPipeline;
-import com.clevertap.android.sdk.validation.eventname.EventNameValidationResult;
 import com.clevertap.android.sdk.validation.propertykey.EventPropertyKeyValidationPipeline;
-import com.clevertap.android.sdk.validation.propertykey.PropertyKeyValidationInput;
-import com.clevertap.android.sdk.validation.propertykey.PropertyKeyValidationResult;
+import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
+import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
+import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationInput;
+import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
