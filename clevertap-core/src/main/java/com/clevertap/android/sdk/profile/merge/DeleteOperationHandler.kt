@@ -165,16 +165,16 @@ internal class DeleteOperationHandler(
             if (ProfileMergeConstants.isDeleteMarker(newArray.opt(i)) && i < oldArray.length()) {
                 indicesToDelete.add(i)
             }
+
+            if (indicesToDelete.isEmpty()) return
+
+            // Delete in reverse order to maintain correct indices
+            indicesToDelete.sortedDescending().forEach { index ->
+                oldArray.remove(index)
+            }
+
+            changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
         }
-
-        if (indicesToDelete.isEmpty()) return
-
-        // Delete in reverse order to maintain correct indices
-        indicesToDelete.sortedDescending().forEach { index ->
-            oldArray.remove(index)
-        }
-
-        changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
     }
 
     /**
@@ -191,3 +191,4 @@ internal class DeleteOperationHandler(
         parent.remove(key)
     }
 }
+
