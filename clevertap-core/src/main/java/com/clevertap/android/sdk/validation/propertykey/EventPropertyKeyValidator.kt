@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.validation.propertykey
 
-import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.validation.DropReason
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationError
@@ -15,8 +14,8 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Validates event property keys after normalization.
  * Checks for empty keys, modifications, and multi-value restrictions.
  */
-class EventPropertyKeyValidator(
-    private val config: ValidationConfig
+open class EventPropertyKeyValidator(
+    val config: ValidationConfig
 ) : Validator<PropertyKeyNormalizationResult> {
 
     override fun validate(input: PropertyKeyNormalizationResult): ValidationOutcome {
@@ -55,47 +54,6 @@ class EventPropertyKeyValidator(
                 }
                 errors.add(error)
             }
-        }
-
-        return if (errors.isEmpty()) {
-            ValidationOutcome.Success()
-        } else {
-            ValidationOutcome.Warning(errors)
-        }
-    }
-
-    /**
-     * Validates a multi-value property key.
-     * Checks normal validation plus multi-value restrictions.
-     *
-     * @param input The key normalization result
-     * @return ValidationOutcome with Drop if key is restricted for multi-value
-     */
-    fun validateMultiValueKey(input: PropertyKeyNormalizationResult): ValidationOutcome {
-        val basicValidation = validate(input)
-
-        // If basic validation failed with drop, return it
-        if (basicValidation is ValidationOutcome.Drop) {
-            return basicValidation
-        }
-
-        val errors = basicValidation.errors.toMutableList()
-
-        // Check if key is restricted for multi-value
-        val isRestricted = config.restrictedMultiValueFields?.any { restrictedField ->
-            Utils.areNamesNormalizedEqual(input.cleanedKey, restrictedField)
-        } ?: false
-
-        if (isRestricted) {
-            val error = ValidationResultFactory.create(
-                ValidationError.RESTRICTED_MULTI_VALUE_KEY,
-                input.cleanedKey
-            )
-            errors.add(error)
-            return ValidationOutcome.Drop(
-                errors = errors,
-                reason = DropReason.RESTRICTED_MULTI_VALUE_KEY
-            )
         }
 
         return if (errors.isEmpty()) {

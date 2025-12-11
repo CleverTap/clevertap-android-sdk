@@ -34,8 +34,8 @@ import com.clevertap.android.sdk.validation.eventname.EventNameValidationPipelin
 import com.clevertap.android.sdk.validation.propertykey.EventPropertyKeyValidationPipeline;
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
-import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationInput;
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult;
+import com.clevertap.android.sdk.validation.propertykey.MultiValuePropertyKeyValidationPipeline;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +61,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final EventDataValidationPipeline eventDataValidationPipeline;
     private final EventNameValidationPipeline eventNameValidationPipeline;
     private final EventPropertyKeyValidationPipeline eventPropertyKeyValidationPipeline;
+    private final MultiValuePropertyKeyValidationPipeline multiValueKeyValidationPipeline;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
@@ -77,6 +78,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             EventDataValidationPipeline eventDataValidationPipeline,
             EventNameValidationPipeline eventNameValidationPipeline,
             EventPropertyKeyValidationPipeline eventPropertyKeyValidationPipeline,
+            MultiValuePropertyKeyValidationPipeline multiValueKeyValidationPipeline,
             ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
@@ -93,6 +95,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.eventDataValidationPipeline = eventDataValidationPipeline;
         this.eventNameValidationPipeline = eventNameValidationPipeline;
         this.eventPropertyKeyValidationPipeline = eventPropertyKeyValidationPipeline;
+        this.multiValueKeyValidationPipeline = multiValueKeyValidationPipeline;
         this.validationResultStack = validationResultStack;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
@@ -768,9 +771,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         // Validate multi-value property key
-        PropertyKeyValidationResult keyResult = eventPropertyKeyValidationPipeline.execute(
-            new PropertyKeyValidationInput(key, true)
-        );
+        PropertyKeyValidationResult keyResult = multiValueKeyValidationPipeline.execute(key);
         validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
         if (keyResult.shouldDrop()) {
@@ -786,9 +787,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
         try {
-            PropertyKeyValidationResult keyResult = eventPropertyKeyValidationPipeline.execute(
-                new PropertyKeyValidationInput(key, false)
-            );
+            PropertyKeyValidationResult keyResult = eventPropertyKeyValidationPipeline.execute(key);
             validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
             if (keyResult.shouldDrop()) {
@@ -843,10 +842,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private void _removeValueForKey(String key) {
         try {
-            // Validate property key (not multi-value)
-            PropertyKeyValidationResult keyValidationResult = eventPropertyKeyValidationPipeline.execute(
-                new PropertyKeyValidationInput(key, false)
-            );
+            PropertyKeyValidationResult keyValidationResult = eventPropertyKeyValidationPipeline.execute(key);
             validationResultStack.pushValidationResult(keyValidationResult.getOutcome().getErrors());
 
             if (keyValidationResult.shouldDrop()) {

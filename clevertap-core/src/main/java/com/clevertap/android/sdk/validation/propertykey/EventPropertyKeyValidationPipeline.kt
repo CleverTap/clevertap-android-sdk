@@ -1,35 +1,30 @@
 package com.clevertap.android.sdk.validation.propertykey
 
 import com.clevertap.android.sdk.validation.ValidationConfig
-import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationInput
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
 
 /**
- * Pipeline for validating property keys.
- * Normalizes and validates property keys, with support for multi-value restrictions.
+ * Base pipeline for validating property keys.
+ * Normalizes and validates property keys.
  *
  * Steps:
  * 1. Normalize property key (remove invalid chars, truncate)
  * 2. Validate normalized key
- * 3. Optionally check multi-value restrictions
  */
-class EventPropertyKeyValidationPipeline(
+open class EventPropertyKeyValidationPipeline(
     config: ValidationConfig
-) : com.clevertap.android.sdk.validation.pipeline.ValidationPipeline<PropertyKeyValidationInput, PropertyKeyValidationResult> {
+) : ValidationPipeline<String?, PropertyKeyValidationResult> {
     
-    private val normalizer = EventPropertyKeyNormalizer(config)
-    private val validator = EventPropertyKeyValidator(config)
+    protected val normalizer = EventPropertyKeyNormalizer(config)
+    protected open val validator = EventPropertyKeyValidator(config)
     
-    override fun execute(input: PropertyKeyValidationInput): PropertyKeyValidationResult {
+    override fun execute(input: String?): PropertyKeyValidationResult {
         // Normalize
-        val normalizationResult = normalizer.normalize(input.key)
+        val normalizationResult = normalizer.normalize(input)
         
-        // Validate (with multi-value check if requested)
-        val outcome = if (input.isMultiValue) {
-            validator.validateMultiValueKey(normalizationResult)
-        } else {
-            validator.validate(normalizationResult)
-        }
+        // Validate
+        val outcome = validator.validate(normalizationResult)
         
         return PropertyKeyValidationResult(
             cleanedKey = normalizationResult.cleanedKey,

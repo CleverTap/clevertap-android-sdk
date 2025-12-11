@@ -192,6 +192,7 @@ internal object CleverTapFactory {
 
         val eventNamePipeline = ValidationPipelineFactory.createEventNamePipeline(validationConfig)
         val eventPropertyKeyPipeline = ValidationPipelineFactory.createPropertyKeyPipeline(validationConfig)
+        val multiValuePropertyKeyValidationPipeline = ValidationPipelineFactory.createMultiValuePropertyKeyPipeline(validationConfig)
         val eventDataPipeline = ValidationPipelineFactory.createEventDataPipeline(validationConfig)
 
         val profileStateMerger = ProfileStateMerger()
@@ -451,6 +452,7 @@ internal object CleverTapFactory {
             eventDataPipeline,
             eventNamePipeline,
             eventPropertyKeyPipeline,
+            multiValuePropertyKeyValidationPipeline,
             validationResultStack,
             coreMetaData,
             deviceInfo,

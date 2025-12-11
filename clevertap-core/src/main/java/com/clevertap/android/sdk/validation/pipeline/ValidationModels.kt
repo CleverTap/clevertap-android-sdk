@@ -84,17 +84,6 @@ data class PropertyKeyValidationResult(
 ) : ValidationResult
 
 /**
- * Input for property key validation.
- *
- * @param key The property key to validate
- * @param isMultiValue Whether to check multi-value restrictions
- */
-data class PropertyKeyValidationInput(
-    val key: String?,
-    val isMultiValue: Boolean = false
-)
-
-/**
  * Result of property key normalization.
  */
 data class PropertyKeyNormalizationResult(
