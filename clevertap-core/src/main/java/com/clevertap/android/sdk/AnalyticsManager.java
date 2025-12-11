@@ -15,7 +15,8 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.profile.ProfileCommand;
-import com.clevertap.android.sdk.profile.ProfileStateMerger;
+import com.clevertap.android.sdk.profile.merge.MergeOperation;
+import com.clevertap.android.sdk.profile.merge.ProfileChange;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
@@ -910,7 +911,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileCommand = new JSONObject().put(command.getCommandString(), value);
             JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
-            ProfileStateMerger.MergeOperation operation = command.getOperation();
+            MergeOperation operation = command.getOperation();
 
             baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, value, operation));
         } catch (Throwable t) {
@@ -996,7 +997,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile);
 
-            baseEventQueueManager.pushBasicProfile(customProfile, false, getFlattenedProfileChanges(customProfile, ProfileStateMerger.MergeOperation.UPDATE));
+            baseEventQueueManager.pushBasicProfile(customProfile, false, getFlattenedProfileChanges(customProfile, MergeOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -1059,7 +1060,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileUpdate = new JSONObject();
             profileUpdate.put(key, profileCommand);
 
-            ProfileStateMerger.MergeOperation operation = command.getOperation();
+            MergeOperation operation = command.getOperation();
             baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, originalValues, operation));
 
             config.getLogger()
@@ -1193,13 +1194,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, ProfileStateMerger.MergeOperation operation) throws JSONException {
-        Map<String, ProfileStateMerger.ProfileChange> profileChanges = localDataStore.mergeJson(key, originalValues, operation);
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, MergeOperation operation) throws JSONException {
+        Map<String, ProfileChange> profileChanges = localDataStore.mergeJson(key, originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, ProfileStateMerger.MergeOperation operation) throws JSONException {
-        Map<String, ProfileStateMerger.ProfileChange> profileChanges = localDataStore.mergeJson(originalValues, operation);
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, MergeOperation operation) throws JSONException {
+        Map<String, ProfileChange> profileChanges = localDataStore.mergeJson(originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 }
