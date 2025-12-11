@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.validation.eventname
 
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
 
 /**
  * Pipeline for validating event names.
@@ -13,7 +14,7 @@ import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult
  */
 class EventNameValidationPipeline(
     config: ValidationConfig
-) : com.clevertap.android.sdk.validation.pipeline.ValidationPipeline<String?, EventNameValidationResult> {
+) : ValidationPipeline<String?, EventNameValidationResult> {
     
     private val normalizer = EventNameNormalizer(config)
     private val validator = EventNameValidator(config)

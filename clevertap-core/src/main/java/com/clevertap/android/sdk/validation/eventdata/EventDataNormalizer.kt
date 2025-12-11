@@ -30,7 +30,7 @@ import kotlin.math.max
  */
 class EventDataNormalizer(
     private val config: ValidationConfig
-) : Normalizer<Map<*, *>, EventDataNormalizationResult> {
+) : Normalizer<Map<*, *>?, EventDataNormalizationResult> {
 
     companion object {
         private const val DATE_PREFIX = "\$D_"
@@ -48,27 +48,39 @@ class EventDataNormalizer(
     private val valuesModified = mutableListOf<ValueModification>()
     private val itemsRemoved = mutableListOf<RemovedItem>()
 
-    override fun normalize(input: Map<*, *>): EventDataNormalizationResult {
+    override fun normalize(input: Map<*, *>?): EventDataNormalizationResult {
         resetTracking()
 
-        val cleaned = try {
-            cleanMapInternal(input, depth = 0)
-        } catch (e: JSONException) {
-            JSONObject() // Return empty object on error
+        val cleanedData = when {
+            input == null -> JSONObject()
+            else -> {
+                try {
+                    cleanMapInternal(input, depth = 0)
+                } catch (e: JSONException) {
+                    JSONObject()
+                }
+            }
         }
 
         return EventDataNormalizationResult(
-            cleanedData = if (cleaned.length() == 0) JSONObject() else cleaned,
-            metrics = EventDataMetrics(
-                maxDepth = maxDepth,
-                maxArrayKeyCount = maxArrayKeyCount,
-                maxObjectKeyCount = maxObjectKeyCount,
-                maxArrayLength = maxArrayLength,
-                maxKVPairCount = maxKVPairCount,
-                keysModified = keysModified.toList(),
-                valuesModified = valuesModified.toList(),
-                itemsRemoved = itemsRemoved.toList()
-            )
+            cleanedData = cleanedData,
+            metrics = buildMetrics()
+        )
+    }
+
+    /**
+     * Builds the metrics object from current tracking state.
+     */
+    private fun buildMetrics(): EventDataMetrics {
+        return EventDataMetrics(
+            maxDepth = maxDepth,
+            maxArrayKeyCount = maxArrayKeyCount,
+            maxObjectKeyCount = maxObjectKeyCount,
+            maxArrayLength = maxArrayLength,
+            maxKVPairCount = maxKVPairCount,
+            keysModified = keysModified.toList(),
+            valuesModified = valuesModified.toList(),
+            itemsRemoved = itemsRemoved.toList()
         )
     }
 

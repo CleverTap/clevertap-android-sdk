@@ -1,10 +1,8 @@
 package com.clevertap.android.sdk.validation.eventdata
 
 import com.clevertap.android.sdk.validation.ValidationConfig
-import com.clevertap.android.sdk.validation.ValidationOutcome
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
-import org.json.JSONObject
 
 /**
  * Pipeline for validating event data (properties).
@@ -23,13 +21,6 @@ class EventDataValidationPipeline(
     private val validator = EventDataValidator(config)
     
     override fun execute(input: Map<*, *>?): EventDataValidationResult {
-        if (input == null) {
-            return EventDataValidationResult(
-                cleanedData = JSONObject(),
-                outcome = ValidationOutcome.Success(),
-            )
-        }
-        
         // Normalize
         val normalizationResult = normalizer.normalize(input)
         
