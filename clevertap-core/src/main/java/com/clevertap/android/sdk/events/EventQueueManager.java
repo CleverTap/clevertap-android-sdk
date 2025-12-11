@@ -318,6 +318,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         Location userLocation = cleverTapMetaData.getLocationFromUser();
         updateLocalStore(eventName, eventType);
 
+        config.getLogger().verbose(config.getAccountId(), "FlattenedEventData : " + flattenedEventData);
+
         if (eventMediator.isChargedEvent(event)) {
             controllerManager.getInAppController()
                     .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
@@ -398,6 +400,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         /*If key is present in IdentitySet and removeFromSharedPrefs is true then
                         proceed to removing PII key(Email) from shared prefs*/
 
+                        // todo multi-values identity keys?
                         if (isProfileKey && !deviceInfo.isErrorDeviceId()) {
                             try {
                                 if (removeFromSharedPrefs) {

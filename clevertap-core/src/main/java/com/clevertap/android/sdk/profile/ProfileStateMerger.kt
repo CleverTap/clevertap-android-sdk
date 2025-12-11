@@ -441,6 +441,7 @@ class ProfileStateMerger {
 
     /**
      * Adds string values to array (allows duplicates).
+     * If a string starts with $D_ prefix, removes it and converts to long.
      */
     private fun handleArrayAdd(
         oldArray: JSONArray,
@@ -454,7 +455,8 @@ class ProfileStateMerger {
         for (i in 0 until newArray.length()) {
             val item = newArray.get(i)
             if (item is String) {
-                oldArray.put(item)
+                val processedItem = processDatePrefix(item)
+                oldArray.put(processedItem)
                 modified = true
             }
         }
@@ -548,6 +550,7 @@ class ProfileStateMerger {
 
     /**
      * Handles simple value updates.
+     * If new value is a string with $D_ prefix, removes it and converts to long.
      */
     private fun handleValueUpdate(
         parent: JSONObject,
@@ -557,9 +560,21 @@ class ProfileStateMerger {
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        if (!areEqual(oldValue, newValue)) {
-            parent.put(key, newValue)
-            changes[path] = ProfileChange(oldValue, newValue)
+        val processedOldValue = if (oldValue is String) {
+            processDatePrefix(oldValue)
+        } else {
+            oldValue
+        }
+
+        val processedNewValue = if (newValue is String) {
+            processDatePrefix(newValue)
+        } else {
+            newValue
+        }
+        
+        if (!areEqual(processedOldValue, processedNewValue)) {
+            parent.put(key, processedNewValue)
+            changes[path] = ProfileChange(processedOldValue, processedNewValue)
         }
     }
 
@@ -732,6 +747,11 @@ class ProfileStateMerger {
          * Use this value to mark fields for deletion.
          */
         const val DELETE_MARKER = "__CLEVERTAP_DELETE__"
+        
+        /**
+         * Prefix for date values that should be converted to long.
+         */
+        private const val DATE_PREFIX = "\$D_"
 
         /**
          * Checks if a value is the DELETE_MARKER.
@@ -741,6 +761,25 @@ class ProfileStateMerger {
             return value is String && value == DELETE_MARKER
         }
 
+        /**
+         * Processes a string value, removing $D_ prefix if present and converting to long.
+         * 
+         * @param value The string value to process
+         * @return Long value if string starts with $D_ prefix, otherwise original string
+         */
+        private fun processDatePrefix(value: String): Any {
+            return if (value.startsWith(DATE_PREFIX)) {
+                try {
+                    value.removePrefix(DATE_PREFIX).toLong()
+                } catch (e: NumberFormatException) {
+                    // If conversion fails, return original string
+                    value
+                }
+            } else {
+                value
+            }
+        }
+        
         /**
          * Extension function to convert ProfileChange map to nested map format.
          * Useful for serialization or legacy compatibility.
