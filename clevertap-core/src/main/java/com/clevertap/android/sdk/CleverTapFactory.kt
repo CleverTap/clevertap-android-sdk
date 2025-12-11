@@ -190,7 +190,7 @@ internal object CleverTapFactory {
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }
 
-        val validationPipelineProvider = ValidationPipelineProvider(validationConfig, validationResultStack)
+        val validationPipelineProvider = ValidationPipelineProvider(validationConfig, validationResultStack, config.logger)
         val profileStateMerger = ProfileStateMerger()
         val nestedJsonBuilder = NestedJsonBuilder()
 

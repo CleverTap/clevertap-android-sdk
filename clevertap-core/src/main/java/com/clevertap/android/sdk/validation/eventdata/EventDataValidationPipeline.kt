@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventdata
 
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
@@ -18,25 +19,34 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  * @param config Validation configuration
  * @param errorReporter Error reporter for pushing errors to stack.
  *                      All validation errors are automatically pushed to this stack.
+ * @param logger Logger for logging validation results
  */
 class EventDataValidationPipeline(
     config: ValidationConfig,
-    private val errorReporter: ValidationResultStack
+    private val errorReporter: ValidationResultStack,
+    private val logger: ILogger
 ) : ValidationPipeline<Map<*, *>?, EventDataValidationResult> {
     
     private val normalizer = EventDataNormalizer(config)
     private val validator = EventDataValidator(config)
     
     override fun execute(input: Map<*, *>?): EventDataValidationResult {
-        // Normalize
+        // Step 1: Normalize the input
         val normalizationResult = normalizer.normalize(input)
         
-        // Validate
+        // Step 2: Validate the normalized result
         val outcome = validator.validate(normalizationResult)
         
-        // Auto-report validation errors
+        // Step 3: Auto-report validation errors
         errorReporter.pushValidationResult(outcome.errors)
         
+        // Step 4: Log validation results
+        logValidationOutcome(
+            logger = logger,
+            tag = "EventDataValidation",
+            outcome = outcome
+        )
+
         return EventDataValidationResult(
             cleanedData = normalizationResult.cleanedData,
             outcome = outcome,

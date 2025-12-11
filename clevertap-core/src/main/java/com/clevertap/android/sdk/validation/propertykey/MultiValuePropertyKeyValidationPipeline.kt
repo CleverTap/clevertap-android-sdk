@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.propertykey
 
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
 
@@ -16,11 +17,13 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
  * @param config Validation configuration
  * @param errorReporter Error reporter for pushing errors to stack.
  *                      All validation errors are automatically pushed to this stack.
+ * @param logger Logger for logging validation results
  */
 class MultiValuePropertyKeyValidationPipeline(
     config: ValidationConfig,
-    errorReporter: ValidationResultStack
-) : EventPropertyKeyValidationPipeline(config, errorReporter) {
+    errorReporter: ValidationResultStack,
+    logger: ILogger
+) : EventPropertyKeyValidationPipeline(config, errorReporter, logger) {
     
     override val validator = MultiValuePropertyKeyValidator(config)
 }

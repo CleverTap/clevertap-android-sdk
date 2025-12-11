@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.pipeline
 
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.eventdata.EventDataValidationPipeline
@@ -20,33 +21,34 @@ import com.clevertap.android.sdk.validation.propertykey.MultiValuePropertyKeyVal
  */
 class ValidationPipelineProvider(
     private val config: ValidationConfig,
-    private val errorReporter: ValidationResultStack
+    private val errorReporter: ValidationResultStack,
+    private val logger: ILogger
 ) {
     /**
      * Pipeline for validating event names.
      */
     val eventNamePipeline: EventNameValidationPipeline by lazy {
-        EventNameValidationPipeline(config, errorReporter)
+        EventNameValidationPipeline(config, errorReporter, logger)
     }
     
     /**
      * Pipeline for validating event data (properties).
      */
     val eventDataPipeline: EventDataValidationPipeline by lazy {
-        EventDataValidationPipeline(config, errorReporter)
+        EventDataValidationPipeline(config, errorReporter, logger)
     }
     
     /**
      * Pipeline for validating regular property keys.
      */
     val propertyKeyPipeline: EventPropertyKeyValidationPipeline by lazy {
-        EventPropertyKeyValidationPipeline(config, errorReporter)
+        EventPropertyKeyValidationPipeline(config, errorReporter, logger)
     }
     
     /**
      * Pipeline for validating multi-value property keys.
      */
     val multiValuePropertyKeyPipeline: MultiValuePropertyKeyValidationPipeline by lazy {
-        MultiValuePropertyKeyValidationPipeline(config, errorReporter)
+        MultiValuePropertyKeyValidationPipeline(config, errorReporter, logger)
     }
 }
