@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.validation.eventdata
 
 import com.clevertap.android.sdk.validation.ValidationConfig
+import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
 
@@ -12,9 +13,15 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  * 1. Normalize event data (clean keys/values, remove nulls/empties)
  * 2. Validate structural limits (depth, array size, etc.)
  * 3. Report modifications and removals
+ * 4. Auto-report validation errors (if error reporter provided)
+ * 
+ * @param config Validation configuration
+ * @param errorReporter Optional error reporter for automatic error logging.
+ *                      Pass null to disable automatic error reporting.
  */
 class EventDataValidationPipeline(
-    config: ValidationConfig
+    config: ValidationConfig,
+    private val errorReporter: ValidationResultStack
 ) : ValidationPipeline<Map<*, *>?, EventDataValidationResult> {
     
     private val normalizer = EventDataNormalizer(config)
@@ -26,6 +33,9 @@ class EventDataValidationPipeline(
         
         // Validate
         val outcome = validator.validate(normalizationResult)
+        
+        // Auto-report validation errors if reporter is provided
+        errorReporter.pushValidationResult(outcome.errors)
         
         return EventDataValidationResult(
             cleanedData = normalizationResult.cleanedData,

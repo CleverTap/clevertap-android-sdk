@@ -264,7 +264,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             // Validate
             EventNameValidationResult nameValidationResult = validationPipelineProvider.getEventNamePipeline().execute(eventName);
-            validationResultStack.pushValidationResult(nameValidationResult.getOutcome().getErrors());
 
             // Check for an error
             if (nameValidationResult.shouldDrop()) {
@@ -272,7 +271,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             EventDataValidationResult dataValidationResult = validationPipelineProvider.getEventDataPipeline().execute(eventActions);
-            validationResultStack.pushValidationResult(dataValidationResult.getOutcome().getErrors());
 
             if (dataValidationResult.shouldDrop()) {
                 return;
@@ -615,8 +613,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             // Validate charged event details
             EventDataValidationResult detailsResult = validationPipelineProvider.getEventDataPipeline().execute(chargeDetails);
-            validationResultStack.pushValidationResult(detailsResult.getOutcome().getErrors());
-            
+
             if (detailsResult.shouldDrop()) {
                 return;
             }
@@ -627,7 +624,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONArray jsonItemsArray = new JSONArray();
             for (HashMap<String, Object> map : items) {
                 EventDataValidationResult itemResult = validationPipelineProvider.getEventDataPipeline().execute(map);
-                validationResultStack.pushValidationResult(itemResult.getOutcome().getErrors());
 
                 if (!itemResult.shouldDrop()) {
                     JSONObject itemDetails = itemResult.getCleanedData();
@@ -760,7 +756,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         // Validate multi-value property key
         PropertyKeyValidationResult keyResult = validationPipelineProvider.getMultiValuePropertyKeyPipeline().execute(key);
-        validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
         if (keyResult.shouldDrop()) {
             return;
@@ -776,20 +771,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
         try {
             PropertyKeyValidationResult keyResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key);
-            validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
             if (keyResult.shouldDrop()) {
                 return;
             }
 
             key = keyResult.getCleanedKey();
-
-            if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0) {
-                ValidationResult error = ValidationResultFactory.create(ValidationError.INVALID_INCREMENT_DECREMENT_VALUE, key);
-                validationResultStack.pushValidationResult(error);
-                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                return;
-            }
 
             JSONObject profileCommand = new JSONObject().put(command.getCommandString(), value);
             JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
@@ -810,7 +797,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             // Validate profile data
             EventDataValidationResult profileResult = validationPipelineProvider.getEventDataPipeline().execute(profile);
-            validationResultStack.pushValidationResult(profileResult.getOutcome().getErrors());
 
             if (profileResult.shouldDrop()) {
                 return;
@@ -831,7 +817,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private void _removeValueForKey(String key) {
         try {
             PropertyKeyValidationResult keyValidationResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key);
-            validationResultStack.pushValidationResult(keyValidationResult.getOutcome().getErrors());
 
             if (keyValidationResult.shouldDrop()) {
                 return;
