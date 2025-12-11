@@ -29,13 +29,10 @@ import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
-import com.clevertap.android.sdk.validation.eventdata.EventDataValidationPipeline;
-import com.clevertap.android.sdk.validation.eventname.EventNameValidationPipeline;
-import com.clevertap.android.sdk.validation.propertykey.EventPropertyKeyValidationPipeline;
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider;
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult;
-import com.clevertap.android.sdk.validation.propertykey.MultiValuePropertyKeyValidationPipeline;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,10 +55,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
     private final ValidationResultStack validationResultStack;
-    private final EventDataValidationPipeline eventDataValidationPipeline;
-    private final EventNameValidationPipeline eventNameValidationPipeline;
-    private final EventPropertyKeyValidationPipeline eventPropertyKeyValidationPipeline;
-    private final MultiValuePropertyKeyValidationPipeline multiValueKeyValidationPipeline;
+    private final ValidationPipelineProvider validationPipelineProvider;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
@@ -75,10 +69,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             Context context,
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
-            EventDataValidationPipeline eventDataValidationPipeline,
-            EventNameValidationPipeline eventNameValidationPipeline,
-            EventPropertyKeyValidationPipeline eventPropertyKeyValidationPipeline,
-            MultiValuePropertyKeyValidationPipeline multiValueKeyValidationPipeline,
+            ValidationPipelineProvider validationPipelineProvider,
             ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
@@ -92,10 +83,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
-        this.eventDataValidationPipeline = eventDataValidationPipeline;
-        this.eventNameValidationPipeline = eventNameValidationPipeline;
-        this.eventPropertyKeyValidationPipeline = eventPropertyKeyValidationPipeline;
-        this.multiValueKeyValidationPipeline = multiValueKeyValidationPipeline;
+        this.validationPipelineProvider = validationPipelineProvider;
         this.validationResultStack = validationResultStack;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
@@ -275,7 +263,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         JSONObject event = new JSONObject();
         try {
             // Validate
-            EventNameValidationResult nameValidationResult = eventNameValidationPipeline.execute(eventName);
+            EventNameValidationResult nameValidationResult = validationPipelineProvider.getEventNamePipeline().execute(eventName);
             validationResultStack.pushValidationResult(nameValidationResult.getOutcome().getErrors());
 
             // Check for an error
@@ -283,7 +271,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 return;
             }
 
-            EventDataValidationResult dataValidationResult = eventDataValidationPipeline.execute(eventActions);
+            EventDataValidationResult dataValidationResult = validationPipelineProvider.getEventDataPipeline().execute(eventActions);
             validationResultStack.pushValidationResult(dataValidationResult.getOutcome().getErrors());
 
             if (dataValidationResult.shouldDrop()) {
@@ -626,7 +614,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         JSONObject chargedEvent = new JSONObject();
         try {
             // Validate charged event details
-            EventDataValidationResult detailsResult = eventDataValidationPipeline.execute(chargeDetails);
+            EventDataValidationResult detailsResult = validationPipelineProvider.getEventDataPipeline().execute(chargeDetails);
             validationResultStack.pushValidationResult(detailsResult.getOutcome().getErrors());
             
             if (detailsResult.shouldDrop()) {
@@ -638,7 +626,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // Validate each item
             JSONArray jsonItemsArray = new JSONArray();
             for (HashMap<String, Object> map : items) {
-                EventDataValidationResult itemResult = eventDataValidationPipeline.execute(map);
+                EventDataValidationResult itemResult = validationPipelineProvider.getEventDataPipeline().execute(map);
                 validationResultStack.pushValidationResult(itemResult.getOutcome().getErrors());
 
                 if (!itemResult.shouldDrop()) {
@@ -771,7 +759,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         // Validate multi-value property key
-        PropertyKeyValidationResult keyResult = multiValueKeyValidationPipeline.execute(key);
+        PropertyKeyValidationResult keyResult = validationPipelineProvider.getMultiValuePropertyKeyPipeline().execute(key);
         validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
         if (keyResult.shouldDrop()) {
@@ -787,7 +775,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
         try {
-            PropertyKeyValidationResult keyResult = eventPropertyKeyValidationPipeline.execute(key);
+            PropertyKeyValidationResult keyResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key);
             validationResultStack.pushValidationResult(keyResult.getOutcome().getErrors());
 
             if (keyResult.shouldDrop()) {
@@ -821,7 +809,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         try {
             // Validate profile data
-            EventDataValidationResult profileResult = eventDataValidationPipeline.execute(profile);
+            EventDataValidationResult profileResult = validationPipelineProvider.getEventDataPipeline().execute(profile);
             validationResultStack.pushValidationResult(profileResult.getOutcome().getErrors());
 
             if (profileResult.shouldDrop()) {
@@ -842,7 +830,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private void _removeValueForKey(String key) {
         try {
-            PropertyKeyValidationResult keyValidationResult = eventPropertyKeyValidationPipeline.execute(key);
+            PropertyKeyValidationResult keyValidationResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key);
             validationResultStack.pushValidationResult(keyValidationResult.getOutcome().getErrors());
 
             if (keyValidationResult.shouldDrop()) {

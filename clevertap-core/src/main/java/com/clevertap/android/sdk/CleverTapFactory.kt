@@ -71,7 +71,7 @@ import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
 import com.clevertap.android.sdk.utils.NestedJsonBuilder
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
-import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineFactory
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
@@ -190,11 +190,7 @@ internal object CleverTapFactory {
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }
 
-        val eventNamePipeline = ValidationPipelineFactory.createEventNamePipeline(validationConfig)
-        val eventPropertyKeyPipeline = ValidationPipelineFactory.createPropertyKeyPipeline(validationConfig)
-        val multiValuePropertyKeyValidationPipeline = ValidationPipelineFactory.createMultiValuePropertyKeyPipeline(validationConfig)
-        val eventDataPipeline = ValidationPipelineFactory.createEventDataPipeline(validationConfig)
-
+        val validationPipelineProvider = ValidationPipelineProvider(validationConfig)
         val profileStateMerger = ProfileStateMerger()
         val nestedJsonBuilder = NestedJsonBuilder()
 
@@ -223,7 +219,6 @@ internal object CleverTapFactory {
         val triggersManager = TriggerManager(context, config.accountId, deviceInfo)
         val impressionManager = ImpressionManager(storeRegistry)
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
-
 
         val inAppActionHandler = InAppActionHandler(
             context,
@@ -449,10 +444,7 @@ internal object CleverTapFactory {
             context,
             config,
             baseEventQueueManager,
-            eventDataPipeline,
-            eventNamePipeline,
-            eventPropertyKeyPipeline,
-            multiValuePropertyKeyValidationPipeline,
+            validationPipelineProvider,
             validationResultStack,
             coreMetaData,
             deviceInfo,
