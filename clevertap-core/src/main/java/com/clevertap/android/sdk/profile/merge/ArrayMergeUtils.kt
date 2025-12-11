@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.profile.merge
 
+import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -46,7 +47,7 @@ internal object ArrayMergeUtils {
     fun hasDeleteMarkerElements(array: JSONArray): Boolean {
         return (0 until array.length()).any { i ->
             val element = array.opt(i)
-            element is String && element == ProfileMergeConstants.DELETE_MARKER
+            element is String && element == Constants.DELETE_MARKER
         }
     }
 
@@ -59,7 +60,7 @@ internal object ArrayMergeUtils {
     fun hasJsonObjectElements(array: JSONArray): Boolean {
         return (0 until array.length()).any { i ->
             val element = array.opt(i)
-            element is JSONObject && !isDeleteMarker(element)
+            element is JSONObject && !ProfileMergeConstants.isDeleteMarker(element)
         }
     }
 
@@ -72,12 +73,5 @@ internal object ArrayMergeUtils {
      */
     fun shouldMergeArrayElements(array: JSONArray): Boolean {
         return (0 until array.length()).any { i -> array.opt(i) is JSONObject }
-    }
-
-    /**
-     * Checks if a value is the DELETE_MARKER.
-     */
-    private fun isDeleteMarker(value: Any?): Boolean {
-        return value is String && value == ProfileMergeConstants.DELETE_MARKER
     }
 }
