@@ -12,11 +12,11 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  * Steps:
  * 1. Normalize event name (remove invalid chars, truncate)
  * 2. Validate normalized name (includes restriction checks)
- * 3. Auto-report validation errors (if error reporter provided)
+ * 3. Automatically report validation errors to the error reporter
  * 
  * @param config Validation configuration
- * @param errorReporter Optional error reporter for automatic error logging.
- *                      Pass null to disable automatic error reporting.
+ * @param errorReporter Error reporter for pushing errors to stack.
+ *                      All validation errors are automatically pushed to this stack.
  */
 class EventNameValidationPipeline(
     config: ValidationConfig,
@@ -30,7 +30,7 @@ class EventNameValidationPipeline(
         val normalizationResult = normalizer.normalize(input)
         val validationOutcome = validator.validate(normalizationResult)
         
-        // Auto-report validation errors if reporter is provided
+        // Auto-report validation errors
         errorReporter.pushValidationResult(validationOutcome.errors)
         
         return EventNameValidationResult(

@@ -11,11 +11,11 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
  * 1. Normalize property key (remove invalid chars, truncate)
  * 2. Validate normalized key
  * 3. Check multi-value restrictions
- * 4. Auto-report validation errors (if error reporter provided)
+ * 4. Automatically report validation errors to the error reporter
  * 
  * @param config Validation configuration
- * @param errorReporter Optional error reporter for automatic error logging.
- *                      Pass null to disable automatic error reporting.
+ * @param errorReporter Error reporter for pushing errors to stack.
+ *                      All validation errors are automatically pushed to this stack.
  */
 class MultiValuePropertyKeyValidationPipeline(
     config: ValidationConfig,

@@ -12,10 +12,11 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  * Steps:
  * 1. Normalize property key (remove invalid chars, truncate)
  * 2. Validate normalized key
- * 3. Auto-report validation errors (if error reporter provided)
+ * 3. Automatically report validation errors to the error reporter
  * 
  * @param config Validation configuration
- * @param errorReporter Error reporter for error logging.
+ * @param errorReporter Error reporter for pushing errors to stack.
+ *                      All validation errors are automatically pushed to this stack.
  */
 open class EventPropertyKeyValidationPipeline(
     config: ValidationConfig,
@@ -32,7 +33,7 @@ open class EventPropertyKeyValidationPipeline(
         // Validate
         val outcome = validator.validate(normalizationResult)
         
-        // Auto-report validation errors if reporter is provided
+        // Auto-report validation errors
         errorReporter.pushValidationResult(outcome.errors)
         
         return PropertyKeyValidationResult(

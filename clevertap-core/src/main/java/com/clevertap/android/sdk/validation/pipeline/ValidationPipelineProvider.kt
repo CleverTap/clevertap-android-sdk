@@ -12,11 +12,11 @@ import com.clevertap.android.sdk.validation.propertykey.MultiValuePropertyKeyVal
  * Simplifies dependency injection by bundling related pipelines together.
  * 
  * All pipelines are lazily initialized and reused throughout the lifecycle.
+ * Validation errors are automatically reported to the provided error reporter.
  * 
  * @param config Validation configuration
- * @param errorReporter Optional error reporter for automatic error logging.
- *                      If provided, pipelines will automatically push validation errors.
- *                      Pass null to disable automatic error reporting (useful for testing).
+ * @param errorReporter Error reporter for pushing errors to stack.
+ *                      All validation pipelines will automatically push their errors to this stack.
  */
 class ValidationPipelineProvider(
     private val config: ValidationConfig,
