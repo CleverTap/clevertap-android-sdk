@@ -8,12 +8,6 @@ class NestedJsonBuilder {
 
     companion object {
         private val ARRAY_INDEX_PATTERN = Regex("""^(.+?)\[(\d+)]$""")
-
-        /**
-         * Marker value to indicate deletion intent in merge operations.
-         * JSONObject.NULL is reserved for sparse array placeholders only.
-         */
-        const val DELETE_MARKER = "__CLEVERTAP_DELETE__"
     }
 
     /**

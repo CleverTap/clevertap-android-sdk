@@ -1041,7 +1041,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
             //Set removeFromSharedPrefs to true to remove PII keys from shared prefs.
-            baseEventQueueManager.pushBasicProfile(profileUpdate, true, getFlattenedProfileChanges(key, NestedJsonBuilder.DELETE_MARKER, command.getOperation()));
+            baseEventQueueManager.pushBasicProfile(profileUpdate, true, getFlattenedProfileChanges(key, Constants.DELETE_MARKER, command.getOperation()));
 
             config.getLogger()
                     .verbose(config.getAccountId(), "removing value for key " + key + " from user profile");
