@@ -17,6 +17,8 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.profile.ProfileStateMerger;
+import com.clevertap.android.sdk.profile.merge.MergeOperation;
+import com.clevertap.android.sdk.profile.merge.ProfileChange;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 
@@ -768,10 +770,10 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    public Map<String, ProfileStateMerger.ProfileChange> mergeJson(
+    public Map<String, ProfileChange> mergeJson(
             String dotNotationKey,
             Object value,
-            ProfileStateMerger.MergeOperation operation
+            MergeOperation operation
     ) throws JSONException {
         JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
         return mergeJson(nestedProfile, operation);
@@ -779,9 +781,9 @@ public class LocalDataStore {
 
 
     @WorkerThread
-    public Map<String, ProfileStateMerger.ProfileChange> mergeJson(
+    public Map<String, ProfileChange> mergeJson(
             JSONObject newJson,
-            ProfileStateMerger.MergeOperation operation
+            MergeOperation operation
     ) throws JSONException {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             ProfileStateMerger.MergeResult result = profileStateMerger.merge(

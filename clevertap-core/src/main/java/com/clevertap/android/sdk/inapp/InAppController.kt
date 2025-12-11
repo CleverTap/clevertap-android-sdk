@@ -51,6 +51,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.profile.merge.ProfileChange
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.filterObjects
@@ -435,7 +436,7 @@ internal class InAppController(
 
     @WorkerThread
     fun onQueueProfileEvent(
-        userAttributeChangedProperties: Map<String, ProfileStateMerger.ProfileChange>,
+        userAttributeChangedProperties: Map<String, ProfileChange>,
         location: Location?
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
