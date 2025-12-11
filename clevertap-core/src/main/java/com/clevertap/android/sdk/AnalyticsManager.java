@@ -839,7 +839,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             // Set removeFromSharedPrefs to true to remove PII keys from shared prefs
             baseEventQueueManager.pushBasicProfile(profileUpdate, true,
-                getFlattenedProfileChanges(key, NestedJsonBuilder.DELETE_MARKER, command.getOperation()));
+                getFlattenedProfileChanges(key, Constants.DELETE_MARKER, command.getOperation()));
 
             config.getLogger().verbose(config.getAccountId(),
                 "removing value for key " + key + " from user profile");
