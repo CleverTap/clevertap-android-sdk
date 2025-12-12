@@ -91,14 +91,14 @@ class ProfileValueHandler(
         if (currentValues == null || newValues == null) {
             return null
         }
-        val mergeOperation =
+        val profileOperation =
             if (command == Constants.COMMAND_REMOVE)
                 Validator.REMOVE_VALUES_OPERATION
             else
                 Validator.ADD_VALUES_OPERATION
 
         // merge currentValues and newValues
-        val vr = validator.mergeMultiValuePropertyForKey(currentValues, newValues, mergeOperation, key)
+        val vr = validator.mergeMultiValuePropertyForKey(currentValues, newValues, profileOperation, key)
 
         // Check for an error
         if (vr.errorCode != 0) {

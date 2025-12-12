@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.profile.ProfileStateTraverser.Companion.toNestedMap
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeAlert
@@ -49,6 +50,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.profile.merge.ProfileChange
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.filterObjects
@@ -433,12 +435,12 @@ internal class InAppController(
 
     @WorkerThread
     fun onQueueProfileEvent(
-        userAttributeChangedProperties: Map<String, Map<String, Any>>,
+        userAttributeChangedProperties: Map<String, ProfileChange>,
         location: Location?
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         val clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
-            userAttributeChangedProperties,
+            userAttributeChangedProperties.toNestedMap(),
             location,
             appFields
         )

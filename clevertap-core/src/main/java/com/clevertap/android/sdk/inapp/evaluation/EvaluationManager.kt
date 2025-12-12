@@ -135,7 +135,7 @@ internal class EvaluationManager(
      *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
     fun evaluateOnUserAttributeChange(
-        eventProperties: Map<String, Map<String, Any>>,
+        eventProperties: Map<String, Map<String, Any?>>,
         userLocation: Location?,
         appFields: Map<String, Any>
     ): Pair<JSONArray,JSONArray> {
