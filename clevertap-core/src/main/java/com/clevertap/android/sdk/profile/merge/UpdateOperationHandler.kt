@@ -41,6 +41,27 @@ internal class UpdateOperationHandler(
 
         val oldValue = target.get(key)
 
+        // Special handling for GET operation
+        if (operation == MergeOperation.GET) {
+            when {
+                oldValue is JSONObject && newValue is JSONObject -> {
+                    // Recurse into nested objects for GET
+                    recursiveMerge(oldValue, newValue, currentPath, changes)
+                }
+                oldValue is JSONArray && newValue is JSONArray -> {
+                    // Handle array GET operations
+                    arrayHandler.handleArrayMerge(
+                        target, key, oldValue, newValue, currentPath, changes, operation, recursiveMerge
+                    )
+                }
+                else -> {
+                    // Found the target value - report it without updating
+                    handleGetOperation(oldValue, currentPath, changes)
+                }
+            }
+            return
+        }
+
         when {
             oldValue is JSONObject && newValue is JSONObject -> {
                 // Recurse into nested objects
@@ -66,7 +87,7 @@ internal class UpdateOperationHandler(
 
     /**
      * Handles keys that don't exist in the target.
-     * Skips arithmetic operations on missing keys.
+     * Skips arithmetic operations and GET operations on missing keys.
      */
     private fun handleMissingKey(
         target: JSONObject,
@@ -76,8 +97,8 @@ internal class UpdateOperationHandler(
         changes: MutableMap<String, ProfileChange>,
         operation: MergeOperation
     ) {
-        // Skip adding keys for arithmetic operations
-        if (operation in listOf(MergeOperation.INCREMENT, MergeOperation.DECREMENT)) {
+        // Skip adding keys for arithmetic operations and GET operations
+        if (operation in listOf(MergeOperation.INCREMENT, MergeOperation.DECREMENT, MergeOperation.GET)) {
             return
         }
 
@@ -142,5 +163,23 @@ internal class UpdateOperationHandler(
             parent.put(key, processedNewValue)
             changes[path] = ProfileChange(processedOldValue, processedNewValue)
         }
+    }
+
+    /**
+     * Handles GET operation - reports the current value without modifying it.
+     * Records a ProfileChange with oldValue set to the current value and newValue set to "__GET_MARKER__".
+     */
+    private fun handleGetOperation(
+        oldValue: Any,
+        path: String,
+        changes: MutableMap<String, ProfileChange>
+    ) {
+        val processedOldValue = if (oldValue is String) {
+            ProfileMergeConstants.processDatePrefix(oldValue)
+        } else {
+            oldValue
+        }
+        
+        changes[path] = ProfileChange(processedOldValue, "__GET_MARKER__")
     }
 }

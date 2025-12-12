@@ -39,5 +39,7 @@ enum class MergeOperation {
      * Remove string values from arrays.
      * Only works with string array elements.
      */
-    ARRAY_REMOVE
+    ARRAY_REMOVE,
+
+    GET
 }
