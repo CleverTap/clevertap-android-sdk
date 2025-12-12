@@ -24,6 +24,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.JsonFlattener;
+import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationError;
@@ -994,12 +995,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, MergeOperation operation) throws JSONException {
-        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(key, originalValues, operation);
+        Map<String, ProfileChange> profileChanges = localDataStore.mergeJson(key, originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 
     private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, MergeOperation operation) throws JSONException {
-        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(originalValues, operation);
+        Map<String, ProfileChange> profileChanges = localDataStore.mergeJson(originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 }

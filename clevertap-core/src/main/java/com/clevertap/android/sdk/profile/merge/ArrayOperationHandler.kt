@@ -38,9 +38,6 @@ internal class ArrayOperationHandler() {
         when (operation) {
             MergeOperation.ARRAY_ADD -> handleArrayAdd(oldArray, newArray, currentPath, changes)
             MergeOperation.ARRAY_REMOVE -> handleArrayRemove(parentJson, key, oldArray, newArray, currentPath, changes)
-            MergeOperation.GET -> {
-                getArrayElements(oldArray, newArray, currentPath, changes, recursiveMerge)
-            }
             MergeOperation.UPDATE, MergeOperation.INCREMENT, MergeOperation.DECREMENT -> {
                 if (ArrayMergeUtils.shouldMergeArrayElements(newArray)) {
                     mergeArrayElements(oldArray, newArray, currentPath, changes, operation, recursiveMerge)
@@ -211,45 +208,6 @@ internal class ArrayOperationHandler() {
             MergeOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
             MergeOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
             else -> oldValue
-        }
-    }
-
-    /**
-     * Gets array elements for GET operation without modifying the array.
-     * Reports each accessed element with "__GET_MARKER__" as the new value.
-     */
-    private fun getArrayElements(
-        oldArray: JSONArray,
-        newArray: JSONArray,
-        basePath: String,
-        changes: MutableMap<String, ProfileChange>,
-        recursiveMerge: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
-    ) {
-        for (i in 0 until newArray.length()) {
-            if (i >= oldArray.length()) {
-                // Index out of bounds - skip
-                continue
-            }
-
-            val oldElement = oldArray.get(i)
-            val newElement = newArray.get(i)
-            val elementPath = "$basePath[$i]"
-
-            when {
-                oldElement is JSONObject && newElement is JSONObject -> {
-                    // Recurse into nested objects
-                    recursiveMerge(oldElement, newElement, elementPath, changes)
-                }
-                else -> {
-                    // Report the element value without modification
-                    val processedOldValue = if (oldElement is String) {
-                        ProfileMergeConstants.processDatePrefix(oldElement)
-                    } else {
-                        oldElement
-                    }
-                    changes[elementPath] = ProfileChange(processedOldValue, "__GET_MARKER__")
-                }
-            }
         }
     }
 }
