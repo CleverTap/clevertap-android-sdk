@@ -48,7 +48,7 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
-import com.clevertap.android.sdk.profile.ProfileStateMerger
+import com.clevertap.android.sdk.profile.ProfileStateTraverser
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
@@ -191,11 +191,11 @@ internal object CleverTapFactory {
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }
 
         val validationPipelineProvider = ValidationPipelineProvider(validationConfig, validationResultStack, config.logger)
-        val profileStateMerger = ProfileStateMerger()
+        val profileStateTraverser = ProfileStateTraverser()
         val nestedJsonBuilder = NestedJsonBuilder()
 
         val localDataStore =
-            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager, profileStateMerger, nestedJsonBuilder)
+            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager, profileStateTraverser, nestedJsonBuilder)
 
         val eventMediator =
             EventMediator(config, coreMetaData, localDataStore, networkRepo)

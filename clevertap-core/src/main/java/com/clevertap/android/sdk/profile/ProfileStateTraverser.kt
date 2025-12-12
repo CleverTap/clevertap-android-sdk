@@ -1,12 +1,12 @@
 package com.clevertap.android.sdk.profile
 
 import androidx.annotation.WorkerThread
-import com.clevertap.android.sdk.profile.merge.ArrayOperationHandler
-import com.clevertap.android.sdk.profile.merge.DeleteOperationHandler
-import com.clevertap.android.sdk.profile.merge.ProfileOperation
-import com.clevertap.android.sdk.profile.merge.ProfileChange
-import com.clevertap.android.sdk.profile.merge.ProfileChangeTracker
-import com.clevertap.android.sdk.profile.merge.UpdateOperationHandler
+import com.clevertap.android.sdk.profile.traversal.ArrayOperationHandler
+import com.clevertap.android.sdk.profile.traversal.DeleteOperationHandler
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation
+import com.clevertap.android.sdk.profile.traversal.ProfileChange
+import com.clevertap.android.sdk.profile.traversal.ProfileChangeTracker
+import com.clevertap.android.sdk.profile.traversal.UpdateOperationHandler
 import org.json.JSONException
 import org.json.JSONObject
 

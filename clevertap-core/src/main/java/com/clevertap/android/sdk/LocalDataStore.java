@@ -17,8 +17,8 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.profile.ProfileStateTraverser;
-import com.clevertap.android.sdk.profile.merge.ProfileOperation;
-import com.clevertap.android.sdk.profile.merge.ProfileChange;
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
+import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 

@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.profile.merge
+package com.clevertap.android.sdk.profile.traversal
 
 import com.clevertap.android.sdk.Constants
 

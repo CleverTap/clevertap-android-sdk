@@ -14,8 +14,8 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.profile.ProfileCommand;
-import com.clevertap.android.sdk.profile.merge.MergeOperation;
-import com.clevertap.android.sdk.profile.merge.ProfileChange;
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
+import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
@@ -24,7 +24,6 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.JsonFlattener;
-import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationError;
@@ -782,7 +781,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileCommand = new JSONObject().put(command.getCommandString(), value);
             JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
-            MergeOperation operation = command.getOperation();
+            ProfileOperation operation = command.getOperation();
 
             baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, value, operation));
         } catch (Throwable t) {
@@ -807,7 +806,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed custom profile: " + cleanedProfile);
 
-            baseEventQueueManager.pushBasicProfile(cleanedProfile, false, getFlattenedProfileChanges(cleanedProfile, MergeOperation.UPDATE));
+            baseEventQueueManager.pushBasicProfile(cleanedProfile, false, getFlattenedProfileChanges(cleanedProfile, ProfileOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -858,7 +857,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileUpdate = new JSONObject();
             profileUpdate.put(key, profileCommand);
 
-            MergeOperation operation = command.getOperation();
+            ProfileOperation operation = command.getOperation();
             baseEventQueueManager.pushBasicProfile(profileUpdate, false,
                 getFlattenedProfileChanges(key, originalValues, operation));
 
@@ -994,13 +993,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, MergeOperation operation) throws JSONException {
-        Map<String, ProfileChange> profileChanges = localDataStore.mergeJson(key, originalValues, operation);
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, ProfileOperation operation) throws JSONException {
+        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(key, originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, MergeOperation operation) throws JSONException {
-        Map<String, ProfileChange> profileChanges = localDataStore.mergeJson(originalValues, operation);
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, ProfileOperation operation) throws JSONException {
+        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 }
