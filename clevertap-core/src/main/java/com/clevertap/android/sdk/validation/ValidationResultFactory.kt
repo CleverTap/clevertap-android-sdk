@@ -65,7 +65,8 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     
     // Multi-value key errors (523)
     RESTRICTED_MULTI_VALUE_KEY(523, "%s... is a restricted key for multi-value properties. Operation aborted."),
-    
+    RESTRICTED_KEY_NESTED_VALUE(523, "%s is a restricted key. It can't have an object/array as the value"),
+
     // Profile identifier errors (531)
     PROFILE_IDENTIFIERS_MISMATCH(531, "Profile Identifiers mismatch with the previously saved ones"),
     

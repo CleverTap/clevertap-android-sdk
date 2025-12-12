@@ -234,7 +234,8 @@ class ValidationConfig private constructor(
                 .setRestrictedMultiValueFields(
                     setOf(
                         "Name", "Email", "Education", "Married", "DOB",
-                        "Gender", "Phone", "Age", "FBID", "GPID", "Birthday"
+                        "Gender", "Phone", "Age", "FBID", "GPID", "Birthday",
+                        "Identity"
                     )
                 )
                 .apply {

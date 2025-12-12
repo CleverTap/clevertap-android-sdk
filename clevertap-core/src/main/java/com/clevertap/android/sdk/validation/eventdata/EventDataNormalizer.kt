@@ -123,6 +123,18 @@ class EventDataNormalizer(
                 continue
             }
 
+            // Drop restricted multi-value fields at 0th level if value is object or array
+            if (depth == 0 && config.restrictedMultiValueFields?.contains(cleanedKey) == true) {
+                val isObjectOrArray = when (value) {
+                    is Map<*, *>, is JSONObject, is List<*>, is Array<*>, is JSONArray -> true
+                    else -> false
+                }
+                if (isObjectOrArray) {
+                    recordRemoval(cleanedKey, RemovalReason.RESTRICTED_KEY_NESTED_VALUE, value)
+                    continue
+                }
+            }
+
             // Special validation for Phone key
             if (cleanedKey.equals("Phone", ignoreCase = true)) {
                 validatePhoneNumber(cleanedKey, value)

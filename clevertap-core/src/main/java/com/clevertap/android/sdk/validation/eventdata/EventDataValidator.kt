@@ -184,6 +184,10 @@ class EventDataValidator(
                 RemovalReason.INVALID_COUNTRY_CODE -> {
                     ValidationResultFactory.create(ValidationError.INVALID_COUNTRY_CODE)
                 }
+
+                RemovalReason.RESTRICTED_KEY_NESTED_VALUE -> {
+                    ValidationResultFactory.create(ValidationError.RESTRICTED_KEY_NESTED_VALUE, item.key)
+                }
             }
             errors.add(error)
         }
