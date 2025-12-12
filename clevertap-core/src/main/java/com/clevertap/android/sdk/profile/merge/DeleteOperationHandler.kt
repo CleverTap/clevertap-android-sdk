@@ -36,7 +36,7 @@ internal class DeleteOperationHandler(
         val oldValue = target.get(key)
 
         when {
-            ProfileMergeConstants.isDeleteMarker(newValue) -> {
+            ProfileOperationUtils.isDeleteMarker(newValue) -> {
                 // Delete this key entirely
                 deleteValue(target, key, oldValue, currentPath, changes)
             }
@@ -162,7 +162,7 @@ internal class DeleteOperationHandler(
 
         // Collect indices to delete
         for (i in 0 until newArray.length()) {
-            if (ProfileMergeConstants.isDeleteMarker(newArray.opt(i)) && i < oldArray.length()) {
+            if (ProfileOperationUtils.isDeleteMarker(newArray.opt(i)) && i < oldArray.length()) {
                 indicesToDelete.add(i)
             }
 

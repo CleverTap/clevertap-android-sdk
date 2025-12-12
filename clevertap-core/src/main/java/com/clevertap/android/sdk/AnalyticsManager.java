@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.profile.ProfileCommand;
-import com.clevertap.android.sdk.profile.merge.MergeOperation;
+import com.clevertap.android.sdk.profile.merge.ProfileOperation;
 import com.clevertap.android.sdk.profile.merge.ProfileChange;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
@@ -910,7 +910,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileCommand = new JSONObject().put(command.getCommandString(), value);
             JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
-            MergeOperation operation = command.getOperation();
+            ProfileOperation operation = command.getOperation();
 
             baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, value, operation));
         } catch (Throwable t) {
@@ -996,7 +996,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile);
 
-            baseEventQueueManager.pushBasicProfile(customProfile, false, getFlattenedProfileChanges(customProfile, MergeOperation.UPDATE));
+            baseEventQueueManager.pushBasicProfile(customProfile, false, getFlattenedProfileChanges(customProfile, ProfileOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -1059,7 +1059,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileUpdate = new JSONObject();
             profileUpdate.put(key, profileCommand);
 
-            MergeOperation operation = command.getOperation();
+            ProfileOperation operation = command.getOperation();
             baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, originalValues, operation));
 
             config.getLogger()
@@ -1193,12 +1193,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, MergeOperation operation) throws JSONException {
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, ProfileOperation operation) throws JSONException {
         Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(key, originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, MergeOperation operation) throws JSONException {
+    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, ProfileOperation operation) throws JSONException {
         Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }

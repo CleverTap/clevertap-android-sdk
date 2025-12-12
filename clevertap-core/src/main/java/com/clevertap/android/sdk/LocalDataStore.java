@@ -16,8 +16,8 @@ import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
-import com.clevertap.android.sdk.profile.ProfileStateMerger;
-import com.clevertap.android.sdk.profile.merge.MergeOperation;
+import com.clevertap.android.sdk.profile.ProfileStateTraverser;
+import com.clevertap.android.sdk.profile.merge.ProfileOperation;
 import com.clevertap.android.sdk.profile.merge.ProfileChange;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.NestedJsonBuilder;
@@ -64,17 +64,17 @@ public class LocalDataStore {
     private final Set<String> userNormalizedEventLogKeys = Collections.synchronizedSet(new HashSet<>());
     private final Map<String, String> normalizedEventNames = new HashMap<>();
 
-    private final ProfileStateMerger profileStateMerger;
+    private final ProfileStateTraverser profileStateTraverser;
     private final NestedJsonBuilder nestedJsonBuilder;
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager, ProfileStateMerger profileStateMerger, NestedJsonBuilder nestedJsonBuilder) {
+    LocalDataStore(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager, ProfileStateTraverser profileStateTraverser, NestedJsonBuilder nestedJsonBuilder) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
         this.cryptHandler = cryptHandler;
         this.deviceInfo = deviceInfo;
         this.baseDatabaseManager = baseDatabaseManager;
-        this.profileStateMerger = profileStateMerger;
+        this.profileStateTraverser = profileStateTraverser;
         this.nestedJsonBuilder = nestedJsonBuilder;
     }
 
@@ -403,7 +403,7 @@ public class LocalDataStore {
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             try {
-                ProfileChange profileChange = processProfileTree(key, GET_MARKER, MergeOperation.GET).get(key);
+                ProfileChange profileChange = processProfileTree(key, GET_MARKER, ProfileOperation.GET).get(key);
                 return profileChange == null ? null : profileChange.getOldValue();
             } catch (JSONException e) {
                 throw new RuntimeException(e);
@@ -765,7 +765,7 @@ public class LocalDataStore {
     public Map<String, ProfileChange> processProfileTree(
             String dotNotationKey,
             Object value,
-            MergeOperation operation
+            ProfileOperation operation
     ) throws JSONException {
         JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
         return processProfileTree(nestedProfile, operation);
@@ -775,16 +775,16 @@ public class LocalDataStore {
     @WorkerThread
     public Map<String, ProfileChange> processProfileTree(
             JSONObject newJson,
-            MergeOperation operation
+            ProfileOperation operation
     ) throws JSONException {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            ProfileStateMerger.MergeResult result = profileStateMerger.merge(
+            ProfileStateTraverser.ProfileTraversalResult result = profileStateTraverser.traverse(
                     PROFILE_FIELDS_IN_THIS_SESSION,
                     newJson,
                     operation
             );
 
-            if (operation != MergeOperation.GET) {
+            if (operation != ProfileOperation.GET) {
                 persistLocalProfileAsync();
             }
 
