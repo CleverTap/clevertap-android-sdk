@@ -10,17 +10,14 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.ProfileValueHandler;
 import com.clevertap.android.sdk.network.NetworkRepo;
-import com.clevertap.android.sdk.validation.Validator;
+import com.clevertap.android.sdk.validation.ValidationConfig;
 import com.clevertap.android.sdk.variables.JsonUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -34,14 +31,12 @@ public class EventMediator {
 
     private final NetworkRepo networkRepo;
 
-    private final ProfileValueHandler profileValueHandler;
 
     public EventMediator(CleverTapInstanceConfig config, CoreMetaData coreMetaData,
-                         LocalDataStore localDataStore, ProfileValueHandler profileValueHandler, NetworkRepo networkRepo) {
+                         LocalDataStore localDataStore, NetworkRepo networkRepo) {
         this.config = config;
         this.localDataStore = localDataStore;
         this.networkRepo = networkRepo;
-        this.profileValueHandler = profileValueHandler;
         cleverTapMetaData = coreMetaData;
     }
 
@@ -96,7 +91,7 @@ public class EventMediator {
         // opted-out and system events enabled
         // check for Constants.RAISED_EVENT and Constants.NV_EVENT event special cases
         String eName = event != null ? getEventName(event) : null;
-        boolean isSystemEvent = Arrays.asList(Validator.restrictedNames).contains(eName);
+        boolean isSystemEvent = ValidationConfig.DEFAULT_RESTRICTED_EVENT_NAMES.contains(eName);
         boolean dropEvent = !isSystemEvent;
         if (dropEvent) {
             config.getLogger().debug(config.getAccountId(), "Current user is opted out dropping event: " + event);

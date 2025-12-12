@@ -51,7 +51,6 @@ internal open class CoreState(
     val cryptHandler: ICryptHandler,
     val storeRegistry: StoreRegistry,
     val templatesManager: TemplatesManager,
-    val profileValueHandler: ProfileValueHandler,
     val cTVariables: CTVariables,
     val executors: CTExecutors
 ) {

@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.profile.merge
+package com.clevertap.android.sdk.profile.traversal
 
 /**
  * Utilities for performing arithmetic operations on numbers during profile merging.

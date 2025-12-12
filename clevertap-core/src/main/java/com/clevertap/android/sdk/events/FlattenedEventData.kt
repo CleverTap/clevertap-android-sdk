@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.events
 
-import com.clevertap.android.sdk.profile.merge.ProfileChange
+import com.clevertap.android.sdk.profile.traversal.ProfileChange
 
 sealed interface FlattenedEventData {
     data class ProfileChanges(val changes: Map<String, ProfileChange>) : FlattenedEventData

@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.profile
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.profile.merge.ProfileOperation
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation
 
 /**
  * Maps profile command strings to their corresponding merge operations.

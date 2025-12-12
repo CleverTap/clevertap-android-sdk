@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.profile.merge
+package com.clevertap.android.sdk.profile.traversal
 
 /**
  * Defines the type of operation to perform on profile data.

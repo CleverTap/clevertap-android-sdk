@@ -25,7 +25,7 @@ import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.profile.merge.ProfileChange;
+import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;

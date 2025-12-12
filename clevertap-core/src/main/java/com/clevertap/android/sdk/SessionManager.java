@@ -1,14 +1,13 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
-import com.clevertap.android.sdk.validation.Validator;
+import com.clevertap.android.sdk.validation.ValidationConfig;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class SessionManager extends BaseSessionManager {
@@ -24,13 +23,13 @@ public class SessionManager extends BaseSessionManager {
 
     private final LocalDataStore localDataStore;
 
-    private final Validator validator;
+    private final ValidationConfig validationConfig;
 
-    public SessionManager(CleverTapInstanceConfig config, CoreMetaData coreMetaData, Validator validator,
+    public SessionManager(CleverTapInstanceConfig config, CoreMetaData coreMetaData, ValidationConfig validationConfig,
             LocalDataStore localDataStore) {
         this.config = config;
         cleverTapMetaData = coreMetaData;
-        this.validator = validator;
+        this.validationConfig = validationConfig;
         this.localDataStore = localDataStore;
     }
 
@@ -77,8 +76,8 @@ public class SessionManager extends BaseSessionManager {
     public void lazyCreateSession(Context context) {
         if (!cleverTapMetaData.inCurrentSession()) {
             cleverTapMetaData.setFirstRequestInSession(true);
-            if (validator != null) {
-                validator.setDiscardedEvents(null);
+            if (validationConfig != null) {
+                validationConfig.updateDiscardedEventNames(null);
             }
             createSession(context);
         }
