@@ -5,8 +5,8 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * Handles UPDATE, INCREMENT, and DECREMENT operations during profile merging.
- * Manages value updates, missing keys, and number operations.
+ * Handles UPDATE, INCREMENT, DECREMENT, and GET operations during profile processing.
+ * Manages value updates, retrieval, missing keys, and number operations.
  */
 internal class UpdateOperationHandler(
     private val changeTracker: ProfileChangeTracker,
@@ -14,25 +14,25 @@ internal class UpdateOperationHandler(
 ) {
 
     /**
-     * Handles non-delete merge operations for a key in the target object.
+     * Handles non-delete operations for a key in the target object.
      *
-     * @param target The JSON object to merge into
+     * @param target The JSON object to operate on
      * @param key The key to process
      * @param newValue The value from source
      * @param currentPath The dot-notation path
      * @param changes The map to accumulate changes in
-     * @param operation The merge operation type
-     * @param recursiveMerge Function to recursively merge nested objects
+     * @param operation The profile operation type
+     * @param recursiveApply Function to recursively apply operation to nested objects
      */
     @Throws(JSONException::class)
-    fun handleMerge(
+    fun handleOperation(
         target: JSONObject,
         key: String,
         newValue: Any,
         currentPath: String,
         changes: MutableMap<String, ProfileChange>,
-        operation: MergeOperation,
-        recursiveMerge: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
+        operation: ProfileOperation,
+        recursiveApply: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
         if (!target.has(key)) {
             handleMissingKey(target, key, newValue, currentPath, changes, operation)
@@ -42,16 +42,16 @@ internal class UpdateOperationHandler(
         val oldValue = target.get(key)
 
         // Special handling for GET operation
-        if (operation == MergeOperation.GET) {
+        if (operation == ProfileOperation.GET) {
             when {
                 oldValue is JSONObject && newValue is JSONObject -> {
                     // Recurse into nested objects for GET
-                    recursiveMerge(oldValue, newValue, currentPath, changes)
+                    recursiveApply(oldValue, newValue, currentPath, changes)
                 }
                 oldValue is JSONArray && newValue is JSONArray -> {
                     // Handle array GET operations
-                    arrayHandler.handleArrayMerge(
-                        target, key, oldValue, newValue, currentPath, changes, operation, recursiveMerge
+                    arrayHandler.handleArrayOperation(
+                        target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                     )
                 }
                 else -> {
@@ -65,16 +65,16 @@ internal class UpdateOperationHandler(
         when {
             oldValue is JSONObject && newValue is JSONObject -> {
                 // Recurse into nested objects
-                recursiveMerge(oldValue, newValue, currentPath, changes)
+                recursiveApply(oldValue, newValue, currentPath, changes)
             }
             oldValue is JSONArray && newValue is JSONArray -> {
                 // Handle array operations
-                arrayHandler.handleArrayMerge(
-                    target, key, oldValue, newValue, currentPath, changes, operation, recursiveMerge
+                arrayHandler.handleArrayOperation(
+                    target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                 )
             }
             oldValue is Number && newValue is Number &&
-                    operation in listOf(MergeOperation.INCREMENT, MergeOperation.DECREMENT) -> {
+                    operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
                 // Handle arithmetic operations
                 handleNumberOperation(target, key, oldValue, newValue, currentPath, changes, operation)
             }
@@ -95,10 +95,10 @@ internal class UpdateOperationHandler(
         newValue: Any,
         currentPath: String,
         changes: MutableMap<String, ProfileChange>,
-        operation: MergeOperation
+        operation: ProfileOperation
     ) {
         // Skip adding keys for arithmetic operations and GET operations
-        if (operation in listOf(MergeOperation.INCREMENT, MergeOperation.DECREMENT, MergeOperation.GET)) {
+        if (operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT, ProfileOperation.GET)) {
             return
         }
 
@@ -121,11 +121,11 @@ internal class UpdateOperationHandler(
         newValue: Number,
         path: String,
         changes: MutableMap<String, ProfileChange>,
-        operation: MergeOperation
+        operation: ProfileOperation
     ) {
         val result = when (operation) {
-            MergeOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
-            MergeOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
+            ProfileOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
+            ProfileOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
             else -> oldValue
         }
 
@@ -148,13 +148,13 @@ internal class UpdateOperationHandler(
         changes: MutableMap<String, ProfileChange>
     ) {
         val processedOldValue = if (oldValue is String) {
-            ProfileMergeConstants.processDatePrefix(oldValue)
+            ProfileOperationUtils.processDatePrefix(oldValue)
         } else {
             oldValue
         }
 
         val processedNewValue = if (newValue is String) {
-            ProfileMergeConstants.processDatePrefix(newValue)
+            ProfileOperationUtils.processDatePrefix(newValue)
         } else {
             newValue
         }
@@ -175,7 +175,7 @@ internal class UpdateOperationHandler(
         changes: MutableMap<String, ProfileChange>
     ) {
         val processedOldValue = if (oldValue is String) {
-            ProfileMergeConstants.processDatePrefix(oldValue)
+            ProfileOperationUtils.processDatePrefix(oldValue)
         } else {
             oldValue
         }

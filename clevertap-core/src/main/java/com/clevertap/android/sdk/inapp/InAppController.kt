@@ -18,8 +18,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.ManifestInfo
-import com.clevertap.android.sdk.profile.ProfileStateMerger
-import com.clevertap.android.sdk.profile.ProfileStateMerger.Companion.toNestedMap
+import com.clevertap.android.sdk.profile.ProfileStateTraverser.Companion.toNestedMap
 import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeAlert
