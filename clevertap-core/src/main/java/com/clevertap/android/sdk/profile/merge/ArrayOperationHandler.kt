@@ -5,42 +5,45 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * Handles array-specific merge operations: ARRAY_ADD, ARRAY_REMOVE, and array element merging.
- * Supports both simple array operations and complex element-wise merging.
+ * Handles array-specific operations: ARRAY_ADD, ARRAY_REMOVE, GET, and array element processing.
+ * Supports both simple array operations and complex element-wise operations.
  */
 internal class ArrayOperationHandler() {
 
     /**
-     * Handles all array merge operations based on the operation type.
+     * Handles all array operations based on the operation type.
      *
      * @param parentJson The parent JSON object containing the array
      * @param key The key of the array in the parent
      * @param oldArray The existing array
-     * @param newArray The array with updates
+     * @param newArray The array with operation parameters
      * @param currentPath The dot-notation path
      * @param changes The map to accumulate changes in
-     * @param operation The merge operation type
-     * @param recursiveMerge Function to recursively merge nested objects
+     * @param operation The profile operation type
+     * @param recursiveTraversal Function to recursively apply operation to nested objects
      */
     @Throws(JSONException::class)
-    fun handleArrayMerge(
+    fun handleArrayOperation(
         parentJson: JSONObject,
         key: String,
         oldArray: JSONArray,
         newArray: JSONArray,
         currentPath: String,
         changes: MutableMap<String, ProfileChange>,
-        operation: MergeOperation,
-        recursiveMerge: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
+        operation: ProfileOperation,
+        recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
         if (newArray.length() == 0) return
 
         when (operation) {
-            MergeOperation.ARRAY_ADD -> handleArrayAdd(oldArray, newArray, currentPath, changes)
-            MergeOperation.ARRAY_REMOVE -> handleArrayRemove(parentJson, key, oldArray, newArray, currentPath, changes)
-            MergeOperation.UPDATE, MergeOperation.INCREMENT, MergeOperation.DECREMENT -> {
+            ProfileOperation.ARRAY_ADD -> handleArrayAdd(oldArray, newArray, currentPath, changes)
+            ProfileOperation.ARRAY_REMOVE -> handleArrayRemove(parentJson, key, oldArray, newArray, currentPath, changes)
+            ProfileOperation.GET -> {
+                getArrayElements(oldArray, newArray, currentPath, changes, recursiveTraversal)
+            }
+            ProfileOperation.UPDATE, ProfileOperation.INCREMENT, ProfileOperation.DECREMENT -> {
                 if (ArrayMergeUtils.shouldMergeArrayElements(newArray)) {
-                    mergeArrayElements(oldArray, newArray, currentPath, changes, operation, recursiveMerge)
+                    processArrayElements(oldArray, newArray, currentPath, changes, operation, recursiveTraversal)
                 } else {
                     handleArrayReplacement(parentJson, key, oldArray, newArray, currentPath, changes)
                 }
@@ -65,7 +68,7 @@ internal class ArrayOperationHandler() {
         for (i in 0 until newArray.length()) {
             val item = newArray.get(i)
             if (item is String) {
-                val processedItem = ProfileMergeConstants.processDatePrefix(item)
+                val processedItem = ProfileOperationUtils.processDatePrefix(item)
                 oldArray.put(processedItem)
                 modified = true
             }
@@ -124,16 +127,16 @@ internal class ArrayOperationHandler() {
     }
 
     /**
-     * Merges array elements individually.
+     * Processes array elements individually.
      * Handles objects, numbers, and simple values differently based on operation.
      */
-    private fun mergeArrayElements(
+    private fun processArrayElements(
         oldArray: JSONArray,
         newArray: JSONArray,
         basePath: String,
         changes: MutableMap<String, ProfileChange>,
-        operation: MergeOperation,
-        recursiveMerge: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
+        operation: ProfileOperation,
+        recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
         val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
         var arrayModified = false
@@ -150,7 +153,7 @@ internal class ArrayOperationHandler() {
             when {
                 oldElement is JSONObject && newElement is JSONObject -> {
                     val elementChanges = mutableMapOf<String, ProfileChange>()
-                    recursiveMerge(oldElement, newElement, "", elementChanges)
+                    recursiveTraversal(oldElement, newElement, "", elementChanges)
                     if (elementChanges.isNotEmpty()) {
                         arrayModified = true
                     }
@@ -162,7 +165,7 @@ internal class ArrayOperationHandler() {
                         arrayModified = true
                     }
                 }
-                operation == MergeOperation.UPDATE && !JsonComparisonUtils.areEqual(oldElement, newElement) -> {
+                operation == ProfileOperation.UPDATE && !JsonComparisonUtils.areEqual(oldElement, newElement) -> {
                     oldArray.put(i, newElement)
                     arrayModified = true
                 }
@@ -184,9 +187,9 @@ internal class ArrayOperationHandler() {
         oldArray: JSONArray,
         newArray: JSONArray,
         index: Int,
-        operation: MergeOperation
+        operation: ProfileOperation
     ): Boolean {
-        if (operation != MergeOperation.UPDATE) return false
+        if (operation != ProfileOperation.UPDATE) return false
 
         val newElement = newArray.get(index)
         while (oldArray.length() <= index) {
@@ -202,12 +205,51 @@ internal class ArrayOperationHandler() {
     private fun applyNumberOperation(
         oldValue: Number,
         newValue: Number,
-        operation: MergeOperation
+        operation: ProfileOperation
     ): Number {
         return when (operation) {
-            MergeOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
-            MergeOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
+            ProfileOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
+            ProfileOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
             else -> oldValue
+        }
+    }
+
+    /**
+     * Gets array elements for GET operation without modifying the array.
+     * Reports each accessed element with "__GET_MARKER__" as the new value.
+     */
+    private fun getArrayElements(
+        oldArray: JSONArray,
+        newArray: JSONArray,
+        basePath: String,
+        changes: MutableMap<String, ProfileChange>,
+        recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
+    ) {
+        for (i in 0 until newArray.length()) {
+            if (i >= oldArray.length()) {
+                // Index out of bounds - skip
+                continue
+            }
+
+            val oldElement = oldArray.get(i)
+            val newElement = newArray.get(i)
+            val elementPath = "$basePath[$i]"
+
+            when {
+                oldElement is JSONObject && newElement is JSONObject -> {
+                    // Recurse into nested objects
+                    recursiveTraversal(oldElement, newElement, elementPath, changes)
+                }
+                else -> {
+                    // Report the element value without modification
+                    val processedOldValue = if (oldElement is String) {
+                        ProfileOperationUtils.processDatePrefix(oldElement)
+                    } else {
+                        oldElement
+                    }
+                    changes[elementPath] = ProfileChange(processedOldValue, "__GET_MARKER__")
+                }
+            }
         }
     }
 }

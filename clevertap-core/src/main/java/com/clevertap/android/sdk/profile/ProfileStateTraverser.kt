@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.profile
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.profile.merge.ArrayOperationHandler
 import com.clevertap.android.sdk.profile.merge.DeleteOperationHandler
-import com.clevertap.android.sdk.profile.merge.MergeOperation
+import com.clevertap.android.sdk.profile.merge.ProfileOperation
 import com.clevertap.android.sdk.profile.merge.ProfileChange
 import com.clevertap.android.sdk.profile.merge.ProfileChangeTracker
 import com.clevertap.android.sdk.profile.merge.UpdateOperationHandler
@@ -11,19 +11,19 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * ProfileStateMerger provides functionality to merge JSON profile data with various operations.
+ * ProfileStateTraverser provides functionality to merge JSON profile data with various operations.
  * Supports nested objects, array operations, and tracks all changes with dot notation paths.
  *
- * This class is designed for merging user profile updates into existing profile state,
- * supporting operations like UPDATE, INCREMENT, DECREMENT, DELETE, and array modifications.
+ * This class is designed for applying operations to user profile state,
+ * supporting operations like UPDATE, INCREMENT, DECREMENT, DELETE, GET, and array modifications.
  *
  * Thread Safety: This class is NOT thread-safe. Callers must ensure proper synchronization
  * when accessing the same JSONObject from multiple threads.
  *
- * @see MergeOperation for available operations
+ * @see ProfileOperation for available operations
  * @see ProfileChange for tracking changes
  */
-class ProfileStateMerger {
+class ProfileStateTraverser {
 
     private val changeTracker = ProfileChangeTracker()
     private val arrayHandler = ArrayOperationHandler()
@@ -35,47 +35,47 @@ class ProfileStateMerger {
      *
      * @property changes Map of dot-notation paths to ProfileChange objects
      */
-    data class MergeResult(
+    data class ProfileTraversalResult(
         val changes: Map<String, ProfileChange>
     )
 
     /**
-     * Merges source JSON into target JSON and returns all changes.
+     * Applies an operation to profile data and returns all changes.
      *
-     * @param target The JSON object to merge into (modified in place)
-     * @param source The JSON object to merge from (not modified)
-     * @param operation The merge operation to perform
-     * @return MergeResult containing all changes with dot-notation paths
-     * @throws org.json.JSONException if there's an error during merge
+     * @param target The JSON object to operate on (modified in place for non-GET operations)
+     * @param source The JSON object containing operation parameters (not modified)
+     * @param operation The profile operation to perform
+     * @return ProfileTraversalResult containing all changes with dot-notation paths
+     * @throws org.json.JSONException if there's an error during operation
      */
     @WorkerThread
     @Throws(JSONException::class)
-    fun merge(
+    fun traverse(
         target: JSONObject,
         source: JSONObject,
-        operation: MergeOperation = MergeOperation.UPDATE
-    ): MergeResult {
+        operation: ProfileOperation = ProfileOperation.UPDATE
+    ): ProfileTraversalResult {
         val changes = mutableMapOf<String, ProfileChange>()
-        mergeRecursive(target, source, "", changes, operation)
-        return MergeResult(changes)
+        traverseRecursive(target, source, "", changes, operation)
+        return ProfileTraversalResult(changes)
     }
 
     /**
-     * Recursively merges source into target, tracking changes at each level.
+     * Recursively applies operation to nested structures, tracking changes at each level.
      *
-     * @param target The JSON object being merged into
-     * @param source The JSON object being merged from
+     * @param target The JSON object being operated on
+     * @param source The JSON object containing operation parameters
      * @param path Current dot-notation path (for tracking)
      * @param changes Accumulator for all changes
-     * @param operation The merge operation to perform
+     * @param operation The profile operation to perform
      */
     @Throws(JSONException::class)
-    private fun mergeRecursive(
+    private fun traverseRecursive(
         target: JSONObject,
         source: JSONObject?,
         path: String,
         changes: MutableMap<String, ProfileChange>,
-        operation: MergeOperation
+        operation: ProfileOperation
     ) {
         if (source == null) return
 
@@ -86,18 +86,18 @@ class ProfileStateMerger {
             val currentPath = buildPath(path, key)
 
             when (operation) {
-                MergeOperation.DELETE -> {
+                ProfileOperation.DELETE -> {
                     deleteHandler.handleDelete(
                         target, key, newValue, currentPath, changes
                     ) { target, source, path, changes ->
-                        mergeRecursive(target, source, path, changes, MergeOperation.DELETE)
+                        traverseRecursive(target, source, path, changes, ProfileOperation.DELETE)
                     }
                 }
                 else -> {
-                    updateHandler.handleMerge(
+                    updateHandler.handleOperation(
                         target, key, newValue, currentPath, changes, operation
                     ) { target, source, path, changes ->
-                        mergeRecursive(target, source, path, changes, operation)
+                        traverseRecursive(target, source, path, changes, operation)
                     }
                 }
             }
