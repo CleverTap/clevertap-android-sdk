@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.Constants.GET_MARKER;
 import static com.clevertap.android.sdk.Constants.piiDBKeys;
 
 import android.annotation.SuppressLint;
@@ -10,7 +11,6 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
-import com.clevertap.android.sdk.cryption.CryptHandler;
 import com.clevertap.android.sdk.cryption.EncryptionLevel;
 import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
@@ -403,18 +403,10 @@ public class LocalDataStore {
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             try {
-                if (!PROFILE_FIELDS_IN_THIS_SESSION.has(key)) {
-                    return null;
-                }
-                Object property = PROFILE_FIELDS_IN_THIS_SESSION.opt(key);
-                if (property instanceof String && CryptHandler.isTextEncrypted((String) property)) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property because it wasn't decrypted");
-                    return null;
-                }
-                return property;
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property", t);
-                return null;
+                ProfileChange profileChange = processProfileTree(key, GET_MARKER, MergeOperation.GET).get(key);
+                return profileChange == null ? null : profileChange.getOldValue();
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -770,18 +762,18 @@ public class LocalDataStore {
     }
 
     @WorkerThread
-    public Map<String, ProfileChange> mergeJson(
+    public Map<String, ProfileChange> processProfileTree(
             String dotNotationKey,
             Object value,
             MergeOperation operation
     ) throws JSONException {
         JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
-        return mergeJson(nestedProfile, operation);
+        return processProfileTree(nestedProfile, operation);
     }
 
 
     @WorkerThread
-    public Map<String, ProfileChange> mergeJson(
+    public Map<String, ProfileChange> processProfileTree(
             JSONObject newJson,
             MergeOperation operation
     ) throws JSONException {
@@ -792,8 +784,9 @@ public class LocalDataStore {
                     operation
             );
 
-            // Persist after successful merge
-            persistLocalProfileAsync();
+            if (operation != MergeOperation.GET) {
+                persistLocalProfileAsync();
+            }
 
             // Return the changes map
             return result.getChanges();
