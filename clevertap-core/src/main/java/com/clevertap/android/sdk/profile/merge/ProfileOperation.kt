@@ -1,12 +1,12 @@
 package com.clevertap.android.sdk.profile.merge
 
 /**
- * Defines the type of merge operation to perform on profile data.
+ * Defines the type of operation to perform on profile data.
  */
-enum class MergeOperation {
+enum class ProfileOperation {
     /**
      * Replace old values with new values. Creates keys if they don't exist.
-     * For nested objects, recursively merges properties.
+     * For nested objects, recursively updates properties.
      */
     UPDATE,
 
@@ -41,5 +41,10 @@ enum class MergeOperation {
      */
     ARRAY_REMOVE,
 
+    /**
+     * Retrieve values without modification.
+     * Navigates through nested objects and arrays to report existing values.
+     * Changes are reported with newValue = "__GET_MARKER__".
+     */
     GET
 }

@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.Constants
 /**
  * Constants used throughout the profile merge system.
  */
-internal object ProfileMergeConstants {
+internal object ProfileOperationUtils {
     /**
      * Processes a string value, removing $D_ prefix if present and converting to long.
      *
