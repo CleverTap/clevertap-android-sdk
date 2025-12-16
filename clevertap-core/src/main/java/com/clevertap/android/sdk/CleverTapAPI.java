@@ -1294,11 +1294,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void addMultiValueForKey(String key, String value) {
-        if (value == null || value.isEmpty()) {
-            coreState.getAnalyticsManager()._generateEmptyMultiValueError(key);
-            return;
-        }
-
         addMultiValuesForKey(key, new ArrayList<>(Collections.singletonList(value)));
     }
 
@@ -2641,11 +2636,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeMultiValueForKey(String key, String value) {
-        if (value == null || value.isEmpty()) {
-            coreState.getAnalyticsManager()._generateEmptyMultiValueError(key);
-            return;
-        }
-
         removeMultiValuesForKey(key, new ArrayList<>(Collections.singletonList(value)));
     }
 

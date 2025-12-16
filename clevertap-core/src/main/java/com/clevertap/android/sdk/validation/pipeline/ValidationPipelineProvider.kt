@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.validation.eventdata.EventDataValidationPipeline
 import com.clevertap.android.sdk.validation.eventname.EventNameValidationPipeline
 import com.clevertap.android.sdk.validation.propertykey.EventPropertyKeyValidationPipeline
-import com.clevertap.android.sdk.validation.propertykey.MultiValuePropertyKeyValidationPipeline
+import com.clevertap.android.sdk.validation.eventdata.MultiValueDataValidationPipeline
 
 /**
  * Provides access to all validation pipelines.
@@ -48,7 +48,7 @@ class ValidationPipelineProvider(
     /**
      * Pipeline for validating multi-value property keys.
      */
-    val multiValuePropertyKeyPipeline: MultiValuePropertyKeyValidationPipeline by lazy {
-        MultiValuePropertyKeyValidationPipeline(config, errorReporter, logger)
+    val multiValueDataPipeline: MultiValueDataValidationPipeline by lazy {
+        MultiValueDataValidationPipeline(config, errorReporter, logger)
     }
 }

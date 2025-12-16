@@ -186,7 +186,7 @@ class EventDataValidator(
                 }
 
                 RemovalReason.RESTRICTED_KEY_NESTED_VALUE -> {
-                    ValidationResultFactory.create(ValidationError.RESTRICTED_KEY_NESTED_VALUE, item.key)
+                    ValidationResultFactory.create(ValidationError.RESTRICTED_MULTI_VALUE_KEY, item.key)
                 }
             }
             errors.add(error)

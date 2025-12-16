@@ -32,7 +32,6 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
 
     // Profile validation errors (512)
     INVALID_MULTI_VALUE(512, "Invalid multi value for key %s, profile multi value operation aborted."),
-    INVALID_INCREMENT_DECREMENT_VALUE(512, "Increment/Decrement value for profile key %s, cannot be zero or negative"),
     INVALID_COUNTRY_CODE(512, "Device country code not available and profile phone: %s does not appear to start with country code"),
     INVALID_PHONE(512, "Invalid phone number"),
     EMPTY_KEY(512, "Found an empty key. Skipping and continuing"),
@@ -64,8 +63,7 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     CHARGED_EVENT_TOO_MANY_ITEMS(522, "Charged event contained more than 50 items."),
     
     // Multi-value key errors (523)
-    RESTRICTED_MULTI_VALUE_KEY(523, "%s... is a restricted key for multi-value properties. Operation aborted."),
-    RESTRICTED_KEY_NESTED_VALUE(523, "%s is a restricted key. It can't have an object/array as the value"),
+    RESTRICTED_MULTI_VALUE_KEY(523, "%s... is a restricted key for multi-value properties. Dropped."),
 
     // Profile identifier errors (531)
     PROFILE_IDENTIFIERS_MISMATCH(531, "Profile Identifiers mismatch with the previously saved ones"),

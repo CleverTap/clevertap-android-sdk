@@ -14,7 +14,7 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Validates event property keys after normalization.
  * Checks for empty keys, modifications, and multi-value restrictions.
  */
-open class EventPropertyKeyValidator(
+class EventPropertyKeyValidator(
     val config: ValidationConfig
 ) : Validator<PropertyKeyNormalizationResult> {
 

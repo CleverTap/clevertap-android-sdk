@@ -21,7 +21,7 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  *                      All validation errors are automatically pushed to this stack.
  * @param logger Logger for logging validation results
  */
-class EventDataValidationPipeline(
+open class EventDataValidationPipeline(
     config: ValidationConfig,
     private val errorReporter: ValidationResultStack,
     private val logger: ILogger

@@ -590,12 +590,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT);
     }
 
-    void _generateEmptyMultiValueError(String key) {
-        ValidationResult error = ValidationResultFactory.create(ValidationError.INVALID_MULTI_VALUE, key);
-        validationResultStack.pushValidationResult(error);
-        config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-    }
-
     void pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
 
         if (chargeDetails == null || items == null) {
@@ -749,20 +743,22 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
 
     private void _handleMultiValues(ArrayList<String> values, String key, ProfileCommand command) {
-            if (values == null || values.isEmpty()) {
-            _generateEmptyMultiValueError(key);
+        if (key == null) {
             return;
         }
 
-        // Validate multi-value property key
-        PropertyKeyValidationResult keyResult = validationPipelineProvider.getMultiValuePropertyKeyPipeline().execute(key);
+        Map<String, ArrayList<String>> eventData = Map.of(key, values);
+        EventDataValidationResult eventDataValidationResult = validationPipelineProvider.getMultiValueDataPipeline().execute(eventData);
 
-        if (keyResult.shouldDrop()) {
+        if (eventDataValidationResult.shouldDrop()) {
             return;
         }
 
-        key = keyResult.getCleanedKey();
-        _pushMultiValue(values, key, command);
+        try {
+            _pushMultiValue(eventDataValidationResult.getCleanedData().getJSONArray(key), key, command);
+        } catch (JSONException e) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to handle Multi Values for key" + key, e);
+        }
     }
 
     private void _constructIncrementDecrementValues(Number value, String key, ProfileCommand command) {
@@ -849,10 +845,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private void _pushMultiValue(ArrayList<String> originalValues, String key, ProfileCommand command) {
+    private void _pushMultiValue(JSONArray originalValues, String key, ProfileCommand command) {
         try {
             JSONObject profileCommand = new JSONObject();
-            profileCommand.put(command.getCommandString(), new JSONArray(originalValues));
+            profileCommand.put(command.getCommandString(), originalValues);
 
             JSONObject profileUpdate = new JSONObject();
             profileUpdate.put(key, profileCommand);

@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
 
 /**
- * Base pipeline for validating property keys.
+ * Pipeline for validating property keys.
  * Normalizes and validates property keys.
  *
  * Steps:
@@ -20,14 +20,14 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  *                      All validation errors are automatically pushed to this stack.
  * @param logger Logger for logging validation results
  */
-open class EventPropertyKeyValidationPipeline(
+class EventPropertyKeyValidationPipeline(
     config: ValidationConfig,
     private val errorReporter: ValidationResultStack,
-    protected val logger: ILogger
+    private val logger: ILogger
 ) : ValidationPipeline<String?, PropertyKeyValidationResult> {
     
-    protected val normalizer = EventPropertyKeyNormalizer(config)
-    protected open val validator = EventPropertyKeyValidator(config)
+    private val normalizer = EventPropertyKeyNormalizer(config)
+    private val validator = EventPropertyKeyValidator(config)
     
     override fun execute(input: String?): PropertyKeyValidationResult {
         // Step 1: Normalize the input
