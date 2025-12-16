@@ -126,6 +126,25 @@ data class RemovedItem(
 )
 
 // ============================================================================
+// Charged Event Items Models
+// ============================================================================
+
+/**
+ * Result of charged event items validation.
+ */
+data class ChargedEventItemsValidationResult(
+    val itemsCount: Int,
+    override val outcome: ValidationOutcome
+) : ValidationResult
+
+/**
+ * Result of charged event items normalization.
+ */
+data class ChargedEventItemsNormalizationResult(
+    val itemsCount: Int
+) : NormalizationResult
+
+// ============================================================================
 // Enums
 // ============================================================================
 

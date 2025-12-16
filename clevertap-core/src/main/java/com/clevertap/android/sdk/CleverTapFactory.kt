@@ -445,7 +445,6 @@ internal object CleverTapFactory {
             config,
             baseEventQueueManager,
             validationPipelineProvider,
-            validationResultStack,
             coreMetaData,
             deviceInfo,
             callbackManager,

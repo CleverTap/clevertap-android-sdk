@@ -25,10 +25,6 @@ import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.JsonFlattener;
 import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.validation.ValidationError;
-import com.clevertap.android.sdk.validation.ValidationResultFactory;
-import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider;
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
@@ -54,7 +50,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final ControllerManager controllerManager;
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
-    private final ValidationResultStack validationResultStack;
     private final ValidationPipelineProvider validationPipelineProvider;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
@@ -70,7 +65,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
             ValidationPipelineProvider validationPipelineProvider,
-            ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
@@ -84,7 +78,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
         this.validationPipelineProvider = validationPipelineProvider;
-        this.validationResultStack = validationResultStack;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
@@ -597,11 +590,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        if (items.size() > 50) {
-            ValidationResult error = ValidationResultFactory.create(ValidationError.CHARGED_EVENT_TOO_MANY_ITEMS);
-            config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-            validationResultStack.pushValidationResult(error);
-        }
+        validationPipelineProvider.getChargedEventItemsValidationPipeline().execute(items);
 
         JSONObject chargedEvent = new JSONObject();
         try {

@@ -20,6 +20,7 @@ class ValidationConfig private constructor(
     val eventNameCharsNotAllowed: Set<Char>?,
     val restrictedEventNames: Set<String>?,
     val restrictedMultiValueFields: Set<String>?,
+    val maxChargedEventItemsCount: Int?,
     val deviceCountryCodeProvider: () -> String?
 ) {
     /**
@@ -51,6 +52,7 @@ class ValidationConfig private constructor(
         private var eventNameCharsNotAllowed: Set<Char>? = null
         private var restrictedEventNames: Set<String>? = null
         private var restrictedMultiValueFields: Set<String>? = null
+        private var maxChargedEventItemsCount: Int? = null
         private var discardedEventNames: Set<String>? = null
         private var deviceCountryCodeProvider: (() -> String?)? = null
 
@@ -152,6 +154,14 @@ class ValidationConfig private constructor(
         }
 
         /**
+         * Add validation for maximum charged event items count.
+         * Events with more items than this will trigger a warning.
+         */
+        fun addChargedEventItemsCountValidation(maxCount: Int) = apply {
+            this.maxChargedEventItemsCount = maxCount
+        }
+
+        /**
          * Set the list of discarded event names from Dashboard.
          * Note: This can also be updated later using updateDiscardedEventNames().
          */
@@ -185,6 +195,7 @@ class ValidationConfig private constructor(
                 eventNameCharsNotAllowed = eventNameCharsNotAllowed,
                 restrictedEventNames = restrictedEventNames,
                 restrictedMultiValueFields = restrictedMultiValueFields,
+                maxChargedEventItemsCount = maxChargedEventItemsCount,
                 deviceCountryCodeProvider = deviceCountryCodeProvider ?: { null }
             )
             // Set discarded names after construction
@@ -226,6 +237,7 @@ class ValidationConfig private constructor(
                 .addObjectKeyCountValidation(5)
                 .addArrayLengthValidation(100)
                 .addKVPairCountValidation(100)
+                .addChargedEventItemsCountValidation(50)
                 .addKeyCharacterValidation(setOf(':', '$', '\'', '"', '\\'))
                 .addValueCharacterValidation(setOf('\'', '"', '\\'))
                 .addEventNameLengthValidation(Constants.MAX_VALUE_LENGTH)
