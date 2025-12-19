@@ -198,7 +198,7 @@ internal object CleverTapFactory {
             LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager, profileStateTraverser, nestedJsonBuilder)
 
         val eventMediator =
-            EventMediator(config, coreMetaData, localDataStore, networkRepo)
+            EventMediator(config, coreMetaData, networkRepo)
 
         getInstance(context, config)
 

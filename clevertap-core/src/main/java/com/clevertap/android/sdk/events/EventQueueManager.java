@@ -400,7 +400,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         /*If key is present in IdentitySet and removeFromSharedPrefs is true then
                         proceed to removing PII key(Email) from shared prefs*/
 
-                        // todo multi-values identity keys?
                         if (isProfileKey && !deviceInfo.isErrorDeviceId()) {
                             try {
                                 if (removeFromSharedPrefs) {
