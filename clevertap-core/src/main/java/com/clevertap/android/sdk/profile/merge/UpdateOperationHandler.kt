@@ -41,45 +41,24 @@ internal class UpdateOperationHandler(
 
         val oldValue = target.get(key)
 
-        // Special handling for GET operation
-        if (operation == ProfileOperation.GET) {
-            when {
-                oldValue is JSONObject && newValue is JSONObject -> {
-                    // Recurse into nested objects for GET
-                    recursiveApply(oldValue, newValue, currentPath, changes)
-                }
-                oldValue is JSONArray && newValue is JSONArray -> {
-                    // Handle array GET operations
-                    arrayHandler.handleArrayOperation(
-                        target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
-                    )
-                }
-                else -> {
-                    // Found the target value - report it without updating
-                    handleGetOperation(oldValue, currentPath, changes)
-                }
-            }
-            return
-        }
-
         when {
             oldValue is JSONObject && newValue is JSONObject -> {
-                // Recurse into nested objects
+                // Recurse into nested objects (works for both GET and other operations)
                 recursiveApply(oldValue, newValue, currentPath, changes)
             }
             oldValue is JSONArray && newValue is JSONArray -> {
-                // Handle array operations
                 arrayHandler.handleArrayOperation(
                     target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                 )
             }
             oldValue is Number && newValue is Number &&
                     operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
-                // Handle arithmetic operations
                 handleNumberOperation(target, key, oldValue, newValue, currentPath, changes, operation)
             }
+            operation == ProfileOperation.GET -> {
+                handleGetOperation(oldValue, currentPath, changes)
+            }
             else -> {
-                // Handle simple value update
                 handleValueUpdate(target, key, oldValue, newValue, currentPath, changes)
             }
         }
