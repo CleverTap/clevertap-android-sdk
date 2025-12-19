@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.profile.merge.DeleteOperationHandler
 import com.clevertap.android.sdk.profile.merge.ProfileOperation
 import com.clevertap.android.sdk.profile.merge.ProfileChange
 import com.clevertap.android.sdk.profile.merge.ProfileChangeTracker
-import com.clevertap.android.sdk.profile.merge.UpdateOperationHandler
+import com.clevertap.android.sdk.profile.merge.OperationHandler
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -27,7 +27,7 @@ class ProfileStateTraverser {
 
     private val changeTracker = ProfileChangeTracker()
     private val arrayHandler = ArrayOperationHandler()
-    private val updateHandler = UpdateOperationHandler(changeTracker, arrayHandler)
+    private val updateHandler = OperationHandler(changeTracker, arrayHandler)
     private val deleteHandler = DeleteOperationHandler(changeTracker)
 
     /**
