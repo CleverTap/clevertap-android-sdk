@@ -2718,10 +2718,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().incrementValue(key, value);
     }
 
-//    public void incrementValue(JSONObject value) {
-//        coreState.getAnalyticsManager().incrementValue(key, value);
-//    }
-
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
      *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
