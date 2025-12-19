@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.profile.merge
 
+import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -8,7 +9,7 @@ import org.json.JSONObject
  * Handles UPDATE, INCREMENT, DECREMENT, and GET operations during profile processing.
  * Manages value updates, retrieval, missing keys, and number operations.
  */
-internal class UpdateOperationHandler(
+internal class OperationHandler(
     private val changeTracker: ProfileChangeTracker,
     private val arrayHandler: ArrayOperationHandler
 ) {
@@ -159,6 +160,6 @@ internal class UpdateOperationHandler(
             oldValue
         }
         
-        changes[path] = ProfileChange(processedOldValue, "__GET_MARKER__")
+        changes[path] = ProfileChange(processedOldValue, Constants.GET_MARKER)
     }
 }
