@@ -912,7 +912,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             ProfileOperation operation = command.getOperation();
 
-            baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, value, operation));
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, value, operation));
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key "
                     + key, t);
@@ -996,7 +996,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile);
 
-            baseEventQueueManager.pushBasicProfile(customProfile, false, getFlattenedProfileChanges(customProfile, ProfileOperation.UPDATE));
+            baseEventQueueManager.pushBasicProfile(customProfile, false, mergeProfileChanges(customProfile, ProfileOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -1040,7 +1040,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
             //Set removeFromSharedPrefs to true to remove PII keys from shared prefs.
-            baseEventQueueManager.pushBasicProfile(profileUpdate, true, getFlattenedProfileChanges(key, Constants.DELETE_MARKER, command.getOperation()));
+            baseEventQueueManager.pushBasicProfile(profileUpdate, true, mergeProfileChanges(key, Constants.DELETE_MARKER, command.getOperation()));
 
             config.getLogger()
                     .verbose(config.getAccountId(), "removing value for key " + key + " from user profile");
@@ -1060,7 +1060,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             profileUpdate.put(key, profileCommand);
 
             ProfileOperation operation = command.getOperation();
-            baseEventQueueManager.pushBasicProfile(profileUpdate, false, getFlattenedProfileChanges(key, originalValues, operation));
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, originalValues, operation));
 
             config.getLogger()
                     .verbose(config.getAccountId(), "Constructed multi-value profile push: " + profileUpdate);
@@ -1193,12 +1193,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(String key, Object originalValues, ProfileOperation operation) throws JSONException {
+    private FlattenedEventData.ProfileChanges mergeProfileChanges(String key, Object originalValues, ProfileOperation operation) throws JSONException {
         Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(key, originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 
-    private FlattenedEventData.ProfileChanges getFlattenedProfileChanges(JSONObject originalValues, ProfileOperation operation) throws JSONException {
+    private FlattenedEventData.ProfileChanges mergeProfileChanges(JSONObject originalValues, ProfileOperation operation) throws JSONException {
         Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
