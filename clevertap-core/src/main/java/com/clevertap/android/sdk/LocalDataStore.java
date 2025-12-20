@@ -396,6 +396,15 @@ public class LocalDataStore {
         }
     }
 
+    public JSONObject getProfile() {
+        try {
+            return new JSONObject(PROFILE_FIELDS_IN_THIS_SESSION.toString());
+        } catch (JSONException e) {
+            // Handle exception or return empty object
+            return new JSONObject();
+        }
+    }
+
     public Object getProfileProperty(String key) {
         if (key == null) {
             return null;
