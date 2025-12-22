@@ -57,6 +57,29 @@ class ValidationConfig private constructor(
         private var deviceCountryCodeProvider: (() -> String?)? = null
 
         /**
+         * Creates a builder initialized with values from an existing config.
+         * Useful for creating modified copies of a config.
+         */
+        fun from(config: ValidationConfig) = apply {
+            this.maxKeyLength = config.maxKeyLength
+            this.maxValueLength = config.maxValueLength
+            this.maxDepth = config.maxDepth
+            this.maxArrayKeyCount = config.maxArrayKeyCount
+            this.maxObjectKeyCount = config.maxObjectKeyCount
+            this.maxArrayLength = config.maxArrayLength
+            this.maxKVPairCount = config.maxKVPairCount
+            this.keyCharsNotAllowed = config.keyCharsNotAllowed
+            this.valueCharsNotAllowed = config.valueCharsNotAllowed
+            this.maxEventNameLength = config.maxEventNameLength
+            this.eventNameCharsNotAllowed = config.eventNameCharsNotAllowed
+            this.restrictedEventNames = config.restrictedEventNames
+            this.restrictedMultiValueFields = config.restrictedMultiValueFields
+            this.maxChargedEventItemsCount = config.maxChargedEventItemsCount
+            this.discardedEventNames = config.discardedEventNames
+            this.deviceCountryCodeProvider = config.deviceCountryCodeProvider
+        }
+
+        /**
          * Add validation for maximum key length.
          * Keys longer than this will be truncated.
          */
@@ -225,10 +248,17 @@ class ValidationConfig private constructor(
             Constants.SC_CAMPAIGN_OPT_OUT_EVENT_NAME
         )
 
+        val DEFAULT_RESTRICTED_MULTI_VALUE_FIELDS = setOf(
+            "Name", "Email", "Education", "Married", "DOB",
+            "Gender", "Phone", "Age", "FBID", "GPID", "Birthday",
+            "Identity"
+        )
+
+
         /**
          * Default validation configuration with common CleverTap limits.
          */
-        fun default(countryCodeProvider: (() -> String?)? = null): ValidationConfig {
+        fun default(countryCodeProvider: (() -> String?)? = null): Builder {
             return Builder()
                 .addKeySizeValidation(Constants.MAX_KEY_LENGTH)
                 .addValueSizeValidation(512)
@@ -243,19 +273,12 @@ class ValidationConfig private constructor(
                 .addEventNameLengthValidation(Constants.MAX_VALUE_LENGTH)
                 .addEventNameCharacterValidation(setOf('.', ':', '$', '\'', '"', '\\'))
                 .setRestrictedEventNames(DEFAULT_RESTRICTED_EVENT_NAMES)
-                .setRestrictedMultiValueFields(
-                    setOf(
-                        "Name", "Email", "Education", "Married", "DOB",
-                        "Gender", "Phone", "Age", "FBID", "GPID", "Birthday",
-                        "Identity"
-                    )
-                )
+                .setRestrictedMultiValueFields(DEFAULT_RESTRICTED_MULTI_VALUE_FIELDS)
                 .apply {
                     if (countryCodeProvider != null) {
                         setDeviceCountryCodeProvider(countryCodeProvider)
                     }
                 }
-                .build()
         }
     }
 }

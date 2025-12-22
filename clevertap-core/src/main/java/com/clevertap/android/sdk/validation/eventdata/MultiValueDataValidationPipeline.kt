@@ -18,19 +18,17 @@ import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
  * 4. Drop if cleaned data is empty
  * 5. Automatically report validation errors to the error reporter
  *
- * @param config Validation configuration
  * @param errorReporter Error reporter for pushing errors to stack.
  *                      All validation errors are automatically pushed to this stack.
  * @param logger Logger for logging validation results
  */
 class MultiValueDataValidationPipeline(
-    config: ValidationConfig,
     errorReporter: ValidationResultStack,
     logger: ILogger
-) : EventDataValidationPipeline(config, errorReporter, logger) {
+) : EventDataValidationPipeline(errorReporter, logger) {
 
-    override fun execute(input: Map<*, *>?): EventDataValidationResult {
-        val result = super.execute(input)
+    override fun execute(input: Map<*, *>?, config: ValidationConfig): EventDataValidationResult {
+        val result = super.execute(input, config)
 
         // Drop event if all properties were removed during validation
         if (result.cleanedData.length() == 0) {

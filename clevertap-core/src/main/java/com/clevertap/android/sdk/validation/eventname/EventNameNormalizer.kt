@@ -14,11 +14,9 @@ import com.clevertap.android.sdk.validation.pipeline.Normalizer
  * - Truncating to maximum length
  * - Trimming whitespace
  */
-class EventNameNormalizer(
-    private val config: ValidationConfig
-) : Normalizer<String?, EventNameNormalizationResult> {
+class EventNameNormalizer : Normalizer<String?, EventNameNormalizationResult> {
 
-    override fun normalize(input: String?): EventNameNormalizationResult {
+    override fun normalize(input: String?, config: ValidationConfig): EventNameNormalizationResult {
         if (input == null) {
             return EventNameNormalizationResult(
                 originalName = null,

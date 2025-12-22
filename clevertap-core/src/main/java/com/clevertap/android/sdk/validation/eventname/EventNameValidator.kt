@@ -15,11 +15,9 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Validates event names after normalization.
  * Checks for null names, truncation, character modifications, and restrictions.
  */
-class EventNameValidator(
-    private val config: ValidationConfig
-) : Validator<EventNameNormalizationResult> {
+class EventNameValidator : Validator<EventNameNormalizationResult> {
 
-    override fun validate(input: EventNameNormalizationResult): ValidationOutcome {
+    override fun validate(input: EventNameNormalizationResult, config: ValidationConfig): ValidationOutcome {
         val errors = mutableListOf<ValidationResult>()
         if (input.originalName == null) {
             val error = ValidationResultFactory.create(ValidationError.EVENT_NAME_NULL)
@@ -31,7 +29,12 @@ class EventNameValidator(
         }
 
         // Check for modifications during normalization before empty check so that modifications are recorded
-        validateModifications(input.modifications, input.originalName, errors)
+        validateModifications(
+            modifications = input.modifications,
+            originalName = input.originalName,
+            maxEventNameLength = config.maxEventNameLength,
+            errors = errors
+        )
 
         // Check for empty cleaned name (became empty after normalization)
         if (input.cleanedName.isEmpty()) {
@@ -44,10 +47,18 @@ class EventNameValidator(
         }
 
         // Check restricted event names
-        validateNotRestricted(input.cleanedName, errors)?.let { return it }
+        validateNotRestricted(
+            cleanedName = input.cleanedName,
+            restrictedEventNames = config.restrictedEventNames,
+            errors = errors
+        )?.let { return it }
 
         // Check discarded event names
-        validateNotDiscarded(input.cleanedName, errors)?.let { return it }
+        validateNotDiscarded(
+            cleanedName = input.cleanedName,
+            discardedEventNames = config.discardedEventNames,
+            errors = errors
+        )?.let { return it }
 
         return if (errors.isEmpty()) {
             ValidationOutcome.Success()
@@ -63,6 +74,7 @@ class EventNameValidator(
     private fun validateModifications(
         modifications: Set<ModificationReason>,
         originalName : String,
+        maxEventNameLength: Int?,
         errors: MutableList<ValidationResult>
     ) {
         modifications.forEach { modification ->
@@ -71,7 +83,7 @@ class EventNameValidator(
                     val error = ValidationResultFactory.create(
                         ValidationError.EVENT_NAME_TOO_LONG,
                         originalName,
-                        config.maxEventNameLength?.toString() ?: "unknown"
+                        maxEventNameLength?.toString() ?: "unknown"
                     )
                     errors.add(error)
                 }
@@ -92,9 +104,10 @@ class EventNameValidator(
      */
     private fun validateNotRestricted(
         cleanedName: String,
+        restrictedEventNames: Set<String>?,
         errors: MutableList<ValidationResult>
     ): ValidationOutcome.Drop? {
-        val isRestricted = config.restrictedEventNames?.any { restrictedName ->
+        val isRestricted = restrictedEventNames?.any { restrictedName ->
             Utils.areNamesNormalizedEqual(cleanedName, restrictedName)
         } ?: false
 
@@ -119,9 +132,10 @@ class EventNameValidator(
      */
     private fun validateNotDiscarded(
         cleanedName: String,
+        discardedEventNames: Set<String>?,
         errors: MutableList<ValidationResult>
     ): ValidationOutcome.Drop? {
-        val isDiscarded = config.discardedEventNames?.any { discardedName ->
+        val isDiscarded = discardedEventNames?.any { discardedName ->
             Utils.areNamesNormalizedEqual(cleanedName, discardedName)
         } ?: false
 

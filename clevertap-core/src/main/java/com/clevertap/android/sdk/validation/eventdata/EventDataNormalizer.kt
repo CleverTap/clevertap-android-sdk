@@ -28,9 +28,7 @@ import kotlin.math.max
  * - Validating phone numbers
  * - Tracking structural metrics
  */
-class EventDataNormalizer(
-    private val config: ValidationConfig
-) : Normalizer<Map<*, *>?, EventDataNormalizationResult> {
+class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult> {
 
     companion object {
         private const val DATE_PREFIX = "\$D_"
@@ -48,14 +46,23 @@ class EventDataNormalizer(
     private val valuesModified = mutableListOf<ValueModification>()
     private val itemsRemoved = mutableListOf<RemovedItem>()
 
-    override fun normalize(input: Map<*, *>?): EventDataNormalizationResult {
+    override fun normalize(input: Map<*, *>?, config: ValidationConfig): EventDataNormalizationResult {
         resetTracking()
 
         val cleanedData = when {
             input == null -> JSONObject()
             else -> {
                 try {
-                    cleanMapInternal(input, depth = 0)
+                    cleanMapInternal(
+                        map = input,
+                        restrictedMultiValueFields = config.restrictedMultiValueFields,
+                        deviceCountryCode = config.deviceCountryCodeProvider(),
+                        keyCharsNotAllowed = config.keyCharsNotAllowed,
+                        maxKeyLength = config.maxKeyLength,
+                        valueCharsNotAllowed = config.valueCharsNotAllowed,
+                        maxValueLength = config.maxValueLength,
+                        depth = 0
+                    )
                 } catch (_: JSONException) {
                     JSONObject()
                 }
@@ -96,7 +103,16 @@ class EventDataNormalizer(
     }
 
     @Throws(JSONException::class)
-    private fun cleanMapInternal(map: Map<*, *>, depth: Int): JSONObject {
+    private fun cleanMapInternal(
+        map: Map<*, *>,
+        restrictedMultiValueFields: Set<String>?,
+        deviceCountryCode: String?,
+        keyCharsNotAllowed: Set<Char>?,
+        maxKeyLength: Int?,
+        valueCharsNotAllowed: Set<Char>?,
+        maxValueLength: Int?,
+        depth: Int
+    ): JSONObject {
         maxDepth = max(maxDepth, depth)
 
         val cleaned = JSONObject()
@@ -111,7 +127,7 @@ class EventDataNormalizer(
             }
 
             val keyStr = key.toString()
-            val cleanedKey = cleanKey(keyStr)
+            val cleanedKey = cleanKey(keyStr, keyCharsNotAllowed, maxKeyLength)
 
             if (cleanedKey.isEmpty()) {
                 recordRemoval(keyStr, RemovalReason.EMPTY_KEY, "")
@@ -124,7 +140,7 @@ class EventDataNormalizer(
             }
 
             // Drop restricted multi-value fields at 0th level if value is object or array
-            if (depth == 0 && config.restrictedMultiValueFields?.contains(cleanedKey) == true) {
+            if (depth == 0 && restrictedMultiValueFields?.contains(cleanedKey) == true) {
                 val isObjectOrArray = when (value) {
                     is Map<*, *>, is JSONObject, is List<*>, is Array<*>, is JSONArray -> true
                     else -> false
@@ -138,7 +154,7 @@ class EventDataNormalizer(
             // Special validation for Phone key
             if (cleanedKey.equals("Phone", ignoreCase = true)) {
                 // only validate and record error, don't remove
-                validatePhoneNumber(cleanedKey, value)
+                validatePhoneNumber(cleanedKey, value, deviceCountryCode)
             }
 
             when (value) {
@@ -146,7 +162,15 @@ class EventDataNormalizer(
                 is List<*>, is Array<*>, is JSONArray -> arrayKeyCount++
             }
 
-            val cleanedValue = cleanAnyValue(value, cleanedKey, depth + 1)
+            val cleanedValue = cleanAnyValue(
+                value = value,
+                parentKey = cleanedKey,
+                keyCharsNotAllowed = keyCharsNotAllowed,
+                maxKeyLength = maxKeyLength,
+                valueCharsNotAllowed = valueCharsNotAllowed,
+                maxValueLength = maxValueLength,
+                depth = depth + 1
+            )
 
             if (cleanedValue != null) {
                 cleaned.put(cleanedKey, cleanedValue)
@@ -161,7 +185,7 @@ class EventDataNormalizer(
         return cleaned
     }
 
-    private fun validatePhoneNumber(key: String, value: Any?) {
+    private fun validatePhoneNumber(key: String, value: Any?, deviceCountryCode: String?) {
         if (value !is String) {
             recordRemoval(key, RemovalReason.INVALID_PHONE_NUMBER, value)
             return
@@ -170,7 +194,7 @@ class EventDataNormalizer(
         val phoneValue = value.trim()
 
         // If no country code available, require phone to start with '+'
-        if (config.deviceCountryCodeProvider().isNullOrEmpty()) {
+        if (deviceCountryCode.isNullOrEmpty()) {
             if (!phoneValue.startsWith("+")) {
                 recordRemoval(key, RemovalReason.INVALID_COUNTRY_CODE, phoneValue)
             }
@@ -178,18 +202,35 @@ class EventDataNormalizer(
     }
 
     @Throws(JSONException::class)
-    private fun cleanAnyValue(value: Any?, parentKey: String, depth: Int): Any? {
+    private fun cleanAnyValue(
+        value: Any?,
+        parentKey: String,
+        keyCharsNotAllowed: Set<Char>?,
+        maxKeyLength: Int?,
+        valueCharsNotAllowed: Set<Char>?,
+        maxValueLength: Int?,
+        depth: Int
+    ): Any? {
         if (value == null || value == JSONObject.NULL) {
             return null
         }
 
         val cleaned = when (value) {
-            is Map<*, *> -> cleanMapInternal(value, depth)
-            is JSONObject -> cleanJSONObject(value, depth)
-            is List<*> -> cleanList(value, parentKey, depth)
-            is Array<*> -> cleanList(value.toList(), parentKey, depth)
-            is JSONArray -> cleanJSONArray(value, parentKey, depth)
-            else -> return cleanPrimitiveValue(value, parentKey)
+            is Map<*, *> -> cleanMapInternal(
+                map = value,
+                restrictedMultiValueFields = null, // Not needed at nested levels
+                deviceCountryCode = null, // Not needed at nested levels
+                keyCharsNotAllowed = keyCharsNotAllowed,
+                maxKeyLength = maxKeyLength,
+                valueCharsNotAllowed = valueCharsNotAllowed,
+                maxValueLength = maxValueLength,
+                depth = depth
+            )
+            is JSONObject -> cleanJSONObject(value, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            is List<*> -> cleanList(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            is Array<*> -> cleanList(value.toList(), parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            is JSONArray -> cleanJSONArray(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            else -> return cleanPrimitiveValue(value, parentKey, valueCharsNotAllowed, maxValueLength)
         }
 
         return if (isEmpty(cleaned)) {
@@ -209,7 +250,15 @@ class EventDataNormalizer(
     }
 
     @Throws(JSONException::class)
-    private fun cleanList(list: List<*>, parentKey: String, depth: Int): JSONArray {
+    private fun cleanList(
+        list: List<*>,
+        parentKey: String,
+        keyCharsNotAllowed: Set<Char>?,
+        maxKeyLength: Int?,
+        valueCharsNotAllowed: Set<Char>?,
+        maxValueLength: Int?,
+        depth: Int
+    ): JSONArray {
         maxDepth = max(maxDepth, depth)
         maxArrayLength = max(maxArrayLength, list.size)
 
@@ -221,7 +270,7 @@ class EventDataNormalizer(
                 continue
             }
 
-            val cleanedValue = cleanAnyValue(value, parentKey, depth)
+            val cleanedValue = cleanAnyValue(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
             if (cleanedValue != null) {
                 cleaned.put(cleanedValue)
             }
@@ -231,7 +280,14 @@ class EventDataNormalizer(
     }
 
     @Throws(JSONException::class)
-    private fun cleanJSONObject(json: JSONObject, depth: Int): JSONObject {
+    private fun cleanJSONObject(
+        json: JSONObject,
+        keyCharsNotAllowed: Set<Char>?,
+        maxKeyLength: Int?,
+        valueCharsNotAllowed: Set<Char>?,
+        maxValueLength: Int?,
+        depth: Int
+    ): JSONObject {
         maxDepth = max(maxDepth, depth)
 
         val cleaned = JSONObject()
@@ -242,7 +298,7 @@ class EventDataNormalizer(
         val it = json.keys()
         while (it.hasNext()) {
             val key = it.next()
-            val cleanedKey = cleanKey(key)
+            val cleanedKey = cleanKey(key, keyCharsNotAllowed, maxKeyLength)
 
             if (cleanedKey.isEmpty()) {
                 recordRemoval(key, RemovalReason.EMPTY_VALUE, "")
@@ -261,7 +317,7 @@ class EventDataNormalizer(
                 is JSONArray -> arrayKeyCount++
             }
 
-            val cleanedValue = cleanAnyValue(value, cleanedKey, depth + 1)
+            val cleanedValue = cleanAnyValue(value, cleanedKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth + 1)
 
             if (cleanedValue != null) {
                 cleaned.put(cleanedKey, cleanedValue)
@@ -277,7 +333,15 @@ class EventDataNormalizer(
     }
 
     @Throws(JSONException::class)
-    private fun cleanJSONArray(array: JSONArray, parentKey: String, depth: Int): JSONArray {
+    private fun cleanJSONArray(
+        array: JSONArray,
+        parentKey: String,
+        keyCharsNotAllowed: Set<Char>?,
+        maxKeyLength: Int?,
+        valueCharsNotAllowed: Set<Char>?,
+        maxValueLength: Int?,
+        depth: Int
+    ): JSONArray {
         maxDepth = max(maxDepth, depth)
         maxArrayLength = max(maxArrayLength, array.length())
 
@@ -291,7 +355,7 @@ class EventDataNormalizer(
                 continue
             }
 
-            val cleanedValue = cleanAnyValue(value, parentKey, depth)
+            val cleanedValue = cleanAnyValue(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
             if (cleanedValue != null) {
                 cleaned.put(cleanedValue)
             }
@@ -300,7 +364,7 @@ class EventDataNormalizer(
         return cleaned
     }
 
-    private fun cleanKey(key: String): String {
+    private fun cleanKey(key: String, keyCharsNotAllowed: Set<Char>?, maxKeyLength: Int?): String {
         val original = key
         var cleaned = key.trim()
 
@@ -311,7 +375,7 @@ class EventDataNormalizer(
         val reasons = mutableListOf<ModificationReason>()
 
         // Remove disallowed characters
-        config.keyCharsNotAllowed?.let { notAllowed ->
+        keyCharsNotAllowed?.let { notAllowed ->
             val filtered = cleaned.filterNot { it in notAllowed }
             if (filtered != cleaned) {
                 cleaned = filtered
@@ -320,7 +384,7 @@ class EventDataNormalizer(
         }
 
         // Truncate if exceeds max length
-        config.maxKeyLength?.let { maxLength ->
+        maxKeyLength?.let { maxLength ->
             if (cleaned.length > maxLength) {
                 reasons.add(ModificationReason.TRUNCATED_TO_MAX_LENGTH)
                 cleaned = cleaned.substring(0, maxLength)
@@ -343,11 +407,11 @@ class EventDataNormalizer(
         return result
     }
 
-    private fun cleanPrimitiveValue(value: Any?, key: String): Any? {
+    private fun cleanPrimitiveValue(value: Any?, key: String, valueCharsNotAllowed: Set<Char>?, maxValueLength: Int?): Any? {
         return when (value) {
             is Int, is Long, is Float, is Double, is Boolean -> value
-            is String -> cleanStringValue(value, key)
-            is Char -> cleanPrimitiveValue(value.toString(), key)
+            is String -> cleanStringValue(value, key, valueCharsNotAllowed, maxValueLength)
+            is Char -> cleanPrimitiveValue(value.toString(), key, valueCharsNotAllowed, maxValueLength)
             is Date -> "$DATE_PREFIX${value.time / 1000}"
             else -> {
                 recordRemoval(key, RemovalReason.NON_PRIMITIVE_VALUE, value)
@@ -356,7 +420,7 @@ class EventDataNormalizer(
         }
     }
 
-    private fun cleanStringValue(value: String, key: String): String? {
+    private fun cleanStringValue(value: String, key: String, valueCharsNotAllowed: Set<Char>?, maxValueLength: Int?): String? {
         val original = value
         var cleaned = value.trim()
 
@@ -368,7 +432,7 @@ class EventDataNormalizer(
         val reasons = mutableListOf<ModificationReason>()
 
         // Remove disallowed characters
-        config.valueCharsNotAllowed?.let { notAllowed ->
+        valueCharsNotAllowed?.let { notAllowed ->
             val filtered = cleaned.filterNot { it in notAllowed }
             if (filtered != cleaned) {
                 cleaned = filtered
@@ -377,7 +441,7 @@ class EventDataNormalizer(
         }
 
         // Truncate if exceeds max length
-        config.maxValueLength?.let { maxLength ->
+        maxValueLength?.let { maxLength ->
             if (cleaned.length > maxLength) {
                 reasons.add(ModificationReason.TRUNCATED_TO_MAX_LENGTH)
                 cleaned = cleaned.substring(0, maxLength)

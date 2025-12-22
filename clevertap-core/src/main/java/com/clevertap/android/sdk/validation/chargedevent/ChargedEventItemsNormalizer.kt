@@ -12,11 +12,9 @@ import com.clevertap.android.sdk.validation.pipeline.Normalizer
  * - Counting the number of items
  * - Converting null input to empty list
  */
-class ChargedEventItemsNormalizer(
-    private val config: ValidationConfig
-) : Normalizer<List<*>?, ChargedEventItemsNormalizationResult> {
+class ChargedEventItemsNormalizer : Normalizer<List<*>?, ChargedEventItemsNormalizationResult> {
 
-    override fun normalize(input: List<*>?): ChargedEventItemsNormalizationResult {
+    override fun normalize(input: List<*>?, config: ValidationConfig): ChargedEventItemsNormalizationResult {
         val items = input ?: emptyList<Any>()
         
         return ChargedEventItemsNormalizationResult(

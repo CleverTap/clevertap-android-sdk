@@ -188,10 +188,10 @@ internal object CleverTapFactory {
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
-        val validationConfig = ValidationConfig.default { deviceInfo.countryCode }
+        val validationConfig = ValidationConfig.default { deviceInfo.countryCode }.build()
 
-        val validationPipelineProvider = ValidationPipelineProvider(validationConfig, validationResultStack, config.logger)
-        val profileStateTraverser = ProfileStateTraverser(config.logger)
+        val validationPipelineProvider = ValidationPipelineProvider(validationResultStack, config.logger)
+        val profileStateTraverser = ProfileStateTraverser()
         val nestedJsonBuilder = NestedJsonBuilder()
 
         val localDataStore =
@@ -445,6 +445,7 @@ internal object CleverTapFactory {
             config,
             baseEventQueueManager,
             validationPipelineProvider,
+            validationConfig,
             coreMetaData,
             deviceInfo,
             callbackManager,

@@ -15,26 +15,24 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  * 2. Validate items count against maximum allowed limit (50)
  * 3. Automatically report validation errors to the error reporter
  *
- * @param config Validation configuration
  * @param errorReporter Error reporter for pushing errors to stack.
  *                      All validation errors are automatically pushed to this stack.
  * @param logger Logger for logging validation results
  */
 open class ChargedEventItemsValidationPipeline(
-    config: ValidationConfig,
     private val errorReporter: ValidationResultStack,
     private val logger: ILogger
 ) : ValidationPipeline<List<*>?, ChargedEventItemsValidationResult> {
 
-    private val normalizer = ChargedEventItemsNormalizer(config)
-    private val validator = ChargedEventItemsValidator(config)
+    private val normalizer = ChargedEventItemsNormalizer()
+    private val validator = ChargedEventItemsValidator()
 
-    override fun execute(input: List<*>?): ChargedEventItemsValidationResult {
+    override fun execute(input: List<*>?, config: ValidationConfig): ChargedEventItemsValidationResult {
         // Step 1: Normalize the input
-        val normalizationResult = normalizer.normalize(input)
+        val normalizationResult = normalizer.normalize(input, config)
 
         // Step 2: Validate the normalized result
-        val outcome = validator.validate(normalizationResult)
+        val outcome = validator.validate(normalizationResult, config)
 
         // Step 3: Auto-report validation errors
         errorReporter.pushValidationResult(outcome.errors)
