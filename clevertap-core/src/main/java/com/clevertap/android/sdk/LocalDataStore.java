@@ -687,7 +687,6 @@ public class LocalDataStore {
 
     private void resetLocalProfileSync() {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            // Better way to remove all keys
             Iterator<String> keys = PROFILE_FIELDS_IN_THIS_SESSION.keys();
             List<String> keysToRemove = new ArrayList<>();
             while (keys.hasNext()) {
@@ -700,66 +699,6 @@ public class LocalDataStore {
 
         // Load the older profile from cache into the db
         inflateLocalProfileAsync(context);
-    }
-
-    private void _removeProfileField(String key) {
-        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
-            } catch (Throwable t) {
-                getConfigLogger()
-                        .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
-            }
-        }
-    }
-    private void _setProfileField(String key, Object value) {
-        if (value == null) {
-            return;
-        }
-        try {
-            synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                PROFILE_FIELDS_IN_THIS_SESSION.put(key, value);
-            }
-        } catch (Throwable t) {
-            getConfigLogger()
-                    .verbose(getConfigAccountId(), "Failed to set local profile value for key " + key, t);
-        }
-    }
-
-    /**
-     * This function centrally updates the profile fields both in the local cache and the local db
-     *
-     * @param fields, a map of key value pairs to be updated locally. The value will be null if that key needs to be
-     *                removed
-     */
-//    int k = 0;
-    public void updateProfileFields(Map<String, Object> fields) {
-        if(fields.isEmpty())
-            return;
-        /*Set<String> events = new HashSet<>();
-        for (int i = 0; i < 5000; i++) {
-            String s = "profile field - "+k+"-"+i;//RandomStringUtils.randomAlphanumeric(512);
-            events.add(s);
-        }
-        k++;*/
-        long start = System.nanoTime();
-        persistUserEventLogsInBulk(fields.keySet());
-//        persistUserEventLogsInBulk(events);
-        /*for (String key : events)
-        {
-            persistUserEventLog(key);
-        }*/
-        long end = System.nanoTime();
-        config.getLogger().verbose(config.getAccountId(),"UserEventLog: persistUserEventLog execution time = "+(end - start)+" nano seconds");
-        for (Map.Entry<String, Object> entry : fields.entrySet()) {
-            String key = entry.getKey();
-            Object newValue = entry.getValue();
-            if (newValue == null) {
-                _removeProfileField(key);
-            }
-            _setProfileField(key, newValue);
-        }
-        persistLocalProfileAsync();
     }
 
     private String storageKeyWithSuffix(String key) {
