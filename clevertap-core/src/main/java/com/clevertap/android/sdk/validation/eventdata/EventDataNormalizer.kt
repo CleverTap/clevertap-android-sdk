@@ -330,7 +330,7 @@ class EventDataNormalizer(
         val result = cleaned.trim()
 
         // Record modification if key changed
-        if (result != original && result.isNotEmpty() && reasons.isNotEmpty()) {
+        if (result != original && reasons.isNotEmpty()) {
             keysModified.add(
                 KeyModification(
                     originalKey = original,
