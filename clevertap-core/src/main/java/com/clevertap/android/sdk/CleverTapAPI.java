@@ -2105,6 +2105,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @return A JSONObject containing all user profile properties, or null if personalization is disabled.
      */
+    @WorkerThread
     public JSONObject getProfile() {
         if (!coreState.getConfig().isPersonalizationEnabled()) {
             return null;
