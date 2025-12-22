@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.profile
 
 import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.profile.traversal.ArrayOperationHandler
 import com.clevertap.android.sdk.profile.traversal.DeleteOperationHandler
 import com.clevertap.android.sdk.profile.traversal.ProfileOperation
@@ -23,7 +24,9 @@ import org.json.JSONObject
  * @see ProfileOperation for available operations
  * @see ProfileChange for tracking changes
  */
-class ProfileStateTraverser {
+class ProfileStateTraverser(
+    private val logger: ILogger
+) {
 
     private val changeTracker = ProfileChangeTracker()
     private val arrayHandler = ArrayOperationHandler()
@@ -49,7 +52,6 @@ class ProfileStateTraverser {
      * @throws org.json.JSONException if there's an error during operation
      */
     @WorkerThread
-    @Throws(JSONException::class)
     fun traverse(
         target: JSONObject,
         source: JSONObject,
@@ -62,6 +64,7 @@ class ProfileStateTraverser {
 
     /**
      * Recursively applies operation to nested structures, tracking changes at each level.
+     * Continues processing remaining keys even if individual operations fail.
      *
      * @param target The JSON object being operated on
      * @param source The JSON object containing operation parameters
@@ -69,7 +72,6 @@ class ProfileStateTraverser {
      * @param changes Accumulator for all changes
      * @param operation The profile operation to perform
      */
-    @Throws(JSONException::class)
     private fun traverseRecursive(
         target: JSONObject,
         source: JSONObject?,
@@ -82,24 +84,33 @@ class ProfileStateTraverser {
         val keys = source.keys()
         while (keys.hasNext()) {
             val key = keys.next()
-            val newValue = source.get(key)
             val currentPath = buildPath(path, key)
+            
+            try {
+                val newValue = source.get(key)
 
-            when (operation) {
-                ProfileOperation.DELETE -> {
-                    deleteHandler.handleDelete(
-                        target, key, newValue, currentPath, changes
-                    ) { target, source, path, changes ->
-                        traverseRecursive(target, source, path, changes, ProfileOperation.DELETE)
+                when (operation) {
+                    ProfileOperation.DELETE -> {
+                        deleteHandler.handleDelete(
+                            target, key, newValue, currentPath, changes
+                        ) { target, source, path, changes ->
+                            traverseRecursive(target, source, path, changes, ProfileOperation.DELETE)
+                        }
+                    }
+                    else -> {
+                        updateHandler.handleOperation(
+                            target, key, newValue, currentPath, changes, operation
+                        ) { target, source, path, changes ->
+                            traverseRecursive(target, source, path, changes, operation)
+                        }
                     }
                 }
-                else -> {
-                    updateHandler.handleOperation(
-                        target, key, newValue, currentPath, changes, operation
-                    ) { target, source, path, changes ->
-                        traverseRecursive(target, source, path, changes, operation)
-                    }
-                }
+            } catch (e: JSONException) {
+                val errorMsg = "Failed to process key '$key': ${e.message}"
+                logger.verbose("ProfileStateTraverser", errorMsg)
+            } catch (e: Exception) {
+                val errorMsg = "Unexpected error processing key '$key': ${e.message}"
+                logger.verbose("ProfileStateTraverser", errorMsg)
             }
         }
     }

@@ -3,6 +3,8 @@ package com.clevertap.android.sdk;
 import static com.clevertap.android.sdk.Constants.GET_MARKER;
 import static com.clevertap.android.sdk.Constants.piiDBKeys;
 
+import static java.util.Collections.emptyMap;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -411,12 +413,8 @@ public class LocalDataStore {
         }
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                ProfileChange profileChange = processProfileTree(key, GET_MARKER, ProfileOperation.GET).get(key);
-                return profileChange == null ? null : profileChange.getOldValue();
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
+            ProfileChange profileChange = processProfileTree(key, GET_MARKER, ProfileOperation.GET).get(key);
+            return profileChange == null ? null : profileChange.getOldValue();
         }
     }
 
@@ -714,9 +712,13 @@ public class LocalDataStore {
             String dotNotationKey,
             Object value,
             ProfileOperation operation
-    ) throws JSONException {
-        JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
-        return processProfileTree(nestedProfile, operation);
+    ) {
+        try {
+            JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
+            return processProfileTree(nestedProfile, operation);
+        } catch (JSONException e) {
+            return emptyMap();
+        }
     }
 
 
@@ -724,7 +726,7 @@ public class LocalDataStore {
     public Map<String, ProfileChange> processProfileTree(
             JSONObject newJson,
             ProfileOperation operation
-    ) throws JSONException {
+    ) {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             ProfileStateTraverser.ProfileTraversalResult result = profileStateTraverser.traverse(
                     PROFILE_FIELDS_IN_THIS_SESSION,

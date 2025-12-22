@@ -2076,6 +2076,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *         a date string with "$D_" prefix.
      */
     @SuppressWarnings({"unused"})
+    @WorkerThread
     public Object getProperty(String name) {
         if (!coreState.getConfig().isPersonalizationEnabled()) {
             return null;
