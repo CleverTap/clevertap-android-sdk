@@ -147,7 +147,7 @@ internal class OperationHandler(
 
     /**
      * Handles GET operation - reports the current value without modifying it.
-     * Records a ProfileChange with oldValue set to the current value and newValue set to "__GET_MARKER__".
+     * Records a ProfileChange with oldValue set to the current value and newValue set to "__CLEVERTAP_GET__".
      */
     private fun handleGetOperation(
         oldValue: Any,

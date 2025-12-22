@@ -44,7 +44,7 @@ enum class ProfileOperation {
     /**
      * Retrieve values without modification.
      * Navigates through nested objects and arrays to report existing values.
-     * Changes are reported with newValue = "__GET_MARKER__".
+     * Changes are reported with newValue = "__CLEVERTAP_GET__".
      */
     GET
 }
