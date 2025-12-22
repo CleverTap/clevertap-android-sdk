@@ -7,6 +7,9 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.FlattenedEventData;
@@ -100,12 +103,20 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void incrementValue(String key, Number value) {
-        _constructIncrementDecrementValues(value,key, ProfileCommand.INCREMENT);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("incrementValue", () -> {
+            _constructIncrementDecrementValues(value,key, ProfileCommand.INCREMENT);
+            return null;
+        });
     }
 
     @Override
     public void decrementValue(String key, Number value) {
-        _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("decrementValue", () -> {
+            _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT);
+            return null;
+        });
     }
 
     /**
@@ -253,6 +264,15 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("pushEvent", () -> {
+            _pushEvent(eventName, eventActions);
+            return null;
+        });
+    }
+
+    @WorkerThread
+    private void _pushEvent(String eventName, Map<String, Object> eventActions) {
         JSONObject event = new JSONObject();
         try {
             // Validate
@@ -583,7 +603,16 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT);
     }
 
-    void pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
+    public void pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("pushChargedEvent", () -> {
+            _pushChargedEvent(chargeDetails, items);
+            return null;
+        });
+    }
+
+    @WorkerThread
+    private void _pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
 
         if (chargeDetails == null || items == null) {
             config.getLogger().debug(config.getAccountId(), "Invalid Charged event: details and or items is null");

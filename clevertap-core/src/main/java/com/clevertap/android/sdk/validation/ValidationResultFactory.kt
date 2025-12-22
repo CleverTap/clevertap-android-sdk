@@ -31,14 +31,13 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     EVENT_NAME_INVALID_CHARACTERS(510, "Key '%s' contains invalid characters. Cleaned"),
 
     // Profile validation errors (512)
-    INVALID_MULTI_VALUE(512, "Invalid multi value for key %s, profile multi value operation aborted."),
     INVALID_COUNTRY_CODE(512, "Device country code not available and profile phone: %s does not appear to start with country code"),
     INVALID_PHONE(512, "Invalid phone number"),
     EMPTY_KEY(512, "Found an empty key. Skipping and continuing"),
     EMPTY_KEY_ABORT(512, "Found an empty key. Aborting the operation"),
     PROP_VALUE_NOT_PRIMITIVE(512, "Property value for property %s wasn't a primitive (%s)"),
     CHANNEL_ID_MISSING_IN_PAYLOAD(512, "ChannelId is required for API 26+ but not provided in the notification payload. Falling to default channel: %s"),
-    CHANNEL_ID_NOT_REGISTERED(512, "Unable to render notification on channelId: %s as it is not registered by the app. Falling to default channel: "),
+    CHANNEL_ID_NOT_REGISTERED(512, "Unable to render notification on channelId: %s as it is not registered by the app. Falling to default channel. "),
     NOTIFICATION_VIEWED_DISABLED(512, "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: %s"),
     
     // Event name restrictions (513)

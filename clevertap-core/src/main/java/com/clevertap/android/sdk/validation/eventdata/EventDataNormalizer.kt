@@ -56,7 +56,7 @@ class EventDataNormalizer(
             else -> {
                 try {
                     cleanMapInternal(input, depth = 0)
-                } catch (e: JSONException) {
+                } catch (_: JSONException) {
                     JSONObject()
                 }
             }
@@ -137,6 +137,7 @@ class EventDataNormalizer(
 
             // Special validation for Phone key
             if (cleanedKey.equals("Phone", ignoreCase = true)) {
+                // only validate and record error, don't remove
                 validatePhoneNumber(cleanedKey, value)
             }
 
