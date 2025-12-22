@@ -386,11 +386,6 @@ class EventDataNormalizer(
 
         val result = cleaned.trim()
 
-        if (result.isEmpty()) {
-            recordRemoval(key, RemovalReason.EMPTY_VALUE, "")
-            return null
-        }
-
         // Record modification
         if (result != original && reasons.isNotEmpty()) {
             valuesModified.add(
@@ -401,6 +396,11 @@ class EventDataNormalizer(
                     reasons = reasons
                 )
             )
+        }
+
+        if (result.isEmpty()) {
+            recordRemoval(key, RemovalReason.EMPTY_VALUE, "")
+            return null
         }
 
         return result

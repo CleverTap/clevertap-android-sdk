@@ -26,7 +26,7 @@ object ValidationResultFactory {
 enum class ValidationError(val code: Int, private val messageTemplate: String) {
     
     // Event name validation errors (510)
-    EVENT_NAME_NULL(510, "Event Name is null"),
+    EVENT_NAME_NULL(510, "Event Name is null/empty"),
     EVENT_NAME_TOO_LONG(510, "%s... exceeds the limit of %s characters. Trimmed"),
     EVENT_NAME_INVALID_CHARACTERS(510, "Key '%s' contains invalid characters. Cleaned"),
 
