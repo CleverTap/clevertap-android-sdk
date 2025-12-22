@@ -566,7 +566,6 @@ public class LocalDataStore {
     }
 
     private void persistLocalProfileAsync() {
-
         final String profileID = this.config.getAccountId();
 
         this.postAsyncSafely("LocalDataStore#persistLocalProfileAsync", new Runnable() {
@@ -574,7 +573,7 @@ public class LocalDataStore {
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
                     JSONObject profile = new JSONObject();
-                    boolean passFlag = true;
+                    boolean encryptionFailed = false;
 
                     // Copy all fields from PROFILE_FIELDS_IN_THIS_SESSION to profile
                     try {
@@ -587,34 +586,35 @@ public class LocalDataStore {
                         getConfigLogger().verbose(getConfigAccountId(), "Failed to copy profile fields", e);
                     }
 
-
                     // Encrypts only the pii keys before storing to DB
-
                     boolean isMediumEncryption = EncryptionLevel.fromInt(config.getEncryptionLevel()) == EncryptionLevel.MEDIUM;
                     for (String piiKey : piiDBKeys) {
                         try {
                             if (profile.has(piiKey)) {
                                 Object value = profile.opt(piiKey);
                                 if (value instanceof String) {
-
                                     if (isMediumEncryption) {
                                         value = cryptHandler.encryptSafe((String) value);
+                                        if (value == null) {
+                                            encryptionFailed = true;
+                                            // Don't update profile with null, keep original
+                                            continue;
+                                        }
+                                        profile.put(piiKey, value);
                                     }
-                                    if (value == null) {
-                                        passFlag = false;
-                                        continue;
-                                    }
-                                    profile.put(piiKey, value);
                                 }
                             }
                         } catch (JSONException e) {
                             getConfigLogger().verbose(getConfigAccountId(), "Failed to encrypt pii key: " + piiKey, e);
-                        }
-
-                        if (!passFlag) {
-                            cryptHandler.updateMigrationFailureCount(false);
+                            encryptionFailed = true;
                         }
                     }
+
+                    // Update migration failure count ONCE after processing all keys
+                    if (encryptionFailed) {
+                        cryptHandler.updateMigrationFailureCount(false);
+                    }
+
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), profile);
                     getConfigLogger().verbose(getConfigAccountId(),
