@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.profile.traversal
 
+import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -216,7 +217,7 @@ internal class ArrayOperationHandler() {
 
     /**
      * Gets array elements for GET operation without modifying the array.
-     * Reports each accessed element with "__GET_MARKER__" as the new value.
+     * Reports each accessed element with "__CLEVERTAP_GET__" as the new value.
      */
     private fun getArrayElements(
         oldArray: JSONArray,
@@ -247,7 +248,7 @@ internal class ArrayOperationHandler() {
                     } else {
                         oldElement
                     }
-                    changes[elementPath] = ProfileChange(processedOldValue, "__GET_MARKER__")
+                    changes[elementPath] = ProfileChange(processedOldValue, Constants.GET_MARKER)
                 }
             }
         }
