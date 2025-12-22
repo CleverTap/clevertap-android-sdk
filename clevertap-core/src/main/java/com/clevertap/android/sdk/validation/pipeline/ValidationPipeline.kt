@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.validation.pipeline
 
 import com.clevertap.android.sdk.ILogger
+import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationOutcome
 
 /**
@@ -15,9 +16,10 @@ interface ValidationPipeline<I, O> {
      * Executes the validation pipeline for the given input.
      *
      * @param input The data to validate
+     * @param config Validation configuration to use for execution
      * @return The validation result containing outcome and cleaned data
      */
-    fun execute(input: I): O
+    fun execute(input: I, config: ValidationConfig): O
     
     /**
      * Logs validation outcome

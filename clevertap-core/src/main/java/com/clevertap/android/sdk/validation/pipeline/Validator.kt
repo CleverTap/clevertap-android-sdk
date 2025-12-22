@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.pipeline
 
+import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationOutcome
 
 /**
@@ -13,7 +14,8 @@ interface Validator<I> {
      * Validates the input data.
      *
      * @param input The normalized data to validate
+     * @param config Validation configuration to use for validation
      * @return ValidationOutcome indicating success, warning, or drop
      */
-    fun validate(input: I): ValidationOutcome
+    fun validate(input: I, config: ValidationConfig): ValidationOutcome
 }

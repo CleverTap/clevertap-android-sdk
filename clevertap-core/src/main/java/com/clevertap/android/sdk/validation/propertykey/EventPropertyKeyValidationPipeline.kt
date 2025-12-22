@@ -15,26 +15,24 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  * 2. Validate normalized key
  * 3. Automatically report validation errors to the error reporter
  * 
- * @param config Validation configuration
  * @param errorReporter Error reporter for pushing errors to stack.
  *                      All validation errors are automatically pushed to this stack.
  * @param logger Logger for logging validation results
  */
 class EventPropertyKeyValidationPipeline(
-    config: ValidationConfig,
     private val errorReporter: ValidationResultStack,
     private val logger: ILogger
 ) : ValidationPipeline<String?, PropertyKeyValidationResult> {
     
-    private val normalizer = EventPropertyKeyNormalizer(config)
-    private val validator = EventPropertyKeyValidator(config)
+    private val normalizer = EventPropertyKeyNormalizer()
+    private val validator = EventPropertyKeyValidator()
     
-    override fun execute(input: String?): PropertyKeyValidationResult {
+    override fun execute(input: String?, config: ValidationConfig): PropertyKeyValidationResult {
         // Step 1: Normalize the input
-        val normalizationResult = normalizer.normalize(input)
+        val normalizationResult = normalizer.normalize(input, config)
         
         // Step 2: Validate the normalized result
-        val outcome = validator.validate(normalizationResult)
+        val outcome = validator.validate(normalizationResult, config)
         
         // Step 3: Auto-report validation errors
         errorReporter.pushValidationResult(outcome.errors)

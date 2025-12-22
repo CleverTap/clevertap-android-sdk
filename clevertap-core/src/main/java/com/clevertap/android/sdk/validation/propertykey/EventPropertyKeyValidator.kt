@@ -14,11 +14,9 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Validates event property keys after normalization.
  * Checks for empty keys, modifications, and multi-value restrictions.
  */
-class EventPropertyKeyValidator(
-    val config: ValidationConfig
-) : Validator<PropertyKeyNormalizationResult> {
+class EventPropertyKeyValidator : Validator<PropertyKeyNormalizationResult> {
 
-    override fun validate(input: PropertyKeyNormalizationResult): ValidationOutcome {
+    override fun validate(input: PropertyKeyNormalizationResult, config: ValidationConfig): ValidationOutcome {
         val errors = mutableListOf<ValidationResult>()
 
         // Check if key was removed

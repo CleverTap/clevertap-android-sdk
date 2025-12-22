@@ -13,11 +13,9 @@ import com.clevertap.android.sdk.validation.pipeline.Validator
  * Checks if the items count exceeds the maximum allowed limit.
  * Note: Items validation never drops events, only warns.
  */
-class ChargedEventItemsValidator(
-    private val config: ValidationConfig
-) : Validator<ChargedEventItemsNormalizationResult> {
+class ChargedEventItemsValidator : Validator<ChargedEventItemsNormalizationResult> {
 
-    override fun validate(input: ChargedEventItemsNormalizationResult): ValidationOutcome {
+    override fun validate(input: ChargedEventItemsNormalizationResult, config: ValidationConfig): ValidationOutcome {
         val errors = mutableListOf<ValidationResult>()
 
         // Check items count limit

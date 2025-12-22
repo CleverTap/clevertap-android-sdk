@@ -17,11 +17,9 @@ import com.clevertap.android.sdk.validation.pipeline.RemovalReason
  * - Trimming whitespace
  * - Detecting if key becomes empty after cleaning
  */
-class EventPropertyKeyNormalizer(
-    private val config: ValidationConfig
-) : Normalizer<String?, PropertyKeyNormalizationResult> {
+class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNormalizationResult> {
 
-    override fun normalize(input: String?): PropertyKeyNormalizationResult {
+    override fun normalize(input: String?, config: ValidationConfig): PropertyKeyNormalizationResult {
         val original = input?: ""
         var cleaned = input?.trim() ?: ""
         val modifications = mutableSetOf<KeyModification>()

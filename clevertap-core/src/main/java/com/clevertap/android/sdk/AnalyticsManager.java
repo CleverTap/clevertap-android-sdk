@@ -3,6 +3,8 @@ package com.clevertap.android.sdk;
 import static com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getWzrkFields;
 
+import static java.util.Collections.emptySet;
+
 import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
@@ -28,6 +30,7 @@ import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.JsonFlattener;
 import com.clevertap.android.sdk.utils.UriHelper;
+import com.clevertap.android.sdk.validation.ValidationConfig;
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider;
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
@@ -54,6 +57,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
     private final ValidationPipelineProvider validationPipelineProvider;
+    private final ValidationConfig validationConfig;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
@@ -68,6 +72,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
             ValidationPipelineProvider validationPipelineProvider,
+            ValidationConfig validationConfig,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
@@ -81,6 +86,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
         this.validationPipelineProvider = validationPipelineProvider;
+        this.validationConfig = validationConfig;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
@@ -275,15 +281,24 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private void _pushEvent(String eventName, Map<String, Object> eventActions) {
         JSONObject event = new JSONObject();
         try {
-            // Validate
-            EventNameValidationResult nameValidationResult = validationPipelineProvider.getEventNamePipeline().execute(eventName);
+            // Validate event name with regular config
+            EventNameValidationResult nameValidationResult = validationPipelineProvider.getEventNamePipeline()
+                .execute(eventName, validationConfig);
 
             // Check for an error
             if (nameValidationResult.shouldDrop()) {
                 return;
             }
 
-            EventDataValidationResult dataValidationResult = validationPipelineProvider.getEventDataPipeline().execute(eventActions);
+            // Create config WITHOUT restrictedMultiValueFields for event data
+            ValidationConfig eventConfig = new ValidationConfig.Builder()
+                .from(validationConfig)
+                .setRestrictedMultiValueFields(emptySet())
+                .build();
+
+            // Validate event data with modified config (no restrictions on multi-value fields)
+            EventDataValidationResult dataValidationResult = validationPipelineProvider.getEventDataPipeline()
+                .execute(eventActions, eventConfig);
 
             if (dataValidationResult.shouldDrop()) {
                 return;
@@ -619,12 +634,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        validationPipelineProvider.getChargedEventItemsValidationPipeline().execute(items);
+        validationPipelineProvider.getChargedEventItemsValidationPipeline().execute(items, validationConfig);
 
         JSONObject chargedEvent = new JSONObject();
         try {
             // Validate charged event details
-            EventDataValidationResult detailsResult = validationPipelineProvider.getEventDataPipeline().execute(chargeDetails);
+            EventDataValidationResult detailsResult = validationPipelineProvider.getEventDataPipeline().execute(chargeDetails, validationConfig);
 
             if (detailsResult.shouldDrop()) {
                 return;
@@ -635,7 +650,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // Validate each item
             JSONArray jsonItemsArray = new JSONArray();
             for (HashMap<String, Object> map : items) {
-                EventDataValidationResult itemResult = validationPipelineProvider.getEventDataPipeline().execute(map);
+                EventDataValidationResult itemResult = validationPipelineProvider.getEventDataPipeline().execute(map, validationConfig);
 
                 if (!itemResult.shouldDrop()) {
                     JSONObject itemDetails = itemResult.getCleanedData();
@@ -766,7 +781,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         Map<String, ArrayList<String>> eventData = Map.of(key, values);
-        EventDataValidationResult eventDataValidationResult = validationPipelineProvider.getMultiValueDataPipeline().execute(eventData);
+        EventDataValidationResult eventDataValidationResult = validationPipelineProvider.getMultiValueDataPipeline().execute(eventData, validationConfig);
 
         if (eventDataValidationResult.shouldDrop()) {
             return;
@@ -784,7 +799,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
         try {
-            PropertyKeyValidationResult keyResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key);
+            PropertyKeyValidationResult keyResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key, validationConfig);
 
             if (keyResult.shouldDrop()) {
                 return;
@@ -810,7 +825,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         try {
             // Validate profile data
-            EventDataValidationResult profileResult = validationPipelineProvider.getEventDataPipeline().execute(profile);
+            EventDataValidationResult profileResult = validationPipelineProvider.getEventDataPipeline().execute(profile, validationConfig);
 
             if (profileResult.shouldDrop()) {
                 return;
@@ -830,7 +845,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private void _removeValueForKey(String key) {
         try {
-            PropertyKeyValidationResult keyValidationResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key);
+            PropertyKeyValidationResult keyValidationResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key, validationConfig);
 
             if (keyValidationResult.shouldDrop()) {
                 return;
