@@ -9,10 +9,13 @@ import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DEFAULT_DE
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MAX_DELAY_SECONDS
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MIN_DELAY_SECONDS
+import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_DEFAULT_INACTION_SECONDS
+import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_INACTION_DURATION
+import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MAX_INACTION_SECONDS
+import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MIN_INACTION_SECONDS
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
 import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
-import com.clevertap.android.sdk.partition
 import com.clevertap.android.sdk.safeGetJSONArray
 import com.clevertap.android.sdk.safeGetJSONArrayOrNullIfEmpty
 import com.clevertap.android.sdk.toList
@@ -25,6 +28,17 @@ object InAppDelayConstants{
     const val INAPP_MIN_DELAY_SECONDS = 1
     const val INAPP_MAX_DELAY_SECONDS = 1200
 }
+
+/**
+ * Constants for in-action in-apps feature
+ */
+object InAppInActionConstants {
+    const val INAPP_INACTION_DURATION = "inactionDuration"
+    const val INAPP_DEFAULT_INACTION_SECONDS = 0
+    const val INAPP_MIN_INACTION_SECONDS = 1
+    const val INAPP_MAX_INACTION_SECONDS = 1200
+}
+
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
@@ -49,13 +63,22 @@ internal class InAppResponseAdapter(
         }
     }
 
+    // ------------------------------------------------------------------------- //
+    //  delayAfterTrigger ALWAYS comes WITH content - it's a display delay       //
+    //  inactionDuration ALWAYS comes WITHOUT content - need to fetch after timer//
+    //  An in-app can have EITHER delay OR in-action, NEVER both initially       //
+    //  After in-action fetch, the returned content CAN have delayAfterTrigger   //
+    //  Client-Side (inapp_notifs_cs) does NOT support inactionDuration          //
+    // ------------------------------------------------------------------------- //
+
     private val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
-    val partitionedLegacyInApps = partitionInAppsByDelay(legacyInApps.second)
+    val partitionedLegacyInApps = partitionInAppsByDelayAndInAction(legacyInApps.second)
     private val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
-    val partitionedClientSideInApps = partitionInAppsByDelay(clientSideInApps.second)
-    val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
+    val partitionedClientSideInApps = partitionInAppsByDelayAndInAction(clientSideInApps.second)
+    private val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
+    val partitionedServerSideInAppsMeta = partitionInAppsByDelayAndInAction(serverSideInApps.second)
     private val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
-    val partitionedAppLaunchServerSideInApps = partitionInAppsByDelay(appLaunchServerSideInApps.second)
+    val partitionedAppLaunchServerSideInApps = partitionInAppsByDelayAndInAction(appLaunchServerSideInApps.second)
 
     private val preloadImages: List<String>
     private val preloadGifs: List<String>
@@ -147,48 +170,47 @@ internal class InAppResponseAdapter(
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
 
-    /**
-     * Core partitioning logic that separates in-apps based on delay
-     */
-    private fun partitionInAppsByDelay(inAppsArray: JSONArray?): PartitionedInApps {
+
+    private fun partitionInAppsByDelayAndInAction(
+        inAppsArray: JSONArray?
+    ): PartitionedInAppsWithInAction {
+         /*An in-app can have EITHER (never both):
+         delayAfterTrigger → Existing delayed flow
+         inactionDuration → New in-action flow
+         delayAfterTrigger always comes with in-app content*/
         if (inAppsArray == null) {
-            return PartitionedInApps.empty()
-        }
-        val (immediateList, delayedList) = inAppsArray.partition<JSONObject> { inApp ->
-            hasNoDelay(inApp)
+            return PartitionedInAppsWithInAction.empty()
         }
 
-        return PartitionedInApps(
-            immediateInApps = immediateList,
-            delayedInApps = delayedList
+        val immediate = mutableListOf<JSONObject>()
+        val delayed = mutableListOf<JSONObject>()
+        val inAction = mutableListOf<JSONObject>()
+
+        inAppsArray.iterator<JSONObject> { inApp ->
+            when {
+                hasInAction(inApp) -> inAction.add(inApp)
+
+                hasDelay(inApp) -> delayed.add(inApp)
+
+                else -> immediate.add(inApp)
+            }
+        }
+
+        return PartitionedInAppsWithInAction(
+            immediateInApps = JSONArray(immediate),
+            delayedInApps = JSONArray(delayed),
+            inActionInApps = JSONArray(inAction)
         )
     }
 
-    /**
-     * Helper function to determine if an in-app has no delay or delay is 0
-     * An in-app is considered immediate if:
-     * 1. It doesn't have a delayAfterTrigger field, OR
-     * 2. The delayAfterTrigger field is 0 or negative, OR
-     * 3. The delayAfterTrigger field is outside valid range (1-1200)
-     *
-     * @param inApp JSONObject representing the in-app notification
-     * @return true if immediate, false if delayed
-     */
-    private fun hasNoDelay(inApp: JSONObject): Boolean = getValidatedInAppDelay(inApp) == INAPP_DEFAULT_DELAY_SECONDS
+    private fun hasInAction(inApp: JSONObject): Boolean {
+        val inactionSeconds = inApp.optInt(INAPP_INACTION_DURATION, INAPP_DEFAULT_INACTION_SECONDS)
+        return inactionSeconds in INAPP_MIN_INACTION_SECONDS..INAPP_MAX_INACTION_SECONDS
+    }
 
-
-    /**
-     * Helper function to get the delay value in seconds for a delayed in-app
-     * @param inApp JSONObject representing the in-app notification
-     * @return delay in seconds, 0 if no delay or invalid delay
-     */
-    private fun getValidatedInAppDelay(inApp: JSONObject): Int {
+    private fun hasDelay(inApp: JSONObject): Boolean {
         val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
-        return if (delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) {
-            delaySeconds
-        } else {
-            INAPP_DEFAULT_DELAY_SECONDS
-        }
+        return delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS
     }
 }
 

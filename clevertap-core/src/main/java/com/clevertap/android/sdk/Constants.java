@@ -319,6 +319,7 @@ public interface Constants {
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;
     int FETCH_TYPE_IN_APPS = 5;
+    int FETCH_TYPE_IN_ACTION_IN_APPS = 6;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";

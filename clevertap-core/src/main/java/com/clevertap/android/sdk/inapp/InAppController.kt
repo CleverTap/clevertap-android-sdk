@@ -40,7 +40,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter
 import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
-import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
+import com.clevertap.android.sdk.inapp.delay.InActionResult
+import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
@@ -73,7 +74,8 @@ internal class InAppController(
     private val templatesManager: TemplatesManager,
     private val inAppActionHandler: InAppActionHandler,
     private val inAppNotificationInflater: InAppNotificationInflater,
-    private val inAppDelayManager: InAppDelayManager,
+    private val inAppDelayManager: InAppScheduler<DelayedInAppResult>,
+    private val inAppInActionManager: InAppScheduler<InActionResult>,
     private val clock: Clock
 ) : InAppListener {
 
@@ -143,7 +145,7 @@ internal class InAppController(
             "InAppController: Scheduling ${delayedInApps.length()} delayed in-apps"
         )
 
-        inAppDelayManager.scheduleDelayedInApps(delayedInApps) { result ->
+        inAppDelayManager.schedule(delayedInApps) { result ->
             when (result) {
                 is DelayedInAppResult.Success -> {
                     logger.verbose(
@@ -170,6 +172,51 @@ internal class InAppController(
                         result.throwable
                     )
                 }
+
+                is DelayedInAppResult.Discarded -> {
+                    logger.verbose(
+                        config.accountId,
+                        "InAppController: in-app discarded ${result.id}: ${result.reason}"
+                    )
+                }
+            }
+        }
+    }
+    fun scheduleInActionInApps(inActionMetadata: JSONArray) {
+        logger.verbose(
+            config.accountId,
+            "InAppController: Scheduling ${inActionMetadata.length()} in-action in-apps"
+        )
+
+        inAppInActionManager.schedule(inActionMetadata) { result ->
+            when (result) {
+                is InActionResult.ReadyToFetch -> {
+                    // After inaction duration expires, fetch content from backend
+                    logger.verbose(
+                        defaultLogTag,
+                        "In-action duration expired for targetId: ${result.targetId}, calling fetch API"
+                    )
+                    fetchInActionInApp(result.targetId)
+                }
+                is InActionResult.Error -> {
+                    logger.verbose(
+                        defaultLogTag,
+                        "Error scheduling in-action in-app: ${result.message} for targetId: ${result.targetId}"
+                    )
+                }
+                is InActionResult.Cancelled -> {
+                    logger.verbose(
+                        defaultLogTag,
+                        "In-action in-app cancelled for targetId: ${result.targetId}"
+                    )
+                }
+
+                is InActionResult.Discarded -> {
+                    logger.verbose(
+                        defaultLogTag,
+                        "In-action: in-app discarded ${result.id}: ${result.reason}"
+                    )
+                }
             }
         }
     }
@@ -178,7 +225,7 @@ internal class InAppController(
      * Get count of currently active delayed in-apps
      */
     fun getActiveDelayedInAppsCount(): Int {
-        return inAppDelayManager.getActiveCallbackCount()
+        return inAppDelayManager.getActiveCount()
     }
 
     fun promptPushPrimer(jsonObject: JSONObject) {
@@ -396,16 +443,27 @@ internal class InAppController(
     ) {
         val appFieldsWithEventProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithEventProperties.putAll(eventProperties)
-        val clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(
+
+        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        val evaluatedInApps = evaluationManager.evaluateOnEvent(
             eventName,
             appFieldsWithEventProperties,
             userLocation
         )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+
+        // Handle immediate CS in-apps
+        if (evaluatedInApps.first.length() > 0) {
+            addInAppNotificationsToQueue(evaluatedInApps.first)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+
+        // Handle delayed CS in-apps
+        if (evaluatedInApps.second.length() > 0) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        }
+
+        // Handle in-action SS metadata
+        if (evaluatedInApps.third.length() > 0) {
+            scheduleInActionInApps(evaluatedInApps.third)
         }
     }
 
@@ -418,16 +476,27 @@ internal class InAppController(
         val appFieldsWithChargedEventProperties =
             JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithChargedEventProperties.putAll(chargeDetails)
-        val clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(
+
+        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        val evaluatedInApps = evaluationManager.evaluateOnChargedEvent(
             appFieldsWithChargedEventProperties,
             items,
             userLocation
         )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+
+        // Handle immediate CS in-apps
+        if (evaluatedInApps.first.length() > 0) {
+            addInAppNotificationsToQueue(evaluatedInApps.first)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+
+        // Handle delayed CS in-apps
+        if (evaluatedInApps.second.length() > 0) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        }
+
+        // Handle in-action SS metadata
+        if (evaluatedInApps.third.length() > 0) {
+            scheduleInActionInApps(evaluatedInApps.third)
         }
     }
 
@@ -437,16 +506,27 @@ internal class InAppController(
         location: Location?
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        val clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
+
+        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        val evaluatedInApps = evaluationManager.evaluateOnUserAttributeChange(
             userAttributeChangedProperties,
             location,
             appFields
         )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+
+        // Handle immediate CS in-apps
+        if (evaluatedInApps.first.length() > 0) {
+            addInAppNotificationsToQueue(evaluatedInApps.first)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+
+        // Handle delayed CS in-apps
+        if (evaluatedInApps.second.length() > 0) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        }
+
+        // Handle in-action SS metadata
+        if (evaluatedInApps.third.length() > 0) {
+            scheduleInActionInApps(evaluatedInApps.third)
         }
     }
 
@@ -931,6 +1011,33 @@ internal class InAppController(
             }
         } else {
             logger.debug("Cannot present template without name.")
+        }
+    }
+
+    /**
+     * Fetch in-action in-app content from backend after inactionDuration expires
+     * Sends wzrk_fetch event with t=6 and target ID
+     *
+     * @param targetId The campaign ID (ti) to fetch content for
+     */
+    @WorkerThread
+    private fun fetchInActionInApp(targetId: Long) {
+        logger.verbose(
+            defaultLogTag,
+            "Fetching in-action in-app content for targetId: $targetId"
+        )
+
+        val fetchEvent = createInActionFetchRequest(targetId)
+        analyticsManager.sendFetchEvent(fetchEvent)
+    }
+
+    private fun createInActionFetchRequest(targetId: Long): JSONObject {
+        return JSONObject().apply {
+            put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH)
+            put(Constants.KEY_EVT_DATA, JSONObject().apply {
+                put(Constants.KEY_T, Constants.FETCH_TYPE_IN_ACTION_IN_APPS) // t=6
+                put("tgtId", targetId)
+            })
         }
     }
 }

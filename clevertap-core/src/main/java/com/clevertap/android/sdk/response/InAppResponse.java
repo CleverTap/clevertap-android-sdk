@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.data.PartitionedInApps;
+import com.clevertap.android.sdk.inapp.data.PartitionedInAppsWithInAction;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.FileStore;
@@ -137,38 +137,55 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
-            PartitionedInApps partitionedLegacyInApps = res.getPartitionedLegacyInApps();
-            if (partitionedLegacyInApps.getHasImmediateInApps()) {
+            // Legacy SS in-apps
+            PartitionedInAppsWithInAction partitionedLegacyInApps = res.getPartitionedLegacyInApps();
+            if (partitionedLegacyInApps.hasImmediateInApps()) {
                 displayInApp(partitionedLegacyInApps.getImmediateInApps());
             }
-            if (partitionedLegacyInApps.getHasDelayedInApps()) {
+            if (partitionedLegacyInApps.hasDelayedInApps()) {
                 scheduleDelayedLegacyInApps(partitionedLegacyInApps.getDelayedInApps());
             }
+            if (partitionedLegacyInApps.hasInActionInApps()) {
+                // Schedule in-action timers
+                controllerManager.getInAppController()
+                        .scheduleInActionInApps(partitionedLegacyInApps.getInActionInApps());
+            }
 
-            PartitionedInApps partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
-            if (partitionedAppLaunchServerSideInApps.getHasImmediateInApps()) {
+            PartitionedInAppsWithInAction partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
+            if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
                 controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
                         partitionedAppLaunchServerSideInApps.getImmediateInApps(),
                         coreMetaData.getLocationFromUser());
             }
-            if (partitionedAppLaunchServerSideInApps.getHasDelayedInApps()) {
+            if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {
                 controllerManager.getInAppController().onAppLaunchServerSideDelayedInAppsResponse(
                         partitionedAppLaunchServerSideInApps.getDelayedInApps(),
                         coreMetaData.getLocationFromUser()
                 );
             }
+            if (partitionedAppLaunchServerSideInApps.hasInActionInApps()) {
+                // Schedule in-action from App Launch SS meta
+                controllerManager.getInAppController()
+                        .scheduleInActionInApps(partitionedAppLaunchServerSideInApps.getInActionInApps());
+            }
 
-            PartitionedInApps partitionedClientSideInApps = res.getPartitionedClientSideInApps();
-            if (partitionedClientSideInApps.getHasImmediateInApps()) {
+            PartitionedInAppsWithInAction partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+            if (partitionedClientSideInApps.hasImmediateInApps()) {
                 inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
             }
-            if (partitionedClientSideInApps.getHasDelayedInApps()) {
+            if (partitionedClientSideInApps.hasDelayedInApps()) {
                 inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
             }
 
-            Pair<Boolean, JSONArray> ssInApps = res.getServerSideInApps();
-            if (ssInApps.getFirst()) {
-                inAppStore.storeServerSideInAppsMetaData(ssInApps.getSecond());
+            PartitionedInAppsWithInAction partitionedServerSideInAppsMeta = res.getPartitionedServerSideInAppsMeta();
+            // delayAfterTrigger only comes within inapp_notifs(Legacy SS, with in-app content)
+            if (partitionedServerSideInAppsMeta.hasImmediateInApps())
+            {
+                inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.getImmediateInApps());
+            }
+            if (partitionedServerSideInAppsMeta.hasInActionInApps())
+            {
+                inAppStore.storeServerSideInActionMetaData(partitionedServerSideInAppsMeta.getInActionInApps());
             }
 
             List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();

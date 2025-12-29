@@ -42,6 +42,7 @@ internal class InAppStore(
         const val SERVER_SIDE_MODE = "SS"
         const val NO_MODE = "NO_MODE"
         const val PREFS_DELAYED_INAPP_KEY_CS = "delayed_inapp_notifs_cs"
+        const val PREFS_INACTION_INAPP_KEY_SS = "inaction_inapp_notifs_ss"  // In-Action SS metadata
     }
 
     /**
@@ -60,13 +61,17 @@ internal class InAppStore(
             field = value
 
             when (value) {
-                CLIENT_SIDE_MODE -> removeServerSideInAppsMetaData()
+                CLIENT_SIDE_MODE -> {
+                    removeServerSideInAppsMetaData()
+                    removeServerSideInActionInAppsMetaData()
+                }
                 SERVER_SIDE_MODE -> {
                     removeClientSideInApps()
                     removeClientSideDelayedInApps()
                 }
                 NO_MODE -> {
                     removeServerSideInAppsMetaData()
+                    removeServerSideInActionInAppsMetaData()
                     removeClientSideInApps()
                     removeClientSideDelayedInApps()
                 }
@@ -86,6 +91,9 @@ internal class InAppStore(
      */
     private fun removeServerSideInAppsMetaData() {
         ctPreference.remove(PREFS_INAPP_KEY_SS)
+    }
+    private fun removeServerSideInActionInAppsMetaData() {
+        ctPreference.remove(PREFS_INACTION_INAPP_KEY_SS)
     }
 
     /**
@@ -109,6 +117,9 @@ internal class InAppStore(
      */
     fun storeServerSideInAppsMetaData(serverSideInAppsMetaData: JSONArray) {
         ctPreference.writeString(PREFS_INAPP_KEY_SS, serverSideInAppsMetaData.toString())
+    }
+    fun storeServerSideInActionMetaData(serverSideInActionInAppsMetaData: JSONArray) {
+        ctPreference.writeString(PREFS_INACTION_INAPP_KEY_SS, serverSideInActionInAppsMetaData.toString())
     }
 
     /**
@@ -170,6 +181,13 @@ internal class InAppStore(
      */
     fun readServerSideInAppsMetaData(): JSONArray {
         val ssInAppsMetaData = ctPreference.readString(PREFS_INAPP_KEY_SS, "")
+
+        if (ssInAppsMetaData.isNullOrBlank()) return JSONArray()
+
+        return JSONArray(ssInAppsMetaData)
+    }
+    fun readServerSideInActionMetaData(): JSONArray {
+        val ssInAppsMetaData = ctPreference.readString(PREFS_INACTION_INAPP_KEY_SS, "")
 
         if (ssInAppsMetaData.isNullOrBlank()) return JSONArray()
 

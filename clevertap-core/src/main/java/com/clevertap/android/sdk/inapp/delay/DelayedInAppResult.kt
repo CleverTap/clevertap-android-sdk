@@ -43,4 +43,13 @@ sealed interface DelayedInAppResult {
             override fun toString(): String = message
         }
     }
+
+    data class Discarded(val id: String, val reason: String) : DelayedInAppResult
+}
+
+sealed interface InActionResult {
+    data class ReadyToFetch(val targetId: Long, val metadata: JSONObject) : InActionResult
+    data class Error(val targetId: Long, val message: String) : InActionResult
+    data class Cancelled(val targetId: Long) : InActionResult
+    data class Discarded(val id: String, val reason: String) : InActionResult
 }

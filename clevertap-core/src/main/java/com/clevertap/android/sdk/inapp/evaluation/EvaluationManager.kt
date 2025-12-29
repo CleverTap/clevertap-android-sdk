@@ -81,10 +81,10 @@ internal class EvaluationManager(
      *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
      *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
      */
-    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {
+    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): Triple<JSONArray,JSONArray,JSONArray> {
         val event = listOf(EventAdapter(eventName, eventProperties, userLocation = userLocation))
         evaluateServerSide(event)
-        return Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
+        return Triple(evaluateClientSide(event),evaluateDelayedClientSide(event),evaluateServerSideInAction(event))
     }
 
     /**
@@ -107,10 +107,10 @@ internal class EvaluationManager(
         details: Map<String, Any>,
         items: List<Map<String, Any>>,
         userLocation: Location?
-    ): Pair<JSONArray,JSONArray> {
+    ): Triple<JSONArray,JSONArray,JSONArray> {
         val event = listOf(EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation))
         evaluateServerSide(event)
-        return  Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
+        return  Triple(evaluateClientSide(event),evaluateDelayedClientSide(event),evaluateServerSideInAction(event))
     }
 
 
@@ -138,7 +138,7 @@ internal class EvaluationManager(
         eventProperties: Map<String, Map<String, Any>>,
         userLocation: Location?,
         appFields: Map<String, Any>
-    ): Pair<JSONArray,JSONArray> {
+    ): Triple<JSONArray,JSONArray,JSONArray> {
         val eventAdapterList = eventProperties.map { eventProperty ->
             val mergedEventProperties = eventProperty.value.toMutableMap().apply {
                 putAll(appFields)
@@ -151,7 +151,7 @@ internal class EvaluationManager(
             )
         }
         evaluateServerSide(eventAdapterList)
-        return Pair(evaluateClientSide(eventAdapterList),evaluateDelayedClientSide(eventAdapterList))
+        return Triple(evaluateClientSide(eventAdapterList),evaluateDelayedClientSide(eventAdapterList),evaluateServerSideInAction(eventAdapterList))
     }
 
 
@@ -259,6 +259,40 @@ internal class EvaluationManager(
                 saveEvaluatedServerSideInAppIds()
             }
         }
+    }
+
+    /**
+     * Evaluates server-side in-action in-app metadata based on events.
+     * Similar to evaluateServerSide() but for in-action campaigns.
+     * Returns eligible in-action campaigns that should have timers scheduled.
+     *
+     * Unlike evaluateServerSide(), this does NOT add campaign IDs to evaluatedServerSideCampaignIds
+     * because in-action campaigns use a separate fetch mechanism (t=6) when the timer expires.
+     *
+     * @param events List of event adapters to evaluate against in-action metadata
+     * @return JSONArray of eligible in-action campaigns with full metadata for scheduling
+     */
+    fun evaluateServerSideInAction(events: List<EventAdapter>): JSONArray {
+        // Load in-action SS metadata from storage
+        val inActionMetadata = storeRegistry.inAppStore?.readServerSideInActionMetaData()
+            ?: return JSONArray()
+
+        val eligibleInActionCampaigns = JSONArray()
+
+        // Evaluate each event against in-action metadata
+        for (event in events) {
+            // Use core evaluate() method - checks triggers and limits
+            val eligibleInApps = evaluate(event, inActionMetadata.toList())
+
+            for (inApp in eligibleInApps) {
+                eligibleInActionCampaigns.put(inApp)
+            }
+        }
+
+        // Note: We do NOT add to evaluatedServerSideCampaignIds
+        // In-action campaigns use their own fetch flow (t=6) when timer expires
+
+        return eligibleInActionCampaigns
     }
 
     /**
