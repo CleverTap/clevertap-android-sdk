@@ -139,6 +139,7 @@ internal class InAppController(
     /**
      * Schedule multiple delayed in-apps for display after their respective delays
      */
+    @WorkerThread
     fun scheduleDelayedInAppsForAllModes(delayedInApps: JSONArray) {
         logger.verbose(
             config.accountId,
@@ -182,6 +183,8 @@ internal class InAppController(
             }
         }
     }
+
+    @WorkerThread
     fun scheduleInActionInApps(inActionMetadata: JSONArray) {
         logger.verbose(
             config.accountId,

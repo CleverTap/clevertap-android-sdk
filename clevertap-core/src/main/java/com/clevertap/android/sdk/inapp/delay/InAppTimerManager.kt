@@ -1,13 +1,13 @@
 package com.clevertap.android.sdk.inapp.delay
 
 
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.inapp.delay.InAppDelayManager.Companion
 import com.clevertap.android.sdk.utils.Clock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -16,7 +16,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -48,16 +47,16 @@ internal class InAppTimerManager(
 
     init {
         scope.launch {
-            logCoroutineInfo("lifeCycleOwner scope launch")
+            logCoroutineInfo("lifeCycleOwner scope launch, $coroutineContext, ${coroutineContext[Job]?.parent}}")
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                logCoroutineInfo("process lifeCycleOwner: started")
+                logCoroutineInfo("process lifeCycleOwner: started, $coroutineContext, ${coroutineContext[Job]?.parent}}")
                 try {
                     onAppForeground()
                     awaitCancellation()
                 } catch (c: CancellationException) {
-                    logCoroutineInfo("process lifeCycleOwner: Stopped")
+                    logCoroutineInfo("process lifeCycleOwner: Stopped, $coroutineContext, ${coroutineContext[Job]?.parent}}")
                     withContext(NonCancellable) {
-                        logCoroutineInfo("process lifeCycleOwner: withContext block")
+                        logCoroutineInfo("process lifeCycleOwner: withContext block, $coroutineContext, ${coroutineContext[Job]?.parent}}")
                         onAppBackground()
                     }
                     ensureActive()
@@ -73,6 +72,7 @@ internal class InAppTimerManager(
      * @param callback Lambda invoked after delay completes
      * @return Job handle
      */
+    @WorkerThread
     fun scheduleTimer(
         id: String,
         delayInMs: Long,
@@ -154,13 +154,6 @@ internal class InAppTimerManager(
     }
 
     /**
-     * Get all active timer IDs
-     */
-    fun getActiveTimerIds(): Set<String> {
-        return activeJobs.filterValues { it.isActive }.keys.toSet()
-    }
-
-    /**
      * App went to background - cancel all timers
      */
     suspend fun onAppBackground() {
@@ -221,14 +214,6 @@ internal class InAppTimerManager(
             accountId,
             "$TAG Foreground handling complete - Rescheduled: $rescheduledCount, Discarded: $discardedCount"
         )
-    }
-
-    /**
-     * Clean up resources
-     */
-    suspend fun cleanup() {
-        cancelAllTimers()
-        scope.cancel()
     }
 
     private fun logCoroutineInfo(msg: String) {

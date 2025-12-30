@@ -5,14 +5,6 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DEFAULT_DELAY_SECONDS
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MAX_DELAY_SECONDS
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MIN_DELAY_SECONDS
-import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_DEFAULT_INACTION_SECONDS
-import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_INACTION_DURATION
-import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MAX_INACTION_SECONDS
-import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MIN_INACTION_SECONDS
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
 import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
@@ -72,13 +64,25 @@ internal class InAppResponseAdapter(
     // ------------------------------------------------------------------------- //
 
     private val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
-    val partitionedLegacyInApps = partitionInAppsByDelayAndInAction(legacyInApps.second)
+    val partitionedLegacyInApps: DurationPartitionedInApps.ImmediateDelayedAndInAction =
+        InAppDurationPartitioner.partitionLegacyInApps(legacyInApps.second)
+
     private val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
-    val partitionedClientSideInApps = partitionInAppsByDelayAndInAction(clientSideInApps.second)
+    val partitionedClientSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionClientSideInApps(clientSideInApps.second)
+
     private val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
-    val partitionedServerSideInAppsMeta = partitionInAppsByDelayAndInAction(serverSideInApps.second)
+    val partitionedServerSideInAppsMeta: DurationPartitionedInApps.UnknownAndInAction =
+        InAppDurationPartitioner.partitionServerSideMetaInApps(serverSideInApps.second)
+
     private val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
-    val partitionedAppLaunchServerSideInApps = partitionInAppsByDelayAndInAction(appLaunchServerSideInApps.second)
+    val partitionedAppLaunchServerSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionAppLaunchServerSideInApps(appLaunchServerSideInApps.second)
+
+    private val appLaunchServerSideMetaInApps: Pair<Boolean, JSONArray?> =
+        responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_META_KEY)
+    val partitionedAppLaunchServerSideMetaInApps: DurationPartitionedInApps.InActionOnly =
+        InAppDurationPartitioner.partitionAppLaunchServerSideMetaInApps(appLaunchServerSideMetaInApps.second)
 
     private val preloadImages: List<String>
     private val preloadGifs: List<String>
@@ -169,49 +173,6 @@ internal class InAppResponseAdapter(
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
-
-
-    private fun partitionInAppsByDelayAndInAction(
-        inAppsArray: JSONArray?
-    ): PartitionedInAppsWithInAction {
-         /*An in-app can have EITHER (never both):
-         delayAfterTrigger → Existing delayed flow
-         inactionDuration → New in-action flow
-         delayAfterTrigger always comes with in-app content*/
-        if (inAppsArray == null) {
-            return PartitionedInAppsWithInAction.empty()
-        }
-
-        val immediate = mutableListOf<JSONObject>()
-        val delayed = mutableListOf<JSONObject>()
-        val inAction = mutableListOf<JSONObject>()
-
-        inAppsArray.iterator<JSONObject> { inApp ->
-            when {
-                hasInAction(inApp) -> inAction.add(inApp)
-
-                hasDelay(inApp) -> delayed.add(inApp)
-
-                else -> immediate.add(inApp)
-            }
-        }
-
-        return PartitionedInAppsWithInAction(
-            immediateInApps = JSONArray(immediate),
-            delayedInApps = JSONArray(delayed),
-            inActionInApps = JSONArray(inAction)
-        )
-    }
-
-    private fun hasInAction(inApp: JSONObject): Boolean {
-        val inactionSeconds = inApp.optInt(INAPP_INACTION_DURATION, INAPP_DEFAULT_INACTION_SECONDS)
-        return inactionSeconds in INAPP_MIN_INACTION_SECONDS..INAPP_MAX_INACTION_SECONDS
-    }
-
-    private fun hasDelay(inApp: JSONObject): Boolean {
-        val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
-        return delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS
-    }
 }
 
 enum class CtCacheType {

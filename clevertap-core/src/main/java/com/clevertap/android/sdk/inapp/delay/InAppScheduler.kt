@@ -71,7 +71,7 @@ internal class InAppScheduler<T>(
     /**
      * Schedule a single in-app with timer
      */
-    @AnyThread
+    @WorkerThread
     private fun scheduleWithTimer(
         id: String,
         delayInMs: Long,
@@ -81,7 +81,7 @@ internal class InAppScheduler<T>(
             when (timerResult) {
                 is InAppTimerManager.TimerResult.Completed -> {
                     // Timer completed, retrieve and process
-                    scope.launch {
+                    scope.launch { //TODO: do we require relaunch of coroutine? callback ideally should be running on provider's thread, relaunch will make operation non-atomic. from scheduling till callback execution op should be atomic
                         val data = storageStrategy.retrieveAfterTimer(id)
                         val result = if (data != null) {
                             dataExtractor.createSuccessResult(id, data)
@@ -130,7 +130,7 @@ internal class InAppScheduler<T>(
     /**
      * Clean up resources
      */
-    suspend fun cleanup() {
+    fun cleanup() {
         scope.cancel()
     }
 }

@@ -25,7 +25,7 @@ internal interface InAppDataExtractor<T> {
  * Data extractor for delayed in-apps
  */
 internal class DelayedInAppDataExtractor : InAppDataExtractor<DelayedInAppResult> {
-    override fun extractDelay(inApp: JSONObject): Long {
+    override fun extractDelay(inApp: JSONObject): Long {// TODO: check dupe logic present anywhere
         val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
         return if (delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) {
             delaySeconds.seconds.inWholeMilliseconds
@@ -38,7 +38,7 @@ internal class DelayedInAppDataExtractor : InAppDataExtractor<DelayedInAppResult
         return DelayedInAppResult.Success(data, id)
     }
 
-    override fun createErrorResult(id: String, message: String): DelayedInAppResult {
+    override fun createErrorResult(id: String, message: String): DelayedInAppResult { // TODO: use enums for error msg
         return DelayedInAppResult.Error(
             DelayedInAppResult.Error.ErrorReason.UNKNOWN,
             id,
@@ -57,7 +57,7 @@ internal class DelayedInAppDataExtractor : InAppDataExtractor<DelayedInAppResult
  * Data extractor for in-action in-apps
  */
 internal class InActionDataExtractor : InAppDataExtractor<InActionResult> {
-    override fun extractDelay(inApp: JSONObject): Long {
+    override fun extractDelay(inApp: JSONObject): Long {// TODO: check dupe logic present anywhere
         val inactionSeconds = inApp.optInt(INAPP_INACTION_DURATION, INAPP_DEFAULT_INACTION_SECONDS)
         return if (inactionSeconds in INAPP_MIN_INACTION_SECONDS..INAPP_MAX_INACTION_SECONDS) {
             inactionSeconds.seconds.inWholeMilliseconds
@@ -70,7 +70,7 @@ internal class InActionDataExtractor : InAppDataExtractor<InActionResult> {
         return InActionResult.ReadyToFetch(id.toLong(), data)
     }
 
-    override fun createErrorResult(id: String, message: String): InActionResult {
+    override fun createErrorResult(id: String, message: String): InActionResult {// TODO: use enums for error msg
         return InActionResult.Error(id.toLong(), message)
     }
     override fun createDiscardedResult(id: String): InActionResult {

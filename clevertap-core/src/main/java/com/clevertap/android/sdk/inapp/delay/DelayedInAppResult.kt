@@ -5,7 +5,7 @@ import org.json.JSONObject
 /**
  * Sealed class representing the result of a delayed in-app callback
  */
-sealed interface DelayedInAppResult {
+sealed interface DelayedInAppResult { // TODO: correct params ordering like InActionResult
 
     /**
      * Success state - in-app was successfully retrieved and is ready for display

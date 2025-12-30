@@ -85,6 +85,7 @@ public interface Constants {
 
     String INAPP_NOTIFS_STALE_KEY = "inapp_stale";
     String INAPP_NOTIFS_APP_LAUNCHED_KEY = "inapp_notifs_applaunched";
+    String INAPP_NOTIFS_APP_LAUNCHED_META_KEY = "inapp_notifs_applaunched_meta";
 
     String INAPP_NOTIFS_KEY_CS = "inapp_notifs_cs";
     String INAPP_NOTIFS_KEY_SS = "inapp_notifs_ss";

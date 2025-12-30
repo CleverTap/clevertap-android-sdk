@@ -10,8 +10,8 @@ import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
+import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.data.PartitionedInAppsWithInAction;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.FileStore;
@@ -138,7 +138,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             // Legacy SS in-apps
-            PartitionedInAppsWithInAction partitionedLegacyInApps = res.getPartitionedLegacyInApps();
+            DurationPartitionedInApps.ImmediateDelayedAndInAction partitionedLegacyInApps = res.getPartitionedLegacyInApps();
             if (partitionedLegacyInApps.hasImmediateInApps()) {
                 displayInApp(partitionedLegacyInApps.getImmediateInApps());
             }
@@ -151,7 +151,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                         .scheduleInActionInApps(partitionedLegacyInApps.getInActionInApps());
             }
 
-            PartitionedInAppsWithInAction partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
+            DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
             if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
                 controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
                         partitionedAppLaunchServerSideInApps.getImmediateInApps(),
@@ -163,13 +163,15 @@ public class InAppResponse extends CleverTapResponseDecorator {
                         coreMetaData.getLocationFromUser()
                 );
             }
-            if (partitionedAppLaunchServerSideInApps.hasInActionInApps()) {
+
+            DurationPartitionedInApps.InActionOnly partitionedAppLaunchServerSideMetaInApps = res.getPartitionedAppLaunchServerSideMetaInApps();
+            if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
                 // Schedule in-action from App Launch SS meta
                 controllerManager.getInAppController()
-                        .scheduleInActionInApps(partitionedAppLaunchServerSideInApps.getInActionInApps());
+                        .scheduleInActionInApps(partitionedAppLaunchServerSideMetaInApps.getInActionInApps());
             }
 
-            PartitionedInAppsWithInAction partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+            DurationPartitionedInApps.ImmediateAndDelayed partitionedClientSideInApps = res.getPartitionedClientSideInApps();
             if (partitionedClientSideInApps.hasImmediateInApps()) {
                 inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
             }
@@ -177,11 +179,11 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
             }
 
-            PartitionedInAppsWithInAction partitionedServerSideInAppsMeta = res.getPartitionedServerSideInAppsMeta();
+            DurationPartitionedInApps.UnknownAndInAction partitionedServerSideInAppsMeta = res.getPartitionedServerSideInAppsMeta();
             // delayAfterTrigger only comes within inapp_notifs(Legacy SS, with in-app content)
-            if (partitionedServerSideInAppsMeta.hasImmediateInApps())
+            if (partitionedServerSideInAppsMeta.hasUnknownDurationInApps())
             {
-                inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.getImmediateInApps());
+                inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.getUnknownDurationInApps());
             }
             if (partitionedServerSideInAppsMeta.hasInActionInApps())
             {
