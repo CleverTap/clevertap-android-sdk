@@ -68,9 +68,9 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     PROFILE_IDENTIFIERS_MISMATCH(531, "Profile Identifiers mismatch with the previously saved ones"),
     
     // Structural limit errors (540-544)
-    DEPTH_LIMIT_EXCEEDED(541, "Event data exceeded maximum nesting depth. Depth: %s, Limit: %s"),
-    ARRAY_KEY_COUNT_LIMIT_EXCEEDED(542, "Event data exceeded maximum array key count. Count: %s, Limit: %s"),
-    OBJECT_KEY_COUNT_LIMIT_EXCEEDED(543, "Event data exceeded maximum object key count. Count: %s, Limit: %s"),
+    DEPTH_LIMIT_EXCEEDED(540, "Event data exceeded maximum nesting depth. Depth: %s, Limit: %s"),
+    ARRAY_KEY_COUNT_LIMIT_EXCEEDED(541, "Event data exceeded maximum array key count. Count: %s, Limit: %s"),
+    OBJECT_KEY_COUNT_LIMIT_EXCEEDED(542, "Event data exceeded maximum object key count. Count: %s, Limit: %s"),
     ARRAY_LENGTH_LIMIT_EXCEEDED(543, "Event data exceeded maximum array length. Length: %s, Limit: %s"),
     KV_PAIR_COUNT_LIMIT_EXCEEDED(544, "Event data exceeded maximum key-value pair count. Count: %s, Limit: %s"),
     
