@@ -169,7 +169,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
                 maxKeyLength = maxKeyLength,
                 valueCharsNotAllowed = valueCharsNotAllowed,
                 maxValueLength = maxValueLength,
-                depth = depth + 1
+                depth = depth
             )
 
             if (cleanedValue != null) {
@@ -224,9 +224,9 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
                 maxKeyLength = maxKeyLength,
                 valueCharsNotAllowed = valueCharsNotAllowed,
                 maxValueLength = maxValueLength,
-                depth = depth
+                depth = depth + 1
             )
-            is JSONObject -> cleanJSONObject(value, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            is JSONObject -> cleanJSONObject(value, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth + 1)
             is List<*> -> cleanList(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
             is Array<*> -> cleanList(value.toList(), parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
             is JSONArray -> cleanJSONArray(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
@@ -317,7 +317,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
                 is JSONArray -> arrayKeyCount++
             }
 
-            val cleanedValue = cleanAnyValue(value, cleanedKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth + 1)
+            val cleanedValue = cleanAnyValue(value, cleanedKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
 
             if (cleanedValue != null) {
                 cleaned.put(cleanedKey, cleanedValue)
