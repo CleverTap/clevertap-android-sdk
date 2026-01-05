@@ -82,6 +82,7 @@ public interface Constants {
     String INAPP_NOTIF_DARKEN_SCREEN = "dk";
     String INAPP_NOTIF_SHOW_CLOSE = "sc";
     String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
+    String INAPP_NOTIFS_META_KEY = "inapp_notifs_meta";
 
     String INAPP_NOTIFS_STALE_KEY = "inapp_stale";
     String INAPP_NOTIFS_APP_LAUNCHED_KEY = "inapp_notifs_applaunched";

@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp.data
 
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.ImmediateAndDelayed
-import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.ImmediateDelayedAndInAction
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.InActionOnly
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.UnknownAndInAction
 import org.json.JSONArray
@@ -16,10 +15,9 @@ import org.json.JSONArray
  * - **Unknown**: Actual duration (immediate/delayed) determined later via eval flow
  *
  * Subclasses:
- * - [ImmediateAndDelayed]: For Client-Side and AppLaunch Server-Side in-apps
+ * - [ImmediateAndDelayed]: For Legacy, Client-Side, and AppLaunch Server-Side in-apps
  * - [UnknownAndInAction]: For Server-Side metadata in-apps
- * - [ImmediateDelayedAndInAction]: For Legacy in-apps
- * - [InActionOnly]: For AppLaunch Server-Side metadata in-apps
+ * - [InActionOnly]: For Legacy metadata and AppLaunch Server-Side metadata in-apps
  */
 sealed class DurationPartitionedInApps {
 
@@ -27,10 +25,12 @@ sealed class DurationPartitionedInApps {
      * Partition containing immediate and delayed duration in-apps.
      *
      * Used for:
+     * - Legacy in-apps (`inapp_notifs`)
      * - Client-Side in-apps (`inapp_notifs_cs`)
      * - AppLaunch Server-Side in-apps (`inapp_notifs_applaunched`)
      *
-     * Note: These sources do NOT support `inactionDuration`.
+     * Note: These sources do NOT contain `inactionDuration` items.
+     * InAction items come separately in their respective `_meta` keys.
      */
     data class ImmediateAndDelayed(
         val immediateInApps: JSONArray,
@@ -74,9 +74,10 @@ sealed class DurationPartitionedInApps {
      * Partition containing only inAction duration in-apps.
      *
      * Used for:
+     * - Legacy metadata in-apps (`inapp_notifs_meta`)
      * - AppLaunch Server-Side metadata in-apps (`inapp_notifs_applaunched_meta`)
      *
-     * All items have `inactionDuration` → fetch content after inactivity timer
+     * All items have `inactionDuration` → fetch content after inactivity timer.
      */
     data class InActionOnly(
         val inActionInApps: JSONArray
@@ -86,34 +87,6 @@ sealed class DurationPartitionedInApps {
 
         companion object {
             fun empty() = InActionOnly(JSONArray())
-        }
-    }
-
-    /**
-     * Partition containing all duration types: immediate, delayed, and inAction.
-     *
-     * Used for:
-     * - Legacy in-apps (`inapp_notifs`)
-     *
-     * Rules:
-     * - An in-app can have EITHER `delayAfterTrigger` OR `inactionDuration`, never both
-     * - `delayAfterTrigger` always comes WITH in-app content
-     * - `inactionDuration` always comes WITHOUT content (content fetched after timer)
-     */
-    data class ImmediateDelayedAndInAction(
-        val immediateInApps: JSONArray,
-        val delayedInApps: JSONArray,
-        val inActionInApps: JSONArray
-    ) : DurationPartitionedInApps() {
-
-        fun hasImmediateInApps(): Boolean = immediateInApps.length() > 0
-
-        fun hasDelayedInApps(): Boolean = delayedInApps.length() > 0
-
-        fun hasInActionInApps(): Boolean = inActionInApps.length() > 0
-
-        companion object {
-            fun empty() = ImmediateDelayedAndInAction(JSONArray(), JSONArray(), JSONArray())
         }
     }
 }

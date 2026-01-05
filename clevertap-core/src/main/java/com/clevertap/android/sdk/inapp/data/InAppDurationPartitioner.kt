@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp.data
 
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.ImmediateAndDelayed
-import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.ImmediateDelayedAndInAction
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.InActionOnly
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.UnknownAndInAction
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DEFAULT_DELAY_SECONDS
@@ -31,7 +30,8 @@ import org.json.JSONObject
  * - **Unknown**: actual duration determined later via eval flow (used for SS meta)
  *
  * Provides specialized partition functions for different in-app sources:
- * - [partitionLegacyInApps]: immediate + delayed + inAction
+ * - [partitionLegacyInApps]: immediate + delayed
+ * - [partitionLegacyMetaInApps]: inAction only
  * - [partitionClientSideInApps]: immediate + delayed
  * - [partitionServerSideMetaInApps]: unknown + inAction
  * - [partitionAppLaunchServerSideInApps]: immediate + delayed
@@ -40,38 +40,48 @@ import org.json.JSONObject
 internal object InAppDurationPartitioner {
 
     /**
-     * Partitions legacy in-apps by duration: immediate, delayed, and inAction.
+     * Partitions legacy in-apps by duration: immediate and delayed.
      *
-     * Rules:
-     * - An in-app can have EITHER `delayAfterTrigger` OR `inactionDuration`, never both
-     * - `delayAfterTrigger` always comes with in-app content
-     * - `inactionDuration` always comes without content (needs fetch after timer)
+     * Note: This source does NOT contain `inactionDuration` items.
+     * InAction items come separately in `inapp_notifs_meta`.
      *
      * @param inAppsArray The JSON array of legacy in-app notifications
-     * @return [ImmediateDelayedAndInAction] containing partitioned in-apps
+     * @return [ImmediateAndDelayed] containing partitioned in-apps
      */
-    fun partitionLegacyInApps(inAppsArray: JSONArray?): ImmediateDelayedAndInAction {
+    fun partitionLegacyInApps(inAppsArray: JSONArray?): ImmediateAndDelayed {
         if (inAppsArray == null) {
-            return ImmediateDelayedAndInAction.empty()
+            return ImmediateAndDelayed.empty()
         }
 
         val immediate = mutableListOf<JSONObject>()
         val delayed = mutableListOf<JSONObject>()
-        val inAction = mutableListOf<JSONObject>()
 
         inAppsArray.iterator<JSONObject> { inApp ->
             when {
-                hasInActionDuration(inApp) -> inAction.add(inApp)
                 hasDelayedDuration(inApp) -> delayed.add(inApp)
                 else -> immediate.add(inApp)
             }
         }
 
-        return ImmediateDelayedAndInAction(
+        return ImmediateAndDelayed(
             immediateInApps = JSONArray(immediate),
-            delayedInApps = JSONArray(delayed),
-            inActionInApps = JSONArray(inAction)
+            delayedInApps = JSONArray(delayed)
         )
+    }
+
+    /**
+     * Wraps legacy metadata in-apps as inAction only.
+     *
+     * All items in `inapp_notifs_meta` have `inactionDuration`
+     * → fetch content after inactivity timer.
+     *
+     * Note: No partitioning needed as all items are inAction.
+     *
+     * @param inAppsArray The JSON array of legacy metadata in-app notifications
+     * @return [InActionOnly] containing inAction in-apps
+     */
+    fun partitionLegacyMetaInApps(inAppsArray: JSONArray?): InActionOnly {
+        return InActionOnly(inAppsArray ?: JSONArray())
     }
 
     /**

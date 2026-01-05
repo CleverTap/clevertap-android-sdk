@@ -63,26 +63,43 @@ internal class InAppResponseAdapter(
     //  Client-Side (inapp_notifs_cs) does NOT support inactionDuration          //
     // ------------------------------------------------------------------------- //
 
-    private val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
-    val partitionedLegacyInApps: DurationPartitionedInApps.ImmediateDelayedAndInAction =
+    // Legacy in-apps: supports immediate + delayed durations
+    private val legacyInApps: Pair<Boolean, JSONArray?> =
+        responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
+    val partitionedLegacyInApps: DurationPartitionedInApps.ImmediateAndDelayed =
         InAppDurationPartitioner.partitionLegacyInApps(legacyInApps.second)
 
-    private val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
+    // Legacy metadata in-apps: supports inAction duration only
+    private val legacyMetaInApps: Pair<Boolean, JSONArray?> =
+        responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_META_KEY)
+    val partitionedLegacyMetaInApps: DurationPartitionedInApps.InActionOnly =
+        InAppDurationPartitioner.partitionLegacyMetaInApps(legacyMetaInApps.second)
+
+    // Client-side in-apps: supports immediate + delayed durations
+    private val clientSideInApps: Pair<Boolean, JSONArray?> =
+        responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
     val partitionedClientSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
         InAppDurationPartitioner.partitionClientSideInApps(clientSideInApps.second)
 
-    private val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
+    // Server-side metadata in-apps: supports unknown + inAction durations
+    private val serverSideInApps: Pair<Boolean, JSONArray?> =
+        responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
     val partitionedServerSideInAppsMeta: DurationPartitionedInApps.UnknownAndInAction =
         InAppDurationPartitioner.partitionServerSideMetaInApps(serverSideInApps.second)
 
-    private val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    // App-launch server-side in-apps: supports immediate + delayed durations
+    private val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> =
+        responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
     val partitionedAppLaunchServerSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
         InAppDurationPartitioner.partitionAppLaunchServerSideInApps(appLaunchServerSideInApps.second)
 
+    // App-launch server-side metadata in-apps: supports inAction duration only
     private val appLaunchServerSideMetaInApps: Pair<Boolean, JSONArray?> =
         responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_META_KEY)
     val partitionedAppLaunchServerSideMetaInApps: DurationPartitionedInApps.InActionOnly =
-        InAppDurationPartitioner.partitionAppLaunchServerSideMetaInApps(appLaunchServerSideMetaInApps.second)
+        InAppDurationPartitioner.partitionAppLaunchServerSideMetaInApps(
+            appLaunchServerSideMetaInApps.second
+        )
 
     private val preloadImages: List<String>
     private val preloadGifs: List<String>
