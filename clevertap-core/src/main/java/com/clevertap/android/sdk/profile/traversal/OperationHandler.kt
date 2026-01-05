@@ -154,12 +154,6 @@ internal class OperationHandler(
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val processedOldValue = if (oldValue is String) {
-            ProfileOperationUtils.processDatePrefix(oldValue)
-        } else {
-            oldValue
-        }
-        
-        changes[path] = ProfileChange(processedOldValue, Constants.GET_MARKER)
+        changes[path] = ProfileChange(oldValue, Constants.GET_MARKER)
     }
 }
