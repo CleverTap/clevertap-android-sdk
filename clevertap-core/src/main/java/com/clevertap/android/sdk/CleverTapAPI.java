@@ -2072,8 +2072,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param name The name of the profile property to retrieve
      * @return The value of the specified property, or null if the property doesn't exist or
-     *         personalization is disabled. The return type can be String, Number, Boolean, or
-     *         a date string with "$D_" prefix.
+     *         personalization is disabled. The return type can be String, Number, Boolean
      */
     @SuppressWarnings({"unused"})
     @WorkerThread
@@ -2091,8 +2090,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns null if personalization is disabled in the CleverTap configuration.</p>
      *
      * <p><b>Note on Date Properties:</b> Date-related property values are returned as Unix timestamps
-     * (seconds since January 1, 1970, 00:00:00 GMT) prefixed with "$D_". For example, a date property
-     * might appear as <code>"birthDate": "$D_1609459200"</code> in the returned JSON.</p>
+     * (seconds since January 1, 1970, 00:00:00 GMT). For example, a date property
+     * might appear as <code>"birthDate": 1609459200</code> in the returned JSON.</p>
      *
      * <p><b>Example usage:</b></p>
      * <pre>{@code
