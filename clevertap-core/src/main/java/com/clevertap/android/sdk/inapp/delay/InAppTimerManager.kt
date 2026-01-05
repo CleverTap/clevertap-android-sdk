@@ -35,15 +35,17 @@ internal class InAppTimerManager(
     private val clock: Clock = Clock.SYSTEM,
     private val scope: CoroutineScope = ProcessLifecycleOwner.get().lifecycleScope +
             Dispatchers.Default.limitedParallelism(PARALLEL_SCHEDULERS),
-    private val lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get()
+    private val lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(),
+    tagSuffix: String = ""
 ) {
     companion object {
         private const val PARALLEL_SCHEDULERS = 20
-        private const val TAG = "[InAppTimerManager]:"
     }
+    private val TAG = "[InAppTimerManager:$tagSuffix]:"
 
     private val activeJobs = ConcurrentHashMap<String, Job>()
     private val cancelledJobs = ConcurrentHashMap<String, CancelledJobData>()
+    private val scheduleLock = Any()
 
     init {
         scope.launch {
@@ -77,47 +79,45 @@ internal class InAppTimerManager(
         id: String,
         delayInMs: Long,
         callback: (TimerResult) -> Unit
-    ): Job {
-        // Keep existing active job if present
-        activeJobs[id]?.let { existingJob ->
-            if (existingJob.isActive) {
+    ): Job =
+        synchronized(scheduleLock) {
+            // Keep existing active job if present
+            activeJobs[id]?.takeIf { it.isActive }?.let {
+                logger.verbose(accountId, "$TAG Timer with id'$id' already scheduled, keeping existing")
+                return it
+            }
+
+            scope.launch {
+                val scheduledAt = clock.currentTimeMillis()
+                try {
+                    delay(delayInMs)
+
+                    // Timer completed successfully
+                    callback(TimerResult.Completed(id, scheduledAt))
+                    cancelledJobs.remove(id)
+
+                } catch (e: CancellationException) {
+                    logger.verbose(accountId, "$TAG Cancelled timer with id: $id")
+                    cancelledJobs.putIfAbsent(
+                        id,
+                        CancelledJobData(delayInMs, scheduledAt, callback)
+                    )
+                    ensureActive() // rethrow cancellation
+                } catch (e: Exception) {
+                    logger.verbose(accountId, "$TAG Error in timer with id: $id", e)
+                    callback(TimerResult.Error(id, e))
+                    cancelledJobs.remove(id)
+                } finally {
+                    activeJobs.remove(id)
+                }
+            }.also {
+                activeJobs[id] = it
                 logger.verbose(
                     accountId,
-                    "$TAG Timer with id '$id' already scheduled, keeping existing"
+                    "$TAG Scheduled timer with id '$id' for ${delayInMs}ms delay"
                 )
-                return existingJob
-            } else {
-                activeJobs.remove(id)
             }
         }
-
-        val job = scope.launch {
-            val scheduledAt = clock.currentTimeMillis()
-            try {
-                delay(delayInMs)
-
-                // Timer completed successfully
-                callback(TimerResult.Completed(id, scheduledAt))
-                cancelledJobs.remove(id)
-
-            } catch (e: CancellationException) {
-                logger.verbose(accountId, "$TAG Cancelled timer with id: $id")
-                cancelledJobs.putIfAbsent(id, CancelledJobData(delayInMs, scheduledAt, callback))
-                ensureActive() // rethrow cancellation
-            } catch (e: Exception) {
-                logger.verbose(accountId, "$TAG Error in timer with id: $id", e)
-                callback(TimerResult.Error(id, e))
-                cancelledJobs.remove(id)
-            } finally {
-                activeJobs.remove(id)
-            }
-        }
-
-        activeJobs[id] = job
-        logger.verbose(accountId, "$TAG Scheduled timer with id '$id' for ${delayInMs}ms delay")
-
-        return job
-    }
 
     /**
      * Cancel a specific timer by ID

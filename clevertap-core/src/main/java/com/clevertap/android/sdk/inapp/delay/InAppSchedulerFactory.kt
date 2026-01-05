@@ -30,7 +30,8 @@ internal object InAppSchedulerFactory {
             logger,
             clock,
             sharedScope,
-            lifecycleOwner
+            lifecycleOwner,
+            "Delayed"
         )
         val storageStrategy = DelayedInAppStorageStrategy(accountId, logger, delayedLegacyInAppStore)
         val dataExtractor = DelayedInAppDataExtractor()
@@ -61,7 +62,8 @@ internal object InAppSchedulerFactory {
             logger,
             clock,
             sharedScope,
-            lifecycleOwner
+            lifecycleOwner,
+            "InAction"
         )
         val storageStrategy = InActionStorageStrategy(logger, accountId)
         val dataExtractor = InActionDataExtractor()
