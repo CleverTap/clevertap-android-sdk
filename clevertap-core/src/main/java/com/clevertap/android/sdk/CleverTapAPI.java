@@ -2072,7 +2072,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param name The name of the profile property to retrieve
      * @return The value of the specified property, or null if the property doesn't exist or
-     *         personalization is disabled. The return type can be String, Number, Boolean
+     *         personalization is disabled. The return type can be String, Number, Boolean, or
+     *         a date string with "$D_" prefix.
      */
     @SuppressWarnings({"unused"})
     @WorkerThread
@@ -2090,8 +2091,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns null if personalization is disabled in the CleverTap configuration.</p>
      *
      * <p><b>Note on Date Properties:</b> Date-related property values are returned as Unix timestamps
-     * (seconds since January 1, 1970, 00:00:00 GMT). For example, a date property
-     * might appear as <code>"birthDate": 1609459200</code> in the returned JSON.</p>
+     * (seconds since January 1, 1970, 00:00:00 GMT) prefixed with "$D_". For example, a date property
+     * might appear as <code>"birthDate": "$D_1609459200"</code> in the returned JSON.</p>
      *
      * <p><b>Example usage:</b></p>
      * <pre>{@code
@@ -2426,7 +2427,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void pushChargedEvent(HashMap<String, Object> chargeDetails,
-            ArrayList<HashMap<String, Object>> items) {
+                                 ArrayList<HashMap<String, Object>> items) {
         coreState.getAnalyticsManager().pushChargedEvent(chargeDetails, items);
     }
 
@@ -2802,17 +2803,17 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static void addNotificationRenderedListener(String id, final NotificationRenderedListener notificationRenderedListener) {
-       sNotificationRenderedListenerMap.put(id, notificationRenderedListener);
+        sNotificationRenderedListenerMap.put(id, notificationRenderedListener);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static NotificationRenderedListener getNotificationRenderedListener(String id) {
-       return sNotificationRenderedListenerMap.get(id);
+        return sNotificationRenderedListenerMap.get(id);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static NotificationRenderedListener removeNotificationRenderedListener(String id) {
-       return sNotificationRenderedListenerMap.remove(id);
+        return sNotificationRenderedListenerMap.remove(id);
     }
 
     /**
@@ -3356,7 +3357,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     //TODO: start synchronizing entire flow from here
     public Future<?> renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
-            Bundle extras) {
+                                            Bundle extras) {
 
         CleverTapInstanceConfig config = coreState.getConfig();
         Future<?> future = null;
@@ -3389,7 +3390,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public void renderPushNotificationOnCallerThread(@NonNull INotificationRenderer iNotificationRenderer, Context context,
-            Bundle extras) {
+                                                     Bundle extras) {
 
         CleverTapInstanceConfig config = coreState.getConfig();
 
