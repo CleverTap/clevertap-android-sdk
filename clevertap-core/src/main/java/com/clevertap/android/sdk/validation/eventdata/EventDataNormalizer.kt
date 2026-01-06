@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventdata
 
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.EventDataMetrics
 import com.clevertap.android.sdk.validation.pipeline.EventDataNormalizationResult
@@ -29,10 +30,6 @@ import kotlin.math.max
  * - Tracking structural metrics
  */
 class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult> {
-
-    companion object {
-        private const val DATE_PREFIX = "\$D_"
-    }
 
     // Metrics tracking
     private var maxDepth = 0
@@ -412,7 +409,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
             is Int, is Long, is Float, is Double, is Boolean -> value
             is String -> cleanStringValue(value, key, valueCharsNotAllowed, maxValueLength)
             is Char -> cleanPrimitiveValue(value.toString(), key, valueCharsNotAllowed, maxValueLength)
-            is Date -> "$DATE_PREFIX${value.time / 1000}"
+            is Date -> "${Constants.DATE_PREFIX}${value.time / 1000}"
             else -> {
                 recordRemoval(key, RemovalReason.NON_PRIMITIVE_VALUE, value)
                 null
