@@ -249,9 +249,9 @@ class ValidationConfig private constructor(
         )
 
         val DEFAULT_RESTRICTED_MULTI_VALUE_FIELDS = setOf(
-            "Name", "Email", "Education", "Married", "DOB",
-            "Gender", "Phone", "Age", "FBID", "GPID", "Birthday",
-            "Identity"
+            "name", "email", "education", "married", "dob",
+            "gender", "phone", "age", "fbid", "gpid", "birthday",
+            "identity"
         )
 
 

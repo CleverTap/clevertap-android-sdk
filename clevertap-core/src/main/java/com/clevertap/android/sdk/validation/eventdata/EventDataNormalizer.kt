@@ -140,7 +140,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
             }
 
             // Drop restricted multi-value fields at 0th level if value is object or array
-            if (depth == 0 && restrictedMultiValueFields?.contains(cleanedKey) == true) {
+            if (depth == 0 && restrictedMultiValueFields?.contains(cleanedKey.lowercase()) == true) {
                 val isObjectOrArray = when (value) {
                     is Map<*, *>, is JSONObject, is List<*>, is Array<*>, is JSONArray -> true
                     else -> false
