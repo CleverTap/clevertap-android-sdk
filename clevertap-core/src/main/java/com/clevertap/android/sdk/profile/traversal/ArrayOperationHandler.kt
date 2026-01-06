@@ -69,7 +69,7 @@ internal class ArrayOperationHandler() {
         for (i in 0 until newArray.length()) {
             val item = newArray.get(i)
             if (item is String) {
-                val processedItem = ProfileOperationUtils.processDatePrefix(item)
+                val processedItem = ProfileOperationUtils.processDatePrefixes(item)
                 oldArray.put(processedItem)
                 modified = true
             }
@@ -112,6 +112,7 @@ internal class ArrayOperationHandler() {
 
     /**
      * Replaces entire array with new array.
+     * Processes date prefixes for comparison, but stores original value.
      */
     private fun handleArrayReplacement(
         parentJson: JSONObject,
@@ -121,9 +122,12 @@ internal class ArrayOperationHandler() {
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        if (!JsonComparisonUtils.areEqual(oldArray, newArray)) {
-            parentJson.put(key, newArray)
-            changes[path] = ProfileChange(oldArray, newArray)
+        val processedOldArray = ProfileOperationUtils.processDatePrefixes(oldArray)
+        val processedNewArray = ProfileOperationUtils.processDatePrefixes(newArray)
+        
+        if (!JsonComparisonUtils.areEqual(processedOldArray, processedNewArray)) {
+            parentJson.put(key, newArray)  // Store original value with prefix
+            changes[path] = ProfileChange(processedOldArray, processedNewArray)  // Track processed values
         }
     }
 
@@ -166,9 +170,13 @@ internal class ArrayOperationHandler() {
                         arrayModified = true
                     }
                 }
-                operation == ProfileOperation.UPDATE && !JsonComparisonUtils.areEqual(oldElement, newElement) -> {
-                    oldArray.put(i, newElement)
-                    arrayModified = true
+                operation == ProfileOperation.UPDATE -> {
+                    val processedOldElement = ProfileOperationUtils.processDatePrefixes(oldElement)
+                    val processedNewElement = ProfileOperationUtils.processDatePrefixes(newElement)
+                    if (!JsonComparisonUtils.areEqual(processedOldElement, processedNewElement)) {
+                        oldArray.put(i, newElement)  // Store original value with prefix
+                        arrayModified = true
+                    }
                 }
             }
         }
@@ -243,12 +251,7 @@ internal class ArrayOperationHandler() {
                 }
                 else -> {
                     // Report the element value without modification
-                    val processedOldValue = if (oldElement is String) {
-                        ProfileOperationUtils.processDatePrefix(oldElement)
-                    } else {
-                        oldElement
-                    }
-                    changes[elementPath] = ProfileChange(processedOldValue, Constants.GET_MARKER)
+                    changes[elementPath] = ProfileChange(oldElement, Constants.GET_MARKER)
                 }
             }
         }
