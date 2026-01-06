@@ -38,17 +38,32 @@ internal class ArrayOperationHandler() {
 
         when (operation) {
             ProfileOperation.ARRAY_ADD -> handleArrayAdd(oldArray, newArray, currentPath, changes)
-            ProfileOperation.ARRAY_REMOVE -> handleArrayRemove(parentJson, key, oldArray, newArray, currentPath, changes)
-            ProfileOperation.GET -> {
-                getArrayElements(oldArray, newArray, currentPath, changes, recursiveTraversal)
-            }
-            ProfileOperation.UPDATE, ProfileOperation.INCREMENT, ProfileOperation.DECREMENT -> {
-                if (ArrayMergeUtils.shouldMergeArrayElements(newArray)) {
-                    processArrayElements(oldArray, newArray, currentPath, changes, operation, recursiveTraversal)
-                } else {
-                    handleArrayReplacement(parentJson, key, oldArray, newArray, currentPath, changes)
-                }
-            }
+            ProfileOperation.ARRAY_REMOVE -> handleArrayRemove(
+                parentJson,
+                key,
+                oldArray,
+                newArray,
+                currentPath,
+                changes
+            )
+
+            ProfileOperation.GET -> getArrayElements(
+                oldArray,
+                newArray,
+                currentPath,
+                changes,
+                recursiveTraversal
+            )
+
+            ProfileOperation.UPDATE, ProfileOperation.INCREMENT, ProfileOperation.DECREMENT -> processArrayElements(
+                oldArray,
+                newArray,
+                currentPath,
+                changes,
+                operation,
+                recursiveTraversal
+            )
+
             else -> {}
         }
     }
@@ -63,20 +78,20 @@ internal class ArrayOperationHandler() {
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val mergedArray = ArrayMergeUtils.copyArray(oldArray)
         var modified = false
 
         for (i in 0 until newArray.length()) {
             val item = newArray.get(i)
             if (item is String) {
                 val processedItem = ProfileOperationUtils.processDatePrefixes(item)
-                oldArray.put(processedItem)
+                mergedArray.put(processedItem)
                 modified = true
             }
         }
 
         if (modified) {
-            changes[path] = ProfileChange(oldArrayCopy, oldArray)
+            changes[path] = ProfileChange(oldArray, mergedArray)
         }
     }
 
@@ -107,27 +122,6 @@ internal class ArrayOperationHandler() {
         if (modified) {
             parentJson.put(key, resultArray)
             changes[path] = ProfileChange(oldArrayCopy, resultArray)
-        }
-    }
-
-    /**
-     * Replaces entire array with new array.
-     * Processes date prefixes for comparison, but stores original value.
-     */
-    private fun handleArrayReplacement(
-        parentJson: JSONObject,
-        key: String,
-        oldArray: JSONArray,
-        newArray: JSONArray,
-        path: String,
-        changes: MutableMap<String, ProfileChange>
-    ) {
-        val processedOldArray = ProfileOperationUtils.processDatePrefixes(oldArray)
-        val processedNewArray = ProfileOperationUtils.processDatePrefixes(newArray)
-        
-        if (!JsonComparisonUtils.areEqual(processedOldArray, processedNewArray)) {
-            parentJson.put(key, newArray)  // Store original value with prefix
-            changes[path] = ProfileChange(processedOldArray, processedNewArray)  // Track processed values
         }
     }
 
@@ -219,7 +213,7 @@ internal class ArrayOperationHandler() {
         return when (operation) {
             ProfileOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
             ProfileOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
-            else -> oldValue
+            else -> newValue
         }
     }
 
