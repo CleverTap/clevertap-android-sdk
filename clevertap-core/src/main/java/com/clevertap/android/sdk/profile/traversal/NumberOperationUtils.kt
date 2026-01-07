@@ -39,4 +39,17 @@ internal object NumberOperationUtils {
             else -> a.toDouble() - b.toDouble()
         }
     }
+
+    /**
+     * Negates a number, preserving its type.
+     */
+    fun negateNumber(n: Number): Number {
+        return when (n) {
+            is Int -> -n
+            is Long -> -n
+            is Float -> -n
+            is Double -> -n
+            else -> -n.toDouble()
+        }
+    }
 }

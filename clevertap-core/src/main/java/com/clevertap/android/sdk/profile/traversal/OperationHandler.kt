@@ -77,18 +77,34 @@ internal class OperationHandler(
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation
     ) {
-        // Skip adding keys for arithmetic operations and GET operations
-        if (operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT, ProfileOperation.GET)) {
+        // Skip GET operations on missing keys
+        if (operation == ProfileOperation.GET) {
             return
         }
 
-        val processedNewValue = ProfileOperationUtils.processDatePrefixes(newValue)
-        target.put(key, newValue)
+        val updatedValue = when (operation) {
+            ProfileOperation.DECREMENT -> {
+                // For missing keys, DECREMENT means 0 - value = -value
+                if (newValue !is Number) return
+                NumberOperationUtils.negateNumber(newValue)
+            }
+            ProfileOperation.INCREMENT -> {
+                // For missing keys, INCREMENT means 0 + value = value
+                if (newValue !is Number) return
+                newValue
+            }
+            else -> {
+                // For SET and other operations, use the value as-is
+                ProfileOperationUtils.processDatePrefixes(newValue)
+            }
+        }
 
-        if (processedNewValue is JSONObject) {
-            changeTracker.recordAllLeafValues(processedNewValue, currentPath, changes)
+        target.put(key, updatedValue)
+
+        if (updatedValue is JSONObject) {
+            changeTracker.recordAllLeafValues(updatedValue, currentPath, changes)
         } else {
-            changes[currentPath] = ProfileChange(null, processedNewValue)
+            changes[currentPath] = ProfileChange(null, updatedValue)
         }
     }
 
