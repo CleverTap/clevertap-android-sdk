@@ -28,6 +28,14 @@ class EventNameValidator : Validator<EventNameNormalizationResult> {
             )
         }
 
+        // Check for modifications during normalization before empty check so that modifications are recorded
+        validateModifications(
+            modifications = input.modifications,
+            originalName = input.originalName,
+            maxEventNameLength = config.maxEventNameLength,
+            errors = errors
+        )
+
         // Check for empty cleaned name (became empty after normalization)
         if (input.cleanedName.isEmpty()) {
             val error = ValidationResultFactory.create(ValidationError.EVENT_NAME_NULL)
@@ -51,14 +59,6 @@ class EventNameValidator : Validator<EventNameNormalizationResult> {
             discardedEventNames = config.discardedEventNames,
             errors = errors
         )?.let { return it }
-
-        // Check for modifications during normalization
-        validateModifications(
-            modifications = input.modifications,
-            originalName = input.originalName,
-            maxEventNameLength = config.maxEventNameLength,
-            errors = errors
-        )
 
         return if (errors.isEmpty()) {
             ValidationOutcome.Success()

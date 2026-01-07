@@ -63,15 +63,4 @@ internal object ArrayMergeUtils {
             element is JSONObject && !ProfileOperationUtils.isDeleteMarker(element)
         }
     }
-
-    /**
-     * Determines if array should be merged element-wise or replaced entirely.
-     * Arrays with JSONObject elements should be merged, others replaced.
-     *
-     * @param array The array to check
-     * @return true if array should be merged element-wise
-     */
-    fun shouldMergeArrayElements(array: JSONArray): Boolean {
-        return (0 until array.length()).any { i -> array.opt(i) is JSONObject }
-    }
 }

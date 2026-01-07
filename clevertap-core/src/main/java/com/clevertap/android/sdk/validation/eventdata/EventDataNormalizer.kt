@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.validation.eventdata
 
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.EventDataMetrics
 import com.clevertap.android.sdk.validation.pipeline.EventDataNormalizationResult
@@ -29,10 +30,6 @@ import kotlin.math.max
  * - Tracking structural metrics
  */
 class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult> {
-
-    companion object {
-        private const val DATE_PREFIX = "\$D_"
-    }
 
     // Metrics tracking
     private var maxDepth = 0
@@ -140,7 +137,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
             }
 
             // Drop restricted multi-value fields at 0th level if value is object or array
-            if (depth == 0 && restrictedMultiValueFields?.contains(cleanedKey) == true) {
+            if (depth == 0 && restrictedMultiValueFields?.contains(cleanedKey.lowercase()) == true) {
                 val isObjectOrArray = when (value) {
                     is Map<*, *>, is JSONObject, is List<*>, is Array<*>, is JSONArray -> true
                     else -> false
@@ -169,7 +166,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
                 maxKeyLength = maxKeyLength,
                 valueCharsNotAllowed = valueCharsNotAllowed,
                 maxValueLength = maxValueLength,
-                depth = depth + 1
+                depth = depth
             )
 
             if (cleanedValue != null) {
@@ -224,9 +221,9 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
                 maxKeyLength = maxKeyLength,
                 valueCharsNotAllowed = valueCharsNotAllowed,
                 maxValueLength = maxValueLength,
-                depth = depth
+                depth = depth + 1
             )
-            is JSONObject -> cleanJSONObject(value, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
+            is JSONObject -> cleanJSONObject(value, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth + 1)
             is List<*> -> cleanList(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
             is Array<*> -> cleanList(value.toList(), parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
             is JSONArray -> cleanJSONArray(value, parentKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
@@ -317,7 +314,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
                 is JSONArray -> arrayKeyCount++
             }
 
-            val cleanedValue = cleanAnyValue(value, cleanedKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth + 1)
+            val cleanedValue = cleanAnyValue(value, cleanedKey, keyCharsNotAllowed, maxKeyLength, valueCharsNotAllowed, maxValueLength, depth)
 
             if (cleanedValue != null) {
                 cleaned.put(cleanedKey, cleanedValue)
@@ -394,7 +391,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
         val result = cleaned.trim()
 
         // Record modification if key changed
-        if (result != original && result.isNotEmpty() && reasons.isNotEmpty()) {
+        if (result != original && reasons.isNotEmpty()) {
             keysModified.add(
                 KeyModification(
                     originalKey = original,
@@ -412,7 +409,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
             is Int, is Long, is Float, is Double, is Boolean -> value
             is String -> cleanStringValue(value, key, valueCharsNotAllowed, maxValueLength)
             is Char -> cleanPrimitiveValue(value.toString(), key, valueCharsNotAllowed, maxValueLength)
-            is Date -> "$DATE_PREFIX${value.time / 1000}"
+            is Date -> "${Constants.DATE_PREFIX}${value.time / 1000}"
             else -> {
                 recordRemoval(key, RemovalReason.NON_PRIMITIVE_VALUE, value)
                 null
@@ -450,11 +447,6 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
 
         val result = cleaned.trim()
 
-        if (result.isEmpty()) {
-            recordRemoval(key, RemovalReason.EMPTY_VALUE, "")
-            return null
-        }
-
         // Record modification
         if (result != original && reasons.isNotEmpty()) {
             valuesModified.add(
@@ -465,6 +457,11 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
                     reasons = reasons
                 )
             )
+        }
+
+        if (result.isEmpty()) {
+            recordRemoval(key, RemovalReason.EMPTY_VALUE, "")
+            return null
         }
 
         return result

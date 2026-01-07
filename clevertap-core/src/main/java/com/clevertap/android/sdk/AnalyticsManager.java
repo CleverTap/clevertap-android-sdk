@@ -1020,12 +1020,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
     }
 
-    private FlattenedEventData.ProfileChanges mergeProfileChanges(String key, Object originalValues, ProfileOperation operation) throws JSONException {
+    private FlattenedEventData.ProfileChanges mergeProfileChanges(String key, Object originalValues, ProfileOperation operation) {
         Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(key, originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 
-    private FlattenedEventData.ProfileChanges mergeProfileChanges(JSONObject originalValues, ProfileOperation operation) throws JSONException {
+    private FlattenedEventData.ProfileChanges mergeProfileChanges(JSONObject originalValues, ProfileOperation operation){
         Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(originalValues, operation);
         return new FlattenedEventData.ProfileChanges(profileChanges);
     }

@@ -82,12 +82,13 @@ internal class OperationHandler(
             return
         }
 
+        val processedNewValue = ProfileOperationUtils.processDatePrefixes(newValue)
         target.put(key, newValue)
 
-        if (newValue is JSONObject) {
-            changeTracker.recordAllLeafValues(newValue, currentPath, changes)
+        if (processedNewValue is JSONObject) {
+            changeTracker.recordAllLeafValues(processedNewValue, currentPath, changes)
         } else {
-            changes[currentPath] = ProfileChange(null, newValue)
+            changes[currentPath] = ProfileChange(null, processedNewValue)
         }
     }
 
@@ -117,7 +118,7 @@ internal class OperationHandler(
 
     /**
      * Handles simple value updates.
-     * If new value is a string with $D_ prefix, removes it and converts to long.
+     * Recursively processes date prefixes in strings, arrays, and objects.
      */
     private fun handleValueUpdate(
         parent: JSONObject,
@@ -127,20 +128,11 @@ internal class OperationHandler(
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val processedOldValue = if (oldValue is String) {
-            ProfileOperationUtils.processDatePrefix(oldValue)
-        } else {
-            oldValue
-        }
-
-        val processedNewValue = if (newValue is String) {
-            ProfileOperationUtils.processDatePrefix(newValue)
-        } else {
-            newValue
-        }
+        val processedOldValue = ProfileOperationUtils.processDatePrefixes(oldValue)
+        val processedNewValue = ProfileOperationUtils.processDatePrefixes(newValue)
 
         if (!JsonComparisonUtils.areEqual(processedOldValue, processedNewValue)) {
-            parent.put(key, processedNewValue)
+            parent.put(key, newValue)
             changes[path] = ProfileChange(processedOldValue, processedNewValue)
         }
     }
@@ -154,12 +146,6 @@ internal class OperationHandler(
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val processedOldValue = if (oldValue is String) {
-            ProfileOperationUtils.processDatePrefix(oldValue)
-        } else {
-            oldValue
-        }
-        
-        changes[path] = ProfileChange(processedOldValue, Constants.GET_MARKER)
+        changes[path] = ProfileChange(oldValue, Constants.GET_MARKER)
     }
 }

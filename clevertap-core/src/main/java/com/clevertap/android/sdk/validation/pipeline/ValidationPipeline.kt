@@ -41,13 +41,11 @@ interface ValidationPipeline<I, O> {
                     "Dropped. Reason: ${outcome.reason}"
                 )
                 outcome.errors.forEach { error ->
-                    logger.verbose(tag, error.errorDesc)
-                }
+                    logger.verbose(tag, "${error.errorCode}: ${error.errorDesc}")                }
             }
             is ValidationOutcome.Warning -> {
                 outcome.errors.forEach { error ->
-                    logger.verbose(tag, error.errorDesc)
-                }
+                    logger.verbose(tag, "${error.errorCode}: ${error.errorDesc}")                }
             }
             is ValidationOutcome.Success -> {
                 // No logging for successful validation by default

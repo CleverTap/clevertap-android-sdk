@@ -26,7 +26,7 @@ object ValidationResultFactory {
 enum class ValidationError(val code: Int, private val messageTemplate: String) {
     
     // Event name validation errors (510)
-    EVENT_NAME_NULL(510, "Event Name is null"),
+    EVENT_NAME_NULL(510, "Event Name is null/empty"),
     EVENT_NAME_TOO_LONG(510, "%s... exceeds the limit of %s characters. Trimmed"),
     EVENT_NAME_INVALID_CHARACTERS(510, "Key '%s' contains invalid characters. Cleaned"),
 
@@ -68,9 +68,9 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     PROFILE_IDENTIFIERS_MISMATCH(531, "Profile Identifiers mismatch with the previously saved ones"),
     
     // Structural limit errors (540-544)
-    DEPTH_LIMIT_EXCEEDED(541, "Event data exceeded maximum nesting depth. Depth: %s, Limit: %s"),
-    ARRAY_KEY_COUNT_LIMIT_EXCEEDED(542, "Event data exceeded maximum array key count. Count: %s, Limit: %s"),
-    OBJECT_KEY_COUNT_LIMIT_EXCEEDED(543, "Event data exceeded maximum object key count. Count: %s, Limit: %s"),
+    DEPTH_LIMIT_EXCEEDED(540, "Event data exceeded maximum nesting depth. Depth: %s, Limit: %s"),
+    ARRAY_KEY_COUNT_LIMIT_EXCEEDED(541, "Event data exceeded maximum array key count. Count: %s, Limit: %s"),
+    OBJECT_KEY_COUNT_LIMIT_EXCEEDED(542, "Event data exceeded maximum object key count. Count: %s, Limit: %s"),
     ARRAY_LENGTH_LIMIT_EXCEEDED(543, "Event data exceeded maximum array length. Length: %s, Limit: %s"),
     KV_PAIR_COUNT_LIMIT_EXCEEDED(544, "Event data exceeded maximum key-value pair count. Count: %s, Limit: %s"),
     
