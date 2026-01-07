@@ -6,6 +6,7 @@ import android.net.NetworkInfo.DetailedState
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
 import com.clevertap.android.sdk.events.EventQueueManager
+import com.clevertap.android.sdk.events.FlattenedEventData
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.login.IdentityRepo
 import com.clevertap.android.sdk.login.IdentityRepoFactory
@@ -127,7 +128,7 @@ class EventQueueManagerTest : BaseTestCase() {
             eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
             verify(exactly = 0) {
                 eventQueueManager.addToQueue(
-                    application, json, Constants.PING_EVENT
+                    application, json, Constants.PING_EVENT, any()
                 )
             }
         }
@@ -143,11 +144,12 @@ class EventQueueManagerTest : BaseTestCase() {
             } returns false
             every {
                 eventQueueManager.addToQueue(
-                    application, json, Constants.FETCH_EVENT
+                    application, json, Constants.FETCH_EVENT, FlattenedEventData.NoData
                 )
             } just runs
             eventQueueManager.queueEvent(application, json, Constants.FETCH_EVENT)
-            verify { eventQueueManager.addToQueue(application, json, Constants.FETCH_EVENT) }
+            verify { eventQueueManager.addToQueue(application, json, Constants.FETCH_EVENT,
+                                                  FlattenedEventData.NoData) }
         }
     }
 
@@ -161,7 +163,7 @@ class EventQueueManagerTest : BaseTestCase() {
             } returns false
             every {
                 eventQueueManager.addToQueue(
-                    application, json, Constants.PING_EVENT
+                    application, json, Constants.PING_EVENT, FlattenedEventData.NoData
                 )
             } just runs
             every { eventQueueManager.pushInitialEventsAsync() } just runs
@@ -171,7 +173,8 @@ class EventQueueManagerTest : BaseTestCase() {
 
             verify { corestate.sessionManager.lazyCreateSession(application) }
             verify { eventQueueManager.pushInitialEventsAsync() }
-            verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) }
+            verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT,
+                                                  FlattenedEventData.NoData) }
         }
     }
 
@@ -192,7 +195,7 @@ class EventQueueManagerTest : BaseTestCase() {
             } returns true
             every {
                 eventQueueManager.addToQueue(
-                    application, json, Constants.PING_EVENT
+                    application, json, Constants.PING_EVENT,
                 )
             } just runs
             every { eventQueueManager.pushInitialEventsAsync() } just runs

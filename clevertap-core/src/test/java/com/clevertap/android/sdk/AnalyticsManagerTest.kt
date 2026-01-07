@@ -16,10 +16,9 @@ import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.UriHelper
+import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResult
-import com.clevertap.android.sdk.validation.ValidationResultStack
-import com.clevertap.android.sdk.validation.Validator
-import com.clevertap.android.sdk.validation.Validator.ValidationContext.Profile
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
 import io.mockk.MockKAnnotations
 import io.mockk.called
 import io.mockk.clearAllMocks
@@ -50,10 +49,13 @@ class AnalyticsManagerTest {
     private val cleverTapInstanceConfig = CleverTapFixtures.provideCleverTapInstanceConfig()
 
     @MockK(relaxed = true)
-    private lateinit var validator: Validator
+    private lateinit var validationPipelineProvider: ValidationPipelineProvider
 
     @MockK(relaxed = true)
-    private lateinit var validationResultStack: ValidationResultStack
+    private lateinit var validationConfig: ValidationConfig
+
+    @MockK(relaxed = true)
+    private lateinit var localDataStore: LocalDataStore
 
     @MockK(relaxed = true)
     private lateinit var eventQueueManager: BaseEventQueueManager
@@ -90,8 +92,8 @@ class AnalyticsManagerTest {
             context,
             cleverTapInstanceConfig,
             eventQueueManager,
-            validator,
-            validationResultStack,
+            validationPipelineProvider,
+            validationConfig,
             coreState.coreMetaData,
             coreState.deviceInfo,
             coreState.callbackManager,
@@ -99,6 +101,7 @@ class AnalyticsManagerTest {
             coreState.cTLockManager,
             timeProvider,
             MockCTExecutors(),
+            localDataStore,
             inAppPreviewHandler
         )
     }
@@ -395,7 +398,7 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.incrementValue(null, 10)
 
         verify {
-            validator wasNot called
+            validationPipelineProvider wasNot called
         }
     }
 
@@ -404,7 +407,7 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.incrementValue("abc", null)
 
         verify {
-            validator wasNot called
+            validationPipelineProvider wasNot called
         }
     }
 
@@ -413,22 +416,8 @@ class AnalyticsManagerTest {
         mockCleanObjectKey("")
         analyticsManagerSUT.incrementValue("", 10)
 
-        verify {
-            validationResultStack.pushValidationResult(match { arg ->
-                arg.errorCode == 512
-            })
-        }
-    }
-
-    @Test
-    fun test_decrementValue_negativeValue_throwsMalformedValueError() {
-        mockCleanObjectKey("abc", 0)
-        analyticsManagerSUT.decrementValue("abc", -10)
-
-        verify {
-            validationResultStack.pushValidationResult(match { arg ->
-                arg.errorCode == 512
-            })
+        verify(exactly = 0) {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -438,8 +427,6 @@ class AnalyticsManagerTest {
 
         val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 10)
         val updateObj = JSONObject().put("int_score", commandObj)
-
-        every { coreState.localDataStore.getProfileProperty("int_score") } returns 10
 
         analyticsManagerSUT.incrementValue("int_score", 10)
 

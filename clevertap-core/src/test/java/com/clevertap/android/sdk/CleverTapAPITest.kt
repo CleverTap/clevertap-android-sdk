@@ -24,16 +24,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 class CleverTapAPITest : BaseTestCase() {
 
-    private lateinit var corestate: MockCoreStateKotlin
+    private lateinit var coreState: MockCoreStateKotlin
     private lateinit var testClock: TestClock
 
     private fun initializeCleverTapAPI() {
-        cleverTapAPI = CleverTapAPI(application, cleverTapInstanceConfig, corestate, testClock)
+        cleverTapAPI = CleverTapAPI(application, cleverTapInstanceConfig, coreState, testClock)
 
         // we need to do this for static methods of CleverTapAPI tests to work correctly.
         CleverTapAPI.setInstances(hashMapOf(Constant.ACC_ID to cleverTapAPI))
@@ -44,7 +42,7 @@ class CleverTapAPITest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         CleverTapAPI.setInstances(null) // clear existing CleverTapAPI instances
-        corestate = MockCoreStateKotlin(cleverTapInstanceConfig)
+        coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
         testClock = TestClock()
     }
 
@@ -55,11 +53,11 @@ class CleverTapAPITest : BaseTestCase() {
 
     private fun verifyCommonConstructorBehavior() {
         verifyOrder {
-            corestate.sessionManager.setLastVisitTime()
-            corestate.sessionManager.setUserLastVisitTs()
-            corestate.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
-            corestate.deviceInfo.setCurrentUserOptOutStateFromStorage()
-            corestate.deviceInfo.setSystemEventsAllowedStateFromStorage()
+            coreState.sessionManager.setLastVisitTime()
+            coreState.sessionManager.setUserLastVisitTs()
+            coreState.deviceInfo.setDeviceNetworkInfoReportingFromStorage()
+            coreState.deviceInfo.setCurrentUserOptOutStateFromStorage()
+            coreState.deviceInfo.setSystemEventsAllowedStateFromStorage()
         }
 
         val actualConfig = StorageHelper.getString(
@@ -129,9 +127,9 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
         cleverTapAPI.setLocationForGeofences(location, 45)
 
-        assertTrue(corestate.coreMetaData.isLocationForGeofence)
-        assertEquals(corestate.coreMetaData.geofenceSDKVersion, 45)
-        verify { corestate.locationManager._setLocation(location) }
+        assertTrue(coreState.coreMetaData.isLocationForGeofence)
+        assertEquals(coreState.coreMetaData.geofenceSDKVersion, 45)
+        verify { coreState.locationManager._setLocation(location) }
     }
 
     @Test
@@ -164,7 +162,7 @@ class CleverTapAPITest : BaseTestCase() {
         cleverTapAPI.pushGeoFenceError(expectedErrorCode, expectedErrorMessage)
 
         // Assert
-        val actualValidationResult = corestate.validationResultStack.popValidationResult()
+        val actualValidationResult = coreState.validationResultStack.popValidationResult()
         assertEquals(expectedErrorCode, actualValidationResult.errorCode)
         assertEquals(expectedErrorMessage, actualValidationResult.errorDesc)
     }
@@ -181,7 +179,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.raiseEventForGeofences(any(), capture(jsonSlot))
+            coreState.analyticsManager.raiseEventForGeofences(any(), capture(jsonSlot))
         }
         assertEquals(expectedJson, jsonSlot.captured)
     }
@@ -198,7 +196,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.raiseEventForGeofences(any(), capture(jsonSlot))
+            coreState.analyticsManager.raiseEventForGeofences(any(), capture(jsonSlot))
         }
         assertEquals(expectedJson, jsonSlot.captured)
     }
@@ -253,10 +251,10 @@ class CleverTapAPITest : BaseTestCase() {
         }
         CleverTapAPI.createNotification(application, bundle, Constants.EMPTY_NOTIFICATION_ID)
         verify {
-            corestate.pushProviders.pushNotificationRenderer = any<CoreNotificationRenderer>()
+            coreState.pushProviders.pushNotificationRenderer = any<CoreNotificationRenderer>()
         }
         verify {
-            corestate.pushProviders._createNotification(
+            coreState.pushProviders._createNotification(
                 application,
                 bundle,
                 Constants.EMPTY_NOTIFICATION_ID
@@ -274,10 +272,10 @@ class CleverTapAPITest : BaseTestCase() {
 
         CleverTapAPI.createNotification(application, bundle)
         verify {
-            corestate.pushProviders.pushNotificationRenderer = any<CoreNotificationRenderer>()
+            coreState.pushProviders.pushNotificationRenderer = any<CoreNotificationRenderer>()
         }
         verify {
-            corestate.pushProviders._createNotification(
+            coreState.pushProviders._createNotification(
                 application,
                 bundle,
                 Constants.EMPTY_NOTIFICATION_ID
@@ -292,7 +290,7 @@ class CleverTapAPITest : BaseTestCase() {
         }
         CleverTapAPI.createNotification(application, bundle)
         verify(exactly = 0) {
-            corestate.pushProviders._createNotification(
+            coreState.pushProviders._createNotification(
                 application,
                 bundle,
                 Constants.EMPTY_NOTIFICATION_ID
@@ -345,7 +343,7 @@ class CleverTapAPITest : BaseTestCase() {
             putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
         }
         CleverTapAPI.processPushNotification(application, bundle)
-        verify { corestate.pushProviders.processCustomPushNotification(bundle) }
+        verify { coreState.pushProviders.processCustomPushNotification(bundle) }
     }
 
     @Test
@@ -355,7 +353,7 @@ class CleverTapAPITest : BaseTestCase() {
             putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
         }
         CleverTapAPI.processPushNotification(application, bundle)
-        verify { corestate.pushProviders.processCustomPushNotification(bundle) }
+        verify { coreState.pushProviders.processCustomPushNotification(bundle) }
     }
 
     @Test
@@ -365,13 +363,13 @@ class CleverTapAPITest : BaseTestCase() {
         val inboxController = null
 
         // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
+        every { coreState.controllerManager.ctInboxController } returns inboxController
         initializeCleverTapAPI()
         cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify { corestate.controllerManager.ctInboxController }
-        confirmVerified(corestate.controllerManager)
+        verify { coreState.controllerManager.ctInboxController }
+        confirmVerified(coreState.controllerManager)
     }
 
     @Test
@@ -381,12 +379,12 @@ class CleverTapAPITest : BaseTestCase() {
         val inboxController = mockk<CTInboxController>(relaxed = true)
 
         // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
+        every { coreState.controllerManager.ctInboxController } returns inboxController
         initializeCleverTapAPI()
         cleverTapAPI.deleteInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { corestate.controllerManager.ctInboxController }
+        verify(exactly = 2) { coreState.controllerManager.ctInboxController }
         verify { inboxController.deleteInboxMessagesForIDs(messageIDs) }
     }
 
@@ -397,13 +395,13 @@ class CleverTapAPITest : BaseTestCase() {
         val inboxController = null
 
         // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
+        every { coreState.controllerManager.ctInboxController } returns inboxController
         initializeCleverTapAPI()
         cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify { corestate.controllerManager.ctInboxController }
-        confirmVerified(corestate.controllerManager)
+        verify { coreState.controllerManager.ctInboxController }
+        confirmVerified(coreState.controllerManager)
     }
 
     @Test
@@ -413,12 +411,12 @@ class CleverTapAPITest : BaseTestCase() {
         val inboxController = mockk<CTInboxController>(relaxed = true)
 
         // Act
-        every { corestate.controllerManager.ctInboxController } returns inboxController
+        every { coreState.controllerManager.ctInboxController } returns inboxController
         initializeCleverTapAPI()
         cleverTapAPI.markReadInboxMessagesForIDs(messageIDs)
 
         // Assert
-        verify(exactly = 2) { corestate.controllerManager.ctInboxController }
+        verify(exactly = 2) { coreState.controllerManager.ctInboxController }
         verify { inboxController.markReadInboxMessagesForIDs(messageIDs) }
     }
 
@@ -426,7 +424,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun `test getUserEventLogCount`() {
         // Arrange
         val evt = UserEventLogTestData.EventNames.TEST_EVENT
-        every { corestate.localDataStore.readUserEventLogCount(evt) } returns 1
+        every { coreState.localDataStore.readUserEventLogCount(evt) } returns 1
 
         // Act
         initializeCleverTapAPI()
@@ -434,7 +432,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         assertEquals(1, userEventLogCountActual)
-        verify { corestate.localDataStore.readUserEventLogCount(evt) }
+        verify { coreState.localDataStore.readUserEventLogCount(evt) }
     }
 
     @Test
@@ -442,7 +440,7 @@ class CleverTapAPITest : BaseTestCase() {
         // Arrange
         val evt = UserEventLogTestData.EventNames.TEST_EVENT
         val log = UserEventLogTestData.EventNames.sampleUserEventLogsForSameDeviceId[0]
-        every { corestate.localDataStore.readUserEventLog(evt) } returns log
+        every { coreState.localDataStore.readUserEventLog(evt) } returns log
 
         // Act
         initializeCleverTapAPI()
@@ -450,14 +448,14 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         assertSame(log, userEventLogActual)
-        verify { corestate.localDataStore.readUserEventLog(evt) }
+        verify { coreState.localDataStore.readUserEventLog(evt) }
     }
 
     @Test
     fun `test getUserEventLogHistory`() {
         // Arrange
         val logs = UserEventLogTestData.EventNames.sampleUserEventLogsForSameDeviceId
-        every { corestate.localDataStore.readUserEventLogs() } returns logs
+        every { coreState.localDataStore.readUserEventLogs() } returns logs
 
         // Act
         initializeCleverTapAPI()
@@ -467,14 +465,14 @@ class CleverTapAPITest : BaseTestCase() {
         assertEquals(2, historyActual.size)
         assertEquals(logs[0], historyActual.values.elementAt(0))
         assertEquals(logs[1], historyActual.values.elementAt(1))
-        verify { corestate.localDataStore.readUserEventLogs() }
+        verify { coreState.localDataStore.readUserEventLogs() }
     }
 
     @Test
     fun `test getUserLastVisitTs`() {
         val expectedUserLastVisitTs = UserEventLogTestData.TestTimestamps.SAMPLE_TIMESTAMP
         // Arrange
-        every { corestate.sessionManager.userLastVisitTs } returns expectedUserLastVisitTs
+        every { coreState.sessionManager.userLastVisitTs } returns expectedUserLastVisitTs
 
         // Act
         initializeCleverTapAPI()
@@ -482,13 +480,13 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         assertEquals(expectedUserLastVisitTs, lastVisitTsActual)
-        verify { corestate.sessionManager.userLastVisitTs }
+        verify { coreState.sessionManager.userLastVisitTs }
     }
 
     @Test
     fun `test getUserAppLaunchCount`() {
         // Arrange
-        every { corestate.localDataStore.readUserEventLogCount(Constants.APP_LAUNCHED_EVENT) } returns 5
+        every { coreState.localDataStore.readUserEventLogCount(Constants.APP_LAUNCHED_EVENT) } returns 5
 
         // Act
         initializeCleverTapAPI()
@@ -496,7 +494,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         assertEquals(5, appLaunchCountActual)
-        verify { corestate.localDataStore.readUserEventLogCount(Constants.APP_LAUNCHED_EVENT) }
+        verify { coreState.localDataStore.readUserEventLogCount(Constants.APP_LAUNCHED_EVENT) }
     }
 
     @Test
@@ -515,12 +513,12 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.analyticsManager.pushProfile(expectedMap)
-            corestate.coreMetaData.isCurrentUserOptedOut = true
-            corestate.coreMetaData.enabledSystemEvents = false
-            corestate.deviceInfo.saveOptOutState(true)
-            corestate.deviceInfo.saveAllowedSystemEventsState(false)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.analyticsManager.pushProfile(expectedMap)
+            coreState.coreMetaData.isCurrentUserOptedOut = true
+            coreState.coreMetaData.enabledSystemEvents = false
+            coreState.deviceInfo.saveOptOutState(true)
+            coreState.deviceInfo.saveAllowedSystemEventsState(false)
         }
     }
 
@@ -540,12 +538,12 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.analyticsManager.pushProfile(expectedMap)
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.coreMetaData.enabledSystemEvents = true
-            corestate.deviceInfo.saveOptOutState(false)
-            corestate.deviceInfo.saveAllowedSystemEventsState(true)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.analyticsManager.pushProfile(expectedMap)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.coreMetaData.enabledSystemEvents = true
+            coreState.deviceInfo.saveOptOutState(false)
+            coreState.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 
@@ -565,12 +563,12 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.analyticsManager.pushProfile(expectedMap)
-            corestate.coreMetaData.isCurrentUserOptedOut = true
-            corestate.coreMetaData.enabledSystemEvents = false
-            corestate.deviceInfo.saveOptOutState(true)
-            corestate.deviceInfo.saveAllowedSystemEventsState(false)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.analyticsManager.pushProfile(expectedMap)
+            coreState.coreMetaData.isCurrentUserOptedOut = true
+            coreState.coreMetaData.enabledSystemEvents = false
+            coreState.deviceInfo.saveOptOutState(true)
+            coreState.deviceInfo.saveAllowedSystemEventsState(false)
         }
     }
 
@@ -590,12 +588,12 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.analyticsManager.pushProfile(expectedMap)
-            corestate.coreMetaData.isCurrentUserOptedOut = true
-            corestate.coreMetaData.enabledSystemEvents = true
-            corestate.deviceInfo.saveOptOutState(true)
-            corestate.deviceInfo.saveAllowedSystemEventsState(true)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.analyticsManager.pushProfile(expectedMap)
+            coreState.coreMetaData.isCurrentUserOptedOut = true
+            coreState.coreMetaData.enabledSystemEvents = true
+            coreState.deviceInfo.saveOptOutState(true)
+            coreState.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 
@@ -615,12 +613,12 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.analyticsManager.pushProfile(expectedMap)
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.coreMetaData.enabledSystemEvents = true
-            corestate.deviceInfo.saveOptOutState(false)
-            corestate.deviceInfo.saveAllowedSystemEventsState(true)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.analyticsManager.pushProfile(expectedMap)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.coreMetaData.enabledSystemEvents = true
+            coreState.deviceInfo.saveOptOutState(false)
+            coreState.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 
@@ -640,12 +638,12 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verifyOrder {
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.analyticsManager.pushProfile(expectedMap)
-            corestate.coreMetaData.isCurrentUserOptedOut = false
-            corestate.coreMetaData.enabledSystemEvents = true
-            corestate.deviceInfo.saveOptOutState(false)
-            corestate.deviceInfo.saveAllowedSystemEventsState(true)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.analyticsManager.pushProfile(expectedMap)
+            coreState.coreMetaData.isCurrentUserOptedOut = false
+            coreState.coreMetaData.enabledSystemEvents = true
+            coreState.deviceInfo.saveOptOutState(false)
+            coreState.deviceInfo.saveAllowedSystemEventsState(true)
         }
     }
 
@@ -664,7 +662,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.pushEvent(eventName, null)
+            coreState.analyticsManager.pushEvent(eventName, null)
         }
     }
 
@@ -685,7 +683,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.pushEvent(eventName, eventData)
+            coreState.analyticsManager.pushEvent(eventName, eventData)
         }
     }
 
@@ -702,7 +700,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify(exactly = 0) {
-            corestate.analyticsManager.pushEvent(any(), null)
+            coreState.analyticsManager.pushEvent(any(), null)
         }
     }
 
@@ -715,7 +713,7 @@ class CleverTapAPITest : BaseTestCase() {
             "Payment Mode" to "Credit Card",
             "Charged ID" to "order_12345"
         )
-        val items = arrayListOf<HashMap<String, Any>>(
+        val items = arrayListOf(
             hashMapOf<String, Any>(
                 "Product Name" to "Wireless Headphones",
                 "Category" to "Electronics",
@@ -736,7 +734,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.pushChargedEvent(chargeDetails, items)
+            coreState.analyticsManager.pushChargedEvent(chargeDetails, items)
         }
     }
 
@@ -752,7 +750,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.pushError(errorMessage, errorCode)
+            coreState.analyticsManager.pushError(errorMessage, errorCode)
         }
     }
 
@@ -769,7 +767,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.pushInstallReferrer(source, medium, campaign)
+            coreState.analyticsManager.pushInstallReferrer(source, medium, campaign)
         }
     }
 
@@ -792,7 +790,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, null)
+            coreState.loginController.onUserLogin(profile, null)
         }
     }
 
@@ -811,7 +809,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, cleverTapID)
+            coreState.loginController.onUserLogin(profile, cleverTapID)
         }
     }
 
@@ -826,7 +824,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.loginController.onUserLogin(profile, null)
+            coreState.loginController.onUserLogin(profile, null)
         }
     }
 
@@ -846,7 +844,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.pushProfile(profile)
+            coreState.analyticsManager.pushProfile(profile)
         }
     }
 
@@ -862,7 +860,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.addMultiValuesForKey(key, arrayListOf(value))
+            coreState.analyticsManager.addMultiValuesForKey(key, arrayListOf(value))
         }
     }
 
@@ -878,7 +876,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager._generateEmptyMultiValueError(key)
+            coreState.analyticsManager.addMultiValuesForKey(key, arrayListOf(value))
         }
     }
 
@@ -894,7 +892,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager._generateEmptyMultiValueError(key)
+            coreState.analyticsManager.addMultiValuesForKey(key, arrayListOf(value))
         }
     }
 
@@ -910,7 +908,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.addMultiValuesForKey(key, values)
+            coreState.analyticsManager.addMultiValuesForKey(key, values)
         }
     }
 
@@ -926,7 +924,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.removeMultiValuesForKey(key, arrayListOf(value))
+            coreState.analyticsManager.removeMultiValuesForKey(key, arrayListOf(value))
         }
     }
 
@@ -942,10 +940,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager._generateEmptyMultiValueError(key)
-        }
-        verify(exactly = 0) {
-            corestate.analyticsManager.removeMultiValuesForKey(any(), any())
+            coreState.analyticsManager.removeMultiValuesForKey(key, arrayListOf(value))
         }
     }
 
@@ -961,10 +956,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager._generateEmptyMultiValueError(key)
-        }
-        verify(exactly = 0) {
-            corestate.analyticsManager.removeMultiValuesForKey(any(), any())
+            coreState.analyticsManager.removeMultiValuesForKey(key, arrayListOf(value))
         }
     }
 
@@ -980,7 +972,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.removeMultiValuesForKey(key, values)
+            coreState.analyticsManager.removeMultiValuesForKey(key, values)
         }
     }
 
@@ -996,7 +988,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.setMultiValuesForKey(key, values)
+            coreState.analyticsManager.setMultiValuesForKey(key, values)
         }
     }
 
@@ -1012,7 +1004,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.incrementValue(key, value)
+            coreState.analyticsManager.incrementValue(key, value)
         }
     }
 
@@ -1028,7 +1020,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.incrementValue(key, value)
+            coreState.analyticsManager.incrementValue(key, value)
         }
     }
 
@@ -1044,7 +1036,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         verify {
-            corestate.analyticsManager.decrementValue(key, value)
+            coreState.analyticsManager.decrementValue(key, value)
         }
     }
 
@@ -1053,8 +1045,8 @@ class CleverTapAPITest : BaseTestCase() {
         // Arrange
         val propertyName = "UserType"
         val expectedValue = "Premium"
-        corestate.config.enablePersonalization(true)
-        every { corestate.localDataStore.getProfileProperty(propertyName) } returns expectedValue
+        coreState.config.enablePersonalization(true)
+        every { coreState.localDataStore.getProfileProperty(propertyName) } returns expectedValue
 
         // Act
         initializeCleverTapAPI()
@@ -1062,14 +1054,14 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         assertEquals(expectedValue, actualValue)
-        verify { corestate.localDataStore.getProfileProperty(propertyName) }
+        verify { coreState.localDataStore.getProfileProperty(propertyName) }
     }
 
     @Test
     fun test_getProperty_whenPersonalizationDisabled() {
         // Arrange
         val propertyName = "UserLevel"
-        corestate.config.enablePersonalization(false)
+        coreState.config.enablePersonalization(false)
 
         // Act
         initializeCleverTapAPI()
@@ -1077,7 +1069,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         assertEquals(null, actualValue)
-        verify(exactly = 0) { corestate.localDataStore.getProfileProperty(any()) }
+        verify(exactly = 0) { coreState.localDataStore.getProfileProperty(any()) }
     }
 
     // =========================
@@ -1089,75 +1081,75 @@ class CleverTapAPITest : BaseTestCase() {
 
         initializeCleverTapAPI()
         // Arrange
-        corestate.config.isAnalyticsOnly = true
+        coreState.config.isAnalyticsOnly = true
 
         // Act
         cleverTapAPI.discardInAppNotifications()
 
         // Assert
-        verify(exactly = 0) { corestate.inAppController.discardInApps(any()) }
+        verify(exactly = 0) { coreState.inAppController.discardInApps(any()) }
 
         // Arrange
-        corestate.config.isAnalyticsOnly = false
+        coreState.config.isAnalyticsOnly = false
 
         // Act
         cleverTapAPI.discardInAppNotifications()
 
         // Assert
-        verify{ corestate.inAppController.discardInApps(any()) }
+        verify{ coreState.inAppController.discardInApps(any()) }
     }
 
     @Test
     fun test_resumeInAppNotifications() {
 
         // Arrange
-        corestate.config.isAnalyticsOnly = true
+        coreState.config.isAnalyticsOnly = true
         initializeCleverTapAPI()
 
         // Act
         cleverTapAPI.resumeInAppNotifications()
 
         // Assert
-        verify(exactly = 0) { corestate.inAppController.resumeInApps() }
+        verify(exactly = 0) { coreState.inAppController.resumeInApps() }
 
         // Arrange
-        corestate.config.isAnalyticsOnly = false
+        coreState.config.isAnalyticsOnly = false
 
         // Act
         cleverTapAPI.resumeInAppNotifications()
 
         // Assert
-        verify { corestate.inAppController.resumeInApps() }
+        verify { coreState.inAppController.resumeInApps() }
     }
 
     @Test
     fun test_suspendInAppNotifications() {
 
         // Arrange
-        corestate.config.isAnalyticsOnly = true
+        coreState.config.isAnalyticsOnly = true
         initializeCleverTapAPI()
 
         // Act
         cleverTapAPI.suspendInAppNotifications()
 
         // Assert
-        verify(exactly = 0) { corestate.inAppController.suspendInApps() }
+        verify(exactly = 0) { coreState.inAppController.suspendInApps() }
 
         // Arrange
-        corestate.config.isAnalyticsOnly = false
+        coreState.config.isAnalyticsOnly = false
 
         // Act
         cleverTapAPI.suspendInAppNotifications()
 
         // Assert
-        verify { corestate.inAppController.suspendInApps() }
+        verify { coreState.inAppController.suspendInApps() }
     }
 
     @Test
     fun test_fetchInApps_analyticsOnly_false() {
 
         // Arrange
-        corestate.config.isAnalyticsOnly = false
+        coreState.config.isAnalyticsOnly = false
         initializeCleverTapAPI()
         val expectedJson = cleverTapAPI.getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS)
 
@@ -1169,8 +1161,8 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         val jsonSlot = slot<JSONObject>()
         verifyOrder {
-            corestate.callbackManager.fetchInAppsCallback = callback
-            corestate.analyticsManager.sendFetchEvent(capture(jsonSlot))
+            coreState.callbackManager.fetchInAppsCallback = callback
+            coreState.analyticsManager.sendFetchEvent(capture(jsonSlot))
         }
         assertEquals(expectedJson.toString(), jsonSlot.captured.toString())
     }
@@ -1187,7 +1179,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         // verify delegation
         verify {
-            corestate.varCache.variants()
+            coreState.varCache.variants()
         }
     }
 }
