@@ -102,6 +102,7 @@ public interface Constants {
     String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
+    String REQUEST_VARIANTS_JSON_RESPONSE_KEY = "abVariantInfo";
     String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
     String GEOFENCES_JSON_RESPONSE_KEY = "geofences";
     String DISCARDED_EVENT_JSON_KEY = "d_e";
@@ -133,6 +134,7 @@ public interface Constants {
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
     String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";
+    String CACHED_VARIANTS_KEY = "variantsForAbKey";
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";

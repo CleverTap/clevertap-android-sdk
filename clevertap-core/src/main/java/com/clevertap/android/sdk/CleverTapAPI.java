@@ -3596,6 +3596,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Returns information about the active variants for the current user. Each variant will contain
+     * an "id" key mapping to the numeric ID of the variant.
+     */
+    public List<Map<String, Object>> variants() {
+        List<Map<String, Object>> originalVariants = coreState.getVarCache().variants();
+        return Collections.unmodifiableList(new ArrayList<>(originalVariants));
+    }
+
+    /**
      * Fetches In Apps from server.
      *
      * @param callback Callback instance {@link FetchInAppsCallback} to be invoked when fetching is done.
