@@ -157,7 +157,6 @@ internal class DeleteOperationHandler(
         basePath: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
         val indicesToDelete = mutableListOf<Int>()
 
         // Collect indices to delete
@@ -165,14 +164,25 @@ internal class DeleteOperationHandler(
             if (ProfileOperationUtils.isDeleteMarker(newArray.opt(i)) && i < oldArray.length()) {
                 indicesToDelete.add(i)
             }
+        }
 
-            if (indicesToDelete.isEmpty()) return
+        if (indicesToDelete.isEmpty()) return
 
-            // Delete in reverse order to maintain correct indices
-            indicesToDelete.sortedDescending().forEach { index ->
+        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        var removedAny = false
+
+        // Delete in reverse order to maintain correct indices
+        indicesToDelete.sortedDescending().forEach { index ->
+            val oldElement = oldArray.get(index)
+            // check is needed since BE can only delete leaf nodes
+            if (oldElement !is JSONObject && oldElement !is JSONArray) {
                 oldArray.remove(index)
+                removedAny = true
             }
+        }
 
+        // Only report changes if we actually removed something
+        if (removedAny) {
             changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
         }
     }
@@ -187,6 +197,10 @@ internal class DeleteOperationHandler(
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
+        if (value is JSONArray || value is JSONObject) {
+            // check is needed since BE can only delete leaf nodes
+            return
+        }
         changeTracker.recordDeletion(value, path, changes)
         parent.remove(key)
     }
