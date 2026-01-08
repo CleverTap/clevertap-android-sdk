@@ -137,7 +137,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
-            // Legacy SS in-apps (inapp_notifs -> NORMAL in-app campaigns WITHOUT advance display rules)
+            // Legacy SS in-apps (inapp_notifs -> NORMAL/DELAYED in-app campaigns WITHOUT advance display rules)
             DurationPartitionedInApps.ImmediateAndDelayed partitionedLegacyInApps = res.getPartitionedLegacyInApps();
             if (partitionedLegacyInApps.hasImmediateInApps()) {
                 displayInApp(partitionedLegacyInApps.getImmediateInApps());
@@ -154,7 +154,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                         .scheduleInActionInApps(partitionedLegacyMetaInApps.getInActionInApps());
             }
 
-            // App launch SS in-apps (inapp_notifs_applaunched -> NORMAL in-app campaigns WITH advance display rules on app launched event)
+            // App launch SS in-apps (inapp_notifs_applaunched -> NORMAL/DELAYED in-app campaigns WITH/WITHOUT advance display rules on app launched event)
             DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
             if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
                 controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
@@ -168,7 +168,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 );
             }
 
-            // App launch SS in-apps meta (inapp_notifs_applaunched_meta -> IN-ACTION in-app campaigns WITH advance display rules on app launched event)
+            // App launch SS in-apps meta (inapp_notifs_applaunched_meta -> IN-ACTION in-app campaigns WITH/WITHOUT advance display rules on app launched event)
             DurationPartitionedInApps.InActionOnly partitionedAppLaunchServerSideMetaInApps = res.getPartitionedAppLaunchServerSideMetaInApps();
             if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
                 // Schedule in-action from App Launch SS meta

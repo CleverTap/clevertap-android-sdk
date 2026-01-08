@@ -234,30 +234,11 @@ internal class EvaluationManager(
      */
     @VisibleForTesting
     internal fun evaluateServerSide(events: List<EventAdapter>) {
-        // Flag to track if the list of evaluated server-side campaign IDs has been updated.
-        var updated = false
-        val eligibleInApps = mutableListOf<JSONObject>()
         // Access the in-app store from the store registry.
         storeRegistry.inAppStore?.let { store ->
-            // Retrieve server-side in-app notifications metadata from storage and evaluate them against the event.
-            for (event in events) {
-                eligibleInApps.addAll(evaluate(event, store.readServerSideInAppsMetaData().toList()))
-            }
-
-            // Iterate through eligible server-side in-app notifications.
-            eligibleInApps.forEach { inApp ->
-                // Extract the campaign ID from the in-app notification.
-                val campaignId = inApp.optLong(Constants.INAPP_ID_IN_PAYLOAD)
-                // Add the campaign ID to the list of evaluated server-side campaign IDs if it's not zero.
-                if (campaignId != 0L) {
-                    updated = true
-                    evaluatedServerSideCampaignIds.add(campaignId)
-                }
-            }
-            // Save the updated list of evaluated server-side campaign IDs to storage if there were updates.
-            if (updated) {
-                saveEvaluatedServerSideInAppIds()
-            }
+            val metadata = store.readServerSideInAppsMetaData().toList<JSONObject>()
+            val eligibleInApps = evaluateEventsAgainstMetadata(events, metadata)
+            trackAndSaveEvaluatedCampaignIds(eligibleInApps)
         }
     }
 
@@ -266,33 +247,41 @@ internal class EvaluationManager(
      * Similar to evaluateServerSide() but for in-action campaigns.
      * Returns eligible in-action campaigns that should have timers scheduled.
      *
-     * Unlike evaluateServerSide(), this does NOT add campaign IDs to evaluatedServerSideCampaignIds
-     * because in-action campaigns use a separate fetch mechanism (t=6) when the timer expires.
-     *
      * @param events List of event adapters to evaluate against in-action metadata
-     * @return JSONArray of eligible in-action campaigns with full metadata for scheduling
+     * @return List of eligible in-action campaigns with full metadata for scheduling
      */
-    fun evaluateServerSideInAction(events: List<EventAdapter>): JSONArray {
-        // Load in-action SS metadata from storage
-        val inActionMetadata = storeRegistry.inAppStore?.readServerSideInActionMetaData()
-            ?: return JSONArray()
+    internal fun evaluateServerSideInAction(events: List<EventAdapter>): JSONArray {
+        return storeRegistry.inAppStore?.let { store ->
+            val metadata = store.readServerSideInActionMetaData().toList<JSONObject>()
+            val eligibleInApps = evaluateEventsAgainstMetadata(events, metadata)
+            trackAndSaveEvaluatedCampaignIds(eligibleInApps)
+            return JSONArray(eligibleInApps)
+        } ?: JSONArray()
+    }
 
-        val eligibleInActionCampaigns = JSONArray()
-
-        // Evaluate each event against in-action metadata
+    private fun evaluateEventsAgainstMetadata(
+        events: List<EventAdapter>,
+        metadata: List<JSONObject>
+    ): List<JSONObject> {
+        val eligibleInApps = mutableListOf<JSONObject>()
         for (event in events) {
-            // Use core evaluate() method - checks triggers and limits
-            val eligibleInApps = evaluate(event, inActionMetadata.toList())
+            eligibleInApps.addAll(evaluate(event, metadata))
+        }
+        return eligibleInApps
+    }
 
-            for (inApp in eligibleInApps) {
-                eligibleInActionCampaigns.put(inApp)
+    private fun trackAndSaveEvaluatedCampaignIds(eligibleInApps: List<JSONObject>) {
+        var updated = false
+        eligibleInApps.forEach { inApp ->
+            val campaignId = inApp.optLong(Constants.INAPP_ID_IN_PAYLOAD)
+            if (campaignId != 0L) {
+                updated = true
+                evaluatedServerSideCampaignIds.add(campaignId)
             }
         }
-
-        // Note: We do NOT add to evaluatedServerSideCampaignIds
-        // In-action campaigns use their own fetch flow (t=6) when timer expires
-
-        return eligibleInActionCampaigns
+        if (updated) {
+            saveEvaluatedServerSideInAppIds()
+        }
     }
 
     /**

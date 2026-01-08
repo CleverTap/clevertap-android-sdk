@@ -188,7 +188,7 @@ internal class InAppController(
     fun scheduleInActionInApps(inActionMetadata: JSONArray) {
         logger.verbose(
             config.accountId,
-            "InAppController: Scheduling ${inActionMetadata.length()} in-action in-apps"
+            "[InAppController]: Scheduling ${inActionMetadata.length()} in-action in-apps"
         )
 
         inAppInActionManager.schedule(inActionMetadata) { result ->
@@ -197,27 +197,27 @@ internal class InAppController(
                     // After inaction duration expires, fetch content from backend
                     logger.verbose(
                         defaultLogTag,
-                        "In-action duration expired for targetId: ${result.targetId}, calling fetch API"
+                        "[InAppController]: In-action duration expired for targetId: ${result.targetId}, calling fetch API"
                     )
                     fetchInActionInApp(result.targetId)
                 }
                 is InActionResult.Error -> {
                     logger.verbose(
                         defaultLogTag,
-                        "Error scheduling in-action in-app: ${result.message} for targetId: ${result.targetId}"
+                        "[InAppController]Error scheduling in-action in-app: ${result.message} for targetId: ${result.targetId}"
                     )
                 }
                 is InActionResult.Cancelled -> {
                     logger.verbose(
                         defaultLogTag,
-                        "In-action in-app cancelled for targetId: ${result.targetId}"
+                        "[InAppController]In-action in-app cancelled for targetId: ${result.targetId}"
                     )
                 }
 
                 is InActionResult.Discarded -> {
                     logger.verbose(
                         defaultLogTag,
-                        "In-action: in-app discarded ${result.id}: ${result.reason}"
+                        "[InAppController]In-action: in-app discarded ${result.id}: ${result.reason}"
                     )
                 }
             }
