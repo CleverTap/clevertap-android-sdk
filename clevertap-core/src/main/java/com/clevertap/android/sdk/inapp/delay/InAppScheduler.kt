@@ -1,15 +1,11 @@
 package com.clevertap.android.sdk.inapp.delay
 
-import androidx.annotation.AnyThread
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.iterator
-import com.clevertap.android.sdk.utils.filterObjects
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -35,13 +31,13 @@ internal class InAppScheduler<T>(
      */
     @WorkerThread
     fun schedule(
-        inApps: JSONArray,
+        inApps: List<JSONObject>,
         onComplete: (T) -> Unit
     ) {
-        logger.verbose(accountId, "$TAG Scheduling ${inApps.length()} in-apps")
+        logger.verbose(accountId, "$TAG Scheduling ${inApps.size} in-apps")
 
         // Step 1: Filter already scheduled in-apps
-        val newInApps = inApps.filterObjects { jsonObject ->
+        val newInApps = inApps.filter { jsonObject ->
             val id = jsonObject.optString(Constants.INAPP_ID_IN_PAYLOAD)
             !timerManager.isTimerScheduled(id)
         }
@@ -50,7 +46,7 @@ internal class InAppScheduler<T>(
         val prepared = storageStrategy.prepareForScheduling(newInApps)
         if (!prepared) {
             logger.verbose(accountId, "$TAG Failed to prepare in-apps for scheduling")
-            newInApps.iterator<JSONObject> {
+            newInApps.forEach {
                 val id = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
                 onComplete(dataExtractor.createErrorResult(id, "Preparation failed"))
             }
@@ -58,7 +54,7 @@ internal class InAppScheduler<T>(
         }
 
         // Step 3: Schedule timers for each in-app
-        newInApps.iterator<JSONObject> {
+        newInApps.forEach {
             val id = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val delayInMs = dataExtractor.extractDelay(it)
 

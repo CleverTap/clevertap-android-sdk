@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
 import androidx.annotation.WorkerThread
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -13,26 +12,26 @@ internal interface InAppQueue {
     /**
      * Enqueues a single In-App message in the queue.
      *
-     * @param jsonObject The In-App message to enqueue.
+     * @param inApp The In-App message to enqueue.
      */
     @WorkerThread
-    fun enqueue(jsonObject: JSONObject)
+    fun enqueue(inApp: JSONObject)
 
     /**
      * Enqueues multiple In-App messages from a JSONArray in the queue.
      *
-     * @param jsonArray The JSONArray containing multiple In-App messages to enqueue.
+     * @param inApps The JSONArray containing multiple In-App messages to enqueue.
      */
     @WorkerThread
-    fun enqueueAll(jsonArray: JSONArray)
+    fun enqueueAll(inApps: List<JSONObject>)
 
     /**
      * Insert a single In-App message in front of the queue.
      *
-     * @param jsonObject The In-App message to insert.
+     * @param inApp The In-App message to insert.
      */
     @WorkerThread
-    fun insertInFront(jsonObject: JSONObject)
+    fun insertInFront(inApp: JSONObject)
 
     /**
      * Dequeues and removes the first In-App message from the queue.

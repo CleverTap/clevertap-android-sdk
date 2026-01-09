@@ -11,9 +11,7 @@ import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTE
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MAX_DELAY_SECONDS
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MIN_DELAY_SECONDS
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
-import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.utils.Clock
-import com.clevertap.android.sdk.utils.filterObjects
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -151,12 +149,12 @@ internal class InAppDelayManager(
      * Schedule multiple delayed in-apps
      */
     internal fun scheduleDelayedInApps(
-        delayedInApps: JSONArray,
+        delayedInApps: List<JSONObject>,
         callback: (DelayedInAppResult) -> Unit
     ) {
         logger.verbose(
             accountId,
-            "$TAG Scheduling ${delayedInApps.length()} delayed in-apps"
+            "$TAG Scheduling ${delayedInApps.size} delayed in-apps"
         )
 
         if (delayedLegacyInAppStore == null) {
@@ -167,7 +165,7 @@ internal class InAppDelayManager(
             return
         }
 
-        val newDelayedInAppsToSchedule = delayedInApps.filterObjects { jsonObject ->
+        val newDelayedInAppsToSchedule = delayedInApps.filter { jsonObject ->
             val inAppId = jsonObject.optString(Constants.INAPP_ID_IN_PAYLOAD)
             inAppId.isNotBlank() && activeJobs[inAppId] == null
         }
@@ -175,7 +173,7 @@ internal class InAppDelayManager(
         val saveSuccess = delayedLegacyInAppStore!!.saveDelayedInAppsBatch(newDelayedInAppsToSchedule)
 
         if (!saveSuccess) {
-            newDelayedInAppsToSchedule.iterator<JSONObject> {
+            newDelayedInAppsToSchedule.forEach {
                 val inAppId = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
                 callback(DelayedInAppResult.Error(
                     DelayedInAppResult.Error.ErrorReason.DB_SAVE_FAILED,
@@ -185,7 +183,7 @@ internal class InAppDelayManager(
             return
         }
 
-        newDelayedInAppsToSchedule.iterator<JSONObject> {
+        newDelayedInAppsToSchedule.forEach {
             val inAppId = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val delayInMilliSeconds = getInAppDelayInMs(it)
 

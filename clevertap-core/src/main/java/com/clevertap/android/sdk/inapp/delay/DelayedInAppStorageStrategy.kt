@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inapp.delay
 
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -14,7 +13,7 @@ internal class DelayedInAppStorageStrategy(
     internal var delayedLegacyInAppStore: DelayedLegacyInAppStore? = null
 ) : InAppSchedulingStrategy {
 
-    override fun prepareForScheduling(inApps: JSONArray): Boolean {
+    override fun prepareForScheduling(inApps: List<JSONObject>): Boolean {
         if (delayedLegacyInAppStore == null) {
             logger.verbose(accountId, "DelayedLegacyInAppStore is null, cannot prepare")
             return false

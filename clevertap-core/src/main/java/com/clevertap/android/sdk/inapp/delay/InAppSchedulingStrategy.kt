@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp.delay
 
 import androidx.annotation.WorkerThread
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -13,7 +12,7 @@ internal interface InAppSchedulingStrategy {
      * @return true if preparation successful, false otherwise
      */
     @WorkerThread
-    fun prepareForScheduling(inApps: JSONArray): Boolean
+    fun prepareForScheduling(inApps: List<JSONObject>): Boolean
 
     /**
      * Retrieve data after timer completes

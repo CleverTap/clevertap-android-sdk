@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.ImmediateA
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.InActionOnly
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.UnknownAndInAction
 import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * Sealed class hierarchy representing in-app notifications partitioned by their display duration.
@@ -33,16 +34,16 @@ sealed class DurationPartitionedInApps {
      * InAction items come separately in their respective `_meta` keys.
      */
     data class ImmediateAndDelayed(
-        val immediateInApps: JSONArray,
-        val delayedInApps: JSONArray
+        val immediateInApps: List<JSONObject>,
+        val delayedInApps: List<JSONObject>
     ) : DurationPartitionedInApps() {
 
-        fun hasImmediateInApps(): Boolean = immediateInApps.length() > 0
+        fun hasImmediateInApps(): Boolean = immediateInApps.isNotEmpty()
 
-        fun hasDelayedInApps(): Boolean = delayedInApps.length() > 0
+        fun hasDelayedInApps(): Boolean = delayedInApps.isNotEmpty()
 
         companion object {
-            fun empty() = ImmediateAndDelayed(JSONArray(), JSONArray())
+            fun empty() = ImmediateAndDelayed(emptyList(), emptyList())
         }
     }
 
@@ -57,16 +58,16 @@ sealed class DurationPartitionedInApps {
      * - **InAction**: Has `inactionDuration` → fetch content after inactivity timer
      */
     data class UnknownAndInAction(
-        val unknownDurationInApps: JSONArray,
-        val inActionInApps: JSONArray
+        val unknownDurationInApps: List<JSONObject>,
+        val inActionInApps: List<JSONObject>
     ) : DurationPartitionedInApps() {
 
-        fun hasUnknownDurationInApps(): Boolean = unknownDurationInApps.length() > 0
+        fun hasUnknownDurationInApps(): Boolean = unknownDurationInApps.isNotEmpty()
 
-        fun hasInActionInApps(): Boolean = inActionInApps.length() > 0
+        fun hasInActionInApps(): Boolean = inActionInApps.isNotEmpty()
 
         companion object {
-            fun empty() = UnknownAndInAction(JSONArray(), JSONArray())
+            fun empty() = UnknownAndInAction(emptyList(), emptyList())
         }
     }
 
@@ -80,13 +81,13 @@ sealed class DurationPartitionedInApps {
      * All items have `inactionDuration` → fetch content after inactivity timer.
      */
     data class InActionOnly(
-        val inActionInApps: JSONArray
+        val inActionInApps: List<JSONObject>
     ) : DurationPartitionedInApps() {
 
-        fun hasInActionInApps(): Boolean = inActionInApps.length() > 0
+        fun hasInActionInApps(): Boolean = inActionInApps.isNotEmpty()
 
         companion object {
-            fun empty() = InActionOnly(JSONArray())
+            fun empty() = InActionOnly(emptyList())
         }
     }
 }

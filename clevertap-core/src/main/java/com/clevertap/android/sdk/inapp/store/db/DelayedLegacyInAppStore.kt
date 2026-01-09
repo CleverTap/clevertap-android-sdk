@@ -33,13 +33,13 @@ internal class DelayedLegacyInAppStore(
     private val accountId: String
 ) {
     @WorkerThread
-    fun saveDelayedInAppsBatch(delayedInApps: JSONArray): Boolean {
-        if (delayedInApps.length() == 0) return true
+    fun saveDelayedInAppsBatch(delayedInApps: List<JSONObject>): Boolean {
+        if (delayedInApps.isEmpty()) return true
 
         val dataList = mutableListOf<DelayedLegacyInAppData>()
         var encryptionFailureCount = 0
 
-        delayedInApps.iterator<JSONObject> { inAppJson ->
+        delayedInApps.forEach{ inAppJson ->
             val inAppId = inAppJson.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val delay = inAppJson.optInt(INAPP_DELAY_AFTER_TRIGGER)
 

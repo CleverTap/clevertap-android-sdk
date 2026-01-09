@@ -227,26 +227,23 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void displayInApp(JSONArray inappNotifsArray) {
+    private void displayInApp(List<JSONObject> inappNotifsList) {
         // Fire the first notification, if any
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InAppResponse#processResponse", new Callable<Void>() {
-            @Override
-            public Void call() {
-                controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsArray);
-                return null;
-            }
+        task.execute("InAppResponse#processResponse", () -> {
+            controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsList);
+            return null;
         });
     }
 
-    private void scheduleDelayedLegacyInApps(JSONArray delayedLegacyInApps) {
+    private void scheduleDelayedLegacyInApps(List<JSONObject> delayedLegacyInApps) {
         InAppController inAppController = controllerManager.getInAppController();
 
         // Schedule using delay functionality
         inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps);
 
         logger.verbose(config.getAccountId(),
-                "InApp: scheduling " + delayedLegacyInApps.length() +
+                "InApp: scheduling " + delayedLegacyInApps.size() +
                         " delayed in-apps. Active delays: " +
                         inAppController.getActiveDelayedInAppsCount());
     }
