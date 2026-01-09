@@ -2,11 +2,6 @@ package com.clevertap.android.sdk
 
 
 import android.content.Context
-import com.clevertap.android.sdk.cryption.CryptFactory
-import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.cryption.CryptRepository
-import com.clevertap.android.sdk.db.BaseDatabaseManager
-import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
 import com.clevertap.android.sdk.usereventlogs.UserEventLog
 import com.clevertap.android.sdk.validation.ValidationConfig
@@ -36,6 +31,7 @@ class SessionManagerTest : BaseTestCase() {
         coreMetaData = CoreMetaData()
         validationConfig = mockk<ValidationConfig>(relaxed = true)
         localDataStoreDef = mockk<LocalDataStore>(relaxed = true)
+        deviceInfo = MockDeviceInfo(appCtx, configDef, "id", coreMetaData)
 
         sessionManagerDef = SessionManager(configDef, coreMetaData, validationConfig,localDataStoreDef)
     }

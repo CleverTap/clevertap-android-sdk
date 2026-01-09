@@ -11,7 +11,7 @@ import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.login.IdentityRepo
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.login.LoginInfoProvider
-import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.profile.traversal.ProfileChange
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResult
@@ -82,7 +82,7 @@ class EventQueueManagerTest : BaseTestCase() {
             every { corestate.eventMediator.getEventName(event) } returns "test_event"
 
             // When
-            eventQueueManager.queueEvent(application, event, Constants.RAISED_EVENT)
+            eventQueueManager.queueEvent(application, event, Constants.RAISED_EVENT, mockEventProperties())
 
             // Then
             verify { corestate.localDataStore.persistUserEventLog("test_event") }
@@ -125,7 +125,7 @@ class EventQueueManagerTest : BaseTestCase() {
                     json, Constants.PING_EVENT
                 )
             } returns true
-            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT, FlattenedEventData.NoData)
             verify(exactly = 0) {
                 eventQueueManager.addToQueue(
                     application, json, Constants.PING_EVENT, any()
@@ -147,7 +147,7 @@ class EventQueueManagerTest : BaseTestCase() {
                     application, json, Constants.FETCH_EVENT, FlattenedEventData.NoData
                 )
             } just runs
-            eventQueueManager.queueEvent(application, json, Constants.FETCH_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.FETCH_EVENT, FlattenedEventData.NoData)
             verify { eventQueueManager.addToQueue(application, json, Constants.FETCH_EVENT,
                                                   FlattenedEventData.NoData) }
         }
@@ -169,7 +169,7 @@ class EventQueueManagerTest : BaseTestCase() {
             every { eventQueueManager.pushInitialEventsAsync() } just runs
             every { corestate.sessionManager.lazyCreateSession(application) } just runs
 
-            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT, FlattenedEventData.NoData)
 
             verify { corestate.sessionManager.lazyCreateSession(application) }
             verify { eventQueueManager.pushInitialEventsAsync() }
@@ -195,13 +195,13 @@ class EventQueueManagerTest : BaseTestCase() {
             } returns true
             every {
                 eventQueueManager.addToQueue(
-                    application, json, Constants.PING_EVENT,
+                    application, json, Constants.PING_EVENT, any()
                 )
             } just runs
             every { eventQueueManager.pushInitialEventsAsync() } just runs
             every { corestate.sessionManager.lazyCreateSession(application) } just runs
 
-            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PING_EVENT, FlattenedEventData.NoData)
 
             val runnableSlot = slot<Runnable>()
             verify { corestate.mainLooperHandler.postDelayed(capture(runnableSlot), any()) }
@@ -210,7 +210,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             verify { corestate.sessionManager.lazyCreateSession(application) }
             verify { eventQueueManager.pushInitialEventsAsync() }
-            verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT) }
+            verify { eventQueueManager.addToQueue(application, json, Constants.PING_EVENT, any()) }
         }
     }
 
@@ -235,12 +235,12 @@ class EventQueueManagerTest : BaseTestCase() {
             every { eventQueueManager.pushInitialEventsAsync() } just runs
             every { corestate.sessionManager.lazyCreateSession(application) } just runs
 
-            eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT, mockProfileChanges())
 
             verify { mockInAppController.onQueueProfileEvent(any(), any()) }
             verify { corestate.sessionManager.lazyCreateSession(application) }
             verify { eventQueueManager.pushInitialEventsAsync() }
-            verify { eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT) }
+            verify { eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT, any()) }
         }
     }
 
@@ -249,20 +249,20 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
             every {
                 eventQueueManager.processPushNotificationViewedEvent(
-                    application, json, Constants.NV_EVENT
+                    application, json, Constants.NV_EVENT, any()
                 )
             } just runs
 
-            eventQueueManager.addToQueue(application, json, Constants.NV_EVENT)
+            eventQueueManager.addToQueue(application, json, Constants.NV_EVENT, FlattenedEventData.NoData)
 
             verify {
                 eventQueueManager.processPushNotificationViewedEvent(
-                    application, json, Constants.NV_EVENT
+                    application, json, Constants.NV_EVENT, any()
                 )
             }
             verify(exactly = 0) {
                 eventQueueManager.processEvent(
-                    application, json, Constants.NV_EVENT
+                    application, json, Constants.NV_EVENT, any()
                 )
             }
         }
@@ -273,18 +273,18 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
             every {
                 eventQueueManager.processEvent(
-                    application, json, Constants.PROFILE_EVENT
+                    application, json, Constants.PROFILE_EVENT, any()
                 )
             } just runs
 
-            eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT, FlattenedEventData.NoData)
 
             verify(exactly = 0) {
                 eventQueueManager.processPushNotificationViewedEvent(
-                    application, json, Constants.PROFILE_EVENT
+                    application, json, Constants.PROFILE_EVENT, any()
                 )
             }
-            verify { eventQueueManager.processEvent(application, json, Constants.PROFILE_EVENT) }
+            verify { eventQueueManager.processEvent(application, json, Constants.PROFILE_EVENT, any()) }
         }
     }
 
@@ -293,7 +293,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.currentSessionId = 1000
-            every { eventQueueManager.now } returns 7000
+            every { eventQueueManager.getNow() } returns 7000
             every {
                 eventQueueManager.flushQueueAsync(
                     application, PUSH_NOTIFICATION_VIEWED
@@ -301,11 +301,11 @@ class EventQueueManagerTest : BaseTestCase() {
             } just runs
             every {
                 eventQueueManager.initInAppEvaluation(
-                    application, json, Constants.PROFILE_EVENT
+                    application, json, Constants.PROFILE_EVENT, any()
                 )
             } just runs
 
-            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT, FlattenedEventData.NoData)
 
             assertNull(json.optJSONObject(Constants.ERROR_KEY))
             assertEquals("event", json.getString("type"))
@@ -339,7 +339,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.currentSessionId = 1000
-            every { eventQueueManager.now } returns 7000
+            every { eventQueueManager.getNow() } returns 7000
             every {
                 eventQueueManager.flushQueueAsync(
                     application, PUSH_NOTIFICATION_VIEWED
@@ -347,12 +347,12 @@ class EventQueueManagerTest : BaseTestCase() {
             } just runs
             every {
                 eventQueueManager.initInAppEvaluation(
-                    application, json, Constants.PROFILE_EVENT
+                    application, json, Constants.PROFILE_EVENT, any()
                 )
             } just runs
 
             // Act
-            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT)
+            eventQueueManager.processPushNotificationViewedEvent(application, json, Constants.PROFILE_EVENT, FlattenedEventData.NoData)
 
             // Assert
             assertEquals(validationResult.errorCode, json.getJSONObject(Constants.ERROR_KEY)["c"])
@@ -380,11 +380,11 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             corestate.coreMetaData.currentSessionId = 10000
-            every { eventQueueManager.pushBasicProfile(null, false) } just runs
+            every { eventQueueManager.pushBasicProfile(null, false, any()) } just runs
 
             eventQueueManager.pushInitialEventsAsync()
 
-            verify(exactly = 0) { eventQueueManager.pushBasicProfile(null, false) }
+            verify(exactly = 0) { eventQueueManager.pushBasicProfile(null, false, any()) }
         }
     }
 
@@ -393,11 +393,11 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             corestate.coreMetaData.currentSessionId = -1
-            every { eventQueueManager.pushBasicProfile(null, false) } just runs
+            every { eventQueueManager.pushBasicProfile(null, false, any()) } just runs
 
             eventQueueManager.pushInitialEventsAsync()
 
-            verify { eventQueueManager.pushBasicProfile(null, false) }
+            verify { eventQueueManager.pushBasicProfile(null, false, any()) }
         }
     }
 
@@ -528,7 +528,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             // Arrange
-            every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
+            every { eventQueueManager.queueEvent(any(), any(), any(), any()) } returns null
 
             val expectedDeviceId = "device_12345"
             val expectedDeviceCarrier = "carrier_12345"
@@ -547,12 +547,12 @@ class EventQueueManagerTest : BaseTestCase() {
             val eventTypeSlot = slot<Int>()
 
             // Act
-            eventQueueManager.pushBasicProfile(null, false)
+            eventQueueManager.pushBasicProfile(null, false, mockProfileChanges())
 
             // Assert
             verify {
                 eventQueueManager.queueEvent(
-                    any(), capture(jsonSlot), capture(eventTypeSlot)
+                    any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                 )
             }
             val actualProfile = jsonSlot.captured["profile"] as JSONObject
@@ -567,7 +567,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             // Arrange
-            every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
+            every { eventQueueManager.queueEvent(any(), any(), any(), any()) } returns null
 
             val expectedDeviceId = "device_12345"
 
@@ -579,12 +579,12 @@ class EventQueueManagerTest : BaseTestCase() {
             val eventTypeSlot = slot<Int>()
 
             // Act
-            eventQueueManager.pushBasicProfile(null, false)
+            eventQueueManager.pushBasicProfile(null, false, mockProfileChanges())
 
             // Assert
             verify {
                 eventQueueManager.queueEvent(
-                    any(), capture(jsonSlot), capture(eventTypeSlot)
+                    any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                 )
             }
             val actualProfile = jsonSlot.captured["profile"] as JSONObject
@@ -598,7 +598,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             // Arrange
-            every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
+            every { eventQueueManager.queueEvent(any(), any(), any(), any()) } returns null
 
             val expectedDeviceId = "device_12345"
 
@@ -610,12 +610,12 @@ class EventQueueManagerTest : BaseTestCase() {
             val eventTypeSlot = slot<Int>()
 
             // Act
-            eventQueueManager.pushBasicProfile(null, false)
+            eventQueueManager.pushBasicProfile(null, false, mockProfileChanges())
 
             // Assert
             verify {
                 eventQueueManager.queueEvent(
-                    any(), capture(jsonSlot), capture(eventTypeSlot)
+                    any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                 )
             }
             val actualProfile = jsonSlot.captured["profile"] as JSONObject
@@ -639,7 +639,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 } returns mockIdentityRepo
 
                 // Arrange
-                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
+                every { eventQueueManager.queueEvent(any(), any(), any(), any()) } returns null
 
                 val expectedDeviceId = "device_12345"
 
@@ -655,12 +655,12 @@ class EventQueueManagerTest : BaseTestCase() {
                 inputJson.put("details", subInputJson)
 
                 // Act
-                eventQueueManager.pushBasicProfile(inputJson, false)
+                eventQueueManager.pushBasicProfile(inputJson, false, mockProfileChanges())
 
                 // Assert
                 verify {
                     eventQueueManager.queueEvent(
-                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                        any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                     )
                 }
                 val actualProfile = jsonSlot.captured["profile"] as JSONObject
@@ -705,13 +705,13 @@ class EventQueueManagerTest : BaseTestCase() {
                 every { mockIdentityRepo.hasIdentity("name") } returns true
 
                 // Act
-                eventQueueManager.pushBasicProfile(inputJson, false)
+                eventQueueManager.pushBasicProfile(inputJson, false, mockProfileChanges())
 
                 // Assert
                 verify { loginInfoProvider.cacheGUIDForIdentifier(expectedDeviceId, "name", "abc") }
                 verify {
                     eventQueueManager.queueEvent(
-                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                        any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                     )
                 }
                 val actualProfile = jsonSlot.captured["profile"] as JSONObject
@@ -738,7 +738,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 } returns mockIdentityRepo
 
                 //Arrange
-                every { eventQueueManager.queueEvent(any(), any(), any()) } returns null
+                every { eventQueueManager.queueEvent(any(), any(), any(), any()) } returns null
 
                 val expectedDeviceID = "_12345789"
                 val expectedDeviceCarrier = "Android"
@@ -762,7 +762,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 every { mockIdentityRepo.hasIdentity("Email") } returns true
 
                 //Act
-                eventQueueManager.pushBasicProfile(inputJson, true)
+                eventQueueManager.pushBasicProfile(inputJson, true, mockProfileChanges())
 
                 //Assert
                 verify {
@@ -773,7 +773,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 }
                 verify {
                     eventQueueManager.queueEvent(
-                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                        any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                     )
                 }
 
@@ -824,12 +824,12 @@ class EventQueueManagerTest : BaseTestCase() {
                 every { mockIdentityRepo.hasIdentity("Phone") } returns false
 
                 //Act
-                eventQueueManager.pushBasicProfile(inputJson, false)
+                eventQueueManager.pushBasicProfile(inputJson, false, mockProfileChanges())
 
                 //Assert
                 verify {
                     eventQueueManager.queueEvent(
-                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                        any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                     )
                 }
 
@@ -880,7 +880,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 every { mockIdentityRepo.hasIdentity("Email") } returns true
 
                 //Act
-                eventQueueManager.pushBasicProfile(inputJson, false)
+                eventQueueManager.pushBasicProfile(inputJson, false, mockProfileChanges())
 
                 //Assert
                 verify {
@@ -890,7 +890,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 }
                 verify {
                     eventQueueManager.queueEvent(
-                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                        any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                     )
                 }
 
@@ -941,12 +941,12 @@ class EventQueueManagerTest : BaseTestCase() {
                 every { mockIdentityRepo.hasIdentity("Phone") } returns false
 
                 //Act
-                eventQueueManager.pushBasicProfile(inputJson, true)
+                eventQueueManager.pushBasicProfile(inputJson, true, mockProfileChanges())
 
                 //Assert
                 verify {
                     eventQueueManager.queueEvent(
-                        any(), capture(jsonSlot), capture(eventTypeSlot)
+                        any(), capture(jsonSlot), capture(eventTypeSlot), mockProfileChanges()
                     )
                 }
 
@@ -980,11 +980,11 @@ class EventQueueManagerTest : BaseTestCase() {
             CoreMetaData.setActivityCount(0)
             val actualEvent = JSONObject()
 
-            every { eventQueueManager.now } returns expectedEpoch
+            every { eventQueueManager.getNow() } returns expectedEpoch
             every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
             // Act
-            eventQueueManager.processEvent(application, actualEvent, Constants.PAGE_EVENT)
+            eventQueueManager.processEvent(application, actualEvent, Constants.PAGE_EVENT, FlattenedEventData.NoData)
 
             // Assert
 
@@ -1057,17 +1057,14 @@ class EventQueueManagerTest : BaseTestCase() {
 
                 every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
                 every { Utils.getCurrentNetworkType(application) } returns expectedNetworkType
-                every { eventQueueManager.now } returns expectedEpoch
+                every { eventQueueManager.getNow() } returns expectedEpoch
                 every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
                 val actualEvent = JSONObject()
                 actualEvent.put("bk", 1)
 
-                every { eventQueueManager.now } returns expectedEpoch
-                every { eventQueueManager.scheduleQueueFlush(application) } just runs
-
                 // Act
-                eventQueueManager.processEvent(application, actualEvent, Constants.PING_EVENT)
+                eventQueueManager.processEvent(application, actualEvent, Constants.PING_EVENT, FlattenedEventData.NoData)
 
                 // Assert
 
@@ -1130,7 +1127,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val actualEvent = JSONObject()
 
-            eventQueueManager.processEvent(application, actualEvent, Constants.PROFILE_EVENT)
+            eventQueueManager.processEvent(application, actualEvent, Constants.PROFILE_EVENT, FlattenedEventData.NoData)
 
             assertEquals("profile", actualEvent["type"])
             // assert following keys are absent in json
@@ -1144,7 +1141,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val actualEvent = JSONObject()
 
-            eventQueueManager.processEvent(application, actualEvent, Constants.DATA_EVENT)
+            eventQueueManager.processEvent(application, actualEvent, Constants.DATA_EVENT, FlattenedEventData.NoData)
 
             assertEquals("data", actualEvent["type"])
             // assert following keys are absent in json
@@ -1159,7 +1156,7 @@ class EventQueueManagerTest : BaseTestCase() {
             val actualEvent = JSONObject()
             actualEvent.put("evtName", Constants.APP_LAUNCHED_EVENT)
 
-            eventQueueManager.processEvent(application, actualEvent, Constants.RAISED_EVENT)
+            eventQueueManager.processEvent(application, actualEvent, Constants.RAISED_EVENT, mockEventProperties())
 
             // assert following keys are present in json
             assertEquals("event", actualEvent["type"])
@@ -1175,4 +1172,27 @@ class EventQueueManagerTest : BaseTestCase() {
             block()
         }
     }
+
+    private fun mockProfileChanges(): FlattenedEventData {
+        val changes = mapOf(
+            "Name" to ProfileChange(oldValue = null, newValue = "John Doe"),
+            "Email" to ProfileChange(oldValue = "old@example.com", newValue = "new@example.com"),
+            "Age" to ProfileChange(oldValue = 25, newValue = 30),
+            "City" to ProfileChange(oldValue = "New York", newValue = null),
+            "Phone" to ProfileChange(oldValue = null, newValue = "+1234567890")
+        )
+        return FlattenedEventData.ProfileChanges(changes)
+    }
+
+    private fun mockEventProperties(): FlattenedEventData.EventProperties {
+        val properties = mapOf(
+            "product" to "Laptop",
+            "category" to "Electronics",
+            "price" to 1299.99,
+            "quantity" to 2,
+            "inStock" to true
+        )
+        return FlattenedEventData.EventProperties(properties)
+    }
+
 }

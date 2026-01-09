@@ -5,9 +5,11 @@ import android.net.Uri
 import android.os.Bundle
 import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationClickedJson
 import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationViewedJson
+import com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.events.BaseEventQueueManager
+import com.clevertap.android.sdk.events.FlattenedEventData
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler
 import com.clevertap.android.sdk.inbox.CTInboxController
@@ -17,16 +19,22 @@ import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.UriHelper
 import com.clevertap.android.sdk.validation.ValidationConfig
-import com.clevertap.android.sdk.validation.ValidationResult
+import com.clevertap.android.sdk.validation.pipeline.ChargedEventItemsValidationResult
+import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
+import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult
+import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
 import io.mockk.MockKAnnotations
+import io.mockk.Runs
 import io.mockk.called
 import io.mockk.clearAllMocks
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.runs
 import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
@@ -39,6 +47,7 @@ import org.robolectric.RobolectricTestRunner
 import org.skyscreamer.jsonassert.JSONCompare
 import org.skyscreamer.jsonassert.JSONCompareMode
 import java.util.concurrent.Future
+import kotlin.apply
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -83,6 +92,8 @@ class AnalyticsManagerTest {
         putString("wzrk_someid", "someid")
         putBoolean("wzrk_dd", true)
     }
+
+    private val jsonIdCheck = { wzrkBundleToJson(bundleIdCheck) }
 
     @Before
     fun setUp() {
@@ -145,7 +156,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `clevertap does not process duplicate PN viewed within 2 seconds - case 2nd notif in 200ms`() {
-        val json = notificationViewedJson(bundleIdCheck)
+        val json = notificationViewedJson(jsonIdCheck())
 
         every { timeProvider.currentTimeMillis() } returns 10000
 
@@ -158,7 +169,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.NV_EVENT
+                Constants.NV_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
 
@@ -175,7 +187,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.NV_EVENT
+                Constants.NV_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
         confirmVerified(eventQueueManager)
@@ -184,7 +197,7 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap processes PN viewed for same wzrk_id if separated by a span of greater than 2 seconds`() {
 
-        val json = notificationViewedJson(bundleIdCheck)
+        val json = notificationViewedJson(jsonIdCheck())
 
         every { timeProvider.currentTimeMillis() } returns 10000
 
@@ -197,7 +210,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.NV_EVENT
+                Constants.NV_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
 
@@ -214,7 +228,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.NV_EVENT
+                Constants.NV_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
         confirmVerified(eventQueueManager)
@@ -236,7 +251,7 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap does not process duplicate (same wzrk_id) PN clicked within 2 seconds - case 2nd click happens in 200ms`() {
 
-        val json = notificationClickedJson(bundleIdCheck)
+        val json = notificationClickedJson(jsonIdCheck())
         every { timeProvider.currentTimeMillis() } returns 0
 
         // send PN first time
@@ -248,7 +263,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.RAISED_EVENT
+                Constants.RAISED_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
 
@@ -265,7 +281,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.RAISED_EVENT
+                Constants.RAISED_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
         confirmVerified(eventQueueManager)
@@ -274,7 +291,7 @@ class AnalyticsManagerTest {
     @Test
     fun `clevertap processes PN clicked for same wzrk_id if separated by a span of greater than 5 seconds`() {
 
-        val json = notificationClickedJson(bundleIdCheck)
+        val json = notificationClickedJson(jsonIdCheck())
         every { timeProvider.currentTimeMillis() } returns 10000
 
         // send PN first time
@@ -286,7 +303,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.RAISED_EVENT
+                Constants.RAISED_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
 
@@ -302,7 +320,8 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.RAISED_EVENT
+                Constants.RAISED_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
         confirmVerified(eventQueueManager)
@@ -365,7 +384,8 @@ class AnalyticsManagerTest {
             putString("wzrk_pid", "same_pid")
         }
 
-        val json1 = notificationClickedJson(notif1)
+        val wzrkJson = wzrkBundleToJson(notif1)
+        val expectedJson = notificationClickedJson(wzrkJson)
 
         every { timeProvider.currentTimeMillis() } returns 0
 
@@ -377,9 +397,10 @@ class AnalyticsManagerTest {
             eventQueueManager.queueEvent(
                 context,
                 match {
-                    JSONCompare.compareJSON(json1, it, JSONCompareMode.STRICT).passed()
+                    JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
                 },
-                Constants.RAISED_EVENT
+                Constants.RAISED_EVENT,
+                any<FlattenedEventData.EventProperties>()
             )
         }
 
@@ -394,30 +415,11 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun test_incrementValue_nullKey_noAction() {
-        analyticsManagerSUT.incrementValue(null, 10)
-
-        verify {
-            validationPipelineProvider wasNot called
-        }
-    }
-
-    @Test
     fun test_incrementValue_nullValue_noAction() {
         analyticsManagerSUT.incrementValue("abc", null)
 
         verify {
             validationPipelineProvider wasNot called
-        }
-    }
-
-    @Test
-    fun test_incrementValue_emptyKey_throwsEmptyKeyError() {
-        mockCleanObjectKey("")
-        analyticsManagerSUT.incrementValue("", 10)
-
-        verify(exactly = 0) {
-            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -433,7 +435,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
-                any()
+                any(), any()
             )
         }
     }
@@ -452,6 +454,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -473,6 +476,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -483,16 +487,7 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.decrementValue("abc", null)
 
         verify {
-            validator wasNot called
-        }
-    }
-
-    @Test
-    fun test_decrementValue_nullKey_noAction() {
-        analyticsManagerSUT.decrementValue(null, 10)
-
-        verify {
-            validator wasNot called
+            validationPipelineProvider wasNot called
         }
     }
 
@@ -512,6 +507,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -533,6 +529,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -554,6 +551,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -567,7 +565,7 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.removeValueForKey(key)
 
         verify(exactly = 0) {
-            eventQueueManager.pushBasicProfile(any(), any())
+            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -578,32 +576,7 @@ class AnalyticsManagerTest {
 
         analyticsManagerSUT.removeValueForKey(key)
         verify(exactly = 0) {
-            eventQueueManager.pushBasicProfile(any(), any())
-        }
-    }
-
-    @Test
-    fun test_removeValueForKey_when_NullKey_pushesEmptyKeyError() {
-        mockCleanObjectKey("")
-
-        analyticsManagerSUT.removeValueForKey(null)
-
-        verify {
-            validationResultStack.pushValidationResult(match {
-                it.errorCode == 512
-            })
-        }
-    }
-
-    @Test
-    fun test_removeValueForKey_when_EmptyKey_pushesEmptyKeyError() {
-        mockCleanObjectKey("")
-
-        analyticsManagerSUT.removeValueForKey("")
-        verify {
-            validationResultStack.pushValidationResult(match {
-                it.errorCode == 512
-            })
+            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -619,6 +592,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -634,72 +608,6 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun test_addMultiValuesForKey_when_NullValue_emptyValueError() {
-        val validationResult = ValidationResult()
-        validationResult.`object` = ""
-        validationResult.errorCode = 512
-
-        analyticsManagerSUT.addMultiValuesForKey("abc", null)
-
-        //Assert
-        verify {
-            validationResultStack.pushValidationResult(match {
-                validationResult.errorCode == it.errorCode
-            })
-        }
-    }
-
-    @Test
-    fun test_addMultiValuesForKey_when_EmptyValue_emptyValueError() {
-        val validationResult = ValidationResult()
-        validationResult.`object` = ""
-        validationResult.errorCode = 512
-
-        analyticsManagerSUT.addMultiValuesForKey("abc", arrayListOf())
-
-        //Assert
-        verify {
-            validationResultStack.pushValidationResult(match {
-                validationResult.errorCode == it.errorCode
-            })
-        }
-    }
-
-    @Test
-    fun test_addMultiValuesForKey_when_RestrictedMultiValueKey_restrictedError() {
-        val validationResult = ValidationResult()
-        validationResult.`object` = null
-        validationResult.errorCode = 523
-        every {
-            validator.cleanMultiValuePropertyKey("Name")
-        } returns validationResult
-
-        // Act
-        analyticsManagerSUT.addMultiValuesForKey("Name", arrayListOf("a"))
-
-        // Check
-        verify(exactly = 2) {
-            validationResultStack.pushValidationResult(match {
-                validationResult.errorCode == it.errorCode
-            })
-        }
-    }
-
-    @Test
-    fun test_addMultiValuesForKey_when_EmptyKey_emptyValueError() {
-        mockCleanMultiValuePropertyKey("")
-
-        analyticsManagerSUT.addMultiValuesForKey("", arrayListOf("a"))
-
-        // Assert
-        verify {
-            validationResultStack.pushValidationResult(match {
-                it.errorCode == 523
-            })
-        }
-    }
-
-    @Test
     fun test_addMultiValuesForKey_when_CorrectKey_pushesBasicProfile() {
         val commandObj = JSONObject().apply {
             put(Constants.COMMAND_ADD, JSONArray(arrayListOf("a")))
@@ -708,7 +616,7 @@ class AnalyticsManagerTest {
             put("abc", commandObj)
         }
 
-        mockCleanMultiValuePropertyKey("abc")
+        mockMultiValueDataValidation(validationPipelineProvider, "abc", arrayListOf("a"))
 
         analyticsManagerSUT.addMultiValuesForKey("abc", arrayListOf("a"))
 
@@ -716,6 +624,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(fields, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -727,13 +636,14 @@ class AnalyticsManagerTest {
         commandObj.put(Constants.COMMAND_REMOVE, JSONArray(arrayListOf("a")))
         val fields = JSONObject()
         fields.put("abc", commandObj)
-        mockCleanMultiValuePropertyKey("abc")
+        mockMultiValueDataValidation(validationPipelineProvider, "abc", arrayListOf("a"))
 
         analyticsManagerSUT.removeMultiValuesForKey("abc", arrayListOf("a"))
 
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(fields, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -746,13 +656,14 @@ class AnalyticsManagerTest {
         val fields = JSONObject()
         fields.put("abc", commandObj)
 
-        mockCleanMultiValuePropertyKey("abc")
+        mockMultiValueDataValidation(validationPipelineProvider, "abc", arrayListOf("a"))
 
         analyticsManagerSUT.setMultiValuesForKey("abc", arrayListOf("a"))
 
         verify {
             eventQueueManager.pushBasicProfile(
                 match { JSONCompare.compareJSON(fields, it, JSONCompareMode.STRICT).passed() },
+                any(),
                 any()
             )
         }
@@ -763,7 +674,7 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.pushProfile(null)
 
         verify {
-            validator wasNot called
+            validationPipelineProvider wasNot called
         }
     }
 
@@ -772,7 +683,7 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.pushProfile(emptyMap())
 
         verify {
-            validator wasNot called
+            validationPipelineProvider wasNot called
         }
     }
 
@@ -786,7 +697,7 @@ class AnalyticsManagerTest {
         analyticsManagerSUT.pushProfile(profile)
 
         verify {
-            validator wasNot called
+            validationPipelineProvider wasNot called
         }
     }
 
@@ -799,8 +710,7 @@ class AnalyticsManagerTest {
             coreState.deviceInfo.deviceID
         } returns "1234"
 
-        mockCleanObjectKey("Phone")
-        mockCleanObjectValue(validPhone, Profile)
+        mockEventDataValidation(validationPipelineProvider, profile)
 
         analyticsManagerSUT.pushProfile(profile)
 
@@ -810,6 +720,7 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
                 },
+                any(),
                 any()
             )
         }
@@ -821,7 +732,7 @@ class AnalyticsManagerTest {
         val profile = mapOf("Phone" to invalidPhone)
 
         mockCleanObjectKey("Phone")
-        mockCleanObjectValue(invalidPhone, Profile)
+        mockEventDataValidation(validationPipelineProvider, profile)
 
         every { coreState.deviceInfo.deviceID } returns "1234"
 
@@ -829,13 +740,11 @@ class AnalyticsManagerTest {
 
         val expectedJson = JSONObject().put("Phone", invalidPhone)
         verify {
-            validationResultStack.pushValidationResult(match { it.errorCode == 512 })
-        }
-        verify {
             eventQueueManager.pushBasicProfile(
                 match {
                     JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
                 },
+                any(),
                 any()
             )
         }
@@ -844,12 +753,7 @@ class AnalyticsManagerTest {
     @Test
     fun test_pushProfile_when_invalidKeys_pushesPartialProfile() {
         val profile = mapOf("key1" to "value1", "" to "value2")
-
-        mockCleanObjectKey("key1")
-        mockCleanObjectKey("")
-
-        mockCleanObjectValue("value1", Profile)
-        mockCleanObjectValue("value2", Profile)
+        mockEventDataValidation(validationPipelineProvider, profile)
 
         every { coreState.deviceInfo.deviceID } returns "1234"
 
@@ -859,62 +763,21 @@ class AnalyticsManagerTest {
         // Checks
         val expectedJson = JSONObject().put("key1", "value1")
         verify {
-            validationResultStack.pushValidationResult(match { it.errorCode == 512 })
-        }
-        verify {
             eventQueueManager.pushBasicProfile(
                 match {
                     JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
                 },
+                any(),
                 any()
             )
         }
     }
 
-    @Test
-    fun test_pushProfile_when_nonPrimitiveValue_pushesPartialProfile() {
-        val nonPrimitiveValue = Any()
-        val profile = mapOf("key1" to nonPrimitiveValue, "key2" to "value2")
-
-        mockCleanObjectKey("key1")
-        mockCleanObjectKey("key2")
-        mockCleanObjectValue("value2", Profile)
-
-        every { coreState.deviceInfo.deviceID } returns "1234"
-
-        every {
-            validator.cleanObjectValue(
-                nonPrimitiveValue,
-                any()
-            )
-        } throws IllegalArgumentException()
-
-        // Act
-        analyticsManagerSUT.pushProfile(profile)
-
-        // Checks
-        val expectedJson = JSONObject().put("key2", "value2")
-        verify {
-            validationResultStack.pushValidationResult(match { it.errorCode == 512 })
-        }
-        verify {
-            eventQueueManager.pushBasicProfile(
-                match {
-                    JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-                },
-                any()
-            )
-        }
-    }
 
     @Test
     fun test_pushProfile_when_validProfile_pushesCompleteProfile() {
         val profile = mapOf("key1" to "value1", "key2" to "value2")
-        mockCleanObjectKey("key1")
-        mockCleanObjectKey("key2")
-
-        mockCleanObjectValue("value1", Profile)
-        mockCleanObjectValue("value2", Profile)
+        mockEventDataValidation(validationPipelineProvider,profile)
 
         every { coreState.deviceInfo.deviceID } returns "1234"
 
@@ -930,6 +793,7 @@ class AnalyticsManagerTest {
                 match {
                     JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
                 },
+                any(),
                 any()
             )
         }
@@ -1016,7 +880,7 @@ class AnalyticsManagerTest {
                 event.getString(Constants.KEY_EVT_NAME) == eventName
                         && event.getJSONObject(Constants.KEY_EVT_DATA)
                     .toString() == displayUnitJson.toString()
-            }, Constants.RAISED_EVENT)
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
 
@@ -1026,19 +890,21 @@ class AnalyticsManagerTest {
             val eventName = "Error Occurred"
             mockCleanEventName(eventName)
             val locationKey = "Location"
-            mockCleanObjectKey(locationKey)
             val messageKey = "Error Message"
-            mockCleanObjectKey(messageKey)
             val codeKey = "Error Code"
-            mockCleanObjectKey(codeKey)
             val activityName = "activity"
-            mockCleanObjectValue(activityName, Validator.ValidationContext.Event)
             every { CoreMetaData.getCurrentActivityName() } returns activityName
-
             val errorMessage = "message"
-            mockCleanObjectValue(errorMessage, Validator.ValidationContext.Event)
             val errorCode = 10
-            mockCleanObjectValue(errorCode, Validator.ValidationContext.Event)
+
+            val eventData = mapOf(
+                locationKey to activityName,
+                messageKey to errorMessage,
+                codeKey to errorCode
+            )
+
+            mockEventDataValidation(validationPipelineProvider, eventData)
+
             analyticsManagerSUT.pushError(errorMessage, errorCode)
 
             verify(exactly = 1) {
@@ -1048,7 +914,7 @@ class AnalyticsManagerTest {
                             && data.getString(locationKey) == activityName
                             && data.getString(messageKey) == errorMessage
                             && data.getInt(codeKey) == errorCode
-                }, Constants.RAISED_EVENT)
+                }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
             }
         }
 
@@ -1106,33 +972,10 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `pushEvent should not queue event when event name is restricted`() {
-        val eventName = "restricted"
-        every { validator.isRestrictedEventName(eventName) } returns ValidationResult().apply {
-            errorCode = 1
-            errorDesc = "Restricted event name"
-        }
-        analyticsManagerSUT.pushEvent(eventName, emptyMap())
-        verify { validationResultStack.pushValidationResult(any()) }
-        verify(exactly = 0) { eventQueueManager.queueEvent(any(), any(), any()) }
-    }
-
-    @Test
-    fun `pushEvent should not queue event when event is discarded`() {
-        val eventName = "discarded"
-        every { validator.isEventDiscarded(eventName) } returns ValidationResult().apply {
-            errorCode = 1
-            errorDesc = "Discarded event"
-        }
-        analyticsManagerSUT.pushEvent(eventName, emptyMap())
-        verify { validationResultStack.pushValidationResult(any()) }
-        verify(exactly = 0) { eventQueueManager.queueEvent(any(), any(), any()) }
-    }
-
-    @Test
     fun `pushEvent should queue event with empty actions when eventActions is null`() {
         val eventName = "Test Event"
         mockCleanEventName(eventName)
+        mockEventDataValidation(validationPipelineProvider, null)
 
         analyticsManagerSUT.pushEvent(eventName, null)
 
@@ -1143,7 +986,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
                 JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-            }, Constants.RAISED_EVENT)
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
 
@@ -1156,10 +999,7 @@ class AnalyticsManagerTest {
         val value2 = 123
         val eventActions = mapOf(prop1 to value1, prop2 to value2)
         mockCleanEventName(eventName)
-        mockCleanObjectKey(prop1)
-        mockCleanObjectKey(prop2)
-        mockCleanObjectValue(value1, Validator.ValidationContext.Event)
-        mockCleanObjectValue(value2, Validator.ValidationContext.Event)
+        mockEventDataValidation(validationPipelineProvider, eventActions)
 
         analyticsManagerSUT.pushEvent(eventName, eventActions)
 
@@ -1173,45 +1013,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
                 JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-            }, Constants.RAISED_EVENT)
-        }
-    }
-
-    @Test
-    fun `pushEvent should queue event with error when action key is invalid`() {
-        val eventName = "Test Event"
-        val actionKey = "action"
-        val actionValue = "value"
-        val eventActions = mapOf(actionKey to actionValue)
-        mockCleanEventName(eventName)
-        mockCleanObjectKey(actionKey, 512)
-        mockCleanObjectValue(actionValue, Validator.ValidationContext.Event)
-
-        analyticsManagerSUT.pushEvent(eventName, eventActions)
-
-        verify(exactly = 1) {
-            eventQueueManager.queueEvent(context, match {
-                it.has(Constants.ERROR_KEY)
-            }, Constants.RAISED_EVENT)
-        }
-    }
-
-    @Test
-    fun `pushEvent should queue event with error when action value is invalid`() {
-        val eventName = "Test Event"
-        val actionKey = "action"
-        val actionValue = "value"
-        val eventActions = mapOf(actionKey to actionValue)
-        mockCleanEventName(eventName)
-        mockCleanObjectKey(actionKey)
-        mockCleanObjectValue(actionValue, Validator.ValidationContext.Event, 512)
-
-        analyticsManagerSUT.pushEvent(eventName, eventActions)
-
-        verify(exactly = 1) {
-            eventQueueManager.queueEvent(context, match {
-                it.has(Constants.ERROR_KEY)
-            }, Constants.RAISED_EVENT)
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
 
@@ -1228,21 +1030,6 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `pushChargedEvent should push validation error when items size is greater than 50`() {
-        val items = ArrayList<HashMap<String, Any>>(51)
-        val map = hashMapOf<String, Any>()
-        repeat(51) {
-            items.add(map)
-        }
-        analyticsManagerSUT.pushChargedEvent(hashMapOf(), items)
-        verify {
-            validationResultStack.pushValidationResult(match {
-                it.errorCode == 522
-            })
-        }
-    }
-
-    @Test
     fun `pushChargedEvent should queue charged event`() {
         val amountKey = "Amount"
         val amountValue = 300
@@ -1254,12 +1041,34 @@ class AnalyticsManagerTest {
         val item2 = hashMapOf<String, Any>(nameKey to name2)
         val items = arrayListOf(item1, item2)
 
+        // Mock key validations
         mockCleanObjectKey(amountKey)
         mockCleanObjectKey(nameKey)
-        mockCleanObjectValue(amountValue, Validator.ValidationContext.Event)
-        mockCleanObjectValue(amountValue, Validator.ValidationContext.Event)
-        mockCleanObjectValue(name1, Validator.ValidationContext.Event)
-        mockCleanObjectValue(name2, Validator.ValidationContext.Event)
+
+        // Mock charged event items validation (for the ArrayList)
+        every {
+            validationPipelineProvider.chargedEventItemsValidationPipeline.execute(items, validationConfig)
+        } returns mockk<ChargedEventItemsValidationResult> {
+            every { shouldDrop() } returns false
+            every { itemsCount } returns 10
+        }
+
+        // Mock event data validation for chargeDetails
+        mockEventDataValidation(validationPipelineProvider, chargeDetails)
+
+        // Mock event data validation for each item
+        every {
+            validationPipelineProvider.eventDataPipeline.execute(match<Map<String, Any>> {
+                it[nameKey] == name1 || it[nameKey] == name2
+            }, validationConfig)
+        } answers {
+            val itemMap = firstArg<Map<String, Any>>()
+            val itemJson = JSONObject().put(nameKey, itemMap[nameKey])
+            mockk<EventDataValidationResult> {
+                every { shouldDrop() } returns false
+                every { cleanedData } returns itemJson
+            }
+        }
 
         analyticsManagerSUT.pushChargedEvent(chargeDetails, items)
 
@@ -1277,7 +1086,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
                 JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
-            }, Constants.RAISED_EVENT)
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
 
@@ -1321,7 +1130,7 @@ class AnalyticsManagerTest {
             verify(exactly = 1) {
                 eventQueueManager.queueEvent(context, match {
                     JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
-                }, Constants.RAISED_EVENT)
+                }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
             }
             if (isClicked) {
                 assertEquals(wzrkFields, coreState.coreMetaData.wzrkParams)
@@ -1365,7 +1174,7 @@ class AnalyticsManagerTest {
             verify(exactly = 1) {
                 eventQueueManager.queueEvent(context, match {
                     JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
-                }, Constants.RAISED_EVENT)
+                }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
             }
             if (isClicked) {
                 assertEquals(wzrkFields, coreState.coreMetaData.wzrkParams)
@@ -1389,9 +1198,7 @@ class AnalyticsManagerTest {
         val future = mockk<Future<*>>()
         every { eventQueueManager.queueEvent(any(), any(), any()) } returns future
 
-        val result = analyticsManagerSUT.raiseEventForGeofences(eventName, geofenceProperties)
-
-        assertEquals(future, result)
+        analyticsManagerSUT.raiseEventForGeofences(eventName, geofenceProperties)
 
         val expectedEventData = JSONObject().apply {
             put(propKey, propValue)
@@ -1404,7 +1211,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
                 JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
-            }, Constants.RAISED_EVENT)
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
 
         val location = coreState.coreMetaData.locationFromUser
@@ -1583,42 +1390,90 @@ class AnalyticsManagerTest {
 
 
     private fun mockCleanObjectKey(key: String?, errCode: Int = 0) {
-        every {
-            validator.cleanObjectKey(key)
-        } returns ValidationResult().apply {
-            `object` = key
-            errorCode = errCode
-        }
+        mockPropertyKeyValidation(
+            validationPipelineProvider,
+            validationConfig,
+            key,
+            shouldDrop = errCode != 0
+        )
     }
 
     private fun mockCleanEventName(name: String?, errCode: Int = 0) {
-        every {
-            validator.cleanEventName(name)
-        } returns ValidationResult().apply {
-            `object` = name
-            errorCode = errCode
-        }
+        mockEventNameValidation(
+            validationPipelineProvider,
+            validationConfig,
+            name,
+            shouldDrop = errCode != 0
+        )
     }
 
-    private fun mockCleanObjectValue(
-        value: Any?,
-        context: Validator.ValidationContext,
-        errCode: Int = 0
+    private fun mockPropertyKeyValidation(
+        validationPipelineProvider: ValidationPipelineProvider,
+        validationConfig: ValidationConfig,
+        key: String?,
+        shouldDrop: Boolean = false
     ) {
         every {
-            validator.cleanObjectValue(value, context)
-        } returns ValidationResult().apply {
-            `object` = value
-            errorCode = errCode
+            validationPipelineProvider.propertyKeyPipeline.execute(key, validationConfig)
+        } returns mockk<PropertyKeyValidationResult> {
+            every { shouldDrop() } returns shouldDrop
+            every { cleanedKey } returns key.orEmpty()
         }
     }
 
-    private fun mockCleanMultiValuePropertyKey(key: String?, errCode: Int = 0) {
+    private fun mockEventNameValidation(
+        validationPipelineProvider: ValidationPipelineProvider,
+        validationConfig: ValidationConfig,
+        name: String?,
+        shouldDrop: Boolean = false
+    ) {
         every {
-            validator.cleanMultiValuePropertyKey(key)
-        } returns ValidationResult().apply {
-            `object` = key
-            errorCode = errCode
+            validationPipelineProvider.eventNamePipeline.execute(name, validationConfig)
+        } returns mockk<EventNameValidationResult> {
+            every { shouldDrop() } returns shouldDrop
+            every { cleanedName } returns name.orEmpty()
+        }
+    }
+
+    private fun mockEventDataValidation(
+        validationPipelineProvider: ValidationPipelineProvider,
+        data: Map<String, Any>?,
+        shouldDrop: Boolean = false
+    ) {
+        val jsonData = JSONObject()
+        data?.forEach { (key, value) ->
+            // Skip null or empty keys
+            if (key.isNotEmpty()) {
+                // Skip null values
+                if (value !is String || value.isNotEmpty()) {
+                    jsonData.put(key, value)
+                }
+            }
+        }
+
+        every {
+            validationPipelineProvider.eventDataPipeline.execute(any<Map<String, Any>>(), any())
+        } returns mockk<EventDataValidationResult> {
+            every { shouldDrop() } returns shouldDrop
+            every { cleanedData } returns jsonData
+        }
+    }
+
+    private fun mockMultiValueDataValidation(
+        validationPipelineProvider: ValidationPipelineProvider,
+        key: String,
+        values: List<String>?,
+        shouldDrop: Boolean = false
+    ) {
+        val jsonData = JSONObject()
+        val jsonArray = JSONArray(values ?: emptyList<String>())
+        jsonData.put(key, jsonArray)
+
+        every {
+            validationPipelineProvider.multiValueDataPipeline.execute(any(), any())
+        } returns mockk<EventDataValidationResult> {
+            every { shouldDrop() } returns shouldDrop
+            every { cleanedData } returns jsonData
         }
     }
 }

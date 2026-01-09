@@ -8,9 +8,11 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
+import com.clevertap.android.sdk.profile.ProfileStateTraverser
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAO
 import com.clevertap.android.sdk.usereventlogs.UserEventLogDAOImpl
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
+import com.clevertap.android.sdk.utils.NestedJsonBuilder
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -36,6 +38,8 @@ class LocalDataStoreTest : BaseTestCase() {
     private lateinit var cryptHandler : CryptHandler
     private lateinit var deviceInfo : DeviceInfo
     private lateinit var dbAdapter: DBAdapter
+    private lateinit var nestedJsonBuilderMock: NestedJsonBuilder
+    private lateinit var profileStateTraverserMock: ProfileStateTraverser
     val eventName = UserEventLogTestData.EventNames.TEST_EVENT
     private val normalizedEventName = UserEventLogTestData.EventNames.eventNameToNormalizedMap[eventName]!!
     private val eventNames = UserEventLogTestData.EventNames.eventNames
@@ -54,12 +58,16 @@ class LocalDataStoreTest : BaseTestCase() {
         baseDatabaseManager = mockk<DBManager>(relaxed = true)
         dbAdapter = mockk<DBAdapter>(relaxed = true)
         userEventLogDaoMock = mockk<UserEventLogDAOImpl>(relaxed = true)
+        profileStateTraverserMock = mockk<ProfileStateTraverser>(relaxed = true)
+        nestedJsonBuilderMock = mockk<NestedJsonBuilder>(relaxed = true)
         localDataStoreWithDefConfig = LocalDataStore(
             appCtx,
             defConfig,
             cryptHandler,
             deviceInfo,
-            baseDatabaseManager
+            baseDatabaseManager,
+            profileStateTraverserMock,
+            nestedJsonBuilderMock
         )
         config = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
         localDataStoreWithConfig = LocalDataStore(
@@ -67,7 +75,9 @@ class LocalDataStoreTest : BaseTestCase() {
             config,
             cryptHandler,
             deviceInfo,
-            baseDatabaseManager
+            baseDatabaseManager,
+            profileStateTraverserMock,
+            nestedJsonBuilderMock
         )
         localDataStoreWithConfigSpy = spyk(localDataStoreWithConfig)
         every { baseDatabaseManager.loadDBAdapter(appCtx) } returns dbAdapter
@@ -171,7 +181,6 @@ class LocalDataStoreTest : BaseTestCase() {
 
     @Test
     fun test_getProfileProperty_when_FunctionIsCalledWithSomeKey_should_ReturnAssociatedValue() {
-        localDataStoreWithConfig.updateProfileFields(mapOf("key" to "val"))
         assertEquals("val", localDataStoreWithConfig.getProfileProperty("key"))
     }
 
@@ -184,7 +193,6 @@ class LocalDataStoreTest : BaseTestCase() {
 
     @Test
     fun test_getProfileProperty_when_FunctionIsCalledWithIncorrectKey_should_ReturnNull() {
-        localDataStoreWithConfig.updateProfileFields(mapOf("key" to "val"))
 
         assertNull(localDataStoreWithConfig.getProfileProperty("key1"))
     }
@@ -192,7 +200,6 @@ class LocalDataStoreTest : BaseTestCase() {
 
     @Test
     fun test_getProfileProperty_when_FunctionIsCalledWithCorrectKeyAndEncryptedValue_should_ReturnNull() {
-        localDataStoreWithConfig.updateProfileFields(mapOf("key" to "[abcd]"))
 
         assertNull(localDataStoreWithConfig.getProfileProperty("key"))
     }
@@ -303,7 +310,6 @@ class LocalDataStoreTest : BaseTestCase() {
             "key4" to 2
         )
 
-        localDataStoreWithConfig.updateProfileFields(fieldMap)
 
         assertEquals("value1", localDataStoreWithConfig.getProfileProperty("key1"))
         assertEquals(true, localDataStoreWithConfig.getProfileProperty("key2"))
