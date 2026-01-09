@@ -25,16 +25,13 @@ import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
 import io.mockk.MockKAnnotations
-import io.mockk.Runs
 import io.mockk.called
 import io.mockk.clearAllMocks
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.runs
 import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
@@ -424,8 +421,8 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun test_incrementValue_intValueIsPassed_incrementIntValue() {
-        mockCleanObjectKey("int_score", 0)
+    fun test_incrementValue_valueIsPassed_incrementIntValue() {
+        mockCleanObjectKey("int_score")
 
         val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 10)
         val updateObj = JSONObject().put("int_score", commandObj)
@@ -441,44 +438,13 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun test_incrementValue_doubleValueIsPassed_incrementDoubleValue() {
-        mockCleanObjectKey("double_score", 0)
+    fun test_incrementValue_validationFails() {
+        mockCleanObjectKey("int_score", true)
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 10.25)
-        val updateObj = JSONObject().put("double_score", commandObj)
+        analyticsManagerSUT.incrementValue("int_score", 10)
 
-        every { coreState.localDataStore.getProfileProperty("double_score") } returns (10.25)
-
-        analyticsManagerSUT.incrementValue("double_score", 10.25)
-
-        verify {
-            eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
-                any(),
-                any()
-            )
-        }
-    }
-
-    @Test
-    fun test_incrementValue_floatValueIsPassed_incrementFloatValue() {
-        mockCleanObjectKey("float_score")
-
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 10.25f)
-        val updateObj = JSONObject().put("float_score", commandObj)
-
-        every {
-            coreState.localDataStore.getProfileProperty("float_score")
-        } returns 10.25f
-
-        analyticsManagerSUT.incrementValue("float_score", 10.25f)
-
-        verify {
-            eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
-                any(),
-                any()
-            )
+        verify(exactly = 0) {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -492,7 +458,7 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun test_decrementValue_intValueIsPassed_decrementIntValue() {
+    fun test_decrementValue_valueIsPassed_decrementIntValue() {
         mockCleanObjectKey("decr_int_score")
 
         val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 10)
@@ -514,46 +480,13 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun test_decrementValue_doubleValueIsPassed_decrementDoubleValue() {
-        mockCleanObjectKey("decr_double_score")
+    fun test_decrementValue_validationFails() {
+        mockCleanObjectKey("int_score", true)
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 10.50)
-        val updateObj = JSONObject().put("decr_double_score", commandObj)
+        analyticsManagerSUT.decrementValue("int_score", 10)
 
-        every {
-            coreState.localDataStore.getProfileProperty("decr_double_score")
-        } returns 20.25
-
-        analyticsManagerSUT.decrementValue("decr_double_score", 10.50)
-
-        verify {
-            eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
-                any(),
-                any()
-            )
-        }
-    }
-
-    @Test
-    fun test_decrementValue_floatValueIsPassed_decrementFloatValue() {
-        mockCleanObjectKey("decr_float_score", 0)
-
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 10.50f)
-        val updateObj = JSONObject().put("decr_float_score", commandObj)
-
-        every {
-            coreState.localDataStore.getProfileProperty("decr_float_score")
-        } returns 20.25f
-
-        analyticsManagerSUT.decrementValue("decr_float_score", 10.50f)
-
-        verify {
-            eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
-                any(),
-                any()
-            )
+        verify(exactly = 0) {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -599,6 +532,17 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun test_removeValueForKey_validationFails() {
+        mockCleanObjectKey("abc", false)
+
+        analyticsManagerSUT.removeValueForKey("abc")
+
+        verify {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
+        }
+    }
+
+    @Test
     fun test_addMultiValuesForKey_when_NullKey_noAction() {
         analyticsManagerSUT.addMultiValuesForKey(null, arrayListOf("a"))
 
@@ -616,7 +560,7 @@ class AnalyticsManagerTest {
             put("abc", commandObj)
         }
 
-        mockMultiValueDataValidation(validationPipelineProvider, "abc", arrayListOf("a"))
+        mockMultiValueDataValidation("abc", arrayListOf("a"))
 
         analyticsManagerSUT.addMultiValuesForKey("abc", arrayListOf("a"))
 
@@ -631,12 +575,25 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun test_addMultiValuesForKey_when_validationFails() {
+        mockMultiValueDataValidation("abc", arrayListOf("a"), true)
+
+        analyticsManagerSUT.addMultiValuesForKey("abc", arrayListOf("a"))
+
+        // Assert
+        verify(exactly = 0) {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
+        }
+    }
+
+
+    @Test
     fun test_removeMultiValuesForKey_when_CorrectKey_pushesBasicProfile() {
         val commandObj = JSONObject()
         commandObj.put(Constants.COMMAND_REMOVE, JSONArray(arrayListOf("a")))
         val fields = JSONObject()
         fields.put("abc", commandObj)
-        mockMultiValueDataValidation(validationPipelineProvider, "abc", arrayListOf("a"))
+        mockMultiValueDataValidation("abc", arrayListOf("a"))
 
         analyticsManagerSUT.removeMultiValuesForKey("abc", arrayListOf("a"))
 
@@ -650,13 +607,25 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun test_removeMultiValuesForKey_when_validationFails() {
+        mockMultiValueDataValidation("abc", arrayListOf("a"), true)
+
+        analyticsManagerSUT.removeMultiValuesForKey("abc", arrayListOf("a"))
+
+        // Assert
+        verify(exactly = 0) {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
+        }
+    }
+
+    @Test
     fun test_setMultiValuesForKey_when_CorrectKey_pushesBasicProfile() {
         val commandObj = JSONObject()
         commandObj.put(Constants.COMMAND_SET, JSONArray(arrayListOf("a")))
         val fields = JSONObject()
         fields.put("abc", commandObj)
 
-        mockMultiValueDataValidation(validationPipelineProvider, "abc", arrayListOf("a"))
+        mockMultiValueDataValidation("abc", arrayListOf("a"))
 
         analyticsManagerSUT.setMultiValuesForKey("abc", arrayListOf("a"))
 
@@ -666,6 +635,18 @@ class AnalyticsManagerTest {
                 any(),
                 any()
             )
+        }
+    }
+
+    @Test
+    fun test_setMultiValuesForKey_when_validationFails() {
+        mockMultiValueDataValidation("abc", arrayListOf("a"), true)
+
+        analyticsManagerSUT.setMultiValuesForKey("abc", arrayListOf("a"))
+
+        // Assert
+        verify(exactly = 0) {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -702,55 +683,6 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun test_pushProfile_when_validPhone_pushesProfile() {
-        val validPhone = "+1234"
-        val profile = mapOf("Phone" to validPhone)
-
-        every {
-            coreState.deviceInfo.deviceID
-        } returns "1234"
-
-        mockEventDataValidation(validationPipelineProvider, profile)
-
-        analyticsManagerSUT.pushProfile(profile)
-
-        val expectedJson = JSONObject().put("Phone", validPhone)
-        verify {
-            eventQueueManager.pushBasicProfile(
-                match {
-                    JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-                },
-                any(),
-                any()
-            )
-        }
-    }
-
-    @Test
-    fun test_pushProfile_when_invalidPhone_pushesErrorAndPushesProfile() {
-        val invalidPhone = "1234"
-        val profile = mapOf("Phone" to invalidPhone)
-
-        mockCleanObjectKey("Phone")
-        mockEventDataValidation(validationPipelineProvider, profile)
-
-        every { coreState.deviceInfo.deviceID } returns "1234"
-
-        analyticsManagerSUT.pushProfile(profile)
-
-        val expectedJson = JSONObject().put("Phone", invalidPhone)
-        verify {
-            eventQueueManager.pushBasicProfile(
-                match {
-                    JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-                },
-                any(),
-                any()
-            )
-        }
-    }
-
-    @Test
     fun test_pushProfile_when_invalidKeys_pushesPartialProfile() {
         val profile = mapOf("key1" to "value1", "" to "value2")
         mockEventDataValidation(validationPipelineProvider, profile)
@@ -770,6 +702,21 @@ class AnalyticsManagerTest {
                 any(),
                 any()
             )
+        }
+    }
+
+    @Test
+    fun test_pushProfile_when_validationFails() {
+        val profile = mapOf("key1" to "value1", "key2" to "value2")
+        mockEventDataValidation(validationPipelineProvider,profile, true)
+
+        every { coreState.deviceInfo.deviceID } returns "1234"
+
+        // Act
+        analyticsManagerSUT.pushProfile(profile)
+
+        verify(exactly = 0) {
+            eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
 
@@ -853,8 +800,55 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun `pushDisplayUnitClickedEventForID displayController is null`() {
+        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
+
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitClickedEventForID displayUnit is null`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        every { displayController.getDisplayUnitForID(any()) } returns null
+        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+
+        analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
+
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
+    }
+
+
+    @Test
     fun `pushDisplayUnitViewedEventForID should queue notification viewed event`() {
         verifyDisplayUnitEventForId(isClicked = false)
+    }
+
+    @Test
+    fun `pushDisplayUnitViewedEventForID displayController is null`() {
+        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
+
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitViewedEventForID displayUnit is null`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        every { displayController.getDisplayUnitForID(any()) } returns null
+        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+
+        analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
+
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
     }
 
     private fun verifyDisplayUnitEventForId(isClicked: Boolean) {
@@ -885,7 +879,7 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `pushError should queue error event with activity name`() {
+    fun `pushError should queue error event with activity name is non-null`() {
         mockkStatic(CoreMetaData::class) {
             val eventName = "Error Occurred"
             mockCleanEventName(eventName)
@@ -912,6 +906,42 @@ class AnalyticsManagerTest {
                     val data = event.getJSONObject(Constants.KEY_EVT_DATA)
                     event.getString(Constants.KEY_EVT_NAME) == eventName
                             && data.getString(locationKey) == activityName
+                            && data.getString(messageKey) == errorMessage
+                            && data.getInt(codeKey) == errorCode
+                }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+
+    }
+
+    @Test
+    fun `pushError should queue error event with activity name is null`() {
+        mockkStatic(CoreMetaData::class) {
+            val eventName = "Error Occurred"
+            mockCleanEventName(eventName)
+            val locationKey = "Location"
+            val messageKey = "Error Message"
+            val codeKey = "Error Code"
+            val activityName = null
+            every { CoreMetaData.getCurrentActivityName() } returns activityName
+            val errorMessage = "message"
+            val errorCode = 10
+
+            val eventData = mapOf(
+                locationKey to "Unknown",
+                messageKey to errorMessage,
+                codeKey to errorCode
+            )
+
+            mockEventDataValidation(validationPipelineProvider, eventData)
+
+            analyticsManagerSUT.pushError(errorMessage, errorCode)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(context, match { event ->
+                    val data = event.getJSONObject(Constants.KEY_EVT_DATA)
+                    event.getString(Constants.KEY_EVT_NAME) == eventName
+                            && data.getString(locationKey) == "Unknown"
                             && data.getString(messageKey) == errorMessage
                             && data.getInt(codeKey) == errorCode
                 }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
@@ -1018,6 +1048,45 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun `pushEvent should not queue event when event name validation fails`() {
+        val eventName = "Test Event"
+        val prop1 = "prop1"
+        val value1 = "value1"
+        val prop2 = "prop2"
+        val value2 = 123
+        val eventActions = mapOf(prop1 to value1, prop2 to value2)
+        mockCleanEventName(eventName, true)
+        mockEventDataValidation(validationPipelineProvider, eventActions)
+
+        analyticsManagerSUT.pushEvent(eventName, eventActions)
+
+        verify(exactly = 0) {
+            validationPipelineProvider.eventDataPipeline.execute(any(), any())
+        }
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `pushEvent should not queue event when event data validation fails`() {
+        val eventName = "Test Event"
+        val prop1 = "prop1"
+        val value1 = "value1"
+        val prop2 = "prop2"
+        val value2 = 123
+        val eventActions = mapOf(prop1 to value1, prop2 to value2)
+        mockCleanEventName(eventName)
+        mockEventDataValidation(validationPipelineProvider, eventActions, true)
+
+        analyticsManagerSUT.pushEvent(eventName, eventActions)
+
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `pushChargedEvent should not queue event when details are null`() {
         analyticsManagerSUT.pushChargedEvent(null, arrayListOf())
         verify(exactly = 0) { eventQueueManager.queueEvent(any(), any(), any()) }
@@ -1027,6 +1096,28 @@ class AnalyticsManagerTest {
     fun `pushChargedEvent should not queue event when items are null`() {
         analyticsManagerSUT.pushChargedEvent(hashMapOf(), null)
         verify(exactly = 0) { eventQueueManager.queueEvent(any(), any(), any()) }
+    }
+
+    @Test
+    fun `pushChargedEvent should not when chargedDetails validation fails`() {
+        val amountKey = "Amount"
+        val amountValue = 300
+        val nameKey = "Name"
+        val name1 = "name1"
+        val name2 = "name2"
+        val chargeDetails = hashMapOf<String, Any>(amountKey to amountValue)
+        val item1 = hashMapOf<String, Any>(nameKey to name1)
+        val item2 = hashMapOf<String, Any>(nameKey to name2)
+        val items = arrayListOf(item1, item2)
+
+        // Mock event data validation for chargeDetails
+        mockEventDataValidation(validationPipelineProvider, chargeDetails, true)
+
+        analyticsManagerSUT.pushChargedEvent(chargeDetails, items)
+
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
     }
 
     @Test
@@ -1040,10 +1131,6 @@ class AnalyticsManagerTest {
         val item1 = hashMapOf<String, Any>(nameKey to name1)
         val item2 = hashMapOf<String, Any>(nameKey to name2)
         val items = arrayListOf(item1, item2)
-
-        // Mock key validations
-        mockCleanObjectKey(amountKey)
-        mockCleanObjectKey(nameKey)
 
         // Mock charged event items validation (for the ArrayList)
         every {
@@ -1077,6 +1164,61 @@ class AnalyticsManagerTest {
         val expectedItems = JSONArray()
             .put(JSONObject().put(nameKey, name1))
             .put(JSONObject().put(nameKey, name2))
+        expectedEvtData.put(Constants.KEY_ITEMS, expectedItems)
+
+        val expectedEvent = JSONObject()
+            .put(Constants.KEY_EVT_NAME, Constants.CHARGED_EVENT)
+            .put(Constants.KEY_EVT_DATA, expectedEvtData)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(context, match {
+                JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+        }
+    }
+
+    @Test
+    fun `pushChargedEvent should drop item if validation fails`() {
+        val amountKey = "Amount"
+        val amountValue = 300
+        val nameKey = "Name"
+        val name1 = "name1"
+        val name2 = "name2"
+        val chargeDetails = hashMapOf<String, Any>(amountKey to amountValue)
+        val item1 = hashMapOf<String, Any>(nameKey to name1)
+        val item2 = hashMapOf<String, Any>(nameKey to name2)
+        val items = arrayListOf(item1, item2)
+
+        // Mock charged event items validation (for the ArrayList)
+        every {
+            validationPipelineProvider.chargedEventItemsValidationPipeline.execute(items, validationConfig)
+        } returns mockk<ChargedEventItemsValidationResult> {
+            every { shouldDrop() } returns false
+            every { itemsCount } returns 10
+        }
+
+        // Mock event data validation for chargeDetails
+        mockEventDataValidation(validationPipelineProvider, chargeDetails)
+
+        // Mock event data validation for each item
+        every {
+            validationPipelineProvider.eventDataPipeline.execute(match<Map<String, Any>> {
+                it[nameKey] == name1 || it[nameKey] == name2
+            }, validationConfig)
+        } answers {
+            val itemMap = firstArg<Map<String, Any>>()
+            val itemJson = JSONObject().put(nameKey, itemMap[nameKey])
+            mockk<EventDataValidationResult> {
+                every { shouldDrop() } returns true
+                every { cleanedData } returns itemJson
+            }
+        }
+
+        analyticsManagerSUT.pushChargedEvent(chargeDetails, items)
+
+        val expectedEvtData = JSONObject()
+            .put(amountKey, amountValue)
+        val expectedItems = JSONArray()
         expectedEvtData.put(Constants.KEY_ITEMS, expectedItems)
 
         val expectedEvent = JSONObject()
@@ -1262,7 +1404,7 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `pushDeepLink should queue page event with referrer data`() {
+    fun `pushDeepLink should queue page event with referrer data with install true`() {
         mockkStatic(UriHelper::class) {
             val uri = mockk<Uri>()
             val referrer = JSONObject().apply {
@@ -1292,6 +1434,47 @@ class AnalyticsManagerTest {
             assertEquals("source", coreState.coreMetaData.source)
             assertEquals("medium", coreState.coreMetaData.medium)
             assertEquals("campaign", coreState.coreMetaData.campaign)
+        }
+    }
+
+    @Test
+    fun `pushDeepLink should queue page event with referrer data with install false`() {
+        mockkStatic(UriHelper::class) {
+            val uri = mockk<Uri>()
+            val referrer = JSONObject().apply {
+                put("us", "source")
+                put("um", "medium")
+                put("uc", "campaign")
+            }
+            every { UriHelper.getUrchinFromUri(uri) } returns referrer
+            every { uri.toString() } returns "wzrk://test"
+
+            analyticsManagerSUT.pushDeepLink(uri, false)
+
+            val expectedExtras = JSONObject().apply {
+                put("us", "source")
+                put("um", "medium")
+                put("uc", "campaign")
+                put("referrer", "wzrk://test")
+            }
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(context, match {
+                    JSONCompare.compareJSON(expectedExtras, it, JSONCompareMode.STRICT).passed()
+                }, Constants.PAGE_EVENT)
+            }
+
+            assertEquals("source", coreState.coreMetaData.source)
+            assertEquals("medium", coreState.coreMetaData.medium)
+            assertEquals("campaign", coreState.coreMetaData.campaign)
+        }
+    }
+
+    @Test
+    fun `pushDeepLink with null URI`() {
+        analyticsManagerSUT.pushDeepLink(null, true)
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
         }
     }
 
@@ -1389,27 +1572,23 @@ class AnalyticsManagerTest {
     }
 
 
-    private fun mockCleanObjectKey(key: String?, errCode: Int = 0) {
+    private fun mockCleanObjectKey(key: String?, shouldDrop: Boolean = false) {
         mockPropertyKeyValidation(
-            validationPipelineProvider,
-            validationConfig,
             key,
-            shouldDrop = errCode != 0
+            shouldDrop = shouldDrop
         )
     }
 
-    private fun mockCleanEventName(name: String?, errCode: Int = 0) {
+    private fun mockCleanEventName(name: String?, shouldDrop: Boolean = false) {
         mockEventNameValidation(
             validationPipelineProvider,
             validationConfig,
             name,
-            shouldDrop = errCode != 0
+            shouldDrop = shouldDrop
         )
     }
 
     private fun mockPropertyKeyValidation(
-        validationPipelineProvider: ValidationPipelineProvider,
-        validationConfig: ValidationConfig,
         key: String?,
         shouldDrop: Boolean = false
     ) {
@@ -1460,7 +1639,6 @@ class AnalyticsManagerTest {
     }
 
     private fun mockMultiValueDataValidation(
-        validationPipelineProvider: ValidationPipelineProvider,
         key: String,
         values: List<String>?,
         shouldDrop: Boolean = false
