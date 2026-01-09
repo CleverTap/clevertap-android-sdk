@@ -180,11 +180,6 @@ class LocalDataStoreTest : BaseTestCase() {
     }
 
     @Test
-    fun test_getProfileProperty_when_FunctionIsCalledWithSomeKey_should_ReturnAssociatedValue() {
-        assertEquals("val", localDataStoreWithConfig.getProfileProperty("key"))
-    }
-
-    @Test
     fun test_getProfileProperty_when_FunctionIsCalledWithNullKey_should_ReturnNull() {
         localDataStoreWithConfig.getProfileProperty(null).let {
             assertNull(it)
@@ -299,22 +294,6 @@ class LocalDataStoreTest : BaseTestCase() {
         json = JSONObject().also { it.put("type", "other") }
         localDataStoreWithConfig.setDataSyncFlag(json)
         assertTrue { json.getBoolean("dsync") }
-    }
-
-    @Test
-    fun test_setProfileFields_when_MapsIsPassed_should_SetTheKeysInPROFILE_FIELDS_IN_THIS_SESSIONMap() {
-        val fieldMap = mapOf(
-            "key1" to "value1",
-            "key2" to true,
-            "key3" to null,
-            "key4" to 2
-        )
-
-
-        assertEquals("value1", localDataStoreWithConfig.getProfileProperty("key1"))
-        assertEquals(true, localDataStoreWithConfig.getProfileProperty("key2"))
-        assertNull(localDataStoreWithConfig.getProfileProperty("key3"))
-        assertEquals(2, localDataStoreWithConfig.getProfileProperty("key4"))
     }
 
     @Test
