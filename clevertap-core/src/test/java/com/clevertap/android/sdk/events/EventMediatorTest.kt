@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.events
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.LocalDataStore
 import com.clevertap.android.sdk.network.NetworkRepo
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
@@ -446,5 +445,86 @@ class EventMediatorTest {
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
         
         assertTrue(result) // Should drop because event name extraction fails
+    }
+
+    @Test
+    fun `isEvent should return true when event has evtName key`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "Test Event")
+
+        val result = eventMediator.isEvent(event)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `isEvent should return false when event does not have evtName key`() {
+        val event = JSONObject().put("someOtherKey", "value")
+
+        val result = eventMediator.isEvent(event)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isEvent should return false when event is empty`() {
+        val event = JSONObject()
+
+        val result = eventMediator.isEvent(event)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isAppLaunchedEvent should return true when event is App Launched`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, Constants.APP_LAUNCHED_EVENT)
+
+        val result = eventMediator.isAppLaunchedEvent(event)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `isAppLaunchedEvent should return false when event is not App Launched`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "Some Other Event")
+
+        val result = eventMediator.isAppLaunchedEvent(event)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isAppLaunchedEvent should return false when event does not have evtName key`() {
+        val event = JSONObject().put("someOtherKey", "value")
+
+        val result = eventMediator.isAppLaunchedEvent(event)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isChargedEvent should return true when event is Charged`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, Constants.CHARGED_EVENT)
+
+        val result = eventMediator.isChargedEvent(event)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `isChargedEvent should return false when event is not Charged`() {
+        val event = JSONObject().put(Constants.KEY_EVT_NAME, "Some Other Event")
+
+        val result = eventMediator.isChargedEvent(event)
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `isChargedEvent should return false when event does not have evtName key`() {
+        val event = JSONObject().put("someOtherKey", "value")
+
+        val result = eventMediator.isChargedEvent(event)
+
+        assertFalse(result)
     }
 }
