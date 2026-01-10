@@ -26,7 +26,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
@@ -106,7 +105,10 @@ internal class InAppDelayManager(
                 val store = delayedLegacyInAppStore
                 if (store == null) {
                     logger.verbose(accountId, "$TAG DelayedLegacyInAppStore is null for callback id: $id")
-                    callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.STORE_NOT_INITIALIZED, id))
+                    callback(DelayedInAppResult.Error(
+                        id,
+                        DelayedInAppResult.Error.ErrorReason.STORE_NOT_INITIALIZED
+                    ))
                     return@launch
                 }
 
@@ -115,9 +117,12 @@ internal class InAppDelayManager(
 
                 // Create appropriate result based on retrieval
                 val result = if (delayedInAppJSONObj != null) {
-                    DelayedInAppResult.Success(delayedInAppJSONObj, id)
+                    DelayedInAppResult.Success(id, delayedInAppJSONObj)
                 } else {
-                    DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.NOT_FOUND_IN_DB, id)
+                    DelayedInAppResult.Error(
+                        id,
+                        DelayedInAppResult.Error.ErrorReason.NOT_FOUND_IN_DB
+                    )
                 }
 
                 // Invoke callback with result
@@ -131,7 +136,11 @@ internal class InAppDelayManager(
                 //callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.CANCELLED, id, e))
             } catch (e: Exception) {
                 logger.verbose(accountId, "$TAG Error in InApp callback with id: $id", e)
-                callback(DelayedInAppResult.Error(DelayedInAppResult.Error.ErrorReason.UNKNOWN, id, e))
+                callback(DelayedInAppResult.Error(
+                    id,
+                    DelayedInAppResult.Error.ErrorReason.UNKNOWN,
+                    e
+                ))
                 cancelledJobs.remove(id)
                 delayedLegacyInAppStore!!.removeDelayedInApp(id)
             } finally {
@@ -176,8 +185,8 @@ internal class InAppDelayManager(
             newDelayedInAppsToSchedule.forEach {
                 val inAppId = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
                 callback(DelayedInAppResult.Error(
-                    DelayedInAppResult.Error.ErrorReason.DB_SAVE_FAILED,
-                    inAppId
+                    inAppId,
+                    DelayedInAppResult.Error.ErrorReason.DB_SAVE_FAILED
                 ))
             }
             return

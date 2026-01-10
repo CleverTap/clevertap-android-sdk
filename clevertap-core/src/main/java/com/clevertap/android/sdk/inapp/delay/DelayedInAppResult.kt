@@ -5,29 +5,29 @@ import org.json.JSONObject
 /**
  * Sealed class representing the result of a delayed in-app callback
  */
-sealed interface DelayedInAppResult { // TODO: correct params ordering like InActionResult
+sealed interface DelayedInAppResult {
 
     /**
      * Success state - in-app was successfully retrieved and is ready for display
      *
-     * @property inApp The JSONObject containing the in-app notification data
      * @property inAppId The unique identifier of the in-app campaign
+     * @property inApp The JSONObject containing the in-app notification data
      */
     data class Success(
-        val inApp: JSONObject,
-        val inAppId: String
+        val inAppId: String,
+        val inApp: JSONObject
     ) : DelayedInAppResult
 
     /**
      * Error state - in-app retrieval failed or data is unavailable
      *
+     * @property inAppId The unique identifier of the in-app campaign
      * @property reason The error reason explaining why the callback failed
-     * @property inAppId The unique identifier of the in-app campaign (if available)
      * @property throwable Optional throwable for debugging purposes
      */
     data class Error(
+        val inAppId: String,
         val reason: ErrorReason,
-        val inAppId: String = "",
         val throwable: Throwable? = null
     ) : DelayedInAppResult {
 

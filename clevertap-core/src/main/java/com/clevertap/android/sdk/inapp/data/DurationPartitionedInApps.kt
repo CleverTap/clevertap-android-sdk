@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.inapp.data
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.ImmediateAndDelayed
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.InActionOnly
 import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps.UnknownAndInAction
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**

@@ -35,13 +35,13 @@ internal class DelayedInAppDataExtractor : InAppDataExtractor<DelayedInAppResult
     }
 
     override fun createSuccessResult(id: String, data: JSONObject): DelayedInAppResult {
-        return DelayedInAppResult.Success(data, id)
+        return DelayedInAppResult.Success(id, data)
     }
 
     override fun createErrorResult(id: String, message: String): DelayedInAppResult { // TODO: use enums for error msg
         return DelayedInAppResult.Error(
-            DelayedInAppResult.Error.ErrorReason.UNKNOWN,
             id,
+            DelayedInAppResult.Error.ErrorReason.UNKNOWN,
             Exception(message)
         )
     }
