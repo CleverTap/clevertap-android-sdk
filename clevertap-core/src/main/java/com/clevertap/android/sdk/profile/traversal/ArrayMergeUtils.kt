@@ -60,7 +60,7 @@ internal object ArrayMergeUtils {
     fun hasJsonObjectElements(array: JSONArray): Boolean {
         return (0 until array.length()).any { i ->
             val element = array.opt(i)
-            element is JSONObject && !ProfileOperationUtils.isDeleteMarker(element)
+            element is JSONObject
         }
     }
 }
