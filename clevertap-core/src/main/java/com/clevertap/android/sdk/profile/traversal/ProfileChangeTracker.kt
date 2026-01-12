@@ -26,7 +26,7 @@ internal class ProfileChangeTracker {
      * @param basePath The dot-notation path prefix
      * @param changes The map to accumulate changes in
      */
-    fun recordAllLeafValues(
+    private fun recordAllLeafValues(
         jsonObject: JSONObject,
         basePath: String,
         changes: MutableMap<String, ProfileChange>
@@ -53,7 +53,7 @@ internal class ProfileChangeTracker {
      * @param basePath The dot-notation path prefix
      * @param changes The map to accumulate changes in
      */
-    fun recordAllLeafDeletions(
+    private fun recordAllLeafDeletions(
         jsonObject: JSONObject,
         basePath: String,
         changes: MutableMap<String, ProfileChange>
