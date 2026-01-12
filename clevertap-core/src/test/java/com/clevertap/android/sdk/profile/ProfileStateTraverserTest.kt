@@ -2620,4 +2620,33 @@ class ProfileStateTraverserTest {
         assertFalse(result.changes.containsKey("stats.level"))
         assertFalse(result.changes.containsKey("metadata.updated"))
     }
+
+    @Test
+    fun `DELETE removes date values from array`() {
+        val target = JSONObject().apply {
+            put("eventDates", JSONArray().apply {
+                put("\$D_1672531200") // Jan 1, 2023
+                put("\$D_1704067200") // Jan 1, 2024
+                put("\$D_1735689600") // Jan 1, 2025
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("eventDates", JSONArray().apply {
+                put("__CLEVERTAP_DELETE__") // Delete index 0
+                put("__CLEVERTAP_DELETE__") // Delete index 1
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+        println(result)
+
+        // Verify date elements are removed
+        val eventDates = target.getJSONArray("eventDates")
+        assertEquals(1, eventDates.length())
+        assertEquals("\$D_1735689600", eventDates.getString(0))
+
+        // Verify deletions are tracked with processed dates (as Long)
+        assertEquals(1735689600L, ((result.changes["eventDates"]!!.newValue) as JSONArray).get(0))
+    }
 }

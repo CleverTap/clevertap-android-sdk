@@ -49,7 +49,7 @@ internal class OperationHandler(
             }
             oldValue is JSONArray && newValue is JSONArray -> {
                 arrayHandler.handleArrayOperation(
-                    target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
+                    target, key, oldValue, newValue, currentPath, changes, operation, changeTracker, recursiveApply
                 )
             }
             operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
@@ -96,14 +96,7 @@ internal class OperationHandler(
         }
 
         target.put(key, updatedValue)
-
-        val processedNewValue = ProfileOperationUtils.processDatePrefixes(updatedValue)
-
-        if (processedNewValue is JSONObject) {
-            changeTracker.recordAllLeafValues(processedNewValue, currentPath, changes)
-        } else {
-            changes[currentPath] = ProfileChange(null, processedNewValue)
-        }
+        changeTracker.recordAddition(currentPath, updatedValue, changes)
     }
 
     /**
@@ -145,12 +138,9 @@ internal class OperationHandler(
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val processedOldValue = ProfileOperationUtils.processDatePrefixes(oldValue)
-        val processedNewValue = ProfileOperationUtils.processDatePrefixes(newValue)
-
-        if (!JsonComparisonUtils.areEqual(processedOldValue, processedNewValue)) {
+        if (!JsonComparisonUtils.areEqual(oldValue, newValue)) {
             parent.put(key, newValue)
-            changes[path] = ProfileChange(processedOldValue, processedNewValue)
+            changeTracker.recordChange(path, oldValue, newValue, changes)
         }
     }
 

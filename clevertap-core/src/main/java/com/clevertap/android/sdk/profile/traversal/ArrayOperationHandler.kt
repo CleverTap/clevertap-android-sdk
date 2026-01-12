@@ -21,6 +21,7 @@ internal class ArrayOperationHandler() {
      * @param currentPath The dot-notation path
      * @param changes The map to accumulate changes in
      * @param operation The profile operation type
+     * @param changeTracker The change tracker for recording changes
      * @param recursiveTraversal Function to recursively apply operation to nested objects
      */
     @Throws(JSONException::class)
@@ -32,6 +33,7 @@ internal class ArrayOperationHandler() {
         currentPath: String,
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation,
+        changeTracker: ProfileChangeTracker,
         recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
         if (newArray.length() == 0) return
@@ -61,7 +63,8 @@ internal class ArrayOperationHandler() {
                 oldArray,
                 newArray,
                 currentPath,
-                changes
+                changes,
+                changeTracker
             )
 
             ProfileOperation.INCREMENT, ProfileOperation.DECREMENT -> processArrayElements(
@@ -112,16 +115,13 @@ internal class ArrayOperationHandler() {
         oldArray: JSONArray,
         newArray: JSONArray,
         path: String,
-        changes: MutableMap<String, ProfileChange>
+        changes: MutableMap<String, ProfileChange>,
+        changeTracker: ProfileChangeTracker
     ) {
-        // Process date prefixes in the new array
-        val processedNewArray = ProfileOperationUtils.processDatePrefixes(newArray) as JSONArray
-        val processedOldArray = ProfileOperationUtils.processDatePrefixes(oldArray) as JSONArray
-
         // Only record change if arrays are different
-        if (!JsonComparisonUtils.areEqual(processedOldArray, processedNewArray)) {
+        if (!JsonComparisonUtils.areEqual(oldArray, newArray)) {
             parentJson.put(key, newArray)
-            changes[path] = ProfileChange(processedOldArray, processedNewArray)
+            changeTracker.recordChange(path, oldArray, newArray, changes)
         }
     }
 
