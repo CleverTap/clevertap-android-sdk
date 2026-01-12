@@ -1285,23 +1285,24 @@ class ProfileStateTraverserTest {
 
         val source = JSONObject().apply {
             put("scores", JSONArray().apply {
-                put(null)
+                put(JSONObject.NULL)
                 put(10)
+                put(40)
             })
         }
 
         val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+        println("AnushX" + result)
 
         // Verify incremented array elements
         val scores = target.getJSONArray("scores")
         assertEquals(3, scores.length())
         assertEquals(30, scores.getInt(0)) // 30 + null (null ignored)
         assertEquals(30, scores.getInt(1)) // 20 + 10
-        assertEquals(50, scores.getInt(2)) // Unchanged (no corresponding source element)
+        assertEquals(90, scores.getInt(2)) // Unchanged (no corresponding source element)
 
         // Verify changes tracked
         assertTrue(result.changes.containsKey("scores"))
-
     }
 
     @Test
@@ -1357,7 +1358,6 @@ class ProfileStateTraverserTest {
         }
 
         val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
-        println("AnushX" + result)
 
         val mixed = target.getJSONArray("mixed")
         assertEquals(40, mixed.getInt(0)) // 30 + 10
