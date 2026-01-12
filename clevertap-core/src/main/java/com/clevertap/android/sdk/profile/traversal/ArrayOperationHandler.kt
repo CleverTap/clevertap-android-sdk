@@ -6,7 +6,7 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * Handles array-specific operations: ARRAY_ADD, ARRAY_REMOVE, GET, and array element processing.
+ * Handles array-specific operations: ARRAY_ADD, ARRAY_REMOVE, GET, UPDATE, and array element processing.
  * Supports both simple array operations and complex element-wise operations.
  */
 internal class ArrayOperationHandler() {
@@ -55,7 +55,16 @@ internal class ArrayOperationHandler() {
                 recursiveTraversal
             )
 
-            ProfileOperation.UPDATE, ProfileOperation.INCREMENT, ProfileOperation.DECREMENT -> processArrayElements(
+            ProfileOperation.UPDATE -> handleArrayReplacement(
+                parentJson,
+                key,
+                oldArray,
+                newArray,
+                currentPath,
+                changes
+            )
+
+            ProfileOperation.INCREMENT, ProfileOperation.DECREMENT -> processArrayElements(
                 oldArray,
                 newArray,
                 currentPath,
@@ -96,6 +105,28 @@ internal class ArrayOperationHandler() {
     }
 
     /**
+     * Replaces the entire array with new array for UPDATE operation.
+     * Processes date prefixes in the new array before replacement.
+     */
+    private fun handleArrayReplacement(
+        parentJson: JSONObject,
+        key: String,
+        oldArray: JSONArray,
+        newArray: JSONArray,
+        path: String,
+        changes: MutableMap<String, ProfileChange>
+    ) {
+        // Process date prefixes in the new array
+        val processedArray = ProfileOperationUtils.processDatePrefixes(newArray) as JSONArray
+        
+        // Only record change if arrays are different
+        if (!JsonComparisonUtils.areEqual(oldArray, processedArray)) {
+            parentJson.put(key, processedArray)
+            changes[path] = ProfileChange(oldArray, processedArray)
+        }
+    }
+
+    /**
      * Removes string values from array.
      */
     private fun handleArrayRemove(
@@ -126,7 +157,7 @@ internal class ArrayOperationHandler() {
     }
 
     /**
-     * Processes array elements individually.
+     * Processes array elements individually for INCREMENT/DECREMENT operations.
      * Handles objects, numbers, and simple values differently based on operation.
      */
     private fun processArrayElements(
@@ -142,7 +173,7 @@ internal class ArrayOperationHandler() {
 
         for (i in 0 until newArray.length()) {
             if (i >= oldArray.length()) {
-                arrayModified = handleOutOfBoundsIndex(oldArray, newArray, i, operation) || arrayModified
+                // For INCREMENT/DECREMENT, don't extend array
                 continue
             }
 
@@ -164,42 +195,12 @@ internal class ArrayOperationHandler() {
                         arrayModified = true
                     }
                 }
-                operation == ProfileOperation.UPDATE -> {
-                    val processedOldElement = ProfileOperationUtils.processDatePrefixes(oldElement)
-                    val processedNewElement = ProfileOperationUtils.processDatePrefixes(newElement)
-                    if (!JsonComparisonUtils.areEqual(processedOldElement, processedNewElement)) {
-                        oldArray.put(i, newElement)  // Store original value with prefix
-                        arrayModified = true
-                    }
-                }
             }
         }
 
         if (arrayModified) {
             changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
         }
-    }
-
-    /**
-     * Handles array indices that are out of bounds.
-     * For UPDATE operations, extends the array with NULL values and sets the element.
-     *
-     * @return true if array was modified
-     */
-    private fun handleOutOfBoundsIndex(
-        oldArray: JSONArray,
-        newArray: JSONArray,
-        index: Int,
-        operation: ProfileOperation
-    ): Boolean {
-        if (operation != ProfileOperation.UPDATE) return false
-
-        val newElement = newArray.get(index)
-        while (oldArray.length() <= index) {
-            oldArray.put(JSONObject.NULL)
-        }
-        oldArray.put(index, newElement)
-        return true
     }
 
     /**
