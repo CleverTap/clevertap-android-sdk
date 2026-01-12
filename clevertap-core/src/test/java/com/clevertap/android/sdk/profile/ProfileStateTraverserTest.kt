@@ -1597,5 +1597,576 @@ class ProfileStateTraverserTest {
         assertEquals(35, quantities.getInt(3)) // 50 - 15
 
         assertEquals(400, target.getJSONObject("inventory").getInt("total"))
+
+        assertTrue(result.changes.containsKey("inventory.quantities"))
+        assertTrue(result.changes.containsKey("inventory.total"))
+    }
+
+    // ==================== GET Operation Tests ====================
+
+    @Test
+    fun `GET retrieves simple values without modifying target`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+            put("age", 25)
+            put("score", 100.5)
+            put("active", true)
+        }
+
+        val source = JSONObject().apply {
+            put("name", "__CLEVERTAP_GET__")
+            put("age", "__CLEVERTAP_GET__")
+            put("score", "__CLEVERTAP_GET__")
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged
+        assertEquals("John", target.getString("name"))
+        assertEquals(25, target.getInt("age"))
+        assertEquals(100.5, target.getDouble("score"), 0.001)
+        assertEquals(true, target.getBoolean("active"))
+
+        // Verify changes contain retrieved values with GET_MARKER
+        assertEquals(3, result.changes.size)
+        assertTrue(result.changes.containsKey("name"))
+        assertEquals("John", result.changes["name"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["name"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("age"))
+        assertEquals(25, result.changes["age"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["age"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("score"))
+        assertEquals(100.5, result.changes["score"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["score"]!!.newValue)
+
+        // Keys not in source should not be retrieved
+        assertFalse(result.changes.containsKey("active"))
+    }
+
+    @Test
+    fun `GET retrieves nested object values without modifying target`() {
+        val target = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("profile", JSONObject().apply {
+                    put("name", "Alice")
+                    put("age", 30)
+                    put("city", "NYC")
+                })
+                put("settings", JSONObject().apply {
+                    put("theme", "dark")
+                    put("notifications", true)
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("profile", JSONObject().apply {
+                    put("name", "__CLEVERTAP_GET__")
+                    put("age", "__CLEVERTAP_GET__")
+                })
+                put("settings", JSONObject().apply {
+                    put("theme", "__CLEVERTAP_GET__")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged
+        val profile = target.getJSONObject("user").getJSONObject("profile")
+        assertEquals("Alice", profile.getString("name"))
+        assertEquals(30, profile.getInt("age"))
+        assertEquals("NYC", profile.getString("city"))
+
+        val settings = target.getJSONObject("user").getJSONObject("settings")
+        assertEquals("dark", settings.getString("theme"))
+        assertEquals(true, settings.getBoolean("notifications"))
+
+        // Verify changes with dot notation
+        assertEquals(3, result.changes.size)
+        assertTrue(result.changes.containsKey("user.profile.name"))
+        assertEquals("Alice", result.changes["user.profile.name"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["user.profile.name"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("user.profile.age"))
+        assertEquals(30, result.changes["user.profile.age"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["user.profile.age"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("user.settings.theme"))
+        assertEquals("dark", result.changes["user.settings.theme"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["user.settings.theme"]!!.newValue)
+
+        // Keys not in source should not be retrieved
+        assertFalse(result.changes.containsKey("user.profile.city"))
+        assertFalse(result.changes.containsKey("user.settings.notifications"))
+    }
+
+    @Test
+    fun `GET retrieves deeply nested values without modifying target`() {
+        val target = JSONObject().apply {
+            put("company", JSONObject().apply {
+                put("department", JSONObject().apply {
+                    put("team", JSONObject().apply {
+                        put("lead", "Bob")
+                        put("size", 10)
+                        put("budget", 50000.0)
+                    })
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("company", JSONObject().apply {
+                put("department", JSONObject().apply {
+                    put("team", JSONObject().apply {
+                        put("lead", "__CLEVERTAP_GET__")
+                        put("size", "__CLEVERTAP_GET__")
+                    })
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged
+        val team = target.getJSONObject("company")
+            .getJSONObject("department")
+            .getJSONObject("team")
+        assertEquals("Bob", team.getString("lead"))
+        assertEquals(10, team.getInt("size"))
+        assertEquals(50000.0, team.getDouble("budget"), 0.001)
+
+        // Verify deep nested paths
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("company.department.team.lead"))
+        assertEquals("Bob", result.changes["company.department.team.lead"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["company.department.team.lead"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("company.department.team.size"))
+        assertEquals(10, result.changes["company.department.team.size"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["company.department.team.size"]!!.newValue)
+
+        assertFalse(result.changes.containsKey("company.department.team.budget"))
+    }
+
+    @Test
+    fun `GET skips missing keys in target`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+            put("age", 25)
+        }
+
+        val source = JSONObject().apply {
+            put("name", "__CLEVERTAP_GET__")
+            put("email", "__CLEVERTAP_GET__") // Missing in target
+            put("phone", "__CLEVERTAP_GET__") // Missing in target
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged and no new keys added
+        assertEquals(2, target.length())
+        assertEquals("John", target.getString("name"))
+        assertEquals(25, target.getInt("age"))
+        assertFalse(target.has("email"))
+        assertFalse(target.has("phone"))
+
+        // Only existing keys should be in changes
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("name"))
+        assertFalse(result.changes.containsKey("email"))
+        assertFalse(result.changes.containsKey("phone"))
+    }
+
+    @Test
+    fun `GET skips missing nested keys in target`() {
+        val target = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("name", "Alice")
+                put("profile", JSONObject().apply {
+                    put("city", "NYC")
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("name", "__CLEVERTAP_GET__")
+                put("age", "__CLEVERTAP_GET__") // Missing in target
+                put("profile", JSONObject().apply {
+                    put("city", "__CLEVERTAP_GET__")
+                    put("country", "__CLEVERTAP_GET__") // Missing in target
+                })
+                put("settings", JSONObject().apply { // Missing in target
+                    put("theme", "__CLEVERTAP_GET__")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged
+        assertEquals("Alice", target.getJSONObject("user").getString("name"))
+        assertEquals("NYC", target.getJSONObject("user").getJSONObject("profile").getString("city"))
+        assertFalse(target.getJSONObject("user").has("age"))
+        assertFalse(target.getJSONObject("user").getJSONObject("profile").has("country"))
+        assertFalse(target.getJSONObject("user").has("settings"))
+
+        // Only existing keys should be in changes
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("user.name"))
+        assertTrue(result.changes.containsKey("user.profile.city"))
+        assertFalse(result.changes.containsKey("user.age"))
+        assertFalse(result.changes.containsKey("user.profile.country"))
+        assertFalse(result.changes.containsKey("user.settings.theme"))
+    }
+
+    @Test
+    fun `GET retrieves array values without modifying target`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+                put("tag3")
+            })
+            put("scores", JSONArray().apply {
+                put(10)
+                put(20)
+                put(30)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("tags", "__CLEVERTAP_GET__")
+            put("scores", "__CLEVERTAP_GET__")
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target arrays are unchanged
+        val tags = target.getJSONArray("tags")
+        assertEquals(3, tags.length())
+        assertEquals("tag1", tags.getString(0))
+        assertEquals("tag2", tags.getString(1))
+        assertEquals("tag3", tags.getString(2))
+
+        val scores = target.getJSONArray("scores")
+        assertEquals(3, scores.length())
+        assertEquals(10, scores.getInt(0))
+        assertEquals(20, scores.getInt(1))
+        assertEquals(30, scores.getInt(2))
+
+        // Verify arrays are retrieved
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("tags"))
+        assertTrue(result.changes["tags"]!!.oldValue is JSONArray)
+        assertEquals("__CLEVERTAP_GET__", result.changes["tags"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("scores"))
+        assertTrue(result.changes["scores"]!!.oldValue is JSONArray)
+        assertEquals("__CLEVERTAP_GET__", result.changes["scores"]!!.newValue)
+    }
+
+    @Test
+    fun `GET retrieves array elements by position without modifying target`() {
+        val target = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("item1")
+                put("item2")
+                put("item3")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("__CLEVERTAP_GET__") // Get index 0
+                put("__CLEVERTAP_GET__") // Get index 1
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target array is unchanged
+        val items = target.getJSONArray("items")
+        assertEquals(3, items.length())
+        assertEquals("item1", items.getString(0))
+        assertEquals("item2", items.getString(1))
+        assertEquals("item3", items.getString(2))
+
+        // Verify only requested indices are retrieved
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("items[0]"))
+        assertEquals("item1", result.changes["items[0]"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["items[0]"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("items[1]"))
+        assertEquals("item2", result.changes["items[1]"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["items[1]"]!!.newValue)
+
+        // Index 2 was not requested
+        assertFalse(result.changes.containsKey("items[2]"))
+    }
+
+    @Test
+    fun `GET retrieves nested arrays in objects without modifying target`() {
+        val target = JSONObject().apply {
+            put("data", JSONObject().apply {
+                put("values", JSONArray().apply {
+                    put(100)
+                    put(200)
+                    put(300)
+                })
+                put("labels", JSONArray().apply {
+                    put("A")
+                    put("B")
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("data", JSONObject().apply {
+                put("values", JSONArray().apply {
+                    put("__CLEVERTAP_GET__")
+                    put("__CLEVERTAP_GET__")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged
+        val values = target.getJSONObject("data").getJSONArray("values")
+        assertEquals(3, values.length())
+        assertEquals(100, values.getInt(0))
+        assertEquals(200, values.getInt(1))
+        assertEquals(300, values.getInt(2))
+
+        val labels = target.getJSONObject("data").getJSONArray("labels")
+        assertEquals(2, labels.length())
+        assertEquals("A", labels.getString(0))
+        assertEquals("B", labels.getString(1))
+
+        // Verify only requested nested array elements are retrieved
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("data.values[0]"))
+        assertEquals(100, result.changes["data.values[0]"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["data.values[0]"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("data.values[1]"))
+        assertEquals(200, result.changes["data.values[1]"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["data.values[1]"]!!.newValue)
+
+        assertFalse(result.changes.containsKey("data.values[2]"))
+        assertFalse(result.changes.containsKey("data.labels[0]"))
+        assertFalse(result.changes.containsKey("data.labels[1]"))
+    }
+
+    @Test
+    fun `GET handles mixed types without modifying target`() {
+        val target = JSONObject().apply {
+            put("string", "text")
+            put("number", 42)
+            put("double", 3.14)
+            put("boolean", true)
+            put("nullValue", JSONObject.NULL)
+            put("array", JSONArray().apply {
+                put(1)
+                put(2)
+            })
+            put("object", JSONObject().apply {
+                put("key", "value")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("string", "__CLEVERTAP_GET__")
+            put("number", "__CLEVERTAP_GET__")
+            put("double", "__CLEVERTAP_GET__")
+            put("boolean", "__CLEVERTAP_GET__")
+            put("nullValue", "__CLEVERTAP_GET__")
+            put("array", "__CLEVERTAP_GET__")
+            put("object", JSONObject().apply {
+                put("key", "__CLEVERTAP_GET__")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify all values are unchanged
+        assertEquals("text", target.getString("string"))
+        assertEquals(42, target.getInt("number"))
+        assertEquals(3.14, target.getDouble("double"), 0.001)
+        assertEquals(true, target.getBoolean("boolean"))
+        assertTrue(target.isNull("nullValue"))
+        assertEquals(2, target.getJSONArray("array").length())
+        assertEquals("value", target.getJSONObject("object").getString("key"))
+
+        // Verify all values are retrieved correctly
+        assertEquals(7, result.changes.size)
+        assertEquals("text", result.changes["string"]!!.oldValue)
+        assertEquals(42, result.changes["number"]!!.oldValue)
+        assertEquals(3.14, result.changes["double"]!!.oldValue)
+        assertEquals(true, result.changes["boolean"]!!.oldValue)
+        assertEquals(JSONObject.NULL, result.changes["nullValue"]!!.oldValue)
+        assertTrue(result.changes["array"]!!.oldValue is JSONArray)
+        assertEquals("value", result.changes["object.key"]!!.oldValue)
+
+        // All should have GET_MARKER as newValue
+        result.changes.values.forEach { change ->
+            assertEquals("__CLEVERTAP_GET__", change.newValue)
+        }
+    }
+
+    @Test
+    fun `GET with empty source retrieves nothing`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+            put("age", 25)
+            put("active", true)
+        }
+
+        val source = JSONObject()
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged
+        assertEquals("John", target.getString("name"))
+        assertEquals(25, target.getInt("age"))
+        assertEquals(true, target.getBoolean("active"))
+
+        // No changes should be recorded
+        assertEquals(0, result.changes.size)
+    }
+
+    @Test
+    fun `GET handles date prefix values without modifying target`() {
+        val target = JSONObject().apply {
+            put("dob", "\$D_631152000") // Jan 1, 1990
+            put("joinDate", "\$D_1609459200") // Jan 1, 2021
+            put("events", JSONObject().apply {
+                put("lastLogin", "\$D_1704067200") // Jan 1, 2024
+                put("lastPurchase", "\$D_1672531200") // Jan 1, 2023
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("dob", "__CLEVERTAP_GET__")
+            put("events", JSONObject().apply {
+                put("lastLogin", "__CLEVERTAP_GET__")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is unchanged
+        assertEquals("\$D_631152000", target.getString("dob"))
+        assertEquals("\$D_1609459200", target.getString("joinDate"))
+        assertEquals("\$D_1704067200", target.getJSONObject("events").getString("lastLogin"))
+        assertEquals("\$D_1672531200", target.getJSONObject("events").getString("lastPurchase"))
+
+        // Verify retrieved values are processed (converted to Long)
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("dob"))
+        assertEquals("\$D_631152000", result.changes["dob"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["dob"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("events.lastLogin"))
+        assertEquals("\$D_1704067200", result.changes["events.lastLogin"]!!.oldValue)
+        assertEquals("__CLEVERTAP_GET__", result.changes["events.lastLogin"]!!.newValue)
+
+        assertFalse(result.changes.containsKey("joinDate"))
+        assertFalse(result.changes.containsKey("events.lastPurchase"))
+    }
+
+    @Test
+    fun `GET handles comprehensive scenario without modifying target`() {
+        val target = JSONObject().apply {
+            put("userId", "12345")
+            put("profile", JSONObject().apply {
+                put("name", "Charlie")
+                put("age", 28)
+                put("email", "[email protected]")
+                put("preferences", JSONObject().apply {
+                    put("theme", "dark")
+                    put("notifications", true)
+                })
+            })
+            put("stats", JSONObject().apply {
+                put("scores", JSONArray().apply {
+                    put(100)
+                    put(200)
+                    put(300)
+                })
+                put("level", 10)
+            })
+            put("metadata", JSONObject().apply {
+                put("created", "\$D_1609459200")
+                put("updated", "\$D_1704067200")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("userId", "__CLEVERTAP_GET__")
+            put("profile", JSONObject().apply {
+                put("name", "__CLEVERTAP_GET__")
+                put("preferences", JSONObject().apply {
+                    put("theme", "__CLEVERTAP_GET__")
+                })
+            })
+            put("stats", JSONObject().apply {
+                put("scores", JSONArray().apply {
+                    put("__CLEVERTAP_GET__")
+                    put("__CLEVERTAP_GET__")
+                })
+            })
+            put("metadata", JSONObject().apply {
+                put("created", "__CLEVERTAP_GET__")
+            })
+        }
+
+        // Store original JSON string to verify no modifications
+        val originalTarget = target.toString()
+
+        val result = traverser.traverse(target, source, ProfileOperation.GET)
+
+        // Verify target is completely unchanged
+        assertEquals(originalTarget, target.toString())
+
+        // Verify only requested values are retrieved
+        assertEquals(6, result.changes.size)
+        assertTrue(result.changes.containsKey("userId"))
+        assertEquals("12345", result.changes["userId"]!!.oldValue)
+
+        assertTrue(result.changes.containsKey("profile.name"))
+        assertEquals("Charlie", result.changes["profile.name"]!!.oldValue)
+
+        assertTrue(result.changes.containsKey("profile.preferences.theme"))
+        assertEquals("dark", result.changes["profile.preferences.theme"]!!.oldValue)
+
+        assertTrue(result.changes.containsKey("stats.scores[0]"))
+        assertEquals(100, result.changes["stats.scores[0]"]!!.oldValue)
+
+        assertTrue(result.changes.containsKey("stats.scores[1]"))
+        assertEquals(200, result.changes["stats.scores[1]"]!!.oldValue)
+
+        // Date value should be processed
+        assertTrue(result.changes.containsKey("metadata.created"))
+        assertEquals("\$D_1609459200", result.changes["metadata.created"]!!.oldValue)
+
+        // All should have GET_MARKER
+        result.changes.values.forEach { change ->
+            assertEquals("__CLEVERTAP_GET__", change.newValue)
+        }
+
+        // Verify unrequested values are not retrieved
+        assertFalse(result.changes.containsKey("profile.age"))
+        assertFalse(result.changes.containsKey("profile.email"))
+        assertFalse(result.changes.containsKey("profile.preferences.notifications"))
+        assertFalse(result.changes.containsKey("stats.scores[2]"))
+        assertFalse(result.changes.containsKey("stats.level"))
+        assertFalse(result.changes.containsKey("metadata.updated"))
     }
 }
