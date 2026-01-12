@@ -1285,7 +1285,7 @@ class ProfileStateTraverserTest {
 
         val source = JSONObject().apply {
             put("scores", JSONArray().apply {
-                put(10)
+                put(null)
                 put(10)
             })
         }
@@ -1295,7 +1295,7 @@ class ProfileStateTraverserTest {
         // Verify incremented array elements
         val scores = target.getJSONArray("scores")
         assertEquals(3, scores.length())
-        assertEquals(40, scores.getInt(0)) // 30 + 10
+        assertEquals(30, scores.getInt(0)) // 30 + null (null ignored)
         assertEquals(30, scores.getInt(1)) // 20 + 10
         assertEquals(50, scores.getInt(2)) // Unchanged (no corresponding source element)
 
