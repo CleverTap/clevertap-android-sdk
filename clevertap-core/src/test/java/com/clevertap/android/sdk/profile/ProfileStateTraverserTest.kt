@@ -2528,7 +2528,7 @@ class ProfileStateTraverserTest {
     }
 
     @Test
-    fun `DELETE handles comprehensive scenario`() {
+    fun `DELETE handles comprehensive scenario with JSONObject arrays`() {
         val target = JSONObject().apply {
             put("userId", "12345")
             put("profile", JSONObject().apply {
@@ -2552,6 +2552,28 @@ class ProfileStateTraverserTest {
                 put("created", "\$D_1609459200")
                 put("updated", "\$D_1704067200")
             })
+            put("orders", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("id", "order1")
+                    put("amount", 100)
+                    put("status", "completed")
+                })
+                put(JSONObject().apply {
+                    put("id", "order2")
+                    put("amount", 200)
+                    put("status", "pending")
+                })
+                put(JSONObject().apply {
+                    put("id", "order3")
+                    put("amount", 300)
+                    put("status", "completed")
+                })
+            })
+            put("tags", JSONArray().apply {
+                put("premium")
+                put("verified")
+                put("active")
+            })
         }
 
         val source = JSONObject().apply {
@@ -2570,6 +2592,19 @@ class ProfileStateTraverserTest {
             })
             put("metadata", JSONObject().apply {
                 put("created", "__CLEVERTAP_DELETE__")
+            })
+            put("orders", JSONArray().apply {
+                // Delete order with id=order2
+                put(JSONObject().apply {
+                    put("id", "__CLEVERTAP_DELETE__")
+                })
+                // Delete any order with status=completed
+                put(JSONObject().apply {
+                    put("status", "__CLEVERTAP_DELETE__")
+                })
+            })
+            put("tags", JSONArray().apply {
+                put("__CLEVERTAP_DELETE__") // Delete first item
             })
         }
 
@@ -2591,6 +2626,18 @@ class ProfileStateTraverserTest {
         assertFalse(target.getJSONObject("metadata").has("created"))
         assertTrue(target.getJSONObject("metadata").has("updated")) // Not deleted
 
+        // Verify JSONObject array deletions
+        val orders = target.getJSONArray("orders")
+        println("AnushX" + orders)
+        assertFalse((orders.get(0) as JSONObject).has("id")) // All orders deleted (order2 explicitly, order1 and order3 by status match)
+        assertFalse((orders.get(1) as JSONObject).has("status")) // All orders deleted (order2 explicitly, order1 and order3 by status match)
+
+        // Verify primitive array deletions
+        val tags = target.getJSONArray("tags")
+        assertEquals(2, tags.length()) // First item deleted
+        assertEquals("verified", tags.getString(0))
+        assertEquals("active", tags.getString(1))
+
         // Verify changes
         assertTrue(result.changes.containsKey("userId"))
         assertEquals("12345", result.changes["userId"]!!.oldValue)
@@ -2605,10 +2652,23 @@ class ProfileStateTraverserTest {
         assertNull(result.changes["profile.preferences.theme"]!!.newValue)
 
         assertTrue(result.changes.containsKey("stats.scores"))
-
         assertTrue(result.changes.containsKey("metadata.created"))
         assertEquals(1609459200L, result.changes["metadata.created"]!!.oldValue)
         assertNull(result.changes["metadata.created"]!!.newValue)
+
+        // Verify array changes
+        assertTrue(result.changes.containsKey("orders"))
+        val oldOrders = result.changes["orders"]!!.oldValue as JSONArray
+        assertEquals(3, oldOrders.length())
+        val newOrders = result.changes["orders"]!!.newValue as JSONArray
+        assertEquals(3, newOrders.length())
+        assertEquals(2, (newOrders.get(0) as JSONObject).length())
+
+        assertTrue(result.changes.containsKey("tags"))
+        val oldTags = result.changes["tags"]!!.oldValue as JSONArray
+        assertEquals(3, oldTags.length())
+        val newTags = result.changes["tags"]!!.newValue as JSONArray
+        assertEquals(2, newTags.length())
 
         // Verify not deleted items are not in changes
         assertFalse(result.changes.containsKey("profile.age"))
