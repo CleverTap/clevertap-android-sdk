@@ -195,7 +195,6 @@ class ProfileStateTraverserTest {
         }
 
         val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
-        println("AnushX " + result)
 
         // Verify target state after update
         assertEquals("John", target.getString("name"))
@@ -615,5 +614,660 @@ class ProfileStateTraverserTest {
         assertFalse(result.changes.containsKey("unchanged1"))
         assertFalse(result.changes.containsKey("nested.unchanged2"))
         assertFalse(result.changes.containsKey("nested.deep.unchanged3"))
+    }
+
+
+    @Test
+    fun `INCREMENT adds to existing numeric values`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("points", 50.5)
+            put("level", 5)
+            put("bonus", 0)
+        }
+
+        val source = JSONObject().apply {
+            put("score", 25)
+            put("points", 10.5)
+            put("level", 2)
+            put("bonus", 100)
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Verify incremented values
+        assertEquals(125, target.getInt("score"))
+        assertEquals(61.0, target.getDouble("points"), 0.001)
+        assertEquals(7, target.getInt("level"))
+        assertEquals(100, target.getInt("bonus"))
+
+        // Verify changes tracked
+        assertEquals(4, result.changes.size)
+        assertEquals(100, result.changes["score"]!!.oldValue)
+        assertEquals(125, result.changes["score"]!!.newValue)
+        assertEquals(50.5, result.changes["points"]!!.oldValue)
+        assertEquals(61.0, result.changes["points"]!!.newValue)
+        assertEquals(5, result.changes["level"]!!.oldValue)
+        assertEquals(7, result.changes["level"]!!.newValue)
+        assertEquals(0, result.changes["bonus"]!!.oldValue)
+        assertEquals(100, result.changes["bonus"]!!.newValue)
+    }
+
+    @Test
+    fun `INCREMENT adds new keys that don't exist in target`() {
+        val target = JSONObject().apply {
+            put("existingScore", 100)
+        }
+
+        val source = JSONObject().apply {
+            put("newScore", 50)
+            put("newPoints", 25.5)
+            put("anotherValue", 10)
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Verify new keys are added with source values
+        assertEquals(50, target.getInt("newScore"))
+        assertEquals(25.5, target.getDouble("newPoints"), 0.001)
+        assertEquals(10, target.getInt("anotherValue"))
+
+        // Verify changes tracked with null oldValue
+        assertTrue(result.changes.containsKey("newScore"))
+        assertNull(result.changes["newScore"]!!.oldValue)
+        assertEquals(50, result.changes["newScore"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("newPoints"))
+        assertNull(result.changes["newPoints"]!!.oldValue)
+        assertEquals(25.5, result.changes["newPoints"]!!.newValue)
+    }
+
+    @Test
+    fun `INCREMENT skips non-numeric values in target`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("name", "John") // String
+            put("active", true) // Boolean
+            put("tags", JSONArray().apply { put("tag1") }) // Array
+            put("metadata", JSONObject().apply { put("key", "value") }) // Object
+        }
+
+        val source = JSONObject().apply {
+            put("score", 50)
+            put("name", 10) // Try to increment string
+            put("active", 5) // Try to increment boolean
+            put("tags", 20) // Try to increment array
+            put("metadata", 15) // Try to increment object
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Only numeric target value should be incremented
+        assertEquals(150, target.getInt("score"))
+
+        // Non-numeric values should remain unchanged
+        assertEquals("John", target.getString("name"))
+        assertEquals(true, target.getBoolean("active"))
+        assertTrue(target.get("tags") is JSONArray)
+        assertTrue(target.get("metadata") is JSONObject)
+
+        // Only score should be in changes
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("score"))
+    }
+
+    @Test
+    fun `INCREMENT skips non-numeric values in source`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("points", 50)
+        }
+
+        val source = JSONObject().apply {
+            put("score", 25) // Valid
+            put("points", "invalid") // Invalid - string
+            put("newValue1", true) // Invalid - boolean
+            put("newValue2", JSONArray()) // Invalid - array
+            put("newValue3", JSONObject()) // Invalid - object
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Only valid numeric increment should work
+        assertEquals(125, target.getInt("score"))
+        assertEquals(50, target.getInt("points")) // Unchanged
+
+        // Invalid source values should not be added
+        assertFalse(target.has("newValue1"))
+        assertFalse(target.has("newValue2"))
+        assertFalse(target.has("newValue3"))
+
+        // Only score should be in changes
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("score"))
+    }
+
+    @Test
+    fun `INCREMENT handles nested objects`() {
+        val target = JSONObject().apply {
+            put("stats", JSONObject().apply {
+                put("wins", 10)
+                put("losses", 5)
+                put("score", 100.5)
+            })
+            put("progress", JSONObject().apply {
+                put("level", 3)
+                put("xp", 500)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("stats", JSONObject().apply {
+                put("wins", 3)
+                put("losses", 1)
+            })
+            put("progress", JSONObject().apply {
+                put("xp", 150)
+                put("bonus", 50) // New key
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Verify incremented nested values
+        val stats = target.getJSONObject("stats")
+        assertEquals(13, stats.getInt("wins"))
+        assertEquals(6, stats.getInt("losses"))
+        assertEquals(100.5, stats.getDouble("score"), 0.001) // Unchanged
+
+        val progress = target.getJSONObject("progress")
+        assertEquals(3, progress.getInt("level")) // Unchanged
+        assertEquals(650, progress.getInt("xp"))
+        assertEquals(50, progress.getInt("bonus")) // New key added
+
+        // Verify changes with dot notation
+        assertTrue(result.changes.containsKey("stats.wins"))
+        assertEquals(10, result.changes["stats.wins"]!!.oldValue)
+        assertEquals(13, result.changes["stats.wins"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("stats.losses"))
+        assertTrue(result.changes.containsKey("progress.xp"))
+        assertTrue(result.changes.containsKey("progress.bonus"))
+        assertNull(result.changes["progress.bonus"]!!.oldValue)
+
+        // Unchanged values should not be in changes
+        assertFalse(result.changes.containsKey("stats.score"))
+        assertFalse(result.changes.containsKey("progress.level"))
+    }
+
+    @Test
+    fun `INCREMENT handles deeply nested numeric values`() {
+        val target = JSONObject().apply {
+            put("game", JSONObject().apply {
+                put("player", JSONObject().apply {
+                    put("stats", JSONObject().apply {
+                        put("health", 100)
+                        put("mana", 50)
+                    })
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("game", JSONObject().apply {
+                put("player", JSONObject().apply {
+                    put("stats", JSONObject().apply {
+                        put("health", 25)
+                        put("mana", 10)
+                        put("stamina", 30) // New key
+                    })
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Verify deep nested increments
+        val stats = target.getJSONObject("game")
+            .getJSONObject("player")
+            .getJSONObject("stats")
+        assertEquals(125, stats.getInt("health"))
+        assertEquals(60, stats.getInt("mana"))
+        assertEquals(30, stats.getInt("stamina"))
+
+        // Verify changes with deep paths
+        assertTrue(result.changes.containsKey("game.player.stats.health"))
+        assertTrue(result.changes.containsKey("game.player.stats.mana"))
+        assertTrue(result.changes.containsKey("game.player.stats.stamina"))
+    }
+
+    @Test
+    fun `INCREMENT handles negative numbers`() {
+        val target = JSONObject().apply {
+            put("balance", -50)
+            put("debt", -100)
+            put("score", 25)
+        }
+
+        val source = JSONObject().apply {
+            put("balance", 100) // Add positive to negative
+            put("debt", -25) // Add negative to negative
+            put("score", -10) // Add negative to positive
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        assertEquals(50, target.getInt("balance"))
+        assertEquals(-125, target.getInt("debt"))
+        assertEquals(15, target.getInt("score"))
+
+        assertEquals(3, result.changes.size)
+    }
+
+    @Test
+    fun `INCREMENT handles mixed integer and double values`() {
+        val target = JSONObject().apply {
+            put("intValue", 10)
+            put("doubleValue", 5.5)
+            put("mixedValue", 100)
+        }
+
+        val source = JSONObject().apply {
+            put("intValue", 5.5) // Add double to int
+            put("doubleValue", 10) // Add int to double
+            put("mixedValue", 2.3) // Add double to int
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Values should be added correctly
+        assertEquals(15.5, target.getDouble("intValue"), 0.001)
+        assertEquals(15.5, target.getDouble("doubleValue"), 0.001)
+        assertEquals(102.3, target.getDouble("mixedValue"), 0.001)
+    }
+
+    @Test
+    fun `INCREMENT handles zero values`() {
+        val target = JSONObject().apply {
+            put("value1", 0)
+            put("value2", 100)
+        }
+
+        val source = JSONObject().apply {
+            put("value1", 50) // Add to zero
+            put("value2", 0) // Add zero
+            put("value3", 0) // Add zero to missing key
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        assertEquals(50, target.getInt("value1"))
+        assertEquals(100, target.getInt("value2")) // No change
+        assertEquals(0, target.getInt("value3"))
+
+        // value2 should not be in changes (no actual change)
+        assertTrue(result.changes.containsKey("value1"))
+        assertFalse(result.changes.containsKey("value2"))
+        assertTrue(result.changes.containsKey("value3"))
+    }
+
+    @Test
+    fun `INCREMENT handles comprehensive scenario`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("name", "John") // Non-numeric
+            put("stats", JSONObject().apply {
+                put("wins", 10)
+                put("title", "Champion") // Non-numeric nested
+                put("points", 50.5)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("score", 25)
+            put("name", 5) // Try to increment string
+            put("level", 3) // New key
+            put("stats", JSONObject().apply {
+                put("wins", 5)
+                put("losses", 2) // New nested key
+                put("points", 10.5)
+                put("title", 1) // Try to increment nested string
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Top-level increments
+        assertEquals(125, target.getInt("score"))
+        assertEquals("John", target.getString("name")) // Unchanged
+        assertEquals(3, target.getInt("level")) // New key added
+
+        // Nested increments
+        val stats = target.getJSONObject("stats")
+        assertEquals(15, stats.getInt("wins"))
+        assertEquals(2, stats.getInt("losses")) // New key added
+        assertEquals(61.0, stats.getDouble("points"), 0.001)
+        assertEquals("Champion", stats.getString("title")) // Unchanged
+
+        // Verify changes
+        assertTrue(result.changes.containsKey("score"))
+        assertTrue(result.changes.containsKey("level"))
+        assertTrue(result.changes.containsKey("stats.wins"))
+        assertTrue(result.changes.containsKey("stats.losses"))
+        assertTrue(result.changes.containsKey("stats.points"))
+        assertFalse(result.changes.containsKey("name"))
+        assertFalse(result.changes.containsKey("stats.title"))
+    }
+
+    // ==================== DECREMENT Operation Tests ====================
+
+    @Test
+    fun `DECREMENT subtracts from existing numeric values`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("points", 50.5)
+            put("level", 5)
+            put("bonus", 200)
+        }
+
+        val source = JSONObject().apply {
+            put("score", 25)
+            put("points", 10.5)
+            put("level", 2)
+            put("bonus", 100)
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Verify decremented values
+        assertEquals(75, target.getInt("score"))
+        assertEquals(40.0, target.getDouble("points"), 0.001)
+        assertEquals(3, target.getInt("level"))
+        assertEquals(100, target.getInt("bonus"))
+
+        // Verify changes tracked
+        assertEquals(4, result.changes.size)
+        assertEquals(100, result.changes["score"]!!.oldValue)
+        assertEquals(75, result.changes["score"]!!.newValue)
+        assertEquals(50.5, result.changes["points"]!!.oldValue)
+        assertEquals(40.0, result.changes["points"]!!.newValue)
+    }
+
+    @Test
+    fun `DECREMENT adds negated value for missing keys`() {
+        val target = JSONObject().apply {
+            put("existingScore", 100)
+        }
+
+        val source = JSONObject().apply {
+            put("newScore", 50)
+            put("newPoints", 25.5)
+            put("anotherValue", 10)
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Verify new keys are added with negated source values
+        assertEquals(-50, target.getInt("newScore"))
+        assertEquals(-25.5, target.getDouble("newPoints"), 0.001)
+        assertEquals(-10, target.getInt("anotherValue"))
+
+        // Verify changes tracked with null oldValue
+        assertTrue(result.changes.containsKey("newScore"))
+        assertNull(result.changes["newScore"]!!.oldValue)
+        assertEquals(-50, result.changes["newScore"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("newPoints"))
+        assertNull(result.changes["newPoints"]!!.oldValue)
+        assertEquals(-25.5, result.changes["newPoints"]!!.newValue)
+    }
+
+    @Test
+    fun `DECREMENT skips non-numeric values in target`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("name", "John") // String
+            put("active", true) // Boolean
+            put("tags", JSONArray().apply { put("tag1") }) // Array
+            put("metadata", JSONObject().apply { put("key", "value") }) // Object
+        }
+
+        val source = JSONObject().apply {
+            put("score", 50)
+            put("name", 10) // Try to decrement string
+            put("active", 5) // Try to decrement boolean
+            put("tags", 20) // Try to decrement array
+            put("metadata", 15) // Try to decrement object
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Only numeric target value should be decremented
+        assertEquals(50, target.getInt("score"))
+
+        // Non-numeric values should remain unchanged
+        assertEquals("John", target.getString("name"))
+        assertEquals(true, target.getBoolean("active"))
+        assertTrue(target.get("tags") is JSONArray)
+        assertTrue(target.get("metadata") is JSONObject)
+
+        // Only score should be in changes
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("score"))
+    }
+
+    @Test
+    fun `DECREMENT skips non-numeric values in source`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("points", 50)
+        }
+
+        val source = JSONObject().apply {
+            put("score", 25) // Valid
+            put("points", "invalid") // Invalid - string
+            put("newValue1", true) // Invalid - boolean
+            put("newValue2", JSONArray()) // Invalid - array
+            put("newValue3", JSONObject()) // Invalid - object
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Only valid numeric decrement should work
+        assertEquals(75, target.getInt("score"))
+        assertEquals(50, target.getInt("points")) // Unchanged
+
+        // Invalid source values should not be added
+        assertFalse(target.has("newValue1"))
+        assertFalse(target.has("newValue2"))
+        assertFalse(target.has("newValue3"))
+
+        // Only score should be in changes
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("score"))
+    }
+
+    @Test
+    fun `DECREMENT handles nested objects`() {
+        val target = JSONObject().apply {
+            put("stats", JSONObject().apply {
+                put("health", 100)
+                put("damage", 50)
+                put("defense", 75.5)
+            })
+            put("resources", JSONObject().apply {
+                put("gold", 500)
+                put("gems", 100)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("stats", JSONObject().apply {
+                put("health", 25)
+                put("damage", 10)
+            })
+            put("resources", JSONObject().apply {
+                put("gold", 150)
+                put("silver", 50) // New key - should add -50
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Verify decremented nested values
+        val stats = target.getJSONObject("stats")
+        assertEquals(75, stats.getInt("health"))
+        assertEquals(40, stats.getInt("damage"))
+        assertEquals(75.5, stats.getDouble("defense"), 0.001) // Unchanged
+
+        val resources = target.getJSONObject("resources")
+        assertEquals(350, resources.getInt("gold"))
+        assertEquals(100, resources.getInt("gems")) // Unchanged
+        assertEquals(-50, resources.getInt("silver")) // New key with negated value
+
+        // Verify changes with dot notation
+        assertTrue(result.changes.containsKey("stats.health"))
+        assertTrue(result.changes.containsKey("stats.damage"))
+        assertTrue(result.changes.containsKey("resources.gold"))
+        assertTrue(result.changes.containsKey("resources.silver"))
+        assertNull(result.changes["resources.silver"]!!.oldValue)
+
+        // Unchanged values should not be in changes
+        assertFalse(result.changes.containsKey("stats.defense"))
+        assertFalse(result.changes.containsKey("resources.gems"))
+    }
+
+    @Test
+    fun `DECREMENT handles deeply nested numeric values`() {
+        val target = JSONObject().apply {
+            put("game", JSONObject().apply {
+                put("player", JSONObject().apply {
+                    put("inventory", JSONObject().apply {
+                        put("potions", 10)
+                        put("scrolls", 5)
+                    })
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("game", JSONObject().apply {
+                put("player", JSONObject().apply {
+                    put("inventory", JSONObject().apply {
+                        put("potions", 3)
+                        put("scrolls", 2)
+                        put("arrows", 20) // New key
+                    })
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Verify deep nested decrements
+        val inventory = target.getJSONObject("game")
+            .getJSONObject("player")
+            .getJSONObject("inventory")
+        assertEquals(7, inventory.getInt("potions"))
+        assertEquals(3, inventory.getInt("scrolls"))
+        assertEquals(-20, inventory.getInt("arrows")) // New key with negated value
+
+        // Verify changes with deep paths
+        assertTrue(result.changes.containsKey("game.player.inventory.potions"))
+        assertTrue(result.changes.containsKey("game.player.inventory.scrolls"))
+        assertTrue(result.changes.containsKey("game.player.inventory.arrows"))
+    }
+
+    @Test
+    fun `DECREMENT handles negative numbers`() {
+        val target = JSONObject().apply {
+            put("balance", -50)
+            put("debt", -100)
+            put("score", 25)
+        }
+
+        val source = JSONObject().apply {
+            put("balance", 100) // Subtract positive from negative
+            put("debt", -25) // Subtract negative from negative
+            put("score", -10) // Subtract negative from positive (adds)
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        assertEquals(-150, target.getInt("balance"))
+        assertEquals(-75, target.getInt("debt"))
+        assertEquals(35, target.getInt("score"))
+
+        assertEquals(3, result.changes.size)
+    }
+
+    @Test
+    fun `DECREMENT handles mixed integer and double values`() {
+        val target = JSONObject().apply {
+            put("intValue", 10)
+            put("doubleValue", 15.5)
+            put("mixedValue", 100)
+        }
+
+        val source = JSONObject().apply {
+            put("intValue", 5.5) // Subtract double from int
+            put("doubleValue", 10) // Subtract int from double
+            put("mixedValue", 2.3) // Subtract double from int
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Values should be subtracted correctly
+        assertEquals(4.5, target.getDouble("intValue"), 0.001)
+        assertEquals(5.5, target.getDouble("doubleValue"), 0.001)
+        assertEquals(97.7, target.getDouble("mixedValue"), 0.001)
+    }
+
+    @Test
+    fun `DECREMENT handles comprehensive scenario`() {
+        val target = JSONObject().apply {
+            put("score", 100)
+            put("name", "John") // Non-numeric
+            put("inventory", JSONObject().apply {
+                put("gold", 500)
+                put("location", "Castle") // Non-numeric nested
+                put("gems", 25.5)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("score", 25)
+            put("name", 5) // Try to decrement string
+            put("penalty", 10) // New key - should be -10
+            put("inventory", JSONObject().apply {
+                put("gold", 100)
+                put("silver", 50) // New nested key - should be -50
+                put("gems", 5.5)
+                put("location", 1) // Try to decrement nested string
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Top-level decrements
+        assertEquals(75, target.getInt("score"))
+        assertEquals("John", target.getString("name")) // Unchanged
+        assertEquals(-10, target.getInt("penalty")) // New key with negated value
+
+        // Nested decrements
+        val inventory = target.getJSONObject("inventory")
+        assertEquals(400, inventory.getInt("gold"))
+        assertEquals(-50, inventory.getInt("silver")) // New key with negated value
+        assertEquals(20.0, inventory.getDouble("gems"), 0.001)
+        assertEquals("Castle", inventory.getString("location")) // Unchanged
+
+        // Verify changes
+        assertTrue(result.changes.containsKey("score"))
+        assertTrue(result.changes.containsKey("penalty"))
+        assertTrue(result.changes.containsKey("inventory.gold"))
+        assertTrue(result.changes.containsKey("inventory.silver"))
+        assertTrue(result.changes.containsKey("inventory.gems"))
+        assertFalse(result.changes.containsKey("name"))
+        assertFalse(result.changes.containsKey("inventory.location"))
     }
 }
