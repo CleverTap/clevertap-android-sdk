@@ -93,8 +93,7 @@ internal class ArrayOperationHandler() {
         for (i in 0 until newArray.length()) {
             val item = newArray.get(i)
             if (item is String) {
-                val processedItem = ProfileOperationUtils.processDatePrefixes(item)
-                mergedArray.put(processedItem)
+                mergedArray.put(item)
                 modified = true
             }
         }
@@ -106,7 +105,6 @@ internal class ArrayOperationHandler() {
 
     /**
      * Replaces the entire array with new array for UPDATE operation.
-     * Processes date prefixes in the new array before replacement.
      */
     private fun handleArrayReplacement(
         parentJson: JSONObject,
@@ -117,12 +115,13 @@ internal class ArrayOperationHandler() {
         changes: MutableMap<String, ProfileChange>
     ) {
         // Process date prefixes in the new array
-        val processedArray = ProfileOperationUtils.processDatePrefixes(newArray) as JSONArray
-        
+        val processedNewArray = ProfileOperationUtils.processDatePrefixes(newArray) as JSONArray
+        val processedOldArray = ProfileOperationUtils.processDatePrefixes(oldArray) as JSONArray
+
         // Only record change if arrays are different
-        if (!JsonComparisonUtils.areEqual(oldArray, processedArray)) {
-            parentJson.put(key, processedArray)
-            changes[path] = ProfileChange(oldArray, processedArray)
+        if (!JsonComparisonUtils.areEqual(processedOldArray, processedNewArray)) {
+            parentJson.put(key, newArray)
+            changes[path] = ProfileChange(processedOldArray, processedNewArray)
         }
     }
 

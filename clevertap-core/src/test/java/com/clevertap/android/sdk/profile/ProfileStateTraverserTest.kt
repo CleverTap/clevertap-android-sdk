@@ -64,6 +64,43 @@ class ProfileStateTraverserTest {
                 put("old1")
                 put("old2")
             })
+
+            // Nested object with $D_ date values
+            put("employment", JSONObject().apply {
+                put("company", "TechCorp")
+                put("startDate", "\$D_1609459200") // Jan 1, 2021
+                put("lastPromotion", "\$D_1640995200") // Jan 1, 2022
+            })
+
+            // Array with $D_ date values
+            put("eventDates", JSONArray().apply {
+                put("\$D_1672531200") // Jan 1, 2023
+                put("\$D_1704067200") // Jan 1, 2024
+                put("regular_string")
+            })
+
+            // Deeply nested object with $D_ values
+            put("timeline", JSONObject().apply {
+                put("personal", JSONObject().apply {
+                    put("birthDate", "\$D_631152000") // Jan 1, 1990
+                    put("graduationDate", "\$D_1262304000") // Jan 1, 2010
+                })
+                put("professional", JSONObject().apply {
+                    put("firstJob", "\$D_1325376000") // Jan 1, 2012
+                })
+            })
+
+            // Array of objects with $D_ values
+            put("milestones", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("event", "joined")
+                    put("date", "\$D_1577836800") // Jan 1, 2020
+                })
+                put(JSONObject().apply {
+                    put("event", "promoted")
+                    put("date", "\$D_1609459200") // Jan 1, 2021
+                })
+            })
         }
 
         val source = JSONObject().apply {
@@ -107,9 +144,58 @@ class ProfileStateTraverserTest {
                 put("new2")
                 put("new3")
             })
+
+            // Update nested object with $D_ values (partial update)
+            put("employment", JSONObject().apply {
+                put("company", "MegaCorp") // Update existing
+                put("startDate", "\$D_1640995200") // Update date
+                put("endDate", "\$D_1704067200") // Add new date field
+                // lastPromotion not specified, should remain unchanged
+            })
+
+            // Update array with $D_ values (complete replacement)
+            put("eventDates", JSONArray().apply {
+                put("\$D_1704067200") // Jan 1, 2024
+                put("\$D_1735689600") // Jan 1, 2025
+                put("\$D_1767225600") // Jan 1, 2026
+            })
+
+            // Update deeply nested object with $D_ values
+            put("timeline", JSONObject().apply {
+                put("personal", JSONObject().apply {
+                    put("birthDate", "\$D_631152000") // Same value
+                    put("graduationDate", "\$D_1293840000") // Updated date
+                    put("marriageDate", "\$D_1420070400") // New date field
+                })
+                // professional not specified, should remain unchanged
+            })
+
+            // Replace array of objects with $D_ values
+            put("milestones", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("event", "relocated")
+                    put("date", "\$D_1735689600") // Jan 1, 2025
+                })
+            })
+
+            // Add new nested object with mixed $D_ values
+            put("healthRecords", JSONObject().apply {
+                put("lastCheckup", "\$D_1704067200")
+                put("vaccinations", JSONArray().apply {
+                    put(JSONObject().apply {
+                        put("name", "COVID-19")
+                        put("date", "\$D_1640995200")
+                    })
+                    put(JSONObject().apply {
+                        put("name", "Flu")
+                        put("date", "\$D_1672531200")
+                    })
+                })
+            })
         }
 
         val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
+        println("AnushX " + result)
 
         // Verify target state after update
         assertEquals("John", target.getString("name"))
@@ -141,6 +227,44 @@ class ProfileStateTraverserTest {
         assertEquals(3, tags.length())
         assertEquals("new1", tags.getString(0))
 
+        // Verify nested object with $D_ updates
+        val employment = target.getJSONObject("employment")
+        assertEquals("MegaCorp", employment.getString("company"))
+        assertEquals("\$D_1640995200", employment.getString("startDate"))
+        assertEquals("\$D_1704067200", employment.getString("endDate"))
+        assertEquals("\$D_1640995200", employment.getString("lastPromotion")) // Unchanged
+
+        // Verify array with $D_ replacement
+        val eventDates = target.getJSONArray("eventDates")
+        assertEquals(3, eventDates.length())
+        assertEquals("\$D_1704067200", eventDates.getString(0))
+        assertEquals("\$D_1735689600", eventDates.getString(1))
+        assertEquals("\$D_1767225600", eventDates.getString(2))
+
+        // Verify deeply nested $D_ updates
+        val timeline = target.getJSONObject("timeline")
+        val personal = timeline.getJSONObject("personal")
+        assertEquals("\$D_631152000", personal.getString("birthDate"))
+        assertEquals("\$D_1293840000", personal.getString("graduationDate"))
+        assertEquals("\$D_1420070400", personal.getString("marriageDate"))
+        val professional = timeline.getJSONObject("professional")
+        assertEquals("\$D_1325376000", professional.getString("firstJob")) // Unchanged
+
+        // Verify array of objects with $D_ replacement
+        val milestones = target.getJSONArray("milestones")
+        assertEquals(1, milestones.length())
+        val milestone = milestones.getJSONObject(0)
+        assertEquals("relocated", milestone.getString("event"))
+        assertEquals("\$D_1735689600", milestone.getString("date"))
+
+        // Verify new nested object with $D_ values
+        val healthRecords = target.getJSONObject("healthRecords")
+        assertEquals("\$D_1704067200", healthRecords.getString("lastCheckup"))
+        val vaccinations = healthRecords.getJSONArray("vaccinations")
+        assertEquals(2, vaccinations.length())
+        assertEquals("\$D_1640995200", vaccinations.getJSONObject(0).getString("date"))
+        assertEquals("\$D_1672531200", vaccinations.getJSONObject(1).getString("date"))
+
         // Verify changes tracked correctly
         // Should NOT include "name" (no change)
         assertFalse(result.changes.containsKey("name"))
@@ -153,7 +277,7 @@ class ProfileStateTraverserTest {
         assertTrue(result.changes["dob"]!!.oldValue is Long)
         assertTrue(result.changes["dob"]!!.newValue is Long)
         assertEquals(123L, result.changes["dob"]!!.oldValue)
-        assertEquals(456L, result.changes["dob"]!!.oldValue)
+        assertEquals(456L, result.changes["dob"]!!.newValue)
 
         assertTrue(result.changes.containsKey("active"))
 
@@ -186,6 +310,44 @@ class ProfileStateTraverserTest {
 
         // Should include array replacement
         assertTrue(result.changes.containsKey("tags"))
+
+        // Verify $D_ changes in nested objects
+        assertTrue(result.changes.containsKey("employment.company"))
+        assertTrue(result.changes.containsKey("employment.startDate"))
+        assertEquals(1609459200L, result.changes["employment.startDate"]!!.oldValue)
+        assertEquals(1640995200L, result.changes["employment.startDate"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("employment.endDate"))
+        assertNull(result.changes["employment.endDate"]!!.oldValue) // New field
+        assertEquals(1704067200L, result.changes["employment.endDate"]!!.newValue)
+
+        // Should NOT include unchanged $D_ values
+        assertFalse(result.changes.containsKey("employment.lastPromotion"))
+
+        // Verify $D_ changes in arrays (array replacement)
+        assertTrue(result.changes.containsKey("eventDates"))
+
+        // Verify $D_ changes in deeply nested objects
+        assertFalse(result.changes.containsKey("timeline.personal.birthDate")) // Same value
+        assertTrue(result.changes.containsKey("timeline.personal.graduationDate"))
+        assertEquals(1262304000L, result.changes["timeline.personal.graduationDate"]!!.oldValue)
+        assertEquals(1293840000L, result.changes["timeline.personal.graduationDate"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("timeline.personal.marriageDate"))
+        assertNull(result.changes["timeline.personal.marriageDate"]!!.oldValue)
+        assertEquals(1420070400L, result.changes["timeline.personal.marriageDate"]!!.newValue)
+
+        // Should NOT include unchanged nested objects
+        assertFalse(result.changes.containsKey("timeline.professional.firstJob"))
+
+        // Verify array of objects replacement
+        assertTrue(result.changes.containsKey("milestones"))
+
+        // Verify new nested object with $D_ values
+        assertTrue(result.changes.containsKey("healthRecords.lastCheckup"))
+        assertEquals(1704067200L, result.changes["healthRecords.lastCheckup"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("healthRecords.vaccinations"))
     }
 
     @Test

@@ -93,18 +93,17 @@ internal class OperationHandler(
                 if (newValue !is Number) return
                 newValue
             }
-            else -> {
-                // For SET and other operations, use the value as-is
-                ProfileOperationUtils.processDatePrefixes(newValue)
-            }
+            else -> newValue
         }
 
         target.put(key, updatedValue)
 
-        if (updatedValue is JSONObject) {
-            changeTracker.recordAllLeafValues(updatedValue, currentPath, changes)
+        val processedNewValue = ProfileOperationUtils.processDatePrefixes(updatedValue)
+
+        if (processedNewValue is JSONObject) {
+            changeTracker.recordAllLeafValues(processedNewValue, currentPath, changes)
         } else {
-            changes[currentPath] = ProfileChange(null, updatedValue)
+            changes[currentPath] = ProfileChange(null, processedNewValue)
         }
     }
 
