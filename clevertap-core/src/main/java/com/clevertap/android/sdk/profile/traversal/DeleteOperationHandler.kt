@@ -183,7 +183,9 @@ internal class DeleteOperationHandler(
 
         // Only report changes if we actually removed something
         if (removedAny) {
-            changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
+            val processedOldArrayCopy = ProfileOperationUtils.processDatePrefixes(oldArrayCopy)
+            val processedOldArray = ProfileOperationUtils.processDatePrefixes(oldArray)
+            changes[basePath] = ProfileChange(processedOldArrayCopy, processedOldArray)
         }
     }
 
@@ -201,7 +203,8 @@ internal class DeleteOperationHandler(
             // check is needed since BE can only delete leaf nodes
             return
         }
-        changeTracker.recordDeletion(value, path, changes)
+        val processedValue = ProfileOperationUtils.processDatePrefixes(value)
+        changeTracker.recordDeletion(processedValue, path, changes)
         parent.remove(key)
     }
 }
