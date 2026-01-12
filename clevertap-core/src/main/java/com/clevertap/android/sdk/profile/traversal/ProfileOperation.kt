@@ -12,13 +12,15 @@ enum class ProfileOperation {
 
     /**
      * Add new value to old value (numeric values only).
-     * Skips non-numeric values and keys that don't exist.
+     * Skips non-numeric values
+     * Adds the value if key doesn't exist
      */
     INCREMENT,
 
     /**
      * Subtract new value from old value (numeric values only).
-     * Skips non-numeric values and keys that don't exist.
+     * Skips non-numeric values
+     * Adds the negated value if key doesn't exist
      */
     DECREMENT,
 

@@ -52,8 +52,7 @@ internal class OperationHandler(
                     target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                 )
             }
-            oldValue is Number && newValue is Number &&
-                    operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
+            operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
                 handleNumberOperation(target, key, oldValue, newValue, currentPath, changes, operation)
             }
             operation == ProfileOperation.GET -> {
@@ -113,12 +112,15 @@ internal class OperationHandler(
     private fun handleNumberOperation(
         parent: JSONObject,
         key: String,
-        oldValue: Number,
-        newValue: Number,
+        oldValue: Any,
+        newValue: Any,
         path: String,
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation
     ) {
+        if (oldValue !is Number || newValue !is Number) {
+            return
+        }
         val result = when (operation) {
             ProfileOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
             ProfileOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
