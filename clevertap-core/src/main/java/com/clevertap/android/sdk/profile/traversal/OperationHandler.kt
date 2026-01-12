@@ -49,7 +49,7 @@ internal class OperationHandler(
             }
             oldValue is JSONArray && newValue is JSONArray -> {
                 arrayHandler.handleArrayOperation(
-                    target, key, oldValue, newValue, currentPath, changes, operation, changeTracker, recursiveApply
+                    target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                 )
             }
             operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {

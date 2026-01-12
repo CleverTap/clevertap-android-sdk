@@ -9,7 +9,7 @@ import org.json.JSONObject
  * Handles array-specific operations: ARRAY_ADD, ARRAY_REMOVE, GET, UPDATE, and array element processing.
  * Supports both simple array operations and complex element-wise operations.
  */
-internal class ArrayOperationHandler() {
+internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTracker) {
 
     /**
      * Handles all array operations based on the operation type.
@@ -21,7 +21,6 @@ internal class ArrayOperationHandler() {
      * @param currentPath The dot-notation path
      * @param changes The map to accumulate changes in
      * @param operation The profile operation type
-     * @param changeTracker The change tracker for recording changes
      * @param recursiveTraversal Function to recursively apply operation to nested objects
      */
     @Throws(JSONException::class)
@@ -33,7 +32,6 @@ internal class ArrayOperationHandler() {
         currentPath: String,
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation,
-        changeTracker: ProfileChangeTracker,
         recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
         if (newArray.length() == 0) return
@@ -64,7 +62,6 @@ internal class ArrayOperationHandler() {
                 newArray,
                 currentPath,
                 changes,
-                changeTracker
             )
 
             ProfileOperation.INCREMENT, ProfileOperation.DECREMENT -> processArrayElements(
@@ -114,8 +111,7 @@ internal class ArrayOperationHandler() {
         oldArray: JSONArray,
         newArray: JSONArray,
         path: String,
-        changes: MutableMap<String, ProfileChange>,
-        changeTracker: ProfileChangeTracker
+        changes: MutableMap<String, ProfileChange>
     ) {
         // Only record change if arrays are different
         if (!JsonComparisonUtils.areEqual(oldArray, newArray)) {
