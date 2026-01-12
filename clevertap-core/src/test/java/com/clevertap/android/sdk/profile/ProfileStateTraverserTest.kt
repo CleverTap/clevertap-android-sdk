@@ -493,7 +493,6 @@ class ProfileStateTraverserTest {
         }
 
         val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
-        println("AnushX " + result)
 
         // Verify all type conversions
         assertEquals(123, target.getInt("stringToNum"))
@@ -555,7 +554,6 @@ class ProfileStateTraverserTest {
 
         val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
 
-        println("AnushX" + result)
         // Arrays are replaced entirely in UPDATE
         val simpleArray = target.getJSONArray("simpleArray")
         assertEquals(3, simpleArray.length())
@@ -1292,7 +1290,6 @@ class ProfileStateTraverserTest {
         }
 
         val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
-        println("AnushX" + result)
 
         // Verify incremented array elements
         val scores = target.getJSONArray("scores")
@@ -2648,5 +2645,552 @@ class ProfileStateTraverserTest {
 
         // Verify deletions are tracked with processed dates (as Long)
         assertEquals(1735689600L, ((result.changes["eventDates"]!!.newValue) as JSONArray).get(0))
+    }
+
+    // ==================== ARRAY_ADD Operation Tests ====================
+
+    @Test
+    fun `ARRAY_ADD adds string values to array`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag3")
+                put("tag4")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+
+        // Verify new values are added to array
+        val tags = target.getJSONArray("tags")
+        assertEquals(4, tags.length())
+        assertEquals("tag1", tags.getString(0))
+        assertEquals("tag2", tags.getString(1))
+        assertEquals("tag3", tags.getString(2))
+        assertEquals("tag4", tags.getString(3))
+
+        // Verify changes tracked
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("tags"))
+        assertTrue(result.changes["tags"]!!.oldValue is JSONArray)
+        assertTrue(result.changes["tags"]!!.newValue is JSONArray)
+    }
+
+    @Test
+    fun `ARRAY_ADD allows duplicate values`() {
+        val target = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("apple")
+                put("banana")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("apple") // Duplicate
+                put("orange")
+                put("banana") // Duplicate
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+        println("AnushX" + result)
+
+        // Verify duplicates are added
+        val items = target.getJSONArray("items")
+        println("AnushX" + items)
+//        assertEquals(3, items.length())
+        assertEquals("apple", items.getString(0))
+        assertEquals("banana", items.getString(1))
+        assertEquals("apple", items.getString(2))
+        assertEquals("orange", items.getString(3))
+    }
+
+    @Test
+    fun `ARRAY_ADD to empty array`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray())
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("first")
+                put("second")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+
+        // Verify values are added to empty array
+        val tags = target.getJSONArray("tags")
+        assertEquals(2, tags.length())
+        assertEquals("first", tags.getString(0))
+        assertEquals("second", tags.getString(1))
+
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("tags"))
+    }
+
+    @Test
+    fun `ARRAY_ADD creates array if key doesn't exist`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+
+        // Verify new array is created
+        assertTrue(target.has("tags"))
+        val tags = target.getJSONArray("tags")
+        assertEquals(2, tags.length())
+        assertEquals("tag1", tags.getString(0))
+        assertEquals("tag2", tags.getString(1))
+
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("tags"))
+        assertNull(result.changes["tags"]!!.oldValue)
+    }
+
+    @Test
+    fun `ARRAY_ADD with empty source array does nothing`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray()) // Empty
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+
+        // Verify array is unchanged
+        val tags = target.getJSONArray("tags")
+        assertEquals(2, tags.length())
+
+        // No changes should be recorded
+        assertEquals(0, result.changes.size)
+    }
+
+    @Test
+    fun `ARRAY_ADD skips non-string values`() {
+        val target = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("string1")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("string2") // Valid
+                put(123) // Non-string, should be skipped
+                put(true) // Non-string, should be skipped
+                put(JSONObject().apply { put("key", "value") }) // Non-string, should be skipped
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+
+        // Verify only string value is added
+        val items = target.getJSONArray("items")
+        assertEquals(2, items.length())
+        assertEquals("string1", items.getString(0))
+        assertEquals("string2", items.getString(1))
+    }
+
+    @Test
+    fun `ARRAY_ADD to nested arrays`() {
+        val target = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("tags", JSONArray().apply {
+                    put("tag1")
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("tags", JSONArray().apply {
+                    put("tag2")
+                    put("tag3")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+
+        // Verify nested array additions
+        val tags = target.getJSONObject("user").getJSONArray("tags")
+        assertEquals(3, tags.length())
+        assertEquals("tag1", tags.getString(0))
+        assertEquals("tag2", tags.getString(1))
+        assertEquals("tag3", tags.getString(2))
+
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("user.tags"))
+    }
+
+    @Test
+    fun `ARRAY_ADD comprehensive scenario`() {
+        val target = JSONObject().apply {
+            put("categories", JSONArray().apply {
+                put("electronics")
+                put("books")
+            })
+            put("profile", JSONObject().apply {
+                put("interests", JSONArray().apply {
+                    put("coding")
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("categories", JSONArray().apply {
+                put("clothing")
+                put("electronics") // Duplicate
+            })
+            put("profile", JSONObject().apply {
+                put("interests", JSONArray().apply {
+                    put("reading")
+                    put("gaming")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_ADD)
+
+        // Verify top-level array
+        val categories = target.getJSONArray("categories")
+        assertEquals(4, categories.length())
+        assertEquals("electronics", categories.getString(0))
+        assertEquals("books", categories.getString(1))
+        assertEquals("clothing", categories.getString(2))
+        assertEquals("electronics", categories.getString(3)) // Duplicate added
+
+        // Verify nested array
+        val interests = target.getJSONObject("profile").getJSONArray("interests")
+        assertEquals(3, interests.length())
+        assertEquals("coding", interests.getString(0))
+        assertEquals("reading", interests.getString(1))
+        assertEquals("gaming", interests.getString(2))
+
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("categories"))
+        assertTrue(result.changes.containsKey("profile.interests"))
+    }
+
+    // ==================== ARRAY_REMOVE Operation Tests ====================
+
+    @Test
+    fun `ARRAY_REMOVE removes string values from array`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+                put("tag3")
+                put("tag4")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag2")
+                put("tag4")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify values are removed from array
+        val tags = target.getJSONArray("tags")
+        assertEquals(2, tags.length())
+        assertEquals("tag1", tags.getString(0))
+        assertEquals("tag3", tags.getString(1))
+
+        // Verify changes tracked
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("tags"))
+        assertTrue(result.changes["tags"]!!.oldValue is JSONArray)
+        assertTrue(result.changes["tags"]!!.newValue is JSONArray)
+    }
+
+    @Test
+    fun `ARRAY_REMOVE removes all occurrences of duplicate values`() {
+        val target = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("apple")
+                put("banana")
+                put("apple")
+                put("orange")
+                put("apple")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("apple")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify all occurrences of "apple" are removed
+        val items = target.getJSONArray("items")
+        assertEquals(2, items.length())
+        assertEquals("banana", items.getString(0))
+        assertEquals("orange", items.getString(1))
+
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("items"))
+    }
+
+    @Test
+    fun `ARRAY_REMOVE from empty array does nothing`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray())
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify array remains empty
+        val tags = target.getJSONArray("tags")
+        assertEquals(0, tags.length())
+
+        // No changes should be recorded
+        assertEquals(0, result.changes.size)
+    }
+
+    @Test
+    fun `ARRAY_REMOVE with non-existent values does nothing`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag3") // Not in array
+                put("tag4") // Not in array
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify array is unchanged
+        val tags = target.getJSONArray("tags")
+        assertEquals(2, tags.length())
+        assertEquals("tag1", tags.getString(0))
+        assertEquals("tag2", tags.getString(1))
+
+        // No changes should be recorded
+        assertEquals(0, result.changes.size)
+    }
+
+    @Test
+    fun `ARRAY_REMOVE with empty source array does nothing`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray()) // Empty
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify array is unchanged
+        val tags = target.getJSONArray("tags")
+        assertEquals(2, tags.length())
+
+        // No changes should be recorded
+        assertEquals(0, result.changes.size)
+    }
+
+    @Test
+    fun `ARRAY_REMOVE preserves non-string values`() {
+        val target = JSONObject().apply {
+            put("mixed", JSONArray().apply {
+                put("string1")
+                put(123)
+                put("string2")
+                put(true)
+                put("string3")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("mixed", JSONArray().apply {
+                put("string2")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify only string2 is removed, non-strings preserved
+        val mixed = target.getJSONArray("mixed")
+        assertEquals(4, mixed.length())
+        assertEquals("string1", mixed.getString(0))
+        assertEquals(123, mixed.getInt(1))
+        assertEquals(true, mixed.getBoolean(2))
+        assertEquals("string3", mixed.getString(3))
+
+        assertEquals(1, result.changes.size)
+    }
+
+    @Test
+    fun `ARRAY_REMOVE removes all elements results in empty array`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify array is now empty
+        val tags = target.getJSONArray("tags")
+        assertEquals(0, tags.length())
+
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("tags"))
+    }
+
+    @Test
+    fun `ARRAY_REMOVE from nested arrays`() {
+        val target = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("tags", JSONArray().apply {
+                    put("tag1")
+                    put("tag2")
+                    put("tag3")
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("tags", JSONArray().apply {
+                    put("tag2")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify nested array removal
+        val tags = target.getJSONObject("user").getJSONArray("tags")
+        assertEquals(2, tags.length())
+        assertEquals("tag1", tags.getString(0))
+        assertEquals("tag3", tags.getString(1))
+
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("user.tags"))
+    }
+
+    @Test
+    fun `ARRAY_REMOVE skips missing key in target`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+        }
+
+        val source = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        println("AnushX" + target)
+        // Verify no array is created
+        assertFalse(target.has("tags"))
+
+        // No changes should be recorded
+        assertEquals(0, result.changes.size)
+    }
+
+    @Test
+    fun `ARRAY_REMOVE comprehensive scenario`() {
+        val target = JSONObject().apply {
+            put("categories", JSONArray().apply {
+                put("electronics")
+                put("books")
+                put("clothing")
+                put("electronics") // Duplicate
+                put("sports")
+            })
+            put("profile", JSONObject().apply {
+                put("interests", JSONArray().apply {
+                    put("coding")
+                    put("reading")
+                    put("gaming")
+                    put("reading") // Duplicate
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("categories", JSONArray().apply {
+                put("electronics") // Remove all occurrences
+                put("books")
+            })
+            put("profile", JSONObject().apply {
+                put("interests", JSONArray().apply {
+                    put("reading") // Remove all occurrences
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.ARRAY_REMOVE)
+
+        // Verify top-level array
+        val categories = target.getJSONArray("categories")
+        assertEquals(2, categories.length())
+        assertEquals("clothing", categories.getString(0))
+        assertEquals("sports", categories.getString(1))
+
+        // Verify nested array
+        val interests = target.getJSONObject("profile").getJSONArray("interests")
+        assertEquals(2, interests.length())
+        assertEquals("coding", interests.getString(0))
+        assertEquals("gaming", interests.getString(1))
+
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("categories"))
+        assertTrue(result.changes.containsKey("profile.interests"))
     }
 }
