@@ -2169,4 +2169,455 @@ class ProfileStateTraverserTest {
         assertFalse(result.changes.containsKey("stats.level"))
         assertFalse(result.changes.containsKey("metadata.updated"))
     }
+
+    // ==================== DELETE Operation Tests ====================
+
+    @Test
+    fun `DELETE removes simple values from target`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+            put("age", 25)
+            put("score", 100.5)
+            put("active", true)
+        }
+
+        val source = JSONObject().apply {
+            put("name", "__CLEVERTAP_DELETE__")
+            put("age", "__CLEVERTAP_DELETE__")
+            put("score", "__CLEVERTAP_DELETE__")
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify keys are removed from target
+        assertFalse(target.has("name"))
+        assertFalse(target.has("age"))
+        assertFalse(target.has("score"))
+        assertTrue(target.has("active")) // Not in source, should remain
+        assertEquals(1, target.length())
+
+        // Verify deletions are tracked
+        assertEquals(3, result.changes.size)
+        assertTrue(result.changes.containsKey("name"))
+        assertEquals("John", result.changes["name"]!!.oldValue)
+        assertNull(result.changes["name"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("age"))
+        assertEquals(25, result.changes["age"]!!.oldValue)
+        assertNull(result.changes["age"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("score"))
+        assertEquals(100.5, result.changes["score"]!!.oldValue)
+        assertNull(result.changes["score"]!!.newValue)
+
+        assertFalse(result.changes.containsKey("active"))
+    }
+
+    @Test
+    fun `DELETE removes nested object values`() {
+        val target = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("profile", JSONObject().apply {
+                    put("name", "Alice")
+                    put("age", 30)
+                    put("city", "NYC")
+                })
+                put("settings", JSONObject().apply {
+                    put("theme", "dark")
+                    put("notifications", true)
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("profile", JSONObject().apply {
+                    put("name", "__CLEVERTAP_DELETE__")
+                    put("age", "__CLEVERTAP_DELETE__")
+                })
+                put("settings", JSONObject().apply {
+                    put("theme", "__CLEVERTAP_DELETE__")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify nested keys are removed
+        val profile = target.getJSONObject("user").getJSONObject("profile")
+        assertFalse(profile.has("name"))
+        assertFalse(profile.has("age"))
+        assertTrue(profile.has("city")) // Not deleted
+
+        val settings = target.getJSONObject("user").getJSONObject("settings")
+        assertFalse(settings.has("theme"))
+        assertTrue(settings.has("notifications")) // Not deleted
+
+        // Verify changes with dot notation
+        assertEquals(3, result.changes.size)
+        assertTrue(result.changes.containsKey("user.profile.name"))
+        assertEquals("Alice", result.changes["user.profile.name"]!!.oldValue)
+        assertNull(result.changes["user.profile.name"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("user.profile.age"))
+        assertEquals(30, result.changes["user.profile.age"]!!.oldValue)
+        assertNull(result.changes["user.profile.age"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("user.settings.theme"))
+        assertEquals("dark", result.changes["user.settings.theme"]!!.oldValue)
+        assertNull(result.changes["user.settings.theme"]!!.newValue)
+    }
+
+    @Test
+    fun `DELETE removes deeply nested values`() {
+        val target = JSONObject().apply {
+            put("company", JSONObject().apply {
+                put("department", JSONObject().apply {
+                    put("team", JSONObject().apply {
+                        put("lead", "Bob")
+                        put("size", 10)
+                        put("budget", 50000.0)
+                    })
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("company", JSONObject().apply {
+                put("department", JSONObject().apply {
+                    put("team", JSONObject().apply {
+                        put("lead", "__CLEVERTAP_DELETE__")
+                        put("size", "__CLEVERTAP_DELETE__")
+                    })
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify deep nested deletions
+        val team = target.getJSONObject("company")
+            .getJSONObject("department")
+            .getJSONObject("team")
+        assertFalse(team.has("lead"))
+        assertFalse(team.has("size"))
+        assertTrue(team.has("budget")) // Not deleted
+
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("company.department.team.lead"))
+        assertEquals("Bob", result.changes["company.department.team.lead"]!!.oldValue)
+        assertNull(result.changes["company.department.team.lead"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("company.department.team.size"))
+        assertEquals(10, result.changes["company.department.team.size"]!!.oldValue)
+        assertNull(result.changes["company.department.team.size"]!!.newValue)
+    }
+
+    @Test
+    fun `DELETE skips missing keys in target`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+            put("age", 25)
+        }
+
+        val source = JSONObject().apply {
+            put("name", "__CLEVERTAP_DELETE__")
+            put("email", "__CLEVERTAP_DELETE__") // Missing in target
+            put("phone", "__CLEVERTAP_DELETE__") // Missing in target
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify only existing key is removed
+        assertFalse(target.has("name"))
+        assertTrue(target.has("age"))
+        assertEquals(1, target.length())
+
+        // Only existing key should be in changes
+        assertEquals(1, result.changes.size)
+        assertTrue(result.changes.containsKey("name"))
+        assertFalse(result.changes.containsKey("email"))
+        assertFalse(result.changes.containsKey("phone"))
+    }
+
+
+    @Test
+    fun `DELETE does not remove entire array when marker is string`() {
+        val target = JSONObject().apply {
+            put("tags", JSONArray().apply {
+                put("tag1")
+                put("tag2")
+                put("tag3")
+            })
+            put("scores", JSONArray().apply {
+                put(10)
+                put(20)
+                put(30)
+            })
+            put("name", "John")
+        }
+
+        val source = JSONObject().apply {
+            put("tags", "__CLEVERTAP_DELETE__")
+            put("scores", "__CLEVERTAP_DELETE__")
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify arrays are completely removed
+        assertTrue(target.has("tags"))
+        assertTrue(target.has("scores"))
+    }
+
+    @Test
+    fun `DELETE removes array elements by position`() {
+        val target = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("item1")
+                put("item2")
+                put("item3")
+                put("item4")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("__CLEVERTAP_DELETE__") // Delete index 0
+                put("__CLEVERTAP_DELETE__") // Delete index 1
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify array elements are removed
+        val items = target.getJSONArray("items")
+        assertEquals(2, items.length()) // 2 elements removed
+        assertEquals("item3", items.getString(0)) // Shifted down
+        assertEquals("item4", items.getString(1)) // Shifted down
+
+        // Verify deletions are tracked
+        assertTrue(result.changes.containsKey("items"))
+    }
+
+    @Test
+    fun `DELETE removes nested array elements`() {
+        val target = JSONObject().apply {
+            put("data", JSONObject().apply {
+                put("values", JSONArray().apply {
+                    put(100)
+                    put(200)
+                    put(300)
+                    put(400)
+                })
+                put("labels", JSONArray().apply {
+                    put("A")
+                    put("B")
+                    put("C")
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("data", JSONObject().apply {
+                put("values", JSONArray().apply {
+                    put("__CLEVERTAP_DELETE__") // Delete index 0
+                    put("__CLEVERTAP_DELETE__") // Delete index 1
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+        println(result)
+
+        // Verify nested array elements are removed
+        val values = target.getJSONObject("data").getJSONArray("values")
+        assertEquals(2, values.length())
+        assertEquals(300, values.getInt(0)) // Shifted
+        assertEquals(400, values.getInt(1)) // Shifted
+
+        val labels = target.getJSONObject("data").getJSONArray("labels")
+        assertEquals(3, labels.length()) // Unchanged
+
+        assertTrue(result.changes.containsKey("data.values"))
+    }
+
+    @Test
+    fun `DELETE with empty source deletes nothing`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+            put("age", 25)
+            put("active", true)
+        }
+
+        val source = JSONObject()
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify target is unchanged
+        assertEquals(3, target.length())
+        assertEquals("John", target.getString("name"))
+        assertEquals(25, target.getInt("age"))
+        assertEquals(true, target.getBoolean("active"))
+
+        // No changes should be recorded
+        assertEquals(0, result.changes.size)
+    }
+
+    @Test
+    fun `DELETE handles date prefix values`() {
+        val target = JSONObject().apply {
+            put("dob", "\$D_631152000") // Jan 1, 1990
+            put("joinDate", "\$D_1609459200") // Jan 1, 2021
+            put("events", JSONObject().apply {
+                put("lastLogin", "\$D_1704067200") // Jan 1, 2024
+                put("lastPurchase", "\$D_1672531200") // Jan 1, 2023
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("dob", "__CLEVERTAP_DELETE__")
+            put("events", JSONObject().apply {
+                put("lastLogin", "__CLEVERTAP_DELETE__")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify deletions
+        assertFalse(target.has("dob"))
+        assertTrue(target.has("joinDate")) // Not deleted
+        assertFalse(target.getJSONObject("events").has("lastLogin"))
+        assertTrue(target.getJSONObject("events").has("lastPurchase")) // Not deleted
+
+        // Verify deleted values are processed (converted to Long)
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("dob"))
+        assertEquals(631152000L, result.changes["dob"]!!.oldValue)
+        assertNull(result.changes["dob"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("events.lastLogin"))
+        assertEquals(1704067200L, result.changes["events.lastLogin"]!!.oldValue)
+        assertNull(result.changes["events.lastLogin"]!!.newValue)
+    }
+
+    @Test
+    fun `DELETE removes entire nested object when all keys deleted`() {
+        val target = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("temp", JSONObject().apply {
+                    put("key1", "value1")
+                    put("key2", "value2")
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("temp", JSONObject().apply {
+                    put("key1", "__CLEVERTAP_DELETE__")
+                    put("key2", "__CLEVERTAP_DELETE__")
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify nested keys are deleted
+        assertFalse(target.has("user"))
+
+        assertEquals(2, result.changes.size)
+        assertTrue(result.changes.containsKey("user.temp.key1"))
+        assertTrue(result.changes.containsKey("user.temp.key2"))
+    }
+
+    @Test
+    fun `DELETE handles comprehensive scenario`() {
+        val target = JSONObject().apply {
+            put("userId", "12345")
+            put("profile", JSONObject().apply {
+                put("name", "Charlie")
+                put("age", 28)
+                put("email", "[email protected]")
+                put("preferences", JSONObject().apply {
+                    put("theme", "dark")
+                    put("notifications", true)
+                })
+            })
+            put("stats", JSONObject().apply {
+                put("scores", JSONArray().apply {
+                    put(100)
+                    put(200)
+                    put(300)
+                })
+                put("level", 10)
+            })
+            put("metadata", JSONObject().apply {
+                put("created", "\$D_1609459200")
+                put("updated", "\$D_1704067200")
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("userId", "__CLEVERTAP_DELETE__")
+            put("profile", JSONObject().apply {
+                put("name", "__CLEVERTAP_DELETE__")
+                put("preferences", JSONObject().apply {
+                    put("theme", "__CLEVERTAP_DELETE__")
+                })
+            })
+            put("stats", JSONObject().apply {
+                put("scores", JSONArray().apply {
+                    put("__CLEVERTAP_DELETE__")
+                    put("__CLEVERTAP_DELETE__")
+                })
+            })
+            put("metadata", JSONObject().apply {
+                put("created", "__CLEVERTAP_DELETE__")
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DELETE)
+
+        // Verify deletions
+        assertFalse(target.has("userId"))
+        assertFalse(target.getJSONObject("profile").has("name"))
+        assertTrue(target.getJSONObject("profile").has("age")) // Not deleted
+        assertTrue(target.getJSONObject("profile").has("email")) // Not deleted
+        assertFalse(target.getJSONObject("profile").getJSONObject("preferences").has("theme"))
+        assertTrue(target.getJSONObject("profile").getJSONObject("preferences").has("notifications")) // Not deleted
+
+        val scores = target.getJSONObject("stats").getJSONArray("scores")
+        assertEquals(1, scores.length()) // 2 deleted
+        assertEquals(300, scores.getInt(0))
+        assertTrue(target.getJSONObject("stats").has("level")) // Not deleted
+
+        assertFalse(target.getJSONObject("metadata").has("created"))
+        assertTrue(target.getJSONObject("metadata").has("updated")) // Not deleted
+
+        // Verify changes
+        assertTrue(result.changes.containsKey("userId"))
+        assertEquals("12345", result.changes["userId"]!!.oldValue)
+        assertNull(result.changes["userId"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("profile.name"))
+        assertEquals("Charlie", result.changes["profile.name"]!!.oldValue)
+        assertNull(result.changes["profile.name"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("profile.preferences.theme"))
+        assertEquals("dark", result.changes["profile.preferences.theme"]!!.oldValue)
+        assertNull(result.changes["profile.preferences.theme"]!!.newValue)
+
+        assertTrue(result.changes.containsKey("stats.scores"))
+
+        assertTrue(result.changes.containsKey("metadata.created"))
+        assertEquals(1609459200L, result.changes["metadata.created"]!!.oldValue)
+        assertNull(result.changes["metadata.created"]!!.newValue)
+
+        // Verify not deleted items are not in changes
+        assertFalse(result.changes.containsKey("profile.age"))
+        assertFalse(result.changes.containsKey("profile.email"))
+        assertFalse(result.changes.containsKey("profile.preferences.notifications"))
+        assertFalse(result.changes.containsKey("stats.level"))
+        assertFalse(result.changes.containsKey("metadata.updated"))
+    }
 }
