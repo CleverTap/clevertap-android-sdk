@@ -53,7 +53,6 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
-import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -547,6 +546,21 @@ internal class InAppController(
             addInAppNotificationsToQueue(serverSideInAppsToDisplayImmediate)
         }
 
+    }
+
+    fun onAppLaunchServerSideInactionInAppsResponse(
+        appLaunchServerSideInactionInApps: List<JSONObject>,
+        userLocation: Location?
+    ) {
+        val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
+        val serverSideInactionInAppsToDisplay =
+            evaluationManager.evaluateOnAppLaunchedServerSide(
+                appLaunchServerSideInactionInApps, appLaunchedProperties, userLocation
+            )
+
+        if (serverSideInactionInAppsToDisplay.isNotEmpty()) {
+            scheduleInActionInApps(serverSideInactionInAppsToDisplay)
+        }
     }
 
     fun onAppLaunchServerSideDelayedInAppsResponse(

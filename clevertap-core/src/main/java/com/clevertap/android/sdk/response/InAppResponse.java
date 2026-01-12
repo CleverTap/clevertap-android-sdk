@@ -173,7 +173,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
             if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
                 // Schedule in-action from App Launch SS meta
                 controllerManager.getInAppController()
-                        .scheduleInActionInApps(partitionedAppLaunchServerSideMetaInApps.getInActionInApps());
+                        .onAppLaunchServerSideInactionInAppsResponse(partitionedAppLaunchServerSideMetaInApps.getInActionInApps(),
+                                coreMetaData.getLocationFromUser());
             }
 
             // CS in-apps (inapp_notifs_cs)
