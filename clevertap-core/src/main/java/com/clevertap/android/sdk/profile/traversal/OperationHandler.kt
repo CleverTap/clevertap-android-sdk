@@ -76,8 +76,8 @@ internal class OperationHandler(
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation
     ) {
-        // Skip GET operations on missing keys
-        if (operation == ProfileOperation.GET) {
+        // Skip GET and ARRAY_REMOVE operations on missing keys
+        if (operation == ProfileOperation.GET || operation == ProfileOperation.ARRAY_REMOVE) {
             return
         }
 

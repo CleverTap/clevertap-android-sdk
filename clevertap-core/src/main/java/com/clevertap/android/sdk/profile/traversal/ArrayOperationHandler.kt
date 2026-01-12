@@ -82,7 +82,6 @@ internal class ArrayOperationHandler() {
 
     /**
      * Adds string values to array (allows duplicates).
-     * If a string starts with $D_ prefix, removes it and converts to long.
      */
     private fun handleArrayAdd(
         oldArray: JSONArray,
@@ -90,19 +89,19 @@ internal class ArrayOperationHandler() {
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val mergedArray = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
         var modified = false
 
         for (i in 0 until newArray.length()) {
             val item = newArray.get(i)
             if (item is String) {
-                mergedArray.put(item)
+                oldArray.put(item)
                 modified = true
             }
         }
 
         if (modified) {
-            changes[path] = ProfileChange(oldArray, mergedArray)
+            changes[path] = ProfileChange(oldArrayCopy, oldArray)
         }
     }
 
