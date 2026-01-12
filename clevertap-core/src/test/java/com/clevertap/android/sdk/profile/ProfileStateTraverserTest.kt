@@ -1270,4 +1270,332 @@ class ProfileStateTraverserTest {
         assertFalse(result.changes.containsKey("name"))
         assertFalse(result.changes.containsKey("inventory.location"))
     }
+
+    // ==================== INCREMENT/DECREMENT Array Element Tests ====================
+
+    @Test
+    fun `INCREMENT handles array elements by position`() {
+        val target = JSONObject().apply {
+            put("scores", JSONArray().apply {
+                put(30)
+                put(20)
+                put(50)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("scores", JSONArray().apply {
+                put(10)
+                put(10)
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Verify incremented array elements
+        val scores = target.getJSONArray("scores")
+        assertEquals(3, scores.length())
+        assertEquals(40, scores.getInt(0)) // 30 + 10
+        assertEquals(30, scores.getInt(1)) // 20 + 10
+        assertEquals(50, scores.getInt(2)) // Unchanged (no corresponding source element)
+
+        // Verify changes tracked
+        assertTrue(result.changes.containsKey("scores"))
+
+    }
+
+    @Test
+    fun `DECREMENT handles array elements by position`() {
+        val target = JSONObject().apply {
+            put("scores", JSONArray().apply {
+                put(30)
+                put(20)
+                put(50)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("scores", JSONArray().apply {
+                put(10)
+                put(10)
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        // Verify decremented array elements
+        val scores = target.getJSONArray("scores")
+        assertEquals(3, scores.length())
+        assertEquals(20, scores.getInt(0)) // 30 - 10
+        assertEquals(10, scores.getInt(1)) // 20 - 10
+        assertEquals(50, scores.getInt(2)) // Unchanged
+
+        // Verify changes tracked
+        assertTrue(result.changes.containsKey("scores"))
+    }
+
+    @Test
+    fun `INCREMENT skips non-numeric array elements in target`() {
+        val target = JSONObject().apply {
+            put("mixed", JSONArray().apply {
+                put(30) // Numeric
+                put("text") // String
+                put(true) // Boolean
+                put(JSONObject().apply { put("key", "value") }) // Object
+                put(50) // Numeric
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("mixed", JSONArray().apply {
+                put(10)
+                put(5)
+                put(3)
+                put(2)
+                put(20)
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+        println("AnushX" + result)
+
+        val mixed = target.getJSONArray("mixed")
+        assertEquals(40, mixed.getInt(0)) // 30 + 10
+        assertEquals("text", mixed.getString(1)) // Unchanged
+        assertEquals(true, mixed.getBoolean(2)) // Unchanged
+        assertTrue(mixed.get(3) is JSONObject) // Unchanged
+        assertEquals(70, mixed.getInt(4)) // 50 + 20
+    }
+
+    @Test
+    fun `DECREMENT skips non-numeric array elements in target`() {
+        val target = JSONObject().apply {
+            put("mixed", JSONArray().apply {
+                put(100) // Numeric
+                put("string") // String
+                put(50) // Numeric
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("mixed", JSONArray().apply {
+                put(25)
+                put(10)
+                put(15)
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        val mixed = target.getJSONArray("mixed")
+        assertEquals(75, mixed.getInt(0)) // 100 - 25
+        assertEquals("string", mixed.getString(1)) // Unchanged
+        assertEquals(35, mixed.getInt(2)) // 50 - 15
+    }
+
+    @Test
+    fun `INCREMENT skips non-numeric array elements in source`() {
+        val target = JSONObject().apply {
+            put("values", JSONArray().apply {
+                put(10)
+                put(20)
+                put(30)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("values", JSONArray().apply {
+                put(5) // Valid
+                put("invalid") // Invalid - string
+                put(true) // Invalid - boolean
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        val values = target.getJSONArray("values")
+        assertEquals(15, values.getInt(0)) // 10 + 5
+        assertEquals(20, values.getInt(1)) // Unchanged (invalid source)
+        assertEquals(30, values.getInt(2)) // Unchanged (invalid source)
+    }
+
+    @Test
+    fun `DECREMENT skips non-numeric array elements in source`() {
+        val target = JSONObject().apply {
+            put("data", JSONArray().apply {
+                put(100)
+                put(50)
+                put(75)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("data", JSONArray().apply {
+                put(10) // Valid
+                put(JSONObject()) // Invalid - object
+                put(JSONArray()) // Invalid - array
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        val data = target.getJSONArray("data")
+        assertEquals(90, data.getInt(0)) // 100 - 10
+        assertEquals(50, data.getInt(1)) // Unchanged
+        assertEquals(75, data.getInt(2)) // Unchanged
+    }
+
+    @Test
+    fun `INCREMENT handles nested arrays in objects`() {
+        val target = JSONObject().apply {
+            put("stats", JSONObject().apply {
+                put("scores", JSONArray().apply {
+                    put(10)
+                    put(20)
+                    put(30)
+                })
+                put("levels", JSONArray().apply {
+                    put(1)
+                    put(2)
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("stats", JSONObject().apply {
+                put("scores", JSONArray().apply {
+                    put(5)
+                    put(10)
+                })
+                put("levels", JSONArray().apply {
+                    put(1)
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        val scores = target.getJSONObject("stats").getJSONArray("scores")
+        assertEquals(15, scores.getInt(0))
+        assertEquals(30, scores.getInt(1))
+        assertEquals(30, scores.getInt(2)) // Unchanged
+
+        val levels = target.getJSONObject("stats").getJSONArray("levels")
+        assertEquals(2, levels.getInt(0))
+        assertEquals(2, levels.getInt(1)) // Unchanged
+
+        // Verify changes with nested paths
+        assertTrue(result.changes.containsKey("stats.scores"))
+        assertTrue(result.changes.containsKey("stats.levels"))
+    }
+
+    @Test
+    fun `DECREMENT handles nested arrays in objects`() {
+        val target = JSONObject().apply {
+            put("inventory", JSONObject().apply {
+                put("items", JSONArray().apply {
+                    put(100)
+                    put(50)
+                    put(75)
+                })
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("inventory", JSONObject().apply {
+                put("items", JSONArray().apply {
+                    put(25)
+                    put(10)
+                })
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        val items = target.getJSONObject("inventory").getJSONArray("items")
+        assertEquals(75, items.getInt(0))
+        assertEquals(40, items.getInt(1))
+        assertEquals(75, items.getInt(2)) // Unchanged
+    }
+
+
+    @Test
+    fun `INCREMENT handles comprehensive array scenario`() {
+        val target = JSONObject().apply {
+            put("data", JSONObject().apply {
+                put("metrics", JSONArray().apply {
+                    put(100) // Numeric
+                    put("text") // String (non-numeric)
+                    put(50.5) // Numeric double
+                    put(true) // Boolean (non-numeric)
+                    put(25) // Numeric
+                })
+                put("simple", 200) // Simple numeric value
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("data", JSONObject().apply {
+                put("metrics", JSONArray().apply {
+                    put(25) // Valid increment for index 0
+                    put(5) // Try to increment string at index 1
+                    put(10.5) // Valid increment for index 2
+                    put("invalid") // Invalid source value at index 3
+                    put(15) // Valid increment for index 4
+                })
+                put("simple", 50)
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
+
+        // Verify array elements
+        val metrics = target.getJSONObject("data").getJSONArray("metrics")
+        assertEquals(125, metrics.getInt(0)) // 100 + 25
+        assertEquals("text", metrics.getString(1)) // Unchanged (non-numeric target)
+        assertEquals(61.0, metrics.getDouble(2), 0.001) // 50.5 + 10.5
+        assertEquals(true, metrics.getBoolean(3)) // Unchanged (non-numeric target)
+        assertEquals(40, metrics.getInt(4)) // 25 + 15
+
+        // Verify simple value
+        assertEquals(250, target.getJSONObject("data").getInt("simple"))
+
+    }
+
+    @Test
+    fun `DECREMENT handles comprehensive array scenario`() {
+        val target = JSONObject().apply {
+            put("inventory", JSONObject().apply {
+                put("quantities", JSONArray().apply {
+                    put(100) // Numeric
+                    put(JSONObject().apply { put("nested", "value") }) // Object (non-numeric)
+                    put(75.5) // Numeric double
+                    put(50) // Numeric
+                })
+                put("total", 500)
+            })
+        }
+
+        val source = JSONObject().apply {
+            put("inventory", JSONObject().apply {
+                put("quantities", JSONArray().apply {
+                    put(25) // Valid decrement
+                    put(10) // Try to decrement object
+                    put(JSONArray()) // Invalid source value
+                    put(15) // Valid decrement
+                })
+                put("total", 100)
+            })
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
+
+        val quantities = target.getJSONObject("inventory").getJSONArray("quantities")
+        assertEquals(75, quantities.getInt(0)) // 100 - 25
+        assertTrue(quantities.get(1) is JSONObject) // Unchanged (non-numeric target)
+        assertEquals(75.5, quantities.getDouble(2), 0.001) // Unchanged (invalid source)
+        assertEquals(35, quantities.getInt(3)) // 50 - 15
+
+        assertEquals(400, target.getJSONObject("inventory").getInt("total"))
+    }
 }
