@@ -3253,4 +3253,159 @@ class ProfileStateTraverserTest {
         assertTrue(result.changes.containsKey("categories"))
         assertTrue(result.changes.containsKey("profile.interests"))
     }
+
+    // ==================== Exception and Edge Case Tests ====================
+
+    @Test
+    fun `traverse handles JSONException gracefully and continues processing`() {
+        val target = JSONObject().apply {
+            put("name", "John")
+            put("age", 25)
+            put("score", 100)
+        }
+
+        // Create a mock source that will throw JSONException for one key
+        val source = object : JSONObject() {
+            override fun get(key: String): Any {
+                if (key == "age") {
+                    throw org.json.JSONException("Simulated JSONException")
+                }
+                return super.get(key)
+            }
+        }.apply {
+            put("name", "Jane")
+            put("age", 30) // This will throw exception
+            put("score", 200)
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
+
+        // Verify processing continued for other keys despite exception
+        assertEquals("Jane", target.getString("name"))
+        assertEquals(25, target.getInt("age")) // Unchanged due to exception
+        assertEquals(200, target.getInt("score"))
+
+        // Changes should only include successfully processed keys
+        assertTrue(result.changes.containsKey("name"))
+        assertFalse(result.changes.containsKey("age")) // Failed, so not in changes
+        assertTrue(result.changes.containsKey("score"))
+    }
+
+    @Test
+    fun `traverse handles general Exception gracefully and continues processing`() {
+        val target = JSONObject().apply {
+            put("field1", "value1")
+            put("field2", "value2")
+            put("field3", "value3")
+        }
+
+        // Create a source that throws a general exception for one key
+        val source = object : JSONObject() {
+            override fun get(key: String): Any {
+                if (key == "field2") {
+                    throw RuntimeException("Simulated RuntimeException")
+                }
+                return super.get(key)
+            }
+        }.apply {
+            put("field1", "newValue1")
+            put("field2", "newValue2") // This will throw exception
+            put("field3", "newValue3")
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
+
+        // Verify processing continued despite exception
+        assertEquals("newValue1", target.getString("field1"))
+        assertEquals("value2", target.getString("field2")) // Unchanged due to exception
+        assertEquals("newValue3", target.getString("field3"))
+
+        // Changes should only include successfully processed keys
+        assertTrue(result.changes.containsKey("field1"))
+        assertFalse(result.changes.containsKey("field2")) // Failed, so not in changes
+        assertTrue(result.changes.containsKey("field3"))
+    }
+
+    @Test
+    fun `traverse handles exceptions in nested objects and continues`() {
+        val target = JSONObject().apply {
+            put("user", JSONObject().apply {
+                put("name", "John")
+                put("age", 25)
+            })
+            put("score", 100)
+        }
+
+        val userSource = object : JSONObject() {
+            override fun get(key: String): Any {
+                if (key == "age") {
+                    throw org.json.JSONException("Nested exception")
+                }
+                return super.get(key)
+            }
+        }.apply {
+            put("name", "Jane")
+            put("age", 30) // This will throw exception
+        }
+
+        val source = JSONObject().apply {
+            put("user", userSource)
+            put("score", 200)
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
+
+        // Verify nested processing with exception
+        assertEquals("Jane", target.getJSONObject("user").getString("name"))
+        assertEquals(25, target.getJSONObject("user").getInt("age")) // Unchanged
+        assertEquals(200, target.getInt("score"))
+
+        // Changes should reflect partial success
+        assertTrue(result.changes.containsKey("user.name"))
+        assertFalse(result.changes.containsKey("user.age"))
+        assertTrue(result.changes.containsKey("score"))
+    }
+
+    @Test
+    fun `traverse handles multiple exceptions and continues processing all keys`() {
+        val target = JSONObject().apply {
+            put("field1", "value1")
+            put("field2", "value2")
+            put("field3", "value3")
+            put("field4", "value4")
+            put("field5", "value5")
+        }
+
+        val source = object : JSONObject() {
+            override fun get(key: String): Any {
+                if (key == "field2" || key == "field4") {
+                    throw org.json.JSONException("Multiple exceptions")
+                }
+                return super.get(key)
+            }
+        }.apply {
+            put("field1", "new1")
+            put("field2", "new2") // Exception
+            put("field3", "new3")
+            put("field4", "new4") // Exception
+            put("field5", "new5")
+        }
+
+        val result = traverser.traverse(target, source, ProfileOperation.UPDATE)
+
+        // Verify only non-exception keys are updated
+        assertEquals("new1", target.getString("field1"))
+        assertEquals("value2", target.getString("field2")) // Unchanged
+        assertEquals("new3", target.getString("field3"))
+        assertEquals("value4", target.getString("field4")) // Unchanged
+        assertEquals("new5", target.getString("field5"))
+
+        // Changes should only include successful keys
+        assertEquals(3, result.changes.size)
+        assertTrue(result.changes.containsKey("field1"))
+        assertFalse(result.changes.containsKey("field2"))
+        assertTrue(result.changes.containsKey("field3"))
+        assertFalse(result.changes.containsKey("field4"))
+        assertTrue(result.changes.containsKey("field5"))
+    }
 }
