@@ -2,17 +2,10 @@ package com.clevertap.android.sdk.validation
 
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
 
-@RunWith(RobolectricTestRunner::class)
 class ValidationResultFactoryTest : BaseTestCase() {
-
-    override fun setUp() {
-        super.setUp()
-    }
 
     @Test
     fun test_create_withValidationError_should_returnAppropriateValidationResult() {
@@ -59,14 +52,14 @@ class ValidationResultFactoryTest : BaseTestCase() {
             ValidationTestCase(
                 ValidationError.EVENT_NAME_TOO_LONG,
                 510,
-                arrayOf("LongEventName", "100"),
-                "LongEventName... exceeds the limit of 100 characters. Trimmed"
+                arrayOf("LongEventName", "100", "LongEventN"),
+                "Event name 'LongEventName' exceeds the limit of 100 characters. Trimmed to 'LongEventN'"
             ),
             ValidationTestCase(
                 ValidationError.EVENT_NAME_INVALID_CHARACTERS,
                 510,
-                arrayOf("Invalid@Event"),
-                "Key 'Invalid@Event' contains invalid characters. Cleaned"
+                arrayOf("Invalid@Event", "InvalidEvent"),
+                "Event name 'Invalid@Event' contains invalid characters. Cleaned to 'InvalidEvent'"
             ),
             
             // Profile validation errors (512)
@@ -163,28 +156,28 @@ class ValidationResultFactoryTest : BaseTestCase() {
             ValidationTestCase(
                 ValidationError.KEY_INVALID_CHARACTERS,
                 520,
-                arrayOf("invalid@key"),
-                "Key 'invalid@key' contains invalid characters. Cleaned"
+                arrayOf("invalid@key", "invalidkey"),
+                "Key 'invalid@key' contains invalid characters. Cleaned to 'invalidkey'"
             ),
             ValidationTestCase(
                 ValidationError.KEY_LENGTH_EXCEEDED,
                 520,
-                arrayOf("VeryLongKeyName", "50"),
-                "Key 'VeryLongKeyName' exceeds the limit of 50 characters. Trimmed"
+                arrayOf("VeryLongKeyName", "50", "VeryLongKeyNam"),
+                "Key 'VeryLongKeyName' exceeds the limit of 50 characters. Trimmed to 'VeryLongKeyNam'"
             ),
             
             // Value validation errors (521)
             ValidationTestCase(
                 ValidationError.VALUE_CHARS_LIMIT_EXCEEDED,
                 521,
-                arrayOf("VeryLongValue", "200"),
-                "VeryLongValue... exceeds the limit of 200 characters. Trimmed"
+                arrayOf("VeryLongValue", "keyName", "200", "VeryLongVal"),
+                "Value 'VeryLongValue' for key 'keyName' exceeds the limit of 200 characters. Trimmed to 'VeryLongVal'"
             ),
             ValidationTestCase(
                 ValidationError.VALUE_INVALID_CHARACTERS,
                 521,
-                arrayOf("keyName"),
-                "Value for key 'keyName' contains invalid characters. Cleaned"
+                arrayOf("Value@123", "keyName", "Value123"),
+                "Value 'Value@123' for key 'keyName' contains invalid characters. Cleaned to 'Value123'"
             ),
             
             // Charged event errors (522)
@@ -267,5 +260,3 @@ class ValidationResultFactoryTest : BaseTestCase() {
     )
 
 }
-
-

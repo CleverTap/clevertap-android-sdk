@@ -92,7 +92,7 @@ class EventPropertyKeyValidationPipelineTest {
     @Test
     fun `execute normalizes then validates`() {
         val config = ValidationConfig.Builder()
-            .addKeyCharacterValidation(setOf('!'))
+            .addKeyCharacterValidation(setOf('!', '@'))
             .addKeyLengthValidation(15)
             .build()
 
@@ -307,7 +307,7 @@ class EventPropertyKeyValidationPipelineTest {
 
         // Test 2: Key with modifications
         val result2 = pipeline.execute("property!with@invalid#chars", config)
-        assertEquals("propertywithvalidc", result2.cleanedKey)
+        assertEquals("propertywithinvalidc", result2.cleanedKey)
         assertTrue(result2.outcome is ValidationOutcome.Warning)
 
         // Test 3: Empty key
