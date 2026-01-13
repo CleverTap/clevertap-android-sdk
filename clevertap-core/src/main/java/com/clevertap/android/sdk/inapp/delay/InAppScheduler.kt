@@ -17,8 +17,7 @@ internal class InAppScheduler<T>(
     internal val storageStrategy: InAppSchedulingStrategy,
     private val dataExtractor: InAppDataExtractor<T>,
     private val logger: Logger,
-    private val accountId: String,
-    private val scope: CoroutineScope
+    private val accountId: String
 ) {
     companion object {
         private const val TAG = "[InAppScheduler]:"
@@ -77,29 +76,30 @@ internal class InAppScheduler<T>(
             when (timerResult) {
                 is InAppTimerManager.TimerResult.Completed -> {
                     // Timer completed, retrieve and process
-                    scope.launch { //TODO: do we require relaunch of coroutine? callback ideally should be running on provider's thread, relaunch will make operation non-atomic. from scheduling till callback execution op should be atomic
-                        val data = storageStrategy.retrieveAfterTimer(id)
-                        val result = if (data != null) {
-                            dataExtractor.createSuccessResult(id, data)
-                        } else {
-                            dataExtractor.createErrorResult(id, "Data not found")
-                        }
+                    val data = storageStrategy.retrieveAfterTimer(id)
+                    val result = if (data != null) {
+                        dataExtractor.createSuccessResult(id, data)
+                    } else {
+                        dataExtractor.createErrorResult(id, "Data not found")
+                    }
 
-                        onComplete(result)
-                        storageStrategy.cleanup(id)
-                    }
+                    onComplete(result)
+                    storageStrategy.clear(id)
                 }
+
                 is InAppTimerManager.TimerResult.Error -> {
-                    scope.launch {
-                        onComplete(dataExtractor.createErrorResult(id, timerResult.exception.message ?: "Unknown error"))
-                        storageStrategy.cleanup(id)
-                    }
+                    onComplete(
+                        dataExtractor.createErrorResult(
+                            id,
+                            timerResult.exception.message ?: "Unknown error"
+                        )
+                    )
+                    storageStrategy.clear(id)
                 }
+
                 is InAppTimerManager.TimerResult.Discarded -> {
-                    scope.launch {
-                        onComplete(dataExtractor.createDiscardedResult(id))
-                        storageStrategy.cleanup(id)
-                    }
+                    onComplete(dataExtractor.createDiscardedResult(id))
+                    storageStrategy.clear(id)
                     logger.verbose(accountId, "$TAG Timer discarded, cleaned up: $id")
                 }
             }
@@ -107,26 +107,12 @@ internal class InAppScheduler<T>(
     }
 
     /**
-     * Cancel a scheduled in-app
-     */
-    fun cancel(id: String): Boolean {
-        return timerManager.cancelTimer(id)
-    }
-
-    /**
      * Get active count
      */
     fun getActiveCount(): Int = timerManager.getActiveTimerCount()
 
-    /**
-     * Check if scheduled
-     */
-    fun isScheduled(id: String): Boolean = timerManager.isTimerScheduled(id)
-
-    /**
-     * Clean up resources
-     */
-    fun cleanup() {
-        scope.cancel()
+    suspend fun cancelAllScheduling() {
+        timerManager.cleanup()
+        storageStrategy.clearAll()
     }
 }

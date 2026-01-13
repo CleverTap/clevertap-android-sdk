@@ -53,6 +53,7 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -1045,6 +1046,20 @@ internal class InAppController(
 
         val fetchEvent = createInActionFetchRequest(targetId)
         analyticsManager.sendFetchEvent(fetchEvent)
+    }
+
+    @WorkerThread
+    fun cancelAllScheduledInApps() {
+        try {
+            runBlocking {
+                inAppDelayManager.cancelAllScheduling()
+                logger.verbose(defaultLogTag, "[InAppController]: Cancelled all delayed in-apps")
+                inAppInActionManager.cancelAllScheduling()
+                logger.verbose(defaultLogTag, "[InAppController]: Cancelled all in-action in-apps")
+            }
+        } catch (e: Exception) {
+            logger.verbose(defaultLogTag, "[InAppController]: Error cancelling scheduled in-apps", e)
+        }
     }
 
     private fun createInActionFetchRequest(targetId: Long): JSONObject {

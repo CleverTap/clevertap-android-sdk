@@ -33,7 +33,11 @@ internal class DelayedInAppStorageStrategy(
         return delayedLegacyInAppStore?.getDelayedInApp(id)
     }
 
-    override fun cleanup(id: String) {
+    override fun clear(id: String) {
         delayedLegacyInAppStore?.removeDelayedInApp(id)
+    }
+
+    override fun clearAll() {
+        delayedLegacyInAppStore?.removeAllDelayedInApps()
     }
 }

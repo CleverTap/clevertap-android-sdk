@@ -141,6 +141,17 @@ internal class InAppTimerManager(
         logger.verbose(accountId, "$TAG Cancelled $cancelledCount timers")
     }
 
+    internal suspend fun cleanup() {
+        logger.verbose(accountId, "$TAG cleaning up timer state")
+
+        cancelAllTimers()
+
+        activeJobs.clear()
+        cancelledJobs.clear()
+
+        logger.verbose(accountId, "$TAG cleanup complete")
+    }
+
     /**
      * Get count of active timers
      */

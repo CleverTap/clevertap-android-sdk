@@ -33,7 +33,11 @@ internal class InActionStorageStrategy(
         return inActionCache[id]
     }
 
-    override fun cleanup(id: String) {
+    override fun clear(id: String) {
         inActionCache.remove(id)
+    }
+
+    override fun clearAll() {
+        inActionCache.clear()
     }
 }

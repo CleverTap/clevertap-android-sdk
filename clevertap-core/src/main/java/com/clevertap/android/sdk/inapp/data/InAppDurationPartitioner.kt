@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_INACTIO
 import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MAX_INACTION_SECONDS
 import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MIN_INACTION_SECONDS
 import org.json.JSONObject
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Utility object for partitioning in-app notifications by their display duration.
@@ -144,17 +145,29 @@ internal object InAppDurationPartitioner {
      * Checks if the in-app has a valid inAction duration.
      * Valid range: 1-1200 seconds
      */
-    private fun hasInActionDuration(inApp: JSONObject): Boolean {
-        val inactionSeconds = inApp.optInt(INAPP_INACTION_DURATION, INAPP_DEFAULT_INACTION_SECONDS)
-        return inactionSeconds in INAPP_MIN_INACTION_SECONDS..INAPP_MAX_INACTION_SECONDS
-    }
+    private fun hasInActionDuration(inApp: JSONObject): Boolean = extractInActionMillis(inApp) > 0
 
     /**
      * Checks if the in-app has a valid delayed duration.
      * Valid range: 1-1200 seconds
      */
-    private fun hasDelayedDuration(inApp: JSONObject): Boolean {
-        val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
-        return delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS
+    private fun hasDelayedDuration(inApp: JSONObject): Boolean = extractDelayMillis(inApp) > 0
+
+    internal fun extractDelayMillis(inApp: JSONObject): Long {
+        val seconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
+        return if (seconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) {
+            seconds.seconds.inWholeMilliseconds
+        } else {
+            0L
+        }
+    }
+
+    internal fun extractInActionMillis(inApp: JSONObject): Long {
+        val seconds = inApp.optInt(INAPP_INACTION_DURATION, INAPP_DEFAULT_INACTION_SECONDS)
+        return if (seconds in INAPP_MIN_INACTION_SECONDS..INAPP_MAX_INACTION_SECONDS) {
+            seconds.seconds.inWholeMilliseconds
+        } else {
+            0L
+        }
     }
 }

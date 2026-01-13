@@ -41,8 +41,7 @@ internal object InAppSchedulerFactory {
             storageStrategy,
             dataExtractor,
             logger,
-            accountId,
-            sharedScope // Reuse the same scope
+            accountId
         )
     }
 
@@ -73,8 +72,7 @@ internal object InAppSchedulerFactory {
             storageStrategy,
             dataExtractor,
             logger,
-            accountId,
-            sharedScope // Reuse the same scope
+            accountId
         )
     }
 }

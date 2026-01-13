@@ -109,6 +109,11 @@ internal class DelayedLegacyInAppStore(
     }
 
     @WorkerThread
+    fun removeAllDelayedInApps(): Boolean {
+        return delayedLegacyInAppDAO.clearAll()
+    }
+
+    @WorkerThread
     fun removeDelayedInAppsBatch(inAppIds: List<String>): Int {
         var removedCount = 0
         inAppIds.forEach { inAppId ->

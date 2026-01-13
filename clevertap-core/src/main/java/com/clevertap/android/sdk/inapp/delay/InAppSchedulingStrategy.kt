@@ -25,5 +25,8 @@ internal interface InAppSchedulingStrategy {
      * Cleanup after timer completes or cancelled
      */
     @WorkerThread
-    fun cleanup(id: String)
+    fun clear(id: String)
+
+    @WorkerThread
+    fun clearAll()
 }
