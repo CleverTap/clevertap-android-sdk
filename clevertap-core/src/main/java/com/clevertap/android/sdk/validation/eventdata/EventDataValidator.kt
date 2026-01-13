@@ -133,7 +133,8 @@ class EventDataValidator : Validator<EventDataNormalizationResult> {
                     ModificationReason.INVALID_CHARACTERS_REMOVED -> {
                         ValidationResultFactory.create(
                             ValidationError.KEY_INVALID_CHARACTERS,
-                            modification.originalKey
+                            modification.originalKey,
+                            modification.cleanedKey
                         )
                     }
                     ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
@@ -141,7 +142,8 @@ class EventDataValidator : Validator<EventDataNormalizationResult> {
                             ValidationResultFactory.create(
                                 ValidationError.KEY_LENGTH_EXCEEDED,
                                 modification.originalKey,
-                                limit.toString()
+                                limit.toString(),
+                                modification.cleanedKey
                             )
                         } ?: return@forEach
                     }
@@ -162,7 +164,9 @@ class EventDataValidator : Validator<EventDataNormalizationResult> {
                     ModificationReason.INVALID_CHARACTERS_REMOVED -> {
                         ValidationResultFactory.create(
                             ValidationError.VALUE_INVALID_CHARACTERS,
-                            modification.key
+                            modification.originalValue,
+                            modification.key,
+                            modification.cleanedValue
                         )
                     }
                     ModificationReason.TRUNCATED_TO_MAX_LENGTH -> {
@@ -170,7 +174,9 @@ class EventDataValidator : Validator<EventDataNormalizationResult> {
                             ValidationResultFactory.create(
                                 ValidationError.VALUE_CHARS_LIMIT_EXCEEDED,
                                 modification.originalValue,
-                                limit.toString()
+                                modification.key,
+                                limit.toString(),
+                                modification.cleanedValue
                             )
                         } ?: return@forEach
                     }

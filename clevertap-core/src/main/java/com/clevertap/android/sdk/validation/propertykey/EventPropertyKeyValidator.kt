@@ -45,7 +45,8 @@ class EventPropertyKeyValidator : Validator<PropertyKeyNormalizationResult> {
                             ValidationResultFactory.create(
                                 ValidationError.KEY_LENGTH_EXCEEDED,
                                 modification.originalKey,
-                                limit.toString()
+                                limit.toString(),
+                                modification.cleanedKey
                             )
                         } ?: return@forEach
                     }
