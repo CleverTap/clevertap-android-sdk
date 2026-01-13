@@ -65,7 +65,7 @@ class EventDataNormalizerTest {
 
         val result = normalizer.normalize(input, config)
 
-        val cleanedKey = result.cleanedData.keys().next()
+        val cleanedKey = result.cleanedData.keys().next() as String
         assertEquals(100, cleanedKey.length)
         assertTrue(result.metrics.keysModified.isNotEmpty())
     }
