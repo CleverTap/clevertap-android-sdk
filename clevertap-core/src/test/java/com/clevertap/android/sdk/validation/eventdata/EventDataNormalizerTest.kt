@@ -60,7 +60,7 @@ class EventDataNormalizerTest {
         val longKey = "a".repeat(150)
         val input = mapOf(longKey to "value")
         val config = ValidationConfig.Builder()
-            .addKeySizeValidation(100)
+            .addKeyLengthValidation(100)
             .build()
 
         val result = normalizer.normalize(input, config)
@@ -75,7 +75,7 @@ class EventDataNormalizerTest {
         val longValue = "a".repeat(600)
         val input = mapOf("key" to longValue)
         val config = ValidationConfig.Builder()
-            .addValueSizeValidation(500)
+            .addValueLengthValidation(500)
             .build()
         
         val result = normalizer.normalize(input, config)

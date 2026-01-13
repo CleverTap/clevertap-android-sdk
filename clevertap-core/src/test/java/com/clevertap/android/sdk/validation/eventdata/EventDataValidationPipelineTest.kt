@@ -100,7 +100,7 @@ class EventDataValidationPipelineTest {
     fun `execute returns cleaned data even with warnings`() {
         val input = mapOf("key" to "a".repeat(600))
         val config = ValidationConfig.Builder()
-            .addValueSizeValidation(500)
+            .addValueLengthValidation(500)
             .build()
 
         val result = pipeline.execute(input, config)

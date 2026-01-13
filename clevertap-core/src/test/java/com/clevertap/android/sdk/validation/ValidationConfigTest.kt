@@ -29,7 +29,7 @@ class ValidationConfigTest {
     @Test
     fun `Builder addKeySizeValidation sets max key length`() {
         val config = ValidationConfig.Builder()
-            .addKeySizeValidation(50)
+            .addKeyLengthValidation(50)
             .build()
 
         assertEquals(50, config.maxKeyLength)
@@ -38,7 +38,7 @@ class ValidationConfigTest {
     @Test
     fun `Builder addValueSizeValidation sets max value length`() {
         val config = ValidationConfig.Builder()
-            .addValueSizeValidation(100)
+            .addValueLengthValidation(100)
             .build()
 
         assertEquals(100, config.maxValueLength)
@@ -187,8 +187,8 @@ class ValidationConfigTest {
     @Test
     fun `Builder chains multiple validations fluently`() {
         val config = ValidationConfig.Builder()
-            .addKeySizeValidation(50)
-            .addValueSizeValidation(100)
+            .addKeyLengthValidation(50)
+            .addValueLengthValidation(100)
             .addDepthValidation(5)
             .addArrayKeyCountValidation(10)
             .addObjectKeyCountValidation(15)
@@ -204,8 +204,8 @@ class ValidationConfigTest {
     @Test
     fun `Builder allows overriding values`() {
         val config = ValidationConfig.Builder()
-            .addKeySizeValidation(50)
-            .addKeySizeValidation(100) // Override
+            .addKeyLengthValidation(50)
+            .addKeyLengthValidation(100) // Override
             .build()
 
         assertEquals(100, config.maxKeyLength)
@@ -214,8 +214,8 @@ class ValidationConfigTest {
     @Test
     fun `Builder from copies all values from existing config`() {
         val original = ValidationConfig.Builder()
-            .addKeySizeValidation(50)
-            .addValueSizeValidation(100)
+            .addKeyLengthValidation(50)
+            .addValueLengthValidation(100)
             .addDepthValidation(5)
             .addArrayKeyCountValidation(10)
             .addObjectKeyCountValidation(15)
@@ -257,13 +257,13 @@ class ValidationConfigTest {
     @Test
     fun `Builder from allows modifying copied config`() {
         val original = ValidationConfig.Builder()
-            .addKeySizeValidation(50)
-            .addValueSizeValidation(100)
+            .addKeyLengthValidation(50)
+            .addValueLengthValidation(100)
             .build()
 
         val modified = ValidationConfig.Builder()
             .from(original)
-            .addKeySizeValidation(75) // Override
+            .addKeyLengthValidation(75) // Override
             .addDepthValidation(5) // Add new
             .build()
 
@@ -398,7 +398,7 @@ class ValidationConfigTest {
     @Test
     fun `default builder can be modified with additional validations`() {
         val config = ValidationConfig.default()
-            .addKeySizeValidation(200) // Override default
+            .addKeyLengthValidation(200) // Override default
             .setDiscardedEventNames(setOf("Custom1", "Custom2")) // Add new
             .build()
 
@@ -427,8 +427,8 @@ class ValidationConfigTest {
     @Test
     fun `Builder handles large validation limits`() {
         val config = ValidationConfig.Builder()
-            .addKeySizeValidation(10000)
-            .addValueSizeValidation(50000)
+            .addKeyLengthValidation(10000)
+            .addValueLengthValidation(50000)
             .addArrayLengthValidation(10000)
             .build()
 
@@ -440,7 +440,7 @@ class ValidationConfigTest {
     @Test
     fun `Builder handles zero validation limits`() {
         val config = ValidationConfig.Builder()
-            .addKeySizeValidation(0)
+            .addKeyLengthValidation(0)
             .addDepthValidation(0)
             .addArrayLengthValidation(0)
             .build()
@@ -529,10 +529,10 @@ class ValidationConfigTest {
     @Test
     fun `Builder can build multiple independent configs`() {
         val builder = ValidationConfig.Builder()
-            .addKeySizeValidation(50)
+            .addKeyLengthValidation(50)
 
         val config1 = builder.build()
-        val config2 = builder.addValueSizeValidation(100).build()
+        val config2 = builder.addValueLengthValidation(100).build()
 
         assertEquals(50, config1.maxKeyLength)
         assertNull(config1.maxValueLength)

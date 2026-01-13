@@ -220,7 +220,7 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder()
-            .addKeySizeValidation(100)
+            .addKeyLengthValidation(100)
             .build()
         
         val outcome = validator.validate(input, config)
@@ -282,7 +282,7 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder()
-            .addValueSizeValidation(500)
+            .addValueLengthValidation(500)
             .build()
         
         val outcome = validator.validate(input, config)

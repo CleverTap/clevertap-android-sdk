@@ -51,7 +51,7 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     INVALID_CT_CUSTOM_ID(514, "Attempted to set invalid custom CleverTap ID - %s, falling back to default error CleverTap ID - %s"),
     
     // Key validation errors (520)
-    KEY_INVALID_CHARACTERS(520, "Key '%s' contains invalid characters. Cleaned"),
+    KEY_INVALID_CHARACTERS(520, "Key '%s' contains invalid characters. Cleaned to '%s'"),
     KEY_LENGTH_EXCEEDED(520, "Key '%s' exceeds the limit of %s characters. Trimmed"),
     
     // Value validation errors (521)
