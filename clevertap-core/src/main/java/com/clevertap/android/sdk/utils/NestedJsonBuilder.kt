@@ -7,7 +7,7 @@ import org.json.JSONObject
 class NestedJsonBuilder {
 
     companion object {
-        private val ARRAY_INDEX_PATTERN = Regex("""^(.+?)\[(\d+)]$""")
+        private val ARRAY_INDEX_PATTERN = Regex("""\[(\d+)]""")
     }
 
     /**
@@ -19,8 +19,10 @@ class NestedJsonBuilder {
      * - "items[0]" -> {"items": [value]}
      * - "users[0].name" -> {"users": [{"name": value}]}
      * - "profile.scores[2]" -> {"profile": {"scores": [null, null, value]}}
+     * - "matrix[0][1]" -> {"matrix": [[null, value]]}
+     * - "cube[1][2][3]" -> {"cube": [null, [null, null, [null, null, null, value]]]}
      *
-     * @param path dot notation path (e.g., "user.profile.age" or "items[0].name")
+     * @param path dot notation path (e.g., "user.profile.age" or "items[0].name" or "matrix[0][1]")
      * @param value value to set at the path
      * @return JSONObject with the nested structure
      */
@@ -41,18 +43,42 @@ class NestedJsonBuilder {
     /**
      * Parses a dot notation path into segments.
      * Handles array indices like "items[0]" -> PathSegment("items", 0)
+     * Handles consecutive indices like "matrix[0][1]" -> PathSegment("matrix", 0), PathSegment("", 1)
      */
     private fun parsePath(path: String): List<PathSegment> {
         val segments = mutableListOf<PathSegment>()
         val parts = path.split('.')
 
         for (part in parts) {
-            val arrayMatch = ARRAY_INDEX_PATTERN.find(part)
-            if (arrayMatch != null) {
-                val (key, indexStr) = arrayMatch.destructured
+            // Extract base key and all array indices
+            val remaining = part
+            var baseKey: String?
+
+            // Find all array indices in this part
+            val indices = mutableListOf<Int>()
+            val matches = ARRAY_INDEX_PATTERN.findAll(remaining)
+            
+            for (match in matches) {
+                val indexStr = match.groupValues[1]
                 val index = indexStr.toIntOrNull()
-                segments.add(PathSegment(key, index))
+                    ?: throw IllegalArgumentException("Invalid array index: $indexStr")
+                indices.add(index)
+            }
+            
+            // Extract the base key (part before first [)
+            if (indices.isNotEmpty()) {
+                val firstBracket = remaining.indexOf('[')
+                baseKey = remaining.substring(0, firstBracket)
+                
+                // Add base key with first index
+                segments.add(PathSegment(baseKey, indices[0]))
+                
+                // Add remaining indices as empty-key segments
+                for (i in 1 until indices.size) {
+                    segments.add(PathSegment("", indices[i]))
+                }
             } else {
+                // No array indices, just a regular key
                 segments.add(PathSegment(part, null))
             }
         }
@@ -79,18 +105,21 @@ class NestedJsonBuilder {
                     // This segment represents an array
                     val array = current.optJSONArray(segment.key) ?: JSONArray()
                     current.put(segment.key, array)
+                    
+                    // Ensure array has enough space for the index we're accessing
+                    ensureArraySize(array, segment.arrayIndex + 1)
 
                     if (isLastSegment) {
                         // Set the value at the array index
-                        ensureArraySize(array, segment.arrayIndex + 1)
                         array.put(segment.arrayIndex, convertValue(value))
                     } else {
                         // Continue navigation into the array element
-                        ensureArraySize(array, segment.arrayIndex + 1)
                         val nextSegment = segments[index + 1]
 
-                        if (nextSegment.arrayIndex != null) {
-                            // Next is also an array
+                        // Check if next segment is a consecutive array index (empty key)
+                        // vs a new object property that happens to have an array
+                        if (nextSegment.arrayIndex != null && nextSegment.key.isEmpty()) {
+                            // Next is also an array index (matrix[0][1] case)
                             var nested = array.optJSONArray(segment.arrayIndex)
                             if (nested == null) {
                                 nested = JSONArray()
@@ -98,7 +127,7 @@ class NestedJsonBuilder {
                             }
                             setValueRecursive(nested, segments, index + 1, value)
                         } else {
-                            // Next is an object
+                            // Next is an object (includes cases like users[0].addresses[1])
                             var nested = array.optJSONObject(segment.arrayIndex)
                             if (nested == null) {
                                 nested = JSONObject()
@@ -137,34 +166,36 @@ class NestedJsonBuilder {
             }
 
             is JSONArray -> {
-                if (segment.arrayIndex != null) {
-                    ensureArraySize(current, segment.arrayIndex + 1)
-
-                    if (isLastSegment) {
-                        current.put(segment.arrayIndex, convertValue(value))
-                    } else {
-                        val nextSegment = segments[index + 1]
-
-                        if (nextSegment.arrayIndex != null) {
-                            // Next is also an array
-                            var nested = current.optJSONArray(segment.arrayIndex)
-                            if (nested == null) {
-                                nested = JSONArray()
-                                current.put(segment.arrayIndex, nested)
-                            }
-                            setValueRecursive(nested, segments, index + 1, value)
-                        } else {
-                            // Next is an object
-                            var nested = current.optJSONObject(segment.arrayIndex)
-                            if (nested == null) {
-                                nested = JSONObject()
-                                current.put(segment.arrayIndex, nested)
-                            }
-                            setValueRecursive(nested, segments, index + 1, value)
-                        }
-                    }
-                } else {
+                // When navigating through array, we must have an index
+                if (segment.arrayIndex == null) {
                     throw JSONException("Array requires index notation, got key: ${segment.key}")
+                }
+                
+                ensureArraySize(current, segment.arrayIndex + 1)
+
+                if (isLastSegment) {
+                    current.put(segment.arrayIndex, convertValue(value))
+                } else {
+                    val nextSegment = segments[index + 1]
+
+                    // Check if next segment is a consecutive array index (empty key)
+                    if (nextSegment.arrayIndex != null && nextSegment.key.isEmpty()) {
+                        // Next is consecutive array index (matrix[0][1] case)
+                        var nested = current.optJSONArray(segment.arrayIndex)
+                        if (nested == null) {
+                            nested = JSONArray()
+                            current.put(segment.arrayIndex, nested)
+                        }
+                        setValueRecursive(nested, segments, index + 1, value)
+                    } else {
+                        // Next is an object (includes cases like users[0].addresses[1])
+                        var nested = current.optJSONObject(segment.arrayIndex)
+                        if (nested == null) {
+                            nested = JSONObject()
+                            current.put(segment.arrayIndex, nested)
+                        }
+                        setValueRecursive(nested, segments, index + 1, value)
+                    }
                 }
             }
         }
