@@ -41,8 +41,6 @@ class NestedJsonBuilder {
     /**
      * Parses a dot notation path into segments.
      * Handles array indices like "items[0]" -> PathSegment("items", 0)
-     *
-     * @throws IllegalArgumentException if array index is invalid
      */
     private fun parsePath(path: String): List<PathSegment> {
         val segments = mutableListOf<PathSegment>()
@@ -53,8 +51,6 @@ class NestedJsonBuilder {
             if (arrayMatch != null) {
                 val (key, indexStr) = arrayMatch.destructured
                 val index = indexStr.toIntOrNull()
-                    ?: throw IllegalArgumentException("Invalid array index: $indexStr")
-
                 segments.add(PathSegment(key, index))
             } else {
                 segments.add(PathSegment(part, null))
