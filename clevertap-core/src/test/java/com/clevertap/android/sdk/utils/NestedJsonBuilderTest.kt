@@ -193,6 +193,17 @@ class NestedJsonBuilderTest {
     }
 
     @Test
+    fun `buildFromPath handles complex nested structure with array end`() {
+        val result = builder.buildFromPath("data.users[0].addresses[1]", "Main St")
+        val data = result.getJSONObject("data")
+        val users = data.getJSONArray("users")
+        val user = users.getJSONObject(0)
+        val addresses = user.getJSONArray("addresses")
+        val address = addresses.getString(1)
+        assertEquals("Main St", address)
+    }
+
+    @Test
     fun `buildFromPath handles empty path segments gracefully`() {
         // Path with just the key, no nesting
         val result = builder.buildFromPath("simple", "value")
