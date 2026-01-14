@@ -7,8 +7,6 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DelayedLegacyInAppDAO
 import com.clevertap.android.sdk.db.DelayedLegacyInAppData
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
-import com.clevertap.android.sdk.iterator
-import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 

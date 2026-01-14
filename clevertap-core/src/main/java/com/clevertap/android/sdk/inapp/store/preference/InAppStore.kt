@@ -205,7 +205,7 @@ internal class InAppStore(
         serverSideMetaCache = result
         return result
     }
-  fun readServerSideInActionMetaData(): List<JSONObject> {
+    fun readServerSideInActionMetaData(): List<JSONObject> {
         serverSideInActionCache?.let { return it }
 
         val ssInAppsMetaData = ctPreference.readString(PREFS_INACTION_INAPP_KEY_SS, "")
