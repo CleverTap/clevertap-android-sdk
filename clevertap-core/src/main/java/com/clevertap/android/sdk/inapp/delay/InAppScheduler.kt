@@ -2,10 +2,7 @@ package com.clevertap.android.sdk.inapp.delay
 
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import com.clevertap.android.sdk.ILogger
 import org.json.JSONObject
 
 /**
@@ -16,7 +13,7 @@ internal class InAppScheduler<T>(
     private val timerManager: InAppTimerManager,
     internal val storageStrategy: InAppSchedulingStrategy,
     private val dataExtractor: InAppDataExtractor<T>,
-    private val logger: Logger,
+    private val logger: ILogger,
     private val accountId: String
 ) {
     companion object {

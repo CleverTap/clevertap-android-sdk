@@ -18,9 +18,9 @@ internal interface InAppQueue {
     fun enqueue(inApp: JSONObject)
 
     /**
-     * Enqueues multiple In-App messages from a JSONArray in the queue.
+     * Enqueues multiple In-App messages from a List in the queue.
      *
-     * @param inApps The JSONArray containing multiple In-App messages to enqueue.
+     * @param inApps The List containing multiple In-App messages to enqueue.
      */
     @WorkerThread
     fun enqueueAll(inApps: List<JSONObject>)

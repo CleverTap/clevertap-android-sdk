@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inapp.delay
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 //TODO: check synchronization and map usage
 internal class InActionStorageStrategy(
-    private val logger: Logger,
+    private val logger: ILogger,
     private val accountId: String
 ) : InAppSchedulingStrategy {
 

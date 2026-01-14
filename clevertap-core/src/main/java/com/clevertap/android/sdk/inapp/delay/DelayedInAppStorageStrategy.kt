@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp.delay
 
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import org.json.JSONObject
 
@@ -9,7 +9,7 @@ import org.json.JSONObject
  */
 internal class DelayedInAppStorageStrategy(
     private val accountId: String,
-    private val logger: Logger,
+    private val logger: ILogger,
     internal var delayedLegacyInAppStore: DelayedLegacyInAppStore? = null
 ) : InAppSchedulingStrategy {
 

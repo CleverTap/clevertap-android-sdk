@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
+import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -107,7 +108,7 @@ class InAppDelayManagerTest {
     fun `scheduleDelayedInApps - null store triggers error`() = testScope.runTest {
         // Arrange
         val inapp = createMockInApp(id = "inapp-1", delay = 5)
-        val inapps = JSONArray().apply { put(inapp) }
+        val inapps = listOf( inapp)
         var callbackResult: DelayedInAppResult? = null
 
         delayManager = createDelayManager(store = null) // No store!
@@ -126,7 +127,7 @@ class InAppDelayManagerTest {
     fun `scheduleDelayedInApps - single inapp fires callback after delay`() = testScope.runTest {
         // Arrange
         val inapp = createMockInApp(id = "inapp-1", delay = 5)
-        val inapps = JSONArray().apply { put(inapp) }
+        val inapps = JSONArray().apply { put(inapp) }.toList<JSONObject>()
         var callbackResult: DelayedInAppResult? = null
 
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
@@ -178,7 +179,7 @@ class InAppDelayManagerTest {
             put(inapp1)
             put(inapp2)
             put(inapp3)
-        }
+        }.toList<JSONObject>()
 
         val callbackResults = mutableListOf<DelayedInAppResult>()
 
@@ -229,12 +230,12 @@ class InAppDelayManagerTest {
         handleLifecycleStates()
 
         // Act - Schedule first
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp1) }) { result ->
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp1) }.toList()) { result ->
             callbackResults.add(result)
         }
 
         // Try to schedule second with same ID
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp2) }) { result ->
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp2) }.toList()) { result ->
             callbackResults.add(result)
         }
 
@@ -251,7 +252,7 @@ class InAppDelayManagerTest {
     fun `scheduleDelayedInApps - store save failure triggers error callback`() = testScope.runTest {
         // Arrange
         val inapp = createMockInApp(id = "inapp-1", delay = 5)
-        val inapps = JSONArray().apply { put(inapp) }
+        val inapps = JSONArray().apply { put(inapp) }.toList<JSONObject>()
         var callbackResult: DelayedInAppResult? = null
 
         every { mockStore.saveDelayedInAppsBatch(any()) } returns false // Save fails!
@@ -268,7 +269,8 @@ class InAppDelayManagerTest {
         assertNotNull(callbackResult)
         assertTrue(callbackResult is DelayedInAppResult.Error)
         assertEquals(DelayedInAppResult.Error.ErrorReason.DB_SAVE_FAILED,
-            (callbackResult as DelayedInAppResult.Error).reason)
+            (callbackResult as DelayedInAppResult.Error).reason
+        )
 
         // Verify no scheduling happened
         verify { mockStore.saveDelayedInAppsBatch(any()) }
@@ -279,7 +281,7 @@ class InAppDelayManagerTest {
     fun `scheduleDelayedInApps - inapp not found in DB triggers error`() = testScope.runTest {
         // Arrange
         val inapp = createMockInApp(id = "inapp-1", delay = 5)
-        val inapps = JSONArray().apply { put(inapp) }
+        val inapps = JSONArray().apply { put(inapp) }.toList<JSONObject>()
         var callbackResult: DelayedInAppResult? = null
 
         every { mockStore.saveDelayedInAppsBatch(any()) } returns true
@@ -300,7 +302,8 @@ class InAppDelayManagerTest {
         assertNotNull(callbackResult)
         assertTrue(callbackResult is DelayedInAppResult.Error)
         assertEquals(DelayedInAppResult.Error.ErrorReason.NOT_FOUND_IN_DB,
-            (callbackResult as DelayedInAppResult.Error).reason)
+            (callbackResult as DelayedInAppResult.Error).reason
+        )
     }
 
     @Test
@@ -320,7 +323,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { }
+        }.toList()) { }
 
         // Clear previous invocations
         clearMocks(mockStore, answers = false)
@@ -330,12 +333,12 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp2) // Already scheduled!
             put(inapp3) // New
-        }) { }
+        }.toList()) { }
 
         // Assert - Should only save inapp3 (inapp2 filtered out)
         verify {
             mockStore.saveDelayedInAppsBatch(match { jsonArray ->
-                jsonArray.length() == 1 && jsonArray.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD) == "inapp-3"
+                jsonArray.size == 1 && jsonArray.get(0).getString(Constants.INAPP_ID_IN_PAYLOAD) == "inapp-3"
             })
         }
     }
@@ -362,12 +365,12 @@ class InAppDelayManagerTest {
         handleLifecycleStates()
 
         // Act
-        delayManager.scheduleDelayedInApps(inapps) { }
+        delayManager.scheduleDelayedInApps(inapps.toList()) { }
 
         // Assert - Should only process valid inapp
         verify {
             mockStore.saveDelayedInAppsBatch(match { jsonArray ->
-                jsonArray.length() == 1 && jsonArray.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD) == "valid-id"
+                jsonArray.size == 1 && jsonArray.get(0).getString(Constants.INAPP_ID_IN_PAYLOAD) == "valid-id"
             })
         }
     }
@@ -394,7 +397,7 @@ class InAppDelayManagerTest {
         handleLifecycleStates()
 
         // Act
-        delayManager.scheduleDelayedInApps(inapps) {
+        delayManager.scheduleDelayedInApps(inapps.toList()) {
             callbackCount++
         }
 
@@ -424,7 +427,7 @@ class InAppDelayManagerTest {
         moveAppToForeground()
 
         // Act - Schedule
-        delayManager.scheduleDelayedInApps(inapps) {
+        delayManager.scheduleDelayedInApps(inapps.toList()) {
             callbackCount++
         }
 
@@ -483,7 +486,7 @@ class InAppDelayManagerTest {
         moveAppToForeground()// let pending coroutine for foreground start executing
 
         // Act - Schedule (10 second delay)
-        delayManager.scheduleDelayedInApps(inapps) { result ->
+        delayManager.scheduleDelayedInApps(inapps.toList()) { result ->
             callbackResult = result
         }
 
@@ -527,7 +530,7 @@ class InAppDelayManagerTest {
         moveAppToForeground()
 
         // Schedule with 10 second delay
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) {
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) {
             callbackResult = it
         }
 
@@ -568,7 +571,7 @@ class InAppDelayManagerTest {
         moveAppToForeground()
 
         // Schedule at time 1000ms with 30s (30000ms) delay
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) {
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) {
             callbackResult = it
         }
 
@@ -647,7 +650,7 @@ class InAppDelayManagerTest {
             put(inapp1)  // scheduledAt = 1000ms, needs 8000ms
             put(inapp2)  // scheduledAt = 1000ms, needs 20000ms
             put(inapp3)  // scheduledAt = 1000ms, needs 25000ms
-        }) { callbackResults.add(it) }
+        }.toList()) { callbackResults.add(it) }
 
         // ========================================
         // FOREGROUND: Run for 3 seconds
@@ -727,7 +730,7 @@ class InAppDelayManagerTest {
         // ========================================
         // SCHEDULE: at time = 1000ms, needs 10000ms
         // ========================================
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) {
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) {
             callbackResult = it
         }
 
@@ -785,7 +788,7 @@ class InAppDelayManagerTest {
         // ========================================
         // SCHEDULE: at time = 1000ms, needs 10000ms
         // ========================================
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) {
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) {
             callbackResult = it
         }
 
@@ -850,7 +853,7 @@ class InAppDelayManagerTest {
         // ========================================
         // SCHEDULE: at time = 1000ms, needs 10000ms
         // ========================================
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) {
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) {
             callbackResult = it
         }
 
@@ -933,7 +936,7 @@ class InAppDelayManagerTest {
         handleLifecycleStates()
 
         // Act
-        delayManager.scheduleDelayedInApps(inapps) { result ->
+        delayManager.scheduleDelayedInApps(inapps.toList()) { result ->
             callbackResults.add(result)
         }
 
@@ -959,7 +962,7 @@ class InAppDelayManagerTest {
         handleLifecycleStates()
 
         // Act - Schedule
-        delayManager.scheduleDelayedInApps(inapps) { result ->
+        delayManager.scheduleDelayedInApps(inapps.toList()) { result ->
             callbackResult = result
         }
 
@@ -973,7 +976,8 @@ class InAppDelayManagerTest {
         assertNotNull(callbackResult)
         assertTrue(callbackResult is DelayedInAppResult.Error)
         assertEquals(DelayedInAppResult.Error.ErrorReason.STORE_NOT_INITIALIZED,
-            (callbackResult as DelayedInAppResult.Error).reason)
+            (callbackResult as DelayedInAppResult.Error).reason
+        )
         destoryApp()
     }
     // ============================================
@@ -1010,7 +1014,7 @@ class InAppDelayManagerTest {
             put(inapp1)
             put(inapp2)
             put(inapp3)
-        }) { }
+        }.toList()) { }
 
         // Assert - activeJobs should have 3, cancelledJobs should be empty
         assertEquals(3, delayManager.getActiveCallbackCount())
@@ -1039,7 +1043,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { }
+        }.toList()) { }
 
         // Assert - Before background
         assertEquals(2, delayManager.getActiveCallbackCount())
@@ -1077,7 +1081,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { }
+        }.toList()) { }
 
         assertEquals(2, delayManager.getActiveCallbackCount())
         assertEquals(0, delayManager.getCancelledJobsCount())
@@ -1129,7 +1133,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { callbackCount++ }
+        }.toList()) { callbackCount++ }
 
         assertEquals(2, delayManager.getActiveCallbackCount())
         assertEquals(0, delayManager.getCancelledJobsCount())
@@ -1173,7 +1177,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { }
+        }.toList()) { }
 
         assertEquals(2, delayManager.getActiveCallbackCount())
         assertEquals(0, delayManager.getCancelledJobsCount())
@@ -1219,7 +1223,7 @@ class InAppDelayManagerTest {
         moveAppToForeground()
 
         // Schedule
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) { }
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) { }
 
         // STATE 1: Active after schedule
         assertEquals(1, delayManager.getActiveCallbackCount())
@@ -1278,13 +1282,13 @@ class InAppDelayManagerTest {
         moveAppToForeground()
 
         // Act - Schedule first time
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) { }
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) { }
 
         assertEquals(1, delayManager.getActiveCallbackCount())
         assertEquals(0, delayManager.getCancelledJobsCount())
 
         // Act - Try to schedule again with same ID
-        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }) { }
+        delayManager.scheduleDelayedInApps(JSONArray().apply { put(inapp) }.toList()) { }
 
         // Assert - Count should still be 1 (duplicate filtered)
         assertEquals(1, delayManager.getActiveCallbackCount())
@@ -1292,7 +1296,7 @@ class InAppDelayManagerTest {
 
         // Verify only saved once (second call filters it out)
         verify(exactly = 1) {
-            mockStore.saveDelayedInAppsBatch(match { it.length() == 1 })
+            mockStore.saveDelayedInAppsBatch(match { it.size == 1 })
         }
 
         destoryApp()
@@ -1313,7 +1317,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { }
+        }.toList()) { }
 
         // Assert - No jobs added to activeJobs
         assertEquals(0, delayManager.getActiveCallbackCount())
@@ -1344,7 +1348,7 @@ class InAppDelayManagerTest {
             put(zeroDelayInapp)
             put(negativeDelayInapp)
             put(tooLargeDelayInapp)
-        }) { }
+        }.toList()) { }
 
         // Assert - Only valid one added
         assertEquals(1, delayManager.getActiveCallbackCount())
@@ -1376,7 +1380,7 @@ class InAppDelayManagerTest {
             put(inapp1)
             put(inapp2)
             put(inapp3)
-        }) { }
+        }.toList()) { }
 
         // Assert - All 3 IDs present
         val activeIds = delayManager.getActiveCallbackIds()
@@ -1421,7 +1425,7 @@ class InAppDelayManagerTest {
             put(inapp1)
             put(inapp2)
             put(inapp3)
-        }) { callbackCount++ }
+        }.toList()) { callbackCount++ }
 
         // STATE 1: All active
         assertEquals(3, delayManager.getActiveCallbackCount())
@@ -1465,7 +1469,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { }
+        }.toList()) { }
 
         assertEquals(2, delayManager.getActiveCallbackCount())
 
@@ -1503,7 +1507,7 @@ class InAppDelayManagerTest {
         delayManager.scheduleDelayedInApps(JSONArray().apply {
             put(inapp1)
             put(inapp2)
-        }) { callbackCount++ }
+        }.toList()) { callbackCount++ }
 
         // Wait for all to complete
         advanceTimeBy(10001)

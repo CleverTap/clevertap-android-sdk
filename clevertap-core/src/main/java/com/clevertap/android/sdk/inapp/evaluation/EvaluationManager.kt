@@ -19,7 +19,6 @@ import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
-import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale

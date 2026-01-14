@@ -23,7 +23,6 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.util.List;
-import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;

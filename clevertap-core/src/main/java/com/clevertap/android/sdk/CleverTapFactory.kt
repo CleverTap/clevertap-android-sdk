@@ -108,7 +108,6 @@ internal object CleverTapFactory {
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
-//        val inAppDelayManager = InAppDelayManager(accountId, config.logger)
         val inAppDelayManager = InAppSchedulerFactory.createDelayedInAppScheduler(accountId,config.logger)
         val inAppInActionManager = InAppSchedulerFactory.createInActionScheduler(accountId,config.logger)
 
