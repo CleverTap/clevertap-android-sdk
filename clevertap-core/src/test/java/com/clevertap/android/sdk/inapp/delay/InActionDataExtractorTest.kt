@@ -325,7 +325,7 @@ class InActionDataExtractorTest {
     @Test
     fun `createDiscardedResult returns Discarded with correct id`() {
         // Arrange
-        val id = "discarded_inapp_id"
+        val id = "123"
 
         // Act
         val result = extractor.createDiscardedResult(id)
@@ -333,13 +333,13 @@ class InActionDataExtractorTest {
         // Assert
         assertTrue(result is InActionResult.Discarded)
         val discarded = result as InActionResult.Discarded
-        assertEquals(id, discarded.targetId)
+        assertEquals(id.toLong(), discarded.targetId)
     }
 
     @Test
     fun `createDiscardedResult contains expected reason message`() {
         // Arrange
-        val id = "test_id"
+        val id = "123"
 
         // Act
         val result = extractor.createDiscardedResult(id)
@@ -348,20 +348,6 @@ class InActionDataExtractorTest {
         assertTrue(result is InActionResult.Discarded)
         val discarded = result as InActionResult.Discarded
         assertEquals("Timer expired while app was backgrounded", discarded.reason)
-    }
-
-    @Test
-    fun `createDiscardedResult handles empty id`() {
-        // Arrange
-        val id = ""
-
-        // Act
-        val result = extractor.createDiscardedResult(id)
-
-        // Assert
-        assertTrue(result is InActionResult.Discarded)
-        val discarded = result as InActionResult.Discarded
-        assertEquals("", discarded.targetId)
     }
 
     @Test
@@ -375,7 +361,7 @@ class InActionDataExtractorTest {
         // Assert
         assertTrue(result is InActionResult.Discarded)
         val discarded = result as InActionResult.Discarded
-        assertEquals("12345", discarded.targetId)
+        assertEquals("12345".toLong(), discarded.targetId)
     }
 
     // ==================== BOUNDARY VALUE TESTS ====================

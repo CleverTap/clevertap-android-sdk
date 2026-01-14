@@ -4,6 +4,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.testing.TestLifecycleOwner
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.TestClock
+import com.clevertap.android.sdk.inapp.images.preload.MainDispatcherRule
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import io.mockk.clearAllMocks
 import io.mockk.mockk
