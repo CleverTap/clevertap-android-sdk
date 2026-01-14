@@ -54,7 +54,6 @@ internal object InAppSchedulerFactory {
         scope: CoroutineScope =  lifecycleOwner.lifecycleScope +
                 Dispatchers.Default.limitedParallelism(PARALLEL_SCHEDULERS)
     ): InAppScheduler<InActionResult> {
-         //TODO check if this is really shared or there will be 20 + 20 parallelism
 
         val timerManager = InAppTimerManager(
             accountId,
