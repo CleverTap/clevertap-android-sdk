@@ -216,7 +216,7 @@ internal class InAppController(
                 is InActionResult.Discarded -> {
                     logger.verbose(
                         defaultLogTag,
-                        "[InAppController]In-action: in-app discarded ${result.id}: ${result.reason}"
+                        "[InAppController]In-action: in-app discarded ${result.targetId}: ${result.reason}"
                     )
                 }
             }

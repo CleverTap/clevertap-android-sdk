@@ -51,5 +51,5 @@ sealed interface InActionResult {
     data class ReadyToFetch(val targetId: Long, val metadata: JSONObject) : InActionResult
     data class Error(val targetId: Long, val message: String) : InActionResult
     data class Cancelled(val targetId: Long) : InActionResult
-    data class Discarded(val id: String, val reason: String) : InActionResult
+    data class Discarded(val targetId: Long, val reason: String) : InActionResult
 }

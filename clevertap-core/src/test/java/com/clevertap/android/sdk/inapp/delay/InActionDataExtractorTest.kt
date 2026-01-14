@@ -333,7 +333,7 @@ class InActionDataExtractorTest {
         // Assert
         assertTrue(result is InActionResult.Discarded)
         val discarded = result as InActionResult.Discarded
-        assertEquals(id, discarded.id)
+        assertEquals(id, discarded.targetId)
     }
 
     @Test
@@ -361,7 +361,7 @@ class InActionDataExtractorTest {
         // Assert
         assertTrue(result is InActionResult.Discarded)
         val discarded = result as InActionResult.Discarded
-        assertEquals("", discarded.id)
+        assertEquals("", discarded.targetId)
     }
 
     @Test
@@ -375,7 +375,7 @@ class InActionDataExtractorTest {
         // Assert
         assertTrue(result is InActionResult.Discarded)
         val discarded = result as InActionResult.Discarded
-        assertEquals("12345", discarded.id)
+        assertEquals("12345", discarded.targetId)
     }
 
     // ==================== BOUNDARY VALUE TESTS ====================

@@ -55,7 +55,7 @@ internal class InActionDataExtractor : InAppDataExtractor<InActionResult> {
     }
     override fun createDiscardedResult(id: String): InActionResult {
         return InActionResult.Discarded(
-            id,
+            id.toLong(),
             "Timer expired while app was backgrounded"
         )
     }

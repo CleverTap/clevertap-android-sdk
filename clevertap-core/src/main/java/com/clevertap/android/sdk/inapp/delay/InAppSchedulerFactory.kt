@@ -22,7 +22,7 @@ internal object InAppSchedulerFactory {
         delayedLegacyInAppStore: DelayedLegacyInAppStore?=null,
         clock: Clock = Clock.SYSTEM,
         lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(),
-        scope: CoroutineScope =  ProcessLifecycleOwner.get().lifecycleScope +
+        scope: CoroutineScope =  lifecycleOwner.lifecycleScope +
                 Dispatchers.Default.limitedParallelism(PARALLEL_SCHEDULERS)
     ): InAppScheduler<DelayedInAppResult> {
 
@@ -51,7 +51,7 @@ internal object InAppSchedulerFactory {
         logger: ILogger,
         clock: Clock = Clock.SYSTEM,
         lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(),
-        scope: CoroutineScope =  ProcessLifecycleOwner.get().lifecycleScope +
+        scope: CoroutineScope =  lifecycleOwner.lifecycleScope +
                 Dispatchers.Default.limitedParallelism(PARALLEL_SCHEDULERS)
     ): InAppScheduler<InActionResult> {
          //TODO check if this is really shared or there will be 20 + 20 parallelism
