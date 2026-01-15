@@ -41,14 +41,17 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.skyscreamer.jsonassert.JSONCompare
-import org.skyscreamer.jsonassert.JSONCompareMode
 import java.util.concurrent.Future
 import kotlin.apply
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class AnalyticsManagerTest {
+
+    // Helper function to compare JSONObjects by their string representation
+    private fun JSONObject.isEqualTo(other: JSONObject): Boolean {
+        return this.toString() == other.toString()
+    }
 
     private lateinit var analyticsManagerSUT: AnalyticsManager
     private lateinit var coreState: MockCoreStateKotlin
@@ -163,9 +166,7 @@ class AnalyticsManagerTest {
         verify {
             eventQueueManager.queueEvent(
                 context,
-                match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
-                },
+                match { json.isEqualTo(it) },
                 Constants.NV_EVENT,
                 any<FlattenedEventData.EventProperties>()
             )
@@ -181,9 +182,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(
                 context,
-                match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
-                },
+                match { json.isEqualTo(it) },
                 Constants.NV_EVENT,
                 any<FlattenedEventData.EventProperties>()
             )
@@ -205,7 +204,7 @@ class AnalyticsManagerTest {
             eventQueueManager.queueEvent(
                 context,
                 match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
+                    json.isEqualTo(it)
                 },
                 Constants.NV_EVENT,
                 any<FlattenedEventData.EventProperties>()
@@ -222,9 +221,7 @@ class AnalyticsManagerTest {
         verify(exactly = 2) {
             eventQueueManager.queueEvent(
                 context,
-                match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
-                },
+                match { json.isEqualTo(it) },
                 Constants.NV_EVENT,
                 any<FlattenedEventData.EventProperties>()
             )
@@ -257,9 +254,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(
                 context,
-                match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
-                },
+                match { json.isEqualTo(it) },
                 Constants.RAISED_EVENT,
                 any<FlattenedEventData.EventProperties>()
             )
@@ -276,7 +271,7 @@ class AnalyticsManagerTest {
             eventQueueManager.queueEvent(
                 context,
                 match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
+                    json.isEqualTo(it)
                 },
                 Constants.RAISED_EVENT,
                 any<FlattenedEventData.EventProperties>()
@@ -298,7 +293,7 @@ class AnalyticsManagerTest {
             eventQueueManager.queueEvent(
                 context,
                 match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
+                    json.isEqualTo(it)
                 },
                 Constants.RAISED_EVENT,
                 any<FlattenedEventData.EventProperties>()
@@ -314,9 +309,7 @@ class AnalyticsManagerTest {
         verify(exactly = 2) {
             eventQueueManager.queueEvent(
                 context,
-                match {
-                    JSONCompare.compareJSON(json, it, JSONCompareMode.STRICT).passed()
-                },
+                match { json.isEqualTo(it) },
                 Constants.RAISED_EVENT,
                 any<FlattenedEventData.EventProperties>()
             )
@@ -393,9 +386,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(
                 context,
-                match {
-                    JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-                },
+                match { expectedJson.isEqualTo(it) },
                 Constants.RAISED_EVENT,
                 any<FlattenedEventData.EventProperties>()
             )
@@ -431,7 +422,7 @@ class AnalyticsManagerTest {
 
         verify {
             eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                match { updateObj.isEqualTo(it) },
                 any(), any()
             )
         }
@@ -472,7 +463,7 @@ class AnalyticsManagerTest {
 
         verify {
             eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                match { updateObj.isEqualTo(it) },
                 any(),
                 any()
             )
@@ -524,7 +515,7 @@ class AnalyticsManagerTest {
 
         verify {
             eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(updateObj, it, JSONCompareMode.STRICT).passed() },
+                match { updateObj.isEqualTo(it) },
                 any(),
                 any()
             )
@@ -533,11 +524,11 @@ class AnalyticsManagerTest {
 
     @Test
     fun test_removeValueForKey_validationFails() {
-        mockCleanObjectKey("abc", false)
+        mockCleanObjectKey("abc", true)
 
         analyticsManagerSUT.removeValueForKey("abc")
 
-        verify {
+        verify(exactly = 0) {
             eventQueueManager.pushBasicProfile(any(), any(), any())
         }
     }
@@ -567,7 +558,7 @@ class AnalyticsManagerTest {
         // Assert
         verify {
             eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(fields, it, JSONCompareMode.STRICT).passed() },
+                match { fields.isEqualTo(it) },
                 any(),
                 any()
             )
@@ -599,7 +590,7 @@ class AnalyticsManagerTest {
 
         verify {
             eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(fields, it, JSONCompareMode.STRICT).passed() },
+                match { fields.isEqualTo(it) },
                 any(),
                 any()
             )
@@ -631,7 +622,7 @@ class AnalyticsManagerTest {
 
         verify {
             eventQueueManager.pushBasicProfile(
-                match { JSONCompare.compareJSON(fields, it, JSONCompareMode.STRICT).passed() },
+                match { fields.isEqualTo(it) },
                 any(),
                 any()
             )
@@ -696,9 +687,7 @@ class AnalyticsManagerTest {
         val expectedJson = JSONObject().put("key1", "value1")
         verify {
             eventQueueManager.pushBasicProfile(
-                match {
-                    JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-                },
+                match { expectedJson.isEqualTo(it) },
                 any(),
                 any()
             )
@@ -737,9 +726,7 @@ class AnalyticsManagerTest {
             .put("key2", "value2")
         verify {
             eventQueueManager.pushBasicProfile(
-                match {
-                    JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
-                },
+                match { expectedJson.isEqualTo(it) },
                 any(),
                 any()
             )
@@ -970,7 +957,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
+                expectedJson.isEqualTo(it)
             }, Constants.FETCH_EVENT)
         }
     }
@@ -1015,7 +1002,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
+                expectedJson.isEqualTo(it)
             }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
@@ -1042,7 +1029,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(expectedJson, it, JSONCompareMode.STRICT).passed()
+                expectedJson.isEqualTo(it)
             }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
@@ -1172,7 +1159,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
+                expectedEvent.isEqualTo(it)
             }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
@@ -1227,7 +1214,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
+                expectedEvent.isEqualTo(it)
             }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
     }
@@ -1271,7 +1258,7 @@ class AnalyticsManagerTest {
 
             verify(exactly = 1) {
                 eventQueueManager.queueEvent(context, match {
-                    JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
+                    expectedEvent.isEqualTo(it)
                 }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
             }
             if (isClicked) {
@@ -1315,7 +1302,7 @@ class AnalyticsManagerTest {
 
             verify(exactly = 1) {
                 eventQueueManager.queueEvent(context, match {
-                    JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
+                    expectedEvent.isEqualTo(it)
                 }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
             }
             if (isClicked) {
@@ -1352,7 +1339,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
+                expectedEvent.isEqualTo(it)
             }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
 
@@ -1382,7 +1369,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(expectedEvent, it, JSONCompareMode.STRICT).passed()
+                expectedEvent.isEqualTo(it)
             }, Constants.RAISED_EVENT)
         }
     }
@@ -1398,7 +1385,7 @@ class AnalyticsManagerTest {
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(context, match {
-                JSONCompare.compareJSON(extras, it, JSONCompareMode.STRICT).passed()
+                extras.isEqualTo(it)
             }, Constants.PAGE_EVENT)
         }
     }
@@ -1427,7 +1414,7 @@ class AnalyticsManagerTest {
 
             verify(exactly = 1) {
                 eventQueueManager.queueEvent(context, match {
-                    JSONCompare.compareJSON(expectedExtras, it, JSONCompareMode.STRICT).passed()
+                    expectedExtras.isEqualTo(it)
                 }, Constants.PAGE_EVENT)
             }
 
@@ -1460,7 +1447,7 @@ class AnalyticsManagerTest {
 
             verify(exactly = 1) {
                 eventQueueManager.queueEvent(context, match {
-                    JSONCompare.compareJSON(expectedExtras, it, JSONCompareMode.STRICT).passed()
+                    expectedExtras.isEqualTo(it)
                 }, Constants.PAGE_EVENT)
             }
 

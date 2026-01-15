@@ -223,7 +223,7 @@ class ValidationResultStackTest : BaseTestCase() {
     }
 
     @Test
-    fun test_pushValidationResultList_when_addingToStackAt50_should_NotTriggerTrim() {
+    fun test_pushValidationResultList_when_addingToStackAt50_should_triggerTrim() {
         // Fill stack to exactly 50 elements
         repeat(50) { index ->
             vrStack.pushValidationResult(ValidationResult(index, "error$index"))
