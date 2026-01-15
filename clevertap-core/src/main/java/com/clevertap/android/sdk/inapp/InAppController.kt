@@ -446,7 +446,7 @@ internal class InAppController(
         val appFieldsWithEventProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithEventProperties.putAll(eventProperties)
 
-        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnEvent(
             eventName,
             appFieldsWithEventProperties,
@@ -479,7 +479,7 @@ internal class InAppController(
             JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithChargedEventProperties.putAll(chargeDetails)
 
-        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnChargedEvent(
             appFieldsWithChargedEventProperties,
             items,
@@ -509,7 +509,7 @@ internal class InAppController(
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
 
-        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnUserAttributeChange(
             userAttributeChangedProperties,
             location,
@@ -537,7 +537,6 @@ internal class InAppController(
         userLocation: Location?
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        //val appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps)
         val serverSideInAppsToDisplayImmediate =
             evaluationManager.evaluateOnAppLaunchedServerSide(
                 appLaunchServerSideInApps, appLaunchedProperties, userLocation
@@ -569,7 +568,6 @@ internal class InAppController(
         userLocation: Location?,
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        //val appLaunchSsDelayedInAppList = Utils.toJSONObjectList(appLaunchServerSideDelayedInApps)
 
         val serverSideInAppsToDisplayDelayed =
             evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
