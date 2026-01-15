@@ -45,7 +45,7 @@ internal class InAppStore(
         const val SERVER_SIDE_MODE = "SS"
         const val NO_MODE = "NO_MODE"
         const val PREFS_DELAYED_INAPP_KEY_CS = "delayed_inapp_notifs_cs"
-        const val PREFS_INACTION_INAPP_KEY_SS = "inaction_inapp_notifs_ss"  // In-Action SS metadata
+        const val PREFS_INACTION_INAPP_META_KEY_SS = "inaction_inapp_notifs_ss"  // In-Action SS metadata
     }
 
     /**
@@ -97,7 +97,7 @@ internal class InAppStore(
         serverSideMetaCache = null
     }
     private fun removeServerSideInActionInAppsMetaData() {
-        ctPreference.remove(PREFS_INACTION_INAPP_KEY_SS)
+        ctPreference.remove(PREFS_INACTION_INAPP_META_KEY_SS)
         serverSideInActionCache = null
     }
 
@@ -128,7 +128,7 @@ internal class InAppStore(
     fun storeServerSideInActionMetaData(serverSideInActionMetaData: List<JSONObject>) {
         serverSideInActionCache = serverSideInActionMetaData
         val jsonArray = JSONArray(serverSideInActionMetaData)
-        ctPreference.writeString(PREFS_INACTION_INAPP_KEY_SS, jsonArray.toString())
+        ctPreference.writeString(PREFS_INACTION_INAPP_META_KEY_SS, jsonArray.toString())
     }
 
     /**
@@ -208,7 +208,7 @@ internal class InAppStore(
     fun readServerSideInActionMetaData(): List<JSONObject> {
         serverSideInActionCache?.let { return it }
 
-        val ssInAppsMetaData = ctPreference.readString(PREFS_INACTION_INAPP_KEY_SS, "")
+        val ssInAppsMetaData = ctPreference.readString(PREFS_INACTION_INAPP_META_KEY_SS, "")
         val result = if (ssInAppsMetaData.isNullOrBlank()) {
             emptyList()
         } else {

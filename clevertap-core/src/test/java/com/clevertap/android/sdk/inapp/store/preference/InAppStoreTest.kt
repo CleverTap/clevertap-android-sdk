@@ -326,7 +326,7 @@ class InAppStoreTest {
 
         // Assert
         verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_SS) }
-        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_KEY_SS) }
+        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS) }
         verify(exactly = 0) { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
         assertEquals(InAppStore.CLIENT_SIDE_MODE, inAppStore.mode)
     }
@@ -352,7 +352,7 @@ class InAppStoreTest {
         verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
         verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_SS) }
         verify { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
-        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_KEY_SS) }
+        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS) }
         assertEquals(InAppStore.NO_MODE, inAppStore.mode)
     }
 
@@ -588,7 +588,7 @@ class InAppStoreTest {
         inAppStore.storeServerSideInActionMetaData(serverSideInActionMetaData.toList<JSONObject>())
 
         // Assert
-        verify { ctPreference.writeString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, serverSideInActionMetaData.toString()) }
+        verify { ctPreference.writeString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, serverSideInActionMetaData.toString()) }
     }
 
     @Test
@@ -601,14 +601,14 @@ class InAppStoreTest {
         inAppStore.storeServerSideInActionMetaData(serverSideInActionMetaData)
 
         // Assert
-        verify { ctPreference.writeString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, "[]") }
+        verify { ctPreference.writeString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, "[]") }
     }
 
     @Test
     fun `readServerSideInActionMetaData returns JSONArray from ctPreference`() {
         // Arrange
         val ssInActionMetaData = JSONArray("[{\"id\":200,\"inactionDuration\":60},{\"id\":201,\"inactionDuration\":120}]").toList<JSONObject>()
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns ssInActionMetaData.toString()
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns ssInActionMetaData.toString()
 
         // Act
         val result = inAppStore.readServerSideInActionMetaData()
@@ -620,7 +620,7 @@ class InAppStoreTest {
     @Test
     fun `readServerSideInActionMetaData returns empty list when ctPreference returns null`() {
         // Arrange
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns null
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns null
 
         // Act
         val result = inAppStore.readServerSideInActionMetaData()
@@ -632,7 +632,7 @@ class InAppStoreTest {
     @Test
     fun `readServerSideInActionMetaData returns empty list when ctPreference returns empty string`() {
         // Arrange
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns ""
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns ""
 
         // Act
         val result = inAppStore.readServerSideInActionMetaData()
@@ -644,7 +644,7 @@ class InAppStoreTest {
     @Test
     fun `readServerSideInActionMetaData returns empty list when ctPreference returns blank string`() {
         // Arrange
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns "   "
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns "   "
 
         // Act
         val result = inAppStore.readServerSideInActionMetaData()
@@ -656,7 +656,7 @@ class InAppStoreTest {
     @Test
     fun `readServerSideInActionMetaData returns empty list when JSON parsing fails`() {
         // Arrange
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns "invalid json {"
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns "invalid json {"
 
         // Act
         val result = inAppStore.readServerSideInActionMetaData()
@@ -669,7 +669,7 @@ class InAppStoreTest {
     fun `readServerSideInActionMetaData uses cache on subsequent calls`() {
         // Arrange
         val ssInActionMetaData = "[{\"id\":300,\"inactionDuration\":60}]"
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns ssInActionMetaData
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns ssInActionMetaData
 
         // Act - First call reads from preference
         val result1 = inAppStore.readServerSideInActionMetaData()
@@ -679,7 +679,7 @@ class InAppStoreTest {
         // Assert
         assertEquals(result1.toString(), result2.toString())
         // Verify preference is read only once (cache is used)
-        verify(exactly = 1) { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) }
+        verify(exactly = 1) { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) }
     }
 
     @Test
@@ -695,7 +695,7 @@ class InAppStoreTest {
         // Assert - Should return cached data without reading from preference
         assertEquals(serverSideInActionMetaData.toString(), result.toString())
         // Verify preference read is not called since cache is populated by store
-        verify(exactly = 0) { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) }
+        verify(exactly = 0) { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) }
     }
     @Test
     fun `mode change to CLIENT_SIDE_MODE removes server-side in-action metadata`() {
@@ -704,7 +704,7 @@ class InAppStoreTest {
 
         // Assert
         verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_SS) }
-        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_KEY_SS) }
+        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS) }
         verify(exactly = 0) { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
         verify(exactly = 0) { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
     }
@@ -718,7 +718,7 @@ class InAppStoreTest {
         verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
         verify { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
         verify(exactly = 0) { ctPreference.remove(Constants.PREFS_INAPP_KEY_SS) }
-        verify(exactly = 0) { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_KEY_SS) }
+        verify(exactly = 0) { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS) }
     }
 
     @Test
@@ -730,7 +730,7 @@ class InAppStoreTest {
         verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_CS) }
         verify { ctPreference.remove(Constants.PREFS_INAPP_KEY_SS) }
         verify { ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS) }
-        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_KEY_SS) }
+        verify { ctPreference.remove(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS) }
     }
 
     @Test
@@ -747,11 +747,11 @@ class InAppStoreTest {
         inAppStore.mode = InAppStore.CLIENT_SIDE_MODE
 
         // Now read should go to preference (cache cleared)
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns "[]"
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns "[]"
         val result = inAppStore.readServerSideInActionMetaData()
 
         // Assert - Cache was cleared, so it should read from preference
-        verify { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) }
+        verify { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) }
         assertEquals(emptyList<JSONObject>(), result)
     }
 
@@ -769,11 +769,11 @@ class InAppStoreTest {
         inAppStore.mode = InAppStore.NO_MODE
 
         // Now read should go to preference (cache cleared)
-        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) } returns "[]"
+        every { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) } returns "[]"
         val result = inAppStore.readServerSideInActionMetaData()
 
         // Assert - Cache was cleared, so it should read from preference
-        verify { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_KEY_SS, any()) }
+        verify { ctPreference.readString(InAppStore.PREFS_INACTION_INAPP_META_KEY_SS, any()) }
         assertEquals(emptyList<JSONObject>(), result)
     }
 }
