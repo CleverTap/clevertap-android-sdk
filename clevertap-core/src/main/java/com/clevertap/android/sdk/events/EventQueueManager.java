@@ -25,7 +25,8 @@ import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
-import com.clevertap.android.sdk.profile.merge.ProfileChange;
+import com.clevertap.android.sdk.profile.ProfileStateTraverser;
+import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -330,7 +331,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             controllerManager.getInAppController().onQueueEvent(eventName, flattenedEventProps, userLocation);
         } else if (flattenedEventData instanceof FlattenedEventData.ProfileChanges) {
             Map<String, ProfileChange> flattenedProfileChanges = ((FlattenedEventData.ProfileChanges) flattenedEventData).getChanges();
-            controllerManager.getInAppController().onQueueProfileEvent(flattenedProfileChanges, userLocation);
+            Map<String, Map<String, Object>> userAttributeChangedProperties = ProfileStateTraverser.Companion.toNestedMap(flattenedProfileChanges);
+            controllerManager.getInAppController().onQueueProfileEvent(userAttributeChangedProperties, userLocation);
         } else if (!eventMediator.isAppLaunchedEvent(event) && flattenedEventData instanceof FlattenedEventData.EventProperties) {
             // in case device is online only evaluate non-appLaunched events
             Map<String, Object> flattenedEventProps = ((FlattenedEventData.EventProperties) flattenedEventData).getProperties();
@@ -400,7 +402,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         /*If key is present in IdentitySet and removeFromSharedPrefs is true then
                         proceed to removing PII key(Email) from shared prefs*/
 
-                        // todo multi-values identity keys?
                         if (isProfileKey && !deviceInfo.isErrorDeviceId()) {
                             try {
                                 if (removeFromSharedPrefs) {

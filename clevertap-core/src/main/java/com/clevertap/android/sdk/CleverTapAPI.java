@@ -88,7 +88,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -1294,11 +1293,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void addMultiValueForKey(String key, String value) {
-        if (value == null || value.isEmpty()) {
-            coreState.getAnalyticsManager()._generateEmptyMultiValueError(key);
-            return;
-        }
-
         addMultiValuesForKey(key, new ArrayList<>(Collections.singletonList(value)));
     }
 
@@ -2068,18 +2062,55 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Return the user profile property value for the specified key.
-     * Date related property values are returned as number of seconds since January 1, 1970, 00:00:00 GMT
+     * Retrieves the value of a specific user profile property.
      *
-     * @param name String
-     * @return {@link JSONArray}, String or null
+     * <p>Returns null if personalization is disabled in the CleverTap configuration.</p>
+     *
+     * <p><b>Note on Date Properties:</b> Date-related property values are returned as Unix timestamps
+     * (seconds since January 1, 1970, 00:00:00 GMT) prefixed with "$D_". For example, a date property
+     * might be returned as "$D_1609459200".</p>
+     *
+     * @param name The name of the profile property to retrieve
+     * @return The value of the specified property, or null if the property doesn't exist or
+     *         personalization is disabled. The return type can be String, Number, Boolean, or
+     *         a date string with "$D_" prefix.
      */
     @SuppressWarnings({"unused"})
+    @WorkerThread
     public Object getProperty(String name) {
         if (!coreState.getConfig().isPersonalizationEnabled()) {
             return null;
         }
         return coreState.getLocalDataStore().getProfileProperty(name);
+    }
+
+    /**
+     * Retrieves the complete user profile as a JSON object for the current user.
+     *
+     * <p>Returns a copy of the entire profile containing all stored properties for the current user.
+     * Returns null if personalization is disabled in the CleverTap configuration.</p>
+     *
+     * <p><b>Note on Date Properties:</b> Date-related property values are returned as Unix timestamps
+     * (seconds since January 1, 1970, 00:00:00 GMT) prefixed with "$D_". For example, a date property
+     * might appear as <code>"birthDate": "$D_1609459200"</code> in the returned JSON.</p>
+     *
+     * <p><b>Example usage:</b></p>
+     * <pre>{@code
+     * JSONObject profile = clevertap.getProfile();
+     * if (profile != null) {
+     *     String email = profile.optString("Email");
+     *     String name = profile.optString("Name");
+     * }
+     * }</pre>
+     *
+     * @return A JSONObject containing all user profile properties, or null if personalization is disabled.
+     */
+    @WorkerThread
+    public JSONObject getProfile() {
+        if (!coreState.getConfig().isPersonalizationEnabled()) {
+            return null;
+        }
+        return coreState.getLocalDataStore().getProfile();
     }
 
     /**
@@ -2396,7 +2427,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void pushChargedEvent(HashMap<String, Object> chargeDetails,
-            ArrayList<HashMap<String, Object>> items) {
+                                 ArrayList<HashMap<String, Object>> items) {
         coreState.getAnalyticsManager().pushChargedEvent(chargeDetails, items);
     }
 
@@ -2641,11 +2672,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeMultiValueForKey(String key, String value) {
-        if (value == null || value.isEmpty()) {
-            coreState.getAnalyticsManager()._generateEmptyMultiValueError(key);
-            return;
-        }
-
         removeMultiValuesForKey(key, new ArrayList<>(Collections.singletonList(value)));
     }
 
@@ -2777,17 +2803,17 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static void addNotificationRenderedListener(String id, final NotificationRenderedListener notificationRenderedListener) {
-       sNotificationRenderedListenerMap.put(id, notificationRenderedListener);
+        sNotificationRenderedListenerMap.put(id, notificationRenderedListener);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static NotificationRenderedListener getNotificationRenderedListener(String id) {
-       return sNotificationRenderedListenerMap.get(id);
+        return sNotificationRenderedListenerMap.get(id);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static NotificationRenderedListener removeNotificationRenderedListener(String id) {
-       return sNotificationRenderedListenerMap.remove(id);
+        return sNotificationRenderedListenerMap.remove(id);
     }
 
     /**
@@ -3331,7 +3357,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     //TODO: start synchronizing entire flow from here
     public Future<?> renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
-            Bundle extras) {
+                                            Bundle extras) {
 
         CleverTapInstanceConfig config = coreState.getConfig();
         Future<?> future = null;
@@ -3364,7 +3390,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     public void renderPushNotificationOnCallerThread(@NonNull INotificationRenderer iNotificationRenderer, Context context,
-            Bundle extras) {
+                                                     Bundle extras) {
 
         CleverTapInstanceConfig config = coreState.getConfig();
 
