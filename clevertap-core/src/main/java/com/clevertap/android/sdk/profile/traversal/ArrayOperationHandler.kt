@@ -86,7 +86,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var modified = false
 
         for (i in 0 until newArray.length()) {
@@ -131,13 +131,13 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         val resultArray = JSONArray()
         var modified = false
 
         for (i in 0 until oldArray.length()) {
             val item = oldArray.get(i)
-            if (item is String && ArrayMergeUtils.arrayContainsString(newArray, item)) {
+            if (item is String && newArray.containsString(item)) {
                 modified = true
             } else {
                 resultArray.put(item)
@@ -162,7 +162,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         operation: ProfileOperation,
         recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var arrayModified = false
 
         for (i in 0 until newArray.length()) {

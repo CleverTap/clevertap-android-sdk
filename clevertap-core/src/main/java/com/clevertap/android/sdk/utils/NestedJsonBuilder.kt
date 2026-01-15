@@ -60,8 +60,7 @@ class NestedJsonBuilder {
             
             for (match in matches) {
                 val indexStr = match.groupValues[1]
-                val index = indexStr.toIntOrNull()
-                    ?: throw IllegalArgumentException("Invalid array index: $indexStr")
+                val index = indexStr.toInt()
                 indices.add(index)
             }
             

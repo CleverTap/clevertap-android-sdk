@@ -68,8 +68,8 @@ internal class DeleteOperationHandler(
     ) {
         if (newArray.length() == 0) return
 
-        val hasDeleteMarkers = ArrayMergeUtils.hasDeleteMarkerElements(newArray)
-        val hasObjectsToDelete = ArrayMergeUtils.hasJsonObjectElements(newArray)
+        val hasDeleteMarkers = newArray.hasDeleteMarkerElements()
+        val hasObjectsToDelete = newArray.hasJsonObjectElements()
 
         when {
             hasDeleteMarkers -> deleteArrayElements(oldArray, newArray, currentPath, changes)
@@ -88,7 +88,7 @@ internal class DeleteOperationHandler(
         basePath: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var arrayModified = false
 
         for (i in 0 until minOf(newArray.length(), oldArray.length())) {
@@ -168,7 +168,7 @@ internal class DeleteOperationHandler(
 
         if (indicesToDelete.isEmpty()) return
 
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var removedAny = false
 
         // Delete in reverse order to maintain correct indices

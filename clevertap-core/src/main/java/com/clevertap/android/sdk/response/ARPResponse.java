@@ -126,7 +126,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
             if (validationConfig != null) {
                 validationConfig.updateDiscardedEventNames(discardedEventsSet);
             } else {
-                logger.verbose(config.getAccountId(), "Validator object is NULL");
+                logger.verbose(config.getAccountId(), "ValidationConfig object is NULL");
             }
         } catch (JSONException e) {
             logger.verbose(config.getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());

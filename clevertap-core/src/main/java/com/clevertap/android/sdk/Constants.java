@@ -7,7 +7,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Set;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Constants {
@@ -124,8 +123,6 @@ public interface Constants {
     String LAST_SESSION_EPOCH = "sexe";
     int MAX_KEY_LENGTH = 120;
     int MAX_VALUE_LENGTH = 512;
-    int MAX_MULTI_VALUE_ARRAY_LENGTH = 100;
-    int MAX_MULTI_VALUE_LENGTH = 512;
     String WZRK_FROM_KEY = "wzrk_from";
     String WZRK_ACCT_ID_KEY = "wzrk_acct_id";
     String WZRK_FROM = "CTPushNotificationReceiver";
@@ -199,7 +196,6 @@ public interface Constants {
     String KEY_ALT_TEXT= "alt_text";
     String KEY_BUTTONS = "buttons";
     String KEY_CUSTOM_HTML = "custom-html";
-    String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
@@ -233,7 +229,6 @@ public interface Constants {
     String INAPP_SS_EVAL_META = "inapps_eval";
     String INAPP_SUPPRESSED_META = "inapps_suppressed";
     String INAPP_WHEN_TRIGGERS = "whenTriggers";
-    String INAPP_WHEN_LIMITS = "whenLimit";
     String INAPP_FC_LIMITS = "frequencyLimits";
     String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
 
@@ -296,9 +291,6 @@ public interface Constants {
     String KEY_LINKS = "links";
     String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
     String KEY_ENCRYPTION_CGK = "cgk";
-    String KEY_ENCRYPTION_INAPP_CS = "cs";
-
-    String KEY_ENCRYPTION_INAPP_SS = "ss";
 
     String KEY_ENCRYPTION_NAME = "Name";
     String KEY_ENCRYPTION_IDENTITY = "Identity";
@@ -333,11 +325,7 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
-    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
-    HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
-
-    HashSet<String> keysToSkipForUserAttributesEvaluation = new HashSet<>(Arrays.asList("cc", "tz", "Carrier"));
 
     /**
      * Valid indexes for the App Inbox item and buttons.
@@ -352,7 +340,6 @@ public interface Constants {
     String PT_NOTIF_ID = "notificationId";
     String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
     String KEY_CT_TYPE = "ct_type";
-    String PT_INPUT_KEY = "pt_input_reply";
 
     // ==========Fallback keys=========
     String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident

@@ -298,7 +298,7 @@ class EventDataNormalizer : Normalizer<Map<*, *>?, EventDataNormalizationResult>
             val cleanedKey = cleanKey(key, keyCharsNotAllowed, maxKeyLength)
 
             if (cleanedKey.isEmpty()) {
-                recordRemoval(key, RemovalReason.EMPTY_VALUE, "")
+                recordRemoval(key, RemovalReason.EMPTY_KEY, "")
                 continue
             }
 
