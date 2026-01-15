@@ -47,18 +47,30 @@ class EventNameValidator : Validator<EventNameNormalizationResult> {
         }
 
         // Check restricted event names
-        validateNotRestricted(
-            cleanedName = input.cleanedName,
-            restrictedEventNames = config.restrictedEventNames,
-            errors = errors
-        )?.let { return it }
+        if (isRestricted(input.cleanedName, config.restrictedEventNames)) {
+            val error = ValidationResultFactory.create(
+                ValidationError.RESTRICTED_EVENT_NAME,
+                input.cleanedName
+            )
+            errors.add(error)
+            return ValidationOutcome.Drop(
+                errors = errors,
+                reason = DropReason.RESTRICTED_EVENT_NAME
+            )
+        }
 
         // Check discarded event names
-        validateNotDiscarded(
-            cleanedName = input.cleanedName,
-            discardedEventNames = config.discardedEventNames,
-            errors = errors
-        )?.let { return it }
+        if (isDiscarded(input.cleanedName, config.discardedEventNames)) {
+            val error = ValidationResultFactory.create(
+                ValidationError.DISCARDED_EVENT_NAME,
+                input.cleanedName
+            )
+            errors.add(error)
+            return ValidationOutcome.Drop(
+                errors = errors,
+                reason = DropReason.DISCARDED_EVENT_NAME
+            )
+        }
 
         return if (errors.isEmpty()) {
             ValidationOutcome.Success()
@@ -99,58 +111,26 @@ class EventNameValidator : Validator<EventNameNormalizationResult> {
     }
 
     /**
-     * Validates that the event name is not in the restricted list.
-     * Returns Drop outcome if name is restricted, null otherwise.
+     * Checks if the event name is in the restricted list.
      */
-    private fun validateNotRestricted(
+    private fun isRestricted(
         cleanedName: String,
-        restrictedEventNames: Set<String>?,
-        errors: MutableList<ValidationResult>
-    ): ValidationOutcome.Drop? {
-        val isRestricted = restrictedEventNames?.any { restrictedName ->
+        restrictedEventNames: Set<String>?
+    ): Boolean {
+        return restrictedEventNames?.any { restrictedName ->
             Utils.areNamesNormalizedEqual(cleanedName, restrictedName)
         } ?: false
-
-        if (isRestricted) {
-            val error = ValidationResultFactory.create(
-                ValidationError.RESTRICTED_EVENT_NAME,
-                cleanedName
-            )
-            errors.add(error)
-            return ValidationOutcome.Drop(
-                errors = errors,
-                reason = DropReason.RESTRICTED_EVENT_NAME
-            )
-        }
-
-        return null
     }
 
     /**
-     * Validates that the event name is not in the discarded list.
-     * Returns Drop outcome if name is discarded, null otherwise.
+     * Checks if the event name is in the discarded list.
      */
-    private fun validateNotDiscarded(
+    private fun isDiscarded(
         cleanedName: String,
-        discardedEventNames: Set<String>?,
-        errors: MutableList<ValidationResult>
-    ): ValidationOutcome.Drop? {
-        val isDiscarded = discardedEventNames?.any { discardedName ->
+        discardedEventNames: Set<String>?
+    ): Boolean {
+        return discardedEventNames?.any { discardedName ->
             Utils.areNamesNormalizedEqual(cleanedName, discardedName)
         } ?: false
-
-        if (isDiscarded) {
-            val error = ValidationResultFactory.create(
-                ValidationError.DISCARDED_EVENT_NAME,
-                cleanedName
-            )
-            errors.add(error)
-            return ValidationOutcome.Drop(
-                errors = errors,
-                reason = DropReason.DISCARDED_EVENT_NAME
-            )
-        }
-
-        return null
     }
 }
