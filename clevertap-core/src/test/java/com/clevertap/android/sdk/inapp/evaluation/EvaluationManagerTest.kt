@@ -172,6 +172,320 @@ class EvaluationManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `test evaluateOnUserAttributeChange with single attribute`() {
+        // Arrange
+        val eventProperties = mapOf("email" to mapOf("oldValue" to "old@test.com", "newValue" to "new@test.com"))
+        val userLocation = mockk<Location>()
+        val appFields = mapOf("appVersion" to "1.0")
+
+        // Capture the created EventAdapter list
+        val eventAdapterSlot = slot<List<EventAdapter>>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        // Mock both immediate and delayed client-side evaluations
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
+            JSONObject(mapOf("resultKey" to "immediateValue"))
+        )
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().put(
+            JSONObject(mapOf("delayKey" to "delayedValue"))
+        )
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert
+        assertNotNull(result)
+
+        // Verify that the captured EventAdapter has the expected properties
+        val capturedEventAdapters = eventAdapterSlot.captured
+        assertEquals(1, capturedEventAdapters.size)
+
+        val capturedEventAdapter = capturedEventAdapters[0]
+        assertEquals("email${Constants.USER_ATTRIBUTE_CHANGE}", capturedEventAdapter.eventName)
+        assertEquals("email", capturedEventAdapter.profileAttrName)
+        assertEquals("old@test.com", capturedEventAdapter.eventProperties["oldValue"])
+        assertEquals("new@test.com", capturedEventAdapter.eventProperties["newValue"])
+        assertEquals("1.0", capturedEventAdapter.eventProperties["appVersion"]) // appFields merged
+        assertEquals(userLocation, capturedEventAdapter.userLocation)
+
+        // Verify immediate in-apps (first element of Pair)
+        val immediateInApps = result.first
+        assertTrue(immediateInApps.length() > 0)
+        val firstImmediateObject = immediateInApps.getJSONObject(0)
+        assertEquals("immediateValue", firstImmediateObject.getString("resultKey"))
+
+        // Verify delayed in-apps (second element of Pair)
+        val delayedInApps = result.second
+        assertTrue(delayedInApps.length() > 0)
+        val firstDelayedObject = delayedInApps.getJSONObject(0)
+        assertEquals("delayedValue", firstDelayedObject.getString("delayKey"))
+
+        // Verify method calls
+        verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateDelayedClientSide(any()) }
+    }
+
+    @Test
+    fun `test evaluateOnUserAttributeChange with multiple attributes`() {
+        // Arrange
+        val eventProperties = mapOf(
+            "email" to mapOf("oldValue" to "old@test.com", "newValue" to "new@test.com"),
+            "name" to mapOf("oldValue" to "Old Name", "newValue" to "New Name"),
+            "age" to mapOf("oldValue" to 25, "newValue" to 26)
+        )
+        val userLocation = mockk<Location>()
+        val appFields = mapOf("appVersion" to "1.0", "platform" to "Android")
+
+        // Capture the created EventAdapter list
+        val eventAdapterSlot = slot<List<EventAdapter>>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
+            JSONObject(mapOf("resultKey" to "immediateValue"))
+        )
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert
+        assertNotNull(result)
+
+        // Verify that 3 EventAdapters were created (one per attribute)
+        val capturedEventAdapters = eventAdapterSlot.captured
+        assertEquals(3, capturedEventAdapters.size)
+
+        // Verify each EventAdapter has correct event name and profile attribute name
+        val eventNames = capturedEventAdapters.map { it.eventName }.toSet()
+        val profileAttrNames = capturedEventAdapters.map { it.profileAttrName }.toSet()
+
+        assertTrue(eventNames.contains("email${Constants.USER_ATTRIBUTE_CHANGE}"))
+        assertTrue(eventNames.contains("name${Constants.USER_ATTRIBUTE_CHANGE}"))
+        assertTrue(eventNames.contains("age${Constants.USER_ATTRIBUTE_CHANGE}"))
+
+        assertTrue(profileAttrNames.contains("email"))
+        assertTrue(profileAttrNames.contains("name"))
+        assertTrue(profileAttrNames.contains("age"))
+
+        // Verify appFields are merged into each EventAdapter
+        capturedEventAdapters.forEach { adapter ->
+            assertEquals("1.0", adapter.eventProperties["appVersion"])
+            assertEquals("Android", adapter.eventProperties["platform"])
+        }
+
+        // Verify result contains immediate in-apps
+        val immediateInApps = result.first
+        assertTrue(immediateInApps.length() > 0)
+
+        verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateDelayedClientSide(any()) }
+    }
+
+    @Test
+    fun `test evaluateOnUserAttributeChange with empty eventProperties`() {
+        // Arrange
+        val eventProperties = emptyMap<String, Map<String, Any?>>()
+        val userLocation = mockk<Location>()
+        val appFields = mapOf("appVersion" to "1.0")
+
+        val eventAdapterSlot = slot<List<EventAdapter>>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert
+        assertNotNull(result)
+
+        // Verify empty list of EventAdapters was created
+        val capturedEventAdapters = eventAdapterSlot.captured
+        assertEquals(0, capturedEventAdapters.size)
+
+        // Both results should be empty
+        assertEquals(0, result.first.length())
+        assertEquals(0, result.second.length())
+
+        verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
+        verify(exactly = 1) { evaluationManager.evaluateDelayedClientSide(any()) }
+    }
+
+    @Test
+    fun `test evaluateOnUserAttributeChange with null userLocation`() {
+        // Arrange
+        val eventProperties = mapOf("email" to mapOf("oldValue" to "old@test.com", "newValue" to "new@test.com"))
+        val appFields = mapOf("appVersion" to "1.0")
+
+        val eventAdapterSlot = slot<List<EventAdapter>>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, null, appFields)
+
+        // Assert
+        assertNotNull(result)
+
+        val capturedEventAdapters = eventAdapterSlot.captured
+        assertEquals(1, capturedEventAdapters.size)
+        assertNull(capturedEventAdapters[0].userLocation)
+    }
+
+    @Test
+    fun `test evaluateOnUserAttributeChange with empty appFields`() {
+        // Arrange
+        val eventProperties = mapOf("email" to mapOf("oldValue" to "old@test.com", "newValue" to "new@test.com"))
+        val userLocation = mockk<Location>()
+        val appFields = emptyMap<String, Any>()
+
+        val eventAdapterSlot = slot<List<EventAdapter>>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert
+        assertNotNull(result)
+
+        val capturedEventAdapters = eventAdapterSlot.captured
+        assertEquals(1, capturedEventAdapters.size)
+
+        // Verify only the attribute properties exist (no appFields)
+        val adapter = capturedEventAdapters[0]
+        assertEquals("old@test.com", adapter.eventProperties["oldValue"])
+        assertEquals("new@test.com", adapter.eventProperties["newValue"])
+        assertFalse(adapter.eventProperties.containsKey("appVersion"))
+    }
+
+    @Test
+    fun `test evaluateOnUserAttributeChange merges appFields with attribute properties correctly`() {
+        // Arrange
+        val eventProperties = mapOf(
+            "email" to mapOf("oldValue" to "old@test.com", "newValue" to "new@test.com", "verified" to true)
+        )
+        val userLocation = mockk<Location>()
+        val appFields = mapOf("appVersion" to "1.0", "platform" to "Android", "sessionId" to "abc123")
+
+        val eventAdapterSlot = slot<List<EventAdapter>>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert
+        val capturedEventAdapters = eventAdapterSlot.captured
+        assertEquals(1, capturedEventAdapters.size)
+
+        val adapter = capturedEventAdapters[0]
+        // Verify all properties are present
+        assertEquals("old@test.com", adapter.eventProperties["oldValue"])
+        assertEquals("new@test.com", adapter.eventProperties["newValue"])
+        assertEquals(true, adapter.eventProperties["verified"])
+        assertEquals("1.0", adapter.eventProperties["appVersion"])
+        assertEquals("Android", adapter.eventProperties["platform"])
+        assertEquals("abc123", adapter.eventProperties["sessionId"])
+    }
+
+
+    @Test
+    fun `test evaluateOnUserAttributeChange with attribute containing only newValue`() {
+        // Arrange - only newValue means new attribute was added
+        val eventProperties = mapOf(
+            "email" to mapOf("newValue" to "new@test.com")
+        )
+        val userLocation = mockk<Location>()
+        val appFields = mapOf("appVersion" to "1.0")
+
+        val eventAdapterSlot = slot<List<EventAdapter>>()
+        every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert
+        val capturedEventAdapters = eventAdapterSlot.captured
+        assertEquals(1, capturedEventAdapters.size)
+
+        val adapter = capturedEventAdapters[0]
+        assertFalse(adapter.eventProperties.containsKey("oldValue"))
+        assertEquals("new@test.com", adapter.eventProperties["newValue"])
+        assertEquals("1.0", adapter.eventProperties["appVersion"])
+    }
+
+    @Test
+    fun `test evaluateOnUserAttributeChange returns both immediate and delayed in-apps`() {
+        // Arrange
+        val eventProperties = mapOf("email" to mapOf("oldValue" to "old@test.com", "newValue" to "new@test.com"))
+        val userLocation = mockk<Location>()
+        val appFields = mapOf("appVersion" to "1.0")
+
+        val immediateInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "immediate_123")
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        val delayedInApp = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed_456")
+            .put(INAPP_DELAY_AFTER_TRIGGER, 10)
+            .put(Constants.INAPP_SUPPRESSED, false)
+
+        every { evaluationManager.evaluateServerSide(any()) } returns Unit
+        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(immediateInApp)
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().put(delayedInApp)
+
+        // Act
+        val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert
+        val immediateInApps = result.first
+        val delayedInApps = result.second
+
+        assertEquals(1, immediateInApps.length())
+        assertEquals("immediate_123", immediateInApps.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+
+        assertEquals(1, delayedInApps.length())
+        assertEquals("delayed_456", delayedInApps.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+        assertEquals(10, delayedInApps.getJSONObject(0).getInt(INAPP_DELAY_AFTER_TRIGGER))
+    }
+
+    @Test
+    fun `test evaluateOnUserAttributeChange calls evaluateServerSide before client-side evaluations`() {
+        // Arrange
+        val eventProperties = mapOf("email" to mapOf("oldValue" to "old@test.com", "newValue" to "new@test.com"))
+        val userLocation = mockk<Location>()
+        val appFields = mapOf("appVersion" to "1.0")
+
+        val callOrder = mutableListOf<String>()
+
+        every { evaluationManager.evaluateServerSide(any()) } answers {
+            callOrder.add("server")
+        }
+        every { evaluationManager.evaluateClientSide(any()) } answers {
+            callOrder.add("client")
+            JSONArray()
+        }
+        every { evaluationManager.evaluateDelayedClientSide(any()) } answers {
+            callOrder.add("delayed")
+            JSONArray()
+        }
+
+        // Act
+        evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
+
+        // Assert - verify call order
+        assertEquals(listOf("server", "client", "delayed"), callOrder)
+    }
+
+
+    @Test
     fun `evaluate should return empty list when inappNotifs is empty`() {
         // Arrange
         val event = EventAdapter("eventName", emptyMap(), userLocation = null)

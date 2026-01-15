@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
 import com.clevertap.demo.MyApplication
+import org.json.JSONArray
 import java.util.Date
 
 private const val TAG = "HomeScreenViewModel"
@@ -84,18 +85,21 @@ class HomeScreenViewModel(
         logStep("EVENTS", "Recording event with properties")
 
         val prodViewedAction = mapOf(
-            "Product Name" to "Casio Chronograph Watch",
-            "Category" to "Mens Accessories",
-            "Price" to 59.99,
-            "Date" to Date()
+            "Contact2$$" to mapOf(
+                "Email" to "contact@timekeeper.com",
+                "Phone" to "+91-9876543210",
+                "Address Details" to mapOf(
+                    "Street" to "123 MG Road",
+                    "City$".repeat(50) to "Mumbai",
+                    "Pincode" to "400001"
+                )
+            )
         )
 
         printMap("Event Properties", prodViewedAction)
 
         cleverTapAPI?.apply {
             pushEvent("Product viewed", prodViewedAction)
-            pushEvent("caurousel-inapp")
-            pushEvent("icon-inbox")
         }
     }
 
@@ -170,20 +174,64 @@ class HomeScreenViewModel(
 
         cleverTapAPI?.let { ct ->
             val profileUpdate = buildMap {
-                put("Name", "User Name")
-                put("Email", "User@gmail.com")
-                put("Phone", "+14155559999")
-                put("Gender", "M")
-                put("Employed", "Y")
-                put("Education", "Graduate")
-                put("Married", "Y")
-                put("DOB", Date())
-                put("Age", 28)
-                put("MSG-email", false)
-                put("MSG-push", true)
-                put("MSG-sms", false)
-                put("MyStuffList", arrayListOf("bag", "shoes"))
-                put("MyStuffArray", arrayOf("Jeans", "Perfume"))
+//                put("Name$$", "Sarah Johnson")
+//                put("Email", "sarah.johnson@example.com")
+                put("Phone", "14155551234")
+//                put("Gender", "F")
+//                put("DOB", Date())
+//                put("Age", 32)
+//                put("favSong", "changes now")
+//                put("score", 20)
+//                put("list", JSONArray().put("a").put("b").put("c"))
+//
+//                // User preferences
+//                put("Preferences", hashMapOf(
+//                    "language" to "en",
+//                    "currency" to "USD",
+//                    "timezone" to "America/Los_Angeles",
+//                    "darkMode" to true
+//                ))
+//
+//
+//                // Subscription details
+//                put("Subscription", hashMapOf(
+//                    "tier" to "Gold",
+//                    "status" to "active",
+//                    "startDate" to "2024-01-15",
+//                    "expiryDate" to "2025-01-15",
+//                    "autoRenew" to true,
+//                    "features" to arrayListOf("unlimited_access", "priority_support", "ad_free")
+//                ))
+//
+//                // Address information
+//                put("Address", hashMapOf(
+//                    "street" to "123 Market Street",
+//                    "city" to "San Francisco",
+//                    "state" to "CA",
+//                    "zipCode" to "94103",
+//                    "country" to "USA",
+//                    "isDefault" to true
+//                ))
+//
+//                // Notification preferences
+//                put("NotificationSettings", hashMapOf(
+//                    "email" to true,
+//                    "push" to true,
+//                    "sms" to false,
+//                    "inApp" to true,
+//                    "frequency" to "daily"
+//                ))
+//
+//                // Shopping preferences
+//                put("ShoppingProfile", hashMapOf(
+//                    "favoriteCategories" to arrayListOf("Electronics", "Fashion", "Home"),
+//                    "recentPurchases" to arrayListOf(
+//                        hashMapOf("item" to "Laptop", "date" to "2024-11-20", "amount" to 1299.99),
+//                        hashMapOf("item" to "Headphones", "date" to "2024-11-18", "amount" to 199.99)
+//                    ),
+//                    "wishlist" to arrayListOf("Smart Watch", "Camera", "Desk Chair"),
+//                    "loyaltyPoints" to 2500
+//                ))
             }
 
             printMap("Profile Update", profileUpdate)
@@ -241,13 +289,13 @@ class HomeScreenViewModel(
     private fun removeSingleValueProperties() {
         logStep("USER PROFILE", "Removing single-value property")
         printVar("Removing Key", "Customer Type")
-        cleverTapAPI?.removeValueForKey("Customer Type")
+        cleverTapAPI?.removeValueForKey("ShoppingProfile.recentPurchases")
     }
 
     private fun updateMultiValuePropertiesReplace() {
         logStep("USER PROFILE", "Updating (replacing) multi-value property")
 
-        val values = arrayListOf("Updated Bag", "Updated Shoes")
+        val values = arrayListOf("a", "z", "a")
         printVar("Key", "MyStuffList")
         printList("Values", values)
 
@@ -258,33 +306,33 @@ class HomeScreenViewModel(
         logStep("USER PROFILE", "Updating (adding) multi-value property")
 
         val singleValue = "Coat"
-        val multipleValues = arrayListOf("Socks", "Scarf")
+        val multipleValues = arrayListOf("a", "b", "d")
 
-        printVar("Adding Single Value", singleValue)
-        cleverTapAPI?.addMultiValueForKey("MyStuffList", singleValue)
+//        printVar("Adding Single Value", singleValue)
+//        cleverTapAPI?.addMultiValueForKey("MyStuffList", singleValue)
 
         printList("Adding Multiple Values", multipleValues)
-        cleverTapAPI?.addMultiValuesForKey("MyStuffList", multipleValues)
+        cleverTapAPI?.addMultiValuesForKey("Phone", multipleValues)
     }
 
     private fun updateMultiValuePropertiesRemove() {
         logStep("USER PROFILE", "Removing multi-value property")
 
-        val singleValue = "Coat"
+        val singleValue = "a"
         val multipleValues = arrayListOf("Socks", "Scarf")
 
         printVar("Removing Single Value", singleValue)
         cleverTapAPI?.removeMultiValueForKey("MyStuffList", singleValue)
 
         printList("Removing Multiple Values", multipleValues)
-        cleverTapAPI?.removeMultiValuesForKey("MyStuffList", multipleValues)
+        cleverTapAPI?.removeMultiValuesForKey("ShoppingProfile.wishlist", arrayListOf("Camera"))
     }
 
     private fun incrementValue() {
         logStep("USER PROFILE", "Incrementing value")
         printVar("Key", "score")
         printVar("Increment By", 50)
-        cleverTapAPI?.incrementValue("score", 50)
+        cleverTapAPI?.incrementValue("ShoppingProfile$.recentPurchases[1].amount", 50)
     }
 
     private fun decrementValue() {

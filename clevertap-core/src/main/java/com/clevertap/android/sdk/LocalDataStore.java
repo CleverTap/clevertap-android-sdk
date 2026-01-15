@@ -3,6 +3,8 @@ package com.clevertap.android.sdk;
 import static com.clevertap.android.sdk.Constants.GET_MARKER;
 import static com.clevertap.android.sdk.Constants.piiDBKeys;
 
+import static java.util.Collections.emptyMap;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -17,8 +19,8 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.profile.ProfileStateTraverser;
-import com.clevertap.android.sdk.profile.merge.ProfileOperation;
-import com.clevertap.android.sdk.profile.merge.ProfileChange;
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
+import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
 import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 
@@ -396,18 +398,25 @@ public class LocalDataStore {
         }
     }
 
+    public JSONObject getProfile() {
+        try {
+            synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+                return new JSONObject(PROFILE_FIELDS_IN_THIS_SESSION.toString());
+            }
+        } catch (JSONException e) {
+            // Handle exception or return empty object
+            return new JSONObject();
+        }
+    }
+
     public Object getProfileProperty(String key) {
         if (key == null) {
             return null;
         }
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                ProfileChange profileChange = processProfileTree(key, GET_MARKER, ProfileOperation.GET).get(key);
-                return profileChange == null ? null : profileChange.getOldValue();
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
+            ProfileChange profileChange = processProfileTree(key, GET_MARKER, ProfileOperation.GET).get(key);
+            return profileChange == null ? null : profileChange.getOldValue();
         }
     }
 
@@ -678,7 +687,6 @@ public class LocalDataStore {
 
     private void resetLocalProfileSync() {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            // Better way to remove all keys
             Iterator<String> keys = PROFILE_FIELDS_IN_THIS_SESSION.keys();
             List<String> keysToRemove = new ArrayList<>();
             while (keys.hasNext()) {
@@ -691,66 +699,6 @@ public class LocalDataStore {
 
         // Load the older profile from cache into the db
         inflateLocalProfileAsync(context);
-    }
-
-    private void _removeProfileField(String key) {
-        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
-            } catch (Throwable t) {
-                getConfigLogger()
-                        .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
-            }
-        }
-    }
-    private void _setProfileField(String key, Object value) {
-        if (value == null) {
-            return;
-        }
-        try {
-            synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                PROFILE_FIELDS_IN_THIS_SESSION.put(key, value);
-            }
-        } catch (Throwable t) {
-            getConfigLogger()
-                    .verbose(getConfigAccountId(), "Failed to set local profile value for key " + key, t);
-        }
-    }
-
-    /**
-     * This function centrally updates the profile fields both in the local cache and the local db
-     *
-     * @param fields, a map of key value pairs to be updated locally. The value will be null if that key needs to be
-     *                removed
-     */
-//    int k = 0;
-    public void updateProfileFields(Map<String, Object> fields) {
-        if(fields.isEmpty())
-            return;
-        /*Set<String> events = new HashSet<>();
-        for (int i = 0; i < 5000; i++) {
-            String s = "profile field - "+k+"-"+i;//RandomStringUtils.randomAlphanumeric(512);
-            events.add(s);
-        }
-        k++;*/
-        long start = System.nanoTime();
-        persistUserEventLogsInBulk(fields.keySet());
-//        persistUserEventLogsInBulk(events);
-        /*for (String key : events)
-        {
-            persistUserEventLog(key);
-        }*/
-        long end = System.nanoTime();
-        config.getLogger().verbose(config.getAccountId(),"UserEventLog: persistUserEventLog execution time = "+(end - start)+" nano seconds");
-        for (Map.Entry<String, Object> entry : fields.entrySet()) {
-            String key = entry.getKey();
-            Object newValue = entry.getValue();
-            if (newValue == null) {
-                _removeProfileField(key);
-            }
-            _setProfileField(key, newValue);
-        }
-        persistLocalProfileAsync();
     }
 
     private String storageKeyWithSuffix(String key) {
@@ -766,9 +714,13 @@ public class LocalDataStore {
             String dotNotationKey,
             Object value,
             ProfileOperation operation
-    ) throws JSONException {
-        JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
-        return processProfileTree(nestedProfile, operation);
+    ) {
+        try {
+            JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
+            return processProfileTree(nestedProfile, operation);
+        } catch (JSONException e) {
+            return emptyMap();
+        }
     }
 
 
@@ -776,7 +728,7 @@ public class LocalDataStore {
     public Map<String, ProfileChange> processProfileTree(
             JSONObject newJson,
             ProfileOperation operation
-    ) throws JSONException {
+    ) {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
             ProfileStateTraverser.ProfileTraversalResult result = profileStateTraverser.traverse(
                     PROFILE_FIELDS_IN_THIS_SESSION,

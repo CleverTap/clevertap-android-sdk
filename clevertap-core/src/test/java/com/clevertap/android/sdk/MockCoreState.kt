@@ -33,6 +33,5 @@ internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceCon
     mockk(relaxed = true),
     mockk(relaxed = true),
     mockk(relaxed = true),
-    mockk(relaxed = true),
     MockCTExecutors()
 )
