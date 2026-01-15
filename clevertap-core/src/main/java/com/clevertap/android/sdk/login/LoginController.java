@@ -238,7 +238,7 @@ public class LoginController {
                             identifier = value.toString();
                         } else {
                             config.getLogger().debug(config.getAccountId(),
-                                    "onUserLogin: Aborting the operation as non-primitive value for the identifier key = " + key);
+                                    "onUserLogin: Aborting the operation. Non-primitive value for the identifier key = " + key);
                             return;
                         }
                         if (!identifier.isEmpty()) {
