@@ -819,10 +819,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     private void _push(Map<String, Object> profile) {
-        if (profile == null || profile.isEmpty()) {
-            return;
-        }
-
         try {
             // Validate profile data
             EventDataValidationResult profileResult = validationPipelineProvider.getEventDataPipeline().execute(profile, validationConfig);

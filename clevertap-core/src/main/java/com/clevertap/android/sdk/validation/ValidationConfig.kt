@@ -83,7 +83,7 @@ class ValidationConfig private constructor(
          * Add validation for maximum key length.
          * Keys longer than this will be truncated.
          */
-        fun addKeySizeValidation(maxLength: Int) = apply {
+        fun addKeyLengthValidation(maxLength: Int) = apply {
             this.maxKeyLength = maxLength
         }
 
@@ -91,7 +91,7 @@ class ValidationConfig private constructor(
          * Add validation for maximum value length.
          * String values longer than this will be truncated.
          */
-        fun addValueSizeValidation(maxLength: Int) = apply {
+        fun addValueLengthValidation(maxLength: Int) = apply {
             this.maxValueLength = maxLength
         }
 
@@ -260,8 +260,8 @@ class ValidationConfig private constructor(
          */
         fun default(countryCodeProvider: (() -> String?)? = null): Builder {
             return Builder()
-                .addKeySizeValidation(Constants.MAX_KEY_LENGTH)
-                .addValueSizeValidation(512)
+                .addKeyLengthValidation(Constants.MAX_KEY_LENGTH)
+                .addValueLengthValidation(512)
                 .addDepthValidation(3)
                 .addArrayKeyCountValidation(5)
                 .addObjectKeyCountValidation(5)

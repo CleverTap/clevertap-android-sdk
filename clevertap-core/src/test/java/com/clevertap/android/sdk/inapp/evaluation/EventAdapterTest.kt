@@ -430,6 +430,23 @@ class EventAdapterTest : BaseTestCase() {
         assertFalse(eventAdapter.isChargedEvent())
     }
 
+
+    @Test
+    fun `test isUserAttributeChangeEvent when event is for userAttributeChange`() {
+        // Arrange
+        val eventAdapter = EventAdapter("userProperty_CTUserAttributeChange", emptyMap(), profileAttrName = "userProperty")
+
+        assertTrue(eventAdapter.isUserAttributeChangeEvent())
+    }
+
+    @Test
+    fun `test isUserAttributeChangeEvent when event is not for userAttributeChange`() {
+        // Arrange
+        val eventAdapter = EventAdapter("eventName", emptyMap())
+
+        assertFalse(eventAdapter.isUserAttributeChangeEvent())
+    }
+
     @Test
     fun `testGetProfileAttrName when missing`() {
         // Arrange

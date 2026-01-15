@@ -29,7 +29,7 @@ class ProfileStateTraverser(
 ) {
 
     private val changeTracker = ProfileChangeTracker()
-    private val arrayHandler = ArrayOperationHandler()
+    private val arrayHandler = ArrayOperationHandler(changeTracker)
     private val updateHandler = OperationHandler(changeTracker, arrayHandler)
     private val deleteHandler = DeleteOperationHandler(changeTracker)
 

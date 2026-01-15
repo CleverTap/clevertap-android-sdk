@@ -27,8 +27,8 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     
     // Event name validation errors (510)
     EVENT_NAME_NULL(510, "Event Name is null/empty"),
-    EVENT_NAME_TOO_LONG(510, "%s... exceeds the limit of %s characters. Trimmed"),
-    EVENT_NAME_INVALID_CHARACTERS(510, "Key '%s' contains invalid characters. Cleaned"),
+    EVENT_NAME_TOO_LONG(510, "Event name '%s' exceeds the limit of %s characters. Trimmed to '%s'"),
+    EVENT_NAME_INVALID_CHARACTERS(510, "Event name '%s' contains invalid characters. Cleaned to '%s'"),
 
     // Profile validation errors (512)
     INVALID_COUNTRY_CODE(512, "Device country code not available and profile phone: %s does not appear to start with country code"),
@@ -51,12 +51,12 @@ enum class ValidationError(val code: Int, private val messageTemplate: String) {
     INVALID_CT_CUSTOM_ID(514, "Attempted to set invalid custom CleverTap ID - %s, falling back to default error CleverTap ID - %s"),
     
     // Key validation errors (520)
-    KEY_INVALID_CHARACTERS(520, "Key '%s' contains invalid characters. Cleaned"),
-    KEY_LENGTH_EXCEEDED(520, "Key '%s' exceeds the limit of %s characters. Trimmed"),
+    KEY_INVALID_CHARACTERS(520, "Key '%s' contains invalid characters. Cleaned to '%s'"),
+    KEY_LENGTH_EXCEEDED(520, "Key '%s' exceeds the limit of %s characters. Trimmed to '%s'"),
     
     // Value validation errors (521)
-    VALUE_CHARS_LIMIT_EXCEEDED(521, "%s... exceeds the limit of %s characters. Trimmed"),
-    VALUE_INVALID_CHARACTERS(521, "Value for key '%s' contains invalid characters. Cleaned"),
+    VALUE_CHARS_LIMIT_EXCEEDED(521, "Value '%s' for key '%s' exceeds the limit of %s characters. Trimmed to '%s'"),
+    VALUE_INVALID_CHARACTERS(521, "Value '%s' for key '%s' contains invalid characters. Cleaned to '%s'"),
 
     // Charged event errors (522)
     CHARGED_EVENT_TOO_MANY_ITEMS(522, "Charged event contained more than 50 items."),

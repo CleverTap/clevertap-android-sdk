@@ -183,7 +183,7 @@ internal class DeleteOperationHandler(
 
         // Only report changes if we actually removed something
         if (removedAny) {
-            changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
+            changeTracker.recordChange(basePath, oldArrayCopy, oldArray, changes)
         }
     }
 

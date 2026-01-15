@@ -32,6 +32,7 @@ class EventNameValidator : Validator<EventNameNormalizationResult> {
         validateModifications(
             modifications = input.modifications,
             originalName = input.originalName,
+            cleanedName = input.cleanedName,
             maxEventNameLength = config.maxEventNameLength,
             errors = errors
         )
@@ -85,7 +86,8 @@ class EventNameValidator : Validator<EventNameNormalizationResult> {
      */
     private fun validateModifications(
         modifications: Set<ModificationReason>,
-        originalName : String,
+        originalName: String,
+        cleanedName: String,
         maxEventNameLength: Int?,
         errors: MutableList<ValidationResult>
     ) {
@@ -95,14 +97,16 @@ class EventNameValidator : Validator<EventNameNormalizationResult> {
                     val error = ValidationResultFactory.create(
                         ValidationError.EVENT_NAME_TOO_LONG,
                         originalName,
-                        maxEventNameLength?.toString() ?: "unknown"
+                        maxEventNameLength?.toString() ?: "unknown",
+                        cleanedName
                     )
                     errors.add(error)
                 }
                 ModificationReason.INVALID_CHARACTERS_REMOVED -> {
                     val error = ValidationResultFactory.create(
                         ValidationError.EVENT_NAME_INVALID_CHARACTERS,
-                        originalName
+                        originalName,
+                        cleanedName
                     )
                     errors.add(error)
                 }

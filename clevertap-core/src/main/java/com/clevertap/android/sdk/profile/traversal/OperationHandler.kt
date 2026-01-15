@@ -52,8 +52,7 @@ internal class OperationHandler(
                     target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                 )
             }
-            oldValue is Number && newValue is Number &&
-                    operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
+            operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
                 handleNumberOperation(target, key, oldValue, newValue, currentPath, changes, operation)
             }
             operation == ProfileOperation.GET -> {
@@ -77,8 +76,8 @@ internal class OperationHandler(
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation
     ) {
-        // Skip GET operations on missing keys
-        if (operation == ProfileOperation.GET) {
+        // Skip GET and ARRAY_REMOVE operations on missing keys
+        if (operation == ProfileOperation.GET || operation == ProfileOperation.ARRAY_REMOVE) {
             return
         }
 
@@ -93,19 +92,11 @@ internal class OperationHandler(
                 if (newValue !is Number) return
                 newValue
             }
-            else -> {
-                // For SET and other operations, use the value as-is
-                ProfileOperationUtils.processDatePrefixes(newValue)
-            }
+            else -> newValue
         }
 
         target.put(key, updatedValue)
-
-        if (updatedValue is JSONObject) {
-            changeTracker.recordAllLeafValues(updatedValue, currentPath, changes)
-        } else {
-            changes[currentPath] = ProfileChange(null, updatedValue)
-        }
+        changeTracker.recordAddition(currentPath, updatedValue, changes)
     }
 
     /**
@@ -114,12 +105,15 @@ internal class OperationHandler(
     private fun handleNumberOperation(
         parent: JSONObject,
         key: String,
-        oldValue: Number,
-        newValue: Number,
+        oldValue: Any,
+        newValue: Any,
         path: String,
         changes: MutableMap<String, ProfileChange>,
         operation: ProfileOperation
     ) {
+        if (oldValue !is Number || newValue !is Number) {
+            return
+        }
         val result = when (operation) {
             ProfileOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
             ProfileOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
@@ -144,12 +138,9 @@ internal class OperationHandler(
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val processedOldValue = ProfileOperationUtils.processDatePrefixes(oldValue)
-        val processedNewValue = ProfileOperationUtils.processDatePrefixes(newValue)
-
-        if (!JsonComparisonUtils.areEqual(processedOldValue, processedNewValue)) {
+        if (!JsonComparisonUtils.areEqual(oldValue, newValue)) {
             parent.put(key, newValue)
-            changes[path] = ProfileChange(processedOldValue, processedNewValue)
+            changeTracker.recordChange(path, oldValue, newValue, changes)
         }
     }
 

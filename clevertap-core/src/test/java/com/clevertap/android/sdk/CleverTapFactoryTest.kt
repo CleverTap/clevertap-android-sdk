@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
@@ -7,8 +7,8 @@ import com.clevertap.android.shared.test.Constant.Companion
 import io.mockk.every
 import io.mockk.mockkStatic
 import org.junit.*
-import org.junit.runner.*;
-import org.robolectric.RobolectricTestRunner;
+import org.junit.runner.*
+import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -198,12 +198,5 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullCryptHandler(){
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
         assertNotNull(coreState.cryptHandler)
-    }
-
-    @Test
-    fun test_getCoreState_ReturnedObjectMustHaveNonNullProfileValueHandler(){
-        val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-        assertNotNull(coreState.profileValueHandler)
-        assert(coreState.profileValueHandler is ProfileValueHandler)
     }
 }
