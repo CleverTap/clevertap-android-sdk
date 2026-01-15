@@ -199,16 +199,17 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
 
     /**
      * Applies arithmetic operation to numbers.
+     * Only called for INCREMENT/DECREMENT operations.
      */
     private fun applyNumberOperation(
         oldValue: Number,
         newValue: Number,
         operation: ProfileOperation
     ): Number {
-        return when (operation) {
-            ProfileOperation.INCREMENT -> NumberOperationUtils.addNumbers(oldValue, newValue)
-            ProfileOperation.DECREMENT -> NumberOperationUtils.subtractNumbers(oldValue, newValue)
-            else -> newValue
+        return if (operation == ProfileOperation.INCREMENT) {
+            NumberOperationUtils.addNumbers(oldValue, newValue)
+        } else {
+            NumberOperationUtils.subtractNumbers(oldValue, newValue)
         }
     }
 
