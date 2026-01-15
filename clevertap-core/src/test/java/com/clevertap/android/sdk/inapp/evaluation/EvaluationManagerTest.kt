@@ -91,13 +91,13 @@ class EvaluationManagerTest : BaseTestCase() {
         assertNotNull(result)
 
         // Verify immediate in-apps (first element of Pair)
-        val immediateInApps = result.first
+        val immediateInApps = result.immediateClientSideInApps
         assertTrue(immediateInApps.isNotEmpty())
         val firstImmediateObject = immediateInApps[0]
         assertEquals("immediateValue", firstImmediateObject.getString("resultKey"))
 
         // Verify delayed in-apps (second element of Pair)
-        val delayedInApps = result.second
+        val delayedInApps = result.delayedClientSideInApps
         assertTrue(delayedInApps.isNotEmpty())
         val firstDelayedObject = delayedInApps[0]
         assertEquals("delayedValue", firstDelayedObject.getString("delayKey"))
@@ -163,7 +163,7 @@ class EvaluationManagerTest : BaseTestCase() {
         assertNotNull(result)
 
         // Access immediate in-apps from Pair
-        val immediateInApps = result.first
+        val immediateInApps = result.immediateClientSideInApps
         assertTrue(immediateInApps.isNotEmpty())
         val firstResultObject = immediateInApps[0]
         assertEquals("resultValue", firstResultObject.getString("resultKey"))
@@ -2792,16 +2792,16 @@ class EvaluationManagerTest : BaseTestCase() {
         assertNotNull(result)
 
         // Verify immediate in-apps (first)
-        assertEquals(1, result.first.size)
-        assertEquals("immediate", result.first[0].getString("type"))
+        assertEquals(1, result.immediateClientSideInApps.size)
+        assertEquals("immediate", result.immediateClientSideInApps[0].getString("type"))
 
         // Verify delayed in-apps (second)
-        assertEquals(1, result.second.size)
-        assertEquals("delayed", result.second[0].getString("type"))
+        assertEquals(1, result.delayedClientSideInApps.size)
+        assertEquals("delayed", result.delayedClientSideInApps[0].getString("type"))
 
         // Verify in-action in-apps (third)
-        assertEquals(1, result.third.size)
-        assertEquals("inaction", result.third[0].getString("type"))
+        assertEquals(1, result.serverSideInActionInApps.size)
+        assertEquals("inaction", result.serverSideInActionInApps[0].getString("type"))
 
         verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
         verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
@@ -2834,10 +2834,10 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(Constants.CHARGED_EVENT, capturedEventAdapter.eventName)
 
         // Verify Triple elements
-        assertEquals(1, result.first.size)
-        assertEquals(1, result.second.size)
-        assertEquals(1, result.third.size)
-        assertEquals("inaction", result.third[0].getString("type"))
+        assertEquals(1, result.immediateClientSideInApps.size)
+        assertEquals(1, result.delayedClientSideInApps.size)
+        assertEquals(1, result.serverSideInActionInApps.size)
+        assertEquals("inaction", result.serverSideInActionInApps[0].getString("type"))
 
         verify(exactly = 1) { evaluationManager.evaluateServerSideInAction(any()) }
     }
@@ -2864,10 +2864,10 @@ class EvaluationManagerTest : BaseTestCase() {
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
 
         // Assert
-        assertEquals(1, result.first.size)
-        assertEquals(1, result.second.size)
-        assertEquals(1, result.third.size)
-        assertEquals("inaction", result.third[0].getString("type"))
+        assertEquals(1, result.immediateClientSideInApps.size)
+        assertEquals(1, result.delayedClientSideInApps.size)
+        assertEquals(1, result.serverSideInActionInApps.size)
+        assertEquals("inaction", result.serverSideInActionInApps[0].getString("type"))
 
         verify(exactly = 1) { evaluationManager.evaluateServerSideInAction(any()) }
     }
@@ -2887,9 +2887,9 @@ class EvaluationManagerTest : BaseTestCase() {
         val result = evaluationManager.evaluateOnEvent(eventName, eventProperties, null)
 
         // Assert
-        assertTrue(result.first.isEmpty())
-        assertTrue(result.second.isEmpty())
-        assertTrue(result.third.isEmpty())
+        assertTrue(result.immediateClientSideInApps.isEmpty())
+        assertTrue(result.delayedClientSideInApps.isEmpty())
+        assertTrue(result.serverSideInActionInApps.isEmpty())
     }
 
     @Test

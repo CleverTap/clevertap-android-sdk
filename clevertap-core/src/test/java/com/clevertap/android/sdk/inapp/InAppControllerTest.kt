@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
+import com.clevertap.android.sdk.inapp.data.EvaluatedInAppsResult
 import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
 import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
@@ -465,7 +466,7 @@ class InAppControllerTest {
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
         val delayedInApps = JSONArray().toList<JSONObject>()
         val inactionInApps = JSONArray().toList<JSONObject>()
-        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns Triple(
+        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns EvaluatedInAppsResult(
             inApps.toList(),
             delayedInApps,
             inactionInApps
@@ -486,7 +487,7 @@ class InAppControllerTest {
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
         val delayedInApps = JSONArray().toList<JSONObject>()
         val inactionInApps = JSONArray().toList<JSONObject>()
-        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns Triple(
+        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns EvaluatedInAppsResult(
             inApps.toList(),
             delayedInApps,
             inactionInApps
@@ -517,7 +518,7 @@ class InAppControllerTest {
                 any(),
                 any()
             )
-        } returns Triple(inApps.toList(), delayedInApps.toList(),inactionInApps)
+        } returns EvaluatedInAppsResult(inApps.toList(), delayedInApps.toList(),inactionInApps)
 
         val inAppController = createInAppController()
         inAppController.onQueueProfileEvent(

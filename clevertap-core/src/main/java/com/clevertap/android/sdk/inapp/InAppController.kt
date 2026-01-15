@@ -119,11 +119,11 @@ internal class InAppController(
             evaluationManager.evaluateOnAppLaunchedClientSide(
                 appLaunchedProperties, coreMetaData.locationFromUser
             )
-        if (clientSideInAppsToDisplay.first.isNotEmpty()) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+        if (clientSideInAppsToDisplay.immediateInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay.immediateInApps)
         }
-        if (clientSideInAppsToDisplay.second.isNotEmpty()) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+        if (clientSideInAppsToDisplay.delayedInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.delayedInApps)
         }
     }
 
@@ -454,18 +454,18 @@ internal class InAppController(
         )
 
         // Handle immediate CS in-apps
-        if (evaluatedInApps.first.isNotEmpty()) {
-            addInAppNotificationsToQueue(evaluatedInApps.first)
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
 
         // Handle delayed CS in-apps
-        if (evaluatedInApps.second.isNotEmpty()) {
-            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
         }
 
         // Handle in-action SS metadata
-        if (evaluatedInApps.third.isNotEmpty()) {
-            scheduleInActionInApps(evaluatedInApps.third)
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
@@ -487,18 +487,18 @@ internal class InAppController(
         )
 
         // Handle immediate CS in-apps
-        if (evaluatedInApps.first.isNotEmpty()) {
-            addInAppNotificationsToQueue(evaluatedInApps.first)
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
 
         // Handle delayed CS in-apps
-        if (evaluatedInApps.second.isNotEmpty()) {
-            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
         }
 
         // Handle in-action SS metadata
-        if (evaluatedInApps.third.isNotEmpty()) {
-            scheduleInActionInApps(evaluatedInApps.third)
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
@@ -517,18 +517,18 @@ internal class InAppController(
         )
 
         // Handle immediate CS in-apps
-        if (evaluatedInApps.first.isNotEmpty()) {
-            addInAppNotificationsToQueue(evaluatedInApps.first)
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
 
         // Handle delayed CS in-apps
-        if (evaluatedInApps.second.isNotEmpty()) {
-            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
         }
 
         // Handle in-action SS metadata
-        if (evaluatedInApps.third.isNotEmpty()) {
-            scheduleInActionInApps(evaluatedInApps.third)
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
