@@ -90,19 +90,18 @@ internal class DeleteOperationHandler(
     ) {
         val oldArrayCopy = oldArray.deepCopy()
         var arrayModified = false
+        val indicesToRemove = mutableListOf<Int>()
 
         for (i in 0 until minOf(newArray.length(), oldArray.length())) {
             val oldElement = oldArray.get(i)
             val newElement = newArray.get(i)
 
             if (oldElement is JSONObject && newElement is JSONObject) {
-                // Recursively delete fields from this array element
-                val elementHandler = DeleteOperationHandler(changeTracker)
                 val elementKeys = newElement.keys()
                 while (elementKeys.hasNext()) {
                     val key = elementKeys.next()
                     val value = newElement.get(key)
-                    elementHandler.handleDelete(
+                    handleDelete(
                         oldElement,
                         key,
                         value,
@@ -110,17 +109,22 @@ internal class DeleteOperationHandler(
                         mutableMapOf()
                     ) { target, source, _, _ ->
                         if (source != null) {
-                            elementHandler.handleDeleteRecursive(target, source)
+                           handleDeleteRecursive(target, source)
                         }
                     }
                 }
                 arrayModified = true
 
-                // Remove empty objects
+                // Mark for removal if empty
                 if (oldElement.length() == 0) {
-                    oldArray.remove(i)
+                    indicesToRemove.add(i)
                 }
             }
+        }
+
+        // Remove in reverse order
+        indicesToRemove.sortedDescending().forEach { index ->
+            oldArray.remove(index)
         }
 
         if (arrayModified) {

@@ -40,6 +40,40 @@ class DeleteOperationHandlerTest {
     }
 
     @Test
+    fun `handleDelete test iteration`() {
+        val oldArray = JSONArray(
+            """[
+        {"a": 1},
+        {"a": 2},
+        {"a": 3},
+        {"a": 4}
+    ]"""
+        )
+
+        val newArray = JSONArray(
+            """[
+        {"a": "__CLEVERTAP_DELETE__"},
+        {"a": "__CLEVERTAP_DELETE__"},
+        {"a": "__CLEVERTAP_DELETE__"},
+        {"a": "__CLEVERTAP_DELETE__"}
+    ]"""
+        )
+
+        val target = JSONObject().apply {
+            put("tags", oldArray)
+        }
+        val changes = mutableMapOf<String, ProfileChange>()
+
+        handler.handleDelete(
+            target, "tags", newArray, "tags",
+            changes
+        ) { _, _, _, _ -> }
+
+        val resultArray = target.getJSONArray("tags")
+        assertEquals(0, resultArray.length())
+    }
+
+    @Test
     fun `handleDelete with non-existent key does nothing`() {
         val target = JSONObject().apply {
             put("name", "John")
