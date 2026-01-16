@@ -31,6 +31,7 @@ import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.utils.JsonFlattener;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ValidationConfig;
+import com.clevertap.android.sdk.validation.pipeline.ChargedEventItemsValidationResult;
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider;
 import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
@@ -634,7 +635,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        validationPipelineProvider.getChargedEventItemsValidationPipeline().execute(items, validationConfig);
+        ChargedEventItemsValidationResult validationResult = validationPipelineProvider.getChargedEventItemsValidationPipeline().execute(items, validationConfig);
+        if (validationResult.shouldDrop()) {
+            return;
+        }
 
         JSONObject chargedEvent = new JSONObject();
         try {
