@@ -21,13 +21,10 @@ internal fun JSONArray.deepCopy(): JSONArray {
  * @return true if the array contains the string
  */
 internal fun JSONArray.containsString(value: String): Boolean {
-    for (i in 0 until this.length()) {
+    return (0 until this.length()).any { i ->
         val item = this.get(i)
-        if (item is String && item == value) {
-            return true
-        }
+        item is String && item == value
     }
-    return false
 }
 
 /**

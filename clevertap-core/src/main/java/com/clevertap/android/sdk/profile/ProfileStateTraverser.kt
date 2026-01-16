@@ -85,7 +85,7 @@ class ProfileStateTraverser(
         while (keys.hasNext()) {
             val key = keys.next()
             val currentPath = buildPath(path, key)
-            
+
             try {
                 val newValue = source.get(key)
 
@@ -93,15 +93,15 @@ class ProfileStateTraverser(
                     ProfileOperation.DELETE -> {
                         deleteHandler.handleDelete(
                             target, key, newValue, currentPath, changes
-                        ) { target, source, path, changes ->
-                            traverseRecursive(target, source, path, changes, ProfileOperation.DELETE)
+                        ) { nestedTarget, nestedSource, nestedPath, nestedChanges ->
+                            traverseRecursive(nestedTarget, nestedSource, nestedPath, nestedChanges, ProfileOperation.DELETE)
                         }
                     }
                     else -> {
                         updateHandler.handleOperation(
                             target, key, newValue, currentPath, changes, operation
-                        ) { target, source, path, changes ->
-                            traverseRecursive(target, source, path, changes, operation)
+                        ) { nestedTarget, nestedSource, nestedPath, nestedChanges ->
+                            traverseRecursive(nestedTarget, nestedSource, nestedPath, nestedChanges, operation)
                         }
                     }
                 }
