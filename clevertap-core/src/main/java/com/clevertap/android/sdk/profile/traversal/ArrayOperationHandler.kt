@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import kotlin.math.min
 
 /**
  * Handles array-specific operations: ARRAY_ADD, ARRAY_REMOVE, GET, UPDATE, and array element processing.
@@ -165,12 +166,9 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         val oldArrayCopy = oldArray.deepCopy()
         var arrayModified = false
 
-        for (i in 0 until newArray.length()) {
-            if (i >= oldArray.length()) {
-                // For INCREMENT/DECREMENT, don't extend array
-                continue
-            }
+        val arrayLength = min(oldArray.length(), newArray.length())
 
+        for (i in 0 until arrayLength) {
             val oldElement = oldArray.get(i)
             val newElement = newArray.get(i)
 

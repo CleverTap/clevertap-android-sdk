@@ -124,7 +124,7 @@ internal class DeleteOperationHandler(
         }
 
         if (arrayModified) {
-            changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
+            changeTracker.recordChange(basePath, oldArrayCopy, oldArray, changes)
         }
     }
 
