@@ -48,5 +48,8 @@ enum class ProfileOperation {
      * Navigates through nested objects and arrays to report existing values.
      * Changes are reported with newValue = "__CLEVERTAP_GET__".
      */
-    GET
+    GET;
+
+    fun isNumericOperation(): Boolean =
+        this == INCREMENT || this == DECREMENT
 }

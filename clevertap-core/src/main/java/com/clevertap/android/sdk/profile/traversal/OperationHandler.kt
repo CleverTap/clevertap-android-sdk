@@ -52,7 +52,7 @@ internal class OperationHandler(
                     target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                 )
             }
-            operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
+            operation.isNumericOperation() -> {
                 handleNumberOperation(target, key, oldValue, newValue, currentPath, changes, operation)
             }
             operation == ProfileOperation.GET -> {
