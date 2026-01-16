@@ -7,7 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.utils.Clock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class InAppTimerManager(
     private val accountId: String,
-    private val logger: Logger,
+    private val logger: ILogger,
     private val clock: Clock = Clock.SYSTEM,
     private val scope: CoroutineScope = ProcessLifecycleOwner.get().lifecycleScope +
             Dispatchers.Default.limitedParallelism(PARALLEL_SCHEDULERS),
@@ -139,6 +139,17 @@ internal class InAppTimerManager(
         val jobsToCancel = activeJobs.values.toList()
         jobsToCancel.forEach { it.cancelAndJoin() }
         logger.verbose(accountId, "$TAG Cancelled $cancelledCount timers")
+    }
+
+    internal suspend fun cleanup() {
+        logger.verbose(accountId, "$TAG cleaning up timer state")
+
+        cancelAllTimers()
+
+        activeJobs.clear()
+        cancelledJobs.clear()
+
+        logger.verbose(accountId, "$TAG cleanup complete")
     }
 
     /**

@@ -23,7 +23,6 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.util.List;
-import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -173,7 +172,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
             if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
                 // Schedule in-action from App Launch SS meta
                 controllerManager.getInAppController()
-                        .scheduleInActionInApps(partitionedAppLaunchServerSideMetaInApps.getInActionInApps());
+                        .onAppLaunchServerSideInactionInAppsResponse(partitionedAppLaunchServerSideMetaInApps.getInActionInApps(),
+                                coreMetaData.getLocationFromUser());
             }
 
             // CS in-apps (inapp_notifs_cs)
@@ -227,26 +227,23 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void displayInApp(JSONArray inappNotifsArray) {
+    private void displayInApp(List<JSONObject> inappNotifsList) {
         // Fire the first notification, if any
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InAppResponse#processResponse", new Callable<Void>() {
-            @Override
-            public Void call() {
-                controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsArray);
-                return null;
-            }
+        task.execute("InAppResponse#processResponse", () -> {
+            controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsList);
+            return null;
         });
     }
 
-    private void scheduleDelayedLegacyInApps(JSONArray delayedLegacyInApps) {
+    private void scheduleDelayedLegacyInApps(List<JSONObject> delayedLegacyInApps) {
         InAppController inAppController = controllerManager.getInAppController();
 
         // Schedule using delay functionality
         inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps);
 
         logger.verbose(config.getAccountId(),
-                "InApp: scheduling " + delayedLegacyInApps.length() +
+                "InApp: scheduling " + delayedLegacyInApps.size() +
                         " delayed in-apps. Active delays: " +
                         inAppController.getActiveDelayedInAppsCount());
     }

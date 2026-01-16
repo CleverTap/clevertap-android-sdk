@@ -600,6 +600,7 @@ internal class NetworkManager constructor(
             return false
         }
 
+        coreMetaData.setFreshAppLaunchSent()
         saveDomainChanges(response)
         notifyNetworkHeaderListeners()
 

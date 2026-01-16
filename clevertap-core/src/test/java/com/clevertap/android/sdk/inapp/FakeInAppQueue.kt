@@ -1,24 +1,21 @@
 package com.clevertap.android.sdk.inapp
 
-import org.json.JSONArray
 import org.json.JSONObject
 
 internal class FakeInAppQueue : InAppQueue {
 
     private val queue = mutableListOf<JSONObject>()
 
-    override fun enqueue(jsonObject: JSONObject) {
-        queue.add(jsonObject)
+    override fun enqueue(inApp: JSONObject) {
+        queue.add(inApp)
     }
 
-    override fun enqueueAll(jsonArray: JSONArray) {
-        for (i in 0 until jsonArray.length()) {
-            queue.add(jsonArray.getJSONObject(i))
-        }
+    override fun enqueueAll(inApps: List<JSONObject>) {
+        queue.addAll(inApps)
     }
 
-    override fun insertInFront(jsonObject: JSONObject) {
-        queue.add(0, jsonObject)
+    override fun insertInFront(inApp: JSONObject) {
+        queue.add(0, inApp)
     }
 
     override fun dequeue(): JSONObject? {

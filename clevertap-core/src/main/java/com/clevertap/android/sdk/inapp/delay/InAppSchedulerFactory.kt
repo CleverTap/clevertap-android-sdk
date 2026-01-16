@@ -3,9 +3,10 @@ package com.clevertap.android.sdk.inapp.delay
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.utils.Clock
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
@@ -13,23 +14,23 @@ import kotlinx.coroutines.plus
 @OptIn(ExperimentalCoroutinesApi::class)
 internal object InAppSchedulerFactory {
 
+    private const val PARALLEL_SCHEDULERS = 20
+
     fun createDelayedInAppScheduler(
         accountId: String,
-        logger: Logger,
+        logger: ILogger,
         delayedLegacyInAppStore: DelayedLegacyInAppStore?=null,
         clock: Clock = Clock.SYSTEM,
-        lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get()
+        lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(),
+        scope: CoroutineScope =  lifecycleOwner.lifecycleScope +
+                Dispatchers.Default.limitedParallelism(PARALLEL_SCHEDULERS)
     ): InAppScheduler<DelayedInAppResult> {
-
-        // Single scope for both timer and scheduler operations
-        val sharedScope = ProcessLifecycleOwner.get().lifecycleScope +
-                Dispatchers.Default.limitedParallelism(20)
 
         val timerManager = InAppTimerManager(
             accountId,
             logger,
             clock,
-            sharedScope,
+            scope,
             lifecycleOwner,
             "Delayed"
         )
@@ -41,27 +42,24 @@ internal object InAppSchedulerFactory {
             storageStrategy,
             dataExtractor,
             logger,
-            accountId,
-            sharedScope // Reuse the same scope
+            accountId
         )
     }
 
     fun createInActionScheduler(
         accountId: String,
-        logger: Logger,
+        logger: ILogger,
         clock: Clock = Clock.SYSTEM,
-        lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get()
+        lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(),
+        scope: CoroutineScope =  lifecycleOwner.lifecycleScope +
+                Dispatchers.Default.limitedParallelism(PARALLEL_SCHEDULERS)
     ): InAppScheduler<InActionResult> {
-
-        // Single scope for both timer and scheduler operations
-        val sharedScope = ProcessLifecycleOwner.get().lifecycleScope +
-                Dispatchers.Default.limitedParallelism(20) //TODO check if this is really shared or there will be 20 + 20 parallelism
 
         val timerManager = InAppTimerManager(
             accountId,
             logger,
             clock,
-            sharedScope,
+            scope,
             lifecycleOwner,
             "InAction"
         )
@@ -73,8 +71,7 @@ internal object InAppSchedulerFactory {
             storageStrategy,
             dataExtractor,
             logger,
-            accountId,
-            sharedScope // Reuse the same scope
+            accountId
         )
     }
 }

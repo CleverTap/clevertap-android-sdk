@@ -11,14 +11,14 @@ import com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner.partitionAp
 import com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner.partitionAppLaunchServerSideMetaInApps
 import com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner.partitionClientSideInApps
 import com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner.partitionLegacyInApps
+import com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner.partitionLegacyMetaInApps
 import com.clevertap.android.sdk.inapp.data.InAppDurationPartitioner.partitionServerSideMetaInApps
 import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_DEFAULT_INACTION_SECONDS
 import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_INACTION_DURATION
 import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MAX_INACTION_SECONDS
 import com.clevertap.android.sdk.inapp.data.InAppInActionConstants.INAPP_MIN_INACTION_SECONDS
-import com.clevertap.android.sdk.iterator
-import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Utility object for partitioning in-app notifications by their display duration.
@@ -45,29 +45,11 @@ internal object InAppDurationPartitioner {
      * Note: This source does NOT contain `inactionDuration` items.
      * InAction items come separately in `inapp_notifs_meta`.
      *
-     * @param inAppsArray The JSON array of legacy in-app notifications
+     * @param inAppsList The list of legacy in-app notifications
      * @return [ImmediateAndDelayed] containing partitioned in-apps
      */
-    fun partitionLegacyInApps(inAppsArray: JSONArray?): ImmediateAndDelayed {
-        if (inAppsArray == null) {
-            return ImmediateAndDelayed.empty()
-        }
-
-        val immediate = mutableListOf<JSONObject>()
-        val delayed = mutableListOf<JSONObject>()
-
-        inAppsArray.iterator<JSONObject> { inApp ->
-            when {
-                hasDelayedDuration(inApp) -> delayed.add(inApp)
-                else -> immediate.add(inApp)
-            }
-        }
-
-        return ImmediateAndDelayed(
-            immediateInApps = JSONArray(immediate),
-            delayedInApps = JSONArray(delayed)
-        )
-    }
+    fun partitionLegacyInApps(inAppsList: List<JSONObject>): ImmediateAndDelayed =
+        partitionByDelay(inAppsList)
 
     /**
      * Wraps legacy metadata in-apps as inAction only.
@@ -77,41 +59,22 @@ internal object InAppDurationPartitioner {
      *
      * Note: No partitioning needed as all items are inAction.
      *
-     * @param inAppsArray The JSON array of legacy metadata in-app notifications
+     * @param inAppsList The list of legacy metadata in-app notifications
      * @return [InActionOnly] containing inAction in-apps
      */
-    fun partitionLegacyMetaInApps(inAppsArray: JSONArray?): InActionOnly {
-        return InActionOnly(inAppsArray ?: JSONArray())
-    }
+    fun partitionLegacyMetaInApps(inAppsList: List<JSONObject>): InActionOnly =
+        InActionOnly(inAppsList)
 
     /**
      * Partitions client-side in-apps by duration: immediate and delayed.
      *
      * Note: Client-side does NOT support `inactionDuration`.
      *
-     * @param inAppsArray The JSON array of client-side in-app notifications
+     * @param inAppsList The list of client-side in-app notifications
      * @return [ImmediateAndDelayed] containing partitioned in-apps
      */
-    fun partitionClientSideInApps(inAppsArray: JSONArray?): ImmediateAndDelayed {
-        if (inAppsArray == null) {
-            return ImmediateAndDelayed.empty()
-        }
-
-        val immediate = mutableListOf<JSONObject>()
-        val delayed = mutableListOf<JSONObject>()
-
-        inAppsArray.iterator<JSONObject> { inApp ->
-            when {
-                hasDelayedDuration(inApp) -> delayed.add(inApp)
-                else -> immediate.add(inApp)
-            }
-        }
-
-        return ImmediateAndDelayed(
-            immediateInApps = JSONArray(immediate),
-            delayedInApps = JSONArray(delayed)
-        )
-    }
+    fun partitionClientSideInApps(inAppsList: List<JSONObject>): ImmediateAndDelayed =
+        partitionByDelay(inAppsList)
 
     /**
      * Partitions server-side metadata in-apps by duration: unknown and inAction.
@@ -123,27 +86,16 @@ internal object InAppDurationPartitioner {
      * Note: Server-side meta does NOT have `delayAfterTrigger` directly
      * (delay info comes only after eval or inAction fetch).
      *
-     * @param inAppsArray The JSON array of server-side metadata in-app notifications
+     * @param inAppsList The list of server-side metadata in-app notifications
      * @return [UnknownAndInAction] containing partitioned in-apps
      */
-    fun partitionServerSideMetaInApps(inAppsArray: JSONArray?): UnknownAndInAction {
-        if (inAppsArray == null) {
-            return UnknownAndInAction.empty()
-        }
+    fun partitionServerSideMetaInApps(inAppsList: List<JSONObject>): UnknownAndInAction {
+        if (inAppsList.isEmpty()) return UnknownAndInAction.empty()
 
-        val unknownDuration = mutableListOf<JSONObject>()
-        val inAction = mutableListOf<JSONObject>()
-
-        inAppsArray.iterator<JSONObject> { inApp ->
-            when {
-                hasInActionDuration(inApp) -> inAction.add(inApp)
-                else -> unknownDuration.add(inApp)
-            }
-        }
-
+        val (inAction, unknown) = inAppsList.partition { hasInActionDuration(it) }
         return UnknownAndInAction(
-            unknownDurationInApps = JSONArray(unknownDuration),
-            inActionInApps = JSONArray(inAction)
+            unknownDurationInApps = unknown,
+            inActionInApps = inAction
         )
     }
 
@@ -153,12 +105,11 @@ internal object InAppDurationPartitioner {
      * Note: This source does NOT support `inactionDuration`.
      * InAction items come separately in `inapp_notifs_applaunched_meta`.
      *
-     * @param inAppsArray The JSON array of app-launch server-side in-app notifications
+     * @param inAppsList The list of app-launch server-side in-app notifications
      * @return [ImmediateAndDelayed] containing partitioned in-apps
      */
-    fun partitionAppLaunchServerSideInApps(inAppsArray: JSONArray?): ImmediateAndDelayed {
-        return partitionClientSideInApps(inAppsArray)
-    }
+    fun partitionAppLaunchServerSideInApps(inAppsList: List<JSONObject>): ImmediateAndDelayed =
+        partitionByDelay(inAppsList)
 
     /**
      * Wraps app-launch server-side metadata in-apps as inAction only.
@@ -168,28 +119,55 @@ internal object InAppDurationPartitioner {
      *
      * Note: No partitioning needed as all items are inAction.
      *
-     * @param inAppsArray The JSON array of app-launch server-side metadata in-app notifications
+     * @param inAppsList The list of app-launch server-side metadata in-app notifications
      * @return [InActionOnly] containing inAction in-apps
      */
-    fun partitionAppLaunchServerSideMetaInApps(inAppsArray: JSONArray?): InActionOnly {
-        return InActionOnly(inAppsArray ?: JSONArray())
+    fun partitionAppLaunchServerSideMetaInApps(inAppsList: List<JSONObject>): InActionOnly =
+        InActionOnly(inAppsList)
+
+    // ==================== Private Helpers ====================
+
+    /**
+     * Common partitioning logic for immediate/delayed in-apps.
+     * Used by legacy, client-side, and app-launch server-side sources.
+     */
+    private fun partitionByDelay(inAppsList: List<JSONObject>): ImmediateAndDelayed {
+        if (inAppsList.isEmpty()) return ImmediateAndDelayed.empty()
+
+        val (delayed, immediate) = inAppsList.partition { hasDelayedDuration(it) }
+        return ImmediateAndDelayed(
+            immediateInApps = immediate,
+            delayedInApps = delayed
+        )
     }
 
     /**
      * Checks if the in-app has a valid inAction duration.
      * Valid range: 1-1200 seconds
      */
-    private fun hasInActionDuration(inApp: JSONObject): Boolean {
-        val inactionSeconds = inApp.optInt(INAPP_INACTION_DURATION, INAPP_DEFAULT_INACTION_SECONDS)
-        return inactionSeconds in INAPP_MIN_INACTION_SECONDS..INAPP_MAX_INACTION_SECONDS
-    }
+    private fun hasInActionDuration(inApp: JSONObject): Boolean = extractInActionMillis(inApp) > 0
 
     /**
      * Checks if the in-app has a valid delayed duration.
      * Valid range: 1-1200 seconds
      */
-    private fun hasDelayedDuration(inApp: JSONObject): Boolean {
-        val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
-        return delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS
+    private fun hasDelayedDuration(inApp: JSONObject): Boolean = extractDelayMillis(inApp) > 0
+
+    internal fun extractDelayMillis(inApp: JSONObject): Long {
+        val seconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
+        return if (seconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) {
+            seconds.seconds.inWholeMilliseconds
+        } else {
+            0L
+        }
+    }
+
+    internal fun extractInActionMillis(inApp: JSONObject): Long {
+        val seconds = inApp.optInt(INAPP_INACTION_DURATION, INAPP_DEFAULT_INACTION_SECONDS)
+        return if (seconds in INAPP_MIN_INACTION_SECONDS..INAPP_MAX_INACTION_SECONDS) {
+            seconds.seconds.inWholeMilliseconds
+        } else {
+            0L
+        }
     }
 }

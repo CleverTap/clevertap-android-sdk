@@ -396,6 +396,7 @@ public interface Constants {
     String D_SRC = "d_src";// data source for push impressions
     String D_SRC_PI_R = "PI_R";// push impression data source is Receiver
     String D_SRC_PI_WM = "PI_WM";// push impression data source is work manager
+    String META_FRESH_APP_LAUNCH = "fl";
 
     String REGION_INDIA = "in1";
     String REGION_EUROPE = "eu1";

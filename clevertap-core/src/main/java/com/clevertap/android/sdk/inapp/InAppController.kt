@@ -52,9 +52,8 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
-import com.clevertap.android.sdk.utils.filterObjects
 import com.clevertap.android.sdk.variables.JsonUtil
-import org.json.JSONArray
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -120,11 +119,11 @@ internal class InAppController(
             evaluationManager.evaluateOnAppLaunchedClientSide(
                 appLaunchedProperties, coreMetaData.locationFromUser
             )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+        if (clientSideInAppsToDisplay.immediateInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay.immediateInApps)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+        if (clientSideInAppsToDisplay.delayedInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.delayedInApps)
         }
     }
 
@@ -140,10 +139,10 @@ internal class InAppController(
      * Schedule multiple delayed in-apps for display after their respective delays
      */
     @WorkerThread
-    fun scheduleDelayedInAppsForAllModes(delayedInApps: JSONArray) {
+    fun scheduleDelayedInAppsForAllModes(delayedInApps: List<JSONObject>) {
         logger.verbose(
             config.accountId,
-            "InAppController: Scheduling ${delayedInApps.length()} delayed in-apps"
+            "InAppController: Scheduling ${delayedInApps.size} delayed in-apps"
         )
 
         inAppDelayManager.schedule(delayedInApps) { result ->
@@ -185,10 +184,10 @@ internal class InAppController(
     }
 
     @WorkerThread
-    fun scheduleInActionInApps(inActionMetadata: JSONArray) {
+    fun scheduleInActionInApps(inActionMetadata: List<JSONObject>) {
         logger.verbose(
             config.accountId,
-            "[InAppController]: Scheduling ${inActionMetadata.length()} in-action in-apps"
+            "[InAppController]: Scheduling ${inActionMetadata.size} in-action in-apps"
         )
 
         inAppInActionManager.schedule(inActionMetadata) { result ->
@@ -217,7 +216,7 @@ internal class InAppController(
                 is InActionResult.Discarded -> {
                     logger.verbose(
                         defaultLogTag,
-                        "[InAppController]In-action: in-app discarded ${result.id}: ${result.reason}"
+                        "[InAppController]In-action: in-app discarded ${result.targetId}: ${result.reason}"
                     )
                 }
             }
@@ -425,7 +424,7 @@ internal class InAppController(
     }
 
     @WorkerThread
-    fun addInAppNotificationsToQueue(inappNotifs: JSONArray) {
+    fun addInAppNotificationsToQueue(inappNotifs: List<JSONObject>) {
         try {
             val filteredNotifs = filterNonRegisteredCustomTemplates(inappNotifs)
             inAppQueue.enqueueAll(filteredNotifs)
@@ -447,7 +446,7 @@ internal class InAppController(
         val appFieldsWithEventProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithEventProperties.putAll(eventProperties)
 
-        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnEvent(
             eventName,
             appFieldsWithEventProperties,
@@ -455,18 +454,18 @@ internal class InAppController(
         )
 
         // Handle immediate CS in-apps
-        if (evaluatedInApps.first.length() > 0) {
-            addInAppNotificationsToQueue(evaluatedInApps.first)
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
 
         // Handle delayed CS in-apps
-        if (evaluatedInApps.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
         }
 
         // Handle in-action SS metadata
-        if (evaluatedInApps.third.length() > 0) {
-            scheduleInActionInApps(evaluatedInApps.third)
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
@@ -480,7 +479,7 @@ internal class InAppController(
             JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithChargedEventProperties.putAll(chargeDetails)
 
-        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnChargedEvent(
             appFieldsWithChargedEventProperties,
             items,
@@ -488,18 +487,18 @@ internal class InAppController(
         )
 
         // Handle immediate CS in-apps
-        if (evaluatedInApps.first.length() > 0) {
-            addInAppNotificationsToQueue(evaluatedInApps.first)
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
 
         // Handle delayed CS in-apps
-        if (evaluatedInApps.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
         }
 
         // Handle in-action SS metadata
-        if (evaluatedInApps.third.length() > 0) {
-            scheduleInActionInApps(evaluatedInApps.third)
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
@@ -510,7 +509,7 @@ internal class InAppController(
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
 
-        // Returns Triple: (immediateCS, delayedCS, inActionSS)
+        // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnUserAttributeChange(
             userAttributeChangedProperties,
             location,
@@ -518,51 +517,64 @@ internal class InAppController(
         )
 
         // Handle immediate CS in-apps
-        if (evaluatedInApps.first.length() > 0) {
-            addInAppNotificationsToQueue(evaluatedInApps.first)
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
 
         // Handle delayed CS in-apps
-        if (evaluatedInApps.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(evaluatedInApps.second)
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
         }
 
         // Handle in-action SS metadata
-        if (evaluatedInApps.third.length() > 0) {
-            scheduleInActionInApps(evaluatedInApps.third)
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
     fun onAppLaunchServerSideInAppsResponse(
-        appLaunchServerSideInApps: JSONArray,
+        appLaunchServerSideInApps: List<JSONObject>,
         userLocation: Location?
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        val appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps)
         val serverSideInAppsToDisplayImmediate =
             evaluationManager.evaluateOnAppLaunchedServerSide(
-                appLaunchSsInAppList, appLaunchedProperties, userLocation
+                appLaunchServerSideInApps, appLaunchedProperties, userLocation
             )
 
-        if (serverSideInAppsToDisplayImmediate.length() > 0) {
+        if (serverSideInAppsToDisplayImmediate.isNotEmpty()) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplayImmediate)
         }
 
     }
 
+    fun onAppLaunchServerSideInactionInAppsResponse(
+        appLaunchServerSideInactionInApps: List<JSONObject>,
+        userLocation: Location?
+    ) {
+        val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
+        val serverSideInactionInAppsToDisplay =
+            evaluationManager.evaluateOnAppLaunchedServerSide(
+                appLaunchServerSideInactionInApps, appLaunchedProperties, userLocation
+            )
+
+        if (serverSideInactionInAppsToDisplay.isNotEmpty()) {
+            scheduleInActionInApps(serverSideInactionInAppsToDisplay)
+        }
+    }
+
     fun onAppLaunchServerSideDelayedInAppsResponse(
-        appLaunchServerSideDelayedInApps: JSONArray,
+        appLaunchServerSideDelayedInApps:  List<JSONObject>,
         userLocation: Location?,
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        val appLaunchSsDelayedInAppList = Utils.toJSONObjectList(appLaunchServerSideDelayedInApps)
 
         val serverSideInAppsToDisplayDelayed =
             evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
-                appLaunchSsDelayedInAppList, appLaunchedProperties, userLocation
+                appLaunchServerSideDelayedInApps, appLaunchedProperties, userLocation
             )
 
-        if (serverSideInAppsToDisplayDelayed.length() > 0) {
+        if (serverSideInAppsToDisplayDelayed.isNotEmpty()) {
             scheduleDelayedInAppsForAllModes(serverSideInAppsToDisplayDelayed)
         }
     }
@@ -961,8 +973,8 @@ internal class InAppController(
         )
     }
 
-    private fun filterNonRegisteredCustomTemplates(inAppNotifications: JSONArray): JSONArray {
-        return inAppNotifications.filterObjects { jsonObject ->
+    private fun filterNonRegisteredCustomTemplates(inAppNotifications: List<JSONObject>): List<JSONObject> {
+        return inAppNotifications.filter { jsonObject ->
             !isNonRegisteredCustomTemplate(
                 jsonObject
             )
@@ -1032,6 +1044,20 @@ internal class InAppController(
 
         val fetchEvent = createInActionFetchRequest(targetId)
         analyticsManager.sendFetchEvent(fetchEvent)
+    }
+
+    @WorkerThread
+    fun cancelAllScheduledInApps() {
+        try {
+            runBlocking {
+                inAppDelayManager.cancelAllScheduling()
+                logger.verbose(defaultLogTag, "[InAppController]: Cancelled all delayed in-apps")
+                inAppInActionManager.cancelAllScheduling()
+                logger.verbose(defaultLogTag, "[InAppController]: Cancelled all in-action in-apps")
+            }
+        } catch (e: Exception) {
+            logger.verbose(defaultLogTag, "[InAppController]: Error cancelling scheduled in-apps", e)
+        }
     }
 
     private fun createInActionFetchRequest(targetId: Long): JSONObject {

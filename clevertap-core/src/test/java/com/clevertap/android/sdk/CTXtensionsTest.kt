@@ -1665,6 +1665,174 @@ class CTXtensionsTest : BaseTestCase() {
         assertEquals(1, noName.length())
     }
 
+    // ==================== safeGetJSONObjectListOrEmpty TESTS ====================
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty returns true and list when key exists with non-empty JSONArray`() {
+        // Arrange
+        val jsonObject = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put(JSONObject().put("id", 1))
+                put(JSONObject().put("id", 2))
+            })
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertTrue(result.first)
+        assertEquals(2, result.second.size)
+        assertEquals(1, result.second[0].getInt("id"))
+        assertEquals(2, result.second[1].getInt("id"))
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty returns true and empty list when key exists with empty JSONArray`() {
+        // Arrange
+        val jsonObject = JSONObject().apply {
+            put("items", JSONArray())
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertTrue(result.first)
+        assertTrue(result.second.isEmpty())
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty returns false and empty list when key does not exist`() {
+        // Arrange
+        val jsonObject = JSONObject().apply {
+            put("other", "value")
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertFalse(result.first)
+        assertTrue(result.second.isEmpty())
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty returns false and empty list when key value is not JSONArray`() {
+        // Arrange
+        val jsonObject = JSONObject().apply {
+            put("items", "not an array")
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertFalse(result.first)
+        assertTrue(result.second.isEmpty())
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty returns false and empty list when key value is null`() {
+        // Arrange
+        val jsonObject = JSONObject().apply {
+            put("items", JSONObject.NULL)
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertFalse(result.first)
+        assertTrue(result.second.isEmpty())
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty filters out non-JSONObject elements from array`() {
+        // Arrange - Mixed array with JSONObjects and other types
+        val jsonObject = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put(JSONObject().put("id", 1))
+                put("string value")
+                put(JSONObject().put("id", 2))
+                put(123)
+                put(JSONObject().put("id", 3))
+                put(true)
+            })
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertTrue(result.first)
+        assertEquals(3, result.second.size) // Only JSONObjects
+        assertEquals(1, result.second[0].getInt("id"))
+        assertEquals(2, result.second[1].getInt("id"))
+        assertEquals(3, result.second[2].getInt("id"))
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty returns true and empty list when array has only non-JSONObject elements`() {
+        // Arrange - Array with no JSONObjects
+        val jsonObject = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put("string1")
+                put("string2")
+                put(123)
+                put(true)
+            })
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertTrue(result.first) // Array exists
+        assertTrue(result.second.isEmpty()) // But no JSONObjects in it
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty preserves order of JSONObjects`() {
+        // Arrange
+        val jsonObject = JSONObject().apply {
+            put("items", JSONArray().apply {
+                put(JSONObject().put("order", "first"))
+                put(JSONObject().put("order", "second"))
+                put(JSONObject().put("order", "third"))
+            })
+        }
+
+        // Act
+        val result = jsonObject.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        assertTrue(result.first)
+        assertEquals(3, result.second.size)
+        assertEquals("first", result.second[0].getString("order"))
+        assertEquals("second", result.second[1].getString("order"))
+        assertEquals("third", result.second[2].getString("order"))
+    }
+
+    @Test
+    fun `safeGetJSONObjectListOrEmpty first value indicates array existence not content`() {
+        // Arrange - Empty array exists
+        val jsonWithEmptyArray = JSONObject().put("items", JSONArray())
+        // No array at all
+        val jsonWithoutKey = JSONObject().put("other", "value")
+
+        // Act
+        val resultWithEmptyArray = jsonWithEmptyArray.safeGetJSONObjectListOrEmpty("items")
+        val resultWithoutKey = jsonWithoutKey.safeGetJSONObjectListOrEmpty("items")
+
+        // Assert
+        // Both have empty second list, but first value differs
+        assertTrue(resultWithEmptyArray.first)  // Array exists (even if empty)
+        assertFalse(resultWithoutKey.first)     // No array at all
+
+        assertEquals(resultWithEmptyArray.second, resultWithoutKey.second) // Both empty lists
+    }
+
     private fun configureTestNotificationChannel(
         importance: Int, areChannelsEnabled: Boolean, SDK_INT: Int, channelID: String = "BlockedBRTesting",
         channelName: String = "BlockedBRTesting",

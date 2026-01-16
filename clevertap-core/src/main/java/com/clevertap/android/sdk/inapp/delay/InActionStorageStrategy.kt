@@ -1,9 +1,7 @@
 package com.clevertap.android.sdk.inapp.delay
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.iterator
-import org.json.JSONArray
+import com.clevertap.android.sdk.ILogger
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
@@ -12,16 +10,16 @@ import java.util.concurrent.ConcurrentHashMap
  */
 //TODO: check synchronization and map usage
 internal class InActionStorageStrategy(
-    private val logger: Logger,
+    private val logger: ILogger,
     private val accountId: String
 ) : InAppSchedulingStrategy {
 
     // Cache metadata in memory
     private val inActionCache = ConcurrentHashMap<String, JSONObject>()
 
-    override fun prepareForScheduling(inApps: JSONArray): Boolean {
+    override fun prepareForScheduling(inApps: List<JSONObject>): Boolean {
         // Just cache in memory, no database needed
-        inApps.iterator<JSONObject> {
+        inApps.forEach {
             val id = it.optString(Constants.INAPP_ID_IN_PAYLOAD)
             if (id.isNotBlank()) {
                 inActionCache[id] = it
@@ -35,7 +33,11 @@ internal class InActionStorageStrategy(
         return inActionCache[id]
     }
 
-    override fun cleanup(id: String) {
+    override fun clear(id: String) {
         inActionCache.remove(id)
+    }
+
+    override fun clearAll() {
+        inActionCache.clear()
     }
 }

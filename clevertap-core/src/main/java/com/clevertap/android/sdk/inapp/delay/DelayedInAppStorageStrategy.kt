@@ -1,8 +1,7 @@
 package com.clevertap.android.sdk.inapp.delay
 
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -10,11 +9,11 @@ import org.json.JSONObject
  */
 internal class DelayedInAppStorageStrategy(
     private val accountId: String,
-    private val logger: Logger,
+    private val logger: ILogger,
     internal var delayedLegacyInAppStore: DelayedLegacyInAppStore? = null
 ) : InAppSchedulingStrategy {
 
-    override fun prepareForScheduling(inApps: JSONArray): Boolean {
+    override fun prepareForScheduling(inApps: List<JSONObject>): Boolean {
         if (delayedLegacyInAppStore == null) {
             logger.verbose(accountId, "DelayedLegacyInAppStore is null, cannot prepare")
             return false
@@ -34,7 +33,11 @@ internal class DelayedInAppStorageStrategy(
         return delayedLegacyInAppStore?.getDelayedInApp(id)
     }
 
-    override fun cleanup(id: String) {
+    override fun clear(id: String) {
         delayedLegacyInAppStore?.removeDelayedInApp(id)
+    }
+
+    override fun clearAll() {
+        delayedLegacyInAppStore?.removeAllDelayedInApps()
     }
 }

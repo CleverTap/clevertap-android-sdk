@@ -8,6 +8,8 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.data.ClientSideInAppsResult
+import com.clevertap.android.sdk.inapp.data.EvaluatedInAppsResult
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
@@ -19,7 +21,6 @@ import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
-import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -77,14 +78,23 @@ internal class EvaluationManager(
      * @param eventProperties Additional properties associated with the event, provided as a map.
      * @param userLocation The location of the user triggering the event, if available.
      *
-     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
-     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
-     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
+     * @return An [EvaluatedInAppsResult] containing the evaluated in-app notifications:
+     *         - immediateClientSideInApps: In-apps ready for direct display
+     *         - delayedClientSideInApps: In-apps to be scheduled
+     *         - serverSideInActionInApps: Server-side in-action metadata
      */
-    fun evaluateOnEvent(eventName: String, eventProperties: Map<String, Any>, userLocation: Location?): Triple<JSONArray,JSONArray,JSONArray> {
+    fun evaluateOnEvent(
+        eventName: String,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?
+    ): EvaluatedInAppsResult {
         val event = listOf(EventAdapter(eventName, eventProperties, userLocation = userLocation))
         evaluateServerSide(event)
-        return Triple(evaluateClientSide(event),evaluateDelayedClientSide(event),evaluateServerSideInAction(event))
+        return EvaluatedInAppsResult(
+            immediateClientSideInApps = evaluateClientSide(event),
+            delayedClientSideInApps = evaluateDelayedClientSide(event),
+            serverSideInActionInApps = evaluateServerSideInAction(event)
+        )
     }
 
     /**
@@ -99,18 +109,22 @@ internal class EvaluationManager(
      * @param items A list of maps representing items associated with the charged event.
      * @param userLocation The location of the user triggering the charged event, if available.
      *
-     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
-     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
-     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
+     * @return An [EvaluatedInAppsResult] containing the evaluated in-app notifications
      */
     fun evaluateOnChargedEvent(
         details: Map<String, Any>,
         items: List<Map<String, Any>>,
         userLocation: Location?
-    ): Triple<JSONArray,JSONArray,JSONArray> {
-        val event = listOf(EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation))
+    ): EvaluatedInAppsResult {
+        val event = listOf(
+            EventAdapter(Constants.CHARGED_EVENT, details, items, userLocation = userLocation)
+        )
         evaluateServerSide(event)
-        return  Triple(evaluateClientSide(event),evaluateDelayedClientSide(event),evaluateServerSideInAction(event))
+        return EvaluatedInAppsResult(
+            immediateClientSideInApps = evaluateClientSide(event),
+            delayedClientSideInApps = evaluateDelayedClientSide(event),
+            serverSideInActionInApps = evaluateServerSideInAction(event)
+        )
     }
 
 
@@ -130,15 +144,13 @@ internal class EvaluationManager(
      * @param userLocation The location of the user triggering the event, if available.
      * @param appFields Additional system properties for the event required for evaluation.
      *
-     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
-     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
-     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1200 seconds) to be scheduled
+     * @return An [EvaluatedInAppsResult] containing the evaluated in-app notifications
      */
     fun evaluateOnUserAttributeChange(
         eventProperties: Map<String, Map<String, Any>>,
         userLocation: Location?,
         appFields: Map<String, Any>
-    ): Triple<JSONArray,JSONArray,JSONArray> {
+    ): EvaluatedInAppsResult {
         val eventAdapterList = eventProperties.map { eventProperty ->
             val mergedEventProperties = eventProperty.value.toMutableMap().apply {
                 putAll(appFields)
@@ -151,7 +163,11 @@ internal class EvaluationManager(
             )
         }
         evaluateServerSide(eventAdapterList)
-        return Triple(evaluateClientSide(eventAdapterList),evaluateDelayedClientSide(eventAdapterList),evaluateServerSideInAction(eventAdapterList))
+        return EvaluatedInAppsResult(
+            immediateClientSideInApps = evaluateClientSide(eventAdapterList),
+            delayedClientSideInApps = evaluateDelayedClientSide(eventAdapterList),
+            serverSideInActionInApps = evaluateServerSideInAction(eventAdapterList)
+        )
     }
 
 
@@ -166,14 +182,19 @@ internal class EvaluationManager(
      * @param eventProperties Additional properties associated with the "App Launched" event, provided as a map.
      * @param userLocation The location of the user during the app launch, if available.
      *
-     * @return A Pair of JSONArrays containing the evaluated in-app notifications:
-     *         - **first**: Immediate in-apps (without delay or delay = 0) ready for direct display
-     *         - **second**: Delayed in-apps (with delayAfterTrigger > 0 and <= 1000 seconds) to be scheduled
+     * @return A [ClientSideInAppsResult] containing immediate and delayed in-apps
      */
-    // onBatchSent with App Launched event in batch
-    fun evaluateOnAppLaunchedClientSide(eventProperties: Map<String, Any>, userLocation: Location?): Pair<JSONArray,JSONArray> {
-        val event = listOf(EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation))
-        return Pair(evaluateClientSide(event),evaluateDelayedClientSide(event))
+    fun evaluateOnAppLaunchedClientSide(
+        eventProperties: Map<String, Any>,
+        userLocation: Location?
+    ): ClientSideInAppsResult {
+        val event = listOf(
+            EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
+        )
+        return ClientSideInAppsResult(
+            immediateInApps = evaluateClientSide(event),
+            delayedInApps = evaluateDelayedClientSide(event)
+        )
     }
 
     /**
@@ -188,14 +209,14 @@ internal class EvaluationManager(
      * @param eventProperties Additional properties associated with the "App Launched" event, provided as a map.
      * @param userLocation The location of the user during the app launch, if available.
      *
-     * @return A JSONArray containing the evaluated and prioritized in-app notifications for server-side rendering.
+     * @return A List containing the evaluated and prioritized in-app notifications for server-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
     fun evaluateOnAppLaunchedServerSide(
         appLaunchedNotifs: List<JSONObject>,
         eventProperties: Map<String, Any>,
         userLocation: Location?
-    ): JSONArray {
+    ): List<JSONObject> {
         return executeServerSideAppLaunchEvaluationFlow(
             appLaunchedNotifs,
             eventProperties,
@@ -211,7 +232,7 @@ internal class EvaluationManager(
         appLaunchedDelayedNotifs: List<JSONObject>,
         eventProperties: Map<String, Any>,
         userLocation: Location?
-    ): JSONArray {
+    ): List<JSONObject> {
         return executeServerSideAppLaunchEvaluationFlow(
             appLaunchedDelayedNotifs,
             eventProperties,
@@ -250,13 +271,13 @@ internal class EvaluationManager(
      * @param events List of event adapters to evaluate against in-action metadata
      * @return List of eligible in-action campaigns with full metadata for scheduling
      */
-    internal fun evaluateServerSideInAction(events: List<EventAdapter>): JSONArray {
+    internal fun evaluateServerSideInAction(events: List<EventAdapter>): List<JSONObject> {
         return storeRegistry.inAppStore?.let { store ->
             val metadata = store.readServerSideInActionMetaData().toList<JSONObject>()
             val eligibleInApps = evaluateEventsAgainstMetadata(events, metadata)
             trackAndSaveEvaluatedCampaignIds(eligibleInApps)
-            return JSONArray(eligibleInApps)
-        } ?: JSONArray()
+            eligibleInApps
+        } ?: emptyList()
     }
 
     private fun evaluateEventsAgainstMetadata(
@@ -294,11 +315,11 @@ internal class EvaluationManager(
      *
      * @param events The [List<EventAdapter>] representing the list of events triggering the client-side in-app notification evaluation
      *
-     * @return A JSONArray containing the evaluated and single prioritized in-app notification for client-side rendering.
+     * @return A List containing the evaluated and single prioritized in-app notification for client-side rendering.
      *         This array includes in-app notifications that meet the criteria for display.
      */
     @VisibleForTesting
-    internal fun evaluateClientSide(events: List<EventAdapter>): JSONArray {
+    internal fun evaluateClientSide(events: List<EventAdapter>): List<JSONObject> {
         return executeClientSideEvaluationFlow(
             events,
             InAppSelectionStrategy.Immediate
@@ -309,7 +330,7 @@ internal class EvaluationManager(
      * Evaluates client-side in-apps for delayed display.
      */
     @VisibleForTesting
-    internal fun evaluateDelayedClientSide(events: List<EventAdapter>): JSONArray {
+    internal fun evaluateDelayedClientSide(events: List<EventAdapter>): List<JSONObject> {
         return executeClientSideEvaluationFlow(
             events,
             InAppSelectionStrategy.Delayed
@@ -376,7 +397,7 @@ internal class EvaluationManager(
         eligibleInApps: List<JSONObject>,
         strategy: InAppSelectionStrategy,
         shouldUpdateTTLForThisContext: Boolean = true
-    ): JSONArray {
+    ): List<JSONObject> {
         // STEP 1: Sort eligible in-apps by priority (highest first) and then by timestamp (earliest first)
         val sortedInApps = sortByPriority(eligibleInApps)
 
@@ -413,14 +434,7 @@ internal class EvaluationManager(
             saveSuppressedClientSideInAppIds()
         }
 
-        // STEP 6: Build and return result
-        if (selectedInApps.isNotEmpty()) {
-            return JSONArray().also { array ->
-                selectedInApps.forEach { array.put(it) }
-            }
-        }
-
-        return JSONArray()
+        return selectedInApps
     }
 
     @VisibleForTesting
@@ -428,7 +442,7 @@ internal class EvaluationManager(
         events: List<EventAdapter>,
         strategy: InAppSelectionStrategy,
         readInAppsFromStore: (InAppStore) -> List<JSONObject>
-    ): JSONArray {
+    ): List<JSONObject> {
         val eligibleInApps = mutableListOf<JSONObject>()
 
         storeRegistry.inAppStore?.let { store ->
@@ -452,7 +466,7 @@ internal class EvaluationManager(
                 shouldUpdateTTLForThisContext = true // CS context allows TTL updates
             )
         }.run {
-            return JSONArray()
+            return emptyList()
         }
     }
 
@@ -462,7 +476,7 @@ internal class EvaluationManager(
         eventProperties: Map<String, Any>,
         userLocation: Location?,
         strategy: InAppSelectionStrategy
-    ): JSONArray {
+    ): List<JSONObject> {
         // STEP 1: Create App Launched event adapter
         val event = EventAdapter(
             Constants.APP_LAUNCHED_EVENT,
