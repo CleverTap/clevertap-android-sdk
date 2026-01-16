@@ -10,24 +10,24 @@ sealed interface DelayedInAppResult {
     /**
      * Success state - in-app was successfully retrieved and is ready for display
      *
-     * @property inApp The JSONObject containing the in-app notification data
      * @property inAppId The unique identifier of the in-app campaign
+     * @property inApp The JSONObject containing the in-app notification data
      */
     data class Success(
-        val inApp: JSONObject,
-        val inAppId: String
+        val inAppId: String,
+        val inApp: JSONObject
     ) : DelayedInAppResult
 
     /**
      * Error state - in-app retrieval failed or data is unavailable
      *
+     * @property inAppId The unique identifier of the in-app campaign
      * @property reason The error reason explaining why the callback failed
-     * @property inAppId The unique identifier of the in-app campaign (if available)
      * @property throwable Optional throwable for debugging purposes
      */
     data class Error(
+        val inAppId: String,
         val reason: ErrorReason,
-        val inAppId: String = "",
         val throwable: Throwable? = null
     ) : DelayedInAppResult {
 
@@ -43,4 +43,13 @@ sealed interface DelayedInAppResult {
             override fun toString(): String = message
         }
     }
+
+    data class Discarded(val id: String, val reason: String) : DelayedInAppResult
+}
+
+sealed interface InActionResult {
+    data class ReadyToFetch(val targetId: Long, val metadata: JSONObject) : InActionResult
+    data class Error(val targetId: Long, val message: String) : InActionResult
+    data class Cancelled(val targetId: Long) : InActionResult
+    data class Discarded(val targetId: Long, val reason: String) : InActionResult
 }

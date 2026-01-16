@@ -47,6 +47,7 @@ internal class QueueHeaderBuilder(
             addRenderedTargetList(header)
             addInstallReferrerData(header)
             addFirstRequestInSession(header)
+            addFreshAppLaunch(header)
             addDebugFlag(header)
             addARP(header)
             addReferrerInfo(header)
@@ -138,6 +139,10 @@ internal class QueueHeaderBuilder(
     private fun addFirstRequestInSession(header: JSONObject) {
         header.put("frs", coreMetaData.isFirstRequestInSession)
         coreMetaData.isFirstRequestInSession = false
+    }
+
+    private fun addFreshAppLaunch(header: JSONObject) {
+        header.put(Constants.META_FRESH_APP_LAUNCH, coreMetaData.isFreshAppLaunch)
     }
 
     private fun addDebugFlag(header: JSONObject) {

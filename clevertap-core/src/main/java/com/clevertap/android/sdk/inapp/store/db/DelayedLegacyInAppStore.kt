@@ -7,8 +7,6 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DelayedLegacyInAppDAO
 import com.clevertap.android.sdk.db.DelayedLegacyInAppData
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
-import com.clevertap.android.sdk.iterator
-import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -33,13 +31,13 @@ internal class DelayedLegacyInAppStore(
     private val accountId: String
 ) {
     @WorkerThread
-    fun saveDelayedInAppsBatch(delayedInApps: JSONArray): Boolean {
-        if (delayedInApps.length() == 0) return true
+    fun saveDelayedInAppsBatch(delayedInApps: List<JSONObject>): Boolean {
+        if (delayedInApps.isEmpty()) return true
 
         val dataList = mutableListOf<DelayedLegacyInAppData>()
         var encryptionFailureCount = 0
 
-        delayedInApps.iterator<JSONObject> { inAppJson ->
+        delayedInApps.forEach{ inAppJson ->
             val inAppId = inAppJson.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val delay = inAppJson.optInt(INAPP_DELAY_AFTER_TRIGGER)
 
@@ -106,6 +104,11 @@ internal class DelayedLegacyInAppStore(
     @WorkerThread
     fun removeDelayedInApp(inAppId: String): Boolean {
         return delayedLegacyInAppDAO.remove(inAppId)
+    }
+
+    @WorkerThread
+    fun removeAllDelayedInApps(): Boolean {
+        return delayedLegacyInAppDAO.clearAll()
     }
 
     @WorkerThread

@@ -1266,6 +1266,156 @@ class UtilsTest : BaseTestCase() {
         verify(exactly = 1) { oldGifFile3.delete() }
     }
 
+    @Test
+    fun `toJSONObjectList returns empty list when JSONArray is empty`() {
+        // Arrange
+        val jsonArray = JSONArray()
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertTrue(result.isEmpty())
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `toJSONObjectList returns list with one element when JSONArray has single JSONObject`() {
+        // Arrange
+        val jsonObject = JSONObject().put("id", "test1")
+        val jsonArray = JSONArray().put(jsonObject)
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertEquals(1, result.size)
+        assertEquals("test1", result[0].getString("id"))
+    }
+
+    @Test
+    fun `toJSONObjectList returns empty list when JSONArray has single non-JSONObject element`() {
+        // Arrange
+        val jsonArray = JSONArray().put("string_value")
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `toJSONObjectList preserves order of elements`() {
+        // Arrange
+        val jsonArray = JSONArray()
+        for (i in 1..10) {
+            jsonArray.put(JSONObject().put("order", i))
+        }
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertEquals(10, result.size)
+        for (i in 0 until 10) {
+            assertEquals(i + 1, result[i].getInt("order"))
+        }
+    }
+
+    @Test
+    fun `toJSONObjectList skips string elements in JSONArray`() {
+        // Arrange
+        val jsonObject = JSONObject().put("id", "valid")
+        val jsonArray = JSONArray()
+            .put("string1")
+            .put(jsonObject)
+            .put("string2")
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertEquals(1, result.size)
+        assertEquals("valid", result[0].getString("id"))
+    }
+
+    @Test
+    fun `toJSONObjectList skips integer elements in JSONArray`() {
+        // Arrange
+        val jsonObject = JSONObject().put("id", "valid")
+        val jsonArray = JSONArray()
+            .put(123)
+            .put(jsonObject)
+            .put(456)
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertEquals(1, result.size)
+        assertEquals("valid", result[0].getString("id"))
+    }
+
+    @Test
+    fun `toJSONObjectList handles mixed content with multiple JSONObjects`() {
+        // Arrange
+        val jsonObject1 = JSONObject().put("id", "first")
+        val jsonObject2 = JSONObject().put("id", "second")
+        val jsonObject3 = JSONObject().put("id", "third")
+        val jsonArray = JSONArray()
+            .put("string")
+            .put(jsonObject1)
+            .put(123)
+            .put(jsonObject2)
+            .put(true)
+            .put(jsonObject3)
+            .put(3.14)
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertEquals(3, result.size)
+        assertEquals("first", result[0].getString("id"))
+        assertEquals("second", result[1].getString("id"))
+        assertEquals("third", result[2].getString("id"))
+    }
+
+    @Test
+    fun `toJSONObjectList returns empty list when JSONArray contains only non-JSONObject elements`() {
+        // Arrange
+        val jsonArray = JSONArray()
+            .put("string")
+            .put(123)
+            .put(true)
+            .put(3.14)
+            .put(JSONArray().put("nested"))
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `toJSONObjectList skips null elements in JSONArray`() {
+        // Arrange
+        val jsonObject = JSONObject().put("id", "valid")
+        val jsonArray = JSONArray()
+            .put(JSONObject.NULL)
+            .put(jsonObject)
+            .put(JSONObject.NULL)
+
+        // Act
+        val result = Utils.toJSONObjectList(jsonArray)
+
+        // Assert
+        assertEquals(1, result.size)
+        assertEquals("valid", result[0].getString("id"))
+    }
+
     private fun prepareForWifiConnectivityTest(
         isConnected: Boolean,
         networkType: Int = ConnectivityManager.TYPE_WIFI
