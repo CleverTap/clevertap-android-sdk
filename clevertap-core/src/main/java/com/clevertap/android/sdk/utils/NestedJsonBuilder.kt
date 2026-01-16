@@ -4,7 +4,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-class NestedJsonBuilder {
+internal class NestedJsonBuilder {
 
     companion object {
         private val ARRAY_INDEX_PATTERN = Regex("""\[(\d+)]""")
