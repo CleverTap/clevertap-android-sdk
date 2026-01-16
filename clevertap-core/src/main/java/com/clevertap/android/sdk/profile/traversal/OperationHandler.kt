@@ -122,7 +122,7 @@ internal class OperationHandler(
 
         if (!JsonComparisonUtils.areEqual(oldValue, result)) {
             parent.put(key, result)
-            changes[path] = ProfileChange(oldValue, result)
+            changeTracker.recordChange(path, oldValue, result, changes)
         }
     }
 

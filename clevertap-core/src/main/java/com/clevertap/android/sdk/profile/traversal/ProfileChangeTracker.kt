@@ -26,10 +26,11 @@ internal class ProfileChangeTracker {
      * @param basePath The dot-notation path prefix
      * @param changes The map to accumulate changes in
      */
-    private fun recordAllLeafValues(
+    private fun recordAllLeafAdditions(
         jsonObject: JSONObject,
         basePath: String,
         changes: MutableMap<String, ProfileChange>
+
     ) {
         val keys = jsonObject.keys()
         while (keys.hasNext()) {
@@ -38,7 +39,7 @@ internal class ProfileChangeTracker {
             val currentPath = buildPath(basePath, key)
 
             when (value) {
-                is JSONObject -> recordAllLeafValues(value, currentPath, changes)
+                is JSONObject -> recordAllLeafAdditions(value, currentPath, changes)
                 else -> changes[currentPath] = ProfileChange(null, processValue(value))
             }
         }
@@ -126,7 +127,7 @@ internal class ProfileChangeTracker {
     ) {
         val processedValue = processValue(newValue)
         if (processedValue is JSONObject) {
-            recordAllLeafValues(processedValue, path, changes)
+            recordAllLeafAdditions(processedValue, path, changes)
         } else {
             changes[path] = ProfileChange(null, processedValue)
         }

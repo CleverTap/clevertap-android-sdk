@@ -110,7 +110,7 @@ internal class DeleteOperationHandler(
                         mutableMapOf()
                     ) { target, source, _, _ ->
                         if (source != null) {
-                            elementHandler.handleDeleteRecursive(target, source, mutableMapOf())
+                            elementHandler.handleDeleteRecursive(target, source)
                         }
                     }
                 }
@@ -134,15 +134,14 @@ internal class DeleteOperationHandler(
     private fun handleDeleteRecursive(
         target: JSONObject,
         source: JSONObject,
-        changes: MutableMap<String, ProfileChange>
     ) {
         val keys = source.keys()
         while (keys.hasNext()) {
             val key = keys.next()
             val newValue = source.get(key)
-            handleDelete(target, key, newValue, "", changes) { t, s, _, _ ->
+            handleDelete(target, key, newValue, "", mutableMapOf()) { t, s, _, _ ->
                 if (s != null) {
-                    handleDeleteRecursive(t, s, mutableMapOf())
+                    handleDeleteRecursive(t, s)
                 }
             }
         }

@@ -98,7 +98,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         }
 
         if (modified) {
-            changes[path] = ProfileChange(oldArrayCopy, oldArray)
+            changeTracker.recordChange(path, oldArrayCopy, oldArray, changes)
         }
     }
 
@@ -146,7 +146,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
 
         if (modified) {
             parentJson.put(key, resultArray)
-            changes[path] = ProfileChange(oldArrayCopy, resultArray)
+            changeTracker.recordChange(path, oldArrayCopy, oldArray, changes)
         }
     }
 
@@ -193,7 +193,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         }
 
         if (arrayModified) {
-            changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
+            changeTracker.recordChange(basePath, oldArrayCopy, oldArray, changes)
         }
     }
 
