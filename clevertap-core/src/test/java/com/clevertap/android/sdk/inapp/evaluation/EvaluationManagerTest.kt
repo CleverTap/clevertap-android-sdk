@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.inapp.evaluation.TriggerOperator.Equals
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.network.EndpointId
-import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
@@ -71,12 +70,8 @@ class EvaluationManagerTest : BaseTestCase() {
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
         // Mock both immediate and delayed client-side evaluations
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
-            JSONObject(mapOf("resultKey" to "immediateValue"))
-        ).toList()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().put(
-            JSONObject(mapOf("delayKey" to "delayedValue"))
-        ).toList()
+        every { evaluationManager.evaluateClientSide(any()) } returns listOf(JSONObject().apply { put("resultKey","immediateValue") })
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns listOf(JSONObject().apply { put("delayKey","delayedValue") })
 
         // Act
         val result = evaluationManager.evaluateOnEvent(eventName, eventProperties, userLocation)
@@ -115,12 +110,9 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Capture the created EventAdapter
         val eventAdapterSlot = slot<List<EventAdapter>>()
-        every { evaluationManager.evaluateClientSide(capture(eventAdapterSlot)) } returns JSONArray().put(
-            JSONObject(
-                mapOf("resultKey" to "resultValue")
-            )
-        ).toList()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().toList()
+        val immediateResult: List<JSONObject> = listOf(JSONObject(mapOf("resultKey" to "resultValue")))
+        every { evaluationManager.evaluateClientSide(capture(eventAdapterSlot)) } returns immediateResult
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnAppLaunchedClientSide(emptyMap(), userLocation)
@@ -146,11 +138,10 @@ class EvaluationManagerTest : BaseTestCase() {
 
         // Capture the created EventAdapter
         val eventAdapterSlot = slot<List<EventAdapter>>()
+        val immediateResult: List<JSONObject> = listOf(JSONObject(mapOf("resultKey" to "resultValue")))
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
-            JSONObject(mapOf("resultKey" to "resultValue"))
-        ).toList()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().toList()
+        every { evaluationManager.evaluateClientSide(any()) } returns immediateResult
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnChargedEvent(details, items, userLocation)
@@ -184,12 +175,8 @@ class EvaluationManagerTest : BaseTestCase() {
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
         // Mock both immediate and delayed client-side evaluations
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
-            JSONObject(mapOf("resultKey" to "immediateValue"))
-        )
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().put(
-            JSONObject(mapOf("delayKey" to "delayedValue"))
-        )
+        every { evaluationManager.evaluateClientSide(any()) } returns listOf(JSONObject().apply { put("resultKey", "immediateValue") })
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns listOf(JSONObject().apply { put("delayKey","delayedValue") })
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
@@ -210,15 +197,15 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(userLocation, capturedEventAdapter.userLocation)
 
         // Verify immediate in-apps (first element of Pair)
-        val immediateInApps = result.first
-        assertTrue(immediateInApps.length() > 0)
-        val firstImmediateObject = immediateInApps.getJSONObject(0)
+        val immediateInApps = result.immediateClientSideInApps
+        assertTrue(immediateInApps.isNotEmpty())
+        val firstImmediateObject = immediateInApps[0]
         assertEquals("immediateValue", firstImmediateObject.getString("resultKey"))
 
         // Verify delayed in-apps (second element of Pair)
-        val delayedInApps = result.second
-        assertTrue(delayedInApps.length() > 0)
-        val firstDelayedObject = delayedInApps.getJSONObject(0)
+        val delayedInApps = result.delayedClientSideInApps
+        assertTrue(delayedInApps.isNotEmpty())
+        val firstDelayedObject = delayedInApps[0]
         assertEquals("delayedValue", firstDelayedObject.getString("delayKey"))
 
         // Verify method calls
@@ -241,10 +228,10 @@ class EvaluationManagerTest : BaseTestCase() {
         // Capture the created EventAdapter list
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(
-            JSONObject(mapOf("resultKey" to "immediateValue"))
-        )
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+
+        val immediateResult: List<JSONObject> = listOf(JSONObject().apply { put("resultKey", "immediateValue") })
+        every { evaluationManager.evaluateClientSide(any()) } returns immediateResult
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
@@ -275,8 +262,8 @@ class EvaluationManagerTest : BaseTestCase() {
         }
 
         // Verify result contains immediate in-apps
-        val immediateInApps = result.first
-        assertTrue(immediateInApps.length() > 0)
+        val immediateInApps = result.immediateClientSideInApps
+        assertTrue(immediateInApps.isNotEmpty())
 
         verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
         verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
@@ -292,8 +279,8 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateClientSide(any()) } returns emptyList()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
@@ -306,8 +293,8 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(0, capturedEventAdapters.size)
 
         // Both results should be empty
-        assertEquals(0, result.first.length())
-        assertEquals(0, result.second.length())
+        assertEquals(0, result.immediateClientSideInApps.size)
+        assertEquals(0, result.delayedClientSideInApps.size)
 
         verify(exactly = 1) { evaluationManager.evaluateServerSide(any()) }
         verify(exactly = 1) { evaluationManager.evaluateClientSide(any()) }
@@ -322,8 +309,8 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateClientSide(any()) } returns emptyList()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, null, appFields)
@@ -345,8 +332,8 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateClientSide(any()) } returns emptyList()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
@@ -375,8 +362,8 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateClientSide(any()) } returns emptyList()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
@@ -407,8 +394,8 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val eventAdapterSlot = slot<List<EventAdapter>>()
         every { evaluationManager.evaluateServerSide(capture(eventAdapterSlot)) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray()
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray()
+        every { evaluationManager.evaluateClientSide(any()) } returns emptyList()
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
@@ -440,22 +427,22 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
 
         every { evaluationManager.evaluateServerSide(any()) } returns Unit
-        every { evaluationManager.evaluateClientSide(any()) } returns JSONArray().put(immediateInApp)
-        every { evaluationManager.evaluateDelayedClientSide(any()) } returns JSONArray().put(delayedInApp)
+        every { evaluationManager.evaluateClientSide(any()) } returns listOf(immediateInApp)
+        every { evaluationManager.evaluateDelayedClientSide(any()) } returns listOf(delayedInApp)
 
         // Act
         val result = evaluationManager.evaluateOnUserAttributeChange(eventProperties, userLocation, appFields)
 
         // Assert
-        val immediateInApps = result.first
-        val delayedInApps = result.second
+        val immediateInApps = result.immediateClientSideInApps
+        val delayedInApps = result.delayedClientSideInApps
 
-        assertEquals(1, immediateInApps.length())
-        assertEquals("immediate_123", immediateInApps.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
+        assertEquals(1, immediateInApps.size)
+        assertEquals("immediate_123", immediateInApps[0].getString(Constants.INAPP_ID_IN_PAYLOAD))
 
-        assertEquals(1, delayedInApps.length())
-        assertEquals("delayed_456", delayedInApps.getJSONObject(0).getString(Constants.INAPP_ID_IN_PAYLOAD))
-        assertEquals(10, delayedInApps.getJSONObject(0).getInt(INAPP_DELAY_AFTER_TRIGGER))
+        assertEquals(1, delayedInApps.size)
+        assertEquals("delayed_456", delayedInApps[0].getString(Constants.INAPP_ID_IN_PAYLOAD))
+        assertEquals(10, delayedInApps[0].getInt(INAPP_DELAY_AFTER_TRIGGER))
     }
 
     @Test
@@ -472,11 +459,11 @@ class EvaluationManagerTest : BaseTestCase() {
         }
         every { evaluationManager.evaluateClientSide(any()) } answers {
             callOrder.add("client")
-            JSONArray()
+            emptyList()
         }
         every { evaluationManager.evaluateDelayedClientSide(any()) } answers {
             callOrder.add("delayed")
-            JSONArray()
+            emptyList()
         }
 
         // Act
@@ -755,7 +742,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, true)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -774,7 +761,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
             .put(Constants.INAPP_SUPPRESSED, false)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1, inApp2)
+        val inApps: List<JSONObject> = listOf(inApp1, inApp2)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -793,7 +780,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
             .put(Constants.INAPP_SUPPRESSED, false)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1, inApp2)
+        val inApps: List<JSONObject> = listOf(inApp1, inApp2)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -809,7 +796,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
             .put(Constants.INAPP_SUPPRESSED, false)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -826,7 +813,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, true)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -846,7 +833,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
             .put(Constants.INAPP_SUPPRESSED, false)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1, inApp2)
+        val inApps: List<JSONObject> = listOf(inApp1, inApp2)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -866,7 +853,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 10L)
             .put(Constants.INAPP_SUPPRESSED, false)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1, inApp2)
+        val inApps: List<JSONObject> = listOf(inApp1, inApp2)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -896,7 +883,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 20L)
             .put(Constants.INAPP_SUPPRESSED, false)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         val event1 = EventAdapter("event1", mapOf())
         val event2 = EventAdapter("event2", mapOf())
         every { storeRegistry.inAppStore } returns mockInAppStore
@@ -1088,7 +1075,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApp1 = JSONObject()
             .put(Constants.INAPP_SUPPRESSED, true)
 
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
         val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
@@ -1103,7 +1090,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, true)
         val inApp2 = JSONObject()
             .put(Constants.INAPP_SUPPRESSED, false)
-        val inApps = listOf(inApp1, inApp2)
+        val inApps: List<JSONObject> = listOf(inApp1, inApp2)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
         val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
@@ -1118,7 +1105,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
         val inApp2 = JSONObject()
             .put(Constants.INAPP_SUPPRESSED, false)
-        val inApps = listOf(inApp1, inApp2)
+        val inApps: List<JSONObject> = listOf(inApp1, inApp2)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
         val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
@@ -1131,7 +1118,7 @@ class EvaluationManagerTest : BaseTestCase() {
     fun `test evaluateOnAppLaunchedServerSide if inapp not suppressed then does return after evaluation`() {
         val inApp1 = JSONObject()
             .put(Constants.INAPP_SUPPRESSED, false)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
         val evaluateClientSide = evaluationManager.evaluateOnAppLaunchedServerSide(inApps, emptyMap(), null)
@@ -1145,7 +1132,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApp1 = JSONObject()
             .put(Constants.INAPP_ID_IN_PAYLOAD, 0)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -1159,7 +1146,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApp1 = JSONObject()
             .put(Constants.INAPP_ID_IN_PAYLOAD, 123)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -1173,7 +1160,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApp1 = JSONObject()
             .put(Constants.INAPP_ID_IN_PAYLOAD, 0)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -1188,7 +1175,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val inApp1 = JSONObject()
             .put(Constants.INAPP_ID_IN_PAYLOAD, 123)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val inApps = listOf(inApp1)
+        val inApps: List<JSONObject> = listOf(inApp1)
         every { storeRegistry.inAppStore } returns mockInAppStore
         every { evaluationManager.evaluate(any(), any()) } returns inApps
 
@@ -1206,7 +1193,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val event1 = EventAdapter("event1", mapOf())
         val event2 = EventAdapter("event2", mapOf())
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { evaluationManager.evaluate(event1, any()) } returns listOf()
+        every { evaluationManager.evaluate(event1, any()) } returns emptyList()
         every { evaluationManager.evaluate(event2, any()) } returns listOf(inApp1)
 
         evaluationManager.evaluateServerSide(listOf(event1, event2))
@@ -1963,7 +1950,7 @@ class EvaluationManagerTest : BaseTestCase() {
         val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
@@ -1982,8 +1969,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_ID_IN_PAYLOAD, "delayed123")
             .put(INAPP_DELAY_AFTER_TRIGGER, 10)
 
+        val delayedInApps: List<JSONObject> = listOf(delayedInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp).toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns delayedInApps
         every { evaluationManager.evaluate(any(), any()) } returns emptyList()
 
         // Act
@@ -2005,8 +1993,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val delayedInApps: List<JSONObject> = listOf(delayedInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp).toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns delayedInApps
         every { evaluationManager.evaluate(any(), any()) } returns listOf(delayedInApp)
 
         // Act
@@ -2041,11 +2030,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_PRIORITY, 200)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val allInApps = listOf(inApp10s_high, inApp10s_low, inApp20s)
+        val allInApps: List<JSONObject> = listOf(inApp10s_high, inApp10s_low, inApp20s)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().apply {
-            allInApps.forEach { put(it) }
-        }.toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns allInApps
         every { evaluationManager.evaluate(any(), any()) } returns allInApps
 
         // Act
@@ -2081,11 +2068,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_PRIORITY, 200)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val allInApps = listOf(suppressedInApp, normalInApp)
+        val allInApps: List<JSONObject> = listOf(suppressedInApp, normalInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().apply {
-            allInApps.forEach { put(it) }
-        }.toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns allInApps
         every { evaluationManager.evaluate(any(), any()) } returns allInApps
         every { evaluationManager.generateWzrkId(any(), any()) } returns "suppressed_wzrk_id"
 
@@ -2116,11 +2101,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, true)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val allInApps = listOf(suppressedInApp1, suppressedInApp2)
+        val allInApps: List<JSONObject> = listOf(suppressedInApp1, suppressedInApp2)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().apply {
-            allInApps.forEach { put(it) }
-        }.toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns allInApps
         every { evaluationManager.evaluate(any(), any()) } returns allInApps
         every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
 
@@ -2146,7 +2129,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns emptyList()
 
         // Act
         val result = evaluationManager.evaluateDelayedClientSide(listOf(event))
@@ -2173,8 +2156,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val delayedInApps: List<JSONObject> = listOf(delayedInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp).toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns delayedInApps
         every { evaluationManager.evaluate(any(), any()) } returns listOf(delayedInApp)
 
         // Act
@@ -2201,8 +2185,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val delayedInApps: List<JSONObject> = listOf(delayedInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray().put(delayedInApp).toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns delayedInApps
         every { evaluationManager.evaluate(any(), any()) } returns listOf(delayedInApp)
 
         // Act
@@ -2230,10 +2215,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val delayedInApps: List<JSONObject> = listOf(inApp1, inApp2)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readClientSideDelayedInApps() } returns JSONArray()
-            .put(inApp1)
-            .put(inApp2).toList()
+        every { mockInAppStore.readClientSideDelayedInApps() } returns delayedInApps
 
         // event1 evaluates to inApp1, event2 evaluates to inApp2
         every { evaluationManager.evaluate(event1, any()) } returns listOf(inApp1)
@@ -2312,7 +2296,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
             .put(Constants.INAPP_PRIORITY, 200)
 
-        val allInApps = listOf(inApp10s_high, inApp10s_low, inApp20s)
+        val allInApps: List<JSONObject> = listOf(inApp10s_high, inApp10s_low, inApp20s)
         every { evaluationManager.evaluate(any(), any()) } returns allInApps
 
         // Act
@@ -2347,7 +2331,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
             .put(Constants.INAPP_PRIORITY, 200)
 
-        val allInApps = listOf(suppressedInApp, normalInApp)
+        val allInApps: List<JSONObject> = listOf(suppressedInApp, normalInApp)
         every { evaluationManager.evaluate(any(), any()) } returns allInApps
         every { evaluationManager.generateWzrkId(any(), any()) } returns "suppressed_wzrk_id"
 
@@ -2378,7 +2362,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(INAPP_DELAY_AFTER_TRIGGER, 20)
             .put(Constants.INAPP_SUPPRESSED, true)
 
-        val allInApps = listOf(suppressedInApp1, suppressedInApp2)
+        val allInApps: List<JSONObject> = listOf(suppressedInApp1, suppressedInApp2)
         every { evaluationManager.evaluate(any(), any()) } returns allInApps
         every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
 
@@ -2464,7 +2448,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(INAPP_DELAY_AFTER_TRIGGER, 15)
             .put(Constants.INAPP_SUPPRESSED, false)
 
-        val allInApps = listOf(inApp5s, inApp10s, inApp15s)
+        val allInApps: List<JSONObject> = listOf(inApp5s, inApp10s, inApp15s)
         every { evaluationManager.evaluate(any(), any()) } returns allInApps
 
         // Act
@@ -2500,7 +2484,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
 
-        val eligibleInApps = listOf(suppressedInApp, normalInApp)
+        val eligibleInApps: List<JSONObject> = listOf(suppressedInApp, normalInApp)
 
         // Act
         val result = evaluationManager.selectAndProcessEligibleInApps(
@@ -2542,7 +2526,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
 
-        val eligibleInApps = listOf(inApp10s_high, inApp10s_low, inApp20s)
+        val eligibleInApps: List<JSONObject> = listOf(inApp10s_high, inApp10s_low, inApp20s)
 
         // Act
         val result = evaluationManager.selectAndProcessEligibleInApps(
@@ -2577,7 +2561,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
 
         // Intentionally pass in wrong order
-        val eligibleInApps = listOf(lowPriority, highPriority)
+        val eligibleInApps: List<JSONObject> = listOf(lowPriority, highPriority)
         every { evaluationManager.sortByPriority(any()) } answers { callOriginal() }
 
         // Act
@@ -2608,7 +2592,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_PRIORITY, 200)
             .put(Constants.INAPP_SUPPRESSED, false)
 
-        val eligibleInApps = listOf(suppressedInApp, normalInApp)
+        val eligibleInApps: List<JSONObject> = listOf(suppressedInApp, normalInApp)
         every { evaluationManager.suppress(any()) } just Runs
 
         // Act
@@ -2632,7 +2616,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
 
-        val eligibleInApps = listOf(inApp)
+        val eligibleInApps: List<JSONObject> = listOf(inApp)
         every { evaluationManager.updateTTL(any(), any()) } just Runs
 
         // Act
@@ -2655,7 +2639,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_ID_IN_PAYLOAD, "inapp1")
             .put(Constants.INAPP_SUPPRESSED, false)
 
-        val eligibleInApps = listOf(inApp)
+        val eligibleInApps: List<JSONObject> = listOf(inApp)
         every { evaluationManager.updateTTL(any(), any()) } just Runs
 
         // Act
@@ -2686,7 +2670,7 @@ class EvaluationManagerTest : BaseTestCase() {
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        val eligibleInApps = listOf(suppressedInApp, normalInApp)
+        val eligibleInApps: List<JSONObject> = listOf(suppressedInApp, normalInApp)
 
 
         // Act
@@ -2711,7 +2695,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
-        val eligibleInApps = listOf(normalInApp)
+        val eligibleInApps: List<JSONObject> = listOf(normalInApp)
 
         every { storeRegistry.inAppStore } returns mockInAppStore
 
@@ -2739,7 +2723,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_ID_IN_PAYLOAD, "suppressed2")
             .put(Constants.INAPP_SUPPRESSED, true)
 
-        val eligibleInApps = listOf(suppressed1, suppressed2)
+        val eligibleInApps: List<JSONObject> = listOf(suppressed1, suppressed2)
         every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
 
         // Act
@@ -2778,7 +2762,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_PRIORITY, 300)
             .put(Constants.INAPP_SUPPRESSED, false)
 
-        val eligibleInApps = listOf(inApp5s, inApp10s, inApp15s)
+        val eligibleInApps: List<JSONObject> = listOf(inApp5s, inApp10s, inApp15s)
 
         // Act
         val result = evaluationManager.selectAndProcessEligibleInApps(
@@ -2814,7 +2798,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_PRIORITY, 100)
             .put(Constants.INAPP_SUPPRESSED, false)
 
-        val eligibleInApps = listOf(inApp10s_suppressed, inApp10s_high, inApp10s_low)
+        val eligibleInApps: List<JSONObject> = listOf(inApp10s_suppressed, inApp10s_high, inApp10s_low)
         every { evaluationManager.generateWzrkId(any(), any()) } returns "wzrk_id"
 
         // Act
@@ -2848,7 +2832,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(INAPP_DELAY_AFTER_TRIGGER, 20)
             .put(Constants.INAPP_SUPPRESSED, false)
 
-        val eligibleInApps = listOf(inApp10s, inApp20s)
+        val eligibleInApps: List<JSONObject> = listOf(inApp10s, inApp20s)
 
         // Act
         val result = evaluationManager.selectAndProcessEligibleInApps(
@@ -2881,7 +2865,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_SUPPRESSED, false)
             .put(Constants.WZRK_TIME_TO_LIVE_OFFSET, 60L)
 
-        val eligibleInApps = listOf(inApp10s, inApp20s)
+        val eligibleInApps: List<JSONObject> = listOf(inApp10s, inApp20s)
         every { evaluationManager.updateTTL(any(), any()) } just Runs
 
         // Act
@@ -2916,7 +2900,7 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(Constants.INAPP_PRIORITY, 100)
             .put(Constants.INAPP_SUPPRESSED, false)
 
-        val eligibleInApps = listOf(inApp1, inApp2, inApp3)
+        val eligibleInApps: List<JSONObject> = listOf(inApp1, inApp2, inApp3)
         every { evaluationManager.updateTTL(any(), any()) } just Runs
 
         // Act
@@ -2974,8 +2958,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(InAppInActionConstants.INAPP_INACTION_DURATION, 60)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inActionInApps: List<JSONObject> = listOf(inActionInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readServerSideInActionMetaData() } returns listOf(inActionInApp)
+        every { mockInAppStore.readServerSideInActionMetaData() } returns inActionInApps
         every { evaluationManager.evaluate(any(), any()) } returns listOf(inActionInApp)
 
         val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
@@ -2996,8 +2981,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(InAppInActionConstants.INAPP_INACTION_DURATION, 60)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inActionInApps: List<JSONObject> = listOf(inActionInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readServerSideInActionMetaData() } returns listOf(inActionInApp)
+        every { mockInAppStore.readServerSideInActionMetaData() } returns inActionInApps
         every { evaluationManager.evaluate(any(), any()) } returns listOf(inActionInApp)
 
         val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
@@ -3019,8 +3005,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(InAppInActionConstants.INAPP_INACTION_DURATION, 60)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inActionInApps: List<JSONObject> = listOf(inActionInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readServerSideInActionMetaData() } returns listOf(inActionInApp)
+        every { mockInAppStore.readServerSideInActionMetaData() } returns inActionInApps
         every { evaluationManager.evaluate(any(), any()) } returns listOf(inActionInApp)
 
         val event = EventAdapter("testEvent", emptyMap(), userLocation = null)
@@ -3045,8 +3032,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(InAppInActionConstants.INAPP_INACTION_DURATION, 120)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inActionInApps: List<JSONObject> = listOf(inActionInApp1, inActionInApp2)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readServerSideInActionMetaData() } returns listOf(inActionInApp1, inActionInApp2)
+        every { mockInAppStore.readServerSideInActionMetaData() } returns inActionInApps
 
         val event1 = EventAdapter("event1", emptyMap(), userLocation = null)
         val event2 = EventAdapter("event2", emptyMap(), userLocation = null)
@@ -3069,8 +3057,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(InAppInActionConstants.INAPP_INACTION_DURATION, 60)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inActionInApps: List<JSONObject> = listOf(inActionInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readServerSideInActionMetaData() } returns listOf(inActionInApp)
+        every { mockInAppStore.readServerSideInActionMetaData() } returns inActionInApps
         every { evaluationManager.evaluate(any(), any()) } returns emptyList()
 
         val event = EventAdapter("nonMatchingEvent", emptyMap(), userLocation = null)
@@ -3214,8 +3203,9 @@ class EvaluationManagerTest : BaseTestCase() {
             .put(InAppInActionConstants.INAPP_INACTION_DURATION, 60)
 
         val mockInAppStore = mockk<InAppStore>(relaxed = true)
+        val inActionInApps: List<JSONObject> = listOf(inActionInApp)
         every { storeRegistry.inAppStore } returns mockInAppStore
-        every { mockInAppStore.readServerSideInActionMetaData() } returns listOf(inActionInApp)
+        every { mockInAppStore.readServerSideInActionMetaData() } returns inActionInApps
         every { evaluationManager.evaluate(any(), any()) } returns listOf(inActionInApp)
 
         val event1 = EventAdapter("event1", emptyMap(), userLocation = null)
