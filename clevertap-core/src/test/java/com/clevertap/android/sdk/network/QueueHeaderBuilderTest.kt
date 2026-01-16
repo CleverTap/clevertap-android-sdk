@@ -125,6 +125,7 @@ class QueueHeaderBuilderTest {
         every { coreMetaData.referrerClickTime } returns 111L
         every { coreMetaData.appInstallTime } returns 222L
         every { coreMetaData.isFirstRequestInSession } returns true
+        every { coreMetaData.isFreshAppLaunch } returns true
         every { coreMetaData.wzrkParams } returns JSONObject().apply {
             put(
                 "wzrk_key",
@@ -186,6 +187,7 @@ class QueueHeaderBuilderTest {
         assertEquals(111L, header.optLong("rct"))
         assertEquals(222L, header.optLong("ait"))
         assertTrue(header.optBoolean("frs"))
+        assertTrue(header.optBoolean("fl"))
         assertFalse(header.optBoolean("debug"))
         assertEquals("arp_val", header.optJSONObject("arp")?.optString("arp_key"))
         val ref = header.optJSONObject("ref")!!

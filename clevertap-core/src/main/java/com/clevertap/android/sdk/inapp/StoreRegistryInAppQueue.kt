@@ -1,11 +1,8 @@
 package com.clevertap.android.sdk.inapp
 
 import androidx.annotation.WorkerThread
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
-import com.clevertap.android.sdk.utils.prepend
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -25,54 +22,47 @@ internal class StoreRegistryInAppQueue(
 
     @WorkerThread
     @Synchronized
-    override fun enqueue(jsonObject: JSONObject) {
-        val currentQueue = getQueue()
-        currentQueue.put(jsonObject)
+    override fun enqueue(inApp: JSONObject) {
+        val currentQueue = getQueue().toMutableList()
+        currentQueue.add(inApp)
         saveQueue(currentQueue)
     }
 
     @WorkerThread
     @Synchronized
-    override fun enqueueAll(jsonArray: JSONArray) {
-        val currentQueue = getQueue()
-        for (i in 0 until jsonArray.length()) {
-            try {
-                currentQueue.put(jsonArray.getJSONObject(i))
-            } catch (e: Exception) {
-                Logger.d(
-                    logTag,
-                    "InAppController: Malformed InApp notification: " + e.message
-                )
-            }
-        }
+    override fun enqueueAll(inApps: List<JSONObject>) {
+        if (inApps.isEmpty()) return
+
+        val currentQueue = getQueue().toMutableList()
+        currentQueue.addAll(inApps)
         saveQueue(currentQueue)
     }
 
     @WorkerThread
     @Synchronized
-    override fun insertInFront(jsonObject: JSONObject) {
-        val currentQueue = getQueue()
-        currentQueue.prepend(jsonObject)
+    override fun insertInFront(inApp: JSONObject) {
+        val currentQueue = getQueue().toMutableList()
+        currentQueue.add(0, inApp)
         saveQueue(currentQueue)
     }
 
     @WorkerThread
     @Synchronized
     override fun dequeue(): JSONObject? {
-        val currentQueue = getQueue()
-        if (currentQueue.length() == 0) {
+        val currentQueue = getQueue().toMutableList()
+        if (currentQueue.isEmpty()) {
             return null
         }
-        val removedObject = currentQueue.remove(0)
+        val removedObject = currentQueue.removeAt(0)
         saveQueue(currentQueue)
-        return removedObject as? JSONObject
+        return removedObject
     }
 
     @WorkerThread
     @Synchronized
     override fun getQueueLength(): Int {
         val currentQueue = getQueue()
-        return currentQueue.length()
+        return currentQueue.size
     }
 
     /**
@@ -80,8 +70,8 @@ internal class StoreRegistryInAppQueue(
      *
      * @return The current server-side In-App queue.
      */
-    private fun getQueue(): JSONArray {
-        val inAppStore = storeRegistry.inAppStore ?: return JSONArray()
+    private fun getQueue(): List<JSONObject> {
+        val inAppStore = storeRegistry.inAppStore ?: return emptyList()
         return inAppStore.readServerSideInApps()
     }
 
@@ -90,5 +80,5 @@ internal class StoreRegistryInAppQueue(
      *
      * @param queue The updated server-side In-App queue.
      */
-    private fun saveQueue(queue: JSONArray) = storeRegistry.inAppStore?.storeServerSideInApps(queue)
+    private fun saveQueue(queue: List<JSONObject>) = storeRegistry.inAppStore?.storeServerSideInApps(queue)
 }

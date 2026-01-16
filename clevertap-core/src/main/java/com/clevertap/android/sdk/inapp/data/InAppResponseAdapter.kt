@@ -5,16 +5,10 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DEFAULT_DELAY_SECONDS
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MAX_DELAY_SECONDS
-import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_MIN_DELAY_SECONDS
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
-import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
-import com.clevertap.android.sdk.partition
-import com.clevertap.android.sdk.safeGetJSONArray
 import com.clevertap.android.sdk.safeGetJSONArrayOrNullIfEmpty
+import com.clevertap.android.sdk.safeGetJSONObjectListOrEmpty
 import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONObject
@@ -25,6 +19,17 @@ object InAppDelayConstants{
     const val INAPP_MIN_DELAY_SECONDS = 1
     const val INAPP_MAX_DELAY_SECONDS = 1200
 }
+
+/**
+ * Constants for in-action in-apps feature
+ */
+object InAppInActionConstants {
+    const val INAPP_INACTION_DURATION = "inactionDuration"
+    const val INAPP_DEFAULT_INACTION_SECONDS = 0
+    const val INAPP_MIN_INACTION_SECONDS = 1
+    const val INAPP_MAX_INACTION_SECONDS = 1200
+}
+
 /**
  * Class that wraps functionality for response and return relevant methods to get data
  */
@@ -49,13 +54,51 @@ internal class InAppResponseAdapter(
         }
     }
 
-    private val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
-    val partitionedLegacyInApps = partitionInAppsByDelay(legacyInApps.second)
-    private val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
-    val partitionedClientSideInApps = partitionInAppsByDelay(clientSideInApps.second)
-    val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
-    private val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
-    val partitionedAppLaunchServerSideInApps = partitionInAppsByDelay(appLaunchServerSideInApps.second)
+    // ------------------------------------------------------------------------- //
+    //  delayAfterTrigger ALWAYS comes WITH content - it's a display delay       //
+    //  inactionDuration ALWAYS comes WITHOUT content - need to fetch after timer//
+    //  An in-app can have EITHER delay OR in-action, NEVER both initially       //
+    //  After in-action fetch, the returned content CAN have delayAfterTrigger   //
+    //  Client-Side (inapp_notifs_cs) does NOT support inactionDuration          //
+    // ------------------------------------------------------------------------- //
+
+    // Legacy in-apps: supports immediate + delayed durations
+    private val legacyInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
+    val partitionedLegacyInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionLegacyInApps(legacyInApps.second)
+
+    // Legacy metadata in-apps: supports inAction duration only
+    private val legacyMetaInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_META_KEY)
+    val partitionedLegacyMetaInApps: DurationPartitionedInApps.InActionOnly =
+        InAppDurationPartitioner.partitionLegacyMetaInApps(legacyMetaInApps.second)
+
+    // Client-side in-apps: supports immediate + delayed durations
+    private val clientSideInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_KEY_CS)
+    val partitionedClientSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionClientSideInApps(clientSideInApps.second)
+
+    // Server-side metadata in-apps: supports unknown + inAction durations
+    private val serverSideInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_KEY_SS)
+    val partitionedServerSideInAppsMeta: DurationPartitionedInApps.UnknownAndInAction =
+        InAppDurationPartitioner.partitionServerSideMetaInApps(serverSideInApps.second)
+
+    // App-launch server-side in-apps: supports immediate + delayed durations
+    private val appLaunchServerSideInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    val partitionedAppLaunchServerSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionAppLaunchServerSideInApps(appLaunchServerSideInApps.second)
+
+    // App-launch server-side metadata in-apps: supports inAction duration only
+    private val appLaunchServerSideMetaInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_META_KEY)
+    val partitionedAppLaunchServerSideMetaInApps: DurationPartitionedInApps.InActionOnly =
+        InAppDurationPartitioner.partitionAppLaunchServerSideMetaInApps(
+            appLaunchServerSideMetaInApps.second
+        )
 
     private val preloadImages: List<String>
     private val preloadGifs: List<String>
@@ -94,7 +137,7 @@ internal class InAppResponseAdapter(
         gifList: MutableList<String>
     ) {
         if (clientSideInApps.first) {
-            clientSideInApps.second?.iterator<JSONObject> { jsonObject ->
+            clientSideInApps.second.forEach { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
@@ -127,14 +170,13 @@ internal class InAppResponseAdapter(
         }
     }
 
-    private fun fetchFilesUrlsForTemplates(filesList: MutableList<String>, templatesManager: TemplatesManager) {
+    private fun fetchFilesUrlsForTemplates(
+        filesList: MutableList<String>,
+        templatesManager: TemplatesManager
+    ) {
         if (clientSideInApps.first) {
-            val inAppsList = clientSideInApps.second ?: return
-            for (i in 0 until inAppsList.length()) {
-                createFromJson(inAppsList.optJSONObject(i))?.getFileArgsUrls(
-                    templatesManager,
-                    filesList
-                )
+            clientSideInApps.second.forEach { inApp ->
+                createFromJson(inApp)?.getFileArgsUrls(templatesManager, filesList)
             }
         }
     }
@@ -146,50 +188,6 @@ internal class InAppResponseAdapter(
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
-
-    /**
-     * Core partitioning logic that separates in-apps based on delay
-     */
-    private fun partitionInAppsByDelay(inAppsArray: JSONArray?): PartitionedInApps {
-        if (inAppsArray == null) {
-            return PartitionedInApps.empty()
-        }
-        val (immediateList, delayedList) = inAppsArray.partition<JSONObject> { inApp ->
-            hasNoDelay(inApp)
-        }
-
-        return PartitionedInApps(
-            immediateInApps = immediateList,
-            delayedInApps = delayedList
-        )
-    }
-
-    /**
-     * Helper function to determine if an in-app has no delay or delay is 0
-     * An in-app is considered immediate if:
-     * 1. It doesn't have a delayAfterTrigger field, OR
-     * 2. The delayAfterTrigger field is 0 or negative, OR
-     * 3. The delayAfterTrigger field is outside valid range (1-1200)
-     *
-     * @param inApp JSONObject representing the in-app notification
-     * @return true if immediate, false if delayed
-     */
-    private fun hasNoDelay(inApp: JSONObject): Boolean = getValidatedInAppDelay(inApp) == INAPP_DEFAULT_DELAY_SECONDS
-
-
-    /**
-     * Helper function to get the delay value in seconds for a delayed in-app
-     * @param inApp JSONObject representing the in-app notification
-     * @return delay in seconds, 0 if no delay or invalid delay
-     */
-    private fun getValidatedInAppDelay(inApp: JSONObject): Int {
-        val delaySeconds = inApp.optInt(INAPP_DELAY_AFTER_TRIGGER, INAPP_DEFAULT_DELAY_SECONDS)
-        return if (delaySeconds in INAPP_MIN_DELAY_SECONDS..INAPP_MAX_DELAY_SECONDS) {
-            delaySeconds
-        } else {
-            INAPP_DEFAULT_DELAY_SECONDS
-        }
-    }
 }
 
 enum class CtCacheType {

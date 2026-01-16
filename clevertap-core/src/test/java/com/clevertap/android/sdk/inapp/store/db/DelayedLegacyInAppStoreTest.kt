@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DelayedLegacyInAppDAO
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
+import com.clevertap.android.sdk.toList
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -62,7 +63,7 @@ class DelayedLegacyInAppStoreTest {
     @Test
     fun `test saveDelayedInAppsBatch returns true for empty array`() {
         // Given
-        val emptyArray = JSONArray()
+        val emptyArray = JSONArray().toList<JSONObject>()
 
         // When
         val result = store.saveDelayedInAppsBatch(emptyArray)
@@ -82,7 +83,7 @@ class DelayedLegacyInAppStoreTest {
         every { mockDAO.insertBatch(any()) } returns true
 
         // When
-        val result = store.saveDelayedInAppsBatch(inAppsArray)
+        val result = store.saveDelayedInAppsBatch(inAppsArray.toList())
 
         // Then
         assertTrue(result)
@@ -113,7 +114,7 @@ class DelayedLegacyInAppStoreTest {
         every { mockDAO.insertBatch(any()) } returns true
 
         // When
-        val result = store.saveDelayedInAppsBatch(inAppsArray)
+        val result = store.saveDelayedInAppsBatch(inAppsArray.toList())
 
         // Then
         assertTrue(result)
@@ -142,7 +143,7 @@ class DelayedLegacyInAppStoreTest {
         every { mockDAO.insertBatch(any()) } returns true
 
         // When
-        val result = store.saveDelayedInAppsBatch(inAppsArray)
+        val result = store.saveDelayedInAppsBatch(inAppsArray.toList())
 
         // Then
         assertTrue(result)
@@ -169,7 +170,7 @@ class DelayedLegacyInAppStoreTest {
         every { mockCryptHandler.encrypt(any()) } returns null
 
         // When
-        val result = store.saveDelayedInAppsBatch(inAppsArray)
+        val result = store.saveDelayedInAppsBatch(inAppsArray.toList())
 
         // Then
         assertFalse(result)
@@ -187,7 +188,7 @@ class DelayedLegacyInAppStoreTest {
         every { mockDAO.insertBatch(any()) } returns false
 
         // When
-        val result = store.saveDelayedInAppsBatch(inAppsArray)
+        val result = store.saveDelayedInAppsBatch(inAppsArray.toList())
 
         // Then
         assertFalse(result)
@@ -209,7 +210,7 @@ class DelayedLegacyInAppStoreTest {
         every { mockDAO.insertBatch(any()) } returns true
 
         // When
-        store.saveDelayedInAppsBatch(inAppsArray)
+        store.saveDelayedInAppsBatch(inAppsArray.toList())
 
         // Then
         verify {
@@ -233,7 +234,7 @@ class DelayedLegacyInAppStoreTest {
         every { mockDAO.insertBatch(any()) } returns true
 
         // When
-        val result = store.saveDelayedInAppsBatch(inAppsArray)
+        val result = store.saveDelayedInAppsBatch(inAppsArray.toList())
 
         // Then
         assertTrue(result)
@@ -346,6 +347,36 @@ class DelayedLegacyInAppStoreTest {
         // Then
         assertFalse(result)
         verify(exactly = 1) { mockDAO.remove(testInAppId) }
+    }
+
+    // ============================================
+    // REMOVE ALL DELAYED INAPP TESTS
+    // ============================================
+
+    @Test
+    fun `test removeAllDelayedInApps returns true when removal succeeds`() {
+        // Given
+        every { mockDAO.clearAll() } returns true
+
+        // When
+        val result = store.removeAllDelayedInApps()
+
+        // Then
+        assertTrue(result)
+        verify(exactly = 1) { mockDAO.clearAll() }
+    }
+
+    @Test
+    fun `test removeAllDelayedInApps returns false when removal fails`() {
+        // Given
+        every { mockDAO.clearAll() } returns false
+
+        // When
+        val result = store.removeAllDelayedInApps()
+
+        // Then
+        assertFalse(result)
+        verify(exactly = 1) { mockDAO.clearAll() }
     }
 
     // ============================================

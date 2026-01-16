@@ -645,10 +645,13 @@ public final class Utils {
         return false;
     }
 
-    public static List<JSONObject> toJSONObjectList(JSONArray jsonArray) throws JSONException {
+    public static List<JSONObject> toJSONObjectList(@NonNull JSONArray jsonArray) {
         List<JSONObject> jsonObjectList = new ArrayList<>();
         for (int index = 0; index < jsonArray.length(); index++) {
-            jsonObjectList.add(jsonArray.getJSONObject(index));
+            JSONObject obj = jsonArray.optJSONObject(index);
+            if (obj != null) {
+                jsonObjectList.add(obj);
+            }
         }
         return jsonObjectList;
     }

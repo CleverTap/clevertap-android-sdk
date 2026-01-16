@@ -82,9 +82,11 @@ public interface Constants {
     String INAPP_NOTIF_DARKEN_SCREEN = "dk";
     String INAPP_NOTIF_SHOW_CLOSE = "sc";
     String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
+    String INAPP_NOTIFS_META_KEY = "inapp_notifs_meta";
 
     String INAPP_NOTIFS_STALE_KEY = "inapp_stale";
     String INAPP_NOTIFS_APP_LAUNCHED_KEY = "inapp_notifs_applaunched";
+    String INAPP_NOTIFS_APP_LAUNCHED_META_KEY = "inapp_notifs_applaunched_meta";
 
     String INAPP_NOTIFS_KEY_CS = "inapp_notifs_cs";
     String INAPP_NOTIFS_KEY_SS = "inapp_notifs_ss";
@@ -314,6 +316,7 @@ public interface Constants {
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;
     int FETCH_TYPE_IN_APPS = 5;
+    int FETCH_TYPE_IN_ACTION_IN_APPS = 6;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";
@@ -352,6 +355,7 @@ public interface Constants {
     String D_SRC = "d_src";// data source for push impressions
     String D_SRC_PI_R = "PI_R";// push impression data source is Receiver
     String D_SRC_PI_WM = "PI_WM";// push impression data source is work manager
+    String META_FRESH_APP_LAUNCH = "fl";
 
     String REGION_INDIA = "in1";
     String REGION_EUROPE = "eu1";
