@@ -147,7 +147,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
 
         if (modified) {
             parentJson.put(key, resultArray)
-            changeTracker.recordChange(path, oldArrayCopy, oldArray, changes)
+            changeTracker.recordChange(path, oldArrayCopy, resultArray, changes)
         }
     }
 
