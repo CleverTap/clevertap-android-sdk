@@ -52,7 +52,7 @@ class ValidationPipelineProvider(
     }
 
     /**
-     * Pipeline for validating multi-value property keys.
+     * Pipeline for validating charged event items.
      */
     val chargedEventItemsValidationPipeline: ChargedEventItemsValidationPipeline by lazy {
         ChargedEventItemsValidationPipeline(errorReporter, logger)

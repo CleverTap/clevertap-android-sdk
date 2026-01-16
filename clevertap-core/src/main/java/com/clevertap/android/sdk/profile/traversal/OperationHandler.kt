@@ -52,7 +52,7 @@ internal class OperationHandler(
                     target, key, oldValue, newValue, currentPath, changes, operation, recursiveApply
                 )
             }
-            operation in listOf(ProfileOperation.INCREMENT, ProfileOperation.DECREMENT) -> {
+            operation.isNumericOperation() -> {
                 handleNumberOperation(target, key, oldValue, newValue, currentPath, changes, operation)
             }
             operation == ProfileOperation.GET -> {
@@ -122,7 +122,7 @@ internal class OperationHandler(
 
         if (!JsonComparisonUtils.areEqual(oldValue, result)) {
             parent.put(key, result)
-            changes[path] = ProfileChange(oldValue, result)
+            changeTracker.recordChange(path, oldValue, result, changes)
         }
     }
 

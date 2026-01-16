@@ -36,9 +36,7 @@ internal object JsonComparisonUtils {
     private fun jsonObjectsEqual(obj1: JSONObject, obj2: JSONObject): Boolean {
         if (obj1.length() != obj2.length()) return false
 
-        val keys1 = obj1.keys()
-        while (keys1.hasNext()) {
-            val key = keys1.next()
+        obj1.keys().forEach { key ->
             if (!obj2.has(key)) return false
 
             val value1 = obj1.get(key)

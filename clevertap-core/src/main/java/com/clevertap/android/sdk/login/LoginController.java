@@ -233,11 +233,15 @@ public class LoginController {
                 boolean isProfileKey = iProfileHandler.hasIdentity(key);
                 if (isProfileKey) {
                     try {
-                        String identifier = null;
-                        if (value != null) {
+                        String identifier;
+                        if (value instanceof Number || value instanceof String || value instanceof Boolean) {
                             identifier = value.toString();
+                        } else {
+                            config.getLogger().debug(config.getAccountId(),
+                                    "onUserLogin: Aborting the operation. Non-primitive value for the identifier key = " + key);
+                            return;
                         }
-                        if (identifier != null && !identifier.isEmpty()) {
+                        if (!identifier.isEmpty()) {
                             haveIdentifier = true;
                             cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier);
                             if (cachedGUID != null) {

@@ -68,8 +68,8 @@ internal class DeleteOperationHandler(
     ) {
         if (newArray.length() == 0) return
 
-        val hasDeleteMarkers = ArrayMergeUtils.hasDeleteMarkerElements(newArray)
-        val hasObjectsToDelete = ArrayMergeUtils.hasJsonObjectElements(newArray)
+        val hasDeleteMarkers = newArray.hasDeleteMarkerElements()
+        val hasObjectsToDelete = newArray.hasJsonObjectElements()
 
         when {
             hasDeleteMarkers -> deleteArrayElements(oldArray, newArray, currentPath, changes)
@@ -88,21 +88,20 @@ internal class DeleteOperationHandler(
         basePath: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var arrayModified = false
+        val indicesToRemove = mutableListOf<Int>()
 
         for (i in 0 until minOf(newArray.length(), oldArray.length())) {
             val oldElement = oldArray.get(i)
             val newElement = newArray.get(i)
 
             if (oldElement is JSONObject && newElement is JSONObject) {
-                // Recursively delete fields from this array element
-                val elementHandler = DeleteOperationHandler(changeTracker)
                 val elementKeys = newElement.keys()
                 while (elementKeys.hasNext()) {
                     val key = elementKeys.next()
                     val value = newElement.get(key)
-                    elementHandler.handleDelete(
+                    handleDelete(
                         oldElement,
                         key,
                         value,
@@ -110,21 +109,26 @@ internal class DeleteOperationHandler(
                         mutableMapOf()
                     ) { target, source, _, _ ->
                         if (source != null) {
-                            elementHandler.handleDeleteRecursive(target, source, mutableMapOf())
+                           handleDeleteRecursive(target, source)
                         }
                     }
                 }
                 arrayModified = true
 
-                // Remove empty objects
+                // Mark for removal if empty
                 if (oldElement.length() == 0) {
-                    oldArray.remove(i)
+                    indicesToRemove.add(i)
                 }
             }
         }
 
+        // Remove in reverse order
+        indicesToRemove.sortedDescending().forEach { index ->
+            oldArray.remove(index)
+        }
+
         if (arrayModified) {
-            changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
+            changeTracker.recordChange(basePath, oldArrayCopy, oldArray, changes)
         }
     }
 
@@ -134,15 +138,14 @@ internal class DeleteOperationHandler(
     private fun handleDeleteRecursive(
         target: JSONObject,
         source: JSONObject,
-        changes: MutableMap<String, ProfileChange>
     ) {
         val keys = source.keys()
         while (keys.hasNext()) {
             val key = keys.next()
             val newValue = source.get(key)
-            handleDelete(target, key, newValue, "", changes) { t, s, _, _ ->
+            handleDelete(target, key, newValue, "", mutableMapOf()) { t, s, _, _ ->
                 if (s != null) {
-                    handleDeleteRecursive(t, s, mutableMapOf())
+                    handleDeleteRecursive(t, s)
                 }
             }
         }
@@ -168,7 +171,7 @@ internal class DeleteOperationHandler(
 
         if (indicesToDelete.isEmpty()) return
 
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var removedAny = false
 
         // Delete in reverse order to maintain correct indices

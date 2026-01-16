@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.utils
 import org.json.JSONArray
 import org.json.JSONObject
 
-object JsonFlattener {
+internal object JsonFlattener {
 
     @JvmStatic
     fun flatten(json: JSONObject): Map<String, Any> {

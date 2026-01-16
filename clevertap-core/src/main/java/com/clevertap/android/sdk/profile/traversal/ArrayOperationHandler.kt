@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import kotlin.math.min
 
 /**
  * Handles array-specific operations: ARRAY_ADD, ARRAY_REMOVE, GET, UPDATE, and array element processing.
@@ -86,7 +87,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var modified = false
 
         for (i in 0 until newArray.length()) {
@@ -98,7 +99,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         }
 
         if (modified) {
-            changes[path] = ProfileChange(oldArrayCopy, oldArray)
+            changeTracker.recordChange(path, oldArrayCopy, oldArray, changes)
         }
     }
 
@@ -131,13 +132,13 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         path: String,
         changes: MutableMap<String, ProfileChange>
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         val resultArray = JSONArray()
         var modified = false
 
         for (i in 0 until oldArray.length()) {
             val item = oldArray.get(i)
-            if (item is String && ArrayMergeUtils.arrayContainsString(newArray, item)) {
+            if (item is String && newArray.containsString(item)) {
                 modified = true
             } else {
                 resultArray.put(item)
@@ -146,7 +147,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
 
         if (modified) {
             parentJson.put(key, resultArray)
-            changes[path] = ProfileChange(oldArrayCopy, resultArray)
+            changeTracker.recordChange(path, oldArrayCopy, oldArray, changes)
         }
     }
 
@@ -162,15 +163,12 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         operation: ProfileOperation,
         recursiveTraversal: (JSONObject, JSONObject?, String, MutableMap<String, ProfileChange>) -> Unit
     ) {
-        val oldArrayCopy = ArrayMergeUtils.copyArray(oldArray)
+        val oldArrayCopy = oldArray.deepCopy()
         var arrayModified = false
 
-        for (i in 0 until newArray.length()) {
-            if (i >= oldArray.length()) {
-                // For INCREMENT/DECREMENT, don't extend array
-                continue
-            }
+        val arrayLength = min(oldArray.length(), newArray.length())
 
+        for (i in 0 until arrayLength) {
             val oldElement = oldArray.get(i)
             val newElement = newArray.get(i)
 
@@ -193,7 +191,7 @@ internal class ArrayOperationHandler(private val changeTracker: ProfileChangeTra
         }
 
         if (arrayModified) {
-            changes[basePath] = ProfileChange(oldArrayCopy, oldArray)
+            changeTracker.recordChange(basePath, oldArrayCopy, oldArray, changes)
         }
     }
 

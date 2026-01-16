@@ -4,7 +4,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-class NestedJsonBuilder {
+internal class NestedJsonBuilder {
 
     companion object {
         private val ARRAY_INDEX_PATTERN = Regex("""\[(\d+)]""")
@@ -60,8 +60,7 @@ class NestedJsonBuilder {
             
             for (match in matches) {
                 val indexStr = match.groupValues[1]
-                val index = indexStr.toIntOrNull()
-                    ?: throw IllegalArgumentException("Invalid array index: $indexStr")
+                val index = indexStr.toInt()
                 indices.add(index)
             }
             

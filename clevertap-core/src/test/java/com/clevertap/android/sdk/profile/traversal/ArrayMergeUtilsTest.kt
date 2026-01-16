@@ -8,16 +8,16 @@ import org.junit.Test
 
 class ArrayMergeUtilsTest {
 
-    // copyArray tests
+    // deepCopy tests
     @Test
-    fun `copyArray creates deep copy of simple array`() {
+    fun `deepCopy creates deep copy of simple array`() {
         val original = JSONArray().apply {
             put("value1")
             put("value2")
             put(123)
         }
 
-        val copy = ArrayMergeUtils.copyArray(original)
+        val copy = original.deepCopy()
 
         assertEquals(original.length(), copy.length())
         assertEquals("value1", copy.getString(0))
@@ -27,7 +27,7 @@ class ArrayMergeUtilsTest {
     }
 
     @Test
-    fun `copyArray creates deep copy with nested objects`() {
+    fun `deepCopy creates deep copy with nested objects`() {
         val original = JSONArray().apply {
             put(JSONObject().apply {
                 put("key1", "value1")
@@ -36,7 +36,7 @@ class ArrayMergeUtilsTest {
             put("string")
         }
 
-        val copy = ArrayMergeUtils.copyArray(original)
+        val copy = original.deepCopy()
 
         assertEquals(original.length(), copy.length())
         val originalObj = original.getJSONObject(0)
@@ -47,16 +47,16 @@ class ArrayMergeUtilsTest {
     }
 
     @Test
-    fun `copyArray handles empty array`() {
+    fun `deepCopy handles empty array`() {
         val original = JSONArray()
-        val copy = ArrayMergeUtils.copyArray(original)
+        val copy = original.deepCopy()
 
         assertEquals(0, copy.length())
         assertNotSame(original, copy)
     }
 
     @Test
-    fun `copyArray handles array with nested arrays`() {
+    fun `deepCopy handles array with nested arrays`() {
         val original = JSONArray().apply {
             put(JSONArray().apply {
                 put("nested1")
@@ -65,7 +65,7 @@ class ArrayMergeUtilsTest {
             put("outer")
         }
 
-        val copy = ArrayMergeUtils.copyArray(original)
+        val copy = original.deepCopy()
 
         assertEquals(2, copy.length())
         val nestedCopy = copy.getJSONArray(0)
@@ -74,37 +74,37 @@ class ArrayMergeUtilsTest {
         assertEquals("nested2", nestedCopy.getString(1))
     }
 
-    // arrayContainsString tests
+    // containsString tests
     @Test
-    fun `arrayContainsString returns true when string exists`() {
+    fun `containsString returns true when string exists`() {
         val array = JSONArray().apply {
             put("apple")
             put("banana")
             put("cherry")
         }
 
-        assertTrue(ArrayMergeUtils.arrayContainsString(array, "banana"))
+        assertTrue(array.containsString("banana"))
     }
 
     @Test
-    fun `arrayContainsString returns false when string does not exist`() {
+    fun `containsString returns false when string does not exist`() {
         val array = JSONArray().apply {
             put("apple")
             put("banana")
         }
 
-        assertFalse(ArrayMergeUtils.arrayContainsString(array, "orange"))
+        assertFalse(array.containsString("orange"))
     }
 
     @Test
-    fun `arrayContainsString returns false for empty array`() {
+    fun `containsString returns false for empty array`() {
         val array = JSONArray()
 
-        assertFalse(ArrayMergeUtils.arrayContainsString(array, "test"))
+        assertFalse(array.containsString("test"))
     }
 
     @Test
-    fun `arrayContainsString ignores non-string elements`() {
+    fun `containsString ignores non-string elements`() {
         val array = JSONArray().apply {
             put(123)
             put(true)
@@ -112,29 +112,29 @@ class ArrayMergeUtilsTest {
             put("test")
         }
 
-        assertTrue(ArrayMergeUtils.arrayContainsString(array, "test"))
-        assertFalse(ArrayMergeUtils.arrayContainsString(array, "123"))
+        assertTrue(array.containsString("test"))
+        assertFalse(array.containsString("123"))
     }
 
     @Test
-    fun `arrayContainsString is case sensitive`() {
+    fun `containsString is case sensitive`() {
         val array = JSONArray().apply {
             put("Test")
         }
 
-        assertTrue(ArrayMergeUtils.arrayContainsString(array, "Test"))
-        assertFalse(ArrayMergeUtils.arrayContainsString(array, "test"))
+        assertTrue(array.containsString("Test"))
+        assertFalse(array.containsString("test"))
     }
 
     @Test
-    fun `arrayContainsString handles duplicate strings`() {
+    fun `containsString handles duplicate strings`() {
         val array = JSONArray().apply {
             put("test")
             put("test")
             put("other")
         }
 
-        assertTrue(ArrayMergeUtils.arrayContainsString(array, "test"))
+        assertTrue(array.containsString("test"))
     }
 
     // hasDeleteMarkerElements tests
@@ -146,7 +146,7 @@ class ArrayMergeUtilsTest {
             put("other")
         }
 
-        assertTrue(ArrayMergeUtils.hasDeleteMarkerElements(array))
+        assertTrue(array.hasDeleteMarkerElements())
     }
 
     @Test
@@ -157,14 +157,14 @@ class ArrayMergeUtilsTest {
             put(123)
         }
 
-        assertFalse(ArrayMergeUtils.hasDeleteMarkerElements(array))
+        assertFalse(array.hasDeleteMarkerElements())
     }
 
     @Test
     fun `hasDeleteMarkerElements returns false for empty array`() {
         val array = JSONArray()
 
-        assertFalse(ArrayMergeUtils.hasDeleteMarkerElements(array))
+        assertFalse(array.hasDeleteMarkerElements())
     }
 
     @Test
@@ -174,14 +174,14 @@ class ArrayMergeUtilsTest {
             put(Constants.DELETE_MARKER)
             put("value")
         }
-        assertTrue(ArrayMergeUtils.hasDeleteMarkerElements(array1))
+        assertTrue(array1.hasDeleteMarkerElements())
 
         // Last position
         val array2 = JSONArray().apply {
             put("value")
             put(Constants.DELETE_MARKER)
         }
-        assertTrue(ArrayMergeUtils.hasDeleteMarkerElements(array2))
+        assertTrue(array2.hasDeleteMarkerElements())
 
         // Middle position
         val array3 = JSONArray().apply {
@@ -189,7 +189,7 @@ class ArrayMergeUtilsTest {
             put(Constants.DELETE_MARKER)
             put("value2")
         }
-        assertTrue(ArrayMergeUtils.hasDeleteMarkerElements(array3))
+        assertTrue(array3.hasDeleteMarkerElements())
     }
 
     @Test
@@ -201,7 +201,7 @@ class ArrayMergeUtilsTest {
             })
         }
 
-        assertFalse(ArrayMergeUtils.hasDeleteMarkerElements(array))
+        assertFalse(array.hasDeleteMarkerElements())
     }
 
     @Test
@@ -212,7 +212,7 @@ class ArrayMergeUtilsTest {
             put(Constants.DELETE_MARKER)
         }
 
-        assertTrue(ArrayMergeUtils.hasDeleteMarkerElements(array))
+        assertTrue(array.hasDeleteMarkerElements())
     }
 
     // hasJsonObjectElements tests
@@ -225,7 +225,7 @@ class ArrayMergeUtilsTest {
             })
         }
 
-        assertTrue(ArrayMergeUtils.hasJsonObjectElements(array))
+        assertTrue(array.hasJsonObjectElements())
     }
 
     @Test
@@ -236,14 +236,14 @@ class ArrayMergeUtilsTest {
             put(true)
         }
 
-        assertFalse(ArrayMergeUtils.hasJsonObjectElements(array))
+        assertFalse(array.hasJsonObjectElements())
     }
 
     @Test
     fun `hasJsonObjectElements returns false for empty array`() {
         val array = JSONArray()
 
-        assertFalse(ArrayMergeUtils.hasJsonObjectElements(array))
+        assertFalse(array.hasJsonObjectElements())
     }
 
     @Test
@@ -254,7 +254,7 @@ class ArrayMergeUtilsTest {
             put(JSONObject().apply { put("key2", "value2") })
         }
 
-        assertTrue(ArrayMergeUtils.hasJsonObjectElements(array))
+        assertTrue(array.hasJsonObjectElements())
     }
 
     @Test
@@ -267,7 +267,7 @@ class ArrayMergeUtilsTest {
             })
         }
 
-        assertTrue(ArrayMergeUtils.hasJsonObjectElements(array))
+        assertTrue(array.hasJsonObjectElements())
     }
 
     @Test
@@ -279,6 +279,6 @@ class ArrayMergeUtilsTest {
             })
         }
 
-        assertFalse(ArrayMergeUtils.hasJsonObjectElements(array))
+        assertFalse(array.hasJsonObjectElements())
     }
 }
