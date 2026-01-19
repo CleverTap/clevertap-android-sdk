@@ -2,14 +2,9 @@ package com.clevertap.android.sdk
 
 
 import android.content.Context
-import com.clevertap.android.sdk.cryption.CryptFactory
-import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.cryption.CryptRepository
-import com.clevertap.android.sdk.db.BaseDatabaseManager
-import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventDetail
 import com.clevertap.android.sdk.usereventlogs.UserEventLog
-import com.clevertap.android.sdk.validation.Validator
+import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -25,37 +20,20 @@ class SessionManagerTest : BaseTestCase() {
 
     private lateinit var sessionManagerDef: SessionManager
     private lateinit var configDef: CleverTapInstanceConfig
-    private lateinit var config: CleverTapInstanceConfig
     private lateinit var coreMetaData: CoreMetaData
-    private lateinit var validator : Validator
+    private lateinit var validationConfig: ValidationConfig
     private lateinit var localDataStoreDef: LocalDataStore
-    private lateinit var cryptHandler : CryptHandler
     private lateinit var deviceInfo : DeviceInfo
-    private lateinit var baseDatabaseManager: BaseDatabaseManager
 
     override fun setUp() {
         super.setUp()
-        config = CleverTapInstanceConfig.createInstance(application, "id", "token", "region")
-
-
         configDef = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
         coreMetaData = CoreMetaData()
-        validator = Validator()
-        cryptHandler = CryptHandler(
-            mockk<CryptRepository>(relaxed = true),
-            mockk<CryptFactory>(relaxed = true),
-        )
+        validationConfig = mockk<ValidationConfig>(relaxed = true)
+        localDataStoreDef = mockk<LocalDataStore>(relaxed = true)
         deviceInfo = MockDeviceInfo(appCtx, configDef, "id", coreMetaData)
-        baseDatabaseManager = mockk<DBManager>(relaxed = true)
-        localDataStoreDef = LocalDataStore(
-            application,
-            configDef,
-            cryptHandler,
-            deviceInfo,
-            baseDatabaseManager
-        )
 
-        sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreDef)
+        sessionManagerDef = SessionManager(configDef, coreMetaData, validationConfig,localDataStoreDef)
     }
 
     override fun cleanUp() {
@@ -88,7 +66,7 @@ class SessionManagerTest : BaseTestCase() {
     @Test
     fun test_destroySession_when_DestroySessionIsCalled_should_CallABunchOfApisFromCoreMetaData() {
         val coreMetaDataSpy = spyk(coreMetaData)
-        sessionManagerDef = SessionManager(configDef,coreMetaDataSpy,validator,localDataStoreDef)
+        sessionManagerDef = SessionManager(configDef,coreMetaDataSpy, validationConfig,localDataStoreDef)
 
         sessionManagerDef.destroySession()
         verify(exactly = 1) { coreMetaDataSpy.currentSessionId = 0 }
@@ -117,7 +95,7 @@ class SessionManagerTest : BaseTestCase() {
     @Test
     fun test_getLastVisitTimeAndSetLastVisitTime_when_FunctionIsCalled_should_SetTimeOfLastAppLaunchEventFireInLocalDataStore() {
         val localDataStoreMockk = mockk<LocalDataStore>(relaxed = true)
-        sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreMockk)
+        sessionManagerDef = SessionManager(configDef,coreMetaData, validationConfig,localDataStoreMockk)
 
         // when local data store returns null for app launched event, it sets last visit time as -1
         every { localDataStoreMockk.getEventDetail(Constants.APP_LAUNCHED_EVENT) } returns null
@@ -135,7 +113,7 @@ class SessionManagerTest : BaseTestCase() {
     @Test
     fun test_lazyCreateSession_when_FunctionIsCalledWithContext_should_CreateSessionIfApplicable() {
         val coreMetaDataSpy = spyk(coreMetaData)
-        sessionManagerDef = SessionManager(configDef,coreMetaDataSpy,validator,localDataStoreDef)
+        sessionManagerDef = SessionManager(configDef,coreMetaDataSpy, validationConfig,localDataStoreDef)
         var ctxSpy = spyk(application)
 
         // when current session is going on (i.e when currentSessionId>0 ) session is not created . we verify by verifying coreMetaDataSpy call
@@ -159,7 +137,7 @@ class SessionManagerTest : BaseTestCase() {
         var coreMetaDataSpy = spyk(coreMetaData).also { it.currentSessionId = 0 }
         var ctxSpy = spyk(application)
         sessionManagerDef =
-            spyk(SessionManager(configDef, coreMetaDataSpy, validator, localDataStoreDef))
+            spyk(SessionManager(configDef, coreMetaDataSpy, validationConfig, localDataStoreDef))
 
         every { sessionManagerDef.now } returns 1000
         // when lazyCreateSession is called while coreMetaData.currentSessionId ==0 , createSession gets called and
@@ -178,7 +156,7 @@ class SessionManagerTest : BaseTestCase() {
         // when lastSessionTime <= 0 ,xyz . // when lastSessionID ! = 0
         coreMetaDataSpy = spyk(coreMetaData).also { it.currentSessionId = 0 }
         ctxSpy = spyk(application)
-        sessionManagerDef = SessionManager(configDef, coreMetaDataSpy, validator, localDataStoreDef)
+        sessionManagerDef = SessionManager(configDef, coreMetaDataSpy, validationConfig, localDataStoreDef)
         ctxSpy.getSharedPreferences("WizRocket", Context.MODE_PRIVATE).edit().putInt("lastSessionId:id", 0).putInt("sexe:id", 10)/*.putInt("lastSessionId",11).putInt("sexe",13)*/.commit()
 
         sessionManagerDef.lazyCreateSession(ctxSpy)
@@ -190,7 +168,7 @@ class SessionManagerTest : BaseTestCase() {
     @Test
     fun `test setUserLastVisitTs`(){
         val localDataStoreMockk = mockk<LocalDataStore>()
-        sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreMockk)
+        sessionManagerDef = SessionManager(configDef,coreMetaData, validationConfig,localDataStoreMockk)
         val appLaunchedEventLog = UserEventLog(
             Constants.APP_LAUNCHED_EVENT,
             Utils.getNormalizedName(Constants.APP_LAUNCHED_EVENT),

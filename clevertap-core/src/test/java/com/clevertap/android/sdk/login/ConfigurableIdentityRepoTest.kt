@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
@@ -83,8 +84,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         val result = configurableIdentityRepo.identitySet
 
         //validations
-        println("final result=== ${result.toString()}")
-        verify(exactly = 0) { validationStack.pushValidationResult(any()) }
+        println("final result=== $result")
+        verify(exactly = 0) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 0) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
         Assert.assertEquals(true,result.isValid)
         commonKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
@@ -107,8 +108,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         val result = configurableIdentityRepo.identitySet
 
         //validations
-        println("final result=== ${result.toString()}")
-        verify(exactly = 1) { validationStack.pushValidationResult(any()) }
+        println("final result=== $result")
+        verify(exactly = 1) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 0) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
         Assert.assertEquals(true,result.isValid)
@@ -132,8 +133,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         val result = configurableIdentityRepo.identitySet
 
         //validations
-        println("final result=== ${result.toString()}")
-        verify(exactly = 0) { validationStack.pushValidationResult(any()) }
+        println("final result=== $result")
+        verify(exactly = 0) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 1) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
         Assert.assertEquals(true,result.isValid)
@@ -158,8 +159,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         val result = configurableIdentityRepo.identitySet
 
         //validations
-        println("final result=== ${result.toString()}")
-        verify(exactly = 0) { validationStack.pushValidationResult(any()) }
+        println("final result=== $result")
+        verify(exactly = 0) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 1) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
         Assert.assertEquals(true,result.isValid)

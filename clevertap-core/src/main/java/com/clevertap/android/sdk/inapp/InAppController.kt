@@ -504,7 +504,7 @@ internal class InAppController(
 
     @WorkerThread
     fun onQueueProfileEvent(
-        userAttributeChangedProperties: Map<String, Map<String, Any>>,
+        userAttributeChangedProperties: Map<String, Map<String, Any?>>,
         location: Location?
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)

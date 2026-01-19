@@ -147,7 +147,7 @@ internal class EvaluationManager(
      * @return An [EvaluatedInAppsResult] containing the evaluated in-app notifications
      */
     fun evaluateOnUserAttributeChange(
-        eventProperties: Map<String, Map<String, Any>>,
+        eventProperties: Map<String, Map<String, Any?>>,
         userLocation: Location?,
         appFields: Map<String, Any>
     ): EvaluatedInAppsResult {

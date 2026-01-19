@@ -125,8 +125,6 @@ public interface Constants {
     String LAST_SESSION_EPOCH = "sexe";
     int MAX_KEY_LENGTH = 120;
     int MAX_VALUE_LENGTH = 512;
-    int MAX_MULTI_VALUE_ARRAY_LENGTH = 100;
-    int MAX_MULTI_VALUE_LENGTH = 512;
     String WZRK_FROM_KEY = "wzrk_from";
     String WZRK_ACCT_ID_KEY = "wzrk_acct_id";
     String WZRK_FROM = "CTPushNotificationReceiver";
@@ -200,7 +198,6 @@ public interface Constants {
     String KEY_ALT_TEXT= "alt_text";
     String KEY_BUTTONS = "buttons";
     String KEY_CUSTOM_HTML = "custom-html";
-    String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
@@ -234,7 +231,6 @@ public interface Constants {
     String INAPP_SS_EVAL_META = "inapps_eval";
     String INAPP_SUPPRESSED_META = "inapps_suppressed";
     String INAPP_WHEN_TRIGGERS = "whenTriggers";
-    String INAPP_WHEN_LIMITS = "whenLimit";
     String INAPP_FC_LIMITS = "frequencyLimits";
     String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
 
@@ -270,6 +266,8 @@ public interface Constants {
     String COMMAND_INCREMENT = "$incr";
     String COMMAND_DECREMENT = "$decr";
     String DATE_PREFIX = "$D_";
+    String DELETE_MARKER = "__CLEVERTAP_DELETE__";
+    String GET_MARKER = "__CLEVERTAP_GET__";
     String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";
@@ -295,9 +293,6 @@ public interface Constants {
     String KEY_LINKS = "links";
     String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
     String KEY_ENCRYPTION_CGK = "cgk";
-    String KEY_ENCRYPTION_INAPP_CS = "cs";
-
-    String KEY_ENCRYPTION_INAPP_SS = "ss";
 
     String KEY_ENCRYPTION_NAME = "Name";
     String KEY_ENCRYPTION_IDENTITY = "Identity";
@@ -325,50 +320,15 @@ public interface Constants {
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";
-    // error message codes
-    int INVALID_MULTI_VALUE = 1;
-    int PUSH_KEY_EMPTY = 2;
-    int OBJECT_VALUE_NOT_PRIMITIVE_PROFILE = 3;
-    int INVALID_COUNTRY_CODE = 4;
-    int INVALID_PHONE = 5;
-    int KEY_EMPTY = 6;
-    int PROP_VALUE_NOT_PRIMITIVE = 7;
-    int CHANNEL_ID_MISSING_IN_PAYLOAD = 8;
-    int CHANNEL_ID_NOT_REGISTERED = 9;
-    int NOTIFICATION_VIEWED_DISABLED = 10;
-    int VALUE_CHARS_LIMIT_EXCEEDED = 11;
-    int MULTI_VALUE_CHARS_LIMIT_EXCEEDED = 12;
-    int INVALID_PROFILE_PROP_ARRAY_COUNT = 13;
-    int EVENT_NAME_NULL = 14;
-    int OBJECT_VALUE_NOT_PRIMITIVE = 15;
-    int RESTRICTED_EVENT_NAME = 16;
-    int DISCARDED_EVENT_NAME = 17;
-    int USE_CUSTOM_ID_FALLBACK = 18;
-    int USE_CUSTOM_ID_MISSING_IN_MANIFEST = 19;
-    int UNABLE_TO_SET_CT_CUSTOM_ID = 20;
-    int INVALID_CT_CUSTOM_ID = 21;
-    int INVALID_MULTI_VALUE_KEY = 23;
-    int RESTRICTED_MULTI_VALUE_KEY = 24;
-    int INVALID_INCREMENT_DECREMENT_VALUE = 25;
-    int ENCRYPTION_FLAG_FAIL = 0b00;
-    int ENCRYPTION_FLAG_CGK_SUCCESS = 0b01;
-    int ENCRYPTION_FLAG_DB_SUCCESS = 0b10;
-    int ENCRYPTION_FLAG_ALL_SUCCESS = 0b11;
-
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
-    String EMPTY_STRING = "";
     String AUTH = "auth";
     String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
 
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
-    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
-    HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
-
-    HashSet<String> keysToSkipForUserAttributesEvaluation = new HashSet<>(Arrays.asList("cc", "tz", "Carrier"));
 
     /**
      * Valid indexes for the App Inbox item and buttons.
@@ -383,7 +343,6 @@ public interface Constants {
     String PT_NOTIF_ID = "notificationId";
     String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
     String KEY_CT_TYPE = "ct_type";
-    String PT_INPUT_KEY = "pt_input_reply";
 
     // ==========Fallback keys=========
     String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident

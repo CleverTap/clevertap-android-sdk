@@ -473,7 +473,7 @@ class InAppControllerTest {
         )
 
         val inAppController = createInAppController()
-        inAppController.onQueueEvent("event", emptyMap<String, Any>(), mockk())
+        inAppController.onQueueEvent("event", emptyMap(), mockk())
         verifyInAppsDisplayed(
             inAppController,
             CTInAppType.CTInAppTypeInterstitial.toString(),
@@ -495,8 +495,8 @@ class InAppControllerTest {
 
         val inAppController = createInAppController()
         inAppController.onQueueChargedEvent(
-            emptyMap<String, Any>(),
-            emptyList<Map<String, Any>>(),
+            emptyMap(),
+            emptyList(),
             mockk()
         )
         verifyInAppsDisplayed(
@@ -522,7 +522,7 @@ class InAppControllerTest {
 
         val inAppController = createInAppController()
         inAppController.onQueueProfileEvent(
-            emptyMap<String, Map<String, Any>>(),
+            emptyMap(),
             mockk()
         )
         verifyInAppsDisplayed(
