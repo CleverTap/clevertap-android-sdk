@@ -101,6 +101,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
+        config.getLogger().verbose(config.getAccountId(), "addMultiValuesForKey: key=" + key + ", values=" + values);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("addMultiValuesForKey", () -> {
             _handleMultiValues(values, key, ProfileCommand.ADD);
@@ -110,6 +111,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void incrementValue(String key, Number value) {
+        config.getLogger().verbose(config.getAccountId(), "incrementValue: key=" + key + ", value=" + value);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("incrementValue", () -> {
             _constructIncrementDecrementValues(value,key, ProfileCommand.INCREMENT);
@@ -119,6 +121,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void decrementValue(String key, Number value) {
+        config.getLogger().verbose(config.getAccountId(), "decrementValue: key=" + key + ", value=" + value);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("decrementValue", () -> {
             _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT);
@@ -271,6 +274,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
+        config.getLogger().verbose(config.getAccountId(), "pushEvent: eventName=" + eventName + ", eventActions=" + eventActions);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("pushEvent", () -> {
             _pushEvent(eventName, eventActions);
@@ -586,6 +590,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushProfile(final Map<String, Object> profile) {
+        config.getLogger().verbose(config.getAccountId(), "pushProfile: profile=" + profile);
         if (profile == null || profile.isEmpty() || deviceInfo.getDeviceID() == null) {
             return;
         }
@@ -598,6 +603,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
+        config.getLogger().verbose(config.getAccountId(), "removeMultiValuesForKey: key=" + key + ", values=" + values);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("removeMultiValuesForKey", () -> {
             _handleMultiValues(values, key, ProfileCommand.REMOVE);
@@ -607,6 +613,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void removeValueForKey(final String key) {
+        config.getLogger().verbose(config.getAccountId(), "removeValueForKey: key=" + key);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("removeValueForKey", () -> {
             _removeValueForKey(key);
@@ -620,6 +627,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     public void pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
+        config.getLogger().verbose(config.getAccountId(), "pushChargedEvent: chargeDetails=" + chargeDetails + ", items=" + items);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("pushChargedEvent", () -> {
             _pushChargedEvent(chargeDetails, items);
@@ -771,6 +779,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     void setMultiValuesForKey(final String key, final ArrayList<String> values) {
+        config.getLogger().verbose(config.getAccountId(), "setMultiValuesForKey: key=" + key + ", values=" + values);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("setMultiValuesForKey", () -> {
             _handleMultiValues(values, key, ProfileCommand.SET);
