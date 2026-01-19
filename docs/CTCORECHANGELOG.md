@@ -1,4 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 7.8.0 (January 21, 2025)
+#### New Features
+* Adds support for ingestion of Nested Objects in event properties and profile properties
+* todo -> inactions
+
+#### Bug Fixes
+* Fixes an `AbstractMethodError` related to `setTheme` for `InAppNotificationActivity`.
+* 
 ### Version 7.7.1 (December 2, 2025)
 
 #### New Features
