@@ -18,7 +18,7 @@ internal object JsonFlattener {
      * @return Flattened map with dot-notation keys
      */
     @JvmStatic
-    fun flattenInternal(json: JSONObject, prefix: String): Map<String, Any> {
+    private fun flattenInternal(json: JSONObject, prefix: String): Map<String, Any> {
         val result = mutableMapOf<String, Any>()
 
         json.keys().forEach { key ->
@@ -32,14 +32,18 @@ internal object JsonFlattener {
                 }
                 is JSONArray -> {
                     // Keep JSONArray as-is
-                    result[newKey] = value
+                    result[newKey] = DataProcessingUtils.processDatePrefixes(value)
                 }
                 JSONObject.NULL -> {
                     // Skip null values or include them based on preference
                     // result[newKey] = null
                 }
+                is String -> {
+                    // Primitive values (String, Number, Boolean etc.)
+                    result[newKey] = DataProcessingUtils.processDatePrefixes(value)
+                }
                 else -> {
-                    // Primitive values (String, Number, Boolean, Date, etc.)
+                    // Primitive values (String, Number, Boolean etc.)
                     result[newKey] = value
                 }
             }

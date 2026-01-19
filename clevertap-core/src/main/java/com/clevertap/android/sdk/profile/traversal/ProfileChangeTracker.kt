@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.profile.traversal
 
+import com.clevertap.android.sdk.utils.DataProcessingUtils
 import org.json.JSONObject
 
 /**
@@ -11,10 +12,10 @@ internal class ProfileChangeTracker {
 
     /**
      * Processes date prefixes in a value before recording.
-     * Delegates to ProfileOperationUtils for the actual processing.
+     * Delegates to DataProcessingUtils for the actual processing.
      */
     private fun processValue(value: Any?): Any? {
-        return value?.let { ProfileOperationUtils.processDatePrefixes(it) }
+        return value?.let { DataProcessingUtils.processDatePrefixes(it) }
     }
 
     /**

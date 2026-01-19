@@ -226,58 +226,41 @@ class JsonFlattenerTest {
         assertEquals("example.com", result["domain"])
     }
 
-    @Test
-    fun `flattenInternal with prefix`() {
-        val json = JSONObject().apply {
-            put("name", "John")
-        }
-
-        val result = JsonFlattener.flattenInternal(json, "user")
-
-        assertEquals(1, result.size)
-        assertEquals("John", result["user.name"])
-    }
-
-    @Test
-    fun `flattenInternal with empty prefix`() {
-        val json = JSONObject().apply {
-            put("name", "John")
-        }
-
-        val result = JsonFlattener.flattenInternal(json, "")
-
-        assertEquals(1, result.size)
-        assertEquals("John", result["name"])
-    }
 
     @Test
     fun `flatten handles complex real-world structure`() {
         val json = JSONObject().apply {
             put("id", "123")
+            put("date", "\$D_123")
             put("user", JSONObject().apply {
                 put("name", "John Doe")
                 put("email", "john@example.com")
                 put("address", JSONObject().apply {
                     put("street", "123 Main St")
                     put("city", "NYC")
+                    put("date", "\$D_123")
                 })
             })
             put("tags", JSONArray().apply {
                 put("premium")
                 put("verified")
+                put("\$D_123")
             })
             put("active", true)
         }
 
         val result = JsonFlattener.flatten(json)
 
-        assertEquals(7, result.size)
+        assertEquals(9, result.size)
         assertEquals("123", result["id"])
+        assertEquals(123L, result["date"])
         assertEquals("John Doe", result["user.name"])
         assertEquals("john@example.com", result["user.email"])
         assertEquals("123 Main St", result["user.address.street"])
         assertEquals("NYC", result["user.address.city"])
+        assertEquals(123L, result["user.address.date"])
         assertTrue(result["tags"] is JSONArray)
+        assertEquals((result["tags"] as JSONArray).get(2), 123L)
         assertEquals(true, result["active"])
     }
 
