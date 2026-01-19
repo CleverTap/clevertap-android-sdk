@@ -35,11 +35,9 @@ internal object JsonFlattener {
                     result[newKey] = DataProcessingUtils.processDatePrefixes(value)
                 }
                 JSONObject.NULL -> {
-                    // Skip null values or include them based on preference
-                    // result[newKey] = null
+                    // no-op
                 }
                 is String -> {
-                    // Primitive values (String, Number, Boolean etc.)
                     result[newKey] = DataProcessingUtils.processDatePrefixes(value)
                 }
                 else -> {
