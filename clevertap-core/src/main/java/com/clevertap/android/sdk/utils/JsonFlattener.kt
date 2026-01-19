@@ -17,7 +17,6 @@ internal object JsonFlattener {
      * @param prefix Optional prefix for keys (used in recursion)
      * @return Flattened map with dot-notation keys
      */
-    @JvmStatic
     private fun flattenInternal(json: JSONObject, prefix: String): Map<String, Any> {
         val result = mutableMapOf<String, Any>()
 
