@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.profile.traversal
+package com.clevertap.android.sdk.utils
 
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
@@ -7,7 +7,7 @@ import org.json.JSONObject
 /**
  * Constants used throughout the profile merge system.
  */
-internal object ProfileOperationUtils {
+internal object DataProcessingUtils {
     /**
      * Processes a string value, removing $D_ prefix if present and converting to long.
      *

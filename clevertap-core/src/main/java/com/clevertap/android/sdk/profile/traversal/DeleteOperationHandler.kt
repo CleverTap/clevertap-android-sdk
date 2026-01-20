@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.profile.traversal
 
+import com.clevertap.android.sdk.utils.DataProcessingUtils
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -36,7 +37,7 @@ internal class DeleteOperationHandler(
         val oldValue = target.get(key)
 
         when {
-            ProfileOperationUtils.isDeleteMarker(newValue) -> {
+            DataProcessingUtils.isDeleteMarker(newValue) -> {
                 // Delete this key entirely
                 deleteValue(target, key, oldValue, currentPath, changes)
             }
@@ -164,7 +165,7 @@ internal class DeleteOperationHandler(
 
         // Collect indices to delete
         for (i in 0 until newArray.length()) {
-            if (ProfileOperationUtils.isDeleteMarker(newArray.opt(i)) && i < oldArray.length()) {
+            if (DataProcessingUtils.isDeleteMarker(newArray.opt(i)) && i < oldArray.length()) {
                 indicesToDelete.add(i)
             }
         }

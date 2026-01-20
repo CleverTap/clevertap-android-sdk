@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.profile.traversal
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.utils.DataProcessingUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -11,37 +12,37 @@ class ProfileOperationUtilsTest {
     // isDeleteMarker tests
     @Test
     fun `isDeleteMarker returns true for DELETE_MARKER string`() {
-        assertTrue(ProfileOperationUtils.isDeleteMarker(Constants.DELETE_MARKER))
+        assertTrue(DataProcessingUtils.isDeleteMarker(Constants.DELETE_MARKER))
     }
 
     @Test
     fun `isDeleteMarker returns false for null`() {
-        assertFalse(ProfileOperationUtils.isDeleteMarker(null))
+        assertFalse(DataProcessingUtils.isDeleteMarker(null))
     }
 
     @Test
     fun `isDeleteMarker returns false for different string`() {
-        assertFalse(ProfileOperationUtils.isDeleteMarker("some other string"))
+        assertFalse(DataProcessingUtils.isDeleteMarker("some other string"))
     }
 
     @Test
     fun `isDeleteMarker returns false for non-string types`() {
-        assertFalse(ProfileOperationUtils.isDeleteMarker(123))
-        assertFalse(ProfileOperationUtils.isDeleteMarker(true))
-        assertFalse(ProfileOperationUtils.isDeleteMarker(JSONObject()))
-        assertFalse(ProfileOperationUtils.isDeleteMarker(JSONArray()))
+        assertFalse(DataProcessingUtils.isDeleteMarker(123))
+        assertFalse(DataProcessingUtils.isDeleteMarker(true))
+        assertFalse(DataProcessingUtils.isDeleteMarker(JSONObject()))
+        assertFalse(DataProcessingUtils.isDeleteMarker(JSONArray()))
     }
 
     @Test
     fun `isDeleteMarker returns false for empty string`() {
-        assertFalse(ProfileOperationUtils.isDeleteMarker(""))
+        assertFalse(DataProcessingUtils.isDeleteMarker(""))
     }
 
     // processDatePrefixes tests for String values
     @Test
     fun `processDatePrefixes converts valid date prefix string to long`() {
         val input = "${Constants.DATE_PREFIX}1234567890"
-        val result = ProfileOperationUtils.processDatePrefixes(input)
+        val result = DataProcessingUtils.processDatePrefixes(input)
 
         assertTrue(result is Long)
         assertEquals(1234567890L, result)
@@ -50,7 +51,7 @@ class ProfileOperationUtilsTest {
     @Test
     fun `processDatePrefixes returns original string if no date prefix`() {
         val input = "normalString"
-        val result = ProfileOperationUtils.processDatePrefixes(input)
+        val result = DataProcessingUtils.processDatePrefixes(input)
 
         assertTrue(result is String)
         assertEquals("normalString", result)
@@ -59,7 +60,7 @@ class ProfileOperationUtilsTest {
     @Test
     fun `processDatePrefixes returns original string if conversion fails`() {
         val input = "${Constants.DATE_PREFIX}notANumber"
-        val result = ProfileOperationUtils.processDatePrefixes(input)
+        val result = DataProcessingUtils.processDatePrefixes(input)
 
         assertTrue(result is String)
         assertEquals(input, result)
@@ -69,7 +70,7 @@ class ProfileOperationUtilsTest {
     @Test
     fun `processDatePrefixes handles large timestamp`() {
         val input = "${Constants.DATE_PREFIX}9999999999999"
-        val result = ProfileOperationUtils.processDatePrefixes(input)
+        val result = DataProcessingUtils.processDatePrefixes(input)
 
         assertTrue(result is Long)
         assertEquals(9999999999999L, result)
@@ -78,22 +79,22 @@ class ProfileOperationUtilsTest {
     // processDatePrefixes tests for non-String values
     @Test
     fun `processDatePrefixes returns numbers unchanged`() {
-        assertEquals(123, ProfileOperationUtils.processDatePrefixes(123))
-        assertEquals(123L, ProfileOperationUtils.processDatePrefixes(123L))
-        assertEquals(123.45, ProfileOperationUtils.processDatePrefixes(123.45))
+        assertEquals(123, DataProcessingUtils.processDatePrefixes(123))
+        assertEquals(123L, DataProcessingUtils.processDatePrefixes(123L))
+        assertEquals(123.45, DataProcessingUtils.processDatePrefixes(123.45))
     }
 
     @Test
     fun `processDatePrefixes returns boolean unchanged`() {
-        assertEquals(true, ProfileOperationUtils.processDatePrefixes(true))
-        assertEquals(false, ProfileOperationUtils.processDatePrefixes(false))
+        assertEquals(true, DataProcessingUtils.processDatePrefixes(true))
+        assertEquals(false, DataProcessingUtils.processDatePrefixes(false))
     }
 
     // processDatePrefixes tests for JSONArray
     @Test
     fun `processDatePrefixes processes empty array`() {
         val input = JSONArray()
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONArray
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONArray
 
         assertEquals(0, result.length())
     }
@@ -107,7 +108,7 @@ class ProfileOperationUtilsTest {
             put("string")
         }
 
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONArray
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONArray
 
         assertEquals(4, result.length())
         assertEquals(1000L, result.get(0))
@@ -126,7 +127,7 @@ class ProfileOperationUtilsTest {
             put("outer")
         }
 
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONArray
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONArray
         val nested = result.getJSONArray(0)
 
         assertEquals(2, nested.length())
@@ -139,7 +140,7 @@ class ProfileOperationUtilsTest {
     @Test
     fun `processDatePrefixes processes empty object`() {
         val input = JSONObject()
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONObject
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONObject
 
         assertEquals(0, result.length())
     }
@@ -153,7 +154,7 @@ class ProfileOperationUtilsTest {
             put("string", "value")
         }
 
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONObject
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONObject
 
         assertEquals(4, result.length())
         assertEquals(1000L, result.get("date"))
@@ -172,7 +173,7 @@ class ProfileOperationUtilsTest {
             put("date", "${Constants.DATE_PREFIX}2000")
         }
 
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONObject
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONObject
         val nested = result.getJSONObject("outer")
 
         assertEquals(1000L, nested.get("innerDate"))
@@ -190,7 +191,7 @@ class ProfileOperationUtilsTest {
             put("normalField", "value")
         }
 
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONObject
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONObject
         val datesArray = result.getJSONArray("dates")
 
         assertEquals(1000L, datesArray.get(0))
@@ -212,7 +213,7 @@ class ProfileOperationUtilsTest {
             })
         }
 
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONObject
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONObject
         val level1 = result.getJSONObject("level1")
         val level2 = level1.getJSONArray("level2")
         val level3 = level2.getJSONObject(0)
@@ -228,7 +229,7 @@ class ProfileOperationUtilsTest {
             put("${Constants.DATE_PREFIX}1000")
         }
 
-        val result = ProfileOperationUtils.processDatePrefixes(input) as JSONArray
+        val result = DataProcessingUtils.processDatePrefixes(input) as JSONArray
 
         // DELETE_MARKER should remain as string since it doesn't have date prefix
         assertEquals(Constants.DELETE_MARKER, result.get(0))
