@@ -21,6 +21,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.SessionManager;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
@@ -321,22 +322,42 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         config.getLogger().verbose(config.getAccountId(), "FlattenedEventData : " + flattenedEventData);
 
+        // Early return for no-data scenarios
+        if (flattenedEventData instanceof FlattenedEventData.EventProperties.NoData) {
+            return;
+        }
+
+        InAppController inAppController = controllerManager.getInAppController();
+
+        // Handle charged events (highest priority, independent of network state)
         if (eventMediator.isChargedEvent(event)) {
-            controllerManager.getInAppController()
-                    .onQueueChargedEvent(eventMediator.getChargedEventDetails(event),
-                            eventMediator.getChargedEventItemDetails(event), userLocation);
-        } else if (!NetworkManager.isNetworkOnline(context) && eventMediator.isEvent(event)) {
-            // in case device is offline just evaluate all events
-            Map<String, Object> flattenedEventProps = ((FlattenedEventData.EventProperties) flattenedEventData).getProperties();
-            controllerManager.getInAppController().onQueueEvent(eventName, flattenedEventProps, userLocation);
-        } else if (flattenedEventData instanceof FlattenedEventData.ProfileChanges) {
-            Map<String, ProfileChange> flattenedProfileChanges = ((FlattenedEventData.ProfileChanges) flattenedEventData).getChanges();
-            Map<String, Map<String, Object>> userAttributeChangedProperties = ProfileStateTraverser.Companion.toNestedMap(flattenedProfileChanges);
-            controllerManager.getInAppController().onQueueProfileEvent(userAttributeChangedProperties, userLocation);
-        } else if (!eventMediator.isAppLaunchedEvent(event) && flattenedEventData instanceof FlattenedEventData.EventProperties) {
-            // in case device is online only evaluate non-appLaunched events
-            Map<String, Object> flattenedEventProps = ((FlattenedEventData.EventProperties) flattenedEventData).getProperties();
-            controllerManager.getInAppController().onQueueEvent(eventName, flattenedEventProps, userLocation);
+            inAppController.onQueueChargedEvent(
+                    eventMediator.getChargedEventDetails(event),
+                    eventMediator.getChargedEventItemDetails(event),
+                    userLocation
+            );
+            return;
+        }
+
+        // Handle profile changes
+        if (flattenedEventData instanceof FlattenedEventData.ProfileChanges) {
+            Map<String, ProfileChange> flattenedProfileChanges =
+                    ((FlattenedEventData.ProfileChanges) flattenedEventData).getChanges();
+            Map<String, Map<String, Object>> userAttributeChangedProperties =
+                    ProfileStateTraverser.Companion.toNestedMap(flattenedProfileChanges);
+            inAppController.onQueueProfileEvent(userAttributeChangedProperties, userLocation);
+            return;
+        }
+
+        Map<String, Object> flattenedEventProps =
+                ((FlattenedEventData.EventProperties) flattenedEventData).getProperties();
+        boolean isOffline = !NetworkManager.isNetworkOnline(context);
+        boolean isRegularEvent = eventMediator.isEvent(event);
+        boolean isAppLaunchedEvent = eventMediator.isAppLaunchedEvent(event);
+
+        // Queue event if: (offline AND is regular event) OR (online AND NOT app launched event)
+        if ((isOffline && isRegularEvent) || (!isOffline && !isAppLaunchedEvent)) {
+            inAppController.onQueueEvent(eventName, flattenedEventProps, userLocation);
         }
     }
 

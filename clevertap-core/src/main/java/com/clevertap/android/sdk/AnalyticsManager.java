@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import static com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getWzrkFields;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 
 import android.content.Context;
@@ -183,8 +184,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // We won't get here
         }
 
-        // Flattened data is not needed since AppLaunched fields are attached separately before inapp evaluation. AppLaunched Fields never have nesting
-        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+        // Flattened data is an empty map since AppLaunched fields are attached separately before inapp evaluation. AppLaunched Fields never have nesting
+        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, new FlattenedEventData.EventProperties(emptyMap()));
     }
 
     @Override
