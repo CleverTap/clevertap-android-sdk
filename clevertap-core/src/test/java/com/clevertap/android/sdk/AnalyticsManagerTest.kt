@@ -755,7 +755,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(any(), match { event ->
                 event.getString(Constants.KEY_EVT_NAME) == Constants.APP_LAUNCHED_EVENT
-            }, Constants.RAISED_EVENT)
+            }, Constants.RAISED_EVENT, FlattenedEventData.EventProperties(emptyMap()))
         }
     }
 
@@ -766,7 +766,7 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(any(), match { event ->
                 event.getString(Constants.KEY_EVT_NAME) == Constants.APP_LAUNCHED_EVENT
-            }, Constants.RAISED_EVENT)
+            }, Constants.RAISED_EVENT, FlattenedEventData.EventProperties(emptyMap()))
         }
     }
 
