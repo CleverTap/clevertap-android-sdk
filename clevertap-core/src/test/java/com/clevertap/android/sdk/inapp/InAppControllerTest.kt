@@ -19,11 +19,15 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.function
 import com.clevertap.android.sdk.inapp.customtemplates.template
-import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
+import com.clevertap.android.sdk.inapp.data.EvaluatedInAppsResult
+import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
+import com.clevertap.android.sdk.inapp.delay.InActionResult
+import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.sdk.utils.configMock
 import io.mockk.every
@@ -48,7 +52,8 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class InAppControllerTest {
 
-    private lateinit var mockInAppDelayManager: InAppDelayManager
+    private lateinit var mockInAppDelayManager: InAppScheduler<DelayedInAppResult>
+    private lateinit var mockInAppInActionManager: InAppScheduler<InActionResult>
     private lateinit var mockControllerManager: ControllerManager
     private lateinit var mockInAppFCManager: InAppFCManager
     private lateinit var mockCallbackManager: CallbackManager
@@ -122,7 +127,8 @@ class InAppControllerTest {
             )
         }
 
-        mockInAppDelayManager = mockk<InAppDelayManager>()
+        mockInAppDelayManager = mockk()
+        mockInAppInActionManager = mockk()
         fakeInAppQueue = FakeInAppQueue()
     }
 
@@ -294,7 +300,7 @@ class InAppControllerTest {
         val actionJsonString = """
         {
             "${Constants.KEY_TYPE}": "${InAppActionType.KEY_VALUES}",
-            "${Constants.KEY_KV}": ${JSONObject(keyValues)}
+            "${Constants.KEY_KV}": ${JSONObject((keyValues as Map<*, *>?)!!)}
         }
         """.trimIndent()
         val inApp = getInAppWithAction(actionJsonString)
@@ -363,7 +369,7 @@ class InAppControllerTest {
             JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
 
         val inAppController = createInAppController()
-        inAppController.addInAppNotificationsToQueue(inApps)
+        inAppController.addInAppNotificationsToQueue(inApps.toList())
 
         var currentInApp = InAppController.currentlyDisplayingInApp!!
         assertEquals(
@@ -386,7 +392,7 @@ class InAppControllerTest {
 
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        inAppController.addInAppNotificationsToQueue(inApps)
+        inAppController.addInAppNotificationsToQueue(inApps.toList())
         assertNull(InAppController.currentlyDisplayingInApp)
 
         inAppController.resumeInApps()
@@ -407,7 +413,7 @@ class InAppControllerTest {
 //        val inApps =
 //            JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
         val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
-        inAppController.addInAppNotificationsToQueue(inApps)
+        inAppController.addInAppNotificationsToQueue(inApps.toList())
         assertNull(InAppController.currentlyDisplayingInApp)
 
         inAppController.resumeInApps()
@@ -433,7 +439,7 @@ class InAppControllerTest {
         val inAppController = createInAppController()
         inAppController.registerInAppDisplayListener(mockDisplayListener)
         val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
-        inAppController.addInAppNotificationsToQueue(inApps)
+        inAppController.addInAppNotificationsToQueue(inApps.toList())
 
         inAppController.discardInApps(true)
 
@@ -446,7 +452,7 @@ class InAppControllerTest {
         val inAppController = createInAppController()
         inAppController.registerInAppDisplayListener(mockDisplayListener)
         val inApps = JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
-        inAppController.addInAppNotificationsToQueue(inApps)
+        inAppController.addInAppNotificationsToQueue(inApps.toList())
         inAppController.unregisterInAppDisplayListener()
 
         inAppController.discardInApps(true)
@@ -458,14 +464,16 @@ class InAppControllerTest {
     fun `onQueueEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        val delayedInApps = JSONArray()
-        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns Pair(
-            inApps,
-            delayedInApps
+        val delayedInApps = JSONArray().toList<JSONObject>()
+        val inactionInApps = JSONArray().toList<JSONObject>()
+        every { mockEvaluationManager.evaluateOnEvent(any(), any(), any()) } returns EvaluatedInAppsResult(
+            inApps.toList(),
+            delayedInApps,
+            inactionInApps
         )
 
         val inAppController = createInAppController()
-        inAppController.onQueueEvent("event", emptyMap<String, Any>(), mockk())
+        inAppController.onQueueEvent("event", emptyMap(), mockk())
         verifyInAppsDisplayed(
             inAppController,
             CTInAppType.CTInAppTypeInterstitial.toString(),
@@ -477,16 +485,18 @@ class InAppControllerTest {
     fun `onQueueChargedEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        val delayedInApps = JSONArray()
-        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns Pair(
-            inApps,
-            delayedInApps
+        val delayedInApps = JSONArray().toList<JSONObject>()
+        val inactionInApps = JSONArray().toList<JSONObject>()
+        every { mockEvaluationManager.evaluateOnChargedEvent(any(), any(), any()) } returns EvaluatedInAppsResult(
+            inApps.toList(),
+            delayedInApps,
+            inactionInApps
         )
 
         val inAppController = createInAppController()
         inAppController.onQueueChargedEvent(
-            emptyMap<String, Any>(),
-            emptyList<Map<String, Any>>(),
+            emptyMap(),
+            emptyList(),
             mockk()
         )
         verifyInAppsDisplayed(
@@ -500,18 +510,19 @@ class InAppControllerTest {
     fun `onQueueProfileEvent should evaluate and display all matching client-side in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        val delayedInApps = JSONArray()
+        val delayedInApps = JSONArray().toList<JSONObject>()
+        val inactionInApps = JSONArray().toList<JSONObject>()
         every {
             mockEvaluationManager.evaluateOnUserAttributeChange(
                 any(),
                 any(),
                 any()
             )
-        } returns Pair(inApps, delayedInApps)
+        } returns EvaluatedInAppsResult(inApps.toList(), delayedInApps.toList(),inactionInApps)
 
         val inAppController = createInAppController()
         inAppController.onQueueProfileEvent(
-            emptyMap<String, Map<String, Any>>(),
+            emptyMap(),
             mockk()
         )
         verifyInAppsDisplayed(
@@ -531,10 +542,10 @@ class InAppControllerTest {
                 any(),
                 any()
             )
-        } returns inApps
+        } returns inApps.toList()
 
         val inAppController = createInAppController()
-        inAppController.onAppLaunchServerSideInAppsResponse(inApps, mockk())
+        inAppController.onAppLaunchServerSideInAppsResponse(inApps.toList(), mockk())
         verifyInAppsDisplayed(
             inAppController,
             CTInAppType.CTInAppTypeInterstitial.toString(),
@@ -546,7 +557,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should display the next queued in-apps`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
         verifyInAppsDisplayed(
@@ -561,7 +572,7 @@ class InAppControllerTest {
         every { mockConfig.isAnalyticsOnly } returns true
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_COVER_WITH_FUNCTION_BUTTON_ACTION}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
 
@@ -574,7 +585,7 @@ class InAppControllerTest {
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
         //reject inApps without extras (kv)
         every { mockInAppListener.beforeShow(match { extras -> extras.isEmpty() }) } returns false
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
@@ -587,7 +598,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should not display in-apps while the app is in background`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
 
         every { CoreMetaData.isAppForeground() } returns false
 
@@ -609,7 +620,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should not display in-apps rejected by FCManager`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
 
         // reject interstitial type
         every {
@@ -630,7 +641,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should queue in-apps if there is a currently displayed in-app`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
@@ -650,7 +661,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should not display in-apps on excluded activities`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
 
         val mockActivity = mockk<Activity>()
         every { mockActivity.localClassName } returns EXCLUDED_ACTIVITY_NAME
@@ -681,7 +692,7 @@ class InAppControllerTest {
         ).timeToLive
         // set the clock past the ttl of the in-app. ttl is in seconds
         fakeClock.timeMillis = (ttl + 1) * 1000
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
@@ -692,7 +703,7 @@ class InAppControllerTest {
     fun `showNotificationIfAvailable should drop html in-apps when there is no internet`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV},${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
         every { NetworkManager.isNetworkOnline(any()) } returns false
 
         val inAppController = createInAppController()
@@ -706,7 +717,7 @@ class InAppControllerTest {
         val htmlTypeRfpInApp = JSONObject(InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV)
         htmlTypeRfpInApp.put(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, true)
         val inApps = JSONArray("[$htmlTypeRfpInApp,${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
-        fakeInAppQueue.enqueueAll(inApps)
+        fakeInAppQueue.enqueueAll(inApps.toList())
 
         every { mockInAppActionHandler.arePushNotificationsEnabled() } returns true
 
@@ -803,6 +814,7 @@ class InAppControllerTest {
             inAppActionHandler = mockInAppActionHandler,
             inAppNotificationInflater = mockInAppInflater,
             inAppDelayManager = mockInAppDelayManager,
+            inAppInActionManager = mockInAppInActionManager,
             clock = fakeClock
         )
     }

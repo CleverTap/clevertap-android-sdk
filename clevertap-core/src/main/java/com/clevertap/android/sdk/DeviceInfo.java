@@ -35,11 +35,12 @@ import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
+import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
@@ -495,7 +496,7 @@ public class DeviceInfo {
         } else {
             String fallbackId = generateFallbackDeviceID();
             removeDeviceID();
-            String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
+            String error = recordDeviceError(ValidationError.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
             getConfigLogger().info(config.getAccountId(), error);
             return fallbackId;
         }
@@ -920,12 +921,12 @@ public class DeviceInfo {
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {
             if (cleverTapID == null) {
-                String error = recordDeviceError(Constants.USE_CUSTOM_ID_FALLBACK);
+                String error = recordDeviceError(ValidationError.USE_CUSTOM_ID_FALLBACK);
                 config.getLogger().info(error);
             }
         } else {
             if (cleverTapID != null) {
-                String error = recordDeviceError(Constants.USE_CUSTOM_ID_MISSING_IN_MANIFEST);
+                String error = recordDeviceError(ValidationError.USE_CUSTOM_ID_MISSING_IN_MANIFEST);
                 config.getLogger().info(error);
             }
         }
@@ -936,7 +937,7 @@ public class DeviceInfo {
         if (deviceID != null && deviceID.trim().length() > 2) {
             getConfigLogger().verbose(config.getAccountId(), "CleverTap ID already present for profile");
             if (cleverTapID != null) {
-                String error = recordDeviceError(Constants.UNABLE_TO_SET_CT_CUSTOM_ID, deviceID, cleverTapID);
+                String error = recordDeviceError(ValidationError.UNABLE_TO_SET_CT_CUSTOM_ID, deviceID, cleverTapID);
                 getConfigLogger().info(config.getAccountId(), error);
             }
             return deviceID;
@@ -962,8 +963,8 @@ public class DeviceInfo {
         return genId;
     }
 
-    private String recordDeviceError(int messageCode, String... varargs) {
-        ValidationResult validationResult = ValidationResultFactory.create(514, messageCode, varargs);
+    private String recordDeviceError(ValidationError error, String... varargs) {
+        ValidationResult validationResult = ValidationResultFactory.create(error, varargs);
         validationResults.add(validationResult);
         return validationResult.getErrorDesc();
     }

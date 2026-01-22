@@ -306,6 +306,15 @@ fun JSONObject.safeGetJSONArrayOrNullIfEmpty(key: String): Pair<Boolean, JSONArr
     return Pair(list.length() > 0, list.takeIf { it.length() > 0 })
 }
 
+fun JSONObject.safeGetJSONObjectListOrEmpty(key: String): Pair<Boolean, List<JSONObject>> {
+    val array = optJSONArray(key)
+    return if (array != null) {
+        Pair(true, array.toList<JSONObject>())
+    } else {
+        Pair(false, emptyList())
+    }
+}
+
 /**
  * Safely retrieves a JSONArray from the JSONObject using the specified [key].
  *

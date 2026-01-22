@@ -252,11 +252,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @Override
-    public void setTheme(int resid) {
-        super.setTheme(android.R.style.Theme_Translucent_NoTitleBar);
-    }
-
-    @Override
     public void didClickForHardPermissionWithFallbackSettings(boolean fallbackToSettings) {
         showPushPermissionPrompt(fallbackToSettings);
     }

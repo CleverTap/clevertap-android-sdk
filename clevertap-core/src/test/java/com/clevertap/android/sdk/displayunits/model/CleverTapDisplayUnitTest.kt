@@ -1,16 +1,16 @@
 package com.clevertap.android.sdk.displayunits.model
 
 import android.os.Parcel
-import android.text.TextUtils
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
-import org.junit.runner.*
-import org.robolectric.RobolectricTestRunner
-import org.skyscreamer.jsonassert.JSONAssert
 import java.util.TreeMap
 
-@RunWith(RobolectricTestRunner::class)
 class CleverTapDisplayUnitTest : BaseTestCase() {
+
+    // Helper function to compare JSONObjects by their string representation
+    private fun assertJsonEquals(expected: org.json.JSONObject?, actual: org.json.JSONObject?) {
+        Assert.assertEquals(expected?.toString(), actual?.toString())
+    }
 
     @Test
     fun test_toDisplayUnit_nullArray_ReturnInvalidObject() {
@@ -67,6 +67,6 @@ class CleverTapDisplayUnitTest : BaseTestCase() {
             TreeMap(createdFromParcel.customExtras).toString()
         )
         Assert.assertEquals(displayUnit.bgColor, createdFromParcel.bgColor)
-        JSONAssert.assertEquals(displayUnit.jsonObject, createdFromParcel.jsonObject, false)
+        assertJsonEquals(displayUnit.jsonObject, createdFromParcel.jsonObject)
     }
 }

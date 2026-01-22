@@ -1,17 +1,27 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
+import static com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getWzrkFields;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 
 import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
+import com.clevertap.android.sdk.events.FlattenedEventData;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.profile.ProfileCommand;
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
+import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
@@ -19,11 +29,15 @@ import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.Clock;
+import com.clevertap.android.sdk.utils.JsonFlattener;
 import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.validation.ValidationResultFactory;
-import com.clevertap.android.sdk.validation.ValidationResultStack;
-import com.clevertap.android.sdk.validation.Validator;
+import com.clevertap.android.sdk.validation.ValidationConfig;
+import com.clevertap.android.sdk.validation.pipeline.ChargedEventItemsValidationResult;
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider;
+import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
+import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
+import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,11 +58,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final ControllerManager controllerManager;
     private final CoreMetaData coreMetaData;
     private final DeviceInfo deviceInfo;
-    private final ValidationResultStack validationResultStack;
-    private final Validator validator;
+    private final ValidationPipelineProvider validationPipelineProvider;
+    private final ValidationConfig validationConfig;
     private final Clock currentTimeProvider;
     private final CTExecutors executors;
     private final Object notificationMapLock = new Object();
+    private final LocalDataStore localDataStore;
     private final InAppPreviewHandler inAppPreviewHandler;
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
@@ -58,21 +73,22 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             Context context,
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
-            Validator validator,
-            ValidationResultStack validationResultStack,
+            ValidationPipelineProvider validationPipelineProvider,
+            ValidationConfig validationConfig,
             CoreMetaData coreMetaData,
             DeviceInfo deviceInfo,
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
             final CTLockManager ctLockManager,
             Clock currentTimeProvider,
             CTExecutors executors,
+            LocalDataStore localDataStore,
             InAppPreviewHandler inAppPreviewHandler
     ) {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
-        this.validator = validator;
-        this.validationResultStack = validationResultStack;
+        this.validationPipelineProvider = validationPipelineProvider;
+        this.validationConfig = validationConfig;
         this.coreMetaData = coreMetaData;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
@@ -80,27 +96,38 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.controllerManager = controllerManager;
         this.currentTimeProvider = currentTimeProvider;
         this.executors = executors;
+        this.localDataStore = localDataStore;
         this.inAppPreviewHandler = inAppPreviewHandler;
     }
 
     @Override
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
+        config.getLogger().verbose(config.getAccountId(), "addMultiValuesForKey: key=" + key + ", values=" + values);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("addMultiValuesForKey", () -> {
-            final String command = Constants.COMMAND_ADD;
-            _handleMultiValues(values, key, command);
+            _handleMultiValues(values, key, ProfileCommand.ADD);
             return null;
         });
     }
 
     @Override
     public void incrementValue(String key, Number value) {
-        _constructIncrementDecrementValues(value,key,Constants.COMMAND_INCREMENT);
+        config.getLogger().verbose(config.getAccountId(), "incrementValue: key=" + key + ", value=" + value);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("incrementValue", () -> {
+            _constructIncrementDecrementValues(value,key, ProfileCommand.INCREMENT);
+            return null;
+        });
     }
 
     @Override
     public void decrementValue(String key, Number value) {
-        _constructIncrementDecrementValues(value,key,Constants.COMMAND_DECREMENT);
+        config.getLogger().verbose(config.getAccountId(), "decrementValue: key=" + key + ", value=" + value);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("decrementValue", () -> {
+            _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT);
+            return null;
+        });
     }
 
     /**
@@ -156,7 +183,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable t) {
             // We won't get here
         }
-        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+
+        // Flattened data is an empty map since AppLaunched fields are attached separately before inapp evaluation. AppLaunched Fields never have nesting
+        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, new FlattenedEventData.EventProperties(emptyMap()));
     }
 
     @Override
@@ -184,11 +213,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         } catch (Throwable t) {
                             // no-op
                         }
+                        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(eventExtraData));
                     }
                 }
             }
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
             config.getLogger().verbose(config.getAccountId(),
@@ -211,11 +240,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
                     if (eventExtras != null) {
                         event.put("evtData", eventExtras);
+                        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(eventExtras));
                     }
                 }
             }
-
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
             config.getLogger().verbose(config.getAccountId(),
@@ -247,72 +275,47 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
+        config.getLogger().verbose(config.getAccountId(), "pushEvent: eventName=" + eventName + ", eventActions=" + eventActions);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("pushEvent", () -> {
+            _pushEvent(eventName, eventActions);
+            return null;
+        });
+    }
 
-        if (eventName == null || eventName.isEmpty()) {
-            return;
-        }
-
-        ValidationResult validationResult = validator.isRestrictedEventName(eventName);
-        // Check for a restricted event name
-        if (validationResult.getErrorCode() > 0) {
-            validationResultStack.pushValidationResult(validationResult);
-            return;
-        }
-
-        ValidationResult discardedResult = validator.isEventDiscarded(eventName);
-        // Check for a discarded event name
-        if (discardedResult.getErrorCode() > 0) {
-            validationResultStack.pushValidationResult(discardedResult);
-            return;
-        }
-
-        if (eventActions == null) {
-            eventActions = new HashMap<>();
-        }
-
+    @WorkerThread
+    private void _pushEvent(String eventName, Map<String, Object> eventActions) {
         JSONObject event = new JSONObject();
         try {
-            // Validate
-            ValidationResult vr = validator.cleanEventName(eventName);
+            // Validate event name with regular config
+            EventNameValidationResult nameValidationResult = validationPipelineProvider.getEventNamePipeline()
+                .execute(eventName, validationConfig);
 
             // Check for an error
-            if (vr.getErrorCode() != 0) {
-                event.put(Constants.ERROR_KEY, getErrorObject(vr));
+            if (nameValidationResult.shouldDrop()) {
+                return;
             }
 
-            eventName = vr.getObject().toString();
-            JSONObject actions = new JSONObject();
-            for (String key : eventActions.keySet()) {
-                Object value = eventActions.get(key);
-                vr = validator.cleanObjectKey(key);
-                key = vr.getObject().toString();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-                try {
-                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
-                } catch (IllegalArgumentException e) {
-                    // The object was neither a String, Boolean, or any number primitives
-                    ValidationResult error = ValidationResultFactory
-                            .create(512, Constants.PROP_VALUE_NOT_PRIMITIVE, eventName, key,
-                                    value != null ? value.toString() : "");
-                    config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                    validationResultStack.pushValidationResult(error);
-                    // Skip this record
-                    continue;
-                }
-                value = vr.getObject();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-                actions.put(key, value);
-            }
-            event.put("evtName", eventName);
-            event.put("evtData", actions);
+            // Create config WITHOUT restrictedMultiValueFields for event data
+            ValidationConfig eventConfig = new ValidationConfig.Builder()
+                .from(validationConfig)
+                .setRestrictedMultiValueFields(emptySet())
+                .build();
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            // Validate event data with modified config (no restrictions on multi-value fields)
+            EventDataValidationResult dataValidationResult = validationPipelineProvider.getEventDataPipeline()
+                .execute(eventActions, eventConfig);
+
+            if (dataValidationResult.shouldDrop()) {
+                return;
+            }
+
+            JSONObject eventData = dataValidationResult.getCleanedData();
+            FlattenedEventData flattenedData = getFlattenedEventProperties(eventData);
+            event.put("evtName", nameValidationResult.getCleanedName());
+            event.put("evtData", eventData);
+
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, flattenedData);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -355,7 +358,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             event.put("evtData", notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
         } catch (Throwable ignored) {
             // We won't get here
         }
@@ -499,10 +502,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         try {
             // convert bundle to json
-            JSONObject event = AnalyticsManagerBundler.notificationClickedJson(extras);
+            JSONObject notif = wzrkBundleToJson(extras);
+            JSONObject event = AnalyticsManagerBundler.notificationClickedJson(notif);
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
-            coreMetaData.setWzrkParams(AnalyticsManagerBundler.wzrkBundleToJson(extras));
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
+            coreMetaData.setWzrkParams(notif);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -575,12 +579,19 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras);
 
-        JSONObject event = AnalyticsManagerBundler.notificationViewedJson(extras);
-        baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT);
+        try {
+            JSONObject notif = wzrkBundleToJson(extras);
+            JSONObject event = AnalyticsManagerBundler.notificationViewedJson(notif);
+            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
+
+        } catch (JSONException e) {
+            config.getLogger().debug("Failed to recording Notification Viewed " + e);
+        }
     }
 
     @Override
     public void pushProfile(final Map<String, Object> profile) {
+        config.getLogger().verbose(config.getAccountId(), "pushProfile: profile=" + profile);
         if (profile == null || profile.isEmpty() || deviceInfo.getDeviceID() == null) {
             return;
         }
@@ -593,15 +604,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
+        config.getLogger().verbose(config.getAccountId(), "removeMultiValuesForKey: key=" + key + ", values=" + values);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("removeMultiValuesForKey", () -> {
-            _handleMultiValues(values, key, Constants.COMMAND_REMOVE);
+            _handleMultiValues(values, key, ProfileCommand.REMOVE);
             return null;
         });
     }
 
     @Override
     public void removeValueForKey(final String key) {
+        config.getLogger().verbose(config.getAccountId(), "removeValueForKey: key=" + key);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("removeValueForKey", () -> {
             _removeValueForKey(key);
@@ -614,99 +627,56 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT);
     }
 
-    void _generateEmptyMultiValueError(String key) {
-        ValidationResult error = ValidationResultFactory.create(512, Constants.INVALID_MULTI_VALUE, key);
-        validationResultStack.pushValidationResult(error);
-        config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+    public void pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
+        config.getLogger().verbose(config.getAccountId(), "pushChargedEvent: chargeDetails=" + chargeDetails + ", items=" + items);
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("pushChargedEvent", () -> {
+            _pushChargedEvent(chargeDetails, items);
+            return null;
+        });
     }
 
-    void pushChargedEvent(HashMap<String, Object> chargeDetails,
-            ArrayList<HashMap<String, Object>> items) {
+    @WorkerThread
+    private void _pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
 
         if (chargeDetails == null || items == null) {
             config.getLogger().debug(config.getAccountId(), "Invalid Charged event: details and or items is null");
             return;
         }
 
-        if (items.size() > 50) {
-            ValidationResult error = ValidationResultFactory.create(522);
-            config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-            validationResultStack.pushValidationResult(error);
+        ChargedEventItemsValidationResult validationResult = validationPipelineProvider.getChargedEventItemsValidationPipeline().execute(items, validationConfig);
+        if (validationResult.shouldDrop()) {
+            return;
         }
 
-        JSONObject evtData = new JSONObject();
         JSONObject chargedEvent = new JSONObject();
-        ValidationResult vr;
         try {
-            for (String key : chargeDetails.keySet()) {
-                Object value = chargeDetails.get(key);
-                vr = validator.cleanObjectKey(key);
-                key = vr.getObject().toString();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
+            // Validate charged event details
+            EventDataValidationResult detailsResult = validationPipelineProvider.getEventDataPipeline().execute(chargeDetails, validationConfig);
 
-                try {
-                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
-                } catch (IllegalArgumentException e) {
-                    // The object was neither a String, Boolean, or any number primitives
-                    ValidationResult error = ValidationResultFactory.create(511,
-                            Constants.PROP_VALUE_NOT_PRIMITIVE, "Charged", key,
-                            value != null ? value.toString() : "");
-                    validationResultStack.pushValidationResult(error);
-                    config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                    // Skip this property
-                    continue;
-                }
-                value = vr.getObject();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-
-                evtData.put(key, value);
+            if (detailsResult.shouldDrop()) {
+                return;
             }
 
+            JSONObject evtData = detailsResult.getCleanedData();
+
+            // Validate each item
             JSONArray jsonItemsArray = new JSONArray();
             for (HashMap<String, Object> map : items) {
-                JSONObject itemDetails = new JSONObject();
-                for (String key : map.keySet()) {
-                    Object value = map.get(key);
-                    vr = validator.cleanObjectKey(key);
-                    key = vr.getObject().toString();
-                    // Check for an error
-                    if (vr.getErrorCode() != 0) {
-                        chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                    }
+                EventDataValidationResult itemResult = validationPipelineProvider.getEventDataPipeline().execute(map, validationConfig);
 
-                    try {
-                        vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
-                    } catch (IllegalArgumentException e) {
-                        // The object was neither a String, Boolean, or any number primitives
-                        ValidationResult error = ValidationResultFactory
-                                .create(511, Constants.OBJECT_VALUE_NOT_PRIMITIVE, key,
-                                        value != null ? value.toString() : "");
-                        config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                        validationResultStack.pushValidationResult(error);
-                        // Skip this property
-                        continue;
-                    }
-                    value = vr.getObject();
-                    // Check for an error
-                    if (vr.getErrorCode() != 0) {
-                        chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                    }
-                    itemDetails.put(key, value);
+                if (!itemResult.shouldDrop()) {
+                    JSONObject itemDetails = itemResult.getCleanedData();
+                    jsonItemsArray.put(itemDetails);
                 }
-                jsonItemsArray.put(itemDetails);
             }
             evtData.put("Items", jsonItemsArray);
 
             chargedEvent.put("evtName", Constants.CHARGED_EVENT);
             chargedEvent.put("evtData", evtData);
 
-            baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT);
+            FlattenedEventData flattenedData = getFlattenedEventProperties(evtData);
+            baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT, flattenedData);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -740,6 +710,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    @Deprecated
     Future<?> raiseEventForSignedCall(String eventName, JSONObject dcEventProperties) {
 
         Future<?> future = null;
@@ -777,7 +748,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             coreMetaData.setLocationFromUser(location);
 
-            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(geofenceProperties));
         } catch (JSONException e) {
             config.getLogger().debug(config.getAccountId(), Constants.LOG_TAG_GEOFENCES +
                     "JSON Exception when raising GeoFence event "
@@ -809,176 +780,74 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     void setMultiValuesForKey(final String key, final ArrayList<String> values) {
+        config.getLogger().verbose(config.getAccountId(), "setMultiValuesForKey: key=" + key + ", values=" + values);
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("setMultiValuesForKey", () -> {
-            _handleMultiValues(values, key, Constants.COMMAND_SET);
+            _handleMultiValues(values, key, ProfileCommand.SET);
             return null;
         });
     }
 
-    private void _generateInvalidMultiValueKeyError(String key) {
-        ValidationResult error = ValidationResultFactory.create(523, Constants.INVALID_MULTI_VALUE_KEY, key);
-        validationResultStack.pushValidationResult(error);
-        config.getLogger().debug(config.getAccountId(),
-                "Invalid multi-value property key " + key + " profile multi value operation aborted");
-    }
 
-    private void _handleMultiValues(ArrayList<String> values, String key, String command) {
+    private void _handleMultiValues(ArrayList<String> values, String key, ProfileCommand command) {
         if (key == null) {
             return;
         }
 
-        if (values == null || values.isEmpty()) {
-            _generateEmptyMultiValueError(key);
+        Map<String, ArrayList<String>> eventData = new HashMap<>();
+        eventData.put(key, values);
+
+        EventDataValidationResult eventDataValidationResult = validationPipelineProvider.getMultiValueDataPipeline().execute(eventData, validationConfig);
+
+        if (eventDataValidationResult.shouldDrop()) {
             return;
         }
 
-        ValidationResult vr;
-
-        // validate the key
-        vr = validator.cleanMultiValuePropertyKey(key);
-
-        // Check for an error
-        if (vr.getErrorCode() != 0) {
-            validationResultStack.pushValidationResult(vr);
+        try {
+            _pushMultiValue(eventDataValidationResult.getCleanedData().getJSONArray(key), key, command);
+        } catch (JSONException e) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to handle Multi Values for key" + key, e);
         }
-
-        // reset the key
-        Object _key = vr.getObject();
-        String cleanKey = (_key != null) ? vr.getObject().toString() : null;
-
-        // if key is empty generate an error and return
-        if (cleanKey == null || cleanKey.isEmpty()) {
-            _generateInvalidMultiValueKeyError(key);
-            return;
-        }
-
-        key = cleanKey;
-        _pushMultiValue(values, key, command);
     }
 
-    private void _constructIncrementDecrementValues(Number value, String key, String command) {
-        try {
-            if (key == null || value == null) {
-                return;
-            }
-
-            // validate the key
-            ValidationResult vr = validator.cleanObjectKey(key);
-            key = vr.getObject().toString();
-
-            if (key.isEmpty()) {
-                ValidationResult error = ValidationResultFactory.create(512,
-                        Constants.PUSH_KEY_EMPTY, key);
-                validationResultStack.pushValidationResult(error);
-                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                // Abort
-                return;
-            }
-
-            if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0){
-                ValidationResult error = ValidationResultFactory.create(512,
-                        Constants.INVALID_INCREMENT_DECREMENT_VALUE, key);
-                validationResultStack.pushValidationResult(error);
-                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                // Abort
-                return;
-            }
-
-
-            // Check for an error
-            if (vr.getErrorCode() != 0) {
-                validationResultStack.pushValidationResult(vr);
-            }
-
-            // push to server
-            JSONObject commandObj = new JSONObject().put(command, value);
-            JSONObject updateObj = new JSONObject().put(key, commandObj);
-            baseEventQueueManager.pushBasicProfile(updateObj, false);
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key "
-                    + key, t);
+    private void _constructIncrementDecrementValues(Number value, String key, ProfileCommand command) {
+        if (value == null) {
+            return;
         }
+        try {
+            PropertyKeyValidationResult keyResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key, validationConfig);
 
+            if (keyResult.shouldDrop()) {
+                return;
+            }
+
+            key = keyResult.getCleanedKey();
+
+            JSONObject profileCommand = new JSONObject().put(command.getCommandString(), value);
+            JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
+
+            ProfileOperation operation = command.getOperation();
+
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, value, operation));
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key " + key, t);
+        }
     }
 
     private void _push(Map<String, Object> profile) {
-        if (profile == null || profile.isEmpty()) {
-            return;
-        }
-
         try {
-            ValidationResult vr;
-            JSONObject customProfile = new JSONObject();
-            for (String key : profile.keySet()) {
-                Object value = profile.get(key);
+            // Validate profile data
+            EventDataValidationResult profileResult = validationPipelineProvider.getEventDataPipeline().execute(profile, validationConfig);
 
-                vr = validator.cleanObjectKey(key);
-                key = vr.getObject().toString();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    validationResultStack.pushValidationResult(vr);
-                }
-
-                if (key.isEmpty()) {
-                    ValidationResult keyError = ValidationResultFactory.create(512, Constants.PUSH_KEY_EMPTY);
-                    validationResultStack.pushValidationResult(keyError);
-                    config.getLogger().debug(config.getAccountId(), keyError.getErrorDesc());
-                    // Skip this property
-                    continue;
-                }
-
-                try {
-                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Profile);
-                } catch (Throwable e) {
-                    // The object was neither a String, Boolean, or any number primitives
-                    ValidationResult error = ValidationResultFactory.create(512,
-                            Constants.OBJECT_VALUE_NOT_PRIMITIVE_PROFILE,
-                            value != null ? value.toString() : "", key);
-                    validationResultStack.pushValidationResult(error);
-                    config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                    // Skip this property
-                    continue;
-                }
-                value = vr.getObject();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    validationResultStack.pushValidationResult(vr);
-                }
-
-                // test Phone:  if no device country code, test if phone starts with +, log but always send
-                if (key.equalsIgnoreCase("Phone")) {
-                    try {
-                        value = value.toString();
-                        String countryCode = deviceInfo.getCountryCode();
-                        if (countryCode == null || countryCode.isEmpty()) {
-                            String _value = (String) value;
-                            if (!_value.startsWith("+")) {
-                                ValidationResult error = ValidationResultFactory
-                                        .create(512, Constants.INVALID_COUNTRY_CODE, _value);
-                                validationResultStack.pushValidationResult(error);
-                                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                            }
-                        }
-                        config.getLogger().verbose(config.getAccountId(),
-                                "Profile phone is: " + value + " device country code is: " + ((countryCode != null)
-                                        ? countryCode : "null"));
-                    } catch (Exception e) {
-                        validationResultStack
-                                .pushValidationResult(ValidationResultFactory.create(512, Constants.INVALID_PHONE));
-                        config.getLogger()
-                                .debug(config.getAccountId(), "Invalid phone number: " + e.getLocalizedMessage());
-                        continue;
-                    }
-                }
-
-                customProfile.put(key, value);
+            if (profileResult.shouldDrop()) {
+                return;
             }
 
+            JSONObject cleanedProfile = profileResult.getCleanedData();
             config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile);
+                    .verbose(config.getAccountId(), "Constructed custom profile: " + cleanedProfile);
 
-            baseEventQueueManager.pushBasicProfile(customProfile, false);
+            baseEventQueueManager.pushBasicProfile(cleanedProfile, false, mergeProfileChanges(cleanedProfile, ProfileOperation.UPDATE));
 
         } catch (Throwable t) {
             // Will not happen
@@ -988,65 +857,55 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private void _removeValueForKey(String key) {
         try {
-            key = (key == null) ? "" : key; // so we will generate a validation error later on
+            PropertyKeyValidationResult keyValidationResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key, validationConfig);
 
-            // validate the key
-            ValidationResult vr;
-
-            vr = validator.cleanObjectKey(key);
-            key = vr.getObject().toString();
-
-            if (key.isEmpty()) {
-                ValidationResult error = ValidationResultFactory.create(512, Constants.KEY_EMPTY);
-                validationResultStack.pushValidationResult(error);
-                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
-                // Abort
+            if (keyValidationResult.shouldDrop()) {
                 return;
             }
-            // Check for an error
-            if (vr.getErrorCode() != 0) {
-                validationResultStack.pushValidationResult(vr);
-            }
 
-            //If key contains "Identity" then do not remove from SQLDb and shared prefs
+            key = keyValidationResult.getCleanedKey();
+
+            // If key contains "Identity" then do not remove from SQLDb and shared prefs
             if (key.toLowerCase().contains("identity")) {
-                config.getLogger()
-                        .verbose(config.getAccountId(), "Cannot remove value for key " +
-                                key + " from user profile");
+                config.getLogger().verbose(config.getAccountId(),
+                    "Cannot remove value for key " + key + " from user profile");
                 return;
             }
 
-            // send the delete command
-            JSONObject command = new JSONObject().put(Constants.COMMAND_DELETE, true);
-            JSONObject update = new JSONObject().put(key, command);
+            // Send the delete command
+            ProfileCommand command = ProfileCommand.DELETE;
+            JSONObject profileCommand = new JSONObject().put(command.getCommandString(), true);
+            JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
 
             //Set removeFromSharedPrefs to true to remove PII keys from shared prefs.
-            baseEventQueueManager.pushBasicProfile(update,true);
+            baseEventQueueManager.pushBasicProfile(profileUpdate, true, mergeProfileChanges(key, Constants.DELETE_MARKER, command.getOperation()));
 
-            config.getLogger()
-                    .verbose(config.getAccountId(), "removing value for key " + key + " from user profile");
+            config.getLogger().verbose(config.getAccountId(),
+                "removing value for key " + key + " from user profile");
 
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to remove profile value for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(),
+                "Failed to remove profile value for key " + key, t);
         }
     }
 
-    private void _pushMultiValue(ArrayList<String> originalValues, String key, String command) {
+    private void _pushMultiValue(JSONArray originalValues, String key, ProfileCommand command) {
         try {
-            // push to server
-            JSONObject commandObj = new JSONObject();
-            commandObj.put(command, new JSONArray(originalValues));
+            JSONObject profileCommand = new JSONObject();
+            profileCommand.put(command.getCommandString(), originalValues);
 
-            JSONObject fields = new JSONObject();
-            fields.put(key, commandObj);
+            JSONObject profileUpdate = new JSONObject();
+            profileUpdate.put(key, profileCommand);
 
-            baseEventQueueManager.pushBasicProfile(fields, false);
+            ProfileOperation operation = command.getOperation();
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, originalValues, operation));
 
-            config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed multi-value profile push: " + fields);
+            config.getLogger().verbose(config.getAccountId(),
+                "Constructed multi-value profile push: " + profileUpdate);
 
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error pushing multiValue for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(),
+                "Error pushing multiValue for key " + key, t);
         }
     }
 
@@ -1163,9 +1022,23 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             event.put("evtData", notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
         } catch (Throwable ignored) {
             // We won't get here
         }
+    }
+
+    private FlattenedEventData getFlattenedEventProperties(JSONObject properties) {
+        return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
+    }
+
+    private FlattenedEventData.ProfileChanges mergeProfileChanges(String key, Object originalValues, ProfileOperation operation) {
+        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(key, originalValues, operation);
+        return new FlattenedEventData.ProfileChanges(profileChanges);
+    }
+
+    private FlattenedEventData.ProfileChanges mergeProfileChanges(JSONObject originalValues, ProfileOperation operation){
+        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(originalValues, operation);
+        return new FlattenedEventData.ProfileChanges(profileChanges);
     }
 }

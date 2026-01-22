@@ -8,13 +8,12 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.network.ArpRepo;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
-import com.clevertap.android.sdk.validation.Validator;
-
+import com.clevertap.android.sdk.validation.ValidationConfig;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ARPResponse extends CleverTapResponseDecorator {
 
@@ -23,19 +22,19 @@ public class ARPResponse extends CleverTapResponseDecorator {
     private final CleverTapInstanceConfig config;
 
     private final Logger logger;
-    private final Validator validator;
+    private final ValidationConfig validationConfig;
     private final ArpRepo arpRepo;
 
     public ARPResponse(
             CleverTapInstanceConfig config,
-            Validator validator,
+            ValidationConfig validationConfig,
             ControllerManager controllerManager,
             ArpRepo arpRepo
     ) {
         this.config = config;
         ctProductConfigController = controllerManager.getCTProductConfigController();
         logger = this.config.getLogger();
-        this.validator = validator;
+        this.validationConfig = validationConfig;
         this.arpRepo = arpRepo;
     }
 
@@ -118,18 +117,16 @@ public class ARPResponse extends CleverTapResponseDecorator {
         }
 
         try {
-            ArrayList<String> discardedEventsList = new ArrayList<>();
+            Set<String> discardedEventsSet = new HashSet<>();
             JSONArray discardedEventsArray = response.getJSONArray(Constants.DISCARDED_EVENT_JSON_KEY);
 
-            if (discardedEventsArray != null) {
-                for (int i = 0; i < discardedEventsArray.length(); i++) {
-                    discardedEventsList.add(discardedEventsArray.getString(i));
-                }
+            for (int i = 0; i < discardedEventsArray.length(); i++) {
+                discardedEventsSet.add(discardedEventsArray.getString(i));
             }
-            if (validator != null) {
-                validator.setDiscardedEvents(discardedEventsList);
+            if (validationConfig != null) {
+                validationConfig.updateDiscardedEventNames(discardedEventsSet);
             } else {
-                logger.verbose(config.getAccountId(), "Validator object is NULL");
+                logger.verbose(config.getAccountId(), "ValidationConfig object is NULL");
             }
         } catch (JSONException e) {
             logger.verbose(config.getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());

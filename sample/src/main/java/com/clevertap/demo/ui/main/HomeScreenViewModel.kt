@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
 import com.clevertap.demo.MyApplication
+import org.json.JSONArray
 import java.util.Date
 
 private const val TAG = "HomeScreenViewModel"
@@ -46,83 +47,183 @@ class HomeScreenViewModel(
         when (section) {
             0 -> handleEventsSection(item)
             1 -> handleUserProfileSection(item)
-            2 -> handleInboxSection(item)
-            3 -> handleDisplayUnitsSection(item)
-            4 -> handleProductConfigsSection(item)
-            5 -> handleFeatureFlagsSection(item)
-            8 -> handleDeviceIdentifiersSection(item)
-            9 -> handlePushTemplatesSection(item)
-            10 -> handlePromptLocalIAMSection(item)
-            11 -> handleInAppSection(item)
-            12 -> handleCSInAppSection(item)
-            13 -> handleVariablesSection(item)
-            14 -> handleFileTypeVariablesSection(item)
-            15 -> handleLocaleSection(item)
-            16 -> handleCustomTemplatesSection(item)
-            17 -> handleOptOutSection(item)
+            2 -> handleProfileOperationsSection(item)
+            3 -> handleInboxSection(item)
+            4 -> handleDisplayUnitsSection(item)
+            5 -> handleProductConfigsSection(item)
+            6 -> handleFeatureFlagsSection(item)
+            9 -> handleDeviceIdentifiersSection(item)
+            10 -> handlePushTemplatesSection(item)
+            11 -> handlePromptLocalIAMSection(item)
+            12 -> handleInAppSection(item)
+            13 -> handleCSInAppSection(item)
+            14 -> handleVariablesSection(item)
+            15 -> handleFileTypeVariablesSection(item)
+            16 -> handleLocaleSection(item)
+            17 -> handleCustomTemplatesSection(item)
+            18 -> handleOptOutSection(item)
         }
     }
 
     // ========== EVENTS SECTION ==========
     private fun handleEventsSection(item: Int) {
         when (item) {
-            0 -> recordSimpleEvents()
-            1 -> recordEventWithProperties()
-            2 -> recordChargedEvent()
-            3 -> recordScreenEvent()
-            4 -> fireInboxEvents()
+            0 -> recordSimpleEvent()
+            1 -> recordProductViewedEvent()
+            2 -> recordAddToCartEvent()
+            3 -> recordVideoWatchedEvent()
+            4 -> recordSearchEvent()
+            5 -> recordChargedEvent()
+            6 -> recordScreenEvent()
+            7 -> recordAppRatingEvent()
+            8 -> recordShareEvent()
         }
     }
 
-    private fun recordSimpleEvents() {
-        logStep("EVENTS", "Recording simple events")
-        cleverTapAPI?.pushEvent("BlockBRTesting")
-        ctMultiInstance?.pushEvent("icon-inbox")
+    private fun recordSimpleEvent() {
+        logStep("EVENTS", "Recording simple event without properties")
+        
+        val eventName = "App Opened"
+        printVar("Event Name", eventName)
+        
+        cleverTapAPI?.pushEvent(eventName)
     }
 
-    private fun recordEventWithProperties() {
-        logStep("EVENTS", "Recording event with properties")
+    private fun recordProductViewedEvent() {
+        logStep("EVENTS", "Recording Product Viewed event")
 
-        val prodViewedAction = mapOf(
-            "Product Name" to "Casio Chronograph Watch",
-            "Category" to "Mens Accessories",
-            "Price" to 59.99,
-            "Date" to Date()
+        val eventProperties = mapOf(
+            "Product ID" to "PROD-12345",
+            "Product Name" to "Wireless Headphones",
+            "Category" to "Electronics",
+            "Price" to 149.99,
+            "Currency" to "USD",
+            "Brand" to "AudioTech",
+            "In Stock" to true,
+            "Discount Percentage" to 15,
+            "Image URL" to "https://example.com/products/headphones.jpg"
         )
 
-        printMap("Event Properties", prodViewedAction)
+        printMap("Event Properties", eventProperties)
+        cleverTapAPI?.pushEvent("Product Viewed", eventProperties)
+    }
 
-        cleverTapAPI?.apply {
-            pushEvent("Product viewed", prodViewedAction)
-            pushEvent("caurousel-inapp")
-            pushEvent("icon-inbox")
-        }
+    private fun recordAddToCartEvent() {
+        logStep("EVENTS", "Recording Add to Cart event")
+
+        val eventProperties = mapOf(
+            "Product ID" to "PROD-67890",
+            "Product Name" to "Smart Watch",
+            "Quantity" to 1,
+            "Price" to 299.99,
+            "Total Amount" to 299.99,
+            "Cart Total" to 449.98,
+            "Items in Cart" to 2
+        )
+
+        printMap("Event Properties", eventProperties)
+        cleverTapAPI?.pushEvent("Add to Cart", eventProperties)
+    }
+
+    private fun recordVideoWatchedEvent() {
+        logStep("EVENTS", "Recording Video Watched event")
+
+        val eventProperties = mapOf(
+            "Video ID" to "VID-001",
+            "Video Title" to "Getting Started Tutorial",
+            "Duration" to 180,
+            "Watched Duration" to 150,
+            "Completion Percentage" to 83,
+            "Video Category" to "Tutorial",
+            "Quality" to "1080p",
+            "Platform" to "Android"
+        )
+
+        printMap("Event Properties", eventProperties)
+        cleverTapAPI?.pushEvent("Video Watched", eventProperties)
+    }
+
+    private fun recordSearchEvent() {
+        logStep("EVENTS", "Recording Search event")
+
+        val eventProperties = mapOf(
+            "Search Query" to "wireless headphones",
+            "Results Count" to 24,
+            "Filters Applied" to arrayListOf("Price: Under $200", "Rating: 4+ stars"),
+            "Search Category" to "Electronics",
+            "Time Spent" to 45
+        )
+
+        printMap("Event Properties", eventProperties)
+        cleverTapAPI?.pushEvent("Search", eventProperties)
+    }
+
+    private fun recordAppRatingEvent() {
+        logStep("EVENTS", "Recording App Rating event")
+
+        val eventProperties = mapOf(
+            "Rating" to 5,
+            "Review Text" to "Great app! Easy to use.",
+            "Platform" to "Google Play",
+            "App Version" to "2.4.1"
+        )
+
+        printMap("Event Properties", eventProperties)
+        cleverTapAPI?.pushEvent("App Rated", eventProperties)
+    }
+
+    private fun recordShareEvent() {
+        logStep("EVENTS", "Recording Share event")
+
+        val eventProperties = mapOf(
+            "Content Type" to "Product",
+            "Content ID" to "PROD-12345",
+            "Share Method" to "WhatsApp",
+            "Platform" to "Android"
+        )
+
+        printMap("Event Properties", eventProperties)
+        cleverTapAPI?.pushEvent("Content Shared", eventProperties)
     }
 
     private fun recordChargedEvent() {
-        logStep("EVENTS", "Recording charged (transactional) event")
+        logStep("EVENTS", "Recording Charged event (E-commerce transaction)")
 
         val chargeDetails = hashMapOf<String, Any>(
-            "Amount" to 300,
-            "Payment Mode" to "Credit card",
-            "Charged ID" to 24052013
+            "Amount" to 449.98,
+            "Currency" to "USD",
+            "Payment Mode" to "Credit Card",
+            "Transaction ID" to "TXN-${System.currentTimeMillis()}",
+            "Shipping Charges" to 9.99,
+            "Discount" to 50.00,
+            "Coupon Code" to "SAVE50",
+            "Order Status" to "Confirmed"
         )
 
         val items = arrayListOf<HashMap<String, Any>>(
             hashMapOf(
-                "Product category" to "books",
-                "Book name" to "The Millionaire next door",
-                "Quantity" to 1
+                "Product ID" to "PROD-12345",
+                "Product Name" to "Wireless Headphones",
+                "Category" to "Electronics",
+                "Price" to 149.99,
+                "Quantity" to 1,
+                "Brand" to "AudioTech"
             ),
             hashMapOf(
-                "Product category" to "books",
-                "Book name" to "Achieving inner zen",
-                "Quantity" to 1
+                "Product ID" to "PROD-67890",
+                "Product Name" to "Smart Watch",
+                "Category" to "Wearables",
+                "Price" to 299.99,
+                "Quantity" to 1,
+                "Brand" to "TechGear"
             ),
             hashMapOf(
-                "Product category" to "books",
-                "Book name" to "Chuck it, let's do it",
-                "Quantity" to 5
+                "Product ID" to "PROD-11111",
+                "Product Name" to "Phone Case",
+                "Category" to "Accessories",
+                "Price" to 19.99,
+                "Quantity" to 2,
+                "Brand" to "ProtectPro"
             )
         )
 
@@ -134,164 +235,180 @@ class HomeScreenViewModel(
 
     private fun recordScreenEvent() {
         logStep("EVENTS", "Recording screen view event")
-        cleverTapAPI?.recordScreen("Cart Screen Viewed")
-    }
-
-    private fun fireInboxEvents() {
-        logStep("EVENTS", "Firing inbox events")
-        cleverTapAPI?.apply {
-            pushEvent("App Inbox Carousel")
-            pushEvent("App Inbox Deeplink")
-            pushEvent("Add Inbox message with links")
-        }
+        
+        val screenName = "Product Details Screen"
+        printVar("Screen Name", screenName)
+        
+        cleverTapAPI?.recordScreen(screenName)
     }
 
     // ========== USER PROFILE SECTION ==========
     private fun handleUserProfileSection(item: Int) {
         when (item) {
-            0 -> pushProfile()
-            1 -> pushRichProfileData()
-            2 -> updateSingleValuePropertiesReplace()
-            3 -> updateSingleValuePropertiesAdd()
-            4 -> removeSingleValueProperties()
-            5 -> updateMultiValuePropertiesReplace()
-            6 -> updateMultiValuePropertiesAdd()
-            7 -> updateMultiValuePropertiesRemove()
-            8 -> incrementValue()
-            9 -> decrementValue()
-            10 -> setProfileLocation()
-            11 -> getUserProfileProperties()
-            12 -> performUserLogin()
+            0 -> pushBasicProfile()
+            1 -> pushCompleteUserProfile()
+            2 -> pushEcommerceProfile()
+            3 -> updateUserPreferences()
+            4 -> updateSubscriptionInfo()
+            5 -> setProfileLocation()
+            6 -> getUserProfileProperties()
+            7 -> performUserLogin()
         }
     }
 
-    private fun pushProfile() {
-        logStep("USER PROFILE", "Pushing user profile")
-
-        cleverTapAPI?.let { ct ->
-            val profileUpdate = buildMap {
-                put("Name", "User Name")
-                put("Email", "User@gmail.com")
-                put("Phone", "+14155559999")
-                put("Gender", "M")
-                put("Employed", "Y")
-                put("Education", "Graduate")
-                put("Married", "Y")
-                put("DOB", Date())
-                put("Age", 28)
-                put("MSG-email", false)
-                put("MSG-push", true)
-                put("MSG-sms", false)
-                put("MyStuffList", arrayListOf("bag", "shoes"))
-                put("MyStuffArray", arrayOf("Jeans", "Perfume"))
-            }
-
-            printMap("Profile Update", profileUpdate)
-            ct.pushProfile(profileUpdate)
-        }
-    }
-
-    private fun pushRichProfileData() {
-        logStep("USER PROFILE", "Pushing rich profile data")
-
-        cleverTapAPI?.let { ct ->
-            val profileUpdate = buildMap {
-                put("HeightCm", 180)
-                put("HairColor", "Black")
-                put("Race", "Human")
-                put("County", "Atlantis")
-                put("Sport", "Football")
-                put("MyCarsList", arrayListOf("Honda", "BMW", "Ford"))
-            }
-
-            printMap("Rich Profile Update", profileUpdate)
-            ct.pushProfile(profileUpdate)
-        }
-    }
-
-    private fun updateSingleValuePropertiesReplace() {
-        logStep("USER PROFILE", "Updating (replacing) single-value properties")
-
-        val profileUpdate = hashMapOf<String, Any>(
-            "Name" to "Updated User Name",
-            "Email" to "UpdatedUser@gmail.com",
-            "Gender" to "F",
-            "Employed" to "N",
-            "Education" to "College",
-            "Married" to "N",
-            "MSG-push" to false
-        )
-
-        printMap("Profile Update", profileUpdate)
-        cleverTapAPI?.pushProfile(profileUpdate)
-    }
-
-    private fun updateSingleValuePropertiesAdd() {
-        logStep("USER PROFILE", "Updating (adding) single-value properties")
+    private fun pushBasicProfile() {
+        logStep("USER PROFILE", "Pushing basic user profile information")
 
         val profileUpdate = mapOf(
-            "Customer Type" to "Silver",
-            "Preferred Language" to "English"
+            "Name" to "Sarah Johnson",
+            "Email" to "sarah.johnson@example.com",
+            "Phone" to "+14155551234",
+            "Gender" to "F",
+            "DOB" to Date()
         )
 
         printMap("Profile Update", profileUpdate)
         cleverTapAPI?.pushProfile(profileUpdate)
     }
 
-    private fun removeSingleValueProperties() {
-        logStep("USER PROFILE", "Removing single-value property")
-        printVar("Removing Key", "Customer Type")
-        cleverTapAPI?.removeValueForKey("Customer Type")
+    private fun pushCompleteUserProfile() {
+        logStep("USER PROFILE", "Pushing complete user profile with custom properties")
+
+        val profileUpdate = buildMap {
+            // Standard properties
+            put("Name", "Alex Chen")
+            put("Email", "alex.chen@example.com")
+            put("Phone", "+16505551234")
+            put("Gender", "M")
+            put("DOB", Date())
+            
+            // Custom properties
+            put("Customer Type", "Premium")
+            put("Account Created", Date())
+            put("City", "San Francisco")
+            put("Country", "USA")
+            put("Language", "English")
+            put("Timezone", "America/Los_Angeles")
+            
+            // Boolean flags
+            put("Email Verified", true)
+            put("Phone Verified", true)
+            put("MSG-email", true)
+            put("MSG-push", true)
+            put("MSG-sms", false)
+        }
+
+        printMap("Profile Update", profileUpdate)
+        cleverTapAPI?.pushProfile(profileUpdate)
     }
 
-    private fun updateMultiValuePropertiesReplace() {
-        logStep("USER PROFILE", "Updating (replacing) multi-value property")
+    private fun pushEcommerceProfile() {
+        logStep("USER PROFILE", "Pushing e-commerce specific profile")
 
-        val values = arrayListOf("Updated Bag", "Updated Shoes")
-        printVar("Key", "MyStuffList")
-        printList("Values", values)
+        val profileUpdate = mapOf(
+            "Name" to "Emily Davis",
+            "Email" to "emily.davis@example.com",
+            "Loyalty Points" to 2500,
+            "Customer Tier" to "Gold",
+            "Total Orders" to 42,
+            "Total Spend" to 3450.75,
+            "Favorite Categories" to arrayListOf("Electronics", "Fashion", "Home Decor"),
+            "Preferred Payment" to "Credit Card",
+            "Last Purchase Date" to Date(),
+            "Newsletter Subscribed" to true
+        )
 
-        cleverTapAPI?.setMultiValuesForKey("MyStuffList", values)
+        printMap("Profile Update", profileUpdate)
+        cleverTapAPI?.pushProfile(profileUpdate)
     }
 
-    private fun updateMultiValuePropertiesAdd() {
-        logStep("USER PROFILE", "Updating (adding) multi-value property")
+    private fun updateUserPreferences() {
+        logStep("USER PROFILE", "Updating user preferences")
 
-        val singleValue = "Coat"
-        val multipleValues = arrayListOf("Socks", "Scarf")
+        val profileUpdate = mapOf(
+            "Dark Mode Enabled" to true,
+            "Notification Frequency" to "Daily",
+            "Preferred Language" to "English",
+            "Currency" to "USD",
+            "Content Interests" to arrayListOf("Technology", "Business", "Sports")
+        )
 
-        printVar("Adding Single Value", singleValue)
-        cleverTapAPI?.addMultiValueForKey("MyStuffList", singleValue)
-
-        printList("Adding Multiple Values", multipleValues)
-        cleverTapAPI?.addMultiValuesForKey("MyStuffList", multipleValues)
+        printMap("Profile Update", profileUpdate)
+        cleverTapAPI?.pushProfile(profileUpdate)
     }
 
-    private fun updateMultiValuePropertiesRemove() {
-        logStep("USER PROFILE", "Removing multi-value property")
+    private fun updateSubscriptionInfo() {
+        logStep("USER PROFILE", "Updating subscription information")
 
-        val singleValue = "Coat"
-        val multipleValues = arrayListOf("Socks", "Scarf")
+        val profileUpdate = mapOf(
+            "Subscription Plan" to "Premium Annual",
+            "Subscription Status" to "Active",
+            "Subscription Start" to Date(),
+            "Auto Renew" to true,
+            "Features Access" to arrayListOf("Ad-Free", "Unlimited Downloads", "Priority Support")
+        )
 
-        printVar("Removing Single Value", singleValue)
-        cleverTapAPI?.removeMultiValueForKey("MyStuffList", singleValue)
-
-        printList("Removing Multiple Values", multipleValues)
-        cleverTapAPI?.removeMultiValuesForKey("MyStuffList", multipleValues)
+        printMap("Profile Update", profileUpdate)
+        cleverTapAPI?.pushProfile(profileUpdate)
     }
 
-    private fun incrementValue() {
-        logStep("USER PROFILE", "Incrementing value")
-        printVar("Key", "score")
-        printVar("Increment By", 50)
-        cleverTapAPI?.incrementValue("score", 50)
+    private fun removeSingleValueProperty() {
+        logStep("PROFILE OPERATIONS", "Removing a single profile property")
+        
+        val keyToRemove = "Temporary Flag"
+        printVar("Removing Key", keyToRemove)
+        
+        cleverTapAPI?.removeValueForKey(keyToRemove)
     }
 
-    private fun decrementValue() {
-        logStep("USER PROFILE", "Decrementing value")
-        printVar("Key", "score")
-        printVar("Decrement By", 30)
-        cleverTapAPI?.decrementValue("score", 30)
+    private fun setMultiValueProperty() {
+        logStep("PROFILE OPERATIONS", "Setting multi-value property (replaces existing)")
+
+        val favoriteCategories = arrayListOf("Electronics", "Fashion", "Home & Garden")
+        printVar("Key", "Favorite Categories")
+        printList("Values", favoriteCategories)
+
+        cleverTapAPI?.setMultiValuesForKey("Favorite Categories", favoriteCategories)
+    }
+
+    private fun addToMultiValueProperty() {
+        logStep("PROFILE OPERATIONS", "Adding values to multi-value property")
+
+        val newInterests = arrayListOf("Technology", "Travel")
+        printVar("Key", "Interests")
+        printList("Adding Values", newInterests)
+
+        cleverTapAPI?.addMultiValuesForKey("Interests", newInterests)
+    }
+
+    private fun removeFromMultiValueProperty() {
+        logStep("PROFILE OPERATIONS", "Removing values from multi-value property")
+
+        val removeInterests = arrayListOf("Sports")
+        printVar("Key", "Interests")
+        printList("Removing Values", removeInterests)
+
+        cleverTapAPI?.removeMultiValuesForKey("Interests", removeInterests)
+    }
+
+    private fun incrementLoyaltyPoints() {
+        logStep("PROFILE OPERATIONS", "Incrementing loyalty points")
+        
+        val pointsToAdd = 100
+        printVar("Key", "Loyalty Points")
+        printVar("Increment By", pointsToAdd)
+        
+        cleverTapAPI?.incrementValue("Loyalty Points", pointsToAdd)
+    }
+
+    private fun decrementCartCount() {
+        logStep("PROFILE OPERATIONS", "Decrementing cart count")
+        
+        val decrementBy = 1
+        printVar("Key", "Cart Items")
+        printVar("Decrement By", decrementBy)
+        
+        cleverTapAPI?.decrementValue("Cart Items", decrementBy)
     }
 
     private fun setProfileLocation() {
@@ -311,6 +428,18 @@ class HomeScreenViewModel(
         logStep("USER PROFILE", "Performing user login")
         onUserLogin(cleverTapAPI)
         onUserLogin(ctMultiInstance)
+    }
+
+    // ========== PROFILE OPERATIONS SECTION ==========
+    private fun handleProfileOperationsSection(item: Int) {
+        when (item) {
+            0 -> removeSingleValueProperty()
+            1 -> setMultiValueProperty()
+            2 -> addToMultiValueProperty()
+            3 -> removeFromMultiValueProperty()
+            4 -> incrementLoyaltyPoints()
+            5 -> decrementCartCount()
+        }
     }
 
     // ========== INBOX SECTION ==========
@@ -1163,8 +1292,9 @@ class HomeScreenViewModel(
 
         val newProfile = buildMap {
             put("Name", "Don Joe $randomN")
-            put("Email", "donjoe$randomN@gmail.com")
+            put("Email", listOf("donjoe$randomN@gmail.com"))
             put("Phone", "+141566$randomP")
+            put("CustomOca", "fasdsa")
         }
 
         printMap("Login Profile", newProfile)

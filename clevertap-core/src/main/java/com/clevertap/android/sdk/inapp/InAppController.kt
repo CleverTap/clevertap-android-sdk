@@ -40,7 +40,8 @@ import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter
 import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
-import com.clevertap.android.sdk.inapp.delay.InAppDelayManager
+import com.clevertap.android.sdk.inapp.delay.InActionResult
+import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
@@ -51,9 +52,8 @@ import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
-import com.clevertap.android.sdk.utils.filterObjects
 import com.clevertap.android.sdk.variables.JsonUtil
-import org.json.JSONArray
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -73,7 +73,8 @@ internal class InAppController(
     private val templatesManager: TemplatesManager,
     private val inAppActionHandler: InAppActionHandler,
     private val inAppNotificationInflater: InAppNotificationInflater,
-    private val inAppDelayManager: InAppDelayManager,
+    private val inAppDelayManager: InAppScheduler<DelayedInAppResult>,
+    private val inAppInActionManager: InAppScheduler<InActionResult>,
     private val clock: Clock
 ) : InAppListener {
 
@@ -118,11 +119,11 @@ internal class InAppController(
             evaluationManager.evaluateOnAppLaunchedClientSide(
                 appLaunchedProperties, coreMetaData.locationFromUser
             )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+        if (clientSideInAppsToDisplay.immediateInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(clientSideInAppsToDisplay.immediateInApps)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+        if (clientSideInAppsToDisplay.delayedInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.delayedInApps)
         }
     }
 
@@ -137,26 +138,33 @@ internal class InAppController(
     /**
      * Schedule multiple delayed in-apps for display after their respective delays
      */
-    fun scheduleDelayedInAppsForAllModes(delayedInApps: JSONArray) {
+    @WorkerThread
+    fun scheduleDelayedInAppsForAllModes(
+        delayedInApps: List<JSONObject>,
+        shouldUpdateTTL: Boolean = true
+    ) {
         logger.verbose(
             config.accountId,
-            "InAppController: Scheduling ${delayedInApps.length()} delayed in-apps"
+            "[InAppController]: Scheduling ${delayedInApps.size} delayed in-apps"
         )
 
-        inAppDelayManager.scheduleDelayedInApps(delayedInApps) { result ->
+        inAppDelayManager.schedule(delayedInApps) { result ->
             when (result) {
                 is DelayedInAppResult.Success -> {
                     logger.verbose(
                         config.accountId,
-                        "InAppController: Successfully retrieved delayed in-app ${result.inAppId}"
+                        "[InAppController]: Successfully retrieved delayed in-app ${result.inAppId}"
                     )
 
                     val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
                     task.execute("InAppController#executeDelayedInAppCallback-${result.inAppId}") {
-                        logger.verbose(config.accountId,"updating ttl L")
-                        //result.inApp.put(Constants.WZRK_TIME_TO_LIVE_OFFSET,60L)// 60 sec ttl for testing
-                        //Calculate fresh TTL after delay completes
-                        evaluationManager.updateTTL(result.inApp)
+
+                        if (shouldUpdateTTL) {
+                            logger.verbose(config.accountId,"updating ttl for delayed in-apps")
+                            //result.inApp.put(Constants.WZRK_TIME_TO_LIVE_OFFSET,60L)// 60 sec ttl for testing
+                            //Calculate fresh TTL after delay completes
+                            evaluationManager.updateTTL(result.inApp)
+                        }
 
                         // Add to display queue30
                         addInAppNotificationInFrontOfQueue(result.inApp)
@@ -166,8 +174,55 @@ internal class InAppController(
                 is DelayedInAppResult.Error -> {
                     logger.verbose(
                         config.accountId,
-                        "InAppController: Error for delayed in-app ${result.inAppId}: ${result.reason}",
+                        "[InAppController]: Error for delayed in-app ${result.inAppId}: ${result.reason}",
                         result.throwable
+                    )
+                }
+
+                is DelayedInAppResult.Discarded -> {
+                    logger.verbose(
+                        config.accountId,
+                        "[InAppController]: in-app discarded ${result.id}: ${result.reason}"
+                    )
+                }
+            }
+        }
+    }
+
+    @WorkerThread
+    fun scheduleInActionInApps(inActionMetadata: List<JSONObject>) {
+        logger.verbose(
+            config.accountId,
+            "[InAppController]: Scheduling ${inActionMetadata.size} in-action in-apps"
+        )
+
+        inAppInActionManager.schedule(inActionMetadata) { result ->
+            when (result) {
+                is InActionResult.ReadyToFetch -> {
+                    // After inaction duration expires, fetch content from backend
+                    logger.verbose(
+                        defaultLogTag,
+                        "[InAppController]: In-action duration expired for targetId: ${result.targetId}, calling fetch API"
+                    )
+                    fetchInActionInApp(result.targetId)
+                }
+                is InActionResult.Error -> {
+                    logger.verbose(
+                        defaultLogTag,
+                        "[InAppController]Error scheduling in-action in-app: ${result.message} for targetId: ${result.targetId}"
+                    )
+                }
+                is InActionResult.Cancelled -> {
+                    logger.verbose(
+                        defaultLogTag,
+                        "[InAppController]In-action in-app cancelled for targetId: ${result.targetId}"
+                    )
+                }
+
+                is InActionResult.Discarded -> {
+                    logger.verbose(
+                        defaultLogTag,
+                        "[InAppController]In-action: in-app discarded ${result.targetId}: ${result.reason}"
                     )
                 }
             }
@@ -178,7 +233,7 @@ internal class InAppController(
      * Get count of currently active delayed in-apps
      */
     fun getActiveDelayedInAppsCount(): Int {
-        return inAppDelayManager.getActiveCallbackCount()
+        return inAppDelayManager.getActiveCount()
     }
 
     fun promptPushPrimer(jsonObject: JSONObject) {
@@ -375,7 +430,7 @@ internal class InAppController(
     }
 
     @WorkerThread
-    fun addInAppNotificationsToQueue(inappNotifs: JSONArray) {
+    fun addInAppNotificationsToQueue(inappNotifs: List<JSONObject>) {
         try {
             val filteredNotifs = filterNonRegisteredCustomTemplates(inappNotifs)
             inAppQueue.enqueueAll(filteredNotifs)
@@ -396,16 +451,27 @@ internal class InAppController(
     ) {
         val appFieldsWithEventProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithEventProperties.putAll(eventProperties)
-        val clientSideInAppsToDisplay = evaluationManager.evaluateOnEvent(
+
+        // Returns (immediateCS, delayedCS, inActionSS)
+        val evaluatedInApps = evaluationManager.evaluateOnEvent(
             eventName,
             appFieldsWithEventProperties,
             userLocation
         )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+
+        // Handle immediate CS in-apps
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+
+        // Handle delayed CS in-apps
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
+        }
+
+        // Handle in-action SS metadata
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
@@ -418,69 +484,104 @@ internal class InAppController(
         val appFieldsWithChargedEventProperties =
             JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithChargedEventProperties.putAll(chargeDetails)
-        val clientSideInAppsToDisplay = evaluationManager.evaluateOnChargedEvent(
+
+        // Returns (immediateCS, delayedCS, inActionSS)
+        val evaluatedInApps = evaluationManager.evaluateOnChargedEvent(
             appFieldsWithChargedEventProperties,
             items,
             userLocation
         )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+
+        // Handle immediate CS in-apps
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+
+        // Handle delayed CS in-apps
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
+        }
+
+        // Handle in-action SS metadata
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
     @WorkerThread
     fun onQueueProfileEvent(
-        userAttributeChangedProperties: Map<String, Map<String, Any>>,
+        userAttributeChangedProperties: Map<String, Map<String, Any?>>,
         location: Location?
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        val clientSideInAppsToDisplay = evaluationManager.evaluateOnUserAttributeChange(
+
+        // Returns (immediateCS, delayedCS, inActionSS)
+        val evaluatedInApps = evaluationManager.evaluateOnUserAttributeChange(
             userAttributeChangedProperties,
             location,
             appFields
         )
-        if (clientSideInAppsToDisplay.first.length() > 0) {
-            addInAppNotificationsToQueue(clientSideInAppsToDisplay.first)
+
+        // Handle immediate CS in-apps
+        if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
+            addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
         }
-        if (clientSideInAppsToDisplay.second.length() > 0) {
-            scheduleDelayedInAppsForAllModes(clientSideInAppsToDisplay.second)
+
+        // Handle delayed CS in-apps
+        if (evaluatedInApps.delayedClientSideInApps.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(evaluatedInApps.delayedClientSideInApps)
+        }
+
+        // Handle in-action SS metadata
+        if (evaluatedInApps.serverSideInActionInApps.isNotEmpty()) {
+            scheduleInActionInApps(evaluatedInApps.serverSideInActionInApps)
         }
     }
 
     fun onAppLaunchServerSideInAppsResponse(
-        appLaunchServerSideInApps: JSONArray,
+        appLaunchServerSideInApps: List<JSONObject>,
         userLocation: Location?
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        val appLaunchSsInAppList = Utils.toJSONObjectList(appLaunchServerSideInApps)
         val serverSideInAppsToDisplayImmediate =
             evaluationManager.evaluateOnAppLaunchedServerSide(
-                appLaunchSsInAppList, appLaunchedProperties, userLocation
+                appLaunchServerSideInApps, appLaunchedProperties, userLocation
             )
 
-        if (serverSideInAppsToDisplayImmediate.length() > 0) {
+        if (serverSideInAppsToDisplayImmediate.isNotEmpty()) {
             addInAppNotificationsToQueue(serverSideInAppsToDisplayImmediate)
         }
 
     }
 
+    fun onAppLaunchServerSideInactionInAppsResponse(
+        appLaunchServerSideInactionInApps: List<JSONObject>,
+        userLocation: Location?
+    ) {
+        val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
+        val serverSideInactionInAppsToDisplay =
+            evaluationManager.evaluateOnAppLaunchedServerSide(
+                appLaunchServerSideInactionInApps, appLaunchedProperties, userLocation
+            )
+
+        if (serverSideInactionInAppsToDisplay.isNotEmpty()) {
+            scheduleInActionInApps(serverSideInactionInAppsToDisplay)
+        }
+    }
+
     fun onAppLaunchServerSideDelayedInAppsResponse(
-        appLaunchServerSideDelayedInApps: JSONArray,
+        appLaunchServerSideDelayedInApps:  List<JSONObject>,
         userLocation: Location?,
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
-        val appLaunchSsDelayedInAppList = Utils.toJSONObjectList(appLaunchServerSideDelayedInApps)
 
         val serverSideInAppsToDisplayDelayed =
             evaluationManager.evaluateOnAppLaunchedDelayedServerSide(
-                appLaunchSsDelayedInAppList, appLaunchedProperties, userLocation
+                appLaunchServerSideDelayedInApps, appLaunchedProperties, userLocation
             )
 
-        if (serverSideInAppsToDisplayDelayed.length() > 0) {
-            scheduleDelayedInAppsForAllModes(serverSideInAppsToDisplayDelayed)
+        if (serverSideInAppsToDisplayDelayed.isNotEmpty()) {
+            scheduleDelayedInAppsForAllModes(serverSideInAppsToDisplayDelayed, false)
         }
     }
 
@@ -878,8 +979,8 @@ internal class InAppController(
         )
     }
 
-    private fun filterNonRegisteredCustomTemplates(inAppNotifications: JSONArray): JSONArray {
-        return inAppNotifications.filterObjects { jsonObject ->
+    private fun filterNonRegisteredCustomTemplates(inAppNotifications: List<JSONObject>): List<JSONObject> {
+        return inAppNotifications.filter { jsonObject ->
             !isNonRegisteredCustomTemplate(
                 jsonObject
             )
@@ -931,6 +1032,47 @@ internal class InAppController(
             }
         } else {
             logger.debug("Cannot present template without name.")
+        }
+    }
+
+    /**
+     * Fetch in-action in-app content from backend after inactionDuration expires
+     * Sends wzrk_fetch event with t=6 and target ID
+     *
+     * @param targetId The campaign ID (ti) to fetch content for
+     */
+    @WorkerThread
+    private fun fetchInActionInApp(targetId: Long) {
+        logger.verbose(
+            defaultLogTag,
+            "Fetching in-action in-app content for targetId: $targetId"
+        )
+
+        val fetchEvent = createInActionFetchRequest(targetId)
+        analyticsManager.sendFetchEvent(fetchEvent)
+    }
+
+    @WorkerThread
+    fun cancelAllScheduledInApps() {
+        try {
+            runBlocking {
+                inAppDelayManager.cancelAllScheduling()
+                logger.verbose(defaultLogTag, "[InAppController]: Cancelled all delayed in-apps")
+                inAppInActionManager.cancelAllScheduling()
+                logger.verbose(defaultLogTag, "[InAppController]: Cancelled all in-action in-apps")
+            }
+        } catch (e: Exception) {
+            logger.verbose(defaultLogTag, "[InAppController]: Error cancelling scheduled in-apps", e)
+        }
+    }
+
+    private fun createInActionFetchRequest(targetId: Long): JSONObject {
+        return JSONObject().apply {
+            put(Constants.KEY_EVT_NAME, Constants.WZRK_FETCH)
+            put(Constants.KEY_EVT_DATA, JSONObject().apply {
+                put(Constants.KEY_T, Constants.FETCH_TYPE_IN_ACTION_IN_APPS) // t=6
+                put("tgtId", targetId)
+            })
         }
     }
 }

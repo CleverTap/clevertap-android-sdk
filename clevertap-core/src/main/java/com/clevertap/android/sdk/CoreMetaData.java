@@ -82,6 +82,8 @@ public class CoreMetaData extends CleverTapMetaData {
     private boolean relaxNetwork = false;
 
     private static int initialAppEnteredForegroundTime = 0;
+    private boolean freshAppLaunchSent = false;
+    private final Object freshAppLaunchLock = new Object();
 
     public static Activity getCurrentActivity() {
         return (currentActivity == null) ? null : currentActivity.get();
@@ -377,5 +379,26 @@ public class CoreMetaData extends CleverTapMetaData {
 
     public void setRelaxNetwork(boolean relaxNetwork) {
         this.relaxNetwork = relaxNetwork;
+    }
+
+    /**
+     * Checks if CT instance should send fresh app launch flag (fl: true).
+     * Returns true only if:
+     * 1. App has been foregrounded (initialAppEnteredForegroundTime > 0)
+     * 2. This instance has NOT yet sent fl:true
+     */
+    public boolean isFreshAppLaunch() {
+        synchronized (freshAppLaunchLock) {
+            return getInitialAppEnteredForegroundTime() > 0 && !freshAppLaunchSent;
+        }
+    }
+
+    /**
+     * Marks that this instance has sent the fresh app launch flag.
+     */
+    public void setFreshAppLaunchSent() {
+        synchronized (freshAppLaunchLock) {
+            freshAppLaunchSent = true;
+        }
     }
 }
