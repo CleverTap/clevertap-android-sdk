@@ -227,7 +227,7 @@ class EventPropertyKeyNormalizerTest {
         assertEquals("!@#", result.originalKey)
         assertEquals("", result.cleanedKey)
         assertTrue(result.wasRemoved)
-        assertEquals(RemovalReason.EMPTY_VALUE, result.removalReason)
+        assertEquals(RemovalReason.EMPTY_KEY, result.removalReason)
         assertTrue(result.modifications.isEmpty())
     }
 
@@ -308,7 +308,7 @@ class EventPropertyKeyNormalizerTest {
         assertEquals("PropertyKey", result.originalKey)
         assertEquals("", result.cleanedKey)
         assertTrue(result.wasRemoved)
-        assertEquals(RemovalReason.EMPTY_VALUE, result.removalReason)
+        assertEquals(RemovalReason.EMPTY_KEY, result.removalReason)
         assertTrue(result.modifications.isEmpty())
     }
 
@@ -374,7 +374,7 @@ class EventPropertyKeyNormalizerTest {
         val result = normalizer.normalize("abc", config)
 
         assertTrue(result.wasRemoved)
-        assertEquals(RemovalReason.EMPTY_VALUE, result.removalReason)
+        assertEquals(RemovalReason.EMPTY_KEY, result.removalReason)
     }
 
     @Test

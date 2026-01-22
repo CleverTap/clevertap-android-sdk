@@ -14,17 +14,11 @@ import com.clevertap.android.sdk.validation.pipeline.ValidationPipeline
  * 1. Normalize event name (remove invalid chars, truncate)
  * 2. Validate normalized name (includes restriction checks)
  * 3. Automatically report validation errors to the error reporter
- * 
- * @param errorReporter Error reporter for pushing errors to stack.
- *                      All validation errors are automatically pushed to this stack.
- * @param logger Logger for logging validation results
- * 
- * @return EventNameValidationResult containing:
- *   - cleanedName: The normalized/cleaned event name (empty string if input was null)
- *   - outcome: ValidationOutcome indicating Success/Warning/Drop with errors
- * 
- * The pipeline always returns cleaned data even if validation fails.
- * Caller should check outcome.shouldDrop() to determine if the event should be dropped.
+ * 4. Return EventNameValidationResult with cleaned data and validation outcome
+ *
+ * @property errorReporter Error reporter for pushing errors to stack.
+ *                         All validation errors are automatically pushed to this stack.
+ * @property logger Logger for logging validation results
  */
 class EventNameValidationPipeline(
     private val errorReporter: ValidationResultStack,
