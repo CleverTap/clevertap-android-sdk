@@ -62,7 +62,7 @@ class EventPropertyKeyNormalizer : Normalizer<String?, PropertyKeyNormalizationR
                 cleanedKey = "",
                 modifications = emptySet(),
                 wasRemoved = true,
-                removalReason = RemovalReason.EMPTY_VALUE
+                removalReason = RemovalReason.EMPTY_KEY
             )
         }
 

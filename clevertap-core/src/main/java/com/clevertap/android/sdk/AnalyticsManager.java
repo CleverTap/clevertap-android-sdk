@@ -794,7 +794,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        Map<String, ArrayList<String>> eventData = Map.of(key, values);
+        Map<String, ArrayList<String>> eventData = new HashMap<>();
+        eventData.put(key, values);
+
         EventDataValidationResult eventDataValidationResult = validationPipelineProvider.getMultiValueDataPipeline().execute(eventData, validationConfig);
 
         if (eventDataValidationResult.shouldDrop()) {
