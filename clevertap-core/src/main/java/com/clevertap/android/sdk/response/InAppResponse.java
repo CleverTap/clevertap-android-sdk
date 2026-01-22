@@ -240,7 +240,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
         InAppController inAppController = controllerManager.getInAppController();
 
         // Schedule using delay functionality
-        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps);
+        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps, false);
 
         logger.verbose(config.getAccountId(),
                 "InApp: scheduling " + delayedLegacyInApps.size() +
