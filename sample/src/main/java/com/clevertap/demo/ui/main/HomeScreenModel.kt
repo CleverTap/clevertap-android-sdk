@@ -5,19 +5,33 @@ object HomeScreenModel {
     val listData: Map<String, List<String>> by lazy {
         mapOf(
             "EVENTS" to listOf(
-                "Record Event",
-                "Record event with properties",
-                "Record Charged Event",
-                "Record Screen Event",
-                "Fire Inbox events"
+                "Simple Event (App Opened)",
+                "Product Viewed Event",
+                "Add to Cart Event",
+                "Video Watched Event",
+                "Search Event",
+                "Charged Event (Transaction)",
+                "Screen View Event",
+                "App Rating Event",
+                "Content Shared Event"
             ),
             "USER PROFILE" to listOf(
-                "Push profile", "Push rich profile data", "Update(Replace) Single-Value properties",
-                "Update(Add) Single-Value properties", "Update(Remove) Single-Value properties",
-                "Update(Replace) Multi-Value property", "Update(Add) Multi-Value property",
-                "Update(Remove) Multi-Value property", "Update(Add) Increment Value",
-                "Update(Add) Decrement Value", "Profile Location", "Get User Profile Property",
-                "onUserLogin"
+                "Push Basic Profile",
+                "Push Complete User Profile",
+                "Push E-commerce Profile",
+                "Update User Preferences",
+                "Update Subscription Info",
+                "Set Profile Location",
+                "Get User Profile Properties",
+                "User Login"
+            ),
+            "PROFILE OPERATIONS" to listOf(
+                "Remove Single Property",
+                "Set Multi-Value Property",
+                "Add to Multi-Value Property",
+                "Remove from Multi-Value Property",
+                "Increment Loyalty Points",
+                "Decrement Cart Count"
             ),
             "INBOX" to listOf(
                 "Open Inbox(with tabs)",
