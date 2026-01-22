@@ -139,10 +139,13 @@ internal class InAppController(
      * Schedule multiple delayed in-apps for display after their respective delays
      */
     @WorkerThread
-    fun scheduleDelayedInAppsForAllModes(delayedInApps: List<JSONObject>) {
+    fun scheduleDelayedInAppsForAllModes(
+        delayedInApps: List<JSONObject>,
+        shouldUpdateTTL: Boolean = true
+    ) {
         logger.verbose(
             config.accountId,
-            "InAppController: Scheduling ${delayedInApps.size} delayed in-apps"
+            "[InAppController]: Scheduling ${delayedInApps.size} delayed in-apps"
         )
 
         inAppDelayManager.schedule(delayedInApps) { result ->
@@ -150,15 +153,18 @@ internal class InAppController(
                 is DelayedInAppResult.Success -> {
                     logger.verbose(
                         config.accountId,
-                        "InAppController: Successfully retrieved delayed in-app ${result.inAppId}"
+                        "[InAppController]: Successfully retrieved delayed in-app ${result.inAppId}"
                     )
 
                     val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
                     task.execute("InAppController#executeDelayedInAppCallback-${result.inAppId}") {
-                        logger.verbose(config.accountId,"updating ttl L")
-                        //result.inApp.put(Constants.WZRK_TIME_TO_LIVE_OFFSET,60L)// 60 sec ttl for testing
-                        //Calculate fresh TTL after delay completes
-                        evaluationManager.updateTTL(result.inApp)
+
+                        if (shouldUpdateTTL) {
+                            logger.verbose(config.accountId,"updating ttl for delayed in-apps")
+                            //result.inApp.put(Constants.WZRK_TIME_TO_LIVE_OFFSET,60L)// 60 sec ttl for testing
+                            //Calculate fresh TTL after delay completes
+                            evaluationManager.updateTTL(result.inApp)
+                        }
 
                         // Add to display queue30
                         addInAppNotificationInFrontOfQueue(result.inApp)
@@ -168,7 +174,7 @@ internal class InAppController(
                 is DelayedInAppResult.Error -> {
                     logger.verbose(
                         config.accountId,
-                        "InAppController: Error for delayed in-app ${result.inAppId}: ${result.reason}",
+                        "[InAppController]: Error for delayed in-app ${result.inAppId}: ${result.reason}",
                         result.throwable
                     )
                 }
@@ -176,7 +182,7 @@ internal class InAppController(
                 is DelayedInAppResult.Discarded -> {
                     logger.verbose(
                         config.accountId,
-                        "InAppController: in-app discarded ${result.id}: ${result.reason}"
+                        "[InAppController]: in-app discarded ${result.id}: ${result.reason}"
                     )
                 }
             }
@@ -575,7 +581,7 @@ internal class InAppController(
             )
 
         if (serverSideInAppsToDisplayDelayed.isNotEmpty()) {
-            scheduleDelayedInAppsForAllModes(serverSideInAppsToDisplayDelayed)
+            scheduleDelayedInAppsForAllModes(serverSideInAppsToDisplayDelayed, false)
         }
     }
 
