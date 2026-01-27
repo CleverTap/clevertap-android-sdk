@@ -1,3 +1,6 @@
+name: 'Slack Notification'
+description: 'Sends build status notifications to Slack'
+
 # Step to call:
 #- name: Slack Status Notification
 #    if: always()

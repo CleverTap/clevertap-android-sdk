@@ -6,9 +6,11 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.TriggerManager;
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
 import com.clevertap.android.sdk.inapp.data.CtCacheType;
+import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps;
 import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
@@ -21,7 +23,6 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import java.util.List;
-import java.util.concurrent.Callable;
 import kotlin.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -135,24 +136,65 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
-            Pair<Boolean, JSONArray> legacyInApps = res.getLegacyInApps();
-            if (legacyInApps.getFirst()) {
-                displayInApp(legacyInApps.getSecond());
+            // Legacy SS in-apps (inapp_notifs -> NORMAL/DELAYED in-app campaigns WITHOUT advance display rules)
+            DurationPartitionedInApps.ImmediateAndDelayed partitionedLegacyInApps = res.getPartitionedLegacyInApps();
+            if (partitionedLegacyInApps.hasImmediateInApps()) {
+                displayInApp(partitionedLegacyInApps.getImmediateInApps());
+            }
+            if (partitionedLegacyInApps.hasDelayedInApps()) {
+                scheduleDelayedLegacyInApps(partitionedLegacyInApps.getDelayedInApps());
             }
 
-            Pair<Boolean, JSONArray> appLaunchInApps = res.getAppLaunchServerSideInApps();
-            if (appLaunchInApps.getFirst()) {
-                handleAppLaunchServerSide(appLaunchInApps.getSecond());
+            // Legacy SS in-apps meta (inapp_notifs_meta -> IN-ACTION in-app campaigns WITHOUT advance display rules)
+            DurationPartitionedInApps.InActionOnly partitionedLegacyMetaInApps = res.getPartitionedLegacyMetaInApps();
+            if (partitionedLegacyMetaInApps.hasInActionInApps()) {
+                // Schedule in-action timers
+                controllerManager.getInAppController()
+                        .scheduleInActionInApps(partitionedLegacyMetaInApps.getInActionInApps());
             }
 
-            Pair<Boolean, JSONArray> csInApps = res.getClientSideInApps();
-            if (csInApps.getFirst()) {
-                inAppStore.storeClientSideInApps(csInApps.getSecond());
+            // App launch SS in-apps (inapp_notifs_applaunched -> NORMAL/DELAYED in-app campaigns WITH/WITHOUT advance display rules on app launched event)
+            DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
+            if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
+                controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
+                        partitionedAppLaunchServerSideInApps.getImmediateInApps(),
+                        coreMetaData.getLocationFromUser());
+            }
+            if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {
+                controllerManager.getInAppController().onAppLaunchServerSideDelayedInAppsResponse(
+                        partitionedAppLaunchServerSideInApps.getDelayedInApps(),
+                        coreMetaData.getLocationFromUser()
+                );
             }
 
-            Pair<Boolean, JSONArray> ssInApps = res.getServerSideInApps();
-            if (ssInApps.getFirst()) {
-                inAppStore.storeServerSideInAppsMetaData(ssInApps.getSecond());
+            // App launch SS in-apps meta (inapp_notifs_applaunched_meta -> IN-ACTION in-app campaigns WITH/WITHOUT advance display rules on app launched event)
+            DurationPartitionedInApps.InActionOnly partitionedAppLaunchServerSideMetaInApps = res.getPartitionedAppLaunchServerSideMetaInApps();
+            if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
+                // Schedule in-action from App Launch SS meta
+                controllerManager.getInAppController()
+                        .onAppLaunchServerSideInactionInAppsResponse(partitionedAppLaunchServerSideMetaInApps.getInActionInApps(),
+                                coreMetaData.getLocationFromUser());
+            }
+
+            // CS in-apps (inapp_notifs_cs)
+            DurationPartitionedInApps.ImmediateAndDelayed partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+            if (partitionedClientSideInApps.hasImmediateInApps()) {
+                inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
+            }
+            if (partitionedClientSideInApps.hasDelayedInApps()) {
+                inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
+            }
+
+            // SS in-apps (inapp_notifs_ss -> IN-ACTION + NORMAL in-app campaigns WITH advance display rules )
+            DurationPartitionedInApps.UnknownAndInAction partitionedServerSideInAppsMeta = res.getPartitionedServerSideInAppsMeta();
+            // delayAfterTrigger only comes within inapp_notifs(Legacy SS, with in-app content)
+            if (partitionedServerSideInAppsMeta.hasUnknownDurationInApps())
+            {
+                inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.getUnknownDurationInApps());
+            }
+            if (partitionedServerSideInAppsMeta.hasInActionInApps())
+            {
+                inAppStore.storeServerSideInActionMetaData(partitionedServerSideInAppsMeta.getInActionInApps());
             }
 
             List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
@@ -185,25 +227,25 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void handleAppLaunchServerSide(JSONArray inappNotifsApplaunched) {
-        try {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(inappNotifsApplaunched, coreMetaData.getLocationFromUser());
-        } catch (Throwable e) {
-            logger.verbose(config.getAccountId(), "InAppManager: Malformed AppLaunched ServerSide inApps");
-            logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
-        }
-    }
-
-    private void displayInApp(JSONArray inappNotifsArray) {
+    private void displayInApp(List<JSONObject> inappNotifsList) {
         // Fire the first notification, if any
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InAppResponse#processResponse", new Callable<Void>() {
-            @Override
-            public Void call() {
-                controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsArray);
-                return null;
-            }
+        task.execute("InAppResponse#processResponse", () -> {
+            controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsList);
+            return null;
         });
+    }
+
+    private void scheduleDelayedLegacyInApps(List<JSONObject> delayedLegacyInApps) {
+        InAppController inAppController = controllerManager.getInAppController();
+
+        // Schedule using delay functionality
+        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps, false);
+
+        logger.verbose(config.getAccountId(),
+                "InApp: scheduling " + delayedLegacyInApps.size() +
+                        " delayed in-apps. Active delays: " +
+                        inAppController.getActiveDelayedInAppsCount());
     }
 
 }

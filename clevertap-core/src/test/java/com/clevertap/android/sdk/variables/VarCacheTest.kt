@@ -9,10 +9,16 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.variables.VariableDefinitions.NullDefaultValue
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 import com.clevertap.android.shared.test.BaseTestCase
-import io.mockk.*
-import org.junit.*
-import org.junit.runner.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.verify
+import io.mockk.verifyOrder
+import org.junit.Before
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -23,6 +29,7 @@ class VarCacheTest : BaseTestCase() {
     private lateinit var parser: Parser
     private lateinit var fileResourcesRepoImpl: FileResourcesRepoImpl
     private lateinit var fileResourceProvider: FileResourceProvider
+    private lateinit var variablesRepo: VariablesRepo
 
     @Before
     @Throws(Exception::class)
@@ -33,13 +40,12 @@ class VarCacheTest : BaseTestCase() {
 
         fileResourcesRepoImpl = mockk(relaxed = true)
         fileResourceProvider = mockk(relaxed = true)
+        variablesRepo = mockk(relaxed = true)
 
         mockkObject(FileResourceProvider.Companion)
         every { FileResourceProvider.getInstance(any(), any()) } returns fileResourceProvider
 
-        varCache = VarCache(
-            cleverTapInstanceConfig, application, fileResourcesRepoImpl
-        )
+        varCache = VarCache(cleverTapInstanceConfig, application, fileResourcesRepoImpl, variablesRepo)
         ctVariables = CTVariables(varCache)
         parser = Parser(ctVariables)
     }
@@ -52,7 +58,6 @@ class VarCacheTest : BaseTestCase() {
             Constants.CACHED_VARIABLES_KEY
         )
         StorageHelper.removeImmediate(application, varCacheKey)
-        unmockkStatic(CTExecutorFactory::class)
     }
 
     @Test
@@ -64,16 +69,63 @@ class VarCacheTest : BaseTestCase() {
         val var2 = Var.define("group.var2", 2, ctVariables)
 
 
-        varCache.updateDiffsAndTriggerHandlers(
-            mapOf(
-                "var1" to 10,
-                "group" to mapOf("var2" to 20, "var3" to 30),
-            ), func
+        val diffs = mapOf<String, Any>(
+            "var1" to 10,
+            "group" to mapOf("var2" to 20, "var3" to 30),
         )
+        varCache.updateDiffsAndTriggerHandlers(diffs, func)
 
         assertEquals(10, var1.value())
         assertEquals(20, var2.value())
         assertEquals(30, varCache.getMergedValue("group.var3"))
+        verifyOrder {
+            variablesRepo.storeDataInCache(JsonUtil.toJson(diffs))
+            variablesRepo.storeVariantsInCache(any())
+        }
+    }
+
+    @Test
+    fun `test updateAbVariants method - some data`() {
+        val list: List<Map<String, Any>> = listOf(
+            buildMap {
+                put("abTestName", "My Test")
+                put("name", "Variant A")
+                put("abTestId", 123L)
+                put("id", 1234L)
+            },
+            buildMap {
+                put("abTestName", "My Test 2")
+                put("name", "Variant C")
+                put("abTestId", 100L)
+                put("id", 12344L)
+            }
+        )
+        varCache.updateAbVariants(list)
+
+        // Act
+        varCache.updateDiffsAndTriggerHandlers(
+            mapOf(
+                "var1" to "http://example.com/file2",
+            )
+        ) {}
+
+        // Verify
+        verify(exactly = 1) { variablesRepo.storeVariantsInCache(JsonUtil.toJson(list)!!) }
+
+        assertEquals(list, varCache.variants())
+    }
+
+    @Test
+    fun `test updateAbVariants method - empty data`() {
+        val list: List<Map<String, Any>> = emptyList()
+        varCache.updateAbVariants(list)
+
+        // Act
+        varCache.updateDiffsAndTriggerHandlers(mapOf("var1" to 1,)) {}
+
+        // Verify no calls to save
+        verify(exactly = 1) { variablesRepo.storeVariantsInCache(JsonUtil.toJson(list)!!) }
+        assertEquals(list, varCache.variants())
     }
 
     @Test
@@ -356,61 +408,84 @@ class VarCacheTest : BaseTestCase() {
     @Test
     fun `test loadDiffs`() {
         val var1 = Var.define("var1", 1, ctVariables)
-        mockkStatic(StorageHelper::class)
-        every { StorageHelper.getString(any(), any(), any()) } returns """{"var1":2}"""
+        every { variablesRepo.loadDataFromCache() } returns """{"var1":2}"""
 
         varCache.loadDiffs { }
 
         assertEquals(2, var1.value())
-        verify { StorageHelper.getString(application, "variablesKey:" + cleverTapInstanceConfig.accountId, "{}") }
-
-        unmockkStatic(StorageHelper::class)
+        verifyOrder {
+            variablesRepo.loadDataFromCache()
+            variablesRepo.loadVariantsFromCache()
+        }
     }
 
     @Test
     fun `test loadDiffs for kind file`() {
         ctVariables.init()
         val var1 = Var.define("var1", null, "file", ctVariables)
-        mockkStatic(StorageHelper::class)
         every { fileResourceProvider.isFileCached(any()) } returns false
-        every { StorageHelper.getString(any(), any(), any()) } returns """{"var1":"http://example.com/file"}"""
+        every { variablesRepo.loadDataFromCache() } returns """{"var1":"http://example.com/file"}"""
 
         varCache.loadDiffs {}
 
         assertEquals("http://example.com/file", var1.stringValue)
         verify { fileResourcesRepoImpl.preloadFilesAndCache(listOf(Pair("http://example.com/file", FILES)), any()) }
-
-        unmockkStatic(StorageHelper::class)
     }
 
     @Test
     fun `test loadDiffsAndTriggerHandlers`() {
         val var1 = Var.define("var1", 1, ctVariables)
-        mockkStatic(StorageHelper::class)
         val globalCallbackRunnable = mockk<Runnable>(relaxed = true)
-        every { StorageHelper.getString(any(), any(), any()) } returns """{"var1":2}"""
+        every { variablesRepo.loadDataFromCache() } returns """{"var1":2}"""
         varCache.setGlobalCallbacksRunnable(globalCallbackRunnable)
 
         varCache.loadDiffsAndTriggerHandlers {}
 
         assertEquals(2, var1.value())
-        verify { StorageHelper.getString(application, "variablesKey:" + cleverTapInstanceConfig.accountId, "{}") }
+        verify { variablesRepo.loadDataFromCache() }
+        verify { variablesRepo.loadVariantsFromCache() }
         verify { globalCallbackRunnable.run() }
-
-        unmockkStatic(StorageHelper::class)
     }
 
     @Test
     fun `test clearUserContent`() {
         Var.define("var1", 1, ctVariables)
         Var.define("var2", "default", ctVariables)
-        mockkStatic(StorageHelper::class)
 
         varCache.clearUserContent()
 
-        verify { StorageHelper.putString(application, "variablesKey:" + cleverTapInstanceConfig.accountId, "{}") }
+        verify { variablesRepo.storeDataInCache(eq("{}")) }
+    }
 
-        unmockkStatic(StorageHelper::class)
+    @Test
+    fun `test clearUserContent for ab variants data`() {
+        val list: List<Map<String, Any>> = listOf(
+            buildMap {
+                put("abTestName", "My Test")
+                put("name", "Variant A")
+                put("abTestId", 123L)
+                put("id", 1234L)
+            },
+            buildMap {
+                put("abTestName", "My Test 2")
+                put("name", "Variant C")
+                put("abTestId", 100L)
+                put("id", 12344L)
+            }
+        )
+
+        // Setup
+        varCache.updateAbVariants(list)
+
+        // Act
+        varCache.clearUserContent()
+
+        // Verify and Assert
+        assertEquals(varCache.variants(), emptyList<Map<String, Any>>())
+        verifyOrder {
+            variablesRepo.storeDataInCache(any())
+            variablesRepo.storeVariantsInCache(any())
+        }
     }
 
     @Test

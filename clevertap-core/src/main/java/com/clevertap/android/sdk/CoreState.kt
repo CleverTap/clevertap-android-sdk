@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
-import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventMediator
@@ -48,10 +48,9 @@ internal open class CoreState(
     val pushProviders: PushProviders,
     val varCache: VarCache,
     val parser: Parser,
-    val cryptHandler: CryptHandler,
+    val cryptHandler: ICryptHandler,
     val storeRegistry: StoreRegistry,
     val templatesManager: TemplatesManager,
-    val profileValueHandler: ProfileValueHandler,
     val cTVariables: CTVariables,
     val executors: CTExecutors
 ) {

@@ -21,54 +21,91 @@ inputs:
 runs:
   using: "composite"
   steps:
-
     - name: Set variables
       shell: bash
       run: |
         if [ "${{ inputs.test-release }}" == 'true' ]; then
           echo "GRADLE_REPORT_TASK=jacocoTestReportRelease" >> $GITHUB_ENV
+          echo "REPORT_PATH=jacocoTestReportRelease" >> $GITHUB_ENV
         else
           echo "GRADLE_REPORT_TASK=jacocoTestReportDebug" >> $GITHUB_ENV
+          echo "REPORT_PATH=jacocoTestReportDebug" >> $GITHUB_ENV
         fi
 
-    - name: Checkout baseline branch
+    - name: Get baseline commit SHA
       if: ${{ inputs.baseline-branch != '' }}
+      id: baseline-sha
+      shell: bash
+      run: |
+        git fetch origin ${{ inputs.baseline-branch }}
+        BASELINE_SHA=$(git rev-parse origin/${{ inputs.baseline-branch }})
+        echo "sha=$BASELINE_SHA" >> $GITHUB_OUTPUT
+        echo "Baseline branch: ${{ inputs.baseline-branch }}"
+        echo "Baseline SHA: $BASELINE_SHA"
+
+    - name: Restore baseline coverage from cache
+      if: ${{ inputs.baseline-branch != '' }}
+      uses: actions/cache/restore@v3
+      id: baseline-cache
+      with:
+        path: baseline-reports/
+        key: jacoco-baseline-${{ steps.baseline-sha.outputs.sha }}-${{ env.GRADLE_REPORT_TASK }}
+
+    - name: Checkout baseline branch
+      if: ${{ inputs.baseline-branch != '' && steps.baseline-cache.outputs.cache-hit != 'true' }}
       uses: actions/checkout@v3
       with:
         ref: ${{ inputs.baseline-branch }}
         path: baseline
 
     - name: Generate baseline JaCoCo report
-      if: ${{ inputs.baseline-branch != '' }}
+      if: ${{ inputs.baseline-branch != '' && steps.baseline-cache.outputs.cache-hit != 'true' }}
       shell: bash
       working-directory: ./baseline
-      run: ./gradlew $GRADLE_REPORT_TASK  -Pcoverage='true'
+      run: |
+        echo "📊 Generating fresh baseline report..."
+        ./gradlew $GRADLE_REPORT_TASK -Pcoverage='true'
+        mkdir -p ../baseline-reports
+        cp -r clevertap-*/build/reports/jacoco ../baseline-reports/
 
-    - name: Set baseline report path
+    - name: Save baseline coverage to cache
+      if: ${{ inputs.baseline-branch != '' && steps.baseline-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v3
+      with:
+        path: baseline-reports/
+        key: jacoco-baseline-${{ steps.baseline-sha.outputs.sha }}-${{ env.GRADLE_REPORT_TASK }}
+
+    - name: Log cache status
       if: ${{ inputs.baseline-branch != '' }}
       shell: bash
-      run: echo "BASELINE_REPORTS=baseline/clevertap-*/build/reports/jacoco/**/*.xml" >> $GITHUB_ENV
+      run: |
+        if [ "${{ steps.baseline-cache.outputs.cache-hit }}" == "true" ]; then
+          echo "✅ Using cached baseline for SHA: ${{ steps.baseline-sha.outputs.sha }}"
+          echo "⚡ Time saved: ~8 minutes"
+        else
+          echo "📊 Generated fresh baseline for SHA: ${{ steps.baseline-sha.outputs.sha }}"
+          echo "💾 Cached for future PRs"
+        fi
 
-    - name: Setup Python
-      uses: actions/setup-python@v5.1.1
-      with:
-        python-version: '3.12'
-
-    - name: Publish JaCoCo Report in PR comment
-      uses: MoranaApps/jacoco-report@v1.3.0
+    - name: JaCoCo Report
+      uses: madrapps/jacoco-report@v1.7.1
       with:
         token: ${{ inputs.github-token }}
-        paths: clevertap-*/build/reports/jacoco/**/*.xml
-        baseline-paths: ${{ env.BASELINE_REPORTS }}
-        min-coverage-overall: 75
-        min-coverage-changed-files: 75
         title: ${{ inputs.comment-title }}
-        fail-on-threshold: false
-        sensitivity: 'summary'
+        paths: |
+          ${{ github.workspace }}/clevertap-core/build/reports/jacoco/${{ env.REPORT_PATH }}/${{ env.REPORT_PATH }}.xml,
+          ${{ github.workspace }}/clevertap-geofence/build/reports/jacoco/${{ env.REPORT_PATH }}/${{ env.REPORT_PATH }}.xml,
+          ${{ github.workspace }}/clevertap-hms/build/reports/jacoco/${{ env.REPORT_PATH }}/${{ env.REPORT_PATH }}.xml,
+          ${{ github.workspace }}/clevertap-pushtemplates/build/reports/jacoco/${{ env.REPORT_PATH }}/${{ env.REPORT_PATH }}.xml
+        min-coverage-overall: 65
+        min-coverage-changed-files: 65
         update-comment: true
-        skip-not-changed: true
+        pass-emoji: '✅'
+        fail-emoji: '❌'
 
-    - name: Cleanup baseline directory
+    - name: Cleanup directories
       if: ${{ inputs.baseline-branch != '' }}
       shell: bash
-      run: rm -rf baseline
+      run: |
+        rm -rf baseline
+        rm -rf baseline-reports

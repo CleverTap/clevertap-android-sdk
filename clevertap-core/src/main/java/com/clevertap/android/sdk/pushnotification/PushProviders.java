@@ -30,6 +30,7 @@ import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -41,7 +42,9 @@ import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker;
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import java.lang.reflect.Constructor;
@@ -82,6 +85,7 @@ public class PushProviders implements CTPushProviderListener {
 
     private final Context context;
     private final CTWorkManager ctWorkManager;
+    private final Clock clock;
 
     private INotificationRenderer iNotificationRenderer = new CoreNotificationRenderer();
 
@@ -104,11 +108,13 @@ public class PushProviders implements CTPushProviderListener {
             CleverTapInstanceConfig config,
             BaseDatabaseManager baseDatabaseManager,
             ValidationResultStack validationResultStack,
-            AnalyticsManager analyticsManager, ControllerManager controllerManager,
-            CTWorkManager ctWorkManager
+            AnalyticsManager analyticsManager,
+            ControllerManager controllerManager,
+            CTWorkManager ctWorkManager,
+            Clock clock
     ) {
         PushProviders providers = new PushProviders(context, config, baseDatabaseManager, validationResultStack,
-                analyticsManager,ctWorkManager);
+                analyticsManager,ctWorkManager, clock);
         providers.init();
         controllerManager.setPushProviders(providers);
         return providers;
@@ -119,9 +125,12 @@ public class PushProviders implements CTPushProviderListener {
             CleverTapInstanceConfig config,
             BaseDatabaseManager baseDatabaseManager,
             ValidationResultStack validationResultStack,
-            AnalyticsManager analyticsManager, CTWorkManager ctWorkManager) {
+            AnalyticsManager analyticsManager,
+            CTWorkManager ctWorkManager,
+            Clock clock) {
         this.context = context;
         this.config = config;
+        this.clock = clock;
         this.baseDatabaseManager = baseDatabaseManager;
         this.validationResultStack = validationResultStack;
         this.analyticsManager = analyticsManager;
@@ -230,8 +239,7 @@ public class PushProviders implements CTPushProviderListener {
                     if (TextUtils.isEmpty(key)) {
                         return null;
                     }
-                    StorageHelper
-                            .putStringImmediate(context, StorageHelper.storageKeyWithSuffix(config, key), token);
+                    StorageHelper.putStringImmediate(context, config.getAccountId(), key, token);
                     config.log(PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
                     return null;
                 }
@@ -281,7 +289,7 @@ public class PushProviders implements CTPushProviderListener {
         if (pushType != null) {
             String key = pushType.getTokenPrefKey();
             if (!TextUtils.isEmpty(key)) {
-                String cachedToken = StorageHelper.getStringFromPrefs(context, config, key, null);
+                String cachedToken = StorageHelper.getStringFromPrefs(context, config.getAccountId(), key, null);
                 config.log(PushConstants.LOG_TAG, pushType + "getting Cached Token - " + cachedToken);
                 return cachedToken;
             }
@@ -366,13 +374,18 @@ public class PushProviders implements CTPushProviderListener {
                         updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
                     }
                 } else {
-                    String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
-                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
-                            (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
-                    long wzrk_ttl = Long.parseLong(ttl);
-                    DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-                    config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
-                    dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
+                    String wzrkPid = extras.getString(Constants.WZRK_PUSH_ID);
+                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);
+                    long wzrkTtl = clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS;
+                    if (ttl != null) {
+                        wzrkTtl = Long.parseLong(ttl);
+                    }
+                    if (wzrkPid != null) {
+                        config.getLogger().verbose("Storing Push Notification..." + wzrkPid + " - with ttl - " + ttl);
+                        baseDatabaseManager.loadDBAdapter(context).storePushNotificationId(wzrkPid, wzrkTtl);
+                    } else {
+                        config.getLogger().verbose("Will not save Push Notification in DB due to invalid id, processCustomPushNotification");
+                    }
                 }
                 return null;
             }
@@ -445,7 +458,7 @@ public class PushProviders implements CTPushProviderListener {
 
         long lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
 
-        if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+        if (lastTS == 0 || lastTS > clock.currentTimeMillis() - 24 * 60 * 60 * 1000) {
             try {
                 JSONObject eventObject = new JSONObject();
                 eventObject.put("bk", 1);
@@ -684,9 +697,7 @@ public class PushProviders implements CTPushProviderListener {
         task.execute("createOrResetWorker", new Callable<Void>() {
             @Override
             public Void call() {
-                if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                    stopJobScheduler(context);
-                }
+                stopJobScheduler(context);
                 if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
                     createOrResetWorker(false);
                 } else {
@@ -845,24 +856,27 @@ public class PushProviders implements CTPushProviderListener {
         final boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
 
         if (requiresChannelId) {
-            int messageCode = -1;
+            ValidationError error = null;
             String value = "";
 
             if (channelId.isEmpty()) {
-                messageCode = Constants.CHANNEL_ID_MISSING_IN_PAYLOAD;
+                error = ValidationError.CHANNEL_ID_MISSING_IN_PAYLOAD;
                 value = extras.toString();
             } else if (notificationManager.getNotificationChannel(channelId) == null) {
-                messageCode = Constants.CHANNEL_ID_NOT_REGISTERED;
+                error = ValidationError.CHANNEL_ID_NOT_REGISTERED;
                 value = channelId;
             }
-            if (messageCode != -1) {
-                ValidationResult channelIdError = ValidationResultFactory.create(512, messageCode, value);
+            if (error != null) {
+                ValidationResult channelIdError = ValidationResultFactory.create(error, value);
                 config.getLogger().debug(config.getAccountId(), channelIdError.getErrorDesc());
                 validationResultStack.pushValidationResult(channelIdError);
             }
 
+            boolean silenceInForeground = "true".equalsIgnoreCase(extras.getString(Constants.WZRK_SILENCE_IN_FOREGROUND));
+            boolean hideHeadsUp = CoreMetaData.isAppForeground() && silenceInForeground;
+
             // get channel using channel id from push payload. If channel id is null or empty then create default
-            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context);
+            updatedChannelId = CTXtensions.getOrCreateChannel(notificationManager, channelId, context, hideHeadsUp);
 
             // if no channel gets created then do not render push
             if (updatedChannelId == null || updatedChannelId.trim().isEmpty()) {
@@ -999,22 +1013,28 @@ public class PushProviders implements CTPushProviderListener {
 
         Notification n = nb.build();
         notificationManager.notify(notificationId, n);
-        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
+        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n);//cb
 
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
-                    (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
-            long wzrk_ttl = Long.parseLong(ttl);
-            String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
+            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);
+            long wzrkTtl = clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS;
+            if (ttl != null) {
+                wzrkTtl = Long.parseLong(ttl);
+            }
+            String wzrkPid = extras.getString(Constants.WZRK_PUSH_ID);
             DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-            config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
-            dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
+            if (wzrkPid != null) {
+                config.getLogger().verbose("Storing Push Notification..." + wzrkPid + " - with ttl - " + ttl);
+                dbAdapter.storePushNotificationId(wzrkPid, wzrkTtl);
+            } else {
+                config.getLogger().verbose("Will not save Push Notification in DB due to invalid id");
+            }
 
             boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
             if (!notificationViewedEnabled) {
                 ValidationResult notificationViewedError = ValidationResultFactory
-                        .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
+                        .create(ValidationError.NOTIFICATION_VIEWED_DISABLED, extras.toString());
                 config.getLogger().debug(notificationViewedError.getErrorDesc());
                 validationResultStack.pushValidationResult(notificationViewedError);
                 return;
@@ -1022,7 +1042,7 @@ public class PushProviders implements CTPushProviderListener {
 
             long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
             if (omrStart >= 0) {
-                long prt = System.currentTimeMillis() - omrStart;
+                long prt = clock.currentTimeMillis() - omrStart;
                 config.getLogger()
                         .verbose("Rendered Push Notification in " + prt + " millis");
             }

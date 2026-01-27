@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.toList
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
@@ -48,14 +49,14 @@ class StoreRegistryInAppQueueTest {
     @Test
     fun `enqueue single Object results in objectEnqueued`() {
         val jsonObject = JSONObject().put("key", "value")
-        val fakeQueue = JSONArray()
+        val fakeQueue = JSONArray().toList<JSONObject>()
         every { mockInAppStore.readServerSideInApps() } returns fakeQueue
 
         inAppQueue.enqueue(jsonObject)
 
         val expected = JSONArray().put(jsonObject)
 
-        verify { mockInAppStore.storeServerSideInApps(expected) }
+        verify { mockInAppStore.storeServerSideInApps(expected.toList()) }
     }
 
     @Test
@@ -79,14 +80,14 @@ class StoreRegistryInAppQueueTest {
     fun `enqueueAll multiple Objects results in objectsEnqueued`() {
         val jsonArray = JSONArray().put(JSONObject().put("key1", "value1"))
             .put(JSONObject().put("key2", "value2"))
-        val fakeQueue = JSONArray()
+        val fakeQueue = JSONArray().toList<JSONObject>()
         every { mockInAppStore.readServerSideInApps() } returns fakeQueue
 
-        inAppQueue.enqueueAll(jsonArray)
+        inAppQueue.enqueueAll(jsonArray.toList())
 
         val expected = JSONArray().put(jsonArray.getJSONObject(0)).put(jsonArray.getJSONObject(1))
 
-        verify { mockInAppStore.storeServerSideInApps(expected) }
+        verify { mockInAppStore.storeServerSideInApps(expected.toList()) }
     }
 
     @Test
@@ -95,42 +96,43 @@ class StoreRegistryInAppQueueTest {
             .put(JSONObject().put("key1", "value1"))
             .put("nonJsonObjectData")
             .put(JSONObject().put("key2", "value2"))
-        val fakeQueue = JSONArray()
+        val fakeQueue = JSONArray().toList<JSONObject>()
         every { mockInAppStore.readServerSideInApps() } returns fakeQueue
 
-        inAppQueue.enqueueAll(jsonArray)
+        inAppQueue.enqueueAll(jsonArray.toList())
 
         // Only valid JSONObjects should be stored in the queue
         val expected = JSONArray().put(jsonArray.getJSONObject(0)).put(jsonArray.getJSONObject(2))
-        verify { mockInAppStore.storeServerSideInApps(expected) }
+        verify { mockInAppStore.storeServerSideInApps(expected.toList()) }
     }
 
     @Test
     fun `enqueueAll when argument json array is empty`() {
-        val jsonArray = JSONArray()
-        val fakeQueue = JSONArray()
-        every { mockInAppStore.readServerSideInApps() } returns fakeQueue
+        val jsonArray = JSONArray().toList<JSONObject>()
+        val fakeQueue = JSONArray().toList<JSONObject>()
 
         inAppQueue.enqueueAll(jsonArray)
 
-        verify { mockInAppStore.storeServerSideInApps(fakeQueue) }
+        verify(exactly = 0) { mockInAppStore.storeServerSideInApps(fakeQueue) }
+        verify(exactly = 0) { mockInAppStore.readServerSideInApps() }
+
     }
 
     @Test
     fun `dequeue when queue is not empty returns dequeuedObject`() {
         val jsonObject = JSONObject().put("key", "value")
-        val fakeQueue = JSONArray().put(jsonObject)
+        val fakeQueue = JSONArray().put(jsonObject).toList<JSONObject>()
         every { mockInAppStore.readServerSideInApps() } returns fakeQueue
 
         val dequeuedObject = inAppQueue.dequeue()
 
-        verify { mockInAppStore.storeServerSideInApps(JSONArray()) }
+        verify { mockInAppStore.storeServerSideInApps(JSONArray().toList<JSONObject>()) }
         assertEquals(jsonObject.toString(), dequeuedObject?.toString())
     }
 
     @Test
     fun `dequeue when queue is empty returns null`() {
-        val input = JSONArray()
+        val input = JSONArray().toList<JSONObject>()
         every { mockInAppStore.readServerSideInApps() } returns input
 
         val dequeuedObject = inAppQueue.dequeue()
@@ -141,7 +143,7 @@ class StoreRegistryInAppQueueTest {
     @Test
     fun `getQueueLength returns correctLength`() {
         val jsonArray = JSONArray().put(JSONObject().put("key", "value"))
-        every { mockInAppStore.readServerSideInApps() } returns jsonArray
+        every { mockInAppStore.readServerSideInApps() } returns jsonArray.toList()
 
         val queueLength = inAppQueue.getQueueLength()
 

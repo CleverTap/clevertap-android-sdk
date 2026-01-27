@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.login;
 import android.content.Context;
 
 import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
@@ -122,6 +123,7 @@ public class LoginController {
                     baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true);
                     baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true);
                     contentFetchManager.cancelAllResponseJobs();
+                    cancelScheduledInApps();
                     dbManager.clearQueues(context);
 
                     // clear out the old data
@@ -233,11 +235,15 @@ public class LoginController {
                 boolean isProfileKey = iProfileHandler.hasIdentity(key);
                 if (isProfileKey) {
                     try {
-                        String identifier = null;
-                        if (value != null) {
+                        String identifier;
+                        if (value instanceof Number || value instanceof String || value instanceof Boolean) {
                             identifier = value.toString();
+                        } else {
+                            config.getLogger().debug(config.getAccountId(),
+                                    "onUserLogin: Aborting the operation. Non-primitive value for the identifier key = " + key);
+                            return;
                         }
-                        if (identifier != null && !identifier.isEmpty()) {
+                        if (!identifier.isEmpty()) {
                             haveIdentifier = true;
                             cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier);
                             if (cachedGUID != null) {
@@ -331,6 +337,18 @@ public class LoginController {
     private void resetVariables() {
         if (controllerManager.getCtVariables() != null) {
             controllerManager.getCtVariables().clearUserContent();
+        }
+    }
+
+    /**
+     * Cancels all scheduled in-apps (delayed and in-action).
+     * Called during user switch to clear previous user's scheduled in-apps.
+     */
+    @WorkerThread
+    private void cancelScheduledInApps() {
+        if (controllerManager.getInAppController() != null) {
+            controllerManager.getInAppController().cancelAllScheduledInApps();
+            config.getLogger().verbose(config.getAccountId(), "Cancelled all scheduled in-apps for user change");
         }
     }
 

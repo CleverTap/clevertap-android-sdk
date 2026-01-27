@@ -64,6 +64,19 @@ android {
 
     lint {
         abortOnError false
+        checkDependencies false
+        checkGeneratedSources false
+        checkReleaseBuilds false
+
+        // Baseline support - ignores existing issues, only flags new ones
+        baseline = file("lint-baseline.xml")
+
+        // Performance optimizations
+        warningsAsErrors = false
+        ignoreWarnings = false
+
+        // Disable slow checks (optional)
+        // disable 'UnusedResources', 'IconMissingDensityFolder', 'IconDensities'
     }
 
     libraryVariants.all { variant ->

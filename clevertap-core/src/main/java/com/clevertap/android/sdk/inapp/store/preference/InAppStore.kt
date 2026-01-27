@@ -8,9 +8,10 @@ import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_SUPPRESSED_INAPP_KEY_CS
 import com.clevertap.android.sdk.STORE_TYPE_INAPP
 import com.clevertap.android.sdk.StoreProvider
-import com.clevertap.android.sdk.cryption.CryptHandler
+import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
+import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -29,17 +30,22 @@ import org.json.JSONObject
  */
 internal class InAppStore(
     private val ctPreference: ICTPreference,
-    private val cryptHandler: CryptHandler
+    private val cryptHandler: ICryptHandler
 ) : ChangeUserCallback {
 
-    private var clientSideInApps: JSONArray? = null
-    private var serverSideInApps: JSONArray? = null
+    private var clientSideInAppsCache: List<JSONObject>? = null
+    private var serverSideInAppsCache: List<JSONObject>? = null
+    private var clientSideDelayedInAppsCache: List<JSONObject>? = null
+    private var serverSideMetaCache: List<JSONObject>? = null
+    private var serverSideInActionCache: List<JSONObject>? = null
 
     companion object {
 
         const val CLIENT_SIDE_MODE = "CS"
         const val SERVER_SIDE_MODE = "SS"
         const val NO_MODE = "NO_MODE"
+        const val PREFS_DELAYED_INAPP_KEY_CS = "delayed_inapp_notifs_cs"
+        const val PREFS_INACTION_INAPP_META_KEY_SS = "inaction_inapp_notifs_ss"  // In-Action SS metadata
     }
 
     /**
@@ -58,11 +64,19 @@ internal class InAppStore(
             field = value
 
             when (value) {
-                CLIENT_SIDE_MODE -> removeServerSideInAppsMetaData()
-                SERVER_SIDE_MODE -> removeClientSideInApps()
+                CLIENT_SIDE_MODE -> {
+                    removeServerSideInAppsMetaData()
+                    removeServerSideInActionInAppsMetaData()
+                }
+                SERVER_SIDE_MODE -> {
+                    removeClientSideInApps()
+                    removeClientSideDelayedInApps()
+                }
                 NO_MODE -> {
                     removeServerSideInAppsMetaData()
+                    removeServerSideInActionInAppsMetaData()
                     removeClientSideInApps()
+                    removeClientSideDelayedInApps()
                 }
             }
         }
@@ -72,7 +86,7 @@ internal class InAppStore(
      */
     private fun removeClientSideInApps() {
         ctPreference.remove(PREFS_INAPP_KEY_CS)
-        clientSideInApps = null
+        clientSideInAppsCache = null
     }
 
     /**
@@ -80,17 +94,22 @@ internal class InAppStore(
      */
     private fun removeServerSideInAppsMetaData() {
         ctPreference.remove(PREFS_INAPP_KEY_SS)
+        serverSideMetaCache = null
+    }
+    private fun removeServerSideInActionInAppsMetaData() {
+        ctPreference.remove(PREFS_INACTION_INAPP_META_KEY_SS)
+        serverSideInActionCache = null
     }
 
     /**
      * Stores Client-side In-App messages in encrypted format.
      *
-     * @param clientSideInApps The array of Client-side In-App messages.
+     * @param clientSideInApps The list of Client-side In-App messages.
      */
-    fun storeClientSideInApps(clientSideInApps: JSONArray) {
-        this.clientSideInApps = clientSideInApps
-        val encryptedString =
-            cryptHandler.encrypt(clientSideInApps.toString())
+    fun storeClientSideInApps(clientSideInApps: List<JSONObject>) {
+        clientSideInAppsCache = clientSideInApps
+        val jsonArray = JSONArray(clientSideInApps)
+        val encryptedString = cryptHandler.encrypt(jsonArray.toString())
         encryptedString?.apply {
             ctPreference.writeString(PREFS_INAPP_KEY_CS, this)
         }
@@ -99,21 +118,28 @@ internal class InAppStore(
     /**
      * Stores Server-side In-App metadata.
      *
-     * @param serverSideInAppsMetaData The array of Server-side In-App metadata.
+     * @param serverSideInAppsMetaData The list of Server-side In-App metadata.
      */
-    fun storeServerSideInAppsMetaData(serverSideInAppsMetaData: JSONArray) {
-        ctPreference.writeString(PREFS_INAPP_KEY_SS, serverSideInAppsMetaData.toString())
+    fun storeServerSideInAppsMetaData(serverSideInAppsMetaData: List<JSONObject>) {
+        serverSideMetaCache = serverSideInAppsMetaData
+        val jsonArray = JSONArray(serverSideInAppsMetaData)
+        ctPreference.writeString(PREFS_INAPP_KEY_SS, jsonArray.toString())
+    }
+    fun storeServerSideInActionMetaData(serverSideInActionMetaData: List<JSONObject>) {
+        serverSideInActionCache = serverSideInActionMetaData
+        val jsonArray = JSONArray(serverSideInActionMetaData)
+        ctPreference.writeString(PREFS_INACTION_INAPP_META_KEY_SS, jsonArray.toString())
     }
 
     /**
      * Stores Server-side legacy In-App messages in encrypted format.
      *
-     * @param serverSideInApps The array of Server-side legacy In-App messages.
+     * @param serverSideInApps The list of Server-side legacy In-App messages.
      */
-    fun storeServerSideInApps(serverSideInApps: JSONArray) {
-        this.serverSideInApps = serverSideInApps
-        val encryptedString =
-            cryptHandler.encrypt(serverSideInApps.toString())
+    fun storeServerSideInApps(serverSideInApps: List<JSONObject>) {
+        serverSideInAppsCache = serverSideInApps
+        val jsonArray = JSONArray(serverSideInApps)
+        val encryptedString = cryptHandler.encrypt(jsonArray.toString())
         encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
     }
 
@@ -138,36 +164,62 @@ internal class InAppStore(
     /**
      * Reads and decrypts Client-side In-App messages.
      *
-     * @return An array of Client-side In-App messages.
+     * @return A list of Client-side In-App messages.
      */
-    fun readClientSideInApps(): JSONArray {
-        if (clientSideInApps != null)
-            return clientSideInApps as JSONArray
+    fun readClientSideInApps(): List<JSONObject> {
+        clientSideInAppsCache?.let { return it }
 
         val csInAppsEncrypted = ctPreference.readString(PREFS_INAPP_KEY_CS, "")
-        clientSideInApps = if (csInAppsEncrypted.isNullOrBlank()) {
-            JSONArray()
+        val result = if (csInAppsEncrypted.isNullOrBlank()) {
+            emptyList()
         } else {
             try {
-                JSONArray(cryptHandler.decrypt(csInAppsEncrypted))
+                val decrypted = cryptHandler.decrypt(csInAppsEncrypted)
+                JSONArray(decrypted).toList<JSONObject>()
             } catch (e: Exception) {
-                JSONArray()
+                emptyList()
             }
         }
-        return clientSideInApps as JSONArray
+        clientSideInAppsCache = result
+        return result
     }
 
     /**
      * Reads Server-side In-App metadata.
      *
-     * @return An array of Server-side In-App metadata.
+     * @return A list of Server-side In-App metadata.
      */
-    fun readServerSideInAppsMetaData(): JSONArray {
+    fun readServerSideInAppsMetaData(): List<JSONObject> {
+        serverSideMetaCache?.let { return it }
+
         val ssInAppsMetaData = ctPreference.readString(PREFS_INAPP_KEY_SS, "")
+        val result = if (ssInAppsMetaData.isNullOrBlank()) {
+            emptyList()
+        } else {
+            try {
+                JSONArray(ssInAppsMetaData).toList<JSONObject>()
+            } catch (e: JSONException) {
+                emptyList()
+            }
+        }
+        serverSideMetaCache = result
+        return result
+    }
+    fun readServerSideInActionMetaData(): List<JSONObject> {
+        serverSideInActionCache?.let { return it }
 
-        if (ssInAppsMetaData.isNullOrBlank()) return JSONArray()
-
-        return JSONArray(ssInAppsMetaData)
+        val ssInAppsMetaData = ctPreference.readString(PREFS_INACTION_INAPP_META_KEY_SS, "")
+        val result = if (ssInAppsMetaData.isNullOrBlank()) {
+            emptyList()
+        } else {
+            try {
+                JSONArray(ssInAppsMetaData).toList<JSONObject>()
+            } catch (e: JSONException) {
+                emptyList()
+            }
+        }
+        serverSideInActionCache = result
+        return result
     }
 
     /**
@@ -267,24 +319,67 @@ internal class InAppStore(
     /**
      * Reads and decrypts Server-side legacy In-App messages.
      *
-     * @return An array of Server-side legacy In-App messages.
+     * @return A list of Server-side legacy In-App messages.
      */
-    fun readServerSideInApps(): JSONArray {
-        if (serverSideInApps != null)
-            return serverSideInApps as JSONArray
+    fun readServerSideInApps(): List<JSONObject> {
+        serverSideInAppsCache?.let { return it }
 
-        val ssEncryptedInApps = ctPreference.readString(INAPP_KEY, "")
-        serverSideInApps = if (ssEncryptedInApps.isNullOrBlank()) {
-            JSONArray()
+        val ssInAppsEncrypted = ctPreference.readString(INAPP_KEY, "")
+        val result = if (ssInAppsEncrypted.isNullOrBlank()) {
+            emptyList()
         } else {
             try {
-                JSONArray(cryptHandler.decrypt(ssEncryptedInApps))
+                val decrypted = cryptHandler.decrypt(ssInAppsEncrypted)
+                JSONArray(decrypted).toList<JSONObject>()
             } catch (e: Exception) {
-                JSONArray()
+                emptyList()
             }
         }
+        serverSideInAppsCache = result
+        return result
+    }
 
-        return serverSideInApps as JSONArray
+    /**
+     * Stores Client-side Delayed In-App messages in encrypted format.
+     *
+     * @param delayedInApps The list of delayed Client-side In-App messages.
+     */
+    fun storeClientSideDelayedInApps(delayedInApps: List<JSONObject>) {
+        clientSideDelayedInAppsCache = delayedInApps
+        val jsonArray = JSONArray(delayedInApps)
+        val encryptedString = cryptHandler.encrypt(jsonArray.toString())
+        encryptedString?.apply {
+            ctPreference.writeString(PREFS_DELAYED_INAPP_KEY_CS, this)
+        }
+    }
+
+    /**
+     * Reads and decrypts Client-side Delayed In-App messages.
+     *
+     * @return A list of delayed Client-side In-App messages.
+     */
+    fun readClientSideDelayedInApps(): List<JSONObject> {
+        clientSideDelayedInAppsCache?.let { return it }
+
+        val encryptedData = ctPreference.readString(PREFS_DELAYED_INAPP_KEY_CS, "")
+        val result = if (encryptedData.isNullOrBlank()) {
+            emptyList()
+        } else {
+            try {
+                val decrypted = cryptHandler.decrypt(encryptedData)
+                JSONArray(decrypted).toList<JSONObject>()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+        clientSideDelayedInAppsCache = result
+        return result
+    }
+
+
+    fun removeClientSideDelayedInApps() {
+        ctPreference.remove(PREFS_DELAYED_INAPP_KEY_CS)
+        clientSideDelayedInAppsCache = null
     }
 
     /**

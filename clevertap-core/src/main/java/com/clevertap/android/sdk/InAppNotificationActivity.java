@@ -22,6 +22,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.clevertap.android.sdk.inapp.CTInAppAction;
+import com.clevertap.android.sdk.inapp.InAppDisplayListener;
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFullFragment;
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlCoverFragment;
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHalfInterstitialFragment;
@@ -42,7 +43,7 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
-        DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback {
+        DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback, InAppDisplayListener {
 
     private final static String INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT = "displayPushPermissionPrompt";
     private final static String INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS = "shouldShowFallbackSettings";
@@ -135,6 +136,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
 
             setListener(ctState.getInAppController());
+            ctState.getInAppController().registerInAppDisplayListener(this);
 
             inAppNotification = intentExtras.getParcelable(Constants.INAPP_KEY);
         } catch (Throwable t) {
@@ -247,11 +249,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         } else {
             return null;
         }
-    }
-
-    @Override
-    public void setTheme(int resid) {
-        super.setTheme(android.R.style.Theme_Translucent_NoTitleBar);
     }
 
     @Override
@@ -482,8 +479,23 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @Override
+    public void hideInApp() {
+        finish();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        if (config != null) {
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, config);
+            if (cleverTapAPI != null) {
+                CoreState ctState = cleverTapAPI.getCoreState();
+                if (ctState != null) {
+                    ctState.getInAppController().unregisterInAppDisplayListener();
+                }
+            }
+        }
         if (!isChangingConfigurations()) {
             didDismiss(null, false);
         }

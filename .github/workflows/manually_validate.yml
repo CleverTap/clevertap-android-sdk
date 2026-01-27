@@ -26,16 +26,10 @@ on:
         default: true
         required: false
 
-      jacoco_debug:
-        description: Run tests and code coverage :debug
+      jacoco:
+        description: Run tests and code coverage
         type: boolean
         default: true
-        required: false
-
-      jacoco_release:
-        description: Run tests and code coverage :release
-        type: boolean
-        default: false
         required: false
 
       test_debug:
@@ -71,7 +65,7 @@ jobs:
 
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Mandatory File Changes
         if: ${{ inputs.check_mandatory }}
@@ -92,13 +86,9 @@ jobs:
         if: ${{ inputs.checkstyle }}
         uses: ./.github/mini_flows/codechecks_checkstyle
 
-      - name: Unit Tests and Jacoco Coverage (DEBUG)
-        if: ${{ inputs.jacoco_debug }}
+      - name: Unit Tests and Jacoco Coverage
+        if: ${{ inputs.jacoco }}
         uses: ./.github/mini_flows/test_and_coverage_debug
-
-      - name: Unit Tests and Jacoco Coverage (RELEASE)
-        if: ${{ inputs.jacoco_release }}
-        uses: ./.github/mini_flows/test_and_coverage_release
 
       - name: Unit Tests(DEBUG)
         if: ${{ inputs.test_debug }}

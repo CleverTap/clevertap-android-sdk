@@ -1,8 +1,11 @@
+name: 'Test Debug'
+description: 'Runs unit tests for debug and release builds and uploads test reports'
+
 runs:
   using: "composite"
   steps:
 
-    - name: Run Unit Tests And Code Coverage (DEBUG)
+    - name: Run Unit Tests And Code Coverage
       shell: bash
       run: ./gradlew :clevertap-core:testDebugUnitTest :clevertap-geofence:testDebugUnitTest  :clevertap-hms:testDebugUnitTest  :clevertap-pushTemplates:testDebugUnitTest
 

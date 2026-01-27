@@ -10,6 +10,8 @@ import com.clevertap.android.sdk.cryption.CryptMigrator
 import com.clevertap.android.sdk.cryption.CryptRepository
 import com.clevertap.android.sdk.cryption.DataMigrationRepository
 import com.clevertap.android.sdk.cryption.EncryptionLevel.Companion.fromInt
+import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventMediator
 import com.clevertap.android.sdk.events.EventQueueManager
@@ -18,15 +20,19 @@ import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.InAppActionHandler
 import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppNotificationInflater
+import com.clevertap.android.sdk.inapp.InAppPreviewHandler
 import com.clevertap.android.sdk.inapp.StoreRegistryInAppQueue
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
+import com.clevertap.android.sdk.inapp.delay.DelayedInAppStorageStrategy
+import com.clevertap.android.sdk.inapp.delay.InAppSchedulerFactory
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
+import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
@@ -43,6 +49,7 @@ import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
+import com.clevertap.android.sdk.profile.ProfileStateTraverser
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
@@ -62,11 +69,14 @@ import com.clevertap.android.sdk.response.PushAmpResponse
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MainLooperHandler
 import com.clevertap.android.sdk.utils.Clock.Companion.SYSTEM
+import com.clevertap.android.sdk.utils.NestedJsonBuilder
+import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.ValidationResultStack
-import com.clevertap.android.sdk.validation.Validator
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -93,7 +103,6 @@ internal object CleverTapFactory {
         )
 
         val coreMetaData = CoreMetaData()
-        val validator = Validator()
         val validationResultStack = ValidationResultStack()
         val ctLockManager = CTLockManager()
         val mainLooperHandler = MainLooperHandler()
@@ -101,19 +110,14 @@ internal object CleverTapFactory {
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
+        val inAppDelayManager = InAppSchedulerFactory.createDelayedInAppScheduler(accountId,config.logger)
+        val inAppInActionManager = InAppSchedulerFactory.createInActionScheduler(accountId,config.logger)
 
         val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
             FileResourceProvider.getInstance(context, config.logger)
         }
 
-        val databaseManager = DBManager(
-            config = config,
-            ctLockManager = ctLockManager,
-            ijRepo = ijRepo,
-            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
-            clearLastRequestTs = networkRepo::clearLastRequestTs
-        )
         val repository = CryptRepository(
             context = context,
             accountId = config.accountId
@@ -124,47 +128,85 @@ internal object CleverTapFactory {
             ctKeyGenerator = ctKeyGenerator
         )
         val cryptHandler = CryptHandler(
-            encryptionLevel = fromInt(value = config.encryptionLevel),
-            accountID = config.accountId,
             repository = repository,
             cryptFactory = cryptFactory
         )
+
+        val dbEncryptionHandler = DBEncryptionHandler(
+            crypt = cryptHandler,
+            logger = config.logger,
+            encryptionLevel = fromInt(config.encryptionLevel)
+        )
+
+        val variablesRepo = VariablesRepo(
+            context = context,
+            accountId = config.accountId,
+            dbEncryptionHandler = dbEncryptionHandler
+        )
+
+        val databaseName = DBAdapter.getDatabaseName(config)
+
+        val databaseManager = DBManager(
+            accountId = config.accountId,
+            logger = config.logger,
+            databaseName = databaseName,
+            ctLockManager = ctLockManager,
+            ijRepo = ijRepo,
+            dbEncryptionHandler = dbEncryptionHandler,
+            clearFirstRequestTs = networkRepo::clearFirstRequestTs,
+            clearLastRequestTs = networkRepo::clearLastRequestTs
+        )
+
         val task = executors.postAsyncSafelyTask<Unit>()
         task.execute("migratingEncryption") {
-
+            val dbAdapter = databaseManager.loadDBAdapter(context)
             val dataMigrationRepository = DataMigrationRepository(
                 context = context,
                 config = config,
-                dbAdapter = databaseManager.loadDBAdapter(context)
+                dbAdapter = dbAdapter
             )
-
             val cryptMigrator = CryptMigrator(
                 logPrefix = config.accountId,
                 configEncryptionLevel = config.encryptionLevel,
                 logger = config.logger,
                 cryptHandler = cryptHandler,
                 cryptRepository = repository,
-                dataMigrationRepository = dataMigrationRepository
+                dataMigrationRepository = dataMigrationRepository,
+                variablesRepo = variablesRepo,
+                dbAdapter = dbAdapter
             )
             cryptMigrator.migrateEncryption()
+        }
+        val inAppDaoLoaderTask = executors.postAsyncSafelyTask<Unit>()
+        inAppDaoLoaderTask.execute("loadInAppsDao") {
+            (inAppDelayManager.storageStrategy as DelayedInAppStorageStrategy).delayedLegacyInAppStore = DelayedLegacyInAppStore(
+                databaseManager.loadDBAdapter(context).delayedLegacyInAppDAO(),
+                cryptHandler,
+                config.logger,
+                accountId
+            )
         }
 
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
-        val localDataStore =
-            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager)
+        val validationConfig = ValidationConfig.default { deviceInfo.countryCode }.build()
 
-        val profileValueHandler = ProfileValueHandler(validator, validationResultStack)
+        val validationPipelineProvider = ValidationPipelineProvider(validationResultStack, config.logger)
+        val profileStateTraverser = ProfileStateTraverser(config.logger)
+        val nestedJsonBuilder = NestedJsonBuilder()
+
+        val localDataStore =
+            LocalDataStore(context, config, cryptHandler, deviceInfo, databaseManager, profileStateTraverser, nestedJsonBuilder)
 
         val eventMediator =
-            EventMediator(config, coreMetaData, localDataStore, profileValueHandler, networkRepo)
+            EventMediator(config, coreMetaData, networkRepo)
 
         getInstance(context, config)
 
         val callbackManager: BaseCallbackManager = CallbackManager(config, deviceInfo)
 
-        val sessionManager = SessionManager(config, coreMetaData, validator, localDataStore)
+        val sessionManager = SessionManager(config, coreMetaData, validationConfig, localDataStore)
 
         val controllerManager = ControllerManager(
             context,
@@ -179,7 +221,6 @@ internal object CleverTapFactory {
         val triggersManager = TriggerManager(context, config.accountId, deviceInfo)
         val impressionManager = ImpressionManager(storeRegistry)
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
-
 
         val inAppActionHandler = InAppActionHandler(
             context,
@@ -254,7 +295,8 @@ internal object CleverTapFactory {
         val varCache = VarCache(
             config,
             context,
-            impl
+            impl,
+            variablesRepo
         )
 
         val ctVariables = CTVariables(varCache)
@@ -306,7 +348,7 @@ internal object CleverTapFactory {
             logger = config.logger
         )
 
-        val arpResponse = ARPResponse(config, validator, controllerManager, arpRepo)
+        val arpResponse = ARPResponse(config, validationConfig, controllerManager, arpRepo)
         val contentFetchManager = ContentFetchManager(
             config,
             coreMetaData,
@@ -392,20 +434,29 @@ internal object CleverTapFactory {
             coreMetaData
         )
 
+        val inAppPreviewHandler = InAppPreviewHandler(
+            executors,
+            networkManager,
+            inAppResponseForSendTestInApp,
+            context,
+            config.logger
+        )
+
         val analyticsManager = AnalyticsManager(
             context,
             config,
             baseEventQueueManager,
-            validator,
-            validationResultStack,
+            validationPipelineProvider,
+            validationConfig,
             coreMetaData,
             deviceInfo,
             callbackManager,
             controllerManager,
             ctLockManager,
-            inAppResponseForSendTestInApp,
             SYSTEM,
-            executors
+            executors,
+            localDataStore,
+            inAppPreviewHandler
         )
 
         val inAppNotificationInflater = InAppNotificationInflater(
@@ -416,6 +467,7 @@ internal object CleverTapFactory {
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
+
         val inAppController = InAppController(
             context,
             config,
@@ -431,6 +483,8 @@ internal object CleverTapFactory {
             templatesManager,
             inAppActionHandler,
             inAppNotificationInflater,
+            inAppDelayManager,
+            inAppInActionManager,
             SYSTEM
         )
         controllerManager.inAppController = inAppController
@@ -461,7 +515,7 @@ internal object CleverTapFactory {
         val pushProviders = PushProviders
             .load(
                 context, config, databaseManager, validationResultStack,
-                analyticsManager, controllerManager, ctWorkManager
+                analyticsManager, controllerManager, ctWorkManager, SYSTEM
             )
 
         val activityLifeCycleManager = ActivityLifeCycleManager(
@@ -513,7 +567,6 @@ internal object CleverTapFactory {
             cryptHandler = cryptHandler,
             storeRegistry = storeRegistry,
             templatesManager = templatesManager,
-            profileValueHandler = profileValueHandler,
             cTVariables = ctVariables,
             executors = executors
         )

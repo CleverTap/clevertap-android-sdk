@@ -22,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -448,7 +449,8 @@ public class InAppFCManager {
             final JSONArray accountBasedInApps = legacyInAppStore.readInApps();
             if (accountBasedInApps.length() > 0) {
                 Logger.d("migrating in-apps from account id to device id based preference.");
-                inAppStore.storeServerSideInApps(accountBasedInApps);
+                List<JSONObject> accountBasedInAppsList = Utils.toJSONObjectList(accountBasedInApps);
+                inAppStore.storeServerSideInApps(accountBasedInAppsList);
                 legacyInAppStore.removeInApps();
                 Logger.d("Finished migrating in-apps from account id to device id based preference.");
             }

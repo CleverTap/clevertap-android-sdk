@@ -61,7 +61,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         coreState.coreMetaData.currentSessionId = 100
         activityLifeCycleManager.activityPaused()
         assertNotEquals(-1,StorageHelper.getInt(appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, Constants.LAST_SESSION_EPOCH),-1))
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, Constants.LAST_SESSION_EPOCH),-1))
 
     }
 
@@ -70,7 +70,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         coreState.coreMetaData.currentSessionId = 0
         activityLifeCycleManager.activityPaused()
         assertEquals(-1,StorageHelper.getInt(appCtx,
-            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig, Constants.LAST_SESSION_EPOCH),-1))
+            StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, Constants.LAST_SESSION_EPOCH),-1))
 
     }
 

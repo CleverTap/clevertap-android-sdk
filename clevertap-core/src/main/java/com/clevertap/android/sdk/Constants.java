@@ -25,7 +25,9 @@ public interface Constants {
     String TYPE_PHONE = "Phone";
 
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_ID = "fcm_fallback_notification_channel";
+    String CT_FALLBACK_NOTIFICATION_CHANNEL_ID_LOW = "ct_fallback_notification_channel_low_importance";
     String FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Misc";
+    String LOW_IMPORTANCE_FALLBACK_NOTIFICATION_CHANNEL_NAME = "Silent Misc";
     String CLEVERTAP_OPTOUT = "ct_optout";
     String CLEVERTAP_ALLOW_SYSTEM_EVENTS = "ct_allow_sys_events_and_communication";
     String CLEVERTAP_STORAGE_TAG = "WizRocket";
@@ -56,6 +58,7 @@ public interface Constants {
     String WZRK_URL_SCHEMA = "wzrk://";
     String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     String INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY = "wzrk_inapp_type";
+    String INAPP_PREVIEW_S3_URL_KEY = "wzrk_inapp_s3_url";
     String INAPP_IMAGE_INTERSTITIAL_TYPE = "image-interstitial";
     String INAPP_ADVANCED_BUILDER_TYPE = "advanced-builder";
     String INAPP_IMAGE_INTERSTITIAL_CONFIG = "imageInterstitialConfig";
@@ -79,9 +82,11 @@ public interface Constants {
     String INAPP_NOTIF_DARKEN_SCREEN = "dk";
     String INAPP_NOTIF_SHOW_CLOSE = "sc";
     String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
+    String INAPP_NOTIFS_META_KEY = "inapp_notifs_meta";
 
     String INAPP_NOTIFS_STALE_KEY = "inapp_stale";
     String INAPP_NOTIFS_APP_LAUNCHED_KEY = "inapp_notifs_applaunched";
+    String INAPP_NOTIFS_APP_LAUNCHED_META_KEY = "inapp_notifs_applaunched_meta";
 
     String INAPP_NOTIFS_KEY_CS = "inapp_notifs_cs";
     String INAPP_NOTIFS_KEY_SS = "inapp_notifs_ss";
@@ -98,6 +103,7 @@ public interface Constants {
     String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
+    String REQUEST_VARIANTS_JSON_RESPONSE_KEY = "abVariantInfo";
     String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
     String GEOFENCES_JSON_RESPONSE_KEY = "geofences";
     String DISCARDED_EVENT_JSON_KEY = "d_e";
@@ -119,8 +125,6 @@ public interface Constants {
     String LAST_SESSION_EPOCH = "sexe";
     int MAX_KEY_LENGTH = 120;
     int MAX_VALUE_LENGTH = 512;
-    int MAX_MULTI_VALUE_ARRAY_LENGTH = 100;
-    int MAX_MULTI_VALUE_LENGTH = 512;
     String WZRK_FROM_KEY = "wzrk_from";
     String WZRK_ACCT_ID_KEY = "wzrk_acct_id";
     String WZRK_FROM = "CTPushNotificationReceiver";
@@ -129,6 +133,7 @@ public interface Constants {
     String CACHED_GUIDS_KEY = "cachedGUIDsKey";
     String CACHED_GUIDS_LENGTH_KEY = "cachedGUIDsLengthKey";
     String CACHED_VARIABLES_KEY = "variablesKey";
+    String CACHED_VARIANTS_KEY = "variantsForAbKey";
     String MULTI_USER_PREFIX = "mt_";
     String NOTIFICATION_TAG = "wzrk_pn";
     String CHARGED_EVENT = "Charged";
@@ -150,7 +155,7 @@ public interface Constants {
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
             NOTIFICATION_VIEWED_EVENT_NAME, GEOFENCE_ENTERED_EVENT_NAME,
             GEOFENCE_EXITED_EVENT_NAME};
-    long DEFAULT_PUSH_TTL = 1000L * 60 * 60 * 24 * 4;// 4 days
+    long DEFAULT_PUSH_TTL_SECONDS = 60 * 60 * 24 * 4;// 4 days
     long ONE_MIN_IN_MILLIS = 60 * 1000L;
     long ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000L;
     String COPY_TYPE = "copy";
@@ -193,7 +198,6 @@ public interface Constants {
     String KEY_ALT_TEXT= "alt_text";
     String KEY_BUTTONS = "buttons";
     String KEY_CUSTOM_HTML = "custom-html";
-    String KEY_ENCRYPTION_FLAG_STATUS = "encryptionFlagStatus";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
@@ -219,6 +223,7 @@ public interface Constants {
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_DISMISS = "wzrk_dismiss";
     String WZRK_STICKY = "wzrk_sticky";
+    String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";
     String WZRK_SOUND = "wzrk_sound";
     String WZRK_TIME_TO_LIVE = "wzrk_ttl";
     String WZRK_TIME_TO_LIVE_OFFSET = "wzrk_ttl_offset";
@@ -226,7 +231,6 @@ public interface Constants {
     String INAPP_SS_EVAL_META = "inapps_eval";
     String INAPP_SUPPRESSED_META = "inapps_suppressed";
     String INAPP_WHEN_TRIGGERS = "whenTriggers";
-    String INAPP_WHEN_LIMITS = "whenLimit";
     String INAPP_FC_LIMITS = "frequencyLimits";
     String INAPP_OCCURRENCE_LIMITS = "occurrenceLimits";
 
@@ -251,6 +255,7 @@ public interface Constants {
     String BLUE = "#0000FF";
     String GREEN = "#00FF00";
     String LIGHT_BLUE = "#818ce5";
+    String FALLBACK_COLOR = "#FFFFFF";
     /**
      * Profile command constants.
      */
@@ -261,6 +266,8 @@ public interface Constants {
     String COMMAND_INCREMENT = "$incr";
     String COMMAND_DECREMENT = "$decr";
     String DATE_PREFIX = "$D_";
+    String DELETE_MARKER = "__CLEVERTAP_DELETE__";
+    String GET_MARKER = "__CLEVERTAP_GET__";
     String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";
@@ -286,9 +293,6 @@ public interface Constants {
     String KEY_LINKS = "links";
     String KEY_ENCRYPTION_MIGRATION = "encryptionmigration";
     String KEY_ENCRYPTION_CGK = "cgk";
-    String KEY_ENCRYPTION_INAPP_CS = "cs";
-
-    String KEY_ENCRYPTION_INAPP_SS = "ss";
 
     String KEY_ENCRYPTION_NAME = "Name";
     String KEY_ENCRYPTION_IDENTITY = "Identity";
@@ -312,53 +316,19 @@ public interface Constants {
     int FETCH_TYPE_FF = 1;
     int FETCH_TYPE_VARIABLES = 4;
     int FETCH_TYPE_IN_APPS = 5;
+    int FETCH_TYPE_IN_ACTION_IN_APPS = 6;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";
-    // error message codes
-    int INVALID_MULTI_VALUE = 1;
-    int PUSH_KEY_EMPTY = 2;
-    int OBJECT_VALUE_NOT_PRIMITIVE_PROFILE = 3;
-    int INVALID_COUNTRY_CODE = 4;
-    int INVALID_PHONE = 5;
-    int KEY_EMPTY = 6;
-    int PROP_VALUE_NOT_PRIMITIVE = 7;
-    int CHANNEL_ID_MISSING_IN_PAYLOAD = 8;
-    int CHANNEL_ID_NOT_REGISTERED = 9;
-    int NOTIFICATION_VIEWED_DISABLED = 10;
-    int VALUE_CHARS_LIMIT_EXCEEDED = 11;
-    int MULTI_VALUE_CHARS_LIMIT_EXCEEDED = 12;
-    int INVALID_PROFILE_PROP_ARRAY_COUNT = 13;
-    int EVENT_NAME_NULL = 14;
-    int OBJECT_VALUE_NOT_PRIMITIVE = 15;
-    int RESTRICTED_EVENT_NAME = 16;
-    int DISCARDED_EVENT_NAME = 17;
-    int USE_CUSTOM_ID_FALLBACK = 18;
-    int USE_CUSTOM_ID_MISSING_IN_MANIFEST = 19;
-    int UNABLE_TO_SET_CT_CUSTOM_ID = 20;
-    int INVALID_CT_CUSTOM_ID = 21;
-    int INVALID_MULTI_VALUE_KEY = 23;
-    int RESTRICTED_MULTI_VALUE_KEY = 24;
-    int INVALID_INCREMENT_DECREMENT_VALUE = 25;
-    int ENCRYPTION_FLAG_FAIL = 0b00;
-    int ENCRYPTION_FLAG_CGK_SUCCESS = 0b01;
-    int ENCRYPTION_FLAG_DB_SUCCESS = 0b10;
-    int ENCRYPTION_FLAG_ALL_SUCCESS = 0b11;
-
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
-    String EMPTY_STRING = "";
     String AUTH = "auth";
     String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
 
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
-    HashSet<String> MEDIUM_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_CGK, KEY_ENCRYPTION_MIGRATION, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_PHONE, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_NAME));
-    HashSet<String> NONE_CRYPT_KEYS = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_MIGRATION));
     HashSet<String> piiDBKeys = new HashSet<>(Arrays.asList(KEY_ENCRYPTION_NAME, KEY_ENCRYPTION_EMAIL, KEY_ENCRYPTION_IDENTITY, KEY_ENCRYPTION_PHONE));
-
-    HashSet<String> keysToSkipForUserAttributesEvaluation = new HashSet<>(Arrays.asList("cc", "tz", "Carrier"));
 
     /**
      * Valid indexes for the App Inbox item and buttons.
@@ -373,7 +343,6 @@ public interface Constants {
     String PT_NOTIF_ID = "notificationId";
     String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
     String KEY_CT_TYPE = "ct_type";
-    String PT_INPUT_KEY = "pt_input_reply";
 
     // ==========Fallback keys=========
     String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
@@ -386,6 +355,7 @@ public interface Constants {
     String D_SRC = "d_src";// data source for push impressions
     String D_SRC_PI_R = "PI_R";// push impression data source is Receiver
     String D_SRC_PI_WM = "PI_WM";// push impression data source is work manager
+    String META_FRESH_APP_LAUNCH = "fl";
 
     String REGION_INDIA = "in1";
     String REGION_EUROPE = "eu1";

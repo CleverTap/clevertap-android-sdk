@@ -9,6 +9,8 @@ import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 
 import java.util.List;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -69,6 +71,12 @@ public class CTVariables {
         } else {
             handleVariableResponseSuccess(response, fetchCallback);
         }
+    }
+
+    public void handleAbVariantsResponse(@Nullable JSONArray abVariants) {
+        logD("handleVariantsResponse() called with: abVariants  " + abVariants);
+        List<Map<String, Object>> list = JsonUtil.listFromJsonFromDefault(abVariants);
+        varCache.updateAbVariants(list);
     }
 
     public void handleVariableResponseError(@Nullable FetchVariablesCallback fetchCallback) {

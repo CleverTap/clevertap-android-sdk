@@ -20,26 +20,26 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.QueueData
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplate
+import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.EndpointId.Companion.fromEventGroup
 import com.clevertap.android.sdk.network.api.CtApi
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
+import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.api.DefineTemplatesRequestBody
 import com.clevertap.android.sdk.network.api.EncryptedSendQueueRequestBody
+import com.clevertap.android.sdk.network.api.EncryptionFailure
 import com.clevertap.android.sdk.network.api.EncryptionSuccess
 import com.clevertap.android.sdk.network.api.SendQueueRequestBody
 import com.clevertap.android.sdk.network.http.Response
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import com.clevertap.android.sdk.response.ARPResponse
+import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import com.clevertap.android.sdk.isNotNullAndBlank
-import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_DOMAIN_NAME
-import com.clevertap.android.sdk.network.api.CtApi.Companion.HEADER_ENCRYPTION_ENABLED
-import com.clevertap.android.sdk.network.api.EncryptionFailure
-import com.clevertap.android.sdk.response.ClevertapResponseHandler
 
 internal class NetworkManager constructor(
     private val context: Context,
@@ -443,6 +443,32 @@ internal class NetworkManager constructor(
     }
 
     @WorkerThread
+    fun fetchInAppPreviewPayloadFromUrl(url: String): JSONObject? {
+        try {
+            ctApiWrapper.ctApi.fetchFromUrl(url).use { response ->
+                if (response.isSuccess()) {
+                    val bodyString = response.readBody()
+                    val bodyJson = bodyString.toJsonOrNull()
+                    return bodyJson
+                } else {
+                    logger.debug(
+                        config.accountId,
+                        "Failed to fetch inapp payload. Response code: ${response.code}"
+                    )
+                    return null
+                }
+            }
+        } catch (e: Exception) {
+            logger.debug(
+                config.accountId,
+                "An exception occurred while fetching the inapp payload from URL",
+                e
+            )
+            return null
+        }
+    }
+
+    @WorkerThread
     private fun callApiForEventGroup(
         eventGroup: EventGroup,
         body: SendQueueRequestBody
@@ -574,6 +600,7 @@ internal class NetworkManager constructor(
             return false
         }
 
+        coreMetaData.setFreshAppLaunchSent()
         saveDomainChanges(response)
         notifyNetworkHeaderListeners()
 

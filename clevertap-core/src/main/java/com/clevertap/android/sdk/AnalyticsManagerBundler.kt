@@ -28,12 +28,11 @@ object AnalyticsManagerBundler {
     }
 
     @JvmStatic
-    fun notificationViewedJson(root: Bundle): JSONObject {
+    fun notificationViewedJson(root: JSONObject): JSONObject {
         val event = JSONObject()
         try {
-            val notif = wzrkBundleToJson(root)
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
-            event.put("evtData", notif)
+            event.put("evtData", root)
         } catch (ignored: Throwable) {
             //no-op
         }
@@ -41,12 +40,11 @@ object AnalyticsManagerBundler {
     }
 
     @JvmStatic
-    fun notificationClickedJson(root: Bundle): JSONObject {
+    fun notificationClickedJson(root: JSONObject): JSONObject {
         val event = JSONObject()
         try {
-            val notif = wzrkBundleToJson(root)
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
-            event.put("evtData", notif)
+            event.put("evtData", root)
         } catch (ignored: Throwable) {
             //no-op
         }

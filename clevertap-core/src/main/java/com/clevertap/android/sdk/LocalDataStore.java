@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.Constants.GET_MARKER;
 import static com.clevertap.android.sdk.Constants.piiDBKeys;
+
+import static java.util.Collections.emptyMap;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -10,18 +13,22 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 
-import com.clevertap.android.sdk.cryption.CryptHandler;
-import com.clevertap.android.sdk.cryption.CryptHandler.EncryptionAlgorithm;
+import com.clevertap.android.sdk.cryption.EncryptionLevel;
+import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
+import com.clevertap.android.sdk.profile.ProfileStateTraverser;
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
+import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.usereventlogs.UserEventLog;
+import com.clevertap.android.sdk.utils.NestedJsonBuilder;
 
-//import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,13 +49,13 @@ public class LocalDataStore {
 
     private static long EXECUTOR_THREAD_ID = 0;
 
-    private final HashMap<String, Object> PROFILE_FIELDS_IN_THIS_SESSION = new HashMap<>();
+    private final JSONObject PROFILE_FIELDS_IN_THIS_SESSION = new JSONObject();
 
     private final CleverTapInstanceConfig config;
 
     private final Context context;
 
-    private final CryptHandler cryptHandler;
+    private final ICryptHandler cryptHandler;
     private final BaseDatabaseManager baseDatabaseManager;
 
     private final ExecutorService es;
@@ -59,13 +66,18 @@ public class LocalDataStore {
     private final Set<String> userNormalizedEventLogKeys = Collections.synchronizedSet(new HashSet<>());
     private final Map<String, String> normalizedEventNames = new HashMap<>();
 
-    LocalDataStore(Context context, CleverTapInstanceConfig config, CryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager) {
+    private final ProfileStateTraverser profileStateTraverser;
+    private final NestedJsonBuilder nestedJsonBuilder;
+
+    LocalDataStore(Context context, CleverTapInstanceConfig config, ICryptHandler cryptHandler, DeviceInfo deviceInfo, BaseDatabaseManager baseDatabaseManager, ProfileStateTraverser profileStateTraverser, NestedJsonBuilder nestedJsonBuilder) {
         this.context = context;
         this.config = config;
         this.es = Executors.newFixedThreadPool(1);
         this.cryptHandler = cryptHandler;
         this.deviceInfo = deviceInfo;
         this.baseDatabaseManager = baseDatabaseManager;
+        this.profileStateTraverser = profileStateTraverser;
+        this.nestedJsonBuilder = nestedJsonBuilder;
     }
 
     @WorkerThread
@@ -386,23 +398,25 @@ public class LocalDataStore {
         }
     }
 
+    public JSONObject getProfile() {
+        try {
+            synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+                return new JSONObject(PROFILE_FIELDS_IN_THIS_SESSION.toString());
+            }
+        } catch (JSONException e) {
+            // Handle exception or return empty object
+            return new JSONObject();
+        }
+    }
+
     public Object getProfileProperty(String key) {
         if (key == null) {
             return null;
         }
 
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                Object property = PROFILE_FIELDS_IN_THIS_SESSION.get(key);
-                if (property instanceof String && CryptHandler.isTextEncrypted((String) property)) {
-                    getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property because it wasn't decrypted");
-                    return null;
-                }
-                return PROFILE_FIELDS_IN_THIS_SESSION.get(key);
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getConfigAccountId(), "Failed to retrieve local profile property", t);
-                return null;
-            }
+            ProfileChange profileChange = processProfileTree(key, GET_MARKER, ProfileOperation.GET).get(key);
+            return profileChange == null ? null : profileChange.getOldValue();
         }
     }
 
@@ -499,7 +513,7 @@ public class LocalDataStore {
                                 } else {
                                     Object decrypted = value;
                                     if (value instanceof String) {
-                                        decrypted = cryptHandler.decrypt((String) value, key, EncryptionAlgorithm.AES_GCM);
+                                        decrypted = cryptHandler.decryptSafe((String) value);
                                         if (decrypted == null)
                                             decrypted = value;
                                     }
@@ -561,36 +575,57 @@ public class LocalDataStore {
     }
 
     private void persistLocalProfileAsync() {
-
         final String profileID = this.config.getAccountId();
 
         this.postAsyncSafely("LocalDataStore#persistLocalProfileAsync", new Runnable() {
             @Override
             public void run() {
                 synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                    HashMap<String, Object> profile = new HashMap<>(PROFILE_FIELDS_IN_THIS_SESSION);
-                    boolean passFlag = true;
+                    JSONObject profile = new JSONObject();
+                    boolean encryptionFailed = false;
+
+                    // Copy all fields from PROFILE_FIELDS_IN_THIS_SESSION to profile
+                    try {
+                        Iterator<String> keys = PROFILE_FIELDS_IN_THIS_SESSION.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            profile.put(key, PROFILE_FIELDS_IN_THIS_SESSION.get(key));
+                        }
+                    } catch (JSONException e) {
+                        getConfigLogger().verbose(getConfigAccountId(), "Failed to copy profile fields", e);
+                    }
+
                     // Encrypts only the pii keys before storing to DB
+                    boolean isMediumEncryption = EncryptionLevel.fromInt(config.getEncryptionLevel()) == EncryptionLevel.MEDIUM;
                     for (String piiKey : piiDBKeys) {
-                        if (profile.get(piiKey) != null) {
-                            Object value = profile.get(piiKey);
-                            if (value instanceof String) {
-                                String encrypted = cryptHandler.encrypt((String) value, piiKey, EncryptionAlgorithm.AES_GCM);
-                                if (encrypted == null) {
-                                    passFlag = false;
-                                    continue;
+                        try {
+                            if (profile.has(piiKey)) {
+                                Object value = profile.opt(piiKey);
+                                if (value instanceof String) {
+                                    if (isMediumEncryption) {
+                                        value = cryptHandler.encryptSafe((String) value);
+                                        if (value == null) {
+                                            encryptionFailed = true;
+                                            // Don't update profile with null, keep original
+                                            continue;
+                                        }
+                                        profile.put(piiKey, value);
+                                    }
                                 }
-                                profile.put(piiKey, encrypted);
                             }
+                        } catch (JSONException e) {
+                            getConfigLogger().verbose(getConfigAccountId(), "Failed to encrypt pii key: " + piiKey, e);
+                            encryptionFailed = true;
                         }
                     }
-                    JSONObject jsonObjectEncrypted = new JSONObject(profile);
 
-                    if (!passFlag)
+                    // Update migration failure count ONCE after processing all keys
+                    if (encryptionFailed) {
                         cryptHandler.updateMigrationFailureCount(false);
+                    }
 
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-                    long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), jsonObjectEncrypted);
+                    long status = dbAdapter.storeUserProfile(profileID, deviceInfo.getDeviceID(), profile);
                     getConfigLogger().verbose(getConfigAccountId(),
                             "Persist Local Profile complete with status " + status + " for id " + profileID);
                 }
@@ -652,72 +687,18 @@ public class LocalDataStore {
 
     private void resetLocalProfileSync() {
         synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            PROFILE_FIELDS_IN_THIS_SESSION.clear();
+            Iterator<String> keys = PROFILE_FIELDS_IN_THIS_SESSION.keys();
+            List<String> keysToRemove = new ArrayList<>();
+            while (keys.hasNext()) {
+                keysToRemove.add(keys.next());
+            }
+            for (String key : keysToRemove) {
+                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
+            }
         }
 
         // Load the older profile from cache into the db
         inflateLocalProfileAsync(context);
-
-    }
-
-    private void _removeProfileField(String key) {
-        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-            try {
-                PROFILE_FIELDS_IN_THIS_SESSION.remove(key);
-            } catch (Throwable t) {
-                getConfigLogger()
-                        .verbose(getConfigAccountId(), "Failed to remove local profile value for key " + key, t);
-            }
-        }
-    }
-    private void _setProfileField(String key, Object value) {
-        if (value == null) {
-            return;
-        }
-        try {
-            synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
-                PROFILE_FIELDS_IN_THIS_SESSION.put(key, value);
-            }
-        } catch (Throwable t) {
-            getConfigLogger()
-                    .verbose(getConfigAccountId(), "Failed to set local profile value for key " + key, t);
-        }
-    }
-
-    /**
-     * This function centrally updates the profile fields both in the local cache and the local db
-     *
-     * @param fields, a map of key value pairs to be updated locally. The value will be null if that key needs to be
-     *                removed
-     */
-//    int k = 0;
-    public void updateProfileFields(Map<String, Object> fields) {
-        if(fields.isEmpty())
-            return;
-        /*Set<String> events = new HashSet<>();
-        for (int i = 0; i < 5000; i++) {
-            String s = "profile field - "+k+"-"+i;//RandomStringUtils.randomAlphanumeric(512);
-            events.add(s);
-        }
-        k++;*/
-        long start = System.nanoTime();
-        persistUserEventLogsInBulk(fields.keySet());
-//        persistUserEventLogsInBulk(events);
-        /*for (String key : events)
-        {
-            persistUserEventLog(key);
-        }*/
-        long end = System.nanoTime();
-        config.getLogger().verbose(config.getAccountId(),"UserEventLog: persistUserEventLog execution time = "+(end - start)+" nano seconds");
-        for (Map.Entry<String, Object> entry : fields.entrySet()) {
-            String key = entry.getKey();
-            Object newValue = entry.getValue();
-            if (newValue == null) {
-                _removeProfileField(key);
-            }
-            _setProfileField(key, newValue);
-        }
-        persistLocalProfileAsync();
     }
 
     private String storageKeyWithSuffix(String key) {
@@ -726,5 +707,41 @@ public class LocalDataStore {
 
     private String stringify(Object value) {
         return (value == null) ? "" : value.toString();
+    }
+
+    @WorkerThread
+    public Map<String, ProfileChange> processProfileTree(
+            String dotNotationKey,
+            Object value,
+            ProfileOperation operation
+    ) {
+        try {
+            JSONObject nestedProfile = nestedJsonBuilder.buildFromPath(dotNotationKey, value);
+            return processProfileTree(nestedProfile, operation);
+        } catch (JSONException e) {
+            return emptyMap();
+        }
+    }
+
+
+    @WorkerThread
+    public Map<String, ProfileChange> processProfileTree(
+            JSONObject newJson,
+            ProfileOperation operation
+    ) {
+        synchronized (PROFILE_FIELDS_IN_THIS_SESSION) {
+            ProfileStateTraverser.ProfileTraversalResult result = profileStateTraverser.traverse(
+                    PROFILE_FIELDS_IN_THIS_SESSION,
+                    newJson,
+                    operation
+            );
+
+            if (operation != ProfileOperation.GET) {
+                persistLocalProfileAsync();
+            }
+
+            // Return the changes map
+            return result.getChanges();
+        }
     }
 }

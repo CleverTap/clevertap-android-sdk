@@ -5,18 +5,33 @@ object HomeScreenModel {
     val listData: Map<String, List<String>> by lazy {
         mapOf(
             "EVENTS" to listOf(
-                "Record Event",
-                "Record event with properties",
-                "Record Charged Event",
-                "Record Screen Event"
+                "Simple Event (App Opened)",
+                "Product Viewed Event",
+                "Add to Cart Event",
+                "Video Watched Event",
+                "Search Event",
+                "Charged Event (Transaction)",
+                "Screen View Event",
+                "App Rating Event",
+                "Content Shared Event"
             ),
             "USER PROFILE" to listOf(
-                "Push profile", "Update(Replace) Single-Value properties",
-                "Update(Add) Single-Value properties", "Update(Remove) Single-Value properties",
-                "Update(Replace) Multi-Value property", "Update(Add) Multi-Value property",
-                "Update(Remove) Multi-Value property", "Update(Add) Increment Value",
-                "Update(Add) Decrement Value", "Profile Location", "Get User Profile Property",
-                "onUserLogin"
+                "Push Basic Profile",
+                "Push Complete User Profile",
+                "Push E-commerce Profile",
+                "Update User Preferences",
+                "Update Subscription Info",
+                "Set Profile Location",
+                "Get User Profile Properties",
+                "User Login"
+            ),
+            "PROFILE OPERATIONS" to listOf(
+                "Remove Single Property",
+                "Set Multi-Value Property",
+                "Add to Multi-Value Property",
+                "Remove from Multi-Value Property",
+                "Increment Loyalty Points",
+                "Decrement Cart Count"
             ),
             "INBOX" to listOf(
                 "Open Inbox(with tabs)",
@@ -87,7 +102,7 @@ object HomeScreenModel {
                 "Hard permission dialog with fallbackToSettings - false",
                 "Hard permission dialog with fallbackToSettings - true"
             ),
-            "INAPP" to listOf("Suspend", "Discard", "Resume"),
+            "INAPP Control" to listOf("Suspend", "Discard", "Resume", "Discard and Dismiss"),
             "CS INAPP" to listOf("Fetch CS InApps", "Clear all CS InApp Resources", "Clear expired only InAPP Resources"),
             "VARIABLES" to listOf(
                 "Define Variable",
@@ -100,7 +115,9 @@ object HomeScreenModel {
                 "Add Variables Changed Callback",
                 "Remove Variables Changed Callback",
                 "Add One Time Variables Changed Callback",
-                "Remove One Time Variables Changed Callback"
+                "Remove One Time Variables Changed Callback",
+                "Define Multiple vars, fetch and print",
+                "Get AB Variants and print"
             ),
             "FILE TYPE VARIABLES" to listOf(
                 "Define file Variables listeners \n adds file variables with fileReady() listeners",

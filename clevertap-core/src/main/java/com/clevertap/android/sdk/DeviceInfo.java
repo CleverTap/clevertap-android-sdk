@@ -35,11 +35,12 @@ import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
+import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
@@ -495,7 +496,7 @@ public class DeviceInfo {
         } else {
             String fallbackId = generateFallbackDeviceID();
             removeDeviceID();
-            String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
+            String error = recordDeviceError(ValidationError.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
             getConfigLogger().info(config.getAccountId(), error);
             return fallbackId;
         }
@@ -698,8 +699,7 @@ public class DeviceInfo {
 
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
-                enableNetworkInfoReporting);
+        StorageHelper.putBoolean(context, config.getAccountId(), Constants.NETWORK_INFO, enableNetworkInfoReporting);
         config.getLogger()
                 .verbose(config.getAccountId(),
                         "Device Network Information reporting set to " + enableNetworkInfoReporting);
@@ -749,7 +749,7 @@ public class DeviceInfo {
                     "Unable to set current user OptOut state from storage: storage key is null");
             return;
         }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config.getAccountId(), key);
         mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
         config.getLogger().verbose(config.getAccountId(),
                 "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
@@ -763,7 +763,7 @@ public class DeviceInfo {
                     .verbose(config.getAccountId(), "Unable to persist user OptOut state, storage key is null");
             return;
         }
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), userOptOut);
+        StorageHelper.putBoolean(context, config.getAccountId(), key, userOptOut);
         getConfigLogger().verbose(config.getAccountId(), "Set current user OptOut state to: " + userOptOut);
     }
 
@@ -774,7 +774,7 @@ public class DeviceInfo {
                     "Unable to set current user allowed system events and communications flag from storage: storage key is null");
             return;
         }
-        boolean storedAllowedSystemEvents = StorageHelper.getBooleanFromPrefs(context, config, key);
+        boolean storedAllowedSystemEvents = StorageHelper.getBooleanFromPrefs(context, config.getAccountId(), key);
         mCoreMetaData.setEnabledSystemEvents(storedAllowedSystemEvents);
         config.getLogger().verbose(config.getAccountId(),
                 "Set current user allowed system events and communications flag state from storage to: " + storedAllowedSystemEvents + " for key: " + key);
@@ -787,7 +787,7 @@ public class DeviceInfo {
                     .verbose(config.getAccountId(), "Unable to persist user allowed system events and communications flag state, storage key is null");
             return;
         }
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config.getAccountId(), key), allowedSystemEvents);
+        StorageHelper.putBoolean(context, config.getAccountId(), key, allowedSystemEvents);
         getConfigLogger().verbose(config.getAccountId(), "Set current user allowed system events and communications flag state to: " + allowedSystemEvents);
     }
 
@@ -808,7 +808,7 @@ public class DeviceInfo {
     }
 
     void setDeviceNetworkInfoReportingFromStorage() {
-        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config.getAccountId(), Constants.NETWORK_INFO);
         config.getLogger()
                 .verbose(config.getAccountId(),
                         "Setting device network info reporting state from storage to " + enabled);
@@ -921,12 +921,12 @@ public class DeviceInfo {
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {
             if (cleverTapID == null) {
-                String error = recordDeviceError(Constants.USE_CUSTOM_ID_FALLBACK);
+                String error = recordDeviceError(ValidationError.USE_CUSTOM_ID_FALLBACK);
                 config.getLogger().info(error);
             }
         } else {
             if (cleverTapID != null) {
-                String error = recordDeviceError(Constants.USE_CUSTOM_ID_MISSING_IN_MANIFEST);
+                String error = recordDeviceError(ValidationError.USE_CUSTOM_ID_MISSING_IN_MANIFEST);
                 config.getLogger().info(error);
             }
         }
@@ -937,7 +937,7 @@ public class DeviceInfo {
         if (deviceID != null && deviceID.trim().length() > 2) {
             getConfigLogger().verbose(config.getAccountId(), "CleverTap ID already present for profile");
             if (cleverTapID != null) {
-                String error = recordDeviceError(Constants.UNABLE_TO_SET_CT_CUSTOM_ID, deviceID, cleverTapID);
+                String error = recordDeviceError(ValidationError.UNABLE_TO_SET_CT_CUSTOM_ID, deviceID, cleverTapID);
                 getConfigLogger().info(config.getAccountId(), error);
             }
             return deviceID;
@@ -963,8 +963,8 @@ public class DeviceInfo {
         return genId;
     }
 
-    private String recordDeviceError(int messageCode, String... varargs) {
-        ValidationResult validationResult = ValidationResultFactory.create(514, messageCode, varargs);
+    private String recordDeviceError(ValidationError error, String... varargs) {
+        ValidationResult validationResult = ValidationResultFactory.create(error, varargs);
         validationResults.add(validationResult);
         return validationResult.getErrorDesc();
     }

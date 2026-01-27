@@ -1,3 +1,6 @@
+name: 'Mandatory File Changes'
+description: 'Validates that required release files (changelog, version) are updated when source code changes'
+
 runs:
   using: "composite"
   steps:

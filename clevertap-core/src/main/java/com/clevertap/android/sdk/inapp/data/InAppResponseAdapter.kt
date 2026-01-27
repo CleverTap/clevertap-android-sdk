@@ -3,20 +3,32 @@ package com.clevertap.android.sdk.inapp.data
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
-import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
-import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgument
-import com.clevertap.android.sdk.inapp.customtemplates.TemplateArgumentType
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
-import com.clevertap.android.sdk.iterator
 import com.clevertap.android.sdk.orEmptyArray
-import com.clevertap.android.sdk.safeGetJSONArray
 import com.clevertap.android.sdk.safeGetJSONArrayOrNullIfEmpty
+import com.clevertap.android.sdk.safeGetJSONObjectListOrEmpty
 import com.clevertap.android.sdk.toList
-import com.clevertap.android.sdk.utils.getStringOrNull
 import org.json.JSONArray
 import org.json.JSONObject
+
+object InAppDelayConstants{
+    const val INAPP_DELAY_AFTER_TRIGGER = "delayAfterTrigger"
+    const val INAPP_DEFAULT_DELAY_SECONDS = 0
+    const val INAPP_MIN_DELAY_SECONDS = 1
+    const val INAPP_MAX_DELAY_SECONDS = 1200
+}
+
+/**
+ * Constants for in-action in-apps feature
+ */
+object InAppInActionConstants {
+    const val INAPP_INACTION_DURATION = "inactionDuration"
+    const val INAPP_DEFAULT_INACTION_SECONDS = 0
+    const val INAPP_MIN_INACTION_SECONDS = 1
+    const val INAPP_MAX_INACTION_SECONDS = 1200
+}
 
 /**
  * Class that wraps functionality for response and return relevant methods to get data
@@ -42,14 +54,55 @@ internal class InAppResponseAdapter(
         }
     }
 
-    val legacyInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
-    val clientSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_CS)
-    val serverSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArray(Constants.INAPP_NOTIFS_KEY_SS)
-    val appLaunchServerSideInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    // ------------------------------------------------------------------------- //
+    //  delayAfterTrigger ALWAYS comes WITH content - it's a display delay       //
+    //  inactionDuration ALWAYS comes WITHOUT content - need to fetch after timer//
+    //  An in-app can have EITHER delay OR in-action, NEVER both initially       //
+    //  After in-action fetch, the returned content CAN have delayAfterTrigger   //
+    //  Client-Side (inapp_notifs_cs) does NOT support inactionDuration          //
+    // ------------------------------------------------------------------------- //
 
-    val preloadImages: List<String>
-    val preloadGifs: List<String>
-    val preloadFiles: List<String>
+    // Legacy in-apps: supports immediate + delayed durations
+    private val legacyInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_JSON_RESPONSE_KEY)
+    val partitionedLegacyInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionLegacyInApps(legacyInApps.second)
+
+    // Legacy metadata in-apps: supports inAction duration only
+    private val legacyMetaInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_META_KEY)
+    val partitionedLegacyMetaInApps: DurationPartitionedInApps.InActionOnly =
+        InAppDurationPartitioner.partitionLegacyMetaInApps(legacyMetaInApps.second)
+
+    // Client-side in-apps: supports immediate + delayed durations
+    private val clientSideInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_KEY_CS)
+    val partitionedClientSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionClientSideInApps(clientSideInApps.second)
+
+    // Server-side metadata in-apps: supports unknown + inAction durations
+    private val serverSideInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_KEY_SS)
+    val partitionedServerSideInAppsMeta: DurationPartitionedInApps.UnknownAndInAction =
+        InAppDurationPartitioner.partitionServerSideMetaInApps(serverSideInApps.second)
+
+    // App-launch server-side in-apps: supports immediate + delayed durations
+    private val appLaunchServerSideInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+    val partitionedAppLaunchServerSideInApps: DurationPartitionedInApps.ImmediateAndDelayed =
+        InAppDurationPartitioner.partitionAppLaunchServerSideInApps(appLaunchServerSideInApps.second)
+
+    // App-launch server-side metadata in-apps: supports inAction duration only
+    private val appLaunchServerSideMetaInApps: Pair<Boolean, List<JSONObject>> =
+        responseJson.safeGetJSONObjectListOrEmpty(Constants.INAPP_NOTIFS_APP_LAUNCHED_META_KEY)
+    val partitionedAppLaunchServerSideMetaInApps: DurationPartitionedInApps.InActionOnly =
+        InAppDurationPartitioner.partitionAppLaunchServerSideMetaInApps(
+            appLaunchServerSideMetaInApps.second
+        )
+
+    private val preloadImages: List<String>
+    private val preloadGifs: List<String>
+    private val preloadFiles: List<String>
     val preloadAssets: List<String>
     val preloadAssetsMeta: List<Pair<String, CtCacheType>>
 
@@ -84,7 +137,7 @@ internal class InAppResponseAdapter(
         gifList: MutableList<String>
     ) {
         if (clientSideInApps.first) {
-            clientSideInApps.second?.iterator<JSONObject> { jsonObject ->
+            clientSideInApps.second.forEach { jsonObject ->
                 val portrait = jsonObject.optJSONObject(Constants.KEY_MEDIA)
 
                 if (portrait != null) {
@@ -117,14 +170,13 @@ internal class InAppResponseAdapter(
         }
     }
 
-    private fun fetchFilesUrlsForTemplates(filesList: MutableList<String>, templatesManager: TemplatesManager) {
+    private fun fetchFilesUrlsForTemplates(
+        filesList: MutableList<String>,
+        templatesManager: TemplatesManager
+    ) {
         if (clientSideInApps.first) {
-            val inAppsList = clientSideInApps.second ?: return
-            for (i in 0 until inAppsList.length()) {
-                createFromJson(inAppsList.optJSONObject(i))?.getFileArgsUrls(
-                    templatesManager,
-                    filesList
-                )
+            clientSideInApps.second.forEach { inApp ->
+                createFromJson(inApp)?.getFileArgsUrls(templatesManager, filesList)
             }
         }
     }

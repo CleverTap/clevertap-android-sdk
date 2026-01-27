@@ -58,6 +58,6 @@ class CTPushAmpWorkerInstrumentationTest {
         val workInfo = workManager.getWorkInfoById(request.id).get()
         println("workInfo = $workInfo")
         // Assert
-        assertThat(workInfo.state, `is`(WorkInfo.State.ENQUEUED))
+        assertThat(workInfo!!.state, `is`(WorkInfo.State.ENQUEUED))
     }
 }
