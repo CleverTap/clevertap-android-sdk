@@ -37,8 +37,9 @@ class BitmapDownloader(
 
                 // expect HTTP 200 OK, so we don't mistakenly save error report instead of the file
                 if (responseCode != HttpURLConnection.HTTP_OK) {
-                    Logger.d(TAG, "File not loaded completely. URL was: $srcUrl")
-                    return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+                    val reason = "HTTP Error : $responseCode"
+                    Logger.d(TAG, "File not loaded completely. URL was: $srcUrl, Reason: $reason")
+                    return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
                 }
 
                 Logger.v(TAG, "Downloading $srcUrl....")
@@ -60,8 +61,9 @@ class BitmapDownloader(
                 )
             }
         } catch (e: Throwable) {
-            Logger.v(TAG, "Couldn't download the notification media. URL was: $srcUrl", e)
-            return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+            val reason = "Exception : ${e.javaClass.simpleName}"
+            Logger.v(TAG, "Couldn't download the notification media. URL was: $srcUrl, Reason: $reason", e)
+            return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
         } finally {
             try {
                 connection.disconnect()

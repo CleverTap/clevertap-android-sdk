@@ -349,6 +349,7 @@ public interface Constants {
     String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
     String OMR_INVOKE_TIME_IN_MILLIS = "omr_invoke_time_in_millis";
     String WZRK_BPDS = "wzrk_bpds";
+    String WZRK_BPDS_REASON = "wzrk_bpdsr";
     String WZRK_PN_PRT = "wzrk_pn_prt";
     String PRIORITY_NORMAL = "normal";
     String PRIORITY_UNKNOWN = "fcm_unknown";

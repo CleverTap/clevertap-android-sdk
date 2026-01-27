@@ -33,7 +33,9 @@ class BitmapDownloadRequestHandlerWithTimeLimit(
         )
 
         if (downloadedBitmap == null) { // in case some exception in executor framework we get null result from future.
-            downloadedBitmap = DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+            val reason = "Task timeout or executor framework error"
+            Logger.d(reason)
+            downloadedBitmap = DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
         }
 
         return Utils.getDownloadedBitmapPostFallbackIconCheck(fallbackToAppIcon, context, downloadedBitmap)

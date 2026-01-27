@@ -208,14 +208,14 @@ public final class Utils {
 
         int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
+            if (hasPermission(context, Manifest.permission.READ_BASIC_PHONE_STATE) || hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
                 try {
                     networkType = teleMan.getDataNetworkType();
                 } catch (SecurityException se) {
                     Logger.d(TAG, "Security Exception caught while fetch network type",se);
                 }
             } else {
-                Logger.d(TAG , "READ_PHONE_STATE permission not asked by the app or not granted by the user");
+                Logger.d(TAG , "READ_PHONE_STATE and READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user");
             }
         } else {
             networkType = teleMan.getNetworkType();
