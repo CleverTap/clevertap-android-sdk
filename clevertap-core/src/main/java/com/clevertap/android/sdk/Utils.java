@@ -215,7 +215,7 @@ public final class Utils {
                     Logger.d(TAG, "Security Exception caught while fetch network type",se);
                 }
             } else {
-                Logger.d(TAG , "READ_PHONE_STATE and READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user");
+                Logger.d(TAG , "READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user");
             }
         } else {
             networkType = teleMan.getNetworkType();
