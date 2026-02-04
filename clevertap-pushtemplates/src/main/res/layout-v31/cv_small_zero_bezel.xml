@@ -4,7 +4,7 @@
     android:id="@+id/content_view_small"
     android:background="@android:color/transparent"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
 
     <include layout="@layout/image_media_dynamic_relative"
         android:id="@+id/big_media_configurable"/>
@@ -18,8 +18,11 @@
         android:background="@drawable/pt_scrim" />
 
     <RelativeLayout
+        android:id="@+id/rel_lyt_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/large_icon"
         android:layout_centerVertical="true"
         android:paddingStart="@dimen/padding_vertical"
         android:paddingEnd="@dimen/padding_vertical">
@@ -44,4 +47,15 @@
             android:textAppearance="@style/PushMessage" />
 
     </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/large_icon"
+        android:layout_width="@dimen/large_icon"
+        android:layout_height="@dimen/large_icon"
+        android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
+        android:layout_marginBottom="@dimen/padding_micro"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop" />
+
 </RelativeLayout>
