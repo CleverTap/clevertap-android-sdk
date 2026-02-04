@@ -14,6 +14,7 @@ internal open class ZeroBezelSmallContentView(
     ContentView(context, layoutId, renderer.templateMediaManager) {
 
     init {
+        setCustomContentViewLargeIcon(data.baseContent.iconData.largeIcon)
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
         setCustomContentViewTitle(data.baseContent.textData.title)
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
