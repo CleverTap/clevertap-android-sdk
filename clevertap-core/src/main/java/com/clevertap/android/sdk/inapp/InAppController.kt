@@ -826,7 +826,6 @@ internal class InAppController(
 
     @MainThread
     private fun showInApp(inAppNotification: CTInAppNotification) {
-        val activity = CoreMetaData.getCurrentActivity()
         val goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification)
         if (!goFromListener) {
             logger.verbose(
@@ -857,6 +856,7 @@ internal class InAppController(
             return
         }
 
+        val activity = CoreMetaData.getCurrentActivity()
         if (!canShowInAppOnActivity(activity)) {
             pendingNotifications.add(inAppNotification)
             logger.verbose(
@@ -956,18 +956,21 @@ internal class InAppController(
             }
         }
 
-        if (inAppFragment != null) {
-            logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
-            val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
-                inAppFragment,
-                activity,
-                inAppNotification,
-                config,
-                defaultLogTag
-            )
-            if (!showFragmentSuccess) {
-                currentlyDisplayingInApp = null
-            }
+        if (inAppFragment == null || activity == null) {
+            logger.debug("Unable to display In-App: Activity/Fragment is null")
+            return
+        }
+
+        logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
+        val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
+            inAppFragment,
+            activity,
+            inAppNotification,
+            config,
+            defaultLogTag
+        )
+        if (!showFragmentSuccess) {
+            currentlyDisplayingInApp = null
         }
     }
 
