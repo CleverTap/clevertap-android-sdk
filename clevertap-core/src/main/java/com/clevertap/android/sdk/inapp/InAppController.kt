@@ -958,6 +958,7 @@ internal class InAppController(
 
         if (inAppFragment == null || activity == null) {
             logger.debug("Unable to display In-App: Activity/Fragment is null")
+            currentlyDisplayingInApp = null
             return
         }
 
