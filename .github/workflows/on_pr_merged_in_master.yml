@@ -96,5 +96,5 @@ jobs:
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
 
-      - name: Build AARs (RELEASE)
+      - name: Build Release AARs
         uses: ./.github/mini_flows/build_code_release
