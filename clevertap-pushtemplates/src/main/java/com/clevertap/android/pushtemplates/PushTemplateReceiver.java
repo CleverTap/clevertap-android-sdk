@@ -337,7 +337,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     try {
                         Thread.sleep(PTConstants.PT_INPUT_TIMEOUT);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        PTLog.verbose("Thread interrupted while waiting for input timeout", e);
                     }
 
                     Intent launchIntent;

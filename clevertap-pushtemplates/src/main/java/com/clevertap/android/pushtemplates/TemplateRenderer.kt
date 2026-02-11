@@ -67,7 +67,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 newExtras = Utils.fromJson(JSONObject(pt_json))
             }
         } catch (e: JSONException) {
-            e.printStackTrace()
+            PTLog.verbose("Failed to parse push template JSON",e)
         }
         if (newExtras != null) extras.putAll(newExtras)
     }
