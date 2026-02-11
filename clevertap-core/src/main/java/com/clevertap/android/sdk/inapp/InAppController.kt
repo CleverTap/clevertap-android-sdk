@@ -924,8 +924,8 @@ internal class InAppController(
                         t
                     )
                     currentlyDisplayingInApp = null
-                    return
                 }
+                return
             }
 
             CTInAppTypeFooterHTML -> {
