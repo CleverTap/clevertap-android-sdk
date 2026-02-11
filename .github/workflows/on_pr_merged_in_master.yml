@@ -77,7 +77,7 @@ jobs:
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
 
-      - name: Unit Tests and Jacoco Coverage
+      - name: Unit Tests and Jacoco Coverage (DEBUG)
         uses: ./.github/mini_flows/test_and_coverage_debug
 
   # Build (Only after tests pass)

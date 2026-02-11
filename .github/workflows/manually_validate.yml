@@ -86,7 +86,7 @@ jobs:
         if: ${{ inputs.checkstyle }}
         uses: ./.github/mini_flows/codechecks_checkstyle
 
-      - name: Unit Tests and Jacoco Coverage
+      - name: Unit Tests and Jacoco Coverage (DEBUG)
         if: ${{ inputs.jacoco }}
         uses: ./.github/mini_flows/test_and_coverage_debug
 
