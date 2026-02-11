@@ -40,7 +40,7 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.getNotificationChannel(channelId).importance != NotificationManager.IMPORTANCE_NONE
         } catch (e: Exception) {
-            Logger.d("Unable to find notification channel with id = $channelId")
+            Logger.d(Constants.CLEVERTAP_LOG_TAG, "Unable to find notification channel with id = $channelId")
             false
         }
     } else {
@@ -50,7 +50,7 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
 fun Context.areAppNotificationsEnabled() = try {
     NotificationManagerCompat.from(this).areNotificationsEnabled()
 } catch (e: Exception) {
-    Logger.d("Unable to query notifications enabled flag, returning true!",e)
+    Logger.d(Constants.CLEVERTAP_LOG_TAG, "Unable to query notifications enabled flag, returning true!")
     true
 }
 
@@ -123,10 +123,7 @@ private fun NotificationManager.tryGetChannel(
     val shouldSkip = hideHeadsUp && channel.importance != NotificationManager.IMPORTANCE_LOW
 
     if (shouldSkip) {
-        Logger.d(
-            Constants.CLEVERTAP_LOG_TAG,
-            "Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}"
-        )
+        Logger.d(Constants.CLEVERTAP_LOG_TAG, "Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}")
         return null
     }
     return channelId
@@ -221,7 +218,7 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: S
         try {
             coreState.baseEventQueueManager.flushQueueSync(context, PUSH_NOTIFICATION_VIEWED, caller)
         } catch (e: Exception) {
-            Logger.d(logTag, "failed to flush push impressions on ct instance = " + coreState.config.accountId)
+            Logger.d(logTag, "Failed to flush push impressions on CT instance = ${coreState.config.accountId}", e)
         }
         null
     }
@@ -402,7 +399,7 @@ fun String?.toJsonOrNull(): JSONObject? {
 }
 
 @OptIn(ExperimentalContracts::class)
-fun String?.isNotNullAndBlank() : Boolean {
+fun String?.isNotNullAndBlank(): Boolean {
     contract { returns(true) implies (this@isNotNullAndBlank != null) }
     return isNullOrBlank().not()
 }
@@ -431,8 +428,7 @@ fun String?.isNotNullAndBlank() : Boolean {
  * ```
  */
 fun View.applyInsetsWithMarginAdjustment(marginAdjuster : (insets:Insets, mlp:MarginLayoutParams) -> Unit) {
-    ViewCompat.setOnApplyWindowInsetsListener(this
-    ) { v, insets ->
+    ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
         val bars: Insets = insets.getInsets(
             WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
         )

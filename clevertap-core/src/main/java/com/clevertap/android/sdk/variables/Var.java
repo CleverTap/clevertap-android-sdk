@@ -19,6 +19,8 @@ import java.util.Map;
  * @author Ansh Sachdeva
  */
 public class Var<T> {
+
+    private static final String TAG = "Var";
     private final CTVariables ctVariables;
 
     private String name;
@@ -48,7 +50,7 @@ public class Var<T> {
     }
 
     private static void log(String msg){
-        Logger.v("variable", msg);
+        Logger.v(TAG, msg);
     }
 
     public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {
@@ -75,8 +77,7 @@ public class Var<T> {
             return null;
         }
         if (!CTVariableUtils.FILE.equals(kind) && defaultValue == null) {
-            Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '"
-                    + name + "'.");
+            Logger.d(TAG, "Invalid Operation! Null values are not allowed as default values when defining the variable '" + name + "'.");
             return null;
         }
 
@@ -96,7 +97,7 @@ public class Var<T> {
             ctVariables.getVarCache().registerVariable(var);
             var.update();
         } catch (Throwable t) {
-            Logger.v("variable", "Error defining variable: " + name, t);
+            Logger.v(TAG, "Error defining variable: " + name,t);
         }
         return var;
     }

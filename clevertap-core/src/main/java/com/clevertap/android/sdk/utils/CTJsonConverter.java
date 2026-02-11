@@ -31,7 +31,7 @@ import java.util.Map.Entry;
 
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
-
+    private static final String TAG = "CTJsonConverter";
     @NonNull
     public static JSONObject toJsonObject(String json, ILogger logger, String logtag) {
         JSONObject cache = null;
@@ -51,7 +51,7 @@ public class CTJsonConverter {
         JSONObject r = new JSONObject();
 
         String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
-        Logger.v("Received Display Unit via push payload: " + pushJsonPayload);
+        Logger.v(TAG, "Received Display Unit via push payload: " + pushJsonPayload);
         JSONArray displayUnits = new JSONArray();
         r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
         JSONObject testPushObject = new JSONObject(pushJsonPayload);
@@ -181,7 +181,7 @@ public class CTJsonConverter {
     public static JSONArray pushIdsToJSONArray(String[] pushIds) {
         JSONArray renderedTargets = new JSONArray();
         for (String pushId : pushIds) {
-            Logger.v("RTL IDs -" + pushId);
+            Logger.v(TAG, "RTL IDs -" + pushId);
             renderedTargets.put(pushId);
         }
         return renderedTargets;
@@ -213,7 +213,7 @@ public class CTJsonConverter {
                 array[i] = jsonArray.get(i);
             }
         } catch (JSONException e) {
-            Logger.v("CTJsonConverter", "Error converting JSONArray to array", e);
+            Logger.v(TAG,  "Error converting JSONArray to array");
         }
         return array;
     }
@@ -246,7 +246,7 @@ public class CTJsonConverter {
             try {
                 list.add(array.get(i));
             } catch (JSONException e) {
-                Logger.v("CTJsonConverter", "Error converting JSONArray to list", e);
+                Logger.v(TAG, "Error converting JSONArray to list");
             }
         }
         return list;

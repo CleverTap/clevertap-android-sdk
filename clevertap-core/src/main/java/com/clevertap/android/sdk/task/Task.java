@@ -185,12 +185,12 @@ public class Task<TResult> {
             tResultFuture = ((ExecutorService) executor).submit(callable);
             return tResultFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            Logger.v("submitAndGetResult :: " + logTag + " task failed", e);
+            logProperly("submitAndGetResult :: " + logTag + " task failed", e);
             if (tResultFuture != null && !tResultFuture.isCancelled()) {
                 tResultFuture.cancel(true);
             }
         }
-        Logger.v("submitAndGetResult :: " + logTag + " task timed out");
+        logProperly("submitAndGetResult :: " + logTag + " task timed out",null);
         return null;
     }
 

@@ -53,7 +53,9 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
 
+    private static final String TAG = "DeviceInfo";
     private class DeviceCachedInfo {
+
 
         private final static String STANDBY_BUCKET_ACTIVE = "active";
         private final static String STANDBY_BUCKET_FREQUENT = "frequent";
@@ -130,7 +132,8 @@ public class DeviceInfo {
             WindowManager wm = getWindowManager();
 
             if (wm == null) {
-                Logger.v("WindowManager is null, returning zero dimension for width/height");
+                getConfigLogger().verbose(config.getAccountId(),
+                        "WindowManager is null, returning zero dimension for width/height");
                 return new WindowSize(0, 0, 0);
             }
 
@@ -193,7 +196,7 @@ public class DeviceInfo {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionCode;
             } catch (PackageManager.NameNotFoundException e) {
-                Logger.d("Unable to get app build");
+                getConfigLogger().debug(config.getAccountId(), "Unable to get app build");
             }
             return 0;
         }
@@ -255,7 +258,8 @@ public class DeviceInfo {
                     return STANDBY_BUCKET_RESTRICTED;
                 case UsageStatsManager.STANDBY_BUCKET_WORKING_SET:
                     return STANDBY_BUCKET_WORKING_SET;
-                default: return "";
+                default:
+                    return "";
             }
         }
 
@@ -288,7 +292,7 @@ public class DeviceInfo {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionName;
             } catch (PackageManager.NameNotFoundException e) {
-                Logger.d("Unable to get app version");
+                getConfigLogger().debug(config.getAccountId(), "Unable to get app version");
             }
             return null;
         }
@@ -346,7 +350,7 @@ public class DeviceInfo {
                     }
                 }
             } catch (Exception e) {
-                Logger.v("Window context creation failed: " + e.getMessage());
+                getConfigLogger().verbose(config.getAccountId(), "Window context creation failed", e);
             }
         }
 
@@ -455,14 +459,14 @@ public class DeviceInfo {
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null
-                Logger.d("Failed to decide whether device is a TV!",e);
+                Logger.v(TAG, "Failed to decide whether device is a TV!", e);
             }
 
             try {
                 sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
             } catch (Exception e) {
                 // resource not found or context is null
-                Logger.d("Failed to decide whether device is a smart phone or tablet!",e);
+                Logger.v(TAG, "Failed to decide whether device is a smart phone or tablet!", e);
                 sDeviceType = UNKNOWN;
             }
         }

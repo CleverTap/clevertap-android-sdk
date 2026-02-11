@@ -15,6 +15,8 @@ import java.util.Map;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class CTVariableUtils {
+
+    private static final String TAG = "CTVariableUtils";
     public static final String VARS = "vars";
     public static final String STRING = "string";
     public static final String BOOLEAN = "boolean";
@@ -23,7 +25,7 @@ public final class CTVariableUtils {
     public static final String FILE = "file";
 
     private static void log(String msg){
-        Logger.d("variables", msg);
+        Logger.d(TAG, msg);
     }
 
     public static void updateValuesAndKinds(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
@@ -214,7 +216,7 @@ public final class CTVariableUtils {
             return name.split("\\.");
         }
         catch (Throwable t){
-            Logger.v("CTVariableUtils", "Error splitting variable name: " + name, t);
+            Logger.v(TAG, "Error splitting variable name: " + name, t);
             return new String[]{};
         }
     }
@@ -303,7 +305,7 @@ public final class CTVariableUtils {
            return resultJson;
        }
        catch (Throwable t){
-           Logger.v("CTVariableUtils", "Error creating flat vars JSON", t);
+           Logger.v(TAG, "Error creating flat vars JSON", t);
            return new JSONObject();
        }
     }
