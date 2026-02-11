@@ -214,7 +214,7 @@ public final class CTVariableUtils {
             return name.split("\\.");
         }
         catch (Throwable t){
-            t.printStackTrace();
+            Logger.v("CTVariableUtils", "Error splitting variable name: " + name, t);
             return new String[]{};
         }
     }
@@ -303,7 +303,7 @@ public final class CTVariableUtils {
            return resultJson;
        }
        catch (Throwable t){
-           t.printStackTrace();
+           Logger.v("CTVariableUtils", "Error creating flat vars JSON", t);
            return new JSONObject();
        }
     }

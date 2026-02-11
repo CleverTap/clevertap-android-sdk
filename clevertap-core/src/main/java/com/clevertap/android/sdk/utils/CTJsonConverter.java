@@ -213,7 +213,7 @@ public class CTJsonConverter {
                 array[i] = jsonArray.get(i);
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            Logger.v("CTJsonConverter", "Error converting JSONArray to array", e);
         }
         return array;
     }
@@ -246,7 +246,7 @@ public class CTJsonConverter {
             try {
                 list.add(array.get(i));
             } catch (JSONException e) {
-                e.printStackTrace();
+                Logger.v("CTJsonConverter", "Error converting JSONArray to list", e);
             }
         }
         return list;

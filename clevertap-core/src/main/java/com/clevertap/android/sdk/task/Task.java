@@ -185,7 +185,7 @@ public class Task<TResult> {
             tResultFuture = ((ExecutorService) executor).submit(callable);
             return tResultFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.v("submitAndGetResult :: " + logTag + " task failed", e);
             if (tResultFuture != null && !tResultFuture.isCancelled()) {
                 tResultFuture.cancel(true);
             }
@@ -237,7 +237,6 @@ public class Task<TResult> {
                 } catch (Exception e) {
                     onFailure(e);
                     logProperly(taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread().getName(), e);
-                    e.printStackTrace();
                 }
             }
         };

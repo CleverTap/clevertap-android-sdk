@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.bitmap
 
 import android.net.TrafficStats
+import android.util.Log
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.network.DownloadedBitmap
@@ -59,8 +60,7 @@ class BitmapDownloader(
                 )
             }
         } catch (e: Throwable) {
-            Logger.v("Couldn't download the notification media. URL was: $srcUrl")
-            e.printStackTrace()
+            Logger.v("BitmapDownloader", "Couldn't download the notification media. URL was: $srcUrl", e)
             return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
         } finally {
             try {

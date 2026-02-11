@@ -96,7 +96,7 @@ public class Var<T> {
             ctVariables.getVarCache().registerVariable(var);
             var.update();
         } catch (Throwable t) {
-            t.printStackTrace();
+            Logger.v("variable", "Error defining variable: " + name, t);
         }
         return var;
     }

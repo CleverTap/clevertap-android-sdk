@@ -47,9 +47,8 @@ public class FileUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(config.getAccountId(),
-                    "writeFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
+                    "writeFileOnInternalStorage: failed" + dirName, e);
         }
     }
 
@@ -69,9 +68,8 @@ public class FileUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(config.getAccountId(),
-                    "writeFileOnInternalStorage: failed" + fileName + " Error:" + e.getLocalizedMessage());
+                    "writeFileOnInternalStorage: failed" + fileName, e);
         }
     }
 
@@ -142,9 +140,8 @@ public class FileUtils {
                 writer.flush();
             }
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(config.getAccountId(),
-                    "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
+                    "writeFileOnInternalStorage: failed", e);
         }finally {
             if(writer != null){
                 writer.close();

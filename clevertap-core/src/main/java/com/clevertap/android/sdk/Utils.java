@@ -586,7 +586,7 @@ public final class Utils {
             }
             return DownloadedBitmapFactory.INSTANCE.successBitmap(drawableToBitmap(logo), 0, null);
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.v("Utils", "Failed to get app logo, falling back to app icon", e);
             // Try to get the app icon now
             // No error handling here - handle upstream
             return DownloadedBitmapFactory.INSTANCE.successBitmap(
@@ -640,7 +640,7 @@ public final class Utils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.v("Utils", "Error checking if main process", e);
         }
         return false;
     }

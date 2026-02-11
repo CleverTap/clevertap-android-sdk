@@ -50,8 +50,7 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
 fun Context.areAppNotificationsEnabled() = try {
     NotificationManagerCompat.from(this).areNotificationsEnabled()
 } catch (e: Exception) {
-    Logger.d("Unable to query notifications enabled flag, returning true!")
-    e.printStackTrace()
+    Logger.d("Unable to query notifications enabled flag, returning true!",e)
     true
 }
 
@@ -226,11 +225,10 @@ fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: S
         }
         null
     }
-
     try {
         flushFutureResult.get()
     } catch (e: Exception) {
-        e.printStackTrace()
+        Logger.d(logTag, "Error getting flush result for push impressions", e)
     }
 }
 

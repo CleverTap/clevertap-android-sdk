@@ -142,9 +142,8 @@ public class CTProductConfigController {
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                                 "Activated successfully with configs: " + activatedConfigs);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Activate failed: " + e.getLocalizedMessage());
+                                "Activate failed", e);
                     }
                     return null;
                 }
@@ -208,7 +207,8 @@ public class CTProductConfigController {
             event.put("evtName", Constants.WZRK_FETCH);
             event.put("evtData", notif);
         } catch (JSONException e) {
-            e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                    "Error creating fetch event JSON", e);
         }
         analyticsManager.sendFetchEvent(event);
         coreMetaData.setProductConfigRequested(true);
@@ -258,9 +258,8 @@ public class CTProductConfigController {
                     return Double.parseDouble(value);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "Error getting Double for Key-" + Key + " " + e.getLocalizedMessage());
+                        "Error getting Double for Key-" + Key, e);
             }
         }
         return DEFAULT_VALUE_FOR_DOUBLE;
@@ -299,9 +298,8 @@ public class CTProductConfigController {
                     return Long.parseLong(value);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "Error getting Long for Key-" + Key + " " + e.getLocalizedMessage());
+                        "Error getting Long for Key-" + Key, e);
             }
         }
         return DEFAULT_VALUE_FOR_LONG;
@@ -394,8 +392,7 @@ public class CTProductConfigController {
                         activate();
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed", e);
                     sendCallback(PROCESSING_STATE.FETCHED);
                     // set fetchAndActivating flag to false if fetch fails.
                     isFetchAndActivating.compareAndSet(true, false);
@@ -491,8 +488,7 @@ public class CTProductConfigController {
                                     }
                                 } catch (Exception e) {
                                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                            "Product Config: setDefaults Failed for Key: " + key + " with Error: " + e
-                                                    .getLocalizedMessage());
+                                            "Product Config: setDefaults Failed for Key: " + key, e);
                                 }
                             }
                         }
@@ -553,9 +549,8 @@ public class CTProductConfigController {
                         config.getLogger()
                                 .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Reset failed: " + e.getLocalizedMessage());
+                                "Reset failed", e);
                     }
 
                     return null;
@@ -631,9 +626,8 @@ public class CTProductConfigController {
                         isInitialized.set(true);
 
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "InitAsync failed - " + e.getLocalizedMessage());
+                                "InitAsync failed", e);
                         return false;
                     }
                     return true;
@@ -696,9 +690,8 @@ public class CTProductConfigController {
         try {
             kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
         } catch (JSONException e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "ConvertServerJsonToMap failed - " + e.getLocalizedMessage());
+                    "ConvertServerJsonToMap failed", e);
             return map;
         }
 
@@ -715,9 +708,8 @@ public class CTProductConfigController {
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "ConvertServerJsonToMap failed: " + e.getLocalizedMessage());
+                            "ConvertServerJsonToMap failed", e);
                 }
             }
         }
@@ -732,9 +724,8 @@ public class CTProductConfigController {
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                     "GetStoredValues reading file success:[ " + fullFilePath + "]--[Content]" + content);
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetStoredValues reading file failed: " + e.getLocalizedMessage());
+                    "GetStoredValues reading file failed", e);
             return map;
         }
         if (!TextUtils.isEmpty(content)) {
@@ -742,9 +733,8 @@ public class CTProductConfigController {
             try {
                 jsonObject = new JSONObject(content);
             } catch (Exception e) {
-                e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "GetStoredValues failed due to malformed json: " + e.getLocalizedMessage());
+                        "GetStoredValues failed due to malformed json", e);
                 return map;
             }
             Iterator<String> iterator = jsonObject.keys();
@@ -755,9 +745,8 @@ public class CTProductConfigController {
                     try {
                         value = String.valueOf(jsonObject.get(key));
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "GetStoredValues for key " + key + " while parsing json: " + e.getLocalizedMessage());
+                                "GetStoredValues for key " + key + " while parsing json", e);
                         continue;
                     }
                     if (!TextUtils.isEmpty(value)) {
@@ -800,9 +789,8 @@ public class CTProductConfigController {
         try {
             timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "ParseFetchedResponse failed: " + e.getLocalizedMessage());
+                    "ParseFetchedResponse failed", e);
         }
         if (timestamp != null) {
             settings.setLastFetchTimeStampInMillis(timestamp * 1000L);

@@ -707,10 +707,10 @@ internal class NetworkManager constructor(
             } catch (e: JSONException) {
                 logger.verbose(
                     config.accountId,
-                    "Encountered an exception while parsing the push notification viewed event queue"
+                    "Encountered an exception while parsing the push notification viewed event queue",e
                 )
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.verbose(config.accountId, "Exception occurred while notifying push impression listeners", e)
             }
         }
 

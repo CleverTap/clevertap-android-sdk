@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.task;
 
+import com.clevertap.android.sdk.Logger;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -103,7 +105,7 @@ class PostAsyncSafelyExecutor implements ExecutorService {
             try {
                 task.call();
             } catch (Exception e) {
-                e.printStackTrace();
+                Logger.v("PostAsyncSafelyExecutor", "Error executing task synchronously", e);
             }
         } else {
             future = executor.submit(new Callable<T>() {
