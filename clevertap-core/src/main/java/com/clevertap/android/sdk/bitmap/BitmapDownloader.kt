@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.bitmap
 
 import android.net.TrafficStats
-import android.util.Log
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.network.DownloadedBitmap
