@@ -69,12 +69,11 @@ public class BackgroundLocationWork extends ListenableWorker {
                                     }
                                 } catch (Exception e) {
                                     CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                            "Exception while processing geofence receiver intent");
+                                            "Exception while processing geofence receiver intent",e);
                                     if (cleverTapApi != null) {
                                         cleverTapApi.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
                                                 "Exception while processing geofence receiver intent");
                                     }
-                                    e.printStackTrace();
                                 }
 
                                 completer.set(Result.success());

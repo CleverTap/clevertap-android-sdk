@@ -91,8 +91,7 @@ public class CTGeofence {
             }
         } catch (JSONException e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Could not convert JSON to GeofenceList - " + e.getMessage());
-            e.printStackTrace();
+                    "Could not convert JSON to GeofenceList", e);
         }
 
         return geofenceList;

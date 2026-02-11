@@ -63,8 +63,7 @@ public class CTLocationUpdateReceiver extends BroadcastReceiver {
                                     "Timeout location receiver execution limit of 10 secs");
                         } catch (Exception e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Exception while processing location receiver intent");
-                            e.printStackTrace();
+                                    "Exception while processing location receiver intent",e);
                         }
 
                         finishPendingIntent(result);
@@ -85,8 +84,7 @@ public class CTLocationUpdateReceiver extends BroadcastReceiver {
             finishPendingIntent(result);
 
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Exception while processing location updates receiver intent");
-            e.printStackTrace();
+                    "Exception while processing location updates receiver intent",e);
         }
 
         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,

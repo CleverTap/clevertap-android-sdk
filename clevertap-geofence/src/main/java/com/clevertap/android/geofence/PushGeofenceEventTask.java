@@ -225,10 +225,8 @@ class PushGeofenceEventTask implements CTGeofenceTask {
                             } catch (Exception e) {
                                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                                         "Failed to push geofence event with id = " +
-                                                triggeredGeofence.getRequestId());
-                                e.printStackTrace();
+                                                triggeredGeofence.getRequestId(),e);
                             }
-
                             break;
                         }
                     }
@@ -250,8 +248,7 @@ class PushGeofenceEventTask implements CTGeofenceTask {
                 }
             } catch (Exception e) {
                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to read triggered geofences from file");
-                e.printStackTrace();
+                        "Failed to read triggered geofences from file",e);
             }
         }
     }

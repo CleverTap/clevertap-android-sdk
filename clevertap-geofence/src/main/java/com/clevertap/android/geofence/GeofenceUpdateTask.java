@@ -63,8 +63,7 @@ class GeofenceUpdateTask implements CTGeofenceTask {
                 ctOldGeofenceIdList = Utils.jsonToGeoFenceList(ctOldGeofenceObject);
             } catch (Exception e) {
                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to read previously registered geofences from file");
-                e.printStackTrace();
+                        "Failed to read previously registered geofences from file",e);
             }
 
             if (fenceList != null) {
@@ -144,8 +143,7 @@ class GeofenceUpdateTask implements CTGeofenceTask {
                     "Successfully created geofence sublist");
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to create geofence sublist");
-            e.printStackTrace();
+                    "Failed to create geofence sublist",e);
         }
 
         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,

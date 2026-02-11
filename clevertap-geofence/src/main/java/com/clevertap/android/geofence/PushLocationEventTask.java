@@ -73,8 +73,7 @@ class PushLocationEventTask implements CTGeofenceTask {
                     "Finished calling future for setLocationForGeofences()");
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to push location event to CT");
-            e.printStackTrace();
+                    "Failed to push location event to CT",e);
         } finally {
             sendOnCompleteEvent();
         }
