@@ -61,7 +61,7 @@ class BitmapDownloader(
                 )
             }
         } catch (e: Throwable) {
-            val reason = "Exception : ${e.javaClass.simpleName}"
+            val reason = "Exception : ${e.javaClass.simpleName} : ${e.message}"
             Logger.v(TAG, "Couldn't download the notification media. URL was: $srcUrl, Reason: $reason", e)
             return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
         } finally {
