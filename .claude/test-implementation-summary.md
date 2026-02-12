@@ -6,7 +6,7 @@
 
 ## Tests Added
 
-Added 12 comprehensive unit tests covering all aspects of deep link attribution functionality:
+Added 14 comprehensive unit tests covering all aspects of deep link attribution functionality:
 
 ### 1. Button-Level Deep Link Tests
 
@@ -62,9 +62,19 @@ Added 12 comprehensive unit tests covering all aspects of deep link attribution 
 ### 4. Edge Case Tests
 
 #### `inAppActionTriggered should NOT include wzrk_dl for empty actionUrl`
-- **Purpose:** Verify empty URLs are handled gracefully
-- **Tests:** OPEN_URL action with empty string URL
+- **Purpose:** Verify empty URLs are handled gracefully on native templates
+- **Tests:** OPEN_URL action with empty string URL on native (Cover) template
 - **Expectation:** wzrk_dl = null
+
+#### `inAppActionTriggered should fall back to template URL when button URL is empty on HTML template`
+- **Purpose:** Verify fallback behavior when button has empty URL but HTML template has customInAppUrl
+- **Tests:** HTML template with empty button URL and valid template URL
+- **Expectation:** wzrk_dl = template URL (fallback works)
+
+#### `inAppActionTriggered should fall back to template URL when button URL is empty on image-only template`
+- **Purpose:** Verify fallback behavior when button has empty URL but image-only template has customInAppUrl
+- **Tests:** Image-only template with empty button URL and valid template URL
+- **Expectation:** wzrk_dl = template URL (fallback works)
 
 ### 5. Integration Tests
 
@@ -96,8 +106,10 @@ Added 12 comprehensive unit tests covering all aspects of deep link attribution 
 - ✅ Button-level deep links
 - ✅ Template-level deep links
 - ✅ Priority: button URL > template URL
+- ✅ Fallback: template URL when button URL is empty (HTML templates)
+- ✅ Fallback: template URL when button URL is empty (image-only templates)
 - ✅ No deep link for non-navigation actions
-- ✅ Empty/null URL handling
+- ✅ Empty/null URL handling (native templates)
 - ✅ Analytics event integration
 - ✅ All HTML template types
 - ✅ All image-only template types
@@ -124,8 +136,8 @@ Or run all InAppController tests:
 
 ## Code Quality
 
-- **Total tests added:** 12
-- **Lines of test code:** ~380 lines
+- **Total tests added:** 14
+- **Lines of test code:** ~450 lines
 - **Coverage:** Comprehensive coverage of all PRD requirements
 - **Documentation:** Clear test names following convention: "method should behavior for scenario"
 - **Maintainability:** Uses existing helper methods and follows project patterns

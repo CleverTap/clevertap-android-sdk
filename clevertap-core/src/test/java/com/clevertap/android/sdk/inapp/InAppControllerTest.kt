@@ -1013,6 +1013,80 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `inAppActionTriggered should fall back to template URL when button URL is empty on HTML template`() {
+        val inAppController = createInAppController()
+        val templateUrl = "https://example.com/template-link"
+        val callToAction = "Click"
+
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.OPEN_URL}",
+            "${Constants.KEY_ANDROID}": ""
+        }
+        """.trimIndent()
+
+        val inAppJson = JSONObject("""
+        {
+            "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeCoverHTML}",
+            "${Constants.NOTIFICATION_ID_TAG}": "test-campaign",
+            "${Constants.KEY_URL}": "$templateUrl",
+            "${Constants.KEY_BUTTONS}": [{
+                "${Constants.KEY_TEXT}": "$callToAction",
+                "${Constants.KEY_ACTIONS}": $actionJsonString
+            }]
+        }
+        """.trimIndent())
+
+        val inApp = CTInAppNotification(inAppJson, false)
+        val action = CTInAppAction.createFromJson(JSONObject(actionJsonString))!!
+
+        val result = inAppController.inAppNotificationActionTriggered(
+            inApp, action, callToAction, null, null
+        )
+
+        // Should fall back to template URL when button URL is empty
+        assertEquals(templateUrl, result.getString(Constants.DEEP_LINK_KEY))
+        assertEquals(callToAction, result.getString(Constants.KEY_C2A))
+    }
+
+    @Test
+    fun `inAppActionTriggered should fall back to template URL when button URL is empty on image-only template`() {
+        val inAppController = createInAppController()
+        val templateUrl = "https://example.com/image-link"
+        val callToAction = "Click"
+
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.OPEN_URL}",
+            "${Constants.KEY_ANDROID}": ""
+        }
+        """.trimIndent()
+
+        val inAppJson = JSONObject("""
+        {
+            "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeCoverImageOnly}",
+            "${Constants.NOTIFICATION_ID_TAG}": "test-campaign",
+            "${Constants.KEY_URL}": "$templateUrl",
+            "${Constants.KEY_BUTTONS}": [{
+                "${Constants.KEY_TEXT}": "$callToAction",
+                "${Constants.KEY_ACTIONS}": $actionJsonString
+            }]
+        }
+        """.trimIndent())
+
+        val inApp = CTInAppNotification(inAppJson, false)
+        val action = CTInAppAction.createFromJson(JSONObject(actionJsonString))!!
+
+        val result = inAppController.inAppNotificationActionTriggered(
+            inApp, action, callToAction, null, null
+        )
+
+        // Should fall back to template URL when button URL is empty
+        assertEquals(templateUrl, result.getString(Constants.DEEP_LINK_KEY))
+        assertEquals(callToAction, result.getString(Constants.KEY_C2A))
+    }
+
+    @Test
     fun `inAppActionTriggered should include wzrk_dl for all HTML template types`() {
         val inAppController = createInAppController()
         val templateUrl = "https://example.com/html-link"
