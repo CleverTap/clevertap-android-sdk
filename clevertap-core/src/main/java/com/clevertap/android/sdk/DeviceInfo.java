@@ -462,14 +462,14 @@ public class DeviceInfo {
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null
-                Logger.v(TAG, "Failed to decide whether device is a TV!", e);
+                Logger.d(TAG, "Failed to decide whether device is a TV!", e);
             }
 
             try {
                 sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
             } catch (Exception e) {
                 // resource not found or context is null
-                Logger.v(TAG, "Failed to decide whether device is a smart phone or tablet!", e);
+                Logger.d(TAG, "Failed to decide whether device is a smart phone or tablet!", e);
                 sDeviceType = UNKNOWN;
             }
         }

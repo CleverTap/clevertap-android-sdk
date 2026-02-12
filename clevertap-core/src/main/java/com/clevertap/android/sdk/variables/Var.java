@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.variables;
 
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +51,7 @@ public class Var<T> {
         this.ctVariables = ctVariables;
     }
 
-    private static void log(String msg){
+    private static void log(String msg) {
         Logger.v(TAG, msg);
     }
 
@@ -70,6 +72,7 @@ public class Var<T> {
     public static <T> Var<T> define(String name, T defaultValue, String kind, CTVariables ctVariables) {
         if (TextUtils.isEmpty(name)) {
             log("Empty name parameter provided.");
+            return null;
 
         }
         if (name.startsWith(".") || name.endsWith(".")) {
@@ -97,7 +100,7 @@ public class Var<T> {
             ctVariables.getVarCache().registerVariable(var);
             var.update();
         } catch (Throwable t) {
-            Logger.v(TAG, "Error defining variable: " + name,t);
+            Logger.v(TAG, "Error defining variable: " + name, t);
         }
         return var;
     }
@@ -210,7 +213,7 @@ public class Var<T> {
     void warnIfNotStarted() {
         if (!ctVariables.hasVarsRequestCompleted() && !printedCallbackWarning) {
             log("CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
-                + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
+                    + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
         }
     }
@@ -246,7 +249,7 @@ public class Var<T> {
         if (CTVariableUtils.FILE.equals(kind)) {
             return stringValue;
         } else {
-           return null;
+            return null;
         }
     }
 

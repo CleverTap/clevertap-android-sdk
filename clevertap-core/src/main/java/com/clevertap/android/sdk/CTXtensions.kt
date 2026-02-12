@@ -42,7 +42,7 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
         } catch (e: Exception) {
             Logger.d(
                 Constants.CLEVERTAP_LOG_TAG,
-                "Unable to find notification channel with id = $channelId"
+                "Unable to find notification channel with id = $channelId", e
             )
             false
         }
@@ -55,7 +55,7 @@ fun Context.areAppNotificationsEnabled() = try {
 } catch (e: Exception) {
     Logger.d(
         Constants.CLEVERTAP_LOG_TAG,
-        "Unable to query notifications enabled flag, returning true!"
+        "Unable to query notifications enabled flag, returning true!", e
     )
     true
 }
