@@ -40,7 +40,10 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.getNotificationChannel(channelId).importance != NotificationManager.IMPORTANCE_NONE
         } catch (e: Exception) {
-            Logger.d(Constants.CLEVERTAP_LOG_TAG, "Unable to find notification channel with id = $channelId")
+            Logger.d(
+                Constants.CLEVERTAP_LOG_TAG,
+                "Unable to find notification channel with id = $channelId"
+            )
             false
         }
     } else {
@@ -50,7 +53,10 @@ fun Context.isNotificationChannelEnabled(channelId: String): Boolean =
 fun Context.areAppNotificationsEnabled() = try {
     NotificationManagerCompat.from(this).areNotificationsEnabled()
 } catch (e: Exception) {
-    Logger.d(Constants.CLEVERTAP_LOG_TAG, "Unable to query notifications enabled flag, returning true!")
+    Logger.d(
+        Constants.CLEVERTAP_LOG_TAG,
+        "Unable to query notifications enabled flag, returning true!"
+    )
     true
 }
 
@@ -94,7 +100,7 @@ fun NotificationManager.getOrCreateChannel(
         // Create appropriate fallback channel
         createFallbackChannel(context, hideHeadsUp)
     } catch (e: Exception) {
-        Logger.v(Constants.CLEVERTAP_LOG_TAG, "Error getting or creating notification channel", e)
+        Logger.d(Constants.CLEVERTAP_LOG_TAG, "Error getting or creating notification channel", e)
         null
     }
 }
@@ -123,7 +129,10 @@ private fun NotificationManager.tryGetChannel(
     val shouldSkip = hideHeadsUp && channel.importance != NotificationManager.IMPORTANCE_LOW
 
     if (shouldSkip) {
-        Logger.d(Constants.CLEVERTAP_LOG_TAG, "Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}")
+        Logger.d(
+            Constants.CLEVERTAP_LOG_TAG,
+            "Skipping channel $channelId because heads-up should be hidden in FG but importance is ${channel.importance}"
+        )
         return null
     }
     return channelId
@@ -185,6 +194,11 @@ private fun NotificationManager.createDefaultFallbackChannel(context: Context): 
         val channelName = try {
             context.getString(R.string.ct_fcm_fallback_notification_channel_label)
         } catch (e: Exception) {
+            Logger.d(
+                Constants.CLEVERTAP_LOG_TAG,
+                "Failed to fetch fallback channel name from resources",
+                e
+            )
             Constants.FCM_FALLBACK_NOTIFICATION_CHANNEL_NAME
         }
 
@@ -211,14 +225,26 @@ private fun NotificationManager.createDefaultFallbackChannel(context: Context): 
  * @param context The application context.
  */
 @MainThread
-fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(logTag: String, caller: String, context: Context) {
+fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(
+    logTag: String,
+    caller: String,
+    context: Context
+) {
     val flushTask = CTExecutorFactory.executors(coreState.config).postAsyncSafelyTask<Void?>()
 
     val flushFutureResult = flushTask.submit(logTag) {
         try {
-            coreState.baseEventQueueManager.flushQueueSync(context, PUSH_NOTIFICATION_VIEWED, caller)
+            coreState.baseEventQueueManager.flushQueueSync(
+                context,
+                PUSH_NOTIFICATION_VIEWED,
+                caller
+            )
         } catch (e: Exception) {
-            Logger.d(logTag, "Failed to flush push impressions on CT instance = ${coreState.config.accountId}", e)
+            Logger.d(
+                logTag,
+                "Failed to flush push impressions on CT instance = ${coreState.config.accountId}",
+                e
+            )
         }
         null
     }
@@ -427,13 +453,13 @@ fun String?.isNotNullAndBlank(): Boolean {
  * }
  * ```
  */
-fun View.applyInsetsWithMarginAdjustment(marginAdjuster : (insets:Insets, mlp:MarginLayoutParams) -> Unit) {
+fun View.applyInsetsWithMarginAdjustment(marginAdjuster: (insets: Insets, mlp: MarginLayoutParams) -> Unit) {
     ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
         val bars: Insets = insets.getInsets(
             WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
         )
         v.updateLayoutParams<MarginLayoutParams> {
-            marginAdjuster(bars,this)
+            marginAdjuster(bars, this)
         }
         WindowInsetsCompat.CONSUMED
     }
