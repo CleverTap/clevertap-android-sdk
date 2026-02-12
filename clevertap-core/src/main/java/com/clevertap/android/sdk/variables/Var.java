@@ -70,14 +70,14 @@ public class Var<T> {
     public static <T> Var<T> define(String name, T defaultValue, String kind, CTVariables ctVariables) {
         if (TextUtils.isEmpty(name)) {
             log("Empty name parameter provided.");
-            return null;
+
         }
         if (name.startsWith(".") || name.endsWith(".")) {
             log("Variable name starts or ends with a `.` which is not allowed: " + name);
             return null;
         }
         if (!CTVariableUtils.FILE.equals(kind) && defaultValue == null) {
-            Logger.d(TAG, "Invalid Operation! Null values are not allowed as default values when defining the variable '" + name + "'.");
+            Logger.v(TAG, "Invalid Operation! Null values are not allowed as default values when defining the variable '" + name + "'.");
             return null;
         }
 

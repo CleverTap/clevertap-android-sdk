@@ -2,8 +2,10 @@ package com.clevertap.android.sdk.task;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Logger;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Definition of task is to execute some work & return success or failure callbacks
@@ -36,7 +39,7 @@ public class Task<TResult> {
     private final String taskName;
 
     Task(final CleverTapInstanceConfig config, Executor executor,
-            final Executor defaultCallbackExecutor, final String taskName) {
+         final Executor defaultCallbackExecutor, final String taskName) {
         this.executor = executor;
         this.defaultCallbackExecutor = defaultCallbackExecutor;
         this.config = config;
@@ -52,7 +55,7 @@ public class Task<TResult> {
      */
     @NonNull
     public synchronized Task<TResult> addOnFailureListener(@NonNull final Executor executor,
-            final OnFailureListener<Exception> listener) {
+                                                           final OnFailureListener<Exception> listener) {
         if (listener != null) {
             failureExecutables.add(new FailureExecutable<>(executor, listener));
         }
@@ -79,7 +82,7 @@ public class Task<TResult> {
      */
     @NonNull
     public Task<TResult> addOnSuccessListener(@NonNull final Executor executor,
-            final OnSuccessListener<TResult> listener) {
+                                              final OnSuccessListener<TResult> listener) {
         if (listener != null) {
             successExecutables.add(new SuccessExecutable<>(executor, listener));
         }
@@ -169,8 +172,8 @@ public class Task<TResult> {
     /**
      * Submits piece of code to executor and returns result if code executes successfully within timeout or returns null
      *
-     * @param logTag tag name to identify logs.
-     * @param callable - piece of code to run
+     * @param logTag        tag name to identify logs.
+     * @param callable      - piece of code to run
      * @param timeoutMillis - timeout for piece of code to run
      * @return result of callable or null
      */
@@ -184,13 +187,15 @@ public class Task<TResult> {
         try {
             tResultFuture = ((ExecutorService) executor).submit(callable);
             return tResultFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            logProperly("submitAndGetResult :: " + logTag + " task timed out", e);
         } catch (Exception e) {
             logProperly("submitAndGetResult :: " + logTag + " task failed", e);
             if (tResultFuture != null && !tResultFuture.isCancelled()) {
                 tResultFuture.cancel(true);
             }
         }
-        logProperly("submitAndGetResult :: " + logTag + " task timed out",null);
+
         return null;
     }
 
