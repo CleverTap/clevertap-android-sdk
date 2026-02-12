@@ -7,20 +7,36 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.media.RingtoneManager
 import android.net.Uri
-import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.os.Bundle
 import androidx.core.app.NotificationCompat.Builder
-import com.clevertap.android.pushtemplates.PTConstants.*
+import com.clevertap.android.pushtemplates.PTConstants.PT_COLLAPSE_KEY
+import com.clevertap.android.pushtemplates.PTConstants.PT_ID
+import com.clevertap.android.pushtemplates.PTConstants.PT_JSON
+import com.clevertap.android.pushtemplates.PTConstants.PT_META_CLR_DEFAULTS
+import com.clevertap.android.pushtemplates.PTConstants.PT_MSG
+import com.clevertap.android.pushtemplates.PTConstants.PT_NOTIF_ICON
+import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_ICON_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
+import com.clevertap.android.pushtemplates.TemplateRenderer.Companion.debugLevel
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 import com.clevertap.android.pushtemplates.media.TemplateRepository
-import com.clevertap.android.pushtemplates.styles.*
+import com.clevertap.android.pushtemplates.styles.AutoCarouselStyle
+import com.clevertap.android.pushtemplates.styles.BasicStyle
+import com.clevertap.android.pushtemplates.styles.FiveIconStyle
+import com.clevertap.android.pushtemplates.styles.InputBoxStyle
+import com.clevertap.android.pushtemplates.styles.ManualCarouselStyle
+import com.clevertap.android.pushtemplates.styles.ProductDisplayStyle
+import com.clevertap.android.pushtemplates.styles.RatingStyle
+import com.clevertap.android.pushtemplates.styles.TimerStyle
+import com.clevertap.android.pushtemplates.styles.ZeroBezelStyle
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -36,19 +52,24 @@ import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
+import java.util.Random
 
-class TemplateRenderer(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
+class TemplateRenderer(
+    context: Context,
+    private val extras: Bundle,
+    internal val config: CleverTapInstanceConfig? = null
+) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }
     internal var smallIcon = 0
-    internal var smallIconBitmap : Bitmap? = null
-    internal var smallIconColour : String? = null
+    internal var smallIconBitmap: Bitmap? = null
+    internal var smallIconColour: String? = null
 
     internal var actionButtons = emptyList<ActionButton>()
     internal var actionButtonPendingIntents = mutableMapOf<String, PendingIntent>()
-    internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
+    internal var notificationId: Int =
+        -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     enum class LogLevel(private val value: Int) {
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
@@ -67,17 +88,20 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 newExtras = Utils.fromJson(JSONObject(pt_json))
             }
         } catch (e: JSONException) {
-            PTLog.verbose("Failed to parse push template JSON",e)
+            PTLog.verbose("Failed to parse push template JSON", e)
         }
         if (newExtras != null) extras.putAll(newExtras)
     }
 
     override fun getMessage(extras: Bundle): String? {
-        return this.extras.getString(PT_MSG).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_MSG)
+        return this.extras.getString(PT_MSG).takeUnless { it.isNullOrEmpty() } ?: extras.getString(
+            NOTIF_MSG
+        )
     }
 
     override fun getTitle(extras: Bundle, context: Context): String? {
-        return this.extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() } ?: extras.getString(NOTIF_TITLE)
+        return this.extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() }
+            ?: extras.getString(NOTIF_TITLE)
     }
 
 
@@ -103,8 +127,9 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             altTextDefault
         ) { Utils.getNotificationIds(context) }
 
-        this.actionButtons = getActionButtons(context, extras, notificationId, templateData?.getActions())
-        val templateBuilder : Builder? = when (templateData) {
+        this.actionButtons =
+            getActionButtons(context, extras, notificationId, templateData?.getActions())
+        val templateBuilder: Builder? = when (templateData) {
             is BasicTemplateData -> templateData.buildIfValid {
                 BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
             }
@@ -114,7 +139,12 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             }
 
             is ManualCarouselTemplateData -> templateData.buildIfValid {
-                ManualCarouselStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+                ManualCarouselStyle(it, this, extras).builderFromStyle(
+                    context,
+                    extras,
+                    notificationId,
+                    nb
+                )
             }
 
             is RatingTemplateData -> templateData.buildIfValid {
@@ -135,7 +165,8 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                  * if not then do not render notification
                  */
                 if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
-                    (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
+                    (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2
+                ) {
                     null
                 } else {
                     fiveIconNotificationBuilder
@@ -143,7 +174,12 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             }
 
             is ProductTemplateData -> templateData.buildIfValid {
-                ProductDisplayStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+                ProductDisplayStyle(it, this, extras).builderFromStyle(
+                    context,
+                    extras,
+                    notificationId,
+                    nb
+                )
             }
 
             is ZeroBezelTemplateData -> templateData.buildIfValid {
@@ -197,10 +233,17 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
         this.smallIcon = smallIcon
-        this.smallIconColour = Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR) ?: extras.getString(WZRK_COLOR)
+        this.smallIconColour =
+            Utils.getDarkModeAdaptiveColor(extras, Utils.isDarkMode(context), PT_SMALL_ICON_COLOUR)
+                ?: extras.getString(WZRK_COLOR)
 
         try {
-            this.smallIconBitmap = Utils.setBitMapColour(context, smallIcon, this.smallIconColour, PT_META_CLR_DEFAULTS)
+            this.smallIconBitmap = Utils.setBitMapColour(
+                context,
+                smallIcon,
+                this.smallIconColour,
+                PT_META_CLR_DEFAULTS
+            )
         } catch (_: NullPointerException) {
             PTLog.debug("NPE while setting small icon color")
         }
@@ -286,7 +329,11 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                     var icon = 0
                     if (ico.isNotEmpty()) {
                         try {
-                            icon = context.resources.getIdentifier(ico, "drawable", context.packageName)
+                            icon = context.resources.getIdentifier(
+                                ico,
+                                "drawable",
+                                context.packageName
+                            )
                         } catch (t: Throwable) {
                             Logger.d("unable to add notification action icon: " + t.localizedMessage)
                         }
@@ -297,7 +344,8 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                     actionButtons.add(button)
 
                     // Create and store the pendingIntent
-                    val pendingIntent = createActionButtonPendingIntent(context, action, extras, notificationId)
+                    val pendingIntent =
+                        createActionButtonPendingIntent(context, action, extras, notificationId)
                     if (pendingIntent != null) {
                         actionButtonPendingIntents[id] = pendingIntent
                     }
@@ -329,19 +377,22 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                     clazz = Class.forName(intentServiceName)
                 } catch (_: ClassNotFoundException) {
                     try {
-                        clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+                        clazz =
+                            Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
                     } catch (_: ClassNotFoundException) {
                         Logger.d("No Intent Service found")
                     }
                 }
             } else {
                 try {
-                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+                    clazz =
+                        Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
                 } catch (_: ClassNotFoundException) {
                     Logger.d("No Intent Service found")
                 }
             }
-            val isCTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
+            val isCTIntentServiceAvailable =
+                com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
 
             var sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
                     && isCTIntentServiceAvailable)
@@ -400,7 +451,8 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 actionLaunchIntent.putExtra("autoCancel", autoCancel)
                 actionLaunchIntent.putExtra("wzrk_c2a", id)
                 actionLaunchIntent.putExtra("notificationId", notificationId)
-                actionLaunchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                actionLaunchIntent.flags =
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             } else {
                 return null
             }

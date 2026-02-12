@@ -26,9 +26,11 @@ import android.os.Bundle;
 import android.text.Html;
 import android.view.View;
 import android.widget.RemoteViews;
+
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
 import androidx.core.app.RemoteInput;
+
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.pushtemplates.media.GifDecoderImpl;
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager;
@@ -42,6 +44,7 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
@@ -504,7 +507,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 } else {
                     contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
                 }
-                cancelRatingClickIntents(context,intent);
+                cancelRatingClickIntents(context, intent);
                 extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
                 contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation,
                         LaunchPendingIntentFactory.getActivityIntent(extras, context));
@@ -555,8 +558,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     /**
      * This method cancels all pending intents fired on click of rating. Allows the user to
      * click only once for Android 11+ devices and prevents collisions for future rating push-templates
+     *
      * @param context Context required for cancelling pending intents
-     * @param intent Intent required for cancelling pending intents
+     * @param intent  Intent required for cancelling pending intents
      */
     private void cancelRatingClickIntents(Context context, Intent intent) {
         int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
@@ -572,7 +576,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     @SuppressLint("MissingPermission")
     private void handleRatingDeepLink(final Context context, final Bundle extras, final int notificationId,
-            final String pt_dl_clicked, final CleverTapInstanceConfig config) throws InterruptedException {
+                                      final String pt_dl_clicked, final CleverTapInstanceConfig config) throws InterruptedException {
         Thread.sleep(1000);
         notificationManager.cancel(notificationId);
 
@@ -703,8 +707,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     }
 
     private void setNotificationBuilderBasics(NotificationCompat.Builder notificationBuilder,
-            RemoteViews contentViewSmall, RemoteViews contentViewBig, String pt_title, PendingIntent pIntent,
-            PendingIntent dIntent) {
+                                              RemoteViews contentViewSmall, RemoteViews contentViewBig, String pt_title, PendingIntent pIntent,
+                                              PendingIntent dIntent) {
         notificationBuilder.setSmallIcon(smallIcon)
                 .setCustomContentView(contentViewSmall)
                 .setCustomBigContentView(contentViewBig)
@@ -816,7 +820,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     }
 
     private void setToast(Context context, String message,
-            final CleverTapInstanceConfig config) {
+                          final CleverTapInstanceConfig config) {
         if (message != null && !message.isEmpty()) {
             Utils.showToast(context, message, config);
         }
