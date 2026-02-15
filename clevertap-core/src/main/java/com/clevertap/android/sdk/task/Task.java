@@ -189,6 +189,9 @@ public class Task<TResult> {
             return tResultFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             logProperly("submitAndGetResult :: " + logTag + " task timed out", e);
+            if (tResultFuture != null && !tResultFuture.isCancelled()) {
+                tResultFuture.cancel(true);
+            }
         } catch (Exception e) {
             logProperly("submitAndGetResult :: " + logTag + " task failed", e);
             if (tResultFuture != null && !tResultFuture.isCancelled()) {

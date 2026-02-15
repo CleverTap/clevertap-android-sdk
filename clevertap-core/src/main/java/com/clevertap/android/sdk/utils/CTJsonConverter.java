@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
     private static final String TAG = "CTJsonConverter";
+
     @NonNull
     public static JSONObject toJsonObject(String json, ILogger logger, String logtag) {
         JSONObject cache = null;
@@ -40,7 +41,7 @@ public class CTJsonConverter {
                 cache = new JSONObject(json);
             } catch (Throwable t) {
                 // no-op
-                logger.verbose(logtag, "Error reading guid cache: " + t.toString());
+                logger.verbose(logtag, "Error reading guid cache: ", t);
             }
         }
 
@@ -115,7 +116,7 @@ public class CTJsonConverter {
             }
 
             boolean sslPinning = ManifestInfo.getInstance(deviceInfo.getContext()).isSSLPinningEnabled();
-            if(sslPinning){
+            if (sslPinning) {
                 evtData.put("sslpin", true);
             }
 
@@ -151,7 +152,7 @@ public class CTJsonConverter {
                 }
             }
             //Adds an extra field to send local inApp count in queueData.
-            evtData.put("LIAMC",deviceInfo.getLocalInAppCount());
+            evtData.put("LIAMC", deviceInfo.getLocalInAppCount());
 
             // add custom sdk versions in "af" key of header.
             HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
@@ -213,7 +214,7 @@ public class CTJsonConverter {
                 array[i] = jsonArray.get(i);
             }
         } catch (JSONException e) {
-            Logger.v(TAG,  "Error converting JSONArray to array");
+            Logger.v(TAG, "Error converting JSONArray to array", e);
         }
         return array;
     }
@@ -246,7 +247,7 @@ public class CTJsonConverter {
             try {
                 list.add(array.get(i));
             } catch (JSONException e) {
-                Logger.v(TAG, "Error converting JSONArray to list");
+                Logger.v(TAG, "Error converting JSONArray to list", e);
             }
         }
         return list;
