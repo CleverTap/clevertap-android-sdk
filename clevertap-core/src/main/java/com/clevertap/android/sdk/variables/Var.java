@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class Var<T> {
 
-    private static final String TAG = "Var";
+    private static final String TAG = "variable";
     private final CTVariables ctVariables;
 
     private String name;
@@ -80,7 +80,7 @@ public class Var<T> {
             return null;
         }
         if (!CTVariableUtils.FILE.equals(kind) && defaultValue == null) {
-            Logger.v(TAG, "Invalid Operation! Null values are not allowed as default values when defining the variable '" + name + "'.");
+            Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '" + name + "'.");
             return null;
         }
 
