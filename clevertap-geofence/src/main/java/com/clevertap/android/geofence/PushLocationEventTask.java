@@ -1,12 +1,15 @@
 package com.clevertap.android.geofence;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.google.android.gms.location.LocationResult;
+
 import java.util.concurrent.Future;
 
 /**
@@ -51,7 +54,7 @@ class PushLocationEventTask implements CTGeofenceTask {
             Utils.notifyLocationUpdates(context, locationResult.getLastLocation());
 
             @SuppressWarnings("ConstantConditions") //getCleverTapApi() won't be null here
-                    Future<?> future = null;
+            Future<?> future = null;
 
             if (locationResult.getLastLocation() != null) {
                 future = CTGeofenceAPI.getInstance(context)
@@ -73,7 +76,7 @@ class PushLocationEventTask implements CTGeofenceTask {
                     "Finished calling future for setLocationForGeofences()");
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to push location event to CT",e);
+                    "Failed to push location event to CT", e);
         } finally {
             sendOnCompleteEvent();
         }

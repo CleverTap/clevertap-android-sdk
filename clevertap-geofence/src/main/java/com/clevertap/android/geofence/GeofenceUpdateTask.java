@@ -1,16 +1,20 @@
 package com.clevertap.android.geofence;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.model.CTGeofence;
 import com.google.android.gms.tasks.OnSuccessListener;
-import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.List;
 
 /**
  * A task of type {@link CTGeofenceTask} responsible for Adding/Replacing(remove followed by add)
@@ -63,7 +67,7 @@ class GeofenceUpdateTask implements CTGeofenceTask {
                 ctOldGeofenceIdList = Utils.jsonToGeoFenceList(ctOldGeofenceObject);
             } catch (Exception e) {
                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to read previously registered geofences from file",e);
+                        "Failed to read previously registered geofences from file", e);
             }
 
             if (fenceList != null) {
@@ -143,7 +147,7 @@ class GeofenceUpdateTask implements CTGeofenceTask {
                     "Successfully created geofence sublist");
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to create geofence sublist",e);
+                    "Failed to create geofence sublist", e);
         }
 
         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,

@@ -8,12 +8,14 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
 import com.clevertap.android.geofence.interfaces.CTLocationCallback;
 import com.clevertap.android.sdk.CleverTapAPI;
@@ -23,6 +25,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -111,7 +114,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
 
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to request last location",e);
+                    "Failed to request last location", e);
         } finally {
             callback.onLocationComplete(location);
         }
@@ -187,7 +190,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
                         "Finished requesting current location periodically..");
             } catch (Exception e) {
                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to request location updates",e);
+                        "Failed to request location updates", e);
             }
         } else {
 
@@ -265,7 +268,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
                     "Successfully removed periodic current location request");
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to remove location updates",e);
+                    "Failed to remove location updates", e);
         }
     }
 
@@ -294,7 +297,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
                     "WorkManager dependency is missing");
         } catch (Throwable t) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to cancel location work request",t);
+                    "Failed to cancel location work request", t);
         }
     }
 
@@ -349,7 +352,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
                     "WorkManager dependency is missing");
         } catch (Throwable t) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to request periodic work request",t);
+                    "Failed to request periodic work request", t);
         }
     }
 
