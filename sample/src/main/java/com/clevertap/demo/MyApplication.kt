@@ -30,8 +30,8 @@ import com.clevertap.android.sdk.pushnotification.PushType
 import com.clevertap.demo.ui.customtemplates.CopyToClipboardPresenter
 import com.clevertap.demo.ui.customtemplates.CustomInterstitialPresenter
 import com.clevertap.demo.ui.customtemplates.OpenURLConfirmPresenter
-import com.clevertap.demo.ui.main.NotificationUtils
 import com.clevertap.demo.ui.customtemplates.createCustomTemplates
+import com.clevertap.demo.ui.main.NotificationUtils
 import com.github.anrwatchdog.ANRWatchDog
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
@@ -42,19 +42,19 @@ import kotlin.system.measureTimeMillis
 class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks,
     InboxMessageButtonListener, InboxMessageListener {
 
-        companion object {
-            private const val TAG = "MyApplication"
+    companion object {
+        private const val TAG = "MyApplication"
 
-            var ctInstance: CleverTapAPI? = null
-            var ctMultiInstance: CleverTapAPI? = null
+        var ctInstance: CleverTapAPI? = null
+        var ctMultiInstance: CleverTapAPI? = null
 
-            private val BAIDU_PUSH_TYPE = PushType(
-                "bps",
-                "bps_token",
-                "com.clevertap.android.bps.BaiduPushProvider",
-                "com.baidu.android.pushservice.PushMessageReceiver"
-            )
-        }
+        private val BAIDU_PUSH_TYPE = PushType(
+            "bps",
+            "bps_token",
+            "com.clevertap.android.bps.BaiduPushProvider",
+            "com.baidu.android.pushservice.PushMessageReceiver"
+        )
+    }
 
     override fun onCreate() {
         ANRWatchDog().start()
@@ -91,7 +91,10 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
         // this is for clevertap to start sending events => app launched => hence done in app create
         val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
-        Log.i(TAG, "Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
+        Log.i(
+            TAG,
+            "Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds"
+        )
 
         // this is for the setup for canceling notifications
         registerActivityLifecycleCallbacks(this)
@@ -192,7 +195,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         return ctInstance
     }
 
-    private fun buildCustomCtInstance() : CleverTapAPI {
+    private fun buildCustomCtInstance(): CleverTapAPI {
         val config = CleverTapInstanceConfig.createInstance(
             applicationContext,
             BuildConfig.MULTI_CLEVERTAP_ACCOUNT_ID,
@@ -255,6 +258,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         }
     }
 
+
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
         Log.i(TAG, "onNotificationClickedPayloadReceived = $payload")
     }
@@ -304,7 +308,11 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         //dismissAppInbox()
     }
 
-    override fun onInboxItemClicked(message: CTInboxMessage?, contentPageIndex: Int, buttonIndex: Int) {
+    override fun onInboxItemClicked(
+        message: CTInboxMessage?,
+        contentPageIndex: Int,
+        buttonIndex: Int
+    ) {
         Log.i(
             TAG,
             "InboxItemClicked at $contentPageIndex page-index with button-index: $buttonIndex"
@@ -316,7 +324,8 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         //The buttonIndex corresponds to the CTA button clicked (0, 1, or 2). A value of -1 indicates the app inbox body/message clicked.
         if (buttonIndex != -1) {
             //button is clicked
-            val buttonObject: JSONObject? = messageContentObject?.links?.get(buttonIndex) as JSONObject?
+            val buttonObject: JSONObject? =
+                messageContentObject?.links?.get(buttonIndex) as JSONObject?
             val buttonType = buttonObject?.optString("type")
             buttonType?.let {
                 when (it) {
@@ -326,6 +335,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                         Log.i(TAG, "copied text to Clipboard: $copiedText")
                         //dismissAppInbox()
                     }
+
                     "url" -> {
                         //this type fires the deeplink
                         val firedDeepLinkUrl =
@@ -334,17 +344,20 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                         Log.i(TAG, "fired deeplink url: $firedDeepLinkUrl")
                         //dismissAppInbox()
                     }
+
                     "kv" -> {
                         //this type contains the custom key-value pairs
                         val kvPair = buttonObject.optJSONObject("kv")
                         Log.i(TAG, "custom key-value pair: $kvPair")
                         //dismissAppInbox()
                     }
+
                     "rfp" -> {
                         //this type triggers the hard prompt of the notification permission
                         val rfpData = buttonObject.optString("text")
                         Log.i(TAG, "notification permission data: $rfpData")
                     }
+
                     else -> {
                         //do nothing here
                     }
