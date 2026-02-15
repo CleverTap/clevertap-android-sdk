@@ -56,7 +56,7 @@ public class CTGeofenceReceiver extends BroadcastReceiver {
                         }
                     } catch (TimeoutException e) {
                         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Timeout geofence receiver execution limit of 10 secs");
+                                "Timeout geofence receiver execution limit of 8 secs", e);
                     } catch (Exception e) {
                         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                                 "Exception while processing geofence receiver intent", e);
