@@ -108,7 +108,7 @@ public class CTGeofenceBootReceiver extends BroadcastReceiver {
                             }
                         } catch (TimeoutException e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Timeout location update task execution limit of 3 secs");
+                                    "Timeout location update task execution limit of 3 secs", e);
                         } catch (Exception e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                                     "Exception while executing location update task", e);
