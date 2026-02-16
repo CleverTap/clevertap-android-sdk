@@ -12,4 +12,10 @@
     <dimen name="txt_size_inapp_footer_title">16sp</dimen>
     <dimen name="txt_size_inapp_footer_message">12sp</dimen>
     <dimen name="txt_size_inapp_footer_button">14sp</dimen>
+
+    <dimen name="pip_corner_radius">8dp</dimen>
+    <dimen name="pip_edge_padding">16dp</dimen>
+    <dimen name="pip_control_size">24dp</dimen>
+    <dimen name="pip_control_margin">4dp</dimen>
+    <dimen name="pip_expanded_corner_radius">12dp</dimen>
 </resources>

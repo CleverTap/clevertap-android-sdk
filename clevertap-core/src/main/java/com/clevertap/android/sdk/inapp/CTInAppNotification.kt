@@ -148,6 +148,15 @@ class CTInAppNotification : Parcelable {
     internal var widthPercentage: Int = 0
         private set
 
+    internal var pipSizePreset: String = "medium"
+        private set
+
+    internal var pipCornerPosition: String = "bottom-right"
+        private set
+
+    internal var pipAnimation: String = "instant"
+        private set
+
     internal constructor(jsonObject: JSONObject, videoSupported: Boolean) {
         isVideoSupported = videoSupported
         _jsonDescription = jsonObject
@@ -226,6 +235,9 @@ class CTInAppNotification : Parcelable {
             parcel.readParcelable<CustomTemplateInAppData?>(CustomTemplateInAppData::class.java.getClassLoader())
         aspectRatio = parcel.readDouble()
         isRequestForPushPermission = parcel.readByte().toInt() != 0x00
+        pipSizePreset = parcel.readString() ?: "medium"
+        pipCornerPosition = parcel.readString() ?: "bottom-right"
+        pipAnimation = parcel.readString() ?: "instant"
     }
 
     override fun describeContents(): Int {
@@ -284,6 +296,9 @@ class CTInAppNotification : Parcelable {
         dest.writeParcelable(customTemplateData, flags)
         dest.writeDouble(aspectRatio)
         dest.writeByte((if (isRequestForPushPermission) 0x01 else 0x00).toByte())
+        dest.writeString(pipSizePreset)
+        dest.writeString(pipCornerPosition)
+        dest.writeString(pipAnimation)
     }
 
     fun hasStreamMedia(): Boolean {
@@ -406,6 +421,12 @@ class CTInAppNotification : Parcelable {
             isRequestForPushPermission =
                 jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false)
             customTemplateData = createFromJson(jsonObject)
+
+            if (inAppType == CTInAppType.CTInAppTypePiP) {
+                pipSizePreset = jsonObject.optString(Constants.KEY_PIP_SIZE, "medium")
+                pipCornerPosition = jsonObject.optString(Constants.KEY_PIP_POSITION, "bottom-right")
+                pipAnimation = jsonObject.optString(Constants.KEY_PIP_ANIMATION, "instant")
+            }
 
             when (inAppType) {
                 CTInAppType.CTInAppTypeFooter,

@@ -35,6 +35,7 @@ import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeHeaderHTML
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeInterstitial
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeInterstitialHTML
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeInterstitialImageOnly
+import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypePiP
 import com.clevertap.android.sdk.inapp.CTLocalInApp.Companion.FALLBACK_TO_NOTIFICATION_SETTINGS
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
@@ -48,6 +49,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
+import com.clevertap.android.sdk.inapp.fragment.CTInAppNativePiPFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutors
@@ -942,6 +944,10 @@ internal class InAppController(
 
             CTInAppTypeHeader -> {
                 inAppFragment = CTInAppNativeHeaderFragment()
+            }
+
+            CTInAppTypePiP -> {
+                inAppFragment = CTInAppNativePiPFragment()
             }
 
             CTInAppTypeCustomCodeTemplate -> {

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Root layout fills the activity content area. It is transparent
+     and does NOT intercept touches, allowing the activity beneath to work. -->
+<com.clevertap.android.sdk.inapp.pip.PiPRootLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pip_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="false"
+    android:focusable="false">
+
+    <!-- PiP compact container - positioned programmatically via x/y -->
+    <FrameLayout
+        android:id="@+id/pip_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="8dp"
+        android:background="@drawable/pip_background"
+        android:clipChildren="true"
+        android:clipToPadding="true">
+
+        <!-- Media area -->
+        <FrameLayout
+            android:id="@+id/pip_media_frame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/pip_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/ct_inapp_img"
+                android:visibility="gone" />
+
+            <com.clevertap.android.sdk.gif.GifImageView
+                android:id="@+id/pip_gif"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/ct_inapp_gif"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:id="@+id/pip_video_frame"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- Close button (top-right) -->
+        <ImageView
+            android:id="@+id/pip_close"
+            android:layout_width="@dimen/pip_control_size"
+            android:layout_height="@dimen/pip_control_size"
+            android:layout_gravity="top|end"
+            android:layout_margin="@dimen/pip_control_margin"
+            android:padding="3dp"
+            android:src="@drawable/pip_ic_close"
+            android:background="@drawable/pip_control_bg"
+            android:contentDescription="@string/ct_inapp_close_btn" />
+
+        <!-- Expand button (top-left) -->
+        <ImageView
+            android:id="@+id/pip_expand"
+            android:layout_width="@dimen/pip_control_size"
+            android:layout_height="@dimen/pip_control_size"
+            android:layout_gravity="top|start"
+            android:layout_margin="@dimen/pip_control_margin"
+            android:padding="3dp"
+            android:src="@drawable/pip_ic_expand"
+            android:background="@drawable/pip_control_bg"
+            android:contentDescription="@string/ct_pip_expand" />
+
+        <!-- Redirect/CTA button (bottom-right) -->
+        <ImageView
+            android:id="@+id/pip_redirect"
+            android:layout_width="@dimen/pip_control_size"
+            android:layout_height="@dimen/pip_control_size"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/pip_control_margin"
+            android:padding="3dp"
+            android:src="@drawable/pip_ic_redirect"
+            android:background="@drawable/pip_control_bg"
+            android:contentDescription="@string/ct_pip_cta"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Expanded container - initially hidden -->
+    <include layout="@layout/inapp_pip_expanded" />
+
+</com.clevertap.android.sdk.inapp.pip.PiPRootLayout>

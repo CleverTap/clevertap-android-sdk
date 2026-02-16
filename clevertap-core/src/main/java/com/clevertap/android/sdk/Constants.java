@@ -197,6 +197,9 @@ public interface Constants {
     String KEY_URL = "url";
     String KEY_ALT_TEXT= "alt_text";
     String KEY_BUTTONS = "buttons";
+    String KEY_PIP_SIZE = "pipSize";
+    String KEY_PIP_POSITION = "pipPosition";
+    String KEY_PIP_ANIMATION = "pipAnimation";
     String KEY_CUSTOM_HTML = "custom-html";
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";

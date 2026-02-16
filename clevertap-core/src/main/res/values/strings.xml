@@ -13,4 +13,7 @@
     <string name="ct_inapp_img">Inapp Image</string>
     <string name="ct_inapp_media">Inapp Media</string>
     <string name="ct_inapp_gif">Inapp Gif</string>
+    <string name="ct_pip_expand">Expand</string>
+    <string name="ct_pip_collapse">Collapse</string>
+    <string name="ct_pip_cta">Open link</string>
 </resources>

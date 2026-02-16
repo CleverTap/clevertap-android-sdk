@@ -17,6 +17,7 @@ enum class CTInAppType(private val type: String) {
     CTInAppTypeInterstitialImageOnly("interstitial-image"),
     CTInAppTypeHalfInterstitialImageOnly("half-interstitial-image"),
     CTInAppTypeCustomCodeTemplate("custom-code"),
+    CTInAppTypePiP("pip"),
     UNKNOWN("");
 
     override fun toString(): String {
@@ -42,6 +43,7 @@ enum class CTInAppType(private val type: String) {
                 "interstitial-image" -> CTInAppTypeInterstitialImageOnly
                 "half-interstitial-image" -> CTInAppTypeHalfInterstitialImageOnly
                 "custom-code" -> CTInAppTypeCustomCodeTemplate
+                "pip" -> CTInAppTypePiP
                 else -> UNKNOWN
             }
         }

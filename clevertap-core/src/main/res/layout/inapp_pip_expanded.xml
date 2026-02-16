@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pip_expanded_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#BB000000"
+    android:visibility="gone"
+    android:clickable="true"
+    android:focusable="true">
+
+    <RelativeLayout
+        android:id="@+id/pip_expanded_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="24dp"
+        android:background="@drawable/pip_expanded_background"
+        android:clipChildren="true"
+        android:clipToPadding="true">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/pip_expanded_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="48dp"
+            android:textSize="@dimen/txt_size_inapp_title"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Collapse button (top-right) -->
+        <ImageView
+            android:id="@+id/pip_collapse"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="8dp"
+            android:padding="3dp"
+            android:src="@drawable/pip_ic_collapse"
+            android:background="@drawable/pip_control_bg"
+            android:contentDescription="@string/ct_pip_collapse" />
+
+        <!-- Media container -->
+        <FrameLayout
+            android:id="@+id/pip_expanded_media_frame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pip_expanded_title"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp">
+
+            <ImageView
+                android:id="@+id/pip_expanded_image"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/ct_inapp_img"
+                android:visibility="gone" />
+
+            <com.clevertap.android.sdk.gif.GifImageView
+                android:id="@+id/pip_expanded_gif"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/ct_inapp_gif"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:id="@+id/pip_expanded_video_frame"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- Message -->
+        <TextView
+            android:id="@+id/pip_expanded_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/pip_expanded_media_frame"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:textSize="@dimen/txt_size_inapp_message"
+            android:maxLines="4"
+            android:ellipsize="end" />
+
+        <!-- CTA Buttons (bottom) -->
+        <LinearLayout
+            android:id="@+id/pip_expanded_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/pip_expanded_button1"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:layout_weight="1"
+                android:textSize="@dimen/txt_size_inapp_button"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/pip_expanded_button2"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:layout_weight="1"
+                android:textSize="@dimen/txt_size_inapp_button"
+                android:visibility="gone" />
+        </LinearLayout>
+    </RelativeLayout>
+</FrameLayout>
