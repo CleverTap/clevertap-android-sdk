@@ -3,10 +3,13 @@ package com.clevertap.android.geofence;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
 import androidx.annotation.MainThread;
 import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.android.gms.location.LocationResult;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -63,8 +66,7 @@ public class CTLocationUpdateReceiver extends BroadcastReceiver {
                                     "Timeout location receiver execution limit of 10 secs");
                         } catch (Exception e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Exception while processing location receiver intent");
-                            e.printStackTrace();
+                                    "Exception while processing location receiver intent", e);
                         }
 
                         finishPendingIntent(result);
@@ -85,8 +87,7 @@ public class CTLocationUpdateReceiver extends BroadcastReceiver {
             finishPendingIntent(result);
 
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Exception while processing location updates receiver intent");
-            e.printStackTrace();
+                    "Exception while processing location updates receiver intent", e);
         }
 
         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,

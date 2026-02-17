@@ -5,9 +5,11 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.model.CTGeofence;
 import com.google.android.gms.location.Geofence;
@@ -17,6 +19,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +57,7 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
     @WorkerThread
     @Override
     public void addAllGeofence(@Nullable List<CTGeofence> fenceList,
-            @NonNull final OnSuccessListener onSuccessListener) {
+                               @NonNull final OnSuccessListener onSuccessListener) {
 
         if (fenceList == null || fenceList.isEmpty()) {
             return;
@@ -77,8 +80,7 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
 
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to add geofences for monitoring");
-            e.printStackTrace();
+                    "Failed to add geofences for monitoring", e);
         } finally {
             onSuccessListener.onSuccess(aVoid);
         }
@@ -97,7 +99,7 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
     @WorkerThread
     @Override
     public void removeAllGeofence(@Nullable List<String> fenceIdList,
-            @NonNull final OnSuccessListener onSuccessListener) {
+                                  @NonNull final OnSuccessListener onSuccessListener) {
 
         if (fenceIdList == null || fenceIdList.isEmpty()) {
             return;
@@ -112,8 +114,7 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
 
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to remove registered geofences");
-            e.printStackTrace();
+                    "Failed to remove registered geofences", e);
         } finally {
             onSuccessListener.onSuccess(aVoid);
         }
@@ -149,8 +150,7 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
 
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to remove registered geofences");
-            e.printStackTrace();
+                    "Failed to remove registered geofences", e);
         }
     }
 

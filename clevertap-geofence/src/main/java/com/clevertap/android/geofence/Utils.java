@@ -159,8 +159,7 @@ class Utils {
             }
         } catch (Exception e) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Could not convert JSON to GeofenceIdList - " + e.getMessage());
-            e.printStackTrace();
+                    "Could not convert JSON to GeofenceIdList", e);
         }
         return geofenceIdList;
     }
@@ -263,7 +262,8 @@ class Utils {
                 jsonArray.put(arr.getJSONObject(i));
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Failed to create subArray from JSONArray", e);
         }
 
         return jsonArray;

@@ -3,7 +3,9 @@ package com.clevertap.android.geofence;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
 import androidx.annotation.MainThread;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -54,11 +56,10 @@ public class CTGeofenceReceiver extends BroadcastReceiver {
                         }
                     } catch (TimeoutException e) {
                         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Timeout geofence receiver execution limit of 10 secs");
+                                "Timeout geofence receiver execution limit of 8 secs", e);
                     } catch (Exception e) {
                         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Exception while processing geofence receiver intent");
-                        e.printStackTrace();
+                                "Exception while processing geofence receiver intent", e);
                     }
 
                     if (result != null) {
@@ -81,8 +82,7 @@ public class CTGeofenceReceiver extends BroadcastReceiver {
             }
 
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Exception while processing geofence receiver intent");
-            e.printStackTrace();
+                    "Exception while processing geofence receiver intent", e);
         }
 
         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,

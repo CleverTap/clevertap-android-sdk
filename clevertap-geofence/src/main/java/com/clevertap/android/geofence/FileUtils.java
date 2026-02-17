@@ -36,9 +36,8 @@ public class FileUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "deleteFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
+                    "deleteFileOnInternalStorage: failed " + dirName, e);
         }
     }
 
@@ -115,9 +114,8 @@ public class FileUtils {
             CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, fileName
                     + ": writeFileOnInternalStorage: successful");
         } catch (Exception e) {
-            e.printStackTrace();
             CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
+                    "writeFileOnInternalStorage: failed", e);
         }
 
         return isWriteSuccessful;

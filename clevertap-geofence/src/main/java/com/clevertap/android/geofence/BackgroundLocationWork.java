@@ -2,16 +2,19 @@ package com.clevertap.android.geofence;
 
 import android.content.Context;
 import android.location.Location;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.work.ListenableWorker;
 import androidx.work.WorkerParameters;
+
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
 import com.clevertap.android.geofence.interfaces.CTLocationCallback;
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.common.util.concurrent.ListenableFuture;
+
 import java.util.concurrent.Future;
 
 /**
@@ -69,12 +72,11 @@ public class BackgroundLocationWork extends ListenableWorker {
                                     }
                                 } catch (Exception e) {
                                     CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                            "Exception while processing geofence receiver intent");
+                                            "Exception while processing geofence receiver intent", e);
                                     if (cleverTapApi != null) {
                                         cleverTapApi.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
                                                 "Exception while processing geofence receiver intent");
                                     }
-                                    e.printStackTrace();
                                 }
 
                                 completer.set(Result.success());
