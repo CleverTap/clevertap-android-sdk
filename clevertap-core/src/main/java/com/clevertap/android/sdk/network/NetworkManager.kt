@@ -347,8 +347,7 @@ internal class NetworkManager constructor(
             responseFailureCount++
             logger.debug(
                 config.accountId,
-                "An exception occurred while sending the queue, will retry: "
-            )
+                "An exception occurred while sending the queue, will retry: ", e)
             if (callbackManager.failureFlushListener != null) {
                 callbackManager.failureFlushListener.failureFlush(context)
             }
@@ -419,7 +418,7 @@ internal class NetworkManager constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.debug(config.accountId, "An exception occurred while defining templates.")
+            logger.debug(config.accountId, "An exception occurred while defining templates.", e)
             return false
         }
     }
@@ -457,8 +456,7 @@ internal class NetworkManager constructor(
         } catch (e: Exception) {
             logger.debug(
                 config.accountId,
-                "An exception occurred while fetching the inapp payload from URL"
-            )
+                "An exception occurred while fetching the inapp payload from URL" , e)
             return null
         }
     }
@@ -722,13 +720,11 @@ internal class NetworkManager constructor(
             } catch (e: JSONException) {
                 logger.verbose(
                     config.accountId,
-                    "Encountered an exception while parsing the push notification viewed event queue"
-                )
+                    "Encountered an exception while parsing the push notification viewed event queue", e)
             } catch (e: Exception) {
                 logger.verbose(
                     config.accountId,
-                    "Exception occurred while notifying push impression listeners"
-                )
+                    "Exception occurred while notifying push impression listeners" , e)
             }
         }
 

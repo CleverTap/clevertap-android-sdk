@@ -48,7 +48,7 @@ public class FileUtils {
             }
         } catch (Exception e) {
             config.getLogger().verbose(config.getAccountId(),
-                    "writeFileOnInternalStorage: failed" + dirName, e);
+                    "deleteDirectory: failed: "  + dirName, e);
         }
     }
 
@@ -69,7 +69,7 @@ public class FileUtils {
             }
         } catch (Exception e) {
             config.getLogger().verbose(config.getAccountId(),
-                    "writeFileOnInternalStorage: failed" + fileName, e);
+                    "deleteFile: failed: "  + fileName, e);
         }
     }
 
@@ -103,7 +103,7 @@ public class FileUtils {
             content = stringBuilder.toString();
         } catch (Exception e) {
             config.getLogger()
-                    .verbose(config.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
+                    .verbose(config.getAccountId(), "readFromFile: failed for " + fileNameWithPath, e);
             //Log your error with Log.e
         }finally {
             if (inputStream != null) {
@@ -141,7 +141,7 @@ public class FileUtils {
             }
         } catch (Exception e) {
             config.getLogger().verbose(config.getAccountId(),
-                    "writeFileOnInternalStorage: failed", e);
+                    "writeJsonToFile: failed for dir=" + dirName + ", file=" + fileName, e);
         }finally {
             if(writer != null){
                 writer.close();
