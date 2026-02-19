@@ -271,7 +271,7 @@ internal class InAppController(
         data.putString(Constants.KEY_C2A, callToAction)
 
         // Extract and add deep link for attribution
-        val deepLink = extractDeepLink(inAppNotification, action)
+        val deepLink = extractDeepLink(action)
         if (!deepLink.isNullOrEmpty()) {
             data.putString(Constants.DEEP_LINK_KEY, deepLink)
         }
@@ -1087,67 +1087,21 @@ internal class InAppController(
     }
 
     /**
-     * Extracts the deep link URL from an InApp notification action.
+     * Extracts the deep link URL from an InApp action for wzrk_dl attribution.
      *
-     * Priority order:
-     * 1. Button-level deep link (CTInAppAction.actionUrl) - for multi-CTA scenarios
-     * 2. Template-level deep link (CTInAppNotification.customInAppUrl) - for image-only and HTML templates
+     * The deep link is taken from the action URL when the action type is OPEN_URL.
+     * This covers button clicks in both native and HTML InApps (via the JS bridge).
      *
-     * @param inAppNotification The InApp notification being acted upon
      * @param action The action being triggered
-     * @return The deep link URL, or null if no valid deep link exists
+     * @return The deep link URL, or null if the action has no URL
      */
-    private fun extractDeepLink(
-        inAppNotification: CTInAppNotification,
-        action: CTInAppAction
-    ): String? {
-        // Priority 1: Button-level deep link (for CTA buttons with OPEN_URL action)
+    private fun extractDeepLink(action: CTInAppAction): String? {
         if (action.type == InAppActionType.OPEN_URL) {
             val actionUrl = action.actionUrl
             if (!actionUrl.isNullOrEmpty()) {
                 return actionUrl
             }
         }
-
-        // Priority 2: Template-level deep link (for image-only, HTML templates)
-        val customInAppUrl = inAppNotification.customInAppUrl
-        if (!customInAppUrl.isNullOrEmpty() && shouldUseTemplateUrl(inAppNotification.inAppType)) {
-            return customInAppUrl
-        }
-
         return null
-    }
-
-    /**
-     * Determines if the template-level URL should be used for wzrk_dl.
-     *
-     * Template-level URLs are used for:
-     * - Image-only templates (Cover, Interstitial, Half-Interstitial)
-     * - HTML templates (Cover, Interstitial, Half-Interstitial, Header, Footer)
-     *
-     * Template-level URLs are NOT used for:
-     * - Native templates with CTA buttons (button URLs take precedence)
-     * - Ratings, Lead Generation (no navigation URLs)
-     * - Custom Code templates (handled separately)
-     *
-     * @param inAppType The InApp template type
-     * @return true if template-level URL should be used, false otherwise
-     */
-    private fun shouldUseTemplateUrl(inAppType: CTInAppType?): Boolean {
-        return when (inAppType) {
-            // Image-only templates - use template URL
-            CTInAppType.CTInAppTypeCoverImageOnly,
-            CTInAppType.CTInAppTypeInterstitialImageOnly,
-            CTInAppType.CTInAppTypeHalfInterstitialImageOnly,
-            // HTML templates - use template URL
-            CTInAppType.CTInAppTypeCoverHTML,
-            CTInAppType.CTInAppTypeInterstitialHTML,
-            CTInAppType.CTInAppTypeHalfInterstitialHTML,
-            CTInAppType.CTInAppTypeHeaderHTML,
-            CTInAppType.CTInAppTypeFooterHTML -> true
-
-            // All other templates - do NOT use template URL
-            else -> false
-        }
     }
 }
