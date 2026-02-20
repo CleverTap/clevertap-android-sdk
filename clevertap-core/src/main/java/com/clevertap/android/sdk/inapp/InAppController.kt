@@ -270,6 +270,12 @@ internal class InAppController(
         data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.campaignId)
         data.putString(Constants.KEY_C2A, callToAction)
 
+        // Extract and add deep link for attribution
+        val deepLink = extractDeepLink(action)
+        if (!deepLink.isNullOrEmpty()) {
+            data.putString(Constants.DEEP_LINK_KEY, deepLink)
+        }
+
         // send clicked event
         if (!inAppNotification.isLocalInApp) {
             analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data)
@@ -1078,5 +1084,24 @@ internal class InAppController(
                 put("tgtId", targetId)
             })
         }
+    }
+
+    /**
+     * Extracts the deep link URL from an InApp action for wzrk_dl attribution.
+     *
+     * The deep link is taken from the action URL when the action type is OPEN_URL.
+     * This covers button clicks in both native and HTML InApps (via the JS bridge).
+     *
+     * @param action The action being triggered
+     * @return The deep link URL, or null if the action has no URL
+     */
+    private fun extractDeepLink(action: CTInAppAction): String? {
+        if (action.type == InAppActionType.OPEN_URL) {
+            val actionUrl = action.actionUrl
+            if (!actionUrl.isNullOrEmpty()) {
+                return actionUrl
+            }
+        }
+        return null
     }
 }
