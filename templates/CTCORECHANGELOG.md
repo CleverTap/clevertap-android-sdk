@@ -1,4 +1,17 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.0.0 (February 20, 2026)
+#### New Features
+* **Android 16 Support:** Adds support for Android 16, making the SDK compliant with Android 16 requirements. Details [here](https://developer.android.com/about/versions/16/summary)
+* **Enhanced Push Delivery Tracking:** Adds tracking for image download failure reasons along with `wzrk_bpds`, providing better insights into push notification delivery issues.
+* **InApp Deep Link Attribution:** Adds deep link URL capture in InApp notification click events, providing consistent attribution with Push notifications. Supports button-level deep links for CTA clicks and template-level deep links for image-only and HTML templates.
+
+#### Improvements
+* Removes all `printStackTrace` calls across the SDK to address security vulnerability concerns.
+* Moves Install Referrer processing off the main thread to prevent ANRs.
+
+#### Bug Fixes
+* Fixes a race condition that could cause an `Activity` `NullPointerException`.
+
 ### Version 7.8.0 (January 22, 2026)
 #### New Features
 * **Nested Objects Ingestion:** Adds support for ingestion of nested objects in both event and profile properties, enabling richer engagement through more structured analytics. Please contact the `CleverTap` team to enable it for your account.
