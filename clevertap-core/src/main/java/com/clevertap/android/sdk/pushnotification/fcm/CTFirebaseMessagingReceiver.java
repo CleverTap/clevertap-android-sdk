@@ -92,7 +92,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                         "have already informed OS to kill receiver, can not inform again else OS will get angry :-O");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.d(TAG, "Error finishing receiver and canceling timer", e);
         }
     }
 
@@ -164,8 +164,7 @@ public class CTFirebaseMessagingReceiver extends BroadcastReceiver implements No
                         }
                         //We are done flushing events
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        Logger.v(TAG, "Failed executing CTRM flushQueueSync thread.", e);
+                        Logger.d(TAG, "Failed executing CTRM flushQueueSync thread.", e);
                     } finally {
                         finishReceiverAndCancelTimer("flush from receiver is done!");
                     }

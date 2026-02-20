@@ -819,6 +819,139 @@ class InAppControllerTest {
         )
     }
 
+    // Deep Link Attribution Tests
+
+    @Test
+    fun `inAppActionTriggered should include wzrk_dl for button with OPEN_URL action`() {
+        val inAppController = createInAppController()
+        val deepLinkUrl = "https://example.com/deep-link"
+        val callToAction = "Click Here"
+
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.OPEN_URL}",
+            "${Constants.KEY_ANDROID}": "$deepLinkUrl"
+        }
+        """.trimIndent()
+
+        val inApp = getInAppWithAction(actionJsonString)
+        val action = CTInAppAction.createFromJson(JSONObject(actionJsonString))!!
+
+        val result = inAppController.inAppNotificationActionTriggered(
+            inApp, action, callToAction, null, null
+        )
+
+        assertEquals(deepLinkUrl, result.getString(Constants.DEEP_LINK_KEY))
+        assertEquals(callToAction, result.getString(Constants.KEY_C2A))
+    }
+
+    @Test
+    fun `inAppActionTriggered should NOT include wzrk_dl for CLOSE action`() {
+        val inAppController = createInAppController()
+        val callToAction = "Close"
+
+        val inApp = getInAppWithAction("""{"${Constants.KEY_TYPE}": "close"}""")
+
+        val result = inAppController.inAppNotificationActionTriggered(
+            inApp, CTInAppAction.createCloseAction(), callToAction, null, null
+        )
+
+        assertNull(result.getString(Constants.DEEP_LINK_KEY))
+        assertEquals(callToAction, result.getString(Constants.KEY_C2A))
+    }
+
+    @Test
+    fun `inAppActionTriggered should NOT include wzrk_dl for KEY_VALUES action`() {
+        every { mockCallbackManager.getInAppNotificationButtonListener() } returns mockk(relaxed = true)
+        val inAppController = createInAppController()
+        val callToAction = "Submit"
+
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.KEY_VALUES}",
+            "${Constants.KEY_KV}": {"key1": "value1"}
+        }
+        """.trimIndent()
+
+        val inApp = getInAppWithAction(actionJsonString)
+        val action = CTInAppAction.createFromJson(JSONObject(actionJsonString))!!
+
+        val result = inAppController.inAppNotificationActionTriggered(
+            inApp, action, callToAction, null, null
+        )
+
+        assertNull(result.getString(Constants.DEEP_LINK_KEY))
+        assertEquals(callToAction, result.getString(Constants.KEY_C2A))
+    }
+
+    @Test
+    fun `inAppActionTriggered should NOT include wzrk_dl for empty actionUrl`() {
+        val inAppController = createInAppController()
+        val callToAction = "Click"
+
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.OPEN_URL}",
+            "${Constants.KEY_ANDROID}": ""
+        }
+        """.trimIndent()
+
+        val inApp = getInAppWithAction(actionJsonString)
+        val action = CTInAppAction.createFromJson(JSONObject(actionJsonString))!!
+
+        val result = inAppController.inAppNotificationActionTriggered(
+            inApp, action, callToAction, null, null
+        )
+
+        assertNull(result.getString(Constants.DEEP_LINK_KEY))
+        assertEquals(callToAction, result.getString(Constants.KEY_C2A))
+    }
+
+    @Test
+    fun `inAppActionTriggered should verify analytics event includes wzrk_dl`() {
+        val inAppController = createInAppController()
+        val deepLinkUrl = "https://example.com/deep-link"
+        val callToAction = "Click Here"
+
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.OPEN_URL}",
+            "${Constants.KEY_ANDROID}": "$deepLinkUrl"
+        }
+        """.trimIndent()
+
+        val inAppJson = JSONObject("""
+        {
+            "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeCover}",
+            "${Constants.NOTIFICATION_ID_TAG}": "test-campaign-123",
+            "${Constants.KEY_BUTTONS}": [{
+                "${Constants.KEY_TEXT}": "$callToAction",
+                "${Constants.KEY_ACTIONS}": $actionJsonString
+            }]
+        }
+        """.trimIndent())
+
+        val inApp = CTInAppNotification(inAppJson, false)
+        val action = CTInAppAction.createFromJson(JSONObject(actionJsonString))!!
+
+        inAppController.inAppNotificationActionTriggered(
+            inApp, action, callToAction, null, null
+        )
+
+        // Verify analytics manager was called with Bundle containing wzrk_dl
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(
+                eq(true),
+                eq(inApp),
+                match { bundle ->
+                    bundle.getString(Constants.DEEP_LINK_KEY) == deepLinkUrl &&
+                    bundle.getString(Constants.KEY_C2A) == callToAction &&
+                    bundle.getString(Constants.NOTIFICATION_ID_TAG) == "test-campaign-123"
+                }
+            )
+        }
+    }
+
     companion object {
         private const val EXCLUDED_ACTIVITY_NAME = "ExcludedActivity"
     }

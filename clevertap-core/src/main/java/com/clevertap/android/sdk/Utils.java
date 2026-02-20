@@ -56,12 +56,12 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class Utils {
+    private static final String TAG = "Utils";
 
     private static final Pattern normalizedNameExcludePattern = Pattern.compile("\\s+");
 
@@ -99,8 +99,7 @@ public final class Utils {
                 try {
                     hashMapArrayList.add(convertJSONObjectToHashMap(jsonArray.getJSONObject(i)));
                 } catch (JSONException e) {
-                    Logger.v("Could not convert JSONArray of JSONObjects to ArrayList of HashMaps - " + e
-                            .getMessage());
+                    Logger.v(TAG, "Could not convert JSONArray of JSONObjects to ArrayList of HashMaps" ,e);
                 }
             }
         }
@@ -114,7 +113,7 @@ public final class Utils {
                 try {
                     listdata.add(array.getString(i));
                 } catch (JSONException e) {
-                    Logger.v("Could not convert JSONArray to ArrayList - " + e.getMessage());
+                    Logger.v(TAG, "Could not convert JSONArray to ArrayList",e);
                 }
             }
         }
@@ -209,14 +208,14 @@ public final class Utils {
 
         int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
+            if (hasPermission(context, Manifest.permission.READ_BASIC_PHONE_STATE) || hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
                 try {
                     networkType = teleMan.getDataNetworkType();
                 } catch (SecurityException se) {
-                    Logger.d("Security Exception caught while fetch network type" + se.getMessage());
+                    Logger.d(TAG, "Security Exception caught while fetch network type",se);
                 }
             } else {
-                Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
+                Logger.d(TAG , "READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission not asked by the app or not granted by the user");
             }
         } else {
             networkType = teleMan.getNetworkType();
@@ -314,7 +313,7 @@ public final class Utils {
             }
         } catch (Exception e) {
             config.getLogger().debug(config.getAccountId(),
-                    "Couldn't download gif for notification: " + e.getMessage());
+                    "Couldn't download gif for notification: " ,e);
             return null;
         }
     }
@@ -417,7 +416,7 @@ public final class Utils {
             }
         } catch (Exception e) {
             config.getLogger().debug(config.getAccountId(),
-                    "Error during animated image cleanup: " + e.getMessage());
+                    "Error during animated image cleanup: ",e);
         }
     }
 
@@ -466,12 +465,12 @@ public final class Utils {
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
                 if (serviceInfo.name.equals(clazz.getName())) {
-                    Logger.v("Service " + serviceInfo.name + " found");
+                    Logger.v(TAG, "Service " + serviceInfo.name + " found");
                     return true;
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
-            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
+            Logger.d(TAG, "Intent Service name not found exception - " ,e);
         }
         return false;
     }
@@ -542,21 +541,21 @@ public final class Utils {
     public static boolean validateCTID(String cleverTapID) {
         if (cleverTapID == null) {
             Logger.i(
-                    "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL.");
+                    TAG, "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL.");
             return false;
         }
         if (cleverTapID.isEmpty()) {
             Logger.i(
-                    "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty.");
+                   TAG,  "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty.");
             return false;
         }
         if (cleverTapID.length() > 64) {
-            Logger.i("Custom CleverTap ID passed is greater than 64 characters. ");
+            Logger.i(TAG, "Custom CleverTap ID passed is greater than 64 characters. ");
             return false;
         }
         if (!cleverTapID.matches("[=|<>;+.A-Za-z0-9()!:$@_-]*")) {
             Logger.i(
-                    "Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - ");
+                   TAG, "Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - ");
             return false;
         }
         return true;
@@ -586,7 +585,7 @@ public final class Utils {
             }
             return DownloadedBitmapFactory.INSTANCE.successBitmap(drawableToBitmap(logo), 0, null);
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.v(TAG, "Failed to get app logo, falling back to app icon", e);
             // Try to get the app icon now
             // No error handling here - handle upstream
             return DownloadedBitmapFactory.INSTANCE.successBitmap(
@@ -640,7 +639,7 @@ public final class Utils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.v(TAG, "Error checking if main process", e);
         }
         return false;
     }

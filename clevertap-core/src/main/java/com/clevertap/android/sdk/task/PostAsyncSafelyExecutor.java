@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.task;
 
+import com.clevertap.android.sdk.Logger;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -17,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 class PostAsyncSafelyExecutor implements ExecutorService {
 
     private long EXECUTOR_THREAD_ID = 0;
+    private static final String TAG = "PostAsyncSafelyExecutor";
 
     void setExecutor(final ExecutorService executor) {
         this.executor = executor;
@@ -55,7 +58,7 @@ class PostAsyncSafelyExecutor implements ExecutorService {
 
     @Override
     public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks, final long timeout,
-            final TimeUnit unit)
+                                         final TimeUnit unit)
             throws UnsupportedOperationException {
         throw new UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAll: This method is not supported");
     }
@@ -103,7 +106,7 @@ class PostAsyncSafelyExecutor implements ExecutorService {
             try {
                 task.call();
             } catch (Exception e) {
-                e.printStackTrace();
+                Logger.d(TAG, "Error executing task synchronously", e);
             }
         } else {
             future = executor.submit(new Callable<T>() {
