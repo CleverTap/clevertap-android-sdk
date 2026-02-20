@@ -13,10 +13,12 @@ object DownloadedBitmapFactory {
      * Creates a DownloadedBitmap instance with a null bitmap and the provided status.
      *
      * @param status The status indicating the result of the download operation.
+     * @param failureReason Optional reason describing why the download failed.
      * @return A DownloadedBitmap instance with a null bitmap and the provided status.
      */
-    fun nullBitmapWithStatus(status: Status): DownloadedBitmap {
-        return DownloadedBitmap(null, status, -1)
+    @JvmOverloads
+    fun nullBitmapWithStatus(status: Status, failureReason: String? = null): DownloadedBitmap {
+        return DownloadedBitmap(null, status, -1, null, failureReason)
     }
 
 

@@ -41,8 +41,9 @@ class BitmapInputStreamReader(
             // might be -1: server did not report the length
             val fileLength = connection.contentLength
             if (fileLength != -1 && fileLength != totalBytesRead) {
-                Logger.d("File not loaded completely not going forward. URL was: ${connection.url}")
-                return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+                val reason = "Incomplete Download"
+                Logger.d("File not loaded completely not going forward. URL was: ${connection.url}, Reason: $reason")
+                return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
             }
         }
 
