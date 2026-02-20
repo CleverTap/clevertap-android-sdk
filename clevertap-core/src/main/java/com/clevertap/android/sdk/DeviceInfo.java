@@ -26,6 +26,7 @@ import android.view.Display;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowMetrics;
+
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -41,6 +42,8 @@ import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 
+import org.json.JSONObject;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
@@ -48,12 +51,14 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
 
+    private static final String TAG = "DeviceInfo";
+
     private class DeviceCachedInfo {
+
 
         private final static String STANDBY_BUCKET_ACTIVE = "active";
         private final static String STANDBY_BUCKET_FREQUENT = "frequent";
@@ -130,7 +135,8 @@ public class DeviceInfo {
             WindowManager wm = getWindowManager();
 
             if (wm == null) {
-                Logger.v("WindowManager is null, returning zero dimension for width/height");
+                getConfigLogger().verbose(config.getAccountId(),
+                        "WindowManager is null, returning zero dimension for width/height");
                 return new WindowSize(0, 0, 0);
             }
 
@@ -193,7 +199,7 @@ public class DeviceInfo {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionCode;
             } catch (PackageManager.NameNotFoundException e) {
-                Logger.d("Unable to get app build");
+                getConfigLogger().debug(config.getAccountId(), "Unable to get app build", e);
             }
             return 0;
         }
@@ -229,20 +235,20 @@ public class DeviceInfo {
         }
 
         /**
-         *  This method is used for devices above API 28
-            This method gets the standby values for app.Standby buckets are divided into the following:-
-            STANDBY_BUCKET_ACTIVE - The app was used very recently, currently in use or likely to be used very soon.
-            STANDBY_BUCKET_FREQUENT - The app was used in the last few days and/or likely to be used in the next few days.
-            STANDBY_BUCKET_RARE - The app has not be used for several days and/or is unlikely to be used for several days.
-            STANDBY_BUCKET_RESTRICTED - The app has not be used for several days, is unlikely to be used for several days, and has
-                                        been misbehaving in some manner.
-            STANDBY_BUCKET_WORKING_SET - The app was used recently and/or likely to be used in the next few hours.
-
-            @return one of the possible String value of AppStandbyBucket(). If no AppBucket info is found,
-                    returns empty String
-        */
+         * This method is used for devices above API 28
+         * This method gets the standby values for app.Standby buckets are divided into the following:-
+         * STANDBY_BUCKET_ACTIVE - The app was used very recently, currently in use or likely to be used very soon.
+         * STANDBY_BUCKET_FREQUENT - The app was used in the last few days and/or likely to be used in the next few days.
+         * STANDBY_BUCKET_RARE - The app has not be used for several days and/or is unlikely to be used for several days.
+         * STANDBY_BUCKET_RESTRICTED - The app has not be used for several days, is unlikely to be used for several days, and has
+         * been misbehaving in some manner.
+         * STANDBY_BUCKET_WORKING_SET - The app was used recently and/or likely to be used in the next few hours.
+         *
+         * @return one of the possible String value of AppStandbyBucket(). If no AppBucket info is found,
+         * returns empty String
+         */
         @RequiresApi(api = Build.VERSION_CODES.P)
-        private String getAppBucket(){
+        private String getAppBucket() {
             UsageStatsManager usm = (UsageStatsManager) context.getSystemService(USAGE_STATS_SERVICE);
             switch (usm.getAppStandbyBucket()) {
                 case UsageStatsManager.STANDBY_BUCKET_ACTIVE:
@@ -255,7 +261,8 @@ public class DeviceInfo {
                     return STANDBY_BUCKET_RESTRICTED;
                 case UsageStatsManager.STANDBY_BUCKET_WORKING_SET:
                     return STANDBY_BUCKET_WORKING_SET;
-                default: return "";
+                default:
+                    return "";
             }
         }
 
@@ -288,7 +295,7 @@ public class DeviceInfo {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
                 return packageInfo.versionName;
             } catch (PackageManager.NameNotFoundException e) {
-                Logger.d("Unable to get app version");
+                getConfigLogger().debug(config.getAccountId(), "Unable to get app version", e);
             }
             return null;
         }
@@ -346,7 +353,7 @@ public class DeviceInfo {
                     }
                 }
             } catch (Exception e) {
-                Logger.v("Window context creation failed: " + e.getMessage());
+                getConfigLogger().verbose(config.getAccountId(), "Window context creation failed", e);
             }
         }
 
@@ -455,25 +462,22 @@ public class DeviceInfo {
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null
-                Logger.d("Failed to decide whether device is a TV!");
-                e.printStackTrace();
+                Logger.d(TAG, "Failed to decide whether device is a TV!", e);
             }
 
             try {
                 sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
             } catch (Exception e) {
                 // resource not found or context is null
-                Logger.d("Failed to decide whether device is a smart phone or tablet!");
-                e.printStackTrace();
+                Logger.d(TAG, "Failed to decide whether device is a smart phone or tablet!", e);
                 sDeviceType = UNKNOWN;
             }
-
         }
         return sDeviceType;
     }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-            CoreMetaData coreMetaData) {
+               CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;
         this.library = null;

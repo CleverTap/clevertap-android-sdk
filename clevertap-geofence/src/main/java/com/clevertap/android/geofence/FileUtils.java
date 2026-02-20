@@ -2,16 +2,19 @@ package com.clevertap.android.geofence;
 
 import android.content.Context;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import org.json.JSONObject;
 
 @SuppressWarnings("WeakerAccess")
 public class FileUtils {
@@ -36,9 +39,7 @@ public class FileUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "deleteFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
+            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "deleteDirectory failed for dirName: " + dirName, e);
         }
     }
 
@@ -84,15 +85,14 @@ public class FileUtils {
             inputStream.close();
             content = stringBuilder.toString();
         } catch (Exception e) {
-            CTGeofenceAPI.getLogger()
-                    .verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, "[Exception While Reading: " + e.getLocalizedMessage());
+            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Exception while reading file: " + fileNameWithPath, e);
         }
         return content;
     }
 
     @WorkerThread
     static boolean writeJsonToFile(Context context, String dirName, String fileName,
-            @Nullable JSONObject jsonObject) {
+                                   @Nullable JSONObject jsonObject) {
         boolean isWriteSuccessful = false;
         try {
             if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName)) {
@@ -110,16 +110,11 @@ public class FileUtils {
             writer.append(jsonObject.toString());
             writer.flush();
             writer.close();
-
             isWriteSuccessful = true;
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, fileName
-                    + ": writeFileOnInternalStorage: successful");
+            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, fileName + ": writeFileOnInternalStorage: successful");
         } catch (Exception e) {
-            e.printStackTrace();
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
+            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "writeJsonToFile failed for fileName: " + fileName, e);
         }
-
         return isWriteSuccessful;
     }
 }

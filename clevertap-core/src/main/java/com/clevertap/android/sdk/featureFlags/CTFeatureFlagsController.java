@@ -256,9 +256,7 @@ public class CTFeatureFlagsController {
                             getConfigLogger().verbose(getLogTag(), "Feature flags file is empty-" + fileName);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        getConfigLogger().verbose(getLogTag(),
-                                "UnArchiveData failed file- " + fileName + " " + e.getLocalizedMessage());
+                        getConfigLogger().verbose(getLogTag(), "UnArchiveData failed file- " + fileName, e);
                         return false;
                     }
                     return true;
@@ -276,8 +274,7 @@ public class CTFeatureFlagsController {
                 getConfigLogger()
                         .verbose(getLogTag(), "Feature flags saved into file-[" + getCachedFullPath() + "]" + store);
             } catch (Exception e) {
-                e.printStackTrace();
-                getConfigLogger().verbose(getLogTag(), "ArchiveData failed - " + e.getLocalizedMessage());
+                getConfigLogger().verbose(getLogTag(), "ArchiveData failed", e);
             }
         }
     }

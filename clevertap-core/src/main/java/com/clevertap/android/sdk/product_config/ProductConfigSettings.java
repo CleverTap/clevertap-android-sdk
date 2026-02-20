@@ -67,9 +67,8 @@ public class ProductConfigSettings {
                         config.getLogger()
                                 .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Error while resetting settings" + e.getLocalizedMessage());
+                                "Error while resetting settings", e);
                     }
                     return null;
                 }
@@ -104,9 +103,8 @@ public class ProductConfigSettings {
             try {
                 return new JSONObject(content);
             } catch (JSONException e) {
-                e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "LoadSettings failed: " + e.getLocalizedMessage());
+                        "LoadSettings failed", e);
             }
         }
         return null;
@@ -120,9 +118,8 @@ public class ProductConfigSettings {
                 lastFetchedTimeStamp = (long) Double.parseDouble(value);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetLastFetchTimeStampInMillis failed: " + e.getLocalizedMessage());
+                    "GetLastFetchTimeStampInMillis failed", e);
         }
         return lastFetchedTimeStamp;
     }
@@ -165,9 +162,8 @@ public class ProductConfigSettings {
             JSONObject jsonObject = getJsonObject(content);
             populateMapWithJson(jsonObject);
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "LoadSettings failed while reading file: " + e.getLocalizedMessage());
+                    "LoadSettings failed while reading file", e);
         }
     }
 
@@ -184,9 +180,8 @@ public class ProductConfigSettings {
                     Object obj = jsonObject.get(key);
                     value = String.valueOf(obj);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
+                            "Failed loading setting for key " + key, e);
                     continue;
                 }
                 if (!TextUtils.isEmpty(value)) {
@@ -222,9 +217,8 @@ public class ProductConfigSettings {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config setARPValue failed " + e.getLocalizedMessage());
+                            "Product Config setARPValue failed", e);
                 }
             }
         }
@@ -245,9 +239,8 @@ public class ProductConfigSettings {
                 minInterVal = (long) Double.parseDouble(value);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetMinFetchIntervalInSeconds failed: " + e.getLocalizedMessage());
+                    "GetMinFetchIntervalInSeconds failed", e);
         }
         return minInterVal;
     }
@@ -260,9 +253,8 @@ public class ProductConfigSettings {
                 noCallsAllowedInWindow = (int) Double.parseDouble(value);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetNoOfCallsInAllowedWindow failed: " + e.getLocalizedMessage());
+                    "GetNoOfCallsInAllowedWindow failed", e);
         }
         return noCallsAllowedInWindow;
     }
@@ -283,9 +275,8 @@ public class ProductConfigSettings {
                 windowIntervalInMinutes = (int) Double.parseDouble(value);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetWindowIntervalInMinutes failed: " + e.getLocalizedMessage());
+                    "GetWindowIntervalInMinutes failed", e);
         }
         return windowIntervalInMinutes;
     }
@@ -334,9 +325,8 @@ public class ProductConfigSettings {
                     fileUtils.writeJsonToFile(getDirName(),
                             CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
                 } catch (Exception e) {
-                    e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "UpdateConfigToFile failed: " + e.getLocalizedMessage());
+                            "UpdateConfigToFile failed", e);
                     return false;
                 }
                 return true;
