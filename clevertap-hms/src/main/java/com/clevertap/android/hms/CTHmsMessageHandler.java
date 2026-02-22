@@ -51,7 +51,6 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
                 isSuccess = PushNotificationHandler
                         .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.getType());
             } catch (Throwable e) {
-                e.printStackTrace();
                 Logger.d(LOG_TAG, HMS_LOG_TAG + "Error Creating Notification", e);
             }
         }

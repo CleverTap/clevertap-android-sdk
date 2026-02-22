@@ -22,7 +22,6 @@ public class HmsNotificationParser implements INotificationParser<RemoteMessage>
             Logger.d(LOG_TAG, HMS_LOG_TAG + "Found Valid Notification Message ");
             return extras;
         } catch (Throwable e) {
-            e.printStackTrace();
             Logger.d(LOG_TAG, HMS_LOG_TAG + "Invalid Notification Message ", e);
         }
         return null;
