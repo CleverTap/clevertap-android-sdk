@@ -21,4 +21,14 @@ interface InAppVideoPlayerHandle {
     fun setFullscreenClickListener(onClick: () -> Unit)
     fun setMuteClickListener()
     fun videoSurface(): View
+
+    companion object {
+        const val PLAYER_WIDTH_PHONE_DP = 240f
+        const val PLAYER_HEIGHT_PHONE_DP = 134f
+        const val PLAYER_WIDTH_TABLET_DP = 408f
+        const val PLAYER_HEIGHT_TABLET_DP = 299f
+
+        const val VOLUME_MUTED = 0f
+        const val VOLUME_UNMUTED = 1f
+    }
 }

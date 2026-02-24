@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.inapp.fragment
 
-import android.util.TypedValue
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -171,7 +169,6 @@ internal class InAppMediaDelegate(
                     relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility =
                         View.GONE
                 }
-                initFullScreenIconForStream()
                 prepareMedia()
                 playMedia()
                 videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
@@ -180,29 +177,11 @@ internal class InAppMediaDelegate(
                     relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility =
                         View.GONE
                 }
-                initFullScreenIconForStream()
                 prepareMedia()
                 playMedia()
                 videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
             }
         }
-    }
-
-    private fun initFullScreenIconForStream() {
-        val displayMetrics = fragment.resources.displayMetrics
-
-        val iconSide = if (isTablet) {
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30f, displayMetrics).toInt()
-        } else {
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, displayMetrics).toInt()
-        }
-        val iconTop =
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4f, displayMetrics).toInt()
-        val iconRight =
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, displayMetrics).toInt()
-        val layoutParams = FrameLayout.LayoutParams(iconSide, iconSide)
-        layoutParams.gravity = Gravity.END
-        layoutParams.setMargins(0, iconTop, iconRight, 0)
     }
 
     private fun closeFullscreenDialog() {

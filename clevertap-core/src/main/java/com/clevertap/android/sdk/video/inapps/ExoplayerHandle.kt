@@ -71,7 +71,7 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
             setMediaSource(hlsMediaSource)
             prepare()
             repeatMode = Player.REPEAT_MODE_ONE
-            volume = 0f
+            volume = InAppVideoPlayerHandle.VOLUME_MUTED
             seekTo(mediaPosition)
         }
     }
@@ -134,7 +134,7 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         val muteButton = playerView?.findViewById<ImageButton>(R.id.exo_mute) ?: return
         muteButton.setOnClickListener {
             isMuted = !isMuted
-            player?.volume = if (isMuted) 0f else 1f
+            player?.volume = if (isMuted) InAppVideoPlayerHandle.VOLUME_MUTED else InAppVideoPlayerHandle.VOLUME_UNMUTED
             muteButton.setImageResource(
                 if (isMuted) R.drawable.ct_volume_off else R.drawable.ct_volume_on
             )
@@ -165,9 +165,9 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             if (isTablet) {
-                408f
+                InAppVideoPlayerHandle.PLAYER_WIDTH_TABLET_DP
             } else {
-                240f
+                InAppVideoPlayerHandle.PLAYER_WIDTH_PHONE_DP
             },
             context.resources.displayMetrics
         ).toInt()
@@ -180,9 +180,9 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             if (isTablet) {
-                299f
+                InAppVideoPlayerHandle.PLAYER_HEIGHT_TABLET_DP
             } else {
-                134f
+                InAppVideoPlayerHandle.PLAYER_HEIGHT_PHONE_DP
             },
             context.resources.displayMetrics
         ).toInt()
