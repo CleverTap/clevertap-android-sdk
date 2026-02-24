@@ -5,14 +5,29 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
+import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
 
+@UnstableApi
 internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
+
+    private lateinit var mediaDelegate: InAppMediaDelegate
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mediaDelegate = InAppMediaDelegate(
+            fragment = this,
+            inAppNotification = inAppNotification,
+            currentOrientation = currentOrientation,
+            isTablet = inAppNotification.isTablet && isTablet(),
+            resourceProvider = resourceProvider()
+        )
+        mediaDelegate.onCreate()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,25 +46,19 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
         fl.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
 
         val relativeLayout = fl.findViewById<RelativeLayout>(R.id.cover_image_relative_layout)
-        val imageView = relativeLayout.findViewById<ImageView>(R.id.cover_image)
 
-        val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
-        if (mediaForOrientation != null) {
-            if (mediaForOrientation.contentDescription.isNotBlank()) {
-                imageView.contentDescription = mediaForOrientation.contentDescription
-            }
-            val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
-            if (bitmap != null) {
-                imageView.setImageBitmap(bitmap)
-                imageView.tag = 0
-                imageView.setOnClickListener(CTInAppNativeButtonClickListener())
-            }
-        }
+        mediaDelegate.bindVideoFrame(relativeLayout.findViewById(R.id.video_frame))
+        mediaDelegate.setMediaForInApp(
+            relativeLayout,
+            InAppMediaConfig(imageViewId = R.id.cover_image, clickableMedia = true),
+            CTInAppNativeButtonClickListener()
+        )
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
 
         closeImageView.setOnClickListener {
             didDismiss(null)
+            mediaDelegate.clearGif()
             activity?.finish()
         }
 
@@ -60,5 +69,30 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
         }
 
         return inAppView
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mediaDelegate.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mediaDelegate.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mediaDelegate.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mediaDelegate.onStop()
+    }
+
+    override fun cleanup() {
+        super.cleanup()
+        mediaDelegate.cleanup()
     }
 }

@@ -7,16 +7,30 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
+import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
 
+@UnstableApi
 internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
+
+    private lateinit var mediaDelegate: InAppMediaDelegate
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mediaDelegate = InAppMediaDelegate(
+            fragment = this,
+            inAppNotification = inAppNotification,
+            currentOrientation = currentOrientation,
+            isTablet = inAppNotification.isTablet && isTablet(),
+            resourceProvider = resourceProvider()
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,19 +55,11 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
         inAppButtons.add(mainButton)
         val secondaryButton = linearLayout.findViewById<Button>(R.id.cover_button2)
         inAppButtons.add(secondaryButton)
-        val imageView = relativeLayout.findViewById<ImageView>(R.id.backgroundImage)
 
-        val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
-        if (mediaForOrientation != null) {
-            if (mediaForOrientation.contentDescription.isNotBlank()) {
-                imageView.contentDescription = mediaForOrientation.contentDescription
-            }
-            val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
-            if (bitmap != null) {
-                imageView.setImageBitmap(bitmap)
-                imageView.tag = 0
-            }
-        }
+        mediaDelegate.setMediaForInApp(
+            relativeLayout,
+            InAppMediaConfig(imageViewId = R.id.backgroundImage, clickableMedia = false)
+        )
 
         val textView1 = relativeLayout.findViewById<TextView>(R.id.cover_title)
         textView1.text = inAppNotification.title
@@ -86,6 +92,7 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
         closeImageView.setOnClickListener {
             didDismiss(null)
+            mediaDelegate.clearGif()
             activity?.finish()
         }
 
@@ -96,5 +103,25 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
         }
 
         return inAppView
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mediaDelegate.onStart()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mediaDelegate.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mediaDelegate.onStop()
+    }
+
+    override fun cleanup() {
+        super.cleanup()
+        mediaDelegate.cleanup()
     }
 }

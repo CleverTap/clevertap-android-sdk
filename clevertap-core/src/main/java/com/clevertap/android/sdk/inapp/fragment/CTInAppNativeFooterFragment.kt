@@ -12,10 +12,25 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
+import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
+@UnstableApi
 internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() {
+
+    private lateinit var mediaDelegate: InAppMediaDelegate
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mediaDelegate = InAppMediaDelegate(
+            fragment = this,
+            inAppNotification = inAppNotification,
+            currentOrientation = currentOrientation,
+            isTablet = false,
+            resourceProvider = resourceProvider()
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,20 +54,18 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         inAppButtons.add(secondaryButton)
 
         val imageView = linearLayout1.findViewById<ImageView>(R.id.footer_icon)
-        if (!inAppNotification.mediaList.isEmpty()) {
-            val media = inAppNotification.mediaList[0]
-            if (media.contentDescription.isNotBlank()) {
-                imageView.contentDescription = media.contentDescription
-            }
-            val image = resourceProvider().cachedInAppImageV1(media.mediaUrl)
-            if (image != null) {
-                imageView.setImageBitmap(image)
-            } else {
-                imageView.setVisibility(View.GONE)
-            }
-        } else {
-            imageView.setVisibility(View.GONE)
-        }
+        imageView.visibility = View.GONE
+
+        mediaDelegate.setMediaForInApp(
+            relativeLayout,
+            InAppMediaConfig(
+                imageViewId = R.id.footer_icon,
+                clickableMedia = false,
+                useOrientationForImage = false,
+                hideImageViewForNonImageMedia = true,
+                fillVideoFrame = true
+            )
+        )
 
         val textView1 = linearLayout2.findViewById<TextView>(R.id.footer_title)
         textView1.text = inAppNotification.title
@@ -89,5 +102,25 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
             mlp.bottomMargin = insets.bottom
         }
         return inAppView
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mediaDelegate.onStart()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mediaDelegate.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mediaDelegate.onStop()
+    }
+
+    override fun cleanup() {
+        mediaDelegate.cleanup()
+        super.cleanup()
     }
 }
