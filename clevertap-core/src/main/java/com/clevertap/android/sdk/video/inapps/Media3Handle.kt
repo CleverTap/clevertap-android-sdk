@@ -2,9 +2,11 @@ package com.clevertap.android.sdk.video.inapps
 
 import android.content.Context
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import androidx.core.content.res.ResourcesCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -37,6 +39,7 @@ class Media3Handle : InAppVideoPlayerHandle {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
 
+    private var isMuted = true
     private var mediaPosition = 0L
 
     override fun initExoplayer(
@@ -64,6 +67,7 @@ class Media3Handle : InAppVideoPlayerHandle {
             setMediaSource(hlsMediaSource)
             prepare()
             repeatMode = Player.REPEAT_MODE_ONE
+            volume = 0f
             seekTo(mediaPosition)
         }
     }
@@ -79,10 +83,13 @@ class Media3Handle : InAppVideoPlayerHandle {
         val playerWidth = playerWidth(context = context, isTablet = isTablet)
         val playerHeight = playerHeight(context = context, isTablet = isTablet)
 
-        playerView = PlayerView(context).apply {
+        // todo full screen and audio buttons don't show for plain interstitial templates
+        playerView = (LayoutInflater.from(context).inflate(R.layout.ct_media3_inapp_player_view, null) as PlayerView).apply {
             playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
             setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+            // todo
+//            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
             useArtwork = true
             controllerAutoShow = false
             defaultArtwork = ResourcesCompat.getDrawable(
@@ -115,6 +122,25 @@ class Media3Handle : InAppVideoPlayerHandle {
     override fun savePosition() {
         if (player != null) {
             mediaPosition = player!!.currentPosition
+        }
+    }
+
+    override fun setFullscreenClickListener(onClick: () -> Unit) {
+        playerView?.setFullscreenButtonClickListener { onClick() }
+    }
+
+    override fun setMuteClickListener() {
+        val muteButton = playerView?.findViewById<ImageButton>(R.id.exo_mute) ?: return
+        muteButton.setOnClickListener {
+            isMuted = !isMuted
+            player?.volume = if (isMuted) 0f else 1f
+            muteButton.setImageResource(
+                if (isMuted) R.drawable.ct_volume_off else R.drawable.ct_volume_on
+            )
+            muteButton.contentDescription = muteButton.context.getString(
+                if (isMuted) R.string.ct_inbox_unmute_button_content_description
+                else R.string.ct_inbox_mute_button_content_description
+            )
         }
     }
 

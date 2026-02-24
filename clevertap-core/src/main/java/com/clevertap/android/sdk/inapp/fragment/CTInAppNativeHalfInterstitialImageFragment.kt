@@ -9,13 +9,29 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
+import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
 
+@UnstableApi
 internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragment() {
+
+    private lateinit var mediaDelegate: InAppMediaDelegate
+    private var relativeLayout: RelativeLayout? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mediaDelegate = InAppMediaDelegate(
+            fragment = this,
+            inAppNotification = inAppNotification,
+            currentOrientation = currentOrientation,
+            isTablet = inAppNotification.isTablet && isTablet(),
+            resourceProvider = resourceProvider()
+        )
+        mediaDelegate.onCreate()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -33,14 +49,16 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         fl.background = ColorDrawable(-0x45000000)
 
-        val relativeLayout =
-            fl.findViewById<RelativeLayout>(R.id.half_interstitial_image_relative_layout)
-        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
-        val imageView = relativeLayout.findViewById<ImageView>(R.id.half_interstitial_image)
+        relativeLayout = fl.findViewById(R.id.half_interstitial_image_relative_layout)
+        relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
+
+        mediaDelegate.bindVideoFrame(relativeLayout?.findViewById(R.id.video_frame))
+
         when (currentOrientation) {
-            Configuration.ORIENTATION_PORTRAIT -> relativeLayout.getViewTreeObserver()
-                .addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+            Configuration.ORIENTATION_PORTRAIT -> relativeLayout?.getViewTreeObserver()
+                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
                     override fun onGlobalLayout() {
+                        val relativeLayout = relativeLayout ?: return
                         val layoutParams =
                             relativeLayout.layoutParams as FrameLayout.LayoutParams
                         if (inAppNotification.isTablet && isTablet()) {
@@ -63,9 +81,10 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
                     }
                 })
 
-            Configuration.ORIENTATION_LANDSCAPE -> relativeLayout.getViewTreeObserver()
-                .addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+            Configuration.ORIENTATION_LANDSCAPE -> relativeLayout?.getViewTreeObserver()
+                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
                     override fun onGlobalLayout() {
+                        val relativeLayout = relativeLayout ?: return
                         val layoutParams =
                             relativeLayout.layoutParams as FrameLayout.LayoutParams
                         if (!inAppNotification.isTablet || !isTablet()) {
@@ -115,21 +134,16 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
                     }
                 })
         }
-        val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
-        if (mediaForOrientation != null) {
-            if (mediaForOrientation.contentDescription.isNotBlank()) {
-                imageView.contentDescription = mediaForOrientation.contentDescription
-            }
-            val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
-            if (bitmap != null) {
-                imageView.setImageBitmap(bitmap)
-                imageView.tag = 0
-                imageView.setOnClickListener(CTInAppNativeButtonClickListener())
-            }
-        }
+
+        mediaDelegate.setMediaForInApp(
+            relativeLayout,
+            InAppMediaConfig(imageViewId = R.id.half_interstitial_image, clickableMedia = true),
+            CTInAppNativeButtonClickListener()
+        )
 
         closeImageView.setOnClickListener {
             didDismiss(null)
+            mediaDelegate.clearGif()
             activity?.finish()
         }
 
@@ -140,5 +154,30 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
         }
 
         return inAppView
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mediaDelegate.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mediaDelegate.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mediaDelegate.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mediaDelegate.onStop()
+    }
+
+    override fun cleanup() {
+        super.cleanup()
+        mediaDelegate.cleanup()
     }
 }
