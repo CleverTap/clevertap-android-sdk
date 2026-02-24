@@ -29,7 +29,7 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
             isTablet = inAppNotification.isTablet && isTablet(),
             resourceProvider = resourceProvider()
         )
-        mediaDelegate.onCreate()
+        mediaDelegate.initVideoPlayerHandle()
     }
 
     override fun onCreateView(

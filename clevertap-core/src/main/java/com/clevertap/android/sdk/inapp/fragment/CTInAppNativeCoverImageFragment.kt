@@ -26,7 +26,7 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
             isTablet = inAppNotification.isTablet && isTablet(),
             resourceProvider = resourceProvider()
         )
-        mediaDelegate.onCreate()
+        mediaDelegate.initVideoPlayerHandle()
     }
 
     override fun onCreateView(
