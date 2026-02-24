@@ -60,7 +60,7 @@ internal class InAppMediaDelegate(
         }
     }
 
-    fun onCreate() {
+    fun initVideoPlayerHandle() {
         handle = if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
             Media3Handle()
         } else {
