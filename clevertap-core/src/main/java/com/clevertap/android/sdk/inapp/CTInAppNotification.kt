@@ -340,7 +340,7 @@ class CTInAppNotification : Parcelable {
         try {
             id = jsonObject.optString(Constants.INAPP_ID_IN_PAYLOAD, "")
             campaignId = jsonObject.optString(Constants.NOTIFICATION_ID_TAG, "")
-            type = "cover-image" // won't be null based on constructor
+            type = jsonObject.getString(Constants.KEY_TYPE) // won't be null based on constructor
             isLocalInApp = jsonObject.optBoolean(CTLocalInApp.Companion.IS_LOCAL_INAPP, false)
             fallBackToNotificationSettings = jsonObject.optBoolean(
                 CTLocalInApp.Companion.FALLBACK_TO_NOTIFICATION_SETTINGS, false
