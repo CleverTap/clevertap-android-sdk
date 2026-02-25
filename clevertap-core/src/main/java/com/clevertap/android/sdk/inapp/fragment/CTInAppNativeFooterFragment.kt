@@ -123,7 +123,7 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
     }
 
     override fun cleanup() {
-        super.cleanup()
         mediaDelegate.cleanup()
+        super.cleanup()
     }
 }
