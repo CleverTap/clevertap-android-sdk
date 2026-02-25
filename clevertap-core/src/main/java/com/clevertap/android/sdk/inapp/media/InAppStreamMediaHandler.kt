@@ -64,9 +64,7 @@ internal class InAppStreamMediaHandler
         if (config.videoFrameId != 0) {
             videoFrameLayout = relativeLayout?.findViewById(config.videoFrameId)
         }
-        if (config.hideImageViewForNonImageMedia) {
-            relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility = View.GONE
-        }
+        relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility = View.GONE
         prepareMedia()
         playMedia()
         videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)

@@ -68,7 +68,6 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
                 imageViewId = R.id.backgroundImage,
                 clickableMedia = false,
                 useOrientationForImage = false,
-                hideImageViewForNonImageMedia = false,
                 videoFrameId = R.id.video_frame,
                 fillVideoFrame = false
             )

@@ -30,9 +30,7 @@ internal class InAppGifHandler(
             gifImageView?.tag = CLICKABLE_MEDIA_TAG
             gifImageView?.setOnClickListener(clickListener)
         }
-        if (config.hideImageViewForNonImageMedia) {
-            relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility = View.GONE
-        }
+        relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility = View.GONE
     }
 
     override fun onStart() {

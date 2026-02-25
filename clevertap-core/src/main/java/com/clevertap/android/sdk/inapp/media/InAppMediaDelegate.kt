@@ -10,7 +10,6 @@ internal data class InAppMediaConfig(
     val imageViewId: Int,
     val clickableMedia: Boolean,
     val useOrientationForImage: Boolean = true,
-    val hideImageViewForNonImageMedia: Boolean = true,
     val videoFrameId: Int = 0,
     val fillVideoFrame: Boolean = true
 )
