@@ -36,7 +36,6 @@ internal class InAppStreamMediaHandler
     private var fullScreenDialog: ComponentDialog? = null
     private var videoFrameInDialog: FrameLayout? = null
     private var exoPlayerFullscreen = false
-    private var fillVideoFrame = true
 
     private val onBackPressedCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
@@ -60,7 +59,6 @@ internal class InAppStreamMediaHandler
         config: InAppMediaConfig,
         clickListener: View.OnClickListener?
     ) {
-        fillVideoFrame = config.fillVideoFrame
         if (config.videoFrameId != 0) {
             videoFrameLayout = relativeLayout?.findViewById(config.videoFrameId)
         }
@@ -118,13 +116,6 @@ internal class InAppStreamMediaHandler
 
         val handle = handle ?: return
         val videoSurface = handle.videoSurface()
-        if (fillVideoFrame) {
-            videoSurface.layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-
         if (videoFrameLayout?.size == 0) {
             videoFrameLayout?.addView(videoSurface)
         } else {

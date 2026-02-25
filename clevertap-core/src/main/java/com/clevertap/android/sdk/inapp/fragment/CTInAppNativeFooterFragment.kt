@@ -62,7 +62,6 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
                 imageViewId = R.id.footer_icon,
                 clickableMedia = false,
                 useOrientationForImage = false,
-                fillVideoFrame = true
             )
         )
 

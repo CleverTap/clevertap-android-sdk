@@ -63,7 +63,6 @@ internal class CTInAppNativeHeaderFragment : CTInAppBasePartialNativeFragment() 
                 imageViewId = R.id.header_icon,
                 clickableMedia = false,
                 useOrientationForImage = false,
-                fillVideoFrame = true
             )
         )
 

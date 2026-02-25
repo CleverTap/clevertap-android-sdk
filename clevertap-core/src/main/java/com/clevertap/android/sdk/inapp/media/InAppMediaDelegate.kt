@@ -11,7 +11,6 @@ internal data class InAppMediaConfig(
     val clickableMedia: Boolean,
     val useOrientationForImage: Boolean = true,
     val videoFrameId: Int = 0,
-    val fillVideoFrame: Boolean = true
 )
 
 internal fun View.setContentDescriptionIfNotBlank(contentDescription: String) {

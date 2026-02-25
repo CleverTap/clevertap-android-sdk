@@ -69,7 +69,6 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
                 clickableMedia = false,
                 useOrientationForImage = false,
                 videoFrameId = R.id.video_frame,
-                fillVideoFrame = false
             )
         )
         setTitleAndMessage()
