@@ -11,11 +11,11 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
-import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
 import com.clevertap.android.sdk.customviews.CloseImageView
 
-@UnstableApi
 internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragment() {
 
     private lateinit var mediaDelegate: InAppMediaDelegate
@@ -28,9 +28,9 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
             isTablet = inAppNotification.isTablet && isTablet(),
-            resourceProvider = resourceProvider()
+            resourceProvider = resourceProvider(),
+            supportsStreamMedia = true
         )
-        mediaDelegate.initVideoPlayerHandle()
     }
 
     override fun onCreateView(
@@ -51,8 +51,6 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         relativeLayout = fl.findViewById(R.id.half_interstitial_image_relative_layout)
         relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
-
-        mediaDelegate.bindVideoFrame(relativeLayout?.findViewById(R.id.video_frame))
 
         when (currentOrientation) {
             Configuration.ORIENTATION_PORTRAIT -> relativeLayout?.getViewTreeObserver()
@@ -137,13 +135,13 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         mediaDelegate.setMediaForInApp(
             relativeLayout,
-            InAppMediaConfig(imageViewId = R.id.half_interstitial_image, clickableMedia = true),
+            InAppMediaConfig(imageViewId = R.id.half_interstitial_image, clickableMedia = true, videoFrameId = R.id.video_frame),
             CTInAppNativeButtonClickListener()
         )
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaDelegate.clearGif()
+            mediaDelegate.clear()
             activity?.finish()
         }
 

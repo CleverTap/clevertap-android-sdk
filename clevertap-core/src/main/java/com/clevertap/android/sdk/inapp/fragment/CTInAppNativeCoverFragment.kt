@@ -11,12 +11,12 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
-import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
 
-@UnstableApi
 internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
     private lateinit var mediaDelegate: InAppMediaDelegate
@@ -92,7 +92,7 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaDelegate.clearGif()
+            mediaDelegate.clear()
             activity?.finish()
         }
 
@@ -108,6 +108,11 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
     override fun onStart() {
         super.onStart()
         mediaDelegate.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mediaDelegate.onResume()
     }
 
     override fun onPause() {

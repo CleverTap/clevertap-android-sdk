@@ -7,12 +7,12 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
-import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
 
-@UnstableApi
 internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
     private lateinit var mediaDelegate: InAppMediaDelegate
@@ -24,9 +24,9 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
             isTablet = inAppNotification.isTablet && isTablet(),
-            resourceProvider = resourceProvider()
+            resourceProvider = resourceProvider(),
+            supportsStreamMedia = true
         )
-        mediaDelegate.initVideoPlayerHandle()
     }
 
     override fun onCreateView(
@@ -47,10 +47,9 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
         val relativeLayout = fl.findViewById<RelativeLayout>(R.id.cover_image_relative_layout)
 
-        mediaDelegate.bindVideoFrame(relativeLayout.findViewById(R.id.video_frame))
         mediaDelegate.setMediaForInApp(
             relativeLayout,
-            InAppMediaConfig(imageViewId = R.id.cover_image, clickableMedia = true),
+            InAppMediaConfig(imageViewId = R.id.cover_image, clickableMedia = true, videoFrameId = R.id.video_frame),
             CTInAppNativeButtonClickListener()
         )
 
@@ -58,7 +57,7 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaDelegate.clearGif()
+            mediaDelegate.clear()
             activity?.finish()
         }
 

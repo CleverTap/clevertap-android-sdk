@@ -12,11 +12,11 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
-import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
-@UnstableApi
 internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() {
 
     private lateinit var mediaDelegate: InAppMediaDelegate
@@ -109,6 +109,11 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         mediaDelegate.onStart()
     }
 
+    override fun onResume() {
+        super.onResume()
+        mediaDelegate.onResume()
+    }
+
     override fun onPause() {
         super.onPause()
         mediaDelegate.onPause()
@@ -120,7 +125,7 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
     }
 
     override fun cleanup() {
-        mediaDelegate.cleanup()
         super.cleanup()
+        mediaDelegate.cleanup()
     }
 }
