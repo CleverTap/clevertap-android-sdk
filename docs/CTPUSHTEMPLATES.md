@@ -495,7 +495,6 @@ pt_gif_collapsed | Optional | GIF for the collapsed view
 pt_gif_frames_collapsed | Optional | Number of frames to extract from the GIF for the collapsed view
 pt_big_img_collapsed_alt_text | Optional | Alt Text for Image in the collapsed view
 pt_scale_type_collapsed | Optional | ScaleType for the image in the collapsed View ("center_crop"/"fit_center")
-pt_small_view | Optional | Select text-only small view layout (`text_only`)
 pt_dl1 | Optional | Deep Link
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX

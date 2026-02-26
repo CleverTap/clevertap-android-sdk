@@ -1,25 +1,32 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
+import android.view.View
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.ZeroBezelTemplateData
 
 internal open class ZeroBezelSmallContentView(
     context: Context,
-    layoutId: Int,
     renderer: TemplateRenderer,
-    data: ZeroBezelTemplateData
+    data: ZeroBezelTemplateData,
+    layoutId: Int = R.layout.cv_small_zero_bezel
 ) :
-    ContentView(context, layoutId, renderer.templateMediaManager) {
+    SmallContentView(context, renderer, data.baseContent, layoutId) {
 
     init {
-        setCustomContentViewLargeIcon(data.baseContent.iconData.largeIcon)
-        setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
-        setCustomContentViewTitle(data.baseContent.textData.title)
-        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
-        setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_small)
-        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
-        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+        val isMediaLoaded = setCustomContentViewMedia(
+            R.layout.image_view_dynamic_relative,
+            data.collapsedMediaData.gif.url,
+            data.collapsedMediaData.bigImage.url,
+            data.collapsedMediaData.scaleType,
+            data.collapsedMediaData.bigImage.altText,
+            data.collapsedMediaData.gif.numberOfFrames
+        )
+        if (!isMediaLoaded) {
+            PTLog.debug("Download failed for all media in ZeroBezel Collapsed Notification. Not showing the image")
+            remoteView.setViewVisibility(R.id.zero_bezel_scrim, View.GONE)
+        }
     }
 }
