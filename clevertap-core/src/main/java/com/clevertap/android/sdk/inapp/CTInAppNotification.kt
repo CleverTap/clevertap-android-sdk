@@ -286,10 +286,6 @@ class CTInAppNotification : Parcelable {
         dest.writeByte((if (isRequestForPushPermission) 0x01 else 0x00).toByte())
     }
 
-    fun hasStreamMedia(): Boolean {
-        return !_mediaList.isEmpty() && _mediaList[0].isMediaStreamable()
-    }
-
     internal fun getInAppMediaForOrientation(orientation: Int): CTInAppNotificationMedia? {
         var returningMedia: CTInAppNotificationMedia? = null
         for (inAppNotificationMedia in _mediaList) {

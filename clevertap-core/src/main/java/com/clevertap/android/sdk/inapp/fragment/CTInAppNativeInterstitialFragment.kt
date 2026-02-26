@@ -15,26 +15,27 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
-import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.customviews.CloseImageView
 
-@UnstableApi
 internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment() {
 
-    private lateinit var mediaDelegate: InAppMediaDelegate
+    private lateinit var mediaHandler: InAppMediaHandler
     private var relativeLayout: RelativeLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaDelegate = InAppMediaDelegate(
+        mediaHandler = InAppMediaHandler.create(
             fragment = this,
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
             isTablet = inAppNotification.isTablet && isTablet(),
-            resourceProvider = resourceProvider()
+            resourceProvider = resourceProvider(),
+            supportsStreamMedia = true
         )
-        mediaDelegate.initVideoPlayerHandle()
+        lifecycle.addObserver(mediaHandler)
     }
 
     @SuppressLint("ResourceType")
@@ -54,8 +55,6 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         closeImageView = fl.findViewById(CloseImageView.VIEW_ID)
         relativeLayout = fl.findViewById(R.id.interstitial_relative_layout)
 
-        mediaDelegate.bindVideoFrame(relativeLayout?.findViewById(R.id.video_frame))
-
         // Container backgrounds
         relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
         fl.background = ColorDrawable(0xBB000000.toInt())
@@ -64,14 +63,13 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         resizeContainer(fl, closeImageView!!)
 
         // Inapps data binding
-        mediaDelegate.setMediaForInApp(
+        mediaHandler.setup(
             relativeLayout,
             InAppMediaConfig(
                 imageViewId = R.id.backgroundImage,
                 clickableMedia = false,
                 useOrientationForImage = false,
-                hideImageViewForNonImageMedia = false,
-                fillVideoFrame = false
+                videoFrameId = R.id.video_frame,
             )
         )
         setTitleAndMessage()
@@ -81,29 +79,10 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         return inAppView
     }
 
-    override fun onStart() {
-        super.onStart()
-        mediaDelegate.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mediaDelegate.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mediaDelegate.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mediaDelegate.onStop()
-    }
-
     override fun cleanup() {
         super.cleanup()
-        mediaDelegate.cleanup()
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
     }
 
     private fun handleCloseButton() {
@@ -114,7 +93,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
             closeImageView?.setVisibility(View.VISIBLE)
             closeImageView?.setOnClickListener {
                 didDismiss(null)
-                mediaDelegate.clearGif()
+                mediaHandler.clear()
                 activity?.finish()
             }
         }
