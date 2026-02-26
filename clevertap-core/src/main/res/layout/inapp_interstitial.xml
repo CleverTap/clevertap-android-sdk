@@ -26,45 +26,43 @@
             android:textSize="@dimen/txt_size_inapp_title"
             android:textStyle="bold" />
 
-        <ImageView
-            android:id="@+id/backgroundImage"
-            android:contentDescription="@string/ct_inapp_img"
-            android:layout_width="240dp"
-            android:layout_height="134dp"
-            android:layout_below="@+id/interstitial_title"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
-            android:scaleType="centerCrop"
-            android:focusable="true"
-            android:visibility="invisible" />
-
-        <com.clevertap.android.sdk.gif.GifImageView
-            android:id="@+id/gifImage"
-            android:contentDescription="@string/ct_inapp_gif"
-            android:layout_width="240dp"
-            android:layout_height="134dp"
-            android:layout_below="@+id/interstitial_title"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
-            android:scaleType="centerCrop"
-            android:focusable="true"
-            android:visibility="gone" />
-
         <FrameLayout
-            android:id="@+id/video_frame"
-            android:contentDescription="@string/ct_inapp_media"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/media_container"
+            android:layout_width="240dp"
+            android:layout_height="134dp"
             android:layout_below="@id/interstitial_title"
             android:layout_centerHorizontal="true"
-            android:focusable="true"
-            android:visibility="gone"/>
+            android:layout_marginTop="8dp">
+
+            <ImageView
+                android:id="@+id/backgroundImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/ct_inapp_img"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <com.clevertap.android.sdk.gif.GifImageView
+                android:id="@+id/gifImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/ct_inapp_gif"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:id="@+id/video_frame"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/ct_inapp_media"
+                android:visibility="gone"/>
+        </FrameLayout>
 
         <TextView
             android:id="@+id/interstitial_message"
             android:layout_width="240dp"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/backgroundImage"
+            android:layout_below="@+id/media_container"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="14dp"
             android:gravity="center"

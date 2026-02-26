@@ -12,24 +12,25 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
-import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
-@UnstableApi
 internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() {
 
-    private lateinit var mediaDelegate: InAppMediaDelegate
+    private lateinit var mediaHandler: InAppMediaHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaDelegate = InAppMediaDelegate(
+        mediaHandler = InAppMediaHandler.create(
             fragment = this,
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
             isTablet = false,
             resourceProvider = resourceProvider()
         )
+        lifecycle.addObserver(mediaHandler)
     }
 
     override fun onCreateView(
@@ -56,14 +57,12 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         val imageView = linearLayout1.findViewById<ImageView>(R.id.footer_icon)
         imageView.visibility = View.GONE
 
-        mediaDelegate.setMediaForInApp(
+        mediaHandler.setup(
             relativeLayout,
             InAppMediaConfig(
                 imageViewId = R.id.footer_icon,
                 clickableMedia = false,
                 useOrientationForImage = false,
-                hideImageViewForNonImageMedia = true,
-                fillVideoFrame = true
             )
         )
 
@@ -104,23 +103,9 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         return inAppView
     }
 
-    override fun onStart() {
-        super.onStart()
-        mediaDelegate.onStart()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mediaDelegate.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mediaDelegate.onStop()
-    }
-
     override fun cleanup() {
-        mediaDelegate.cleanup()
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
         super.cleanup()
     }
 }
