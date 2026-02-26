@@ -16,16 +16,31 @@
             android:orientation="horizontal"
             android:focusable="true">
 
-            <ImageView
-                android:id="@+id/header_icon"
-                android:contentDescription="@string/ct_inapp_img"
+            <FrameLayout
+                android:id="@+id/header_media_container"
                 android:layout_width="78dp"
                 android:layout_height="78dp"
-                android:layout_marginLeft="20dp"
                 android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp"
-                android:focusable="true"
-                android:scaleType="fitCenter" />
+                android:layout_marginTop="20dp">
+
+                <ImageView
+                    android:id="@+id/header_icon"
+                    android:contentDescription="@string/ct_inapp_img"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:focusable="true"
+                    android:scaleType="fitCenter" />
+
+                <com.clevertap.android.sdk.gif.GifImageView
+                    android:id="@+id/gifImage"
+                    android:contentDescription="@string/ct_inapp_gif"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:focusable="true"
+                    android:visibility="gone" />
+
+            </FrameLayout>
 
             <LinearLayout
                 android:id="@+id/header_linear_layout_2"
@@ -37,7 +52,6 @@
                     android:id="@+id/header_title"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="20dp"
                     android:textSize="16sp"
@@ -47,7 +61,6 @@
                     android:id="@+id/header_message"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="4dp"
                     android:maxLines="3"

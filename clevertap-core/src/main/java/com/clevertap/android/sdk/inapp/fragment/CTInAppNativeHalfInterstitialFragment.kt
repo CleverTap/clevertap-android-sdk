@@ -11,16 +11,32 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.customviews.CloseImageView
 
 internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFragment() {
+
+    private lateinit var mediaHandler: InAppMediaHandler
+    private var relativeLayout: RelativeLayout? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mediaHandler = InAppMediaHandler.create(
+            fragment = this,
+            inAppNotification = inAppNotification,
+            currentOrientation = currentOrientation,
+            isTablet = inAppNotification.isTablet && isTablet(),
+            resourceProvider = resourceProvider()
+        )
+        lifecycle.addObserver(mediaHandler)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -40,13 +56,14 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
 
-        val relativeLayout = fl.findViewById<RelativeLayout>(R.id.half_interstitial_relative_layout)
-        relativeLayout.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
+        relativeLayout = fl.findViewById(R.id.half_interstitial_relative_layout)
+        relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
 
         when (currentOrientation) {
-            Configuration.ORIENTATION_PORTRAIT -> relativeLayout.getViewTreeObserver()
-                .addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+            Configuration.ORIENTATION_PORTRAIT -> relativeLayout?.getViewTreeObserver()
+                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
                     override fun onGlobalLayout() {
+                        val relativeLayout = relativeLayout ?: return
                         val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
                         if (inAppNotification.isTablet && isTablet() || inAppNotification.isLocalInApp && isTabletFromDeviceType(
                                 inflater.context
@@ -70,9 +87,10 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                     }
                 })
 
-            Configuration.ORIENTATION_LANDSCAPE -> relativeLayout.getViewTreeObserver()
-                .addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+            Configuration.ORIENTATION_LANDSCAPE -> relativeLayout?.getViewTreeObserver()
+                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
                     override fun onGlobalLayout() {
+                        val relativeLayout = relativeLayout ?: return
                         val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
                         if (!inAppNotification.isTablet || !isTablet()) {
                             if (isTablet()) {
@@ -119,41 +137,34 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                 })
         }
 
-        val mediaForOrientation = inAppNotification.getInAppMediaForOrientation(currentOrientation)
-        if (mediaForOrientation != null) {
-            val imageView = relativeLayout.findViewById<ImageView>(R.id.backgroundImage)
-            if (mediaForOrientation.contentDescription.isNotBlank()) {
-                imageView.contentDescription = mediaForOrientation.contentDescription
-            }
-            val bitmap = resourceProvider().cachedInAppImageV1(mediaForOrientation.mediaUrl)
-            if (bitmap != null) {
-                imageView.setImageBitmap(bitmap)
-            }
-        }
+        mediaHandler.setup(
+            relativeLayout,
+            InAppMediaConfig(imageViewId = R.id.backgroundImage, clickableMedia = false)
+        )
 
         val linearLayout =
-            relativeLayout.findViewById<LinearLayout>(R.id.half_interstitial_linear_layout)
-        val mainButton = linearLayout.findViewById<Button>(R.id.half_interstitial_button1)
-        inAppButtons.add(mainButton)
-        val secondaryButton = linearLayout.findViewById<Button>(R.id.half_interstitial_button2)
-        inAppButtons.add(secondaryButton)
+            relativeLayout?.findViewById<LinearLayout>(R.id.half_interstitial_linear_layout)
+        val mainButton = linearLayout?.findViewById<Button>(R.id.half_interstitial_button1)
+        mainButton?.let { inAppButtons.add(it) }
+        val secondaryButton = linearLayout?.findViewById<Button>(R.id.half_interstitial_button2)
+        secondaryButton?.let { inAppButtons.add(it) }
 
-        val textView1 = relativeLayout.findViewById<TextView>(R.id.half_interstitial_title)
-        textView1.text = inAppNotification.title
-        textView1.setTextColor(inAppNotification.titleColor.toColorInt())
+        val textView1 = relativeLayout?.findViewById<TextView>(R.id.half_interstitial_title)
+        textView1?.text = inAppNotification.title
+        textView1?.setTextColor(inAppNotification.titleColor.toColorInt())
 
-        val textView2 = relativeLayout.findViewById<TextView>(R.id.half_interstitial_message)
-        textView2.text = inAppNotification.message
-        textView2.setTextColor(inAppNotification.messageColor.toColorInt())
+        val textView2 = relativeLayout?.findViewById<TextView>(R.id.half_interstitial_message)
+        textView2?.text = inAppNotification.message
+        textView2?.setTextColor(inAppNotification.messageColor.toColorInt())
 
         val buttons = inAppNotification.buttons
         if (buttons.size == 1) {
             if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                mainButton.visibility = View.GONE
+                mainButton?.visibility = View.GONE
             } else if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                mainButton.visibility = View.INVISIBLE
+                mainButton?.visibility = View.INVISIBLE
             }
-            setupInAppButton(secondaryButton, buttons[0], 0)
+            secondaryButton?.let { setupInAppButton(it, buttons[0], 0) }
         } else if (!buttons.isEmpty()) {
             for (i in buttons.indices) {
                 if (i >= 2) {
@@ -169,6 +180,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
 
         closeImageView.setOnClickListener {
             didDismiss(null)
+            mediaHandler.clear()
             activity?.finish()
         }
 
@@ -179,6 +191,12 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
         }
 
         return inAppView
+    }
+
+    override fun cleanup() {
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
+        super.cleanup()
     }
 
     fun isTabletFromDeviceType(context: Context?): Boolean {

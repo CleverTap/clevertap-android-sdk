@@ -15,11 +15,21 @@
             android:contentDescription="@string/ct_inapp_img"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:scaleType="centerCrop"
             android:focusable="true" />
+
+        <com.clevertap.android.sdk.gif.GifImageView
+            android:id="@+id/gifImage"
+            android:contentDescription="@string/ct_inapp_gif"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:scaleType="centerCrop"
+            android:focusable="true"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/cover_title"
@@ -82,7 +92,6 @@
         android:layout_height="40dp"
         android:layout_gravity="top|end"
         android:layout_marginEnd="12dp"
-        android:layout_marginRight="12dp"
         android:layout_marginTop="12dp"
         android:adjustViewBounds="true" />
 </FrameLayout>

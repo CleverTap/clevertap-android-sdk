@@ -17,15 +17,30 @@
             android:orientation="horizontal"
             android:focusable="true" >
 
-            <ImageView
-                android:id="@+id/footer_icon"
-                android:contentDescription="@string/ct_inapp_img"
+            <FrameLayout
+                android:id="@+id/footer_media_container"
                 android:layout_width="78dp"
                 android:layout_height="78dp"
-                android:layout_marginLeft="20dp"
                 android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp"
-                android:focusable="true" />
+                android:layout_marginTop="20dp">
+
+                <ImageView
+                    android:id="@+id/footer_icon"
+                    android:contentDescription="@string/ct_inapp_img"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:focusable="true"
+                    android:scaleType="fitCenter" />
+
+                <com.clevertap.android.sdk.gif.GifImageView
+                    android:id="@+id/gifImage"
+                    android:contentDescription="@string/ct_inapp_gif"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:focusable="true"
+                    android:visibility="gone" />
+            </FrameLayout>
 
             <LinearLayout
                 android:id="@+id/footer_linear_layout_2"
