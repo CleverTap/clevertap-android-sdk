@@ -22,10 +22,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/large_icon"
         android:layout_centerVertical="true"
-        android:paddingStart="@dimen/padding_vertical"
-        android:paddingEnd="@dimen/padding_vertical">
+        android:layout_margin="4dp">
 
         <TextView
             android:id="@+id/title"
@@ -33,29 +31,29 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
+            android:layout_toStartOf="@+id/large_icon"
             tools:text="title"
             android:textAppearance="@style/PushTitle" />
+
         <TextView
             android:id="@+id/msg"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/title"
             android:layout_alignStart="@id/title"
+            android:layout_toStartOf="@+id/large_icon"
             android:ellipsize="end"
-            android:maxLines="2"
+            android:maxLines="1"
             tools:text="message message message"
             android:textAppearance="@style/PushMessage" />
 
+        <ImageView
+            android:id="@+id/large_icon"
+            android:layout_width="@dimen/large_icon"
+            android:layout_height="@dimen/large_icon"
+            android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
+            android:layout_alignParentEnd="true"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop" />
     </RelativeLayout>
-
-    <ImageView
-        android:id="@+id/large_icon"
-        android:layout_width="@dimen/large_icon"
-        android:layout_height="@dimen/large_icon"
-        android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
-        android:layout_marginBottom="@dimen/padding_micro"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:scaleType="centerCrop" />
-
 </RelativeLayout>

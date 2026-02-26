@@ -120,7 +120,6 @@ internal data class ZeroBezelTemplateData(
     val baseContent: BaseContent,
     val actions: JSONArray? = null,
     val mediaData: MediaData,
-    val smallView: String? = null,
     val collapsedMediaData: MediaData
 ) : TemplateData()
 

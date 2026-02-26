@@ -5,14 +5,12 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.ZeroBezelTemplateData
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.ZERO_BEZEL_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.ZeroBezelBigContentView
-import com.clevertap.android.pushtemplates.content.ZeroBezelMixedSmallContentView
-import com.clevertap.android.pushtemplates.content.ZeroBezelTextOnlySmallContentView
+import com.clevertap.android.pushtemplates.content.ZeroBezelSmallContentView
 
 internal class ZeroBezelStyle(private val data: ZeroBezelTemplateData, renderer: TemplateRenderer) : Style(data.baseContent, renderer) {
 
@@ -22,13 +20,7 @@ internal class ZeroBezelStyle(private val data: ZeroBezelTemplateData, renderer:
         context: Context,
         renderer: TemplateRenderer
     ): RemoteViews {
-        val textOnlySmallView = data.smallView != null &&
-                data.smallView == PTConstants.TEXT_ONLY
-        return if (textOnlySmallView) {
-            ZeroBezelTextOnlySmallContentView(context, renderer, data).remoteView
-        } else {
-            ZeroBezelMixedSmallContentView(context, renderer, data).remoteView
-        }
+        return ZeroBezelSmallContentView(context,renderer, data).remoteView
     }
 
     override fun makeBigContentRemoteView(
