@@ -13,17 +13,17 @@ import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
-import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.customviews.CloseImageView
 
 internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragment() {
 
-    private lateinit var mediaDelegate: InAppMediaDelegate
+    private lateinit var mediaHandler: InAppMediaHandler
     private var relativeLayout: RelativeLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaDelegate = InAppMediaDelegate(
+        mediaHandler = InAppMediaHandler.create(
             fragment = this,
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
@@ -31,6 +31,7 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
             resourceProvider = resourceProvider(),
             supportsStreamMedia = true
         )
+        lifecycle.addObserver(mediaHandler)
     }
 
     override fun onCreateView(
@@ -133,7 +134,7 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
                 })
         }
 
-        mediaDelegate.setMediaForInApp(
+        mediaHandler.setup(
             relativeLayout,
             InAppMediaConfig(imageViewId = R.id.half_interstitial_image, clickableMedia = true, videoFrameId = R.id.video_frame),
             CTInAppNativeButtonClickListener()
@@ -141,7 +142,7 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaDelegate.clear()
+            mediaHandler.clear()
             activity?.finish()
         }
 
@@ -155,7 +156,8 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
     }
 
     override fun cleanup() {
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
         super.cleanup()
-        mediaDelegate.cleanup()
     }
 }

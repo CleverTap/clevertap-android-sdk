@@ -9,17 +9,17 @@ import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
-import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import com.clevertap.android.sdk.customviews.CloseImageView
 
 internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
-    private lateinit var mediaDelegate: InAppMediaDelegate
+    private lateinit var mediaHandler: InAppMediaHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaDelegate = InAppMediaDelegate(
+        mediaHandler = InAppMediaHandler.create(
             fragment = this,
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
@@ -27,6 +27,7 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
             resourceProvider = resourceProvider(),
             supportsStreamMedia = true
         )
+        lifecycle.addObserver(mediaHandler)
     }
 
     override fun onCreateView(
@@ -47,7 +48,7 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
         val relativeLayout = fl.findViewById<RelativeLayout>(R.id.cover_image_relative_layout)
 
-        mediaDelegate.setMediaForInApp(
+        mediaHandler.setup(
             relativeLayout,
             InAppMediaConfig(imageViewId = R.id.cover_image, clickableMedia = true, videoFrameId = R.id.video_frame),
             CTInAppNativeButtonClickListener()
@@ -57,7 +58,7 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaDelegate.clear()
+            mediaHandler.clear()
             activity?.finish()
         }
 
@@ -71,7 +72,8 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
     }
 
     override fun cleanup() {
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
         super.cleanup()
-        mediaDelegate.cleanup()
     }
 }

@@ -18,23 +18,24 @@ import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
-import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.customviews.CloseImageView
 
 internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFragment() {
 
-    private lateinit var mediaDelegate: InAppMediaDelegate
+    private lateinit var mediaHandler: InAppMediaHandler
     private var relativeLayout: RelativeLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaDelegate = InAppMediaDelegate(
+        mediaHandler = InAppMediaHandler.create(
             fragment = this,
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
             isTablet = inAppNotification.isTablet && isTablet(),
             resourceProvider = resourceProvider()
         )
+        lifecycle.addObserver(mediaHandler)
     }
 
     override fun onCreateView(
@@ -136,7 +137,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                 })
         }
 
-        mediaDelegate.setMediaForInApp(
+        mediaHandler.setup(
             relativeLayout,
             InAppMediaConfig(imageViewId = R.id.backgroundImage, clickableMedia = false)
         )
@@ -179,7 +180,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaDelegate.clear()
+            mediaHandler.clear()
             activity?.finish()
         }
 
@@ -193,8 +194,9 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
     }
 
     override fun cleanup() {
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
         super.cleanup()
-        mediaDelegate.cleanup()
     }
 
     fun isTabletFromDeviceType(context: Context?): Boolean {

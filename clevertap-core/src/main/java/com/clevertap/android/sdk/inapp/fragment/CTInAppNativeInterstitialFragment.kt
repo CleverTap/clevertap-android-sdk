@@ -17,17 +17,17 @@ import android.widget.TextView
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
-import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.customviews.CloseImageView
 
 internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment() {
 
-    private lateinit var mediaDelegate: InAppMediaDelegate
+    private lateinit var mediaHandler: InAppMediaHandler
     private var relativeLayout: RelativeLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaDelegate = InAppMediaDelegate(
+        mediaHandler = InAppMediaHandler.create(
             fragment = this,
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
@@ -35,6 +35,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
             resourceProvider = resourceProvider(),
             supportsStreamMedia = true
         )
+        lifecycle.addObserver(mediaHandler)
     }
 
     @SuppressLint("ResourceType")
@@ -62,7 +63,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         resizeContainer(fl, closeImageView!!)
 
         // Inapps data binding
-        mediaDelegate.setMediaForInApp(
+        mediaHandler.setup(
             relativeLayout,
             InAppMediaConfig(
                 imageViewId = R.id.backgroundImage,
@@ -80,7 +81,8 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
 
     override fun cleanup() {
         super.cleanup()
-        mediaDelegate.cleanup()
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
     }
 
     private fun handleCloseButton() {
@@ -91,7 +93,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
             closeImageView?.setVisibility(View.VISIBLE)
             closeImageView?.setOnClickListener {
                 didDismiss(null)
-                mediaDelegate.clear()
+                mediaHandler.clear()
                 activity?.finish()
             }
         }

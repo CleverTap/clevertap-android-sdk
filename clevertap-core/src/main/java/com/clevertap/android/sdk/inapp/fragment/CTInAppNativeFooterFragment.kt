@@ -14,22 +14,23 @@ import android.widget.TextView
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
-import com.clevertap.android.sdk.inapp.media.InAppMediaDelegate
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
 internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() {
 
-    private lateinit var mediaDelegate: InAppMediaDelegate
+    private lateinit var mediaHandler: InAppMediaHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mediaDelegate = InAppMediaDelegate(
+        mediaHandler = InAppMediaHandler.create(
             fragment = this,
             inAppNotification = inAppNotification,
             currentOrientation = currentOrientation,
             isTablet = false,
             resourceProvider = resourceProvider()
         )
+        lifecycle.addObserver(mediaHandler)
     }
 
     override fun onCreateView(
@@ -56,7 +57,7 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         val imageView = linearLayout1.findViewById<ImageView>(R.id.footer_icon)
         imageView.visibility = View.GONE
 
-        mediaDelegate.setMediaForInApp(
+        mediaHandler.setup(
             relativeLayout,
             InAppMediaConfig(
                 imageViewId = R.id.footer_icon,
@@ -103,7 +104,8 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
     }
 
     override fun cleanup() {
-        mediaDelegate.cleanup()
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
         super.cleanup()
     }
 }
