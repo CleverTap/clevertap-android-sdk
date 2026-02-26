@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
+import com.clevertap.android.pushtemplates.TemplateDataFactory.toTerminalBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
@@ -151,18 +152,26 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             }
 
             is TimerTemplateData -> if (VERSION.SDK_INT >= VERSION_CODES.O) {
-                templateData.buildIfValid {
-                    if (it.renderTerminal) {
-                        TimerTemplateHandler.scheduleTimer(
-                            context,
-                            extras,
-                            notificationId,
-                            it.baseContent.notificationBehavior.dismissAfter,
-                            it,
-                            config
-                        )
+                if (templateData.baseContent.notificationBehavior.dismissAfter == null && templateData.renderTerminalWhenAlreadyExpired) {
+                    val basicTemplateData = templateData.toTerminalBasicTemplateData()
+                    PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with alternate content")
+                    basicTemplateData.buildIfValid {
+                        BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
                     }
-                    TimerStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+                } else {
+                    templateData.buildIfValid {
+                        if (it.renderTerminal) {
+                            TimerTemplateHandler.scheduleTimer(
+                                context,
+                                extras,
+                                notificationId,
+                                it.baseContent.notificationBehavior.dismissAfter,
+                                it,
+                                config
+                            )
+                        }
+                        TimerStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+                    }
                 }
             } else {
                 val basicTemplateData = templateData.toBasicTemplateData()

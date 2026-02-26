@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
+import com.clevertap.android.pushtemplates.TemplateDataFactory.toTerminalBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
@@ -2063,6 +2064,243 @@ class TemplateRendererTest {
         )
 
         verify { CancelTemplateHandler.renderCancelNotification(context, mockCancelTemplateData) }
+        assertNull(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun test_renderNotification_timer_already_expired_renderTerminalWhenAlreadyExpired_true_renders_basic_with_terminal_content() {
+        // When dismissAfter is null AND renderTerminalWhenAlreadyExpired is true,
+        // the renderer should convert to terminal basic template and render via BasicStyle
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns null
+        every { mockTimerTemplateData.renderTerminalWhenAlreadyExpired } returns true
+        every { mockTimerTemplateData.toTerminalBasicTemplateData() } returns mockBasicTemplateData
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockBasicTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert - should render via BasicStyle with terminal content, NOT TimerStyle
+        verify { mockTimerTemplateData.toTerminalBasicTemplateData() }
+        verify {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                timerBundle,
+                123,
+                mockNotificationBuilder
+            )
+        }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun test_renderNotification_timer_already_expired_renderTerminalWhenAlreadyExpired_false_renders_timer_style() {
+        // When dismissAfter is null AND renderTerminalWhenAlreadyExpired is false,
+        // the renderer should NOT render terminal basic, it should go to else branch (TimerStyle)
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns null
+        every { mockTimerTemplateData.renderTerminalWhenAlreadyExpired } returns false
+        every { mockTimerTemplateData.renderTerminal } returns true
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        mockkConstructor(TimerStyle::class)
+        mockkObject(TimerTemplateHandler)
+        every {
+            anyConstructed<TimerStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert - should render via TimerStyle, NOT BasicStyle with terminal content
+        verify(exactly = 0) { mockTimerTemplateData.toTerminalBasicTemplateData() }
+        verify {
+            anyConstructed<TimerStyle>().builderFromStyle(
+                any(),
+                timerBundle,
+                123,
+                mockNotificationBuilder
+            )
+        }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun test_renderNotification_timer_not_expired_renderTerminalWhenAlreadyExpired_true_renders_timer_style() {
+        // When dismissAfter is NOT null (timer hasn't expired), even if renderTerminalWhenAlreadyExpired is true,
+        // the renderer should go to else branch (TimerStyle) and schedule the timer
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns 10_000L
+        every { mockTimerTemplateData.renderTerminalWhenAlreadyExpired } returns true
+        every { mockTimerTemplateData.renderTerminal } returns true
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        mockkConstructor(TimerStyle::class)
+        mockkObject(TimerTemplateHandler)
+        every {
+            anyConstructed<TimerStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert - should NOT render terminal basic, should use TimerStyle and schedule timer
+        verify(exactly = 0) { mockTimerTemplateData.toTerminalBasicTemplateData() }
+        verify {
+            anyConstructed<TimerStyle>().builderFromStyle(
+                any(),
+                timerBundle,
+                123,
+                mockNotificationBuilder
+            )
+        }
+        verify { TimerTemplateHandler.scheduleTimer(context, timerBundle, 123, 10000, mockTimerTemplateData, mockConfig, any()) }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun test_renderNotification_timer_already_expired_renderTerminalWhenAlreadyExpired_true_invalid_validator_returns_null() {
+        // When dismissAfter is null AND renderTerminalWhenAlreadyExpired is true,
+        // but the terminal basic template fails validation, result should be null
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns null
+        every { mockTimerTemplateData.renderTerminalWhenAlreadyExpired } returns true
+        every { mockTimerTemplateData.toTerminalBasicTemplateData() } returns mockBasicTemplateData
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockBasicTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        verify { mockTimerTemplateData.toTerminalBasicTemplateData() }
         assertNull(result)
     }
 }

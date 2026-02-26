@@ -108,6 +108,7 @@ internal data class TimerTemplateData(
     override val templateType: TemplateType = TemplateType.TIMER,
     val baseContent: BaseContent,
     val mediaData: MediaData,
+    val renderTerminalWhenAlreadyExpired: Boolean = true,
     val actions: JSONArray? = null,
     val terminalTextData: BaseTextData,
     val terminalMediaData: MediaData,

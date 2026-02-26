@@ -36,6 +36,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_PRODUCT_DISPLAY_ACTION
 import com.clevertap.android.pushtemplates.PTConstants.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_PRODUCT_DISPLAY_LINEAR
 import com.clevertap.android.pushtemplates.PTConstants.PT_RENDER_TERMINAL
+import com.clevertap.android.pushtemplates.PTConstants.PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_COLLAPSED
@@ -249,6 +250,7 @@ internal object TemplateDataFactory {
             baseContent = resolvedBaseContent,
             mediaData = mediaData,
             actions = Utils.getActionKeys(extras),
+            renderTerminalWhenAlreadyExpired = extras.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED).toBoolean(),
             terminalTextData = createTerminalTextData(extras, baseContent.textData),
             terminalMediaData = createTerminalMediaData(extras, defaultAltText, mediaData),
             chronometerTitleColor = colorMap[PT_CHRONO_TITLE_COLOUR],
@@ -471,6 +473,14 @@ internal object TemplateDataFactory {
         return BasicTemplateData(
             baseContent = this.baseContent,
             mediaData = this.mediaData,
+            actions = this.actions
+        )
+    }
+
+    internal fun TimerTemplateData.toTerminalBasicTemplateData(): BasicTemplateData {
+        return BasicTemplateData(
+            baseContent = this.baseContent.copy(textData = this.terminalTextData),
+            mediaData = this.terminalMediaData,
             actions = this.actions
         )
     }

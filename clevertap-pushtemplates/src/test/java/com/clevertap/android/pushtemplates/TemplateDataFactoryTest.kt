@@ -512,6 +512,28 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    fun `TimerTemplateData_toTerminalBasicTemplateData should use terminal text and media data`() {
+        // Given
+        val timerData = createSampleTimerTemplateData()
+
+        // When
+        val basicData = with(TemplateDataFactory) { timerData.toTerminalBasicTemplateData() }
+
+        // Then
+        assertEquals(TemplateType.BASIC, basicData.templateType)
+        assertEquals(timerData.terminalTextData, basicData.baseContent.textData)
+        assertEquals(timerData.terminalMediaData, basicData.mediaData)
+        assertEquals(timerData.actions, basicData.actions)
+        // Verify it uses terminal text, not original text
+        assertEquals("Terminal", basicData.baseContent.textData.title)
+        assertEquals("Terminal Msg", basicData.baseContent.textData.message)
+        // Verify the rest of baseContent (colors, icons, etc.) is preserved
+        assertEquals(timerData.baseContent.colorData, basicData.baseContent.colorData)
+        assertEquals(timerData.baseContent.iconData, basicData.baseContent.iconData)
+        assertEquals(timerData.baseContent.deepLinkList, basicData.baseContent.deepLinkList)
+    }
+
+    @Test
     fun `FiveIconsTemplateData_toBaseContent should create correct BaseContent`() {
         // Given
         val fiveIconsData = createSampleFiveIconsTemplateData()
@@ -1222,6 +1244,183 @@ class TemplateDataFactoryTest {
         assertTrue(result is TimerTemplateData)
         val timerData = result as TimerTemplateData
         assertTrue(timerData.renderTerminal)
+    }
+
+    @Test
+    fun `createTimerTemplateData should set renderTerminalWhenAlreadyExpired true when extras value is true`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns "true"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertTrue(timerData.renderTerminalWhenAlreadyExpired)
+    }
+
+    @Test
+    fun `createTimerTemplateData should set renderTerminalWhenAlreadyExpired false when extras value is false`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns "false"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertFalse(timerData.renderTerminalWhenAlreadyExpired)
+    }
+
+    @Test
+    fun `createTimerTemplateData should default renderTerminalWhenAlreadyExpired to false when extras value is null`() {
+        // Given - String?.toBoolean() returns false for null
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertFalse(timerData.renderTerminalWhenAlreadyExpired)
+    }
+
+    @Test
+    fun `createTimerTemplateData should set renderTerminalWhenAlreadyExpired false for non-boolean string`() {
+        // Given - String?.toBoolean() returns false for non-"true" strings
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns "yes"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertFalse(timerData.renderTerminalWhenAlreadyExpired)
+    }
+
+    @Test
+    fun `createTimerTemplateData should set renderTerminalWhenAlreadyExpired true case insensitive`() {
+        // Given - String?.toBoolean() is case-insensitive for "true"
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns "True"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertTrue(timerData.renderTerminalWhenAlreadyExpired)
+    }
+
+    @Test
+    fun `createTimerTemplateData already expired with renderTerminalWhenAlreadyExpired true should have null dismissAfter`() {
+        // Given - timer is already expired (getDismissAfterMs returns null) and renderTerminalWhenAlreadyExpired is true
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns "true"
+
+        mockkObject(TimerTemplateHandler)
+        every { TimerTemplateHandler.getDismissAfterMs(any(), any()) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertNull(timerData.baseContent.notificationBehavior.dismissAfter)
+        assertTrue(timerData.renderTerminalWhenAlreadyExpired)
+    }
+
+    @Test
+    fun `createTimerTemplateData already expired with renderTerminalWhenAlreadyExpired false should have null dismissAfter`() {
+        // Given - timer is already expired (getDismissAfterMs returns null) and renderTerminalWhenAlreadyExpired is false
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns "false"
+
+        mockkObject(TimerTemplateHandler)
+        every { TimerTemplateHandler.getDismissAfterMs(any(), any()) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertNull(timerData.baseContent.notificationBehavior.dismissAfter)
+        assertFalse(timerData.renderTerminalWhenAlreadyExpired)
+    }
+
+    @Test
+    fun `createTimerTemplateData not expired should have non-null dismissAfter regardless of renderTerminalWhenAlreadyExpired`() {
+        // Given - timer is NOT expired (valid dismissAfter) and renderTerminalWhenAlreadyExpired is true
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED) } returns "true"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertTrue(result is TimerTemplateData)
+        val timerData = result as TimerTemplateData
+        assertNotNull(timerData.baseContent.notificationBehavior.dismissAfter)
+        assertTrue(timerData.renderTerminalWhenAlreadyExpired)
     }
 
     @Test
