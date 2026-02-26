@@ -277,8 +277,6 @@ class TemplateDataFactoryTest {
     fun `createTemplateData should create ZeroBezelTemplateData for ZERO_BEZEL template type`() {
         // Given
         setupBasicMockBundle()
-        val smallView = "text_only"
-        every { mockBundle.getString(PT_SMALL_VIEW) } returns smallView
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -295,7 +293,6 @@ class TemplateDataFactoryTest {
         
         val zeroBezelData = result as ZeroBezelTemplateData
         assertEquals(TemplateType.ZERO_BEZEL, zeroBezelData.templateType)
-        assertEquals(smallView, zeroBezelData.smallView)
         assertNotNull(zeroBezelData.baseContent)
         assertNotNull(zeroBezelData.mediaData)
         assertNotNull(zeroBezelData.collapsedMediaData)
@@ -943,7 +940,6 @@ class TemplateDataFactoryTest {
             baseContent = createSampleBaseContent(),
             actions = actions,
             mediaData = createSampleMediaData(),
-            smallView = "text_only",
             collapsedMediaData = createSampleMediaData()
         )
 
