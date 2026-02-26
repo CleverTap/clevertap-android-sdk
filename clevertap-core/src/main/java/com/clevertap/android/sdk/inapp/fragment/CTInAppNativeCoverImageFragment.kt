@@ -70,26 +70,6 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
         return inAppView
     }
 
-    override fun onStart() {
-        super.onStart()
-        mediaDelegate.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mediaDelegate.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mediaDelegate.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mediaDelegate.onStop()
-    }
-
     override fun cleanup() {
         super.cleanup()
         mediaDelegate.cleanup()

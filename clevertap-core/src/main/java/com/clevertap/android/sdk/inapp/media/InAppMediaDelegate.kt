@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.media
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 
@@ -18,8 +19,6 @@ internal fun View.setContentDescriptionIfNotBlank(contentDescription: String) {
         this.contentDescription = contentDescription
     }
 }
-
-internal const val CLICKABLE_MEDIA_TAG = 0
 
 /**
  * Coordinator for all media types in InApp notification fragments.
@@ -39,27 +38,18 @@ internal class InAppMediaDelegate(
     supportsStreamMedia: Boolean = false
 ) {
 
+    private val lifecycle: Lifecycle = fragment.lifecycle
+
     private val handler: InAppMediaHandler = createHandler(
         fragment, inAppNotification, currentOrientation, isTablet, resourceProvider, supportsStreamMedia
     )
 
-    fun onStart() {
-        handler.onStart()
-    }
-
-    fun onResume() {
-        handler.onResume()
-    }
-
-    fun onPause() {
-        handler.onPause()
-    }
-
-    fun onStop() {
-        handler.onStop()
+    init {
+        lifecycle.addObserver(handler)
     }
 
     fun cleanup() {
+        lifecycle.removeObserver(handler)
         handler.cleanup()
     }
 

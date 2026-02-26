@@ -32,7 +32,7 @@ internal class InAppImageHandler(
             if (bitmap != null) {
                 imageView?.setImageBitmap(bitmap)
                 if (config.clickableMedia && clickListener != null) {
-                    imageView?.tag = CLICKABLE_MEDIA_TAG
+                    imageView?.tag = 0
                     imageView?.setOnClickListener(clickListener)
                 }
             }

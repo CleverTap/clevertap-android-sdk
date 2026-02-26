@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.media
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import androidx.lifecycle.LifecycleOwner
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.gif.GifImageView
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
@@ -27,20 +28,20 @@ internal class InAppGifHandler(
         gifImageView?.setBytes(gifByteArray)
         gifImageView?.startAnimation()
         if (config.clickableMedia && clickListener != null) {
-            gifImageView?.tag = CLICKABLE_MEDIA_TAG
+            gifImageView?.tag = 0
             gifImageView?.setOnClickListener(clickListener)
         }
         relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility = View.GONE
     }
 
-    override fun onStart() {
+    override fun onStart(owner: LifecycleOwner) {
         gifImageView?.let { view ->
             view.setBytes(resourceProvider.cachedInAppGifV1(media.mediaUrl))
             view.startAnimation()
         }
     }
 
-    override fun onStop() {
+    override fun onStop(owner: LifecycleOwner) {
         clearGif()
     }
 

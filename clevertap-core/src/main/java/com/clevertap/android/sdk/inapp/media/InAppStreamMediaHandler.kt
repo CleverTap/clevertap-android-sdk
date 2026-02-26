@@ -10,6 +10,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
@@ -68,12 +69,12 @@ internal class InAppStreamMediaHandler
         videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
     }
 
-    override fun onResume() {
+    override fun onResume(owner: LifecycleOwner) {
         prepareMedia()
         playMedia()
     }
 
-    override fun onPause() {
+    override fun onPause(owner: LifecycleOwner) {
         if (exoPlayerFullscreen) {
             closeFullscreenDialog()
             onBackPressedCallback.isEnabled = false
@@ -82,7 +83,7 @@ internal class InAppStreamMediaHandler
         handle?.pause()
     }
 
-    override fun onStop() {
+    override fun onStop(owner: LifecycleOwner) {
         handle?.pause()
     }
 
