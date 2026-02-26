@@ -40,10 +40,6 @@ internal class InAppGifHandler(
         }
     }
 
-    override fun onPause() {
-        clearGif()
-    }
-
     override fun onStop() {
         clearGif()
     }
