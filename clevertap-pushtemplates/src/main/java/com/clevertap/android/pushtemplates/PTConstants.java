@@ -102,6 +102,8 @@ public class PTConstants {
 
     public static final String PT_DEFAULT_DL = "pt_default_dl";
 
+    public static final String PT_SMALL_VIEW = "pt_small_view";
+
     public static final String PT_TIMER_THRESHOLD = "pt_timer_threshold";
 
     public static final String PT_RENDER_TERMINAL = "pt_render_terminal";

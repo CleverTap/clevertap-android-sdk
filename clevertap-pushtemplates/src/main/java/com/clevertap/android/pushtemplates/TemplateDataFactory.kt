@@ -39,6 +39,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_RENDER_TERMINAL
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_VIEW
 import com.clevertap.android.pushtemplates.PTConstants.PT_STICKY
 import com.clevertap.android.pushtemplates.PTConstants.PT_SUBTITLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
@@ -228,6 +229,7 @@ internal object TemplateDataFactory {
             baseContent = createBaseContent(extras, colorMap),
             actions = Utils.getActionKeys(extras),
             mediaData = mediaData,
+            showCollapsedBackgroundImage = extras.getString(PT_SMALL_VIEW)?.equals("text_only", ignoreCase = true) != true,
             collapsedMediaData = createCollapsedMediaData(extras, mediaData)
         )
     }
