@@ -108,8 +108,6 @@ public class PTConstants {
 
     public static final String PT_RENDER_TERMINAL = "pt_render_terminal";
 
-    public static final String PT_RENDER_TERMINAL_WHEN_ALREADY_EXPIRED = "pt_render_terminal_when_already_expired";
-
     public static final String PT_INPUT_LABEL = "pt_input_label";
 
     public static final String PT_INPUT_KEY = "pt_input_reply";
