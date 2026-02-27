@@ -229,7 +229,7 @@ internal object TemplateDataFactory {
             baseContent = createBaseContent(extras, colorMap),
             actions = Utils.getActionKeys(extras),
             mediaData = mediaData,
-            smallView = extras.getString(PT_SMALL_VIEW),
+            showCollapsedBackgroundImage = extras.getString(PT_SMALL_VIEW)?.equals("text_only", ignoreCase = true) != true,
             collapsedMediaData = createCollapsedMediaData(extras, mediaData)
         )
     }

@@ -277,8 +277,7 @@ class TemplateDataFactoryTest {
     fun `createTemplateData should create ZeroBezelTemplateData for ZERO_BEZEL template type`() {
         // Given
         setupBasicMockBundle()
-        val smallView = "text_only"
-        every { mockBundle.getString(PT_SMALL_VIEW) } returns smallView
+        every { mockBundle.getString(PT_SMALL_VIEW) } returns "text_only"
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -292,13 +291,73 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is ZeroBezelTemplateData)
-        
+
         val zeroBezelData = result as ZeroBezelTemplateData
         assertEquals(TemplateType.ZERO_BEZEL, zeroBezelData.templateType)
-        assertEquals(smallView, zeroBezelData.smallView)
+        assertFalse(zeroBezelData.showCollapsedBackgroundImage)
         assertNotNull(zeroBezelData.baseContent)
         assertNotNull(zeroBezelData.mediaData)
         assertNotNull(zeroBezelData.collapsedMediaData)
+    }
+
+    @Test
+    fun `createTemplateData should set showCollapsedBackgroundImage true when pt_small_view is null`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_SMALL_VIEW) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ZERO_BEZEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val zeroBezelData = result as ZeroBezelTemplateData
+        assertTrue(zeroBezelData.showCollapsedBackgroundImage)
+    }
+
+    @Test
+    fun `createTemplateData should set showCollapsedBackgroundImage false when pt_small_view is text_only`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_SMALL_VIEW) } returns "text_only"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ZERO_BEZEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val zeroBezelData = result as ZeroBezelTemplateData
+        assertFalse(zeroBezelData.showCollapsedBackgroundImage)
+    }
+
+    @Test
+    fun `createTemplateData should set showCollapsedBackgroundImage true when pt_small_view is other string`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_SMALL_VIEW) } returns "something_else"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ZERO_BEZEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val zeroBezelData = result as ZeroBezelTemplateData
+        assertTrue(zeroBezelData.showCollapsedBackgroundImage)
     }
 
     @Test
@@ -943,7 +1002,7 @@ class TemplateDataFactoryTest {
             baseContent = createSampleBaseContent(),
             actions = actions,
             mediaData = createSampleMediaData(),
-            smallView = "text_only",
+            showCollapsedBackgroundImage = false,
             collapsedMediaData = createSampleMediaData()
         )
 
