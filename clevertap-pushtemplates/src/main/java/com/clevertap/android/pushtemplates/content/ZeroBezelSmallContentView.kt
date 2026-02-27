@@ -16,20 +16,18 @@ internal open class ZeroBezelSmallContentView(
     SmallContentView(context, renderer, data.baseContent, layoutId) {
 
     init {
-        if (data.showCollapsedBackgroundImage) {
-            val isMediaLoaded = setCustomContentViewMedia(
-                R.layout.image_view_dynamic_relative,
-                data.collapsedMediaData.gif.url,
-                data.collapsedMediaData.bigImage.url,
-                data.collapsedMediaData.scaleType,
-                data.collapsedMediaData.bigImage.altText,
-                data.collapsedMediaData.gif.numberOfFrames
-            )
-            if (!isMediaLoaded) {
+        val isMediaLoaded = data.showCollapsedBackgroundImage && setCustomContentViewMedia(
+            R.layout.image_view_dynamic_relative,
+            data.collapsedMediaData.gif.url,
+            data.collapsedMediaData.bigImage.url,
+            data.collapsedMediaData.scaleType,
+            data.collapsedMediaData.bigImage.altText,
+            data.collapsedMediaData.gif.numberOfFrames
+        )
+        if (!isMediaLoaded) {
+            if (data.showCollapsedBackgroundImage) {
                 PTLog.debug("Download failed for all media in ZeroBezel Collapsed Notification. Not showing the image")
-                remoteView.setViewVisibility(R.id.zero_bezel_scrim, View.GONE)
             }
-        } else {
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)
             remoteView.setViewVisibility(R.id.zero_bezel_scrim, View.GONE)
         }
