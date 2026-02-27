@@ -475,6 +475,14 @@ internal object TemplateDataFactory {
         )
     }
 
+    internal fun TimerTemplateData.toTerminalBasicTemplateData(): BasicTemplateData {
+        return BasicTemplateData(
+            baseContent = this.baseContent.copy(textData = this.terminalTextData),
+            mediaData = this.terminalMediaData,
+            actions = this.actions
+        )
+    }
+
     internal fun FiveIconsTemplateData.toBaseContent(): BaseContent {
         return BaseContent(
             textData = BaseTextData(title = this.title, subtitle = this.subtitle),

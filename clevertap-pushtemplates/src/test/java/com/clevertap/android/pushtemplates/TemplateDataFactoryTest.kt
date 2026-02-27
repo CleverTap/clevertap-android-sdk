@@ -512,6 +512,28 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    fun `TimerTemplateData_toTerminalBasicTemplateData should use terminal text and media data`() {
+        // Given
+        val timerData = createSampleTimerTemplateData()
+
+        // When
+        val basicData = with(TemplateDataFactory) { timerData.toTerminalBasicTemplateData() }
+
+        // Then
+        assertEquals(TemplateType.BASIC, basicData.templateType)
+        assertEquals(timerData.terminalTextData, basicData.baseContent.textData)
+        assertEquals(timerData.terminalMediaData, basicData.mediaData)
+        assertEquals(timerData.actions, basicData.actions)
+        // Verify it uses terminal text, not original text
+        assertEquals("Terminal", basicData.baseContent.textData.title)
+        assertEquals("Terminal Msg", basicData.baseContent.textData.message)
+        // Verify the rest of baseContent (colors, icons, etc.) is preserved
+        assertEquals(timerData.baseContent.colorData, basicData.baseContent.colorData)
+        assertEquals(timerData.baseContent.iconData, basicData.baseContent.iconData)
+        assertEquals(timerData.baseContent.deepLinkList, basicData.baseContent.deepLinkList)
+    }
+
+    @Test
     fun `FiveIconsTemplateData_toBaseContent should create correct BaseContent`() {
         // Given
         val fiveIconsData = createSampleFiveIconsTemplateData()
