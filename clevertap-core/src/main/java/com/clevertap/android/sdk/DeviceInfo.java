@@ -41,6 +41,8 @@ import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
+import com.clevertap.android.sdk.network.NetworkMonitor;
+
 
 import org.json.JSONObject;
 
@@ -73,6 +75,7 @@ public class DeviceInfo {
         private final String carrier;
 
         private final String countryCode;
+
 
         private final int dpi;
 
@@ -432,6 +435,8 @@ public class DeviceInfo {
 
     private String customLocale;
 
+    private final  NetworkMonitor networkMonitor;
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -477,12 +482,14 @@ public class DeviceInfo {
     }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-               CoreMetaData coreMetaData) {
+               CoreMetaData coreMetaData,NetworkMonitor networkMonitor) {
         this.context = context;
         this.config = config;
         this.library = null;
         this.customLocale = null;
+        this.networkMonitor = networkMonitor;
         mCoreMetaData = coreMetaData;
+
     }
 
     public void forceNewDeviceID() {
@@ -684,22 +691,17 @@ public class DeviceInfo {
     }
 
     public Boolean isWifiConnected() {
-        Boolean ret = null;
-
-        if (PackageManager.PERMISSION_GRANTED == context
+        if (PackageManager.PERMISSION_GRANTED != context
                 .checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
-            ConnectivityManager connManager = (ConnectivityManager) context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connManager != null) {
-                @SuppressLint("MissingPermission")
-                NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-                ret = (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo
-                        .isConnected());
-            }
+            return null;
         }
-
-        return ret;
+        if (networkMonitor == null) {
+            return null;
+        }
+        return networkMonitor.isWifiConnected();
     }
+
+
 
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;

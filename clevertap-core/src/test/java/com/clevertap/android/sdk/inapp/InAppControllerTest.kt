@@ -705,7 +705,7 @@ class InAppControllerTest {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV},${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
         fakeInAppQueue.enqueueAll(inApps.toList())
-        every { NetworkManager.isNetworkOnline(any()) } returns false
+        every { NetworkMonitor.isNetworkOnline(any()) } returns false
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()

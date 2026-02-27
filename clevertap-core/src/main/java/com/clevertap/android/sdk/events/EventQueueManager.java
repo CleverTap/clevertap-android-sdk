@@ -26,6 +26,7 @@ import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.network.NetworkMonitor;
 import com.clevertap.android.sdk.profile.ProfileStateTraverser;
 import com.clevertap.android.sdk.profile.traversal.ProfileChange;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -70,6 +71,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final NetworkManager networkManager;
 
+
     private final SessionManager sessionManager;
 
     private final ValidationResultStack validationResultStack;
@@ -79,6 +81,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     private final ControllerManager controllerManager;
 
     private final LoginInfoProvider loginInfoProvider;
+    private final NetworkMonitor networkMonitor;
+
 
     public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
             Context context,
@@ -94,7 +98,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             CTLockManager ctLockManager,
             final LocalDataStore localDataStore,
             ControllerManager controllerManager,
-            LoginInfoProvider loginInfoProvider) {
+            LoginInfoProvider loginInfoProvider,NetworkMonitor networkMonitor) {
         this.baseDatabaseManager = baseDatabaseManager;
         this.context = context;
         this.config = config;
@@ -110,6 +114,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
         this.loginInfoProvider = loginInfoProvider;
+        this.networkMonitor = networkMonitor;
 
         callbackManager.setFailureFlushListener(this);
     }
@@ -188,7 +193,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller, final boolean isUserSwitchFlush) {
         // Check if network connectivity is available
-        if (!NetworkManager.isNetworkOnline(context)) {
+        if (!networkMonitor.isNetworkOnline()) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             controllerManager.invokeCallbacksForNetworkError();
             controllerManager.invokeBatchListener(new JSONArray(), false);
@@ -223,7 +228,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData) {
-        if (!NetworkManager.isNetworkOnline(context)) {
+        if (!networkMonitor.isNetworkOnline()) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Event won't be sent.");
             return;
         }
@@ -351,7 +356,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         Map<String, Object> flattenedEventProps =
                 ((FlattenedEventData.EventProperties) flattenedEventData).getProperties();
-        boolean isOffline = !NetworkManager.isNetworkOnline(context);
+        boolean isOffline = !networkMonitor.isNetworkOnline();
         boolean isRegularEvent = eventMediator.isEvent(event);
         boolean isAppLaunchedEvent = eventMediator.isAppLaunchedEvent(event);
 
@@ -577,7 +582,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         // Attach the network type
         try {
-            o.put("nt", Utils.getCurrentNetworkType(context));
+            o.put("nt", networkMonitor.getNetworkTypeString());
         } catch (Throwable t) {
             // Ignore
         }

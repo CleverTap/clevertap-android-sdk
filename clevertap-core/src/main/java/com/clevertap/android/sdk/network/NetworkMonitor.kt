@@ -12,13 +12,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import com.clevertap.android.sdk.Utils
 
 internal class NetworkMonitor(
-    private val context: Context,
+     context: Context,
     private val config: CleverTapInstanceConfig,
     private val logger: ILogger = config.logger
 ) {
-
+    private val appContext: Context = context.applicationContext
     companion object {
         @JvmStatic
         fun isNetworkOnline(context: Context): Boolean {
@@ -31,7 +32,10 @@ internal class NetworkMonitor(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     val activeNetwork = connectivityManager?.activeNetwork
                     val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
-                    capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                    capabilities != null
+                            && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+
                 } else {
                     @Suppress("DEPRECATION")
                     val networkInfo = connectivityManager?.activeNetworkInfo
@@ -66,25 +70,10 @@ internal class NetworkMonitor(
             )
         }
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            other as NetworkState
-            return isAvailable == other.isAvailable &&
-                    networkType == other.networkType &&
-                    isWifiConnected == other.isWifiConnected
-        }
-
-        override fun hashCode(): Int {
-            var result = isAvailable.hashCode()
-            result = 31 * result + networkType.hashCode()
-            result = 31 * result + isWifiConnected.hashCode()
-            return result
-        }
     }
 
     private val connectivityManager by lazy {
-        context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     }
 
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -93,6 +82,7 @@ internal class NetworkMonitor(
     val networkState: Flow<NetworkState> = _stateFlow.asSharedFlow().distinctUntilChanged()
 
     // Internal network state managed by the monitor
+    @Volatile
     private var _currentState: NetworkState = NetworkState.DISCONNECTED
 
     /**
@@ -132,7 +122,7 @@ internal class NetworkMonitor(
 
     private fun calculateCurrentNetworkState(): NetworkState {
         return try {
-            val hasInternet = isNetworkConnected(context)
+            val hasInternet = isNetworkConnected(appContext)
             if (!hasInternet) {
                 NetworkState.DISCONNECTED
             } else {
@@ -207,7 +197,16 @@ internal class NetworkMonitor(
 
     fun getNetworkType(): NetworkType = _currentState.networkType
 
-    fun performQuickNetworkCheck(): Boolean = isNetworkOnline()
+    fun getNetworkTypeString(): String {
+        return when (getNetworkType()) {
+            NetworkType.WIFI -> "WiFi"
+            NetworkType.CELLULAR -> Utils.getDeviceNetworkType(appContext)
+            NetworkType.DISCONNECTED -> "Unavailable"
+            else -> "Unavailable"
+        }
+    }
+
+
 
     /**
      * Gets current network type (internal implementation)
