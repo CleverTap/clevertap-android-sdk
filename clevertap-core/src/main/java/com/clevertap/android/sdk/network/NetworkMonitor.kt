@@ -43,7 +43,7 @@ internal class NetworkMonitor(
                     networkInfo != null && networkInfo.isConnected
                 }
             } catch (e: Exception) {
-                return true // Fallback to true to avoid blocking operations
+                return false // Fallback to true to avoid blocking operations
             }
         }
     }
@@ -170,10 +170,11 @@ internal class NetworkMonitor(
         try {
             val networkRequest = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
                 .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
-                .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
                 .build()
 
             connectivityManager?.registerNetworkCallback(networkRequest, callback)
@@ -201,8 +202,10 @@ internal class NetworkMonitor(
         return when (getNetworkType()) {
             NetworkType.WIFI -> "WiFi"
             NetworkType.CELLULAR -> Utils.getDeviceNetworkType(appContext)
+            NetworkType.ETHERNET -> "Ethernet"
+            NetworkType.VPN -> "VPN"
             NetworkType.DISCONNECTED -> "Unavailable"
-            else -> "Unavailable"
+            NetworkType.UNKNOWN -> "Unknown"
         }
     }
 

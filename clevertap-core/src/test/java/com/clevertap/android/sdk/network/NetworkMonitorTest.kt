@@ -13,6 +13,7 @@ import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowConnectivityManager
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
@@ -61,7 +62,7 @@ class NetworkMonitorTest : BaseTestCase() {
     fun test_networkState_dataClass_differentTypes_areNotEqual() {
         val wifiState = NetworkState(isAvailable = true, networkType = NetworkType.WIFI, isWifiConnected = true)
         val cellularState = NetworkState(isAvailable = true, networkType = NetworkType.CELLULAR, isWifiConnected = false)
-        assertNotSame(wifiState, cellularState)
+        assertNotEquals(wifiState, cellularState)
     }
 
     // ─── Static companion method tests ────────────────────────────────────────

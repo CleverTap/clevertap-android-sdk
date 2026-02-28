@@ -66,7 +66,6 @@ class InAppControllerTest {
     private lateinit var mockInAppActionHandler: InAppActionHandler
     private lateinit var mockInAppInflater: InAppNotificationInflater
     private lateinit var fakeInAppQueue: FakeInAppQueue
-    private lateinit var mockNetworkMonitor: NetworkMonitor
     private val fakeClock = FakeClock(timeMillis = 1735686000000) // 01.01.2025
 
     @Before
