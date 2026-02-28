@@ -100,6 +100,7 @@ internal class NetworkMonitor(
         if (connectivityManager == null) {
             logger.debug(config.accountId, "ConnectivityManager not available")
             _currentState = NetworkState.DISCONNECTED
+            _stateFlow.tryEmit(_currentState)
             return
         }
 
