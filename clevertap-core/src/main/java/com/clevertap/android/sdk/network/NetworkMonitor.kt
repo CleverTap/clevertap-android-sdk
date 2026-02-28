@@ -43,7 +43,7 @@ internal class NetworkMonitor(
                     networkInfo != null && networkInfo.isConnected
                 }
             } catch (e: Exception) {
-                return false // Fallback to true to avoid blocking operations
+                return false //Fail-safe: treat unknown network state as offline
             }
         }
     }
@@ -233,10 +233,10 @@ internal class NetworkMonitor(
         val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork) ?: return NetworkType.UNKNOWN
 
         return when {
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> NetworkType.VPN
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> NetworkType.WIFI
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> NetworkType.CELLULAR
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkType.ETHERNET
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> NetworkType.VPN
             else -> NetworkType.UNKNOWN
         }
     }
