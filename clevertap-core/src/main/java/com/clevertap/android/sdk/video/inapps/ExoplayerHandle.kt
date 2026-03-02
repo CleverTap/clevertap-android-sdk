@@ -139,8 +139,8 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
                 if (isMuted) R.drawable.ct_volume_off else R.drawable.ct_volume_on
             )
             muteButton.contentDescription = muteButton.context.getString(
-                if (isMuted) R.string.ct_inbox_unmute_button_content_description
-                else R.string.ct_inbox_mute_button_content_description
+                if (isMuted) R.string.ct_unmute_button_content_description
+                else R.string.ct_mute_button_content_description
             )
         }
     }

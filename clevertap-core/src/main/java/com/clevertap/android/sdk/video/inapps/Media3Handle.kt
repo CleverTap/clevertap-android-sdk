@@ -83,7 +83,6 @@ class Media3Handle : InAppVideoPlayerHandle {
         val playerWidth = playerWidth(context = context, isTablet = isTablet)
         val playerHeight = playerHeight(context = context, isTablet = isTablet)
 
-        // todo full screen and audio buttons don't show for plain interstitial templates
         playerView = (LayoutInflater.from(context).inflate(R.layout.ct_media3_inapp_player_view, null) as PlayerView).apply {
             playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
             setLayoutParams(playerViewLayoutParamsNormal)
@@ -136,8 +135,8 @@ class Media3Handle : InAppVideoPlayerHandle {
                 if (isMuted) R.drawable.ct_volume_off else R.drawable.ct_volume_on
             )
             muteButton.contentDescription = muteButton.context.getString(
-                if (isMuted) R.string.ct_inbox_unmute_button_content_description
-                else R.string.ct_inbox_mute_button_content_description
+                if (isMuted) R.string.ct_unmute_button_content_description
+                else R.string.ct_mute_button_content_description
             )
         }
     }
