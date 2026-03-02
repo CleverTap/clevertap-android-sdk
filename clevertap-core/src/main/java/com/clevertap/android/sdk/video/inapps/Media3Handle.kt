@@ -88,8 +88,6 @@ class Media3Handle : InAppVideoPlayerHandle {
             playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
             setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
-            // todo
-//            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
             useArtwork = true
             controllerAutoShow = false
             defaultArtwork = ResourcesCompat.getDrawable(
