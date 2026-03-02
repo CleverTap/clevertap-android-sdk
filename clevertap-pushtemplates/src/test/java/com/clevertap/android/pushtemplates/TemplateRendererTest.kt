@@ -1497,8 +1497,8 @@ class TemplateRendererTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.O])
     fun test_renderNotification_timerEnd_null_renders_terminal_basic() {
-        // When dismissAfter is null (timer already expired), renderer should convert to
-        // terminal basic template and render via BasicStyle
+        // When dismissAfter is null (timer already expired) and renderTerminal is true,
+        // renderer should convert to terminal basic template and render via BasicStyle
         val timerBundle = Bundle(testBundle)
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
 
@@ -1508,6 +1508,7 @@ class TemplateRendererTest {
         every { mockTimerTemplateData.baseContent } returns mockBaseContent
         every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
         every { mockNotificationBehavior.dismissAfter } returns null
+        every { mockTimerTemplateData.renderTerminal } returns true
         every { mockTimerTemplateData.toTerminalBasicTemplateData() } returns mockBasicTemplateData
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
@@ -1559,7 +1560,8 @@ class TemplateRendererTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.O])
     fun test_renderNotification_timerEnd_null_invalid_validator_returns_null() {
-        // When dismissAfter is null but the terminal basic template fails validation, result should be null
+        // When dismissAfter is null and renderTerminal is true but the terminal basic template
+        // fails validation, result should be null
         val timerBundle = Bundle(testBundle)
         timerBundle.putString(PTConstants.PT_ID, "pt_timer")
 
@@ -1569,6 +1571,7 @@ class TemplateRendererTest {
         every { mockTimerTemplateData.baseContent } returns mockBaseContent
         every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
         every { mockNotificationBehavior.dismissAfter } returns null
+        every { mockTimerTemplateData.renderTerminal } returns true
         every { mockTimerTemplateData.toTerminalBasicTemplateData() } returns mockBasicTemplateData
 
         val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
@@ -1596,6 +1599,50 @@ class TemplateRendererTest {
 
         // Assert
         verify { mockTimerTemplateData.toTerminalBasicTemplateData() }
+        assertNull(result)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun test_renderNotification_timerEnd_null_renderTerminal_false_returns_null() {
+        // When dismissAfter is null (timer already expired) and renderTerminal is false,
+        // notification should be skipped entirely
+        val timerBundle = Bundle(testBundle)
+        timerBundle.putString(PTConstants.PT_ID, "pt_timer")
+
+        val mockBaseContent = mockk<BaseContent>()
+        val mockNotificationBehavior = mockk<NotificationBehavior>()
+
+        every { mockTimerTemplateData.baseContent } returns mockBaseContent
+        every { mockBaseContent.notificationBehavior } returns mockNotificationBehavior
+        every { mockNotificationBehavior.dismissAfter } returns null
+        every { mockTimerTemplateData.renderTerminal } returns false
+
+        val templateRendererLocal = TemplateRenderer(context, timerBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.TIMER,
+                timerBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockTimerTemplateData
+        every { ValidatorFactory.getValidator(mockTimerTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            timerBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert - should skip notification, no terminal conversion attempted
+        verify(exactly = 0) { mockTimerTemplateData.toTerminalBasicTemplateData() }
         assertNull(result)
     }
 
