@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk.variables;
 
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,8 @@ import java.util.Map;
  * @author Ansh Sachdeva
  */
 public class Var<T> {
+
+    private static final String TAG = "variable";
     private final CTVariables ctVariables;
 
     private String name;
@@ -47,8 +51,8 @@ public class Var<T> {
         this.ctVariables = ctVariables;
     }
 
-    private static void log(String msg){
-        Logger.v("variable", msg);
+    private static void log(String msg) {
+        Logger.v(TAG, msg);
     }
 
     public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {
@@ -69,14 +73,14 @@ public class Var<T> {
         if (TextUtils.isEmpty(name)) {
             log("Empty name parameter provided.");
             return null;
+
         }
         if (name.startsWith(".") || name.endsWith(".")) {
             log("Variable name starts or ends with a `.` which is not allowed: " + name);
             return null;
         }
         if (!CTVariableUtils.FILE.equals(kind) && defaultValue == null) {
-            Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '"
-                    + name + "'.");
+            Logger.d("Invalid Operation! Null values are not allowed as default values when defining the variable '" + name + "'.");
             return null;
         }
 
@@ -96,7 +100,7 @@ public class Var<T> {
             ctVariables.getVarCache().registerVariable(var);
             var.update();
         } catch (Throwable t) {
-            t.printStackTrace();
+            Logger.v(TAG, "Error defining variable: " + name, t);
         }
         return var;
     }
@@ -209,7 +213,7 @@ public class Var<T> {
     void warnIfNotStarted() {
         if (!ctVariables.hasVarsRequestCompleted() && !printedCallbackWarning) {
             log("CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
-                + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
+                    + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
         }
     }
@@ -245,7 +249,7 @@ public class Var<T> {
         if (CTVariableUtils.FILE.equals(kind)) {
             return stringValue;
         } else {
-           return null;
+            return null;
         }
     }
 

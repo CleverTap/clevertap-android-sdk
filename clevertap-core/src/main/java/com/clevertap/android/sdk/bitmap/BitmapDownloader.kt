@@ -17,6 +17,7 @@ class BitmapDownloader(
 ) {
     companion object {
         const val NETWORK_TAG_DOWNLOAD_REQUESTS = 21
+        private const val TAG = "BitmapDownloader"
     }
 
     private var downloadStartTimeInMilliseconds: Long = 0
@@ -24,7 +25,7 @@ class BitmapDownloader(
     private lateinit var srcUrl: String
 
     fun downloadBitmap(srcUrl: String): DownloadedBitmap {
-        Logger.v("initiating bitmap download in BitmapDownloader....")
+        Logger.v(TAG, "Initiating bitmap download in BitmapDownloader...")
 
         this.srcUrl = srcUrl
         downloadStartTimeInMilliseconds = Utils.getNowInMillis()
@@ -36,11 +37,12 @@ class BitmapDownloader(
 
                 // expect HTTP 200 OK, so we don't mistakenly save error report instead of the file
                 if (responseCode != HttpURLConnection.HTTP_OK) {
-                    Logger.d("File not loaded completely not going forward. URL was: $srcUrl")
-                    return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+                    val reason = "HTTP Error : $responseCode"
+                    Logger.d(TAG, "File not loaded completely. URL was: $srcUrl, Reason: $reason")
+                    return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
                 }
 
-                Logger.v("Downloading $srcUrl....")
+                Logger.v(TAG, "Downloading $srcUrl....")
 
                 // might be -1: server did not report the length
                 val fileLength = contentLength
@@ -48,7 +50,7 @@ class BitmapDownloader(
 
                 // Check if the size limit is exceeded
                 if (isSizeConstrained && fileLength > size) {
-                    Logger.v("Image size is larger than $size bytes. Cancelling download!")
+                    Logger.v(TAG, "Image size is larger than $size bytes. Cancelling download!")
                     return DownloadedBitmapFactory.nullBitmapWithStatus(SIZE_LIMIT_EXCEEDED)
                 }
 
@@ -59,15 +61,15 @@ class BitmapDownloader(
                 )
             }
         } catch (e: Throwable) {
-            Logger.v("Couldn't download the notification media. URL was: $srcUrl")
-            e.printStackTrace()
-            return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+            val reason = "Exception : ${e.javaClass.simpleName} : ${e.message}"
+            Logger.v(TAG, "Couldn't download the notification media. URL was: $srcUrl, Reason: $reason", e)
+            return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
         } finally {
             try {
                 connection.disconnect()
                 TrafficStats.clearThreadStatsTag()
             } catch (t: Throwable) {
-                Logger.v("Couldn't close connection!", t)
+                Logger.v(TAG, "Couldn't close connection!", t)
             }
         }
     }

@@ -107,11 +107,7 @@ internal class NetworkManager constructor(
         caller: String?,
         isUserSwitchFlush: Boolean
     ) {
-        config.logger.verbose(
-            config.accountId,
-            "Starting queue flush to CleverTap servers"
-        )
-
+        config.logger.verbose(config.accountId, "Starting queue flush to CleverTap servers")
         var continueProcessing = true
         var totalEventsSent = 0
 
@@ -134,7 +130,6 @@ internal class NetworkManager constructor(
                 config.accountId,
                 "Processing batch of $batchSize events (${queueData.eventIds.size} from events, ${queueData.profileEventIds.size} from profile)"
             )
-
             // Send the combined batch to CleverTap servers
             val networkCallSuccess = sendQueue(
                 context = context,
@@ -186,8 +181,7 @@ internal class NetworkManager constructor(
     fun getDelayFrequency(): Int {
         minDelayFrequency = networkRepo.getMinDelayFrequency(minDelayFrequency, networkRetryCount)
         logger.debug(
-            config.accountId,
-            "Setting delay frequency to $minDelayFrequency"
+            config.accountId, "Setting delay frequency to $minDelayFrequency"
         )
         return minDelayFrequency
     }
@@ -336,7 +330,10 @@ internal class NetworkManager constructor(
         applyQueueHeaderListeners(queueHeader, endpointId)
 
         val requestBody = SendQueueRequestBody(queueHeader, queue)
-        logger.debug(config.accountId, "Send queue contains " + queue.length() + " items: " + requestBody)
+        logger.debug(
+            config.accountId,
+            "Send queue contains " + queue.length() + " items: " + requestBody
+        )
         try {
             val headersDoneListener = {
                 notifyHeaderListeners(
@@ -350,9 +347,7 @@ internal class NetworkManager constructor(
             responseFailureCount++
             logger.debug(
                 config.accountId,
-                "An exception occurred while sending the queue, will retry: ",
-                e
-            )
+                "An exception occurred while sending the queue, will retry: ", e)
             if (callbackManager.failureFlushListener != null) {
                 callbackManager.failureFlushListener.failureFlush(context)
             }
@@ -461,9 +456,7 @@ internal class NetworkManager constructor(
         } catch (e: Exception) {
             logger.debug(
                 config.accountId,
-                "An exception occurred while fetching the inapp payload from URL",
-                e
-            )
+                "An exception occurred while fetching the inapp payload from URL" , e)
             return null
         }
     }
@@ -477,9 +470,11 @@ internal class NetworkManager constructor(
             EventGroup.VARIABLES -> {
                 ctApiWrapper.ctApi.defineVars(body)
             }
+
             EventGroup.REGULAR -> {
                 sendQueueApi(body)
             }
+
             EventGroup.PUSH_NOTIFICATION_VIEWED -> {
                 sendImpressionsApi(body)
             }
@@ -497,13 +492,13 @@ internal class NetworkManager constructor(
                     key = sessionEncryptionKey,
                     iv = encryptionResult.iv
                 ).toJsonString()
-                logger.verbose("Encrypted Request = $bodyEnc")
+                logger.verbose(config.accountId, "Encrypted Request = $bodyEnc")
                 return ctApiWrapper.ctApi.sendQueue(
                     body = bodyEnc,
                     isEncrypted = true
                 )
             } else {
-                logger.verbose("Normal Request cause encryption failed = $body")
+                logger.verbose(config.accountId, "Normal Request cause encryption failed = $body")
             }
         }
         return ctApiWrapper.ctApi.sendQueue(body = body.toString())
@@ -567,7 +562,7 @@ internal class NetworkManager constructor(
     @WorkerThread
     private fun handlePushImpressionsResponse(response: Response): Boolean {
         if (!response.isSuccess()) {
-            logger.info("Received error response code: " + response.code)
+            logger.info(config.accountId, "Received error response code: " + response.code)
             return false
         }
 
@@ -580,7 +575,10 @@ internal class NetworkManager constructor(
         networkRepo.setLastRequestTs(currentRequestTimestamp)
         setFirstRequestTimestampIfNeeded(currentRequestTimestamp)
 
-        logger.verbose(config.accountId, "Processing response : ${response.readBody().toJsonOrNull()}")
+        logger.verbose(
+            config.accountId,
+            "Processing response : ${response.readBody().toJsonOrNull()}"
+        )
         return true
     }
 
@@ -619,19 +617,26 @@ internal class NetworkManager constructor(
 
         val isEncryptedResponse = response.getHeaderValue(HEADER_ENCRYPTION_ENABLED).toBoolean()
         if (isEncryptedResponse) {
-            when (val decryptResponse = encryptionManager.decryptResponse(bodyString = bodyString)) {
+            when (val decryptResponse =
+                encryptionManager.decryptResponse(bodyString = bodyString)) {
                 is EncryptionFailure -> {
                     logger.verbose(config.accountId, "Failed to decrypt response")
                     return false
                 }
+
                 is EncryptionSuccess -> {
                     bodyString = decryptResponse.data
                     bodyJson = bodyString.toJsonOrNull()
-                    logger.verbose("Decrypted response = $bodyString")
+                    logger.verbose(config.accountId, "Decrypted response = $bodyString")
                 }
             }
         }
-        cleverTapResponseHandler.handleResponse(isFullResponse, bodyJson, bodyString, isUserSwitchFlush)
+        cleverTapResponseHandler.handleResponse(
+            isFullResponse,
+            bodyJson,
+            bodyString,
+            isUserSwitchFlush
+        )
         return true
     }
 
@@ -650,16 +655,24 @@ internal class NetworkManager constructor(
     }
 
     private fun handleSendQueueResponseError(response: Response) {
-        logger.info("Received error response code: " + response.code)
+        logger.info(config.accountId, "Received error response code: " + response.code)
         when (response.code) {
             419 -> {
-                logger.verbose("There is decryption failure on backend, disabling encrypted requests.")
+                logger.verbose(
+                    config.accountId,
+                    "There is decryption failure on backend, disabling encrypted requests."
+                )
                 coreMetaData.isRelaxNetwork = true
             }
+
             402 -> {
-                logger.verbose("Encryption in transit feature on not enabled for your account, please contact Clevertap support.")
+                logger.verbose(
+                    config.accountId,
+                    "Encryption in transit feature on not enabled for your account, please contact Clevertap support."
+                )
                 coreMetaData.isRelaxNetwork = true
             }
+
             else -> {
                 // no-op
             }
@@ -707,17 +720,15 @@ internal class NetworkManager constructor(
             } catch (e: JSONException) {
                 logger.verbose(
                     config.accountId,
-                    "Encountered an exception while parsing the push notification viewed event queue"
-                )
+                    "Encountered an exception while parsing the push notification viewed event queue", e)
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.verbose(
+                    config.accountId,
+                    "Exception occurred while notifying push impression listeners" , e)
             }
         }
 
-        logger.verbose(
-            config.accountId,
-            "push notification viewed event sent successfully"
-        )
+        logger.verbose(config.accountId, "push notification viewed event sent successfully")
     }
 
     private fun notifyListenerForPushImpressionSentToServer(listenerKey: String) {
