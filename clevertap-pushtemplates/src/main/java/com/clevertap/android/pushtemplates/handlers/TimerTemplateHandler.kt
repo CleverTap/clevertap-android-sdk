@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import com.clevertap.android.pushtemplates.PTConstants
-import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData
@@ -122,8 +121,6 @@ internal object TimerTemplateHandler {
             timer_end = timerThreshold * PTConstants.ONE_SECOND_LONG + PTConstants.ONE_SECOND_LONG
         } else if (timerEnd >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
             timer_end = timerEnd * PTConstants.ONE_SECOND_LONG + PTConstants.ONE_SECOND_LONG
-        } else {
-            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: ${PTConstants.PT_TIMER_END}")
         }
         return timer_end
     }
