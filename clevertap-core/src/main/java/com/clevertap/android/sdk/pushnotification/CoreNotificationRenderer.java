@@ -121,6 +121,9 @@ public class CoreNotificationRenderer implements INotificationRenderer, AudibleN
         // 2. Try image fallback
         DownloadedBitmap downloadedBitmap = getNotificationImageBitmap(bigPictureUrl, context, config);
         extras.putString(Constants.WZRK_BPDS, downloadedBitmap.getStatus().getStatusValue());
+        if (downloadedBitmap.getFailureReason() != null) {
+            extras.putString(Constants.WZRK_BPDS_REASON, downloadedBitmap.getFailureReason());
+        }
 
         try {
             Bitmap bitmap = downloadedBitmap.getBitmap();

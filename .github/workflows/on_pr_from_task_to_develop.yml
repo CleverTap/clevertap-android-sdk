@@ -68,7 +68,7 @@ jobs:
       contents: read
       packages: write
       pull-requests: write
-    name: Unit test and Jacoco Reporting
+    name: Unit Tests and Coverage
     
     steps:
       - name: Checkout the code from Repo
@@ -91,7 +91,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+    name: Build Release AARs
     steps:
       - name: Checkout the code from Repo
         uses: actions/checkout@v4
@@ -99,5 +99,5 @@ jobs:
       - name: Setup JDK 17
         uses: ./.github/mini_flows/setup_jdk
 
-      - name: Build AARs (RELEASE)
+      - name: Build Release AARs
         uses: ./.github/mini_flows/build_code_release

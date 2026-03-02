@@ -270,6 +270,12 @@ internal class InAppController(
         data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.campaignId)
         data.putString(Constants.KEY_C2A, callToAction)
 
+        // Extract and add deep link for attribution
+        val deepLink = extractDeepLink(action)
+        if (!deepLink.isNullOrEmpty()) {
+            data.putString(Constants.DEEP_LINK_KEY, deepLink)
+        }
+
         // send clicked event
         if (!inAppNotification.isLocalInApp) {
             analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data)
@@ -826,7 +832,6 @@ internal class InAppController(
 
     @MainThread
     private fun showInApp(inAppNotification: CTInAppNotification) {
-        val activity = CoreMetaData.getCurrentActivity()
         val goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification)
         if (!goFromListener) {
             logger.verbose(
@@ -857,6 +862,7 @@ internal class InAppController(
             return
         }
 
+        val activity = CoreMetaData.getCurrentActivity()
         if (!canShowInAppOnActivity(activity)) {
             pendingNotifications.add(inAppNotification)
             logger.verbose(
@@ -924,8 +930,8 @@ internal class InAppController(
                         t
                     )
                     currentlyDisplayingInApp = null
-                    return
                 }
+                return
             }
 
             CTInAppTypeFooterHTML -> {
@@ -956,18 +962,22 @@ internal class InAppController(
             }
         }
 
-        if (inAppFragment != null) {
-            logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
-            val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
-                inAppFragment,
-                activity,
-                inAppNotification,
-                config,
-                defaultLogTag
-            )
-            if (!showFragmentSuccess) {
-                currentlyDisplayingInApp = null
-            }
+        if (inAppFragment == null || activity == null) {
+            logger.debug("Unable to display In-App: Activity/Fragment is null")
+            currentlyDisplayingInApp = null
+            return
+        }
+
+        logger.debug("Displaying In-App: ${inAppNotification.jsonDescription}")
+        val showFragmentSuccess = CTInAppBaseFragment.showOnActivity(
+            inAppFragment,
+            activity,
+            inAppNotification,
+            config,
+            defaultLogTag
+        )
+        if (!showFragmentSuccess) {
+            currentlyDisplayingInApp = null
         }
     }
 
@@ -1074,5 +1084,24 @@ internal class InAppController(
                 put("tgtId", targetId)
             })
         }
+    }
+
+    /**
+     * Extracts the deep link URL from an InApp action for wzrk_dl attribution.
+     *
+     * The deep link is taken from the action URL when the action type is OPEN_URL.
+     * This covers button clicks in both native and HTML InApps (via the JS bridge).
+     *
+     * @param action The action being triggered
+     * @return The deep link URL, or null if the action has no URL
+     */
+    private fun extractDeepLink(action: CTInAppAction): String? {
+        if (action.type == InAppActionType.OPEN_URL) {
+            val actionUrl = action.actionUrl
+            if (!actionUrl.isNullOrEmpty()) {
+                return actionUrl
+            }
+        }
+        return null
     }
 }

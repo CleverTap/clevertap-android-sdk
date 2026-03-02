@@ -9,7 +9,9 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.content.Context;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.BaseAnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -19,6 +21,11 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.FileUtils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,13 +34,10 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
- *      Note: This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+ * Note: This class has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
  * </p>
  */
 @Deprecated
@@ -71,7 +75,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This variable has been deprecated and will be removed in the future versions of this SDK.
+     * Note: This variable has been deprecated and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -83,14 +87,14 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
     CTProductConfigController(Context context, CleverTapInstanceConfig config,
-            final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
-            final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings,
-            FileUtils fileUtils) {
+                              final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
+                              final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings,
+                              FileUtils fileUtils) {
         this.context = context;
         this.config = config;
         this.coreMetaData = coreMetaData;
@@ -104,7 +108,7 @@ public class CTProductConfigController {
     /**
      * Asynchronously activates the most recently fetched configs, so that the fetched key value pairs take effect.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -142,9 +146,8 @@ public class CTProductConfigController {
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                                 "Activated successfully with configs: " + activatedConfigs);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Activate failed: " + e.getLocalizedMessage());
+                                "Activate failed", e);
                     }
                     return null;
                 }
@@ -156,7 +159,7 @@ public class CTProductConfigController {
     /**
      * Starts fetching configs, adhering to the default minimum fetch interval.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -168,10 +171,10 @@ public class CTProductConfigController {
      * Starts fetching configs, adhering to the specified minimum fetch interval in seconds.
      *
      * @param minimumFetchIntervalInSeconds - long value of seconds
-
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
+     *
+     *                                      <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *                                      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     *                                      </p>
      */
     @Deprecated
     public void fetch(long minimumFetchIntervalInSeconds) {
@@ -183,7 +186,7 @@ public class CTProductConfigController {
     /**
      * Asynchronously fetches and then activates the fetched configs.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -196,7 +199,7 @@ public class CTProductConfigController {
      * This method is internal to CleverTap SDK.
      * Developers should not use this method manually.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -208,7 +211,8 @@ public class CTProductConfigController {
             event.put("evtName", Constants.WZRK_FETCH);
             event.put("evtData", notif);
         } catch (JSONException e) {
-            e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                    "Error creating fetch event JSON", e);
         }
         analyticsManager.sendFetchEvent(event);
         coreMetaData.setProductConfigRequested(true);
@@ -223,7 +227,7 @@ public class CTProductConfigController {
      * @return Boolean - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_BOOLEAN}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -245,7 +249,7 @@ public class CTProductConfigController {
      * @return Double - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_DOUBLE}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -258,9 +262,8 @@ public class CTProductConfigController {
                     return Double.parseDouble(value);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "Error getting Double for Key-" + Key + " " + e.getLocalizedMessage());
+                        "Error getting Double for Key-" + Key, e);
             }
         }
         return DEFAULT_VALUE_FOR_DOUBLE;
@@ -271,7 +274,7 @@ public class CTProductConfigController {
      *
      * @return - long value of timestamp in millis.
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -286,7 +289,7 @@ public class CTProductConfigController {
      * @return Long - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_LONG}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -299,9 +302,8 @@ public class CTProductConfigController {
                     return Long.parseLong(value);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "Error getting Long for Key-" + Key + " " + e.getLocalizedMessage());
+                        "Error getting Long for Key-" + Key, e);
             }
         }
         return DEFAULT_VALUE_FOR_LONG;
@@ -318,7 +320,7 @@ public class CTProductConfigController {
      * @return String - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_STRING}
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -335,7 +337,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -348,7 +350,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -362,7 +364,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -394,8 +396,7 @@ public class CTProductConfigController {
                         activate();
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed", e);
                     sendCallback(PROCESSING_STATE.FETCHED);
                     // set fetchAndActivating flag to false if fetch fails.
                     isFetchAndActivating.compareAndSet(true, false);
@@ -408,7 +409,7 @@ public class CTProductConfigController {
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -421,7 +422,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -434,7 +435,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -448,9 +449,9 @@ public class CTProductConfigController {
      * @param resourceID - resource Id of the XML.
      *
      *
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
+     *                   <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *                   Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     *                   </p>
      */
     @Deprecated
     public void setDefaults(final int resourceID) {
@@ -463,9 +464,9 @@ public class CTProductConfigController {
      * @param map - HashMap of the default configs
      *
      *
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
-     * </p>
+     *            <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *            Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     *            </p>
      */
     @Deprecated
     public void setDefaults(final HashMap<String, Object> map) {
@@ -491,8 +492,7 @@ public class CTProductConfigController {
                                     }
                                 } catch (Exception e) {
                                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                            "Product Config: setDefaults Failed for Key: " + key + " with Error: " + e
-                                                    .getLocalizedMessage());
+                                            "Product Config: setDefaults Failed for Key: " + key, e);
                                 }
                             }
                         }
@@ -510,7 +510,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -537,7 +537,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -553,9 +553,8 @@ public class CTProductConfigController {
                         config.getLogger()
                                 .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Reset failed: " + e.getLocalizedMessage());
+                                "Reset failed", e);
                     }
 
                     return null;
@@ -594,7 +593,7 @@ public class CTProductConfigController {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
+     * Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -631,9 +630,8 @@ public class CTProductConfigController {
                         isInitialized.set(true);
 
                     } catch (Exception e) {
-                        e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "InitAsync failed - " + e.getLocalizedMessage());
+                                "InitAsync failed", e);
                         return false;
                     }
                     return true;
@@ -696,9 +694,8 @@ public class CTProductConfigController {
         try {
             kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
         } catch (JSONException e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "ConvertServerJsonToMap failed - " + e.getLocalizedMessage());
+                    "ConvertServerJsonToMap failed", e);
             return map;
         }
 
@@ -715,9 +712,8 @@ public class CTProductConfigController {
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "ConvertServerJsonToMap failed: " + e.getLocalizedMessage());
+                            "ConvertServerJsonToMap failed", e);
                 }
             }
         }
@@ -732,9 +728,8 @@ public class CTProductConfigController {
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                     "GetStoredValues reading file success:[ " + fullFilePath + "]--[Content]" + content);
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "GetStoredValues reading file failed: " + e.getLocalizedMessage());
+                    "GetStoredValues reading file failed", e);
             return map;
         }
         if (!TextUtils.isEmpty(content)) {
@@ -742,9 +737,8 @@ public class CTProductConfigController {
             try {
                 jsonObject = new JSONObject(content);
             } catch (Exception e) {
-                e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "GetStoredValues failed due to malformed json: " + e.getLocalizedMessage());
+                        "GetStoredValues failed due to malformed json", e);
                 return map;
             }
             Iterator<String> iterator = jsonObject.keys();
@@ -755,9 +749,7 @@ public class CTProductConfigController {
                     try {
                         value = String.valueOf(jsonObject.get(key));
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "GetStoredValues for key " + key + " while parsing json: " + e.getLocalizedMessage());
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetStoredValues failed for key " + key + " while parsing json", e);
                         continue;
                     }
                     if (!TextUtils.isEmpty(value)) {
@@ -800,9 +792,8 @@ public class CTProductConfigController {
         try {
             timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
         } catch (Exception e) {
-            e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "ParseFetchedResponse failed: " + e.getLocalizedMessage());
+                    "ParseFetchedResponse failed", e);
         }
         if (timestamp != null) {
             settings.setLastFetchTimeStampInMillis(timestamp * 1000L);

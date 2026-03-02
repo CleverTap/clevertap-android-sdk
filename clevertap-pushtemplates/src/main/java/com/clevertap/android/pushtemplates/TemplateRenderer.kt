@@ -52,13 +52,10 @@ import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.Random
 
-class TemplateRenderer(
-    context: Context,
-    private val extras: Bundle,
-    internal val config: CleverTapInstanceConfig? = null
-) : INotificationRenderer, AudibleNotification {
+import java.util.*
+private const val TAG = "TemplateRenderer"
+class TemplateRenderer(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {
         TemplateMediaManager(templateRepository = TemplateRepository(context, config))
     }
@@ -323,7 +320,7 @@ class TemplateRenderer(
                     val id = action.optString("id")
 
                     if (label.isEmpty() || id.isEmpty()) {
-                        Logger.d("not adding push notification action: action label or id missing")
+                        Logger.d(TAG , "not adding push notification action: action label or id missing")
                         continue
                     }
                     var icon = 0
@@ -335,7 +332,7 @@ class TemplateRenderer(
                                 context.packageName
                             )
                         } catch (t: Throwable) {
-                            Logger.d("unable to add notification action icon: " + t.localizedMessage)
+                            Logger.d(TAG, "unable to add notification action icon: " ,t)
                         }
                     }
 
@@ -350,7 +347,7 @@ class TemplateRenderer(
                         actionButtonPendingIntents[id] = pendingIntent
                     }
                 } catch (t: Throwable) {
-                    Logger.d("error adding notification action : " + t.localizedMessage)
+                    Logger.d(TAG, "error adding notification action : " ,t)
                 }
             }
         }
@@ -380,7 +377,7 @@ class TemplateRenderer(
                         clazz =
                             Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
                     } catch (_: ClassNotFoundException) {
-                        Logger.d("No Intent Service found")
+                        Logger.d(TAG, "No Intent Service found")
                     }
                 }
             } else {
@@ -388,7 +385,7 @@ class TemplateRenderer(
                     clazz =
                         Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
                 } catch (_: ClassNotFoundException) {
-                    Logger.d("No Intent Service found")
+                    Logger.d(TAG, "No Intent Service found")
                 }
             }
             val isCTIntentServiceAvailable =
@@ -477,7 +474,7 @@ class TemplateRenderer(
                 )
             }
         } catch (t: Throwable) {
-            Logger.d("error creating pending intent for action button: " + t.localizedMessage)
+            Logger.d(TAG, "error creating pending intent for action button: ",t)
             return null
         }
     }

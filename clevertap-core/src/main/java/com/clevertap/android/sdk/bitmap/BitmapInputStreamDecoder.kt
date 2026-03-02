@@ -41,8 +41,9 @@ open class BitmapInputStreamDecoder(
 
         val fileLength = connection.contentLength
         if (fileLength != -1 && fileLength != totalBytesRead) {
-            logger?.debug("File not loaded completely not going forward. URL was: ${connection.url}")
-            return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.DOWNLOAD_FAILED)
+            val reason = "Incomplete Download"
+            logger?.debug("File not loaded completely not going forward. URL was: ${connection.url}, Reason: $reason")
+            return DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
         }
 
         val downloadedBitmap: DownloadedBitmap
@@ -65,7 +66,9 @@ open class BitmapInputStreamDecoder(
                     }
                 )
             } else {
-                DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED)
+                val reason = "DecodeByteArray error"
+                logger?.debug(reason)
+                DownloadedBitmapFactory.nullBitmapWithStatus(DOWNLOAD_FAILED, reason)
             }
         } else {
             downloadedBitmap = DownloadedBitmapFactory.successBytes(
