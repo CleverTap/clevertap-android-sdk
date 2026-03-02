@@ -117,6 +117,10 @@ internal class InAppStreamMediaHandler
 
         val handle = handle ?: return
         val videoSurface = handle.videoSurface()
+        videoSurface.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
         if (videoFrameLayout?.size == 0) {
             videoFrameLayout?.addView(videoSurface)
         } else {
