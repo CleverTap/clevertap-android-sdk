@@ -64,8 +64,6 @@ public class GifImageView extends AppCompatImageView implements Runnable {
         public void run() {
             if (tmpBitmap != null && !tmpBitmap.isRecycled()) {
                 setImageBitmap(tmpBitmap);
-                // todo
-//                setScaleType(ScaleType.FIT_CENTER);
             }
         }
     };
