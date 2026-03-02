@@ -48,14 +48,10 @@
 
             <ImageButton
                 android:id="@+id/exo_mute"
-                android:src="@drawable/ct_ic_arrow_back_white_24dp"
+                android:src="@drawable/ct_volume_off"
                 android:visibility="visible"
                 style="@style/ExoStyledControls.Button.Bottom"
-                android:contentDescription="@string/ct_inbox_mute_button_content_description" />
-
-            <ImageButton
-                android:id="@id/exo_settings"
-                style="@style/ExoStyledControls.Button.Bottom.Settings" />
+                android:contentDescription="@string/ct_mute_button_content_description" />
 
             <ImageButton
                 android:id="@id/exo_fullscreen"
@@ -72,6 +68,28 @@
         android:layout_gravity="bottom"
         android:layout_marginBottom="@dimen/exo_styled_progress_margin_bottom" />
 
+    <LinearLayout android:id="@id/exo_minimal_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="@dimen/exo_styled_minimal_controls_margin_bottom"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layoutDirection="ltr">
+
+        <ImageButton
+            android:id="@+id/exo_minimal_mute"
+            android:src="@drawable/ct_volume_off"
+            android:visibility="visible"
+            style="@style/ExoStyledControls.Button.Bottom"
+            android:contentDescription="@string/ct_mute_button_content_description" />
+
+
+        <ImageButton android:id="@id/exo_minimal_fullscreen"
+            style="@style/ExoStyledControls.Button.Bottom.FullScreen"/>
+
+    </LinearLayout>
+
     <LinearLayout
         android:id="@id/exo_center_controls"
         android:layout_width="wrap_content"
@@ -84,16 +102,8 @@
         android:padding="@dimen/exo_styled_controls_padding">
 
         <ImageButton
-            android:id="@id/exo_prev"
-            style="@style/ExoStyledControls.Button.Center.Previous" />
-
-        <ImageButton
             android:id="@id/exo_play_pause"
             style="@style/ExoStyledControls.Button.Center.PlayPause" />
-
-        <ImageButton
-            android:id="@id/exo_next"
-            style="@style/ExoStyledControls.Button.Center.Next" />
 
     </LinearLayout>
 
