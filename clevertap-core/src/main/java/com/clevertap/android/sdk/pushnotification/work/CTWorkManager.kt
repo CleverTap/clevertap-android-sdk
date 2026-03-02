@@ -43,7 +43,6 @@ class CTWorkManager(private val context: Context, config: CleverTapInstanceConfi
             logger.verbose(accountId, "Finished scheduling one time work request to flush push impressions...")
         } catch (t: Throwable) {
             logger.verbose(accountId, "Failed to schedule one time work request to flush push impressions.", t)
-            t.printStackTrace()
         }
     }
 

@@ -13,7 +13,8 @@ data class DownloadedBitmap constructor(
     val bitmap: Bitmap?,
     val status: Status,
     val downloadTime: Long,
-    val bytes: ByteArray? = null
+    val bytes: ByteArray? = null,
+    val failureReason: String? = null
 ) {
 
     /**
@@ -41,6 +42,7 @@ data class DownloadedBitmap constructor(
         if (status != other.status) return false
         if (downloadTime != other.downloadTime) return false
         if (!bytes.contentEquals(other.bytes)) return false
+        if (failureReason != other.failureReason) return false
 
         return true
     }
@@ -50,6 +52,7 @@ data class DownloadedBitmap constructor(
         result = 31 * result + status.hashCode()
         result = 31 * result + downloadTime.hashCode()
         result = 31 * result + bytes.contentHashCode()
+        result = 31 * result + (failureReason?.hashCode() ?: 0)
         return result
     }
 }

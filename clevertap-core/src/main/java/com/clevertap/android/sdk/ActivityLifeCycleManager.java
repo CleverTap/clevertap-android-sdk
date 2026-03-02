@@ -43,16 +43,16 @@ class ActivityLifeCycleManager {
     private final Clock clock;
 
     ActivityLifeCycleManager(Context context,
-            CleverTapInstanceConfig config,
-            AnalyticsManager analyticsManager,
-            CoreMetaData coreMetaData,
-            SessionManager sessionManager,
-            PushProviders pushProviders,
-            BaseCallbackManager callbackManager,
-            InAppController inAppController,
-            BaseEventQueueManager baseEventQueueManager,
-            CTExecutors executors,
-            Clock clock) {
+                             CleverTapInstanceConfig config,
+                             AnalyticsManager analyticsManager,
+                             CoreMetaData coreMetaData,
+                             SessionManager sessionManager,
+                             PushProviders pushProviders,
+                             BaseCallbackManager callbackManager,
+                             InAppController inAppController,
+                             BaseEventQueueManager baseEventQueueManager,
+                             CTExecutors executors,
+                             Clock clock) {
         this.context = context;
         this.config = config;
         this.analyticsManager = analyticsManager;
@@ -104,7 +104,7 @@ class ActivityLifeCycleManager {
             analyticsManager.fetchFeatureFlags();
             pushProviders.onTokenRefresh();
             Task<Void> task = executors.postAsyncSafelyTask();
-            task.execute("HandlingInstallReferrer",new Callable<Void>() {
+            task.execute("HandlingInstallReferrer", new Callable<Void>() {
                 @Override
                 public Void call() {
                     if (!coreMetaData.isInstallReferrerDataSent() && coreMetaData
@@ -166,7 +166,14 @@ class ActivityLifeCycleManager {
                 @Override
                 public void onInstallReferrerServiceDisconnected() {
                     if (!coreMetaData.isInstallReferrerDataSent()) {
-                        handleInstallReferrerOnFirstInstall();
+                        Task<Void> retryTask = executors.postAsyncSafelyTask();
+                        retryTask.execute("RetryInstallReferrer", new Callable<Void>() {
+                            @Override
+                            public Void call() {
+                                handleInstallReferrerOnFirstInstall();
+                                return null;
+                            }
+                        });
                     }
                 }
 
@@ -193,7 +200,14 @@ class ActivityLifeCycleManager {
                                             "Install referrer client null pointer exception caused by Google Play Install Referrer library - "
                                                     + npe
                                                     .getMessage());
-                                    referrerClient.endConnection();
+                                    Task<Void> endTask = executors.ioTaskNonUi();
+                                    endTask.execute("EndReferrerConnection", new Callable<Void>() {
+                                        @Override
+                                        public Void call() {
+                                            referrerClient.endConnection();
+                                            return null;
+                                        }
+                                    });
                                     coreMetaData.setInstallReferrerDataSent(false);
                                 }
                             });

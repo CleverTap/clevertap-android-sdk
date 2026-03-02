@@ -138,7 +138,6 @@ public class Parser {
       }
     } catch (Throwable t) {
       log( "Error parsing variables:", t);
-      t.printStackTrace();
     }
   }
 
