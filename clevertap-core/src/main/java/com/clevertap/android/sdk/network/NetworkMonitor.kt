@@ -67,10 +67,17 @@ internal class NetworkMonitor(
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val activeNetwork = connectivityManager?.activeNetwork
-                val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
+                if (activeNetwork != null) {
+                    val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
                 capabilities != null
                         && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                         && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                } else {
+                    @Suppress("DEPRECATION")
+                    val networkInfo = connectivityManager?.activeNetworkInfo
+                    @Suppress("DEPRECATION")
+                    networkInfo != null && networkInfo.isConnected
+                }
             } else {
                 @Suppress("DEPRECATION")
                 val networkInfo = connectivityManager?.activeNetworkInfo
@@ -220,7 +227,7 @@ internal class NetworkMonitor(
 
     @androidx.annotation.RequiresApi(Build.VERSION_CODES.M)
     private fun getNetworkTypeFromCapabilities(): NetworkType {
-        val activeNetwork = connectivityManager?.activeNetwork
+        val activeNetwork = connectivityManager?.activeNetwork ?: return NetworkType.DISCONNECTED
         val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork) ?: return NetworkType.DISCONNECTED
 
         return when {
