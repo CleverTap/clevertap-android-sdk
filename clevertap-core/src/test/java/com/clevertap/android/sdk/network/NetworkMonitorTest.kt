@@ -148,34 +148,14 @@ class NetworkMonitorTest : BaseTestCase() {
     // ─── NetworkType enum tests ────────────────────────────────────────────────
 
     @Test
-    fun test_networkTypeEnum_containsWifi() {
-        assertTrue(NetworkType.WIFI in NetworkType.values())
+    fun test_networkTypeEnum_containsAllExpectedValues() {
+        val expectedTypes = setOf(
+            NetworkType.WIFI, NetworkType.CELLULAR, NetworkType.ETHERNET,
+            NetworkType.VPN, NetworkType.UNKNOWN, NetworkType.DISCONNECTED
+        )
+        assertEquals(expectedTypes, NetworkType.values().toSet())
     }
 
-    @Test
-    fun test_networkTypeEnum_containsCellular() {
-        assertTrue(NetworkType.CELLULAR in NetworkType.values())
-    }
-
-    @Test
-    fun test_networkTypeEnum_containsEthernet() {
-        assertTrue(NetworkType.ETHERNET in NetworkType.values())
-    }
-
-    @Test
-    fun test_networkTypeEnum_containsVpn() {
-        assertTrue(NetworkType.VPN in NetworkType.values())
-    }
-
-    @Test
-    fun test_networkTypeEnum_containsUnknown() {
-        assertTrue(NetworkType.UNKNOWN in NetworkType.values())
-    }
-
-    @Test
-    fun test_networkTypeEnum_containsDisconnected() {
-        assertTrue(NetworkType.DISCONNECTED in NetworkType.values())
-    }
 
     @Test
     @Suppress("DEPRECATION")

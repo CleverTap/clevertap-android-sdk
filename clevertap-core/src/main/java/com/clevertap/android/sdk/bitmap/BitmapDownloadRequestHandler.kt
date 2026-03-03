@@ -51,7 +51,7 @@ open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDown
                 }
             } catch (e: Exception) {
                 Logger.v("Connectivity check failed: ${e.message}")
-                false
+                true
             }
 
             if (!isOnline)

@@ -211,7 +211,12 @@ internal class NetworkMonitor(
     private fun getCurrentNetworkType(): NetworkType {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                getNetworkTypeFromCapabilities()
+                val activeNetwork = connectivityManager?.activeNetwork
+                if (activeNetwork != null) {
+                    getNetworkTypeFromCapabilities()
+                } else {
+                    getNetworkTypeFromNetworkInfo()
+                }
             } else {
                 getNetworkTypeFromNetworkInfo()
             }
