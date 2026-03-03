@@ -36,12 +36,17 @@ open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDown
             val isOnline = try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     val caps = connectivityManager?.getNetworkCapabilities(connectivityManager.activeNetwork)
-                    caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                    caps != null
+                            && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                 } else {
                     @Suppress("DEPRECATION")
                     connectivityManager?.activeNetworkInfo?.isConnected == true
                 }
-            } catch (e: Exception) { true }
+            } catch (e: SecurityException) {
+                Logger.v("Connectivity check failed: ${e.message}")
+                false
+            }
 
             if (!isOnline)
             {

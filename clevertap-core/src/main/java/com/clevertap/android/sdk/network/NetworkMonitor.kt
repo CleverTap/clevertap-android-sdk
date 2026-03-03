@@ -111,7 +111,8 @@ internal class NetworkMonitor(
     private fun calculateCurrentNetworkState(): NetworkState {
         return try {
             val hasInternet = checkCurrentConnectivity()
-            if (!hasInternet) {
+            val networkType = getCurrentNetworkType()
+            if (!hasInternet || networkType == NetworkType.DISCONNECTED) {
                 NetworkState.DISCONNECTED
             } else {
                 val networkType = getCurrentNetworkType()
