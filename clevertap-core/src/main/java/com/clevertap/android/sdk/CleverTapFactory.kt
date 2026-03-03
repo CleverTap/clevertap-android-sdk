@@ -490,7 +490,8 @@ internal object CleverTapFactory {
             inAppNotificationInflater,
             inAppDelayManager,
             inAppInActionManager,
-            SYSTEM
+            SYSTEM,
+            networkMonitor
         )
         controllerManager.inAppController = inAppController
 

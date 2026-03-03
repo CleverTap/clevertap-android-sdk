@@ -76,7 +76,8 @@ internal class InAppController(
     private val inAppNotificationInflater: InAppNotificationInflater,
     private val inAppDelayManager: InAppScheduler<DelayedInAppResult>,
     private val inAppInActionManager: InAppScheduler<InActionResult>,
-    private val clock: Clock
+    private val clock: Clock,
+    private val networkMonitor: NetworkMonitor
 ) : InAppListener {
 
     private enum class InAppState {
@@ -888,7 +889,7 @@ internal class InAppController(
         }
 
         val isHtmlType = Constants.KEY_CUSTOM_HTML == inAppNotification.type
-        if (isHtmlType && !NetworkMonitor.isNetworkOnline(context)) {
+        if (isHtmlType && !networkMonitor.isNetworkOnline()) {
             logger.debug(
                 defaultLogTag,
                 "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp"

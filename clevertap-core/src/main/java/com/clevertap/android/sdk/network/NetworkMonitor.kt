@@ -54,9 +54,6 @@ internal class NetworkMonitor(
     private val _stateFlow = MutableStateFlow(NetworkState.DISCONNECTED)
     val networkState: Flow<NetworkState> = _stateFlow.asStateFlow()
 
-    // Internal network state managed by the monitor
-    @Volatile
-    private var _currentState: NetworkState = NetworkState.DISCONNECTED
 
     /**
      * EXECUTION STARTS IMMEDIATELY WHEN OBJECT IS CREATED
@@ -66,7 +63,7 @@ internal class NetworkMonitor(
         initializeNetworkMonitoring()
     }
 
-    fun checkCurrentConnectivity(): Boolean {
+    private fun checkCurrentConnectivity(): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val activeNetwork = connectivityManager?.activeNetwork
@@ -91,9 +88,7 @@ internal class NetworkMonitor(
     private fun initializeNetworkMonitoring() {
         if (connectivityManager == null) {
             logger.debug(config.accountId, "ConnectivityManager not available")
-            _currentState = NetworkState.DISCONNECTED
-            _stateFlow.value = _currentState
-
+            _stateFlow.value = NetworkState.DISCONNECTED
             return
         }
 
@@ -103,15 +98,14 @@ internal class NetworkMonitor(
         // Register network callback to monitor changes
         registerNetworkCallback()
 
-        logger.debug(config.accountId, "NetworkMonitor initialized with state: $_currentState")
+        logger.debug(config.accountId, "NetworkMonitor initialized with state: ${_stateFlow.value}")
     }
 
     /**
      * Updates internal state based on current network status
      */
     private fun updateInternalNetworkState() {
-        _currentState = calculateCurrentNetworkState()
-        _stateFlow.value = _currentState
+        _stateFlow.value = calculateCurrentNetworkState()
     }
 
     private fun calculateCurrentNetworkState(): NetworkState {
@@ -140,7 +134,7 @@ internal class NetworkMonitor(
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 updateInternalNetworkState() // Update internal state
-                logger.verbose(config.accountId, "Network became available: ${_currentState.networkType}")
+                logger.verbose(config.accountId, "Network became available: ${_stateFlow.value.networkType}")
             }
 
             override fun onLost(network: Network) {
@@ -150,7 +144,7 @@ internal class NetworkMonitor(
 
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
                 updateInternalNetworkState() // Update internal state
-                logger.verbose(config.accountId, "Network capabilities changed: ${_currentState.networkType}")
+                logger.verbose(config.accountId, "Network capabilities changed: ${_stateFlow.value.networkType}")
             }
 
             override fun onUnavailable() {
@@ -187,13 +181,13 @@ internal class NetworkMonitor(
     /**
      * Synchronous methods that check the current internal state
      */
-    fun getCurrentNetworkState(): NetworkState = _currentState
+    fun getCurrentNetworkState(): NetworkState = _stateFlow.value
 
-    fun isNetworkOnline(): Boolean = _currentState.isAvailable
+    fun isNetworkOnline(): Boolean = _stateFlow.value.isAvailable
 
-    fun isWifiConnected(): Boolean = _currentState.isWifiConnected
+    fun isWifiConnected(): Boolean = _stateFlow.value.isWifiConnected
 
-    fun getNetworkType(): NetworkType = _currentState.networkType
+    fun getNetworkType(): NetworkType = _stateFlow.value.networkType
 
     fun getNetworkTypeString(): String {
         return when (getNetworkType()) {
