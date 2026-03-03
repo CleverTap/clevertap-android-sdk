@@ -115,7 +115,6 @@ internal class NetworkMonitor(
             if (!hasInternet || networkType == NetworkType.DISCONNECTED) {
                 NetworkState.DISCONNECTED
             } else {
-                val networkType = getCurrentNetworkType()
                 NetworkState(
                     isAvailable = true,
                     networkType = networkType,
