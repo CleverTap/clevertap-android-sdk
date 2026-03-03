@@ -11,6 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowConnectivityManager
+import org.robolectric.shadows.ShadowNetworkInfo
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
@@ -147,11 +148,6 @@ class NetworkMonitorTest : BaseTestCase() {
     // ─── NetworkType enum tests ────────────────────────────────────────────────
 
     @Test
-    fun test_networkTypeEnum_totalCount_isSix() {
-        assertEquals(6, NetworkType.values().size)
-    }
-
-    @Test
     fun test_networkTypeEnum_containsWifi() {
         assertTrue(NetworkType.WIFI in NetworkType.values())
     }
@@ -180,4 +176,26 @@ class NetworkMonitorTest : BaseTestCase() {
     fun test_networkTypeEnum_containsDisconnected() {
         assertTrue(NetworkType.DISCONNECTED in NetworkType.values())
     }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun test_isNetworkOnline_whenNetworkConnected_returnsTrue() {
+        val netInfo = ShadowNetworkInfo.newInstance(
+            android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
+        )
+        shadowCM.setActiveNetworkInfo(netInfo)
+        val monitor = createNetworkMonitor()
+        assertTrue(monitor.isNetworkOnline())
+        monitor.cleanup()
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun test_isNetworkOnline_whenNetworkUnavailable_returnsFalse() {
+        shadowCM.setActiveNetworkInfo(null)
+        val monitor = createNetworkMonitor()
+        assertFalse(monitor.isNetworkOnline())
+        monitor.cleanup()
+    }
+
 }

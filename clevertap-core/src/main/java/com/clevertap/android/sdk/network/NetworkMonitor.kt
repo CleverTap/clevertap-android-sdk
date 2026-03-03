@@ -164,10 +164,6 @@ internal class NetworkMonitor(
         try {
             val builder = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-                .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 builder.addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
             }

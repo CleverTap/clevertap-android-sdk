@@ -35,22 +35,27 @@ open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDown
             val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
             val isOnline = try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val caps = connectivityManager?.let {
-                        it.getNetworkCapabilities(it.activeNetwork)
+                    val activeNetwork = connectivityManager?.activeNetwork
+                    if (activeNetwork != null) {
+                        val caps = connectivityManager?.getNetworkCapabilities(activeNetwork)
+                        caps != null
+                                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    }else{
+                        @Suppress("DEPRECATION")
+                        connectivityManager?.activeNetworkInfo?.isConnected == true
                     }
-                    caps != null
-                            && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                            && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                 } else {
                     @Suppress("DEPRECATION")
                     connectivityManager?.activeNetworkInfo?.isConnected == true
                 }
-            } catch (e: SecurityException) {
+            } catch (e: Exception) {
                 Logger.v("Connectivity check failed: ${e.message}")
                 false
             }
 
-            if (!isOnline) {
+            if (!isOnline)
+            {
                 Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: $srcUrl")
                 return DownloadedBitmapFactory.nullBitmapWithStatus(NO_NETWORK)
             }
