@@ -85,7 +85,7 @@ internal class NetworkMonitor(
                 networkInfo != null && networkInfo.isConnected
             }
         } catch (e: Exception) {
-            Logger.v("NetworkMonitor: isNetworkOnline check failed: ${e.message}")
+            logger.verbose(config.accountId, "isNetworkOnline check failed: ${e.message}")
             false
         }
     }

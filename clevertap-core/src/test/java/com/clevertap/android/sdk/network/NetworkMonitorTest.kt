@@ -10,6 +10,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowConnectivityManager
 import org.robolectric.shadows.ShadowNetworkInfo
 import kotlin.test.assertEquals
@@ -158,6 +159,7 @@ class NetworkMonitorTest : BaseTestCase() {
 
 
     @Test
+    @Config(sdk = [21])
     @Suppress("DEPRECATION")
     fun test_isNetworkOnline_whenNetworkConnected_returnsTrue() {
         val netInfo = ShadowNetworkInfo.newInstance(
@@ -170,6 +172,7 @@ class NetworkMonitorTest : BaseTestCase() {
     }
 
     @Test
+    @Config(sdk = [21])
     @Suppress("DEPRECATION")
     fun test_isNetworkOnline_whenNetworkUnavailable_returnsFalse() {
         shadowCM.setActiveNetworkInfo(null)
