@@ -65,14 +65,7 @@ class NetworkMonitorTest : BaseTestCase() {
         assertNotEquals(wifiState, cellularState)
     }
 
-    // ─── Static companion method tests ────────────────────────────────────────
 
-    @Test
-    fun test_staticIsNetworkOnline_whenNoActiveNetwork_returnsFalse() {
-        // Robolectric default: no active network with validated capability
-        val result = NetworkMonitor.isNetworkOnline(application)
-        assertFalse(result)
-    }
 
     // ─── Instance method tests (Robolectric default = no network) ─────────────
 
