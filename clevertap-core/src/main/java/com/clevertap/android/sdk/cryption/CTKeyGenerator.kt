@@ -1,14 +1,11 @@
 package com.clevertap.android.sdk.cryption
 
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import androidx.annotation.RequiresApi
 import com.clevertap.android.sdk.Logger
 import java.security.KeyStore
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
-import javax.crypto.spec.SecretKeySpec
 
 internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
 
@@ -22,25 +19,7 @@ internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
      * @return The secret key for encryption/decryption, or null if an error occurs during key generation/retrieval.
      */
     fun generateOrGetKey(): SecretKey? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            fromAndroidKeystore()
-        } else {
-            Logger.v("KeyStore is not supported on API levels below 23")
-
-            val encodedKey = cryptRepository.localEncryptionKey()
-            if (encodedKey != null) {
-                // If the key exists, decode it and return as SecretKey
-                val decodedKey = encodedKey.fromBase64()
-                SecretKeySpec(decodedKey, "AES")
-            } else {
-                val secretKey = generateSecretKey()
-
-                // Store the key in SharedPreferences
-                val encodedNewKey = secretKey.encoded.toBase64()
-                cryptRepository.updateLocalEncryptionKey(encodedNewKey)
-                secretKey
-            }
-        }
+        return fromAndroidKeystore()
     }
 
     fun generateSecretKey(): SecretKey {
@@ -51,7 +30,6 @@ internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
         return secretKey
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun fromAndroidKeystore() = try {
         val keyStore = KeyStore.getInstance("AndroidKeyStore")
         keyStore.load(null)
