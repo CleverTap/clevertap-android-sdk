@@ -158,7 +158,7 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         return playerView!!
     }
 
-    fun playerWidth(
+    private fun playerWidth(
         context: Context,
         isTablet: Boolean
     ) : Int {
@@ -173,7 +173,7 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         ).toInt()
     }
 
-    fun playerHeight(
+    private fun playerHeight(
         context: Context,
         isTablet: Boolean
     ) : Int {
