@@ -38,13 +38,11 @@ internal interface InAppMediaHandler : DefaultLifecycleObserver {
             resourceProvider: FileResourceProvider,
             supportsStreamMedia: Boolean = false
         ): InAppMediaHandler {
-            val media = inAppNotification.mediaList.firstOrNull()
-                ?: return NoOpMediaHandler
+            val media = inAppNotification.getInAppMediaForOrientation(currentOrientation)
+                ?: inAppNotification.mediaList.firstOrNull() ?: return NoOpMediaHandler
 
             return when {
-                media.isImage() -> InAppImageHandler(
-                    inAppNotification, media, currentOrientation, resourceProvider
-                )
+                media.isImage() -> InAppImageHandler(media, resourceProvider)
                 media.isGIF() -> InAppGifHandler(media, resourceProvider)
                 (media.isVideo() || media.isAudio()) && supportsStreamMedia ->
                     InAppStreamMediaHandler(fragment, media, isTablet)
