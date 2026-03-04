@@ -36,6 +36,7 @@ import com.clevertap.android.pushtemplates.media.TemplateRepository;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
@@ -337,7 +338,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     try {
                         Thread.sleep(PTConstants.PT_INPUT_TIMEOUT);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        PTLog.verbose("Thread interrupted while waiting for input timeout", e);
                     }
 
                     Intent launchIntent;
