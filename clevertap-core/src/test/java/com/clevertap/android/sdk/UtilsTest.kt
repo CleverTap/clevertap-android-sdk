@@ -424,10 +424,16 @@ class UtilsTest : BaseTestCase() {
         // Set up network capabilities so connectivity check passes
         val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val shadowCm = Shadows.shadowOf(cm)
+        val netInfo = ShadowNetworkInfo.newInstance(
+            android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
+        )
+        shadowCm.setActiveNetworkInfo(netInfo)
+        val activeNetwork = cm.activeNetwork!!
         val caps = ShadowNetworkCapabilities.newInstance()
         Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        shadowCm.setNetworkCapabilities(cm.activeNetwork, caps)
+        shadowCm.setNetworkCapabilities(activeNetwork, caps)
+
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
@@ -492,10 +498,16 @@ class UtilsTest : BaseTestCase() {
         // Set up network capabilities so connectivity check passes
         val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val shadowCm = Shadows.shadowOf(cm)
+        val netInfo = ShadowNetworkInfo.newInstance(
+            android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
+        )
+        shadowCm.setActiveNetworkInfo(netInfo)
+        val activeNetwork = cm.activeNetwork!!
         val caps = ShadowNetworkCapabilities.newInstance()
         Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        shadowCm.setNetworkCapabilities(cm.activeNetwork, caps)
+        shadowCm.setNetworkCapabilities(activeNetwork, caps)
+
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
