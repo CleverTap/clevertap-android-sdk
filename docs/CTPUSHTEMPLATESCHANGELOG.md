@@ -1,4 +1,11 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.3.0 (March 6, 2025)
+
+#### New features
+* Enhances the `Timer` template to render the fallback (terminal) notification when the timer is already expired or below the minimum threshold (e.g., <10 seconds remaining).
+* Adds support for displaying the large icon in the collapsed view of the `Zero Bezel` template, on top of the background image. The large icon is now positioned on the right.
+* Enhances visual consistency of the collapsed notification view across all templates.
+
 ### Version 2.2.0 (October 17, 2025)
 
 #### New features
