@@ -8,7 +8,6 @@ import android.net.NetworkRequest
 import android.os.Build
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ILogger
-import com.clevertap.android.sdk.Logger
 import kotlinx.coroutines.flow.Flow
 import com.clevertap.android.sdk.Utils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +35,7 @@ internal class NetworkMonitor(
         val networkType: NetworkType = NetworkType.UNKNOWN,
         val isWifiConnected: Boolean = false
     ) {
-        companion object {
+        companion  object {
             val DISCONNECTED = NetworkState(
                 isAvailable = false,
                 networkType = NetworkType.DISCONNECTED,
@@ -64,8 +63,8 @@ internal class NetworkMonitor(
     }
 
     private fun checkCurrentConnectivity(): Boolean {
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        return try {  //version >= android6(API 23)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)  {
                 val activeNetwork = connectivityManager?.activeNetwork
                 if (activeNetwork != null) {
                     val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
@@ -111,7 +110,7 @@ internal class NetworkMonitor(
     /**
      * Updates internal state based on current network status
      */
-    private fun updateInternalNetworkState() {
+    private fun  updateInternalNetworkState() {
         _stateFlow.value = calculateCurrentNetworkState()
     }
 
@@ -140,22 +139,29 @@ internal class NetworkMonitor(
     private fun registerNetworkCallback() {
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                updateInternalNetworkState() // Update internal state
-                logger.verbose(config.accountId, "Network became available: ${_stateFlow.value.networkType}")
+                _stateFlow.value = _stateFlow.value.copy(isAvailable = true)
+                logger.verbose(config.accountId, "Network available")
             }
 
             override fun onLost(network: Network) {
-                updateInternalNetworkState() // Update internal state
+                _stateFlow.value = NetworkState.DISCONNECTED
                 logger.verbose(config.accountId, "Network lost")
             }
 
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-                updateInternalNetworkState() // Update internal state
-                logger.verbose(config.accountId, "Network capabilities changed: ${_stateFlow.value.networkType}")
+                val type = getNetworkTypeFromCapabilities(networkCapabilities)
+                val newState = NetworkState(
+                    isAvailable = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
+                    networkType = type,
+                    isWifiConnected = type == NetworkType.WIFI
+                )
+                _stateFlow.value = newState
+                logger.verbose(config.accountId, "Network capabilities changed: ${newState.networkType}")
             }
 
             override fun onUnavailable() {
-                updateInternalNetworkState() // Update internal state
+                _stateFlow.value = NetworkState.DISCONNECTED
                 logger.verbose(config.accountId, "Network unavailable")
             }
         }
@@ -213,7 +219,9 @@ internal class NetworkMonitor(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val activeNetwork = connectivityManager?.activeNetwork
                 if (activeNetwork != null) {
-                    getNetworkTypeFromCapabilities()
+                    val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
+                        ?: return NetworkType.DISCONNECTED
+                    getNetworkTypeFromCapabilities(capabilities) // ← capabilities pass karo
                 } else {
                     getNetworkTypeFromNetworkInfo()
                 }
@@ -226,11 +234,7 @@ internal class NetworkMonitor(
         }
     }
 
-    @androidx.annotation.RequiresApi(Build.VERSION_CODES.M)
-    private fun getNetworkTypeFromCapabilities(): NetworkType {
-        val activeNetwork = connectivityManager?.activeNetwork ?: return NetworkType.DISCONNECTED
-        val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork) ?: return NetworkType.DISCONNECTED
-
+    private fun getNetworkTypeFromCapabilities(capabilities: NetworkCapabilities): NetworkType {
         return when {
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> NetworkType.VPN
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> NetworkType.WIFI
@@ -239,6 +243,7 @@ internal class NetworkMonitor(
             else -> NetworkType.UNKNOWN
         }
     }
+
 
     @Suppress("DEPRECATION")
     private fun getNetworkTypeFromNetworkInfo(): NetworkType {
