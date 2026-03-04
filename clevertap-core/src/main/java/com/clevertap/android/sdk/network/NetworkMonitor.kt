@@ -5,16 +5,15 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.os.Build
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ILogger
-import kotlinx.coroutines.flow.Flow
 import com.clevertap.android.sdk.Utils
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 internal class NetworkMonitor(
-     context: Context,
+    context: Context,
     private val config: CleverTapInstanceConfig,
     private val logger: ILogger = config.logger
 ) {
@@ -35,7 +34,7 @@ internal class NetworkMonitor(
         val networkType: NetworkType = NetworkType.UNKNOWN,
         val isWifiConnected: Boolean = false
     ) {
-        companion  object {
+        companion object {
             val DISCONNECTED = NetworkState(
                 isAvailable = false,
                 networkType = NetworkType.DISCONNECTED,
@@ -44,6 +43,7 @@ internal class NetworkMonitor(
         }
 
     }
+
     private val connectivityManager by lazy {
         appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     }
@@ -63,31 +63,18 @@ internal class NetworkMonitor(
     }
 
     private fun checkCurrentConnectivity(): Boolean {
-        return try {  //version >= android6(API 23)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)  {
-                val activeNetwork = connectivityManager?.activeNetwork
-                if (activeNetwork != null) {
-                    val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
-                capabilities != null
-                        && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                        && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                } else {
-                    @Suppress("DEPRECATION")
-                    val networkInfo = connectivityManager?.activeNetworkInfo
-                    @Suppress("DEPRECATION")
-                    networkInfo != null && networkInfo.isConnected
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                val networkInfo = connectivityManager?.activeNetworkInfo
-                @Suppress("DEPRECATION")
-                networkInfo != null && networkInfo.isConnected
-            }
+        return try {
+            val activeNetwork = connectivityManager?.activeNetwork ?: return false
+            val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
+            capabilities != null
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         } catch (e: Exception) {
             logger.verbose(config.accountId, "isNetworkOnline check failed: ${e.message}")
             false
         }
     }
+
     /**
      * Starts network monitoring immediately upon object creation
      */
@@ -110,7 +97,7 @@ internal class NetworkMonitor(
     /**
      * Updates internal state based on current network status
      */
-    private fun  updateInternalNetworkState() {
+    private fun updateInternalNetworkState() {
         _stateFlow.value = calculateCurrentNetworkState()
     }
 
@@ -148,7 +135,10 @@ internal class NetworkMonitor(
                 logger.verbose(config.accountId, "Network lost")
             }
 
-            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities
+            ) {
                 val type = getNetworkTypeFromCapabilities(networkCapabilities)
                 val newState = NetworkState(
                     isAvailable = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -157,7 +147,10 @@ internal class NetworkMonitor(
                     isWifiConnected = type == NetworkType.WIFI
                 )
                 _stateFlow.value = newState
-                logger.verbose(config.accountId, "Network capabilities changed: ${newState.networkType}")
+                logger.verbose(
+                    config.accountId,
+                    "Network capabilities changed: ${newState.networkType}"
+                )
             }
 
             override fun onUnavailable() {
@@ -168,14 +161,10 @@ internal class NetworkMonitor(
 
 
         try {
-            val builder = NetworkRequest.Builder()
+            val networkRequest = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                builder.addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-            }
-            val networkRequest = builder.build()
-
-
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .build()
             connectivityManager?.registerNetworkCallback(networkRequest, callback)
             networkCallback = callback
             logger.verbose(config.accountId, "Network callback registered successfully")
@@ -210,24 +199,16 @@ internal class NetworkMonitor(
     }
 
 
-
     /**
      * Gets current network type (internal implementation)
      */
     private fun getCurrentNetworkType(): NetworkType {
         return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val activeNetwork = connectivityManager?.activeNetwork
-                if (activeNetwork != null) {
-                    val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
-                        ?: return NetworkType.DISCONNECTED
-                    getNetworkTypeFromCapabilities(capabilities) // ← capabilities pass karo
-                } else {
-                    getNetworkTypeFromNetworkInfo()
-                }
-            } else {
-                getNetworkTypeFromNetworkInfo()
-            }
+            val activeNetwork = connectivityManager?.activeNetwork
+                ?: return NetworkType.DISCONNECTED
+            val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
+                ?: return NetworkType.DISCONNECTED
+            getNetworkTypeFromCapabilities(capabilities)
         } catch (e: Exception) {
             logger.debug(config.accountId, "Network type detection failed: ${e.message}")
             NetworkType.UNKNOWN
@@ -244,26 +225,16 @@ internal class NetworkMonitor(
         }
     }
 
-
-    @Suppress("DEPRECATION")
-    private fun getNetworkTypeFromNetworkInfo(): NetworkType {
-        val networkInfo = connectivityManager?.activeNetworkInfo ?: return NetworkType.DISCONNECTED
-        return when (networkInfo.type) {
-            ConnectivityManager.TYPE_WIFI -> NetworkType.WIFI
-            ConnectivityManager.TYPE_MOBILE -> NetworkType.CELLULAR
-            ConnectivityManager.TYPE_ETHERNET -> NetworkType.ETHERNET
-            ConnectivityManager.TYPE_VPN -> NetworkType.VPN
-            else -> NetworkType.UNKNOWN
-        }
-    }
-
     fun cleanup() {
         networkCallback?.let { callback ->
             try {
                 connectivityManager?.unregisterNetworkCallback(callback)
                 logger.verbose(config.accountId, "Network callback unregistered")
             } catch (e: Exception) {
-                logger.debug(config.accountId, "Network callback un-registration failed: ${e.message}")
+                logger.debug(
+                    config.accountId,
+                    "Network callback un-registration failed: ${e.message}"
+                )
             }
         }
         networkCallback = null
