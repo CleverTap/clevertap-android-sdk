@@ -5,4 +5,5 @@ internal data class InAppMediaConfig(
     val clickableMedia: Boolean,
     val useOrientationForImage: Boolean = true,
     val videoFrameId: Int = 0,
+    val gifImageId: Int = 0,
 )
