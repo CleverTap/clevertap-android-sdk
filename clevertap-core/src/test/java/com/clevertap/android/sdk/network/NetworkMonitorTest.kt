@@ -2,25 +2,24 @@ package com.clevertap.android.sdk.network
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.clevertap.android.sdk.network.NetworkMonitor.NetworkState
 import com.clevertap.android.sdk.network.NetworkMonitor.NetworkType
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowConnectivityManager
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import org.robolectric.shadows.ShadowNetworkInfo
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
 
-@RunWith(RobolectricTestRunner::class)
+
 class NetworkMonitorTest : BaseTestCase() {
 
     private lateinit var connectivityManager: ConnectivityManager
@@ -31,7 +30,7 @@ class NetworkMonitorTest : BaseTestCase() {
         super.setUp()
         connectivityManager =
             application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        shadowCM = Shadows.shadowOf(connectivityManager)
+        shadowCM = shadowOf(connectivityManager)
     }
 
     private fun createNetworkMonitor() = NetworkMonitor(application, cleverTapInstanceConfig)
@@ -154,31 +153,59 @@ class NetworkMonitorTest : BaseTestCase() {
             NetworkType.WIFI, NetworkType.CELLULAR, NetworkType.ETHERNET,
             NetworkType.VPN, NetworkType.UNKNOWN, NetworkType.DISCONNECTED
         )
-        assertEquals(expectedTypes, NetworkType.values().toSet())
+        assertEquals(expectedTypes, NetworkType.entries.toSet())
     }
 
 
     @Test
-    @Config(sdk = [21])
+    @Config(sdk = [23])
     @Suppress("DEPRECATION")
     fun test_isNetworkOnline_whenNetworkConnected_returnsTrue() {
         val netInfo = ShadowNetworkInfo.newInstance(
             android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
         )
         shadowCM.setActiveNetworkInfo(netInfo)
+
+        val activeNetwork = connectivityManager.activeNetwork!!
+        val capabilities = ShadowNetworkCapabilities.newInstance()
+        shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        shadowCM.setNetworkCapabilities(activeNetwork, capabilities)
+
         val monitor = createNetworkMonitor()
         assertTrue(monitor.isNetworkOnline())
         monitor.cleanup()
     }
 
+
     @Test
-    @Config(sdk = [21])
-    @Suppress("DEPRECATION")
+    @Config(sdk = [23])
     fun test_isNetworkOnline_whenNetworkUnavailable_returnsFalse() {
-        shadowCM.setActiveNetworkInfo(null)
         val monitor = createNetworkMonitor()
         assertFalse(monitor.isNetworkOnline())
         monitor.cleanup()
     }
+
+    @Test
+    @Config(sdk = [23])
+    @Suppress("DEPRECATION")
+    fun test_isNetworkOnline_whenNetworkUnvalidated_captivePortal_returnsFalse() {
+        // Network connected hai but VALIDATED nahi — jaise hotel/cafe captive portal
+        val netInfo = ShadowNetworkInfo.newInstance(
+            android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
+        )
+        shadowCM.setActiveNetworkInfo(netInfo)
+
+        val activeNetwork = connectivityManager.activeNetwork!!
+        val capabilities = ShadowNetworkCapabilities.newInstance()
+        shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        // NET_CAPABILITY_VALIDATED intentionally nahi diya — captive portal scenario
+        shadowCM.setNetworkCapabilities(activeNetwork, capabilities)
+
+        val monitor = createNetworkMonitor()
+        assertFalse(monitor.isNetworkOnline()) // offline treat hona chahiye
+        monitor.cleanup()
+    }
+
 
 }
