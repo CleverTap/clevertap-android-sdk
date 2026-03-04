@@ -12,12 +12,12 @@ internal class CTKeyGenerator(val cryptRepository: CryptRepository) {
     /**
      * Generates or retrieves a secret key for encryption/decryption.
      *
-     * This method uses the Android Keystore system on devices running API 23 (Marshmallow) or higher
-     * to securely store the key. If the Android Keystore is not available (on older API levels),
-     * it falls back to generating a key and storing it in SharedPreferences, encoded in Base64.
+     * This method uses Android Keystore to securely retrieve or create the key.
+     * With minSdk 23+, no SharedPreferences fallback path is used.
      *
-     * @return The secret key for encryption/decryption, or null if an error occurs during key generation/retrieval.
+     * @return The secret key for encryption/decryption, or null if an error occurs.
      */
+
     fun generateOrGetKey(): SecretKey? {
         return fromAndroidKeystore()
     }
