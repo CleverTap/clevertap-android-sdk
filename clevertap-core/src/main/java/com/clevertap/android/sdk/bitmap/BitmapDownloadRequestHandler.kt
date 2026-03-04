@@ -7,9 +7,7 @@ import com.clevertap.android.sdk.network.DownloadedBitmap.Status.NO_IMAGE
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status.NO_NETWORK
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Build
-
+import com.clevertap.android.sdk.network.isNetworkAvailable
 
 open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDownloader) :
     IBitmapDownloadRequestHandler {
@@ -33,26 +31,7 @@ open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDown
 
         context?.run {
             val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-            val isOnline = try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val activeNetwork = connectivityManager?.activeNetwork
-                    if (activeNetwork != null) {
-                        val caps = connectivityManager?.getNetworkCapabilities(activeNetwork)
-                        caps != null
-                                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    }else{
-                        @Suppress("DEPRECATION")
-                        connectivityManager?.activeNetworkInfo?.isConnected == true
-                    }
-                } else {
-                    @Suppress("DEPRECATION")
-                    connectivityManager?.activeNetworkInfo?.isConnected == true
-                }
-            } catch (e: Exception) {
-                Logger.v("Connectivity check failed: ${e.message}")
-                false
-            }
+            val isOnline = connectivityManager.isNetworkAvailable()
 
             if (!isOnline)
             {

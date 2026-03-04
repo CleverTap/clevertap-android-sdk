@@ -482,7 +482,7 @@ public class DeviceInfo {
     }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-               CoreMetaData coreMetaData,NetworkMonitor networkMonitor) {
+               CoreMetaData coreMetaData, NetworkMonitor networkMonitor) {
         this.context = context;
         this.config = config;
         this.library = null;

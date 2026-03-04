@@ -63,16 +63,7 @@ internal class NetworkMonitor(
     }
 
     private fun checkCurrentConnectivity(): Boolean {
-        return try {
-            val activeNetwork = connectivityManager?.activeNetwork ?: return false
-            val capabilities = connectivityManager?.getNetworkCapabilities(activeNetwork)
-            capabilities != null
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        } catch (e: Exception) {
-            logger.verbose(config.accountId, "isNetworkOnline check failed: ${e.message}")
-            false
-        }
+        return connectivityManager.isNetworkAvailable()
     }
 
     /**

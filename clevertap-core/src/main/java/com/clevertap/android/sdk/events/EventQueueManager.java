@@ -98,7 +98,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             CTLockManager ctLockManager,
             final LocalDataStore localDataStore,
             ControllerManager controllerManager,
-            LoginInfoProvider loginInfoProvider,NetworkMonitor networkMonitor) {
+            LoginInfoProvider loginInfoProvider, NetworkMonitor networkMonitor) {
         this.baseDatabaseManager = baseDatabaseManager;
         this.context = context;
         this.config = config;
