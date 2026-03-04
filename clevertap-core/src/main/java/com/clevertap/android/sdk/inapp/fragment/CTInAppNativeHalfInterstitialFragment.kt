@@ -139,7 +139,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
 
         mediaHandler.setup(
             relativeLayout,
-            InAppMediaConfig(imageViewId = R.id.backgroundImage, clickableMedia = false)
+            InAppMediaConfig(imageViewId = R.id.backgroundImage, clickableMedia = false, gifImageId = R.id.gifImage)
         )
 
         val linearLayout =

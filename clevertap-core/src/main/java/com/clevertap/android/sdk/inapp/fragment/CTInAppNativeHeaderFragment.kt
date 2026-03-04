@@ -64,6 +64,7 @@ internal class CTInAppNativeHeaderFragment : CTInAppBasePartialNativeFragment() 
                 imageViewId = R.id.header_icon,
                 clickableMedia = false,
                 useOrientationForImage = false,
+                gifImageId = R.id.gifImage,
             )
         )
 

@@ -119,7 +119,7 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
 
         mediaHandler.setup(
             relativeLayout,
-            InAppMediaConfig(imageViewId = R.id.interstitial_image, clickableMedia = true, videoFrameId = R.id.video_frame),
+            InAppMediaConfig(imageViewId = R.id.interstitial_image, clickableMedia = true, videoFrameId = R.id.video_frame, gifImageId = R.id.gifImage),
             CTInAppNativeButtonClickListener()
         )
 

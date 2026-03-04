@@ -59,7 +59,7 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
         mediaHandler.setup(
             relativeLayout,
-            InAppMediaConfig(imageViewId = R.id.backgroundImage, clickableMedia = false)
+            InAppMediaConfig(imageViewId = R.id.backgroundImage, clickableMedia = false, gifImageId = R.id.gifImage)
         )
 
         val textView1 = relativeLayout.findViewById<TextView>(R.id.cover_title)
