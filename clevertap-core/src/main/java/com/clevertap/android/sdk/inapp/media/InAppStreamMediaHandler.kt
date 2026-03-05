@@ -29,7 +29,8 @@ internal class InAppStreamMediaHandler
     (
     private val fragment: Fragment,
     private val media: CTInAppNotificationMedia,
-    private val isTablet: Boolean
+    private val isTablet: Boolean,
+    private val onActionClick: (() -> Unit)? = null
 ) : InAppMediaHandler {
 
     private var handle: InAppVideoPlayerHandle? = null
@@ -104,6 +105,9 @@ internal class InAppStreamMediaHandler
             }
         }
         handle.setMuteClickListener()
+        onActionClick?.let { callback ->
+            handle.setActionClickListener { callback() }
+        }
         addViewsForStreamMedia()
         handle.initExoplayer(fragment.requireContext(), media.mediaUrl)
     }

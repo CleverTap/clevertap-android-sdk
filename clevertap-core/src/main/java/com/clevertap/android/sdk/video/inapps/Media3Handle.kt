@@ -141,6 +141,12 @@ class Media3Handle : InAppVideoPlayerHandle {
         }
     }
 
+    override fun setActionClickListener(onClick: () -> Unit) {
+        val actionButton = playerView?.findViewById<ImageButton>(R.id.ct_action_button) ?: return
+        actionButton.visibility = View.VISIBLE
+        actionButton.setOnClickListener { onClick() }
+    }
+
     override fun switchToFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
             playerViewLayoutParamsNormal = playerView!!.layoutParams

@@ -29,7 +29,8 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
             currentOrientation = currentOrientation,
             isTablet = inAppNotification.isTablet && isTablet(),
             resourceProvider = resourceProvider(),
-            supportsStreamMedia = true
+            supportsStreamMedia = true,
+            onActionClick = if (inAppNotification.buttons.isNotEmpty()) {{ handleButtonClickAtIndex(0) }} else null
         )
         lifecycle.addObserver(mediaHandler)
     }
