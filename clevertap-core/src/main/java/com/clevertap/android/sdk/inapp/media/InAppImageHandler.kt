@@ -24,6 +24,7 @@ internal class InAppImageHandler(
         val imageView = relativeLayout?.findViewById<ImageView>(config.imageViewId)
         imageView?.setContentDescriptionIfNotBlank(media.contentDescription)
         imageView?.setImageBitmap(bitmap)
+        imageView?.visibility = View.VISIBLE
         if (config.clickableMedia && clickListener != null) {
             imageView?.tag = 0
             imageView?.setOnClickListener(clickListener)
