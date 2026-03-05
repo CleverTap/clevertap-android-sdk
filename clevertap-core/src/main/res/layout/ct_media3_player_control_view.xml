@@ -7,6 +7,24 @@
         android:background="@color/exo_black_opacity_60" />
 
     <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:padding="4dp">
+
+        <ImageButton
+            android:id="@+id/ct_action_button"
+            android:layout_width="58dp"
+            android:layout_height="58dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/ct_action_button_content_description"
+            android:src="@drawable/ct_ic_action"
+            android:scaleType="centerInside"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <FrameLayout
         android:id="@id/exo_bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/exo_styled_bottom_bar_height"

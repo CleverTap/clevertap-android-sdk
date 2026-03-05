@@ -13,4 +13,6 @@
     <string name="ct_inapp_img">Inapp Image</string>
     <string name="ct_inapp_media">Inapp Media</string>
     <string name="ct_inapp_gif">Inapp Gif</string>
+<!--    todo - confirm this value-->
+    <string name="ct_action_button_content_description">Action</string>
 </resources>

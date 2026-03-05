@@ -33,7 +33,8 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
             currentOrientation = currentOrientation,
             isTablet = inAppNotification.isTablet && isTablet(),
             resourceProvider = resourceProvider(),
-            supportsStreamMedia = true
+            supportsStreamMedia = true,
+            onActionClick = null
         )
         lifecycle.addObserver(mediaHandler)
     }
