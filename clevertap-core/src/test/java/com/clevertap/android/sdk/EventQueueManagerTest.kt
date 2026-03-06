@@ -66,7 +66,8 @@ class EventQueueManagerTest : BaseTestCase() {
                 corestate.cTLockManager,
                 corestate.localDataStore,
                 corestate.controllerManager,
-                loginInfoProvider
+                loginInfoProvider,
+                corestate.networkMonitor
             )
         )
         json = JSONObject()
@@ -479,6 +480,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             corestate.coreMetaData.isOffline = false
+            every { corestate.networkMonitor.isNetworkOnline() } returns true
             val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val shadowOfCM = shadowOf(cm)
             val netInfo =
@@ -502,6 +504,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.isOffline = false
+            every { corestate.networkMonitor.isNetworkOnline() } returns true
             val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val shadowOfCM = shadowOf(cm)
             val netInfo =
@@ -1056,7 +1059,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 CoreMetaData.setActivityCount(expectedActivityCount)
 
                 every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
-                every { Utils.getCurrentNetworkType(application) } returns expectedNetworkType
+                every { corestate.networkMonitor.getNetworkTypeString() } returns expectedNetworkType
                 every { eventQueueManager.getNow() } returns expectedEpoch
                 every { eventQueueManager.scheduleQueueFlush(application) } just runs
 

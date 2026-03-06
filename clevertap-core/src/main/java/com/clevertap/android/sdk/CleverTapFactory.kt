@@ -77,6 +77,8 @@ import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
+import com.clevertap.android.sdk.network.NetworkMonitor
+
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -187,7 +189,9 @@ internal object CleverTapFactory {
             )
         }
 
-        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
+        val networkMonitor = NetworkMonitor(context, config)
+
+        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData,networkMonitor)
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }.build()
@@ -421,7 +425,8 @@ internal object CleverTapFactory {
             ctLockManager,
             localDataStore,
             controllerManager,
-            loginInfoProvider
+            loginInfoProvider,
+            networkMonitor
         )
 
         val inAppResponseForSendTestInApp = InAppResponse(
@@ -485,7 +490,8 @@ internal object CleverTapFactory {
             inAppNotificationInflater,
             inAppDelayManager,
             inAppInActionManager,
-            SYSTEM
+            SYSTEM,
+            networkMonitor
         )
         controllerManager.inAppController = inAppController
 
@@ -561,6 +567,7 @@ internal object CleverTapFactory {
             validationResultStack = validationResultStack,
             mainLooperHandler = mainLooperHandler,
             networkManager = networkManager,
+            networkMonitor = networkMonitor,
             pushProviders = pushProviders,
             varCache = varCache,
             parser = parser,

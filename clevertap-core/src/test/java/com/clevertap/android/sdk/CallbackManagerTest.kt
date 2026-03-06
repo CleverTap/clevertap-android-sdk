@@ -32,7 +32,7 @@ class CallbackManagerTest : BaseTestCase() {
 
         config = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
         coreMetaData = CoreMetaData()
-        deviceInfo = DeviceInfo(application, config, "clevertapId", coreMetaData)
+        deviceInfo = DeviceInfo(application, config, "clevertapId", coreMetaData, null)
         callbackManager = CallbackManager(config, deviceInfo)
         Shadows.shadowOf(Looper.getMainLooper()).idle()
 
