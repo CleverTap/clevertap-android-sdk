@@ -1,5 +1,5 @@
 ## CleverTap Push Templates SDK CHANGE LOG
-### Version 2.3.0 (March 6, 2025)
+### Version 2.3.0 (March 6, 2026)
 
 #### New features
 * Enhances the `Timer` template to render the fallback (terminal) notification when the timer is already expired or below the minimum threshold (e.g., <10 seconds remaining).
