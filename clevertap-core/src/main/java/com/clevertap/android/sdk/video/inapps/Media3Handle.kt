@@ -2,9 +2,11 @@ package com.clevertap.android.sdk.video.inapps
 
 import android.content.Context
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import androidx.core.content.res.ResourcesCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -37,6 +39,7 @@ class Media3Handle : InAppVideoPlayerHandle {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
 
+    private var isMuted = true
     private var mediaPosition = 0L
 
     override fun initExoplayer(
@@ -64,6 +67,7 @@ class Media3Handle : InAppVideoPlayerHandle {
             setMediaSource(hlsMediaSource)
             prepare()
             repeatMode = Player.REPEAT_MODE_ONE
+            volume = InAppVideoPlayerHandle.VOLUME_MUTED
             seekTo(mediaPosition)
         }
     }
@@ -79,7 +83,7 @@ class Media3Handle : InAppVideoPlayerHandle {
         val playerWidth = playerWidth(context = context, isTablet = isTablet)
         val playerHeight = playerHeight(context = context, isTablet = isTablet)
 
-        playerView = PlayerView(context).apply {
+        playerView = (LayoutInflater.from(context).inflate(R.layout.ct_media3_inapp_player_view, null) as PlayerView).apply {
             playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
             setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
@@ -118,6 +122,31 @@ class Media3Handle : InAppVideoPlayerHandle {
         }
     }
 
+    override fun setFullscreenClickListener(onClick: () -> Unit) {
+        playerView?.setFullscreenButtonClickListener { onClick() }
+    }
+
+    override fun setMuteClickListener() {
+        val muteButton = playerView?.findViewById<ImageButton>(R.id.exo_mute) ?: return
+        muteButton.setOnClickListener {
+            isMuted = !isMuted
+            player?.volume = if (isMuted) InAppVideoPlayerHandle.VOLUME_MUTED else InAppVideoPlayerHandle.VOLUME_UNMUTED
+            muteButton.setImageResource(
+                if (isMuted) R.drawable.ct_volume_off else R.drawable.ct_volume_on
+            )
+            muteButton.contentDescription = muteButton.context.getString(
+                if (isMuted) R.string.ct_unmute_button_content_description
+                else R.string.ct_mute_button_content_description
+            )
+        }
+    }
+
+    override fun setActionClickListener(onClick: () -> Unit) {
+        val actionButton = playerView?.findViewById<ImageButton>(R.id.ct_action_button) ?: return
+        actionButton.visibility = View.VISIBLE
+        actionButton.setOnClickListener { onClick() }
+    }
+
     override fun switchToFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
             playerViewLayoutParamsNormal = playerView!!.layoutParams
@@ -138,9 +167,9 @@ class Media3Handle : InAppVideoPlayerHandle {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             if (isTablet) {
-                408f
+                InAppVideoPlayerHandle.PLAYER_WIDTH_TABLET_DP
             } else {
-                240f
+                InAppVideoPlayerHandle.PLAYER_WIDTH_PHONE_DP
             },
             context.resources.displayMetrics
         ).toInt()
@@ -153,9 +182,9 @@ class Media3Handle : InAppVideoPlayerHandle {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             if (isTablet) {
-                299f
+                InAppVideoPlayerHandle.PLAYER_HEIGHT_TABLET_DP
             } else {
-                134f
+                InAppVideoPlayerHandle.PLAYER_HEIGHT_PHONE_DP
             },
             context.resources.displayMetrics
         ).toInt()
