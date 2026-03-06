@@ -6,7 +6,9 @@ import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
 import androidx.annotation.MainThread;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -86,11 +88,10 @@ public class CTGeofenceBootReceiver extends BroadcastReceiver {
                             }
                         } catch (TimeoutException e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Timeout geofence update task execution limit of 3 secs");
+                                    "Timeout geofence update task execution limit of 3 secs", e);
                         } catch (Exception e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Exception while executing geofence update task");
-                            e.printStackTrace();
+                                    "Exception while executing geofence update task", e);
                         }
 
                         CTGeofenceAPI.getLogger().info(GEOFENCE_LOG_TAG,
@@ -107,11 +108,10 @@ public class CTGeofenceBootReceiver extends BroadcastReceiver {
                             }
                         } catch (TimeoutException e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Timeout location update task execution limit of 3 secs");
+                                    "Timeout location update task execution limit of 3 secs", e);
                         } catch (Exception e) {
                             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                    "Exception while executing location update task");
-                            e.printStackTrace();
+                                    "Exception while executing location update task", e);
                         }
 
                         finishPendingIntent(result);
@@ -122,8 +122,7 @@ public class CTGeofenceBootReceiver extends BroadcastReceiver {
                         finishPendingIntent(result);
 
                         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Exception while processing Boot receiver intent");
-                        e.printStackTrace();
+                                "Exception while processing Boot receiver intent", e);
                     }
                 }
             };
