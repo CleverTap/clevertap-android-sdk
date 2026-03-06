@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
@@ -471,7 +470,6 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     @SuppressLint("MissingPermission")
-    @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     private void stopJobScheduler(Context context) {
         int existingJobId = StorageHelper.getInt(context, PF_JOB_ID, -1);
         if (existingJobId != -1) {
