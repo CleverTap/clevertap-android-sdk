@@ -17,7 +17,6 @@ const val PT_BIG_TEXT_LIST = "PT_BIG_TEXT_LIST"
 const val PT_SMALL_TEXT_LIST = "PT_SMALL_TEXT_LIST"
 const val PT_PRODUCT_DISPLAY_ACTION = "PT_PRODUCT_DISPLAY_ACTION"
 const val PT_BIG_IMG = "PT_BIG_IMG"
-const val PT_TIMER_DISMISS_AFTER = "PT_TIMER_DISMISS_AFTER"
 const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
 const val PT_ACTIONS = "PT_ACTIONS"
 
@@ -289,12 +288,6 @@ internal class ValidatorFactory {
                 is TimerTemplateData -> {
                     builder
                         .addBasicTextValidation(templateData.baseContent.textData)
-                        .addLongValidation(
-                            templateData.baseContent.notificationBehavior.dismissAfter,
-                            10000,
-                            PT_TIMER_DISMISS_AFTER,
-                            "Not rendering notification Timer End value lesser than threshold (10 seconds) from current time"
-                        )
                         .build()
                 }
 
@@ -336,7 +329,7 @@ internal class ValidatorFactory {
                     ContentValidator(keys)
                 )
                 TemplateType.ZERO_BEZEL -> ZeroBezelTemplateValidator(ContentValidator(keys))
-                TemplateType.TIMER -> TimerTemplateValidator(ContentValidator(keys))
+                TemplateType.TIMER -> ContentValidator(keys)
                 TemplateType.INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
                 else -> null
             }

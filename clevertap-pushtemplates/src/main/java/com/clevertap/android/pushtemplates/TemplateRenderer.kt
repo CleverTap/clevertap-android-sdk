@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
+import com.clevertap.android.pushtemplates.TemplateDataFactory.toTerminalBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
@@ -150,25 +151,33 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 ZeroBezelStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
             }
 
-            is TimerTemplateData -> if (VERSION.SDK_INT >= VERSION_CODES.O) {
-                templateData.buildIfValid {
-                    if (it.renderTerminal) {
-                        TimerTemplateHandler.scheduleTimer(
-                            context,
-                            extras,
-                            notificationId,
-                            it.baseContent.notificationBehavior.dismissAfter,
-                            it,
-                            config
-                        )
+            is TimerTemplateData -> when {
+                VERSION.SDK_INT < VERSION_CODES.O -> {
+                    PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")
+                    templateData.toBasicTemplateData().buildIfValid {
+                        BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
                     }
-                    TimerStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
                 }
-            } else {
-                val basicTemplateData = templateData.toBasicTemplateData()
-                PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Oreo, reverting to basic template")
-                basicTemplateData.buildIfValid {
-                    BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+                templateData.baseContent.notificationBehavior.dismissAfter == null && !templateData.renderTerminal -> {
+                    PTLog.debug("Timer already expired and renderTerminal is configured as false. Skipping notification")
+                    null
+                }
+                templateData.baseContent.notificationBehavior.dismissAfter == null -> {
+                    PTLog.debug("Timer end value lesser than threshold (${PT_TIMER_MIN_THRESHOLD} seconds), rendering basic template with terminal content")
+                    templateData.toTerminalBasicTemplateData().buildIfValid {
+                        BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+                    }
+                }
+                else -> {
+                    templateData.buildIfValid {
+                        if (it.renderTerminal) {
+                            TimerTemplateHandler.scheduleTimer(
+                                context, extras, notificationId,
+                                it.baseContent.notificationBehavior.dismissAfter, it, config
+                            )
+                        }
+                        TimerStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+                    }
                 }
             }
 
