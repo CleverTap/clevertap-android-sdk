@@ -46,6 +46,7 @@ import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -77,8 +78,6 @@ import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.VarCache
 import com.clevertap.android.sdk.variables.repo.VariablesRepo
-import com.clevertap.android.sdk.network.NetworkMonitor
-
 
 internal object CleverTapFactory {
     @JvmStatic
@@ -109,6 +108,7 @@ internal object CleverTapFactory {
         val ctLockManager = CTLockManager()
         val mainLooperHandler = MainLooperHandler()
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
+        val networkMonitor = NetworkMonitor(context, config)
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
@@ -188,8 +188,6 @@ internal object CleverTapFactory {
                 accountId
             )
         }
-
-        val networkMonitor = NetworkMonitor(context, config)
 
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData,networkMonitor)
         deviceInfo.onInitDeviceInfo(cleverTapID)

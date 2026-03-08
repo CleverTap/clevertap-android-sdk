@@ -698,6 +698,9 @@ public class DeviceInfo {
         if (networkMonitor == null) {
             return null;
         }
+        if (networkMonitor.getNetworkType() == NetworkMonitor.NetworkType.UNDETECTED) {
+            return null;
+        }
         return networkMonitor.isWifiConnected();
     }
 

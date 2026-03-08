@@ -54,15 +54,15 @@ class NetworkMonitorTest : BaseTestCase() {
 
     @Test
     fun test_networkState_dataClass_twoEqualObjects_areEqual() {
-        val state1 = NetworkState(isAvailable = true, networkType = NetworkType.WIFI, isWifiConnected = true)
-        val state2 = NetworkState(isAvailable = true, networkType = NetworkType.WIFI, isWifiConnected = true)
+        val state1 = NetworkState(isAvailable = true, networkType = NetworkType.WIFI)
+        val state2 = NetworkState(isAvailable = true, networkType = NetworkType.WIFI)
         assertEquals(state1, state2)
     }
 
     @Test
     fun test_networkState_dataClass_differentTypes_areNotEqual() {
-        val wifiState = NetworkState(isAvailable = true, networkType = NetworkType.WIFI, isWifiConnected = true)
-        val cellularState = NetworkState(isAvailable = true, networkType = NetworkType.CELLULAR, isWifiConnected = false)
+        val wifiState = NetworkState(isAvailable = true, networkType = NetworkType.WIFI)
+        val cellularState = NetworkState(isAvailable = true, networkType = NetworkType.CELLULAR)
         assertNotEquals(wifiState, cellularState)
     }
 
@@ -151,7 +151,8 @@ class NetworkMonitorTest : BaseTestCase() {
     fun test_networkTypeEnum_containsAllExpectedValues() {
         val expectedTypes = setOf(
             NetworkType.WIFI, NetworkType.CELLULAR, NetworkType.ETHERNET,
-            NetworkType.VPN, NetworkType.UNKNOWN, NetworkType.DISCONNECTED
+            NetworkType.VPN, NetworkType.UNKNOWN, NetworkType.DISCONNECTED,
+            NetworkType.UNDETECTED
         )
         assertEquals(expectedTypes, NetworkType.entries.toSet())
     }
