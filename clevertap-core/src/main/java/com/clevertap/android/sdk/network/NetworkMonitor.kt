@@ -119,37 +119,37 @@ internal class NetworkMonitor(
     private fun registerNetworkCallback() {
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                logger.verbose(config.accountId, "Network available")
+                logger.verbose(config.accountId, "NetworkCallback#onAvailable: network=$network")
                 _stateFlow.value = calculateCurrentNetworkState()
+                logger.verbose(config.accountId, "NetworkCallback#onAvailable: updated state=${_stateFlow.value}")
             }
 
             override fun onLost(network: Network) {
+                logger.verbose(config.accountId, "NetworkCallback#onLost: network=$network")
                 _stateFlow.value = NetworkState.DISCONNECTED
-                logger.verbose(config.accountId, "Network lost")
+                logger.verbose(config.accountId, "NetworkCallback#onLost: updated state=${_stateFlow.value}")
             }
 
             override fun onCapabilitiesChanged(
                 network: Network,
                 networkCapabilities: NetworkCapabilities
             ) {
+                logger.verbose(config.accountId, "NetworkCallback#onCapabilitiesChanged: network=$network, capabilities=$networkCapabilities")
                 val type = getNetworkTypeFromCapabilities(networkCapabilities)
                 val newState = NetworkState(
                     isAvailable = networkCapabilities.hasInternet(),
                     networkType = type,
-
                 )
                 if (_stateFlow.value != newState) {
                     _stateFlow.value = newState
+                    logger.verbose(config.accountId, "NetworkCallback#onCapabilitiesChanged: updated state=${_stateFlow.value}")
                 }
-                logger.verbose(
-                    config.accountId,
-                    "Network capabilities changed: ${newState.networkType}"
-                )
             }
 
             override fun onUnavailable() {
+                logger.verbose(config.accountId, "NetworkCallback#onUnavailable: no network satisfies the request")
                 _stateFlow.value = NetworkState.DISCONNECTED
-                logger.verbose(config.accountId, "Network unavailable")
+                logger.verbose(config.accountId, "NetworkCallback#onUnavailable: updated state=${_stateFlow.value}")
             }
         }
 
@@ -194,10 +194,11 @@ internal class NetworkMonitor(
 
     private fun getNetworkTypeFromCapabilities(capabilities: NetworkCapabilities): NetworkType {
         return when {
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> NetworkType.VPN
+
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> NetworkType.WIFI
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> NetworkType.CELLULAR
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkType.ETHERNET
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> NetworkType.VPN
             else -> NetworkType.UNKNOWN
         }
     }
