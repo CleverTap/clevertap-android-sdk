@@ -92,12 +92,16 @@ internal open class ContentView(
         }
     }
 
-    fun setCustomContentViewLargeIcon(pt_large_icon: String?) {
-        if (pt_large_icon.isNotNullAndEmpty()) {
-            loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView)
-        } else {
-            remoteView.setViewVisibility(R.id.large_icon, View.GONE)
-        }
+    fun setCustomContentViewLargeIcon(ptLargeIcon: String?) {
+        val shouldHide = ptLargeIcon
+            ?.takeIf { it.isNotBlank() }
+            ?.let { loadImageURLIntoRemoteView(R.id.large_icon, it, remoteView) }
+            ?: true
+
+        remoteView.setViewVisibility(
+            R.id.large_icon,
+            if (shouldHide) View.GONE else View.VISIBLE
+        )
     }
 
     fun setCustomBackgroundColour(pt_bg: String?, resId: Int) {
