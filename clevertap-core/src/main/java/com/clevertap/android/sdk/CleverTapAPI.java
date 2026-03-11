@@ -92,6 +92,8 @@ import java.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import kotlin.jvm.Volatile;
+
 
 /**
  * <h1>CleverTapAPI</h1>
@@ -159,7 +161,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sSignedCallNotificationHandler;
 
-    private static ICleverTapNotificationFactory sNotificationFactory;
+    private static volatile ICleverTapNotificationFactory sNotificationFactory;
 
     private static final HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
 
