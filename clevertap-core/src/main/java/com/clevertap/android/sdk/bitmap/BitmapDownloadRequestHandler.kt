@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk.bitmap
 
+import android.content.Context
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status.NO_IMAGE
 import com.clevertap.android.sdk.network.DownloadedBitmap.Status.NO_NETWORK
 import com.clevertap.android.sdk.network.DownloadedBitmapFactory
-import com.clevertap.android.sdk.network.NetworkManager
+import android.net.ConnectivityManager
+import com.clevertap.android.sdk.network.isNetworkAvailable
 
 open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDownloader) :
     IBitmapDownloadRequestHandler {
@@ -28,8 +30,11 @@ open class BitmapDownloadRequestHandler(private val bitmapDownloader: BitmapDown
             .replace("https:/", "https://")
 
         context?.run {
-            val isNetworkOnline = NetworkManager.isNetworkOnline(this)
-            if (!isNetworkOnline) {
+            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            val isOnline = connectivityManager.isNetworkAvailable()
+
+            if (!isOnline)
+            {
                 Logger.v("Network connectivity unavailable. Not downloading bitmap. URL was: $srcUrl")
                 return DownloadedBitmapFactory.nullBitmapWithStatus(NO_NETWORK)
             }

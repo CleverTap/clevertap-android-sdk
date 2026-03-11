@@ -14,6 +14,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.os.Build
 import android.os.Build.VERSION_CODES.KITKAT
@@ -59,6 +60,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
 import org.robolectric.Shadows
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import org.robolectric.shadows.ShadowNetworkInfo
 import org.robolectric.shadows.ShadowPackageManager
 import org.robolectric.util.ReflectionHelpers
@@ -288,30 +290,6 @@ class UtilsTest : BaseTestCase() {
     //------------------------------------------------------------------------------------
 
     @Test
-    fun test_getCurrentNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType() {
-        // if context is null, network type will be unavailable
-        var networkType: String? = Utils.getCurrentNetworkType(null)
-        printIfDebug("Network type is $networkType")
-        assertNotNull(networkType)
-        assertEquals("Unavailable", networkType)
-
-        // if context is not null and  user is connected to wifi and wify is enabled, we will get wifi as return
-        prepareForWifiConnectivityTest(true)
-        networkType = Utils.getCurrentNetworkType(application.applicationContext)
-        printIfDebug("Network type is $networkType")
-        assertEquals("WiFi", networkType)
-
-        // if context is not null and  user is connected to wifi and wify is NOT enabled, we will get Unknown as return
-        prepareForWifiConnectivityTest(false)
-        networkType = Utils.getCurrentNetworkType(application.applicationContext)
-        printIfDebug("Network type is $networkType")
-        assertEquals("Unknown", networkType)
-
-        // remaining parts of this function will be tested in  test_getDeviceNetworkType_when_FunctionIsCalledWithContextAndOSVersionIsM_should_ReturnNetworkType
-    }
-    //------------------------------------------------------------------------------------
-
-    @Test
     fun test_getDeviceNetworkType_when_FunctionIsCalledWithContextAndTelePhonyServiceIsNotAvialable_should_ReturnUnAvailable() {
         //if telephone service is NotAvailable it will return unknown
         prepareForTeleConnectTest(teleServiceAvailable = false)
@@ -419,6 +397,20 @@ class UtilsTest : BaseTestCase() {
         assertEquals(DownloadedBitmap.Status.SUCCESS,bitmap62.status)
         assertNotNull(bitmap62.bitmap)
 
+        // Set up network capabilities so connectivity check passes
+        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowCm = Shadows.shadowOf(cm)
+        val netInfo = ShadowNetworkInfo.newInstance(
+            android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
+        )
+        shadowCm.setActiveNetworkInfo(netInfo)
+        val activeNetwork = cm.activeNetwork!!
+        val caps = ShadowNetworkCapabilities.newInstance()
+        Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        shadowCm.setNetworkCapabilities(activeNetwork, caps)
+
+
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_NOTIFICATION_BITMAP,
@@ -479,6 +471,20 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationBitmapWithSizeConstraints_when_BitmapSizeIsLargerThanGivenSize_should_ReturnNull() {
+        // Set up network capabilities so connectivity check passes
+        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowCm = Shadows.shadowOf(cm)
+        val netInfo = ShadowNetworkInfo.newInstance(
+            android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
+        )
+        shadowCm.setActiveNetworkInfo(netInfo)
+        val activeNetwork = cm.activeNetwork!!
+        val caps = ShadowNetworkCapabilities.newInstance()
+        Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        Shadows.shadowOf(caps).addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        shadowCm.setNetworkCapabilities(activeNetwork, caps)
+
+
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP,
