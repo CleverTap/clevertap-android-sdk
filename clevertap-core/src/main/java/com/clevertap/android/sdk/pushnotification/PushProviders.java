@@ -190,9 +190,11 @@ public class PushProviders implements CTPushProviderListener {
                 // todo - Update key based on implementation from BE
                 boolean isForCustomFactory = extras.getString("isForFactory", "").equalsIgnoreCase("true");
 
-                ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
-                if (customFactory != null && isForCustomFactory) {
-                    triggerNotificationFromFactory(context, extras, customFactory);
+                if (isForCustomFactory) {
+                    ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
+                    if (customFactory != null) {
+                        triggerNotificationFromFactory(context, extras, customFactory);
+                    }
                     return;
                 }
 
