@@ -28,9 +28,6 @@ interface ICleverTapNotificationFactory {
     /**
      * Called when a CleverTap push notification needs to be rendered.
      *
-     * This method is called on a background thread. You may perform
-     * blocking operations such as downloading images if needed.
-     *
      * @param context The application context.
      * @param extras  The notification payload bundle containing all CleverTap keys.
      * @return A [NotificationResult] containing the built notification and notification ID,
