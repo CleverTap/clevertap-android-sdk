@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
+import android.os.Build
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Utils
@@ -12,13 +12,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-internal class NetworkMonitor(
+internal class NetworkMonitor constructor(
     context: Context,
     private val config: CleverTapInstanceConfig,
     private val logger: ILogger = config.logger
 ) {
     private val appContext: Context = context.applicationContext
-
 
     enum class NetworkType {
         WIFI,
@@ -36,6 +35,7 @@ internal class NetworkMonitor(
     ) {
         val isWifiConnected: Boolean
             get() = isAvailable && networkType == NetworkType.WIFI
+
         companion object {
             val DISCONNECTED = NetworkState(
                 isAvailable = false,
@@ -46,7 +46,6 @@ internal class NetworkMonitor(
                 networkType = NetworkType.UNDETECTED
             )
         }
-
     }
 
     private val connectivityManager by lazy {
@@ -55,37 +54,23 @@ internal class NetworkMonitor(
 
     @Volatile
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
-    //used to store the network call back object
 
     private val _stateFlow = MutableStateFlow(NetworkState.UNDETECTED)
-    //hot flow = store + update + broadcast
     val networkState: Flow<NetworkState> = _stateFlow.asStateFlow()
 
-
-    /**
-     * EXECUTION STARTS IMMEDIATELY WHEN OBJECT IS CREATED
-     */
     init {
         logger.debug(config.accountId, "NetworkMonitor initializing...")
         initializeNetworkMonitoring()
     }
 
-
-    /**
-     * Starts network monitoring immediately upon object creation
-     */
-    private fun initializeNetworkMonitoring() {   //main
+    private fun initializeNetworkMonitoring() {
         if (connectivityManager == null) {
             logger.debug(config.accountId, "ConnectivityManager not available")
             _stateFlow.value = NetworkState.UNDETECTED
             return
         }
 
-        // Calculate initial state
-
         _stateFlow.value = calculateCurrentNetworkState()
-
-        // Register network callback to monitor changes
         registerNetworkCallback()
 
         logger.debug(config.accountId, "NetworkMonitor initialized with state: ${_stateFlow.value}")
@@ -93,13 +78,14 @@ internal class NetworkMonitor(
 
     private fun calculateCurrentNetworkState(): NetworkState {
         return try {
-            val cm = connectivityManager ?: return NetworkState.DISCONNECTED
-            val activeNetwork = cm.activeNetwork ?: return NetworkState.DISCONNECTED
-            val capabilities = cm.getNetworkCapabilities(activeNetwork)
-                ?: return NetworkState.DISCONNECTED
-            val hasInternet = capabilities.hasInternet()
-            val networkType =  getNetworkTypeFromCapabilities(capabilities)
-            if (!hasInternet || networkType == NetworkType.DISCONNECTED) {
+            val cm: ConnectivityManager = connectivityManager ?: return NetworkState.UNDETECTED
+            val activeNetwork: Network = cm.activeNetwork ?: return NetworkState.DISCONNECTED
+            val capabilities: NetworkCapabilities = cm.getNetworkCapabilities(activeNetwork)
+                ?: return NetworkState.UNDETECTED
+            val hasInternet: Boolean = capabilities.hasInternet()
+            val networkType: NetworkType = getNetworkTypeFromCapabilities(capabilities)
+
+            if (!hasInternet) {
                 NetworkState.DISCONNECTED
             } else {
                 NetworkState(
@@ -107,21 +93,23 @@ internal class NetworkMonitor(
                     networkType = networkType,
                 )
             }
+        } catch (_: SecurityException) {
+            logger.debug(
+                config.accountId,
+                "Missing ACCESS_NETWORK_STATE permission. Add it to AndroidManifest.xml"
+            )
+            NetworkState.UNDETECTED
         } catch (e: Exception) {
             logger.debug(config.accountId, "Network state calculation failed: ${e.message}")
             NetworkState.UNDETECTED
         }
     }
 
-    /**
-     * Registers network callback to monitor system network changes
-     */
     private fun registerNetworkCallback() {
         val callback = object : ConnectivityManager.NetworkCallback() {
+
             override fun onAvailable(network: Network) {
                 logger.verbose(config.accountId, "NetworkCallback#onAvailable: network=$network")
-                _stateFlow.value = calculateCurrentNetworkState()
-                logger.verbose(config.accountId, "NetworkCallback#onAvailable: updated state=${_stateFlow.value}")
             }
 
             override fun onLost(network: Network) {
@@ -134,50 +122,50 @@ internal class NetworkMonitor(
                 network: Network,
                 networkCapabilities: NetworkCapabilities
             ) {
-                logger.verbose(config.accountId, "NetworkCallback#onCapabilitiesChanged: network=$network, capabilities=$networkCapabilities")
-                val type = getNetworkTypeFromCapabilities(networkCapabilities)
-                val newState = NetworkState(
-                    isAvailable = networkCapabilities.hasInternet(),
-                    networkType = type,
+                logger.verbose(
+                    config.accountId,
+                    "NetworkCallback#onCapabilitiesChanged: network=$network, capabilities=$networkCapabilities"
                 )
-                if (_stateFlow.value != newState) {
-                    _stateFlow.value = newState
-                    logger.verbose(config.accountId, "NetworkCallback#onCapabilitiesChanged: updated state=${_stateFlow.value}")
-                }
-            }
-
-            override fun onUnavailable() {
-                logger.verbose(config.accountId, "NetworkCallback#onUnavailable: no network satisfies the request")
-                _stateFlow.value = NetworkState.DISCONNECTED
-                logger.verbose(config.accountId, "NetworkCallback#onUnavailable: updated state=${_stateFlow.value}")
+                _stateFlow.value = NetworkState(
+                    isAvailable = networkCapabilities.hasInternet(),
+                    networkType = getNetworkTypeFromCapabilities(networkCapabilities)
+                )
+                logger.verbose(
+                    config.accountId,
+                    "NetworkCallback#onCapabilitiesChanged: updated state=${_stateFlow.value}"
+                )
             }
         }
 
-
         try {
-            val networkRequest = NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                .build()
-            connectivityManager?.registerNetworkCallback(networkRequest, callback)
-            networkCallback = callback
-            logger.verbose(config.accountId, "Network callback registered successfully")
-
-        }  catch (e: Exception) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                connectivityManager?.registerDefaultNetworkCallback(callback)
+                networkCallback = callback
+                logger.verbose(config.accountId, "Network callback registered successfully")
+            } else {
+                logger.verbose(config.accountId, "API < 24: using synchronous network check")
+            }
+        } catch (e: Exception) {
             logger.debug(config.accountId, "Network callback registration failed: ${e.message}")
         }
     }
 
-    /**
-     * Synchronous methods that check the current internal state
-     */
-    fun getCurrentNetworkState(): NetworkState = _stateFlow.value
+    fun getCurrentNetworkState(): NetworkState {
+        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            calculateCurrentNetworkState()
+        } else {
+            _stateFlow.value
+        }
+    }
 
-    fun isNetworkOnline(): Boolean = _stateFlow.value.isAvailable
+    fun isNetworkOnline(): Boolean {
+        val state = getCurrentNetworkState()
+        return state.isAvailable || state.networkType == NetworkType.UNDETECTED
+    }
 
-    fun isWifiConnected(): Boolean = _stateFlow.value.isWifiConnected
+    fun isWifiConnected(): Boolean = getCurrentNetworkState().isWifiConnected
 
-    fun getNetworkType(): NetworkType = _stateFlow.value.networkType
+    fun getNetworkType(): NetworkType = getCurrentNetworkState().networkType
 
     fun getNetworkTypeString(): String {
         return when (getNetworkType()) {
@@ -191,10 +179,8 @@ internal class NetworkMonitor(
         }
     }
 
-
     private fun getNetworkTypeFromCapabilities(capabilities: NetworkCapabilities): NetworkType {
         return when {
-
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> NetworkType.WIFI
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> NetworkType.CELLULAR
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkType.ETHERNET
@@ -208,9 +194,11 @@ internal class NetworkMonitor(
                 hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
 
     fun cleanup() {
-        networkCallback?.let { callback ->
+        val callback = networkCallback
+        networkCallback = null
+        callback?.let {
             try {
-                connectivityManager?.unregisterNetworkCallback(callback)
+                connectivityManager?.unregisterNetworkCallback(it)
                 logger.verbose(config.accountId, "Network callback unregistered")
             } catch (e: Exception) {
                 logger.debug(
@@ -219,6 +207,5 @@ internal class NetworkMonitor(
                 )
             }
         }
-        networkCallback = null
     }
 }
