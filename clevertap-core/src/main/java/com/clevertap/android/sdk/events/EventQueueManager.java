@@ -582,8 +582,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         // Attach the network type
         try {
-            if (networkMonitor.getNetworkType() != NetworkMonitor.NetworkType.UNDETECTED){
-            o.put("nt", networkMonitor.getNetworkTypeString());}
+            String networkType = networkMonitor.getNetworkTypeString();
+            if (networkType != null) {
+                o.put("nt", networkType);
+            }
         } catch (Throwable t) {
             // Ignore
         }

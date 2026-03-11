@@ -10,6 +10,6 @@ internal fun ConnectivityManager?.isNetworkAvailable(): Boolean {
         capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     } catch (e: Exception) {
-        false
+        true
     }
 }

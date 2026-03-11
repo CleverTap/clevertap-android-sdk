@@ -189,7 +189,7 @@ internal object CleverTapFactory {
             )
         }
 
-        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData,networkMonitor)
+        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, networkMonitor)
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }.build()

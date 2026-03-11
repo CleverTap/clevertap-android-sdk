@@ -16,8 +16,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Insets;
 import android.hardware.display.DisplayManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -85,8 +83,6 @@ public class DeviceInfo {
 
         private final String model;
 
-        private final String networkType;
-
         private final String osName;
 
         private final String osVersion;
@@ -111,7 +107,6 @@ public class DeviceInfo {
             model = getModel();
             carrier = getCarrier();
             build = getBuild();
-            networkType = getNetworkType();
             bluetoothVersion = getBluetoothVersion();
             countryCode = getCountryCode();
             sdkVersion = getSdkVersion();
@@ -273,11 +268,6 @@ public class DeviceInfo {
             String model = Build.MODEL;
             model = model.replace(getManufacturer(), "");
             return model;
-        }
-
-        @SuppressLint("MissingPermission")
-        private String getNetworkType() {
-            return Utils.getDeviceNetworkType(context);
         }
 
         private String getOsName() {
@@ -605,7 +595,8 @@ public class DeviceInfo {
     }
 
     public String getNetworkType() {
-        return getDeviceCachedInfo().networkType;
+        if (networkMonitor == null) return null;
+        return networkMonitor.getNetworkTypeString();
     }
 
     public String getOsName() {

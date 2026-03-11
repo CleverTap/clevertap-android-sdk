@@ -150,7 +150,7 @@ internal class NetworkMonitor constructor(
         }
     }
 
-    fun getCurrentNetworkState(): NetworkState {
+    private fun getCurrentNetworkState(): NetworkState {
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             calculateCurrentNetworkState()
         } else {
@@ -167,7 +167,7 @@ internal class NetworkMonitor constructor(
 
     fun getNetworkType(): NetworkType = getCurrentNetworkState().networkType
 
-    fun getNetworkTypeString(): String {
+    fun getNetworkTypeString(): String? {
         return when (getNetworkType()) {
             NetworkType.WIFI -> "WiFi"
             NetworkType.CELLULAR -> Utils.getDeviceNetworkType(appContext)
@@ -175,7 +175,7 @@ internal class NetworkMonitor constructor(
             NetworkType.VPN -> "VPN"
             NetworkType.DISCONNECTED -> "Unavailable"
             NetworkType.UNKNOWN -> "Unknown"
-            NetworkType.UNDETECTED -> "Undetected"
+            NetworkType.UNDETECTED -> null
         }
     }
 

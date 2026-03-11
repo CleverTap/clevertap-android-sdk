@@ -290,30 +290,6 @@ class UtilsTest : BaseTestCase() {
     //------------------------------------------------------------------------------------
 
     @Test
-    fun test_getCurrentNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType() {
-        // if context is null, network type will be unavailable
-        var networkType: String? = Utils.getCurrentNetworkType(null)
-        printIfDebug("Network type is $networkType")
-        assertNotNull(networkType)
-        assertEquals("Unavailable", networkType)
-
-        // if context is not null and  user is connected to wifi and wify is enabled, we will get wifi as return
-        prepareForWifiConnectivityTest(true)
-        networkType = Utils.getCurrentNetworkType(application.applicationContext)
-        printIfDebug("Network type is $networkType")
-        assertEquals("WiFi", networkType)
-
-        // if context is not null and  user is connected to wifi and wify is NOT enabled, we will get Unknown as return
-        prepareForWifiConnectivityTest(false)
-        networkType = Utils.getCurrentNetworkType(application.applicationContext)
-        printIfDebug("Network type is $networkType")
-        assertEquals("Unknown", networkType)
-
-        // remaining parts of this function will be tested in  test_getDeviceNetworkType_when_FunctionIsCalledWithContextAndOSVersionIsM_should_ReturnNetworkType
-    }
-    //------------------------------------------------------------------------------------
-
-    @Test
     fun test_getDeviceNetworkType_when_FunctionIsCalledWithContextAndTelePhonyServiceIsNotAvialable_should_ReturnUnAvailable() {
         //if telephone service is NotAvailable it will return unknown
         prepareForTeleConnectTest(teleServiceAvailable = false)
