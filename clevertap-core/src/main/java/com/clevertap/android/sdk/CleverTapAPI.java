@@ -62,6 +62,7 @@ import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
+import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -157,6 +158,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private static NotificationHandler sNotificationHandler;
 
     private static NotificationHandler sSignedCallNotificationHandler;
+
+    private static ICleverTapNotificationFactory sNotificationFactory;
 
     private static final HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
 
@@ -3315,6 +3318,26 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static void setNotificationHandler(NotificationHandler notificationHandler) {
         sNotificationHandler = notificationHandler;
+    }
+
+    /**
+     * Sets a factory that gives the client complete control over creating push notifications.
+     * When set, the SDK will invoke {@link ICleverTapNotificationFactory#onCreateNotification}
+     * instead of its built-in renderers for core push notifications.
+     *
+     * <p>The client is responsible for creating the notification channel, building the
+     * {@link android.app.Notification}, and choosing the notification ID. The SDK still
+     * handles push deduplication, analytics, and displaying the notification.</p>
+     *
+     * @param factory The factory implementation, or {@code null} to revert to default rendering.
+     */
+    public static void setNotificationFactory(@Nullable ICleverTapNotificationFactory factory) {
+        sNotificationFactory = factory;
+    }
+
+    @Nullable
+    public static ICleverTapNotificationFactory getNotificationFactory() {
+        return sNotificationFactory;
     }
 
     /** @noinspection unused*/

@@ -88,6 +88,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
         TemplateRenderer.debugLevel = 3
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
+        CleverTapAPI.setNotificationFactory(CustomNotificationFactory())
 
         // this is for clevertap to start sending events => app launched => hence done in app create
         val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
