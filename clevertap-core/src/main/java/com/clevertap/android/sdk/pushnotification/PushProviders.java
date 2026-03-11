@@ -26,6 +26,7 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.CTXtensions;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -185,6 +186,18 @@ public class PushProviders implements CTPushProviderListener {
                         return;
                     }
                 }
+
+                // todo - Update key based on implementation from BE
+                boolean isForCustomFactory = extras.getString("isForFactory", "").equalsIgnoreCase("true");
+
+                if (isForCustomFactory) {
+                    ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
+                    if (customFactory != null) {
+                        triggerNotificationFromFactory(context, extras, customFactory);
+                    }
+                    return;
+                }
+
                 String notifMessage = iNotificationRenderer.getMessage(extras);
                 notifMessage = (notifMessage != null) ? notifMessage : "";
                 if (notifMessage.isEmpty()) {
@@ -1015,6 +1028,46 @@ public class PushProviders implements CTPushProviderListener {
         notificationManager.notify(notificationId, n);
         config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n);//cb
 
+        postNotificationRendered(context, extras);
+    }
+
+    private void triggerNotificationFromFactory(Context context, Bundle extras,
+                                                ICleverTapNotificationFactory customFactory) {
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+
+        if (notificationManager == null) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Unable to render notification, Notification Manager is null.");
+            return;
+        }
+
+        ICleverTapNotificationFactory.NotificationResult result;
+        try {
+            result = customFactory.onCreateNotification(context, extras);
+        } catch (Throwable t) {
+            config.getLogger().debug(config.getAccountId(),
+                    "ICleverTapNotificationFactory threw an exception", t);
+            return;
+        }
+
+        if (result == null) {
+            config.getLogger().debug(config.getAccountId(),
+                    "ICleverTapNotificationFactory returned null, not rendering notification");
+            return;
+        }
+
+        int notificationId = result.getNotificationId();
+        Notification notification = result.getNotification();
+
+        notificationManager.notify(notificationId, notification);
+        config.getLogger().debug(config.getAccountId(),
+                "Rendered notification from callback: " + notification);
+
+        postNotificationRendered(context, extras);
+    }
+
+    private void postNotificationRendered(Context context, Bundle extras) {
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);
@@ -1049,7 +1102,6 @@ public class PushProviders implements CTPushProviderListener {
 
             ctWorkManager.init();
             analyticsManager.pushNotificationViewedEvent(extras);
-
         }
     }
 }
