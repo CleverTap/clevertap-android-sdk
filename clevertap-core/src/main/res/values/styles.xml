@@ -4,4 +4,82 @@
     <style name="CTInboxActivityTheme" parent="Theme.AppCompat.DayNight">
         <item name="android:windowLightStatusBar">true</item>
     </style>
+
+    <!-- Video player control styles. These are used in ct_media3_player_control_view.xml
+         and ct_exo_styled_player_control_view.xml. Defining them here (instead of relying
+         on ExoStyledControls from the player library) avoids the stub/override conflict. -->
+
+    <style name="CtVideoControls" />
+
+    <!-- Exact mirror of ExoStyledControls.Button from media3-ui:1.4.0 -->
+    <style name="CtVideoControls.Button">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_marginRight">5dp</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.Button.Bottom -->
+    <style name="CtVideoControls.Button.Bottom" parent="CtVideoControls.Button">
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_marginLeft">2dp</item>
+        <item name="android:layout_marginRight">2dp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.Button.Bottom.FullScreen
+         android:src is intentionally omitted: Media3/ExoPlayer sets the fullscreen
+         icon dynamically at runtime via PlayerControlView. -->
+    <style name="CtVideoControls.Button.Bottom.FullScreen" parent="CtVideoControls.Button.Bottom">
+        <item name="android:contentDescription">Enter fullscreen</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.Button.Center -->
+    <style name="CtVideoControls.Button.Center" parent="CtVideoControls.Button">
+        <item name="android:layout_width">52dp</item>
+        <item name="android:layout_height">52dp</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.Button.Center.PlayPause
+         android:src is intentionally omitted: Media3/ExoPlayer toggles the play/pause
+         icon dynamically at runtime via PlayerControlView. -->
+    <style name="CtVideoControls.Button.Center.PlayPause" parent="CtVideoControls.Button.Center">
+        <item name="android:padding">2dp</item>
+        <item name="android:contentDescription">Play</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.TimeText -->
+    <style name="CtVideoControls.TimeText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:paddingRight">4dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.TimeText.Position -->
+    <style name="CtVideoControls.TimeText.Position" parent="CtVideoControls.TimeText">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:text">00:00:00</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.TimeText.Separator -->
+    <style name="CtVideoControls.TimeText.Separator" parent="CtVideoControls.TimeText">
+        <item name="android:textColor">#B3FFFFFF</item>
+        <item name="android:text">·</item>
+    </style>
+
+    <!-- Exact mirror of ExoStyledControls.TimeText.Duration -->
+    <style name="CtVideoControls.TimeText.Duration" parent="CtVideoControls.TimeText">
+        <item name="android:textColor">#B3FFFFFF</item>
+        <item name="android:text">00:00:00</item>
+    </style>
 </resources>

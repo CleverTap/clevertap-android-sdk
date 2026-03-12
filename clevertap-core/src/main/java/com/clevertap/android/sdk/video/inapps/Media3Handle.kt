@@ -124,21 +124,25 @@ class Media3Handle : InAppVideoPlayerHandle {
 
     override fun setFullscreenClickListener(onClick: () -> Unit) {
         playerView?.setFullscreenButtonClickListener { onClick() }
+        setFullscreenIcon(isFullScreen = false)
     }
 
     override fun setMuteClickListener() {
         val muteButton = playerView?.findViewById<ImageButton>(R.id.exo_mute) ?: return
-        muteButton.setOnClickListener {
+        val minimalMuteButton = playerView?.findViewById<ImageButton>(R.id.exo_minimal_mute)
+        val clickListener = View.OnClickListener {
             isMuted = !isMuted
             player?.volume = if (isMuted) InAppVideoPlayerHandle.VOLUME_MUTED else InAppVideoPlayerHandle.VOLUME_UNMUTED
-            muteButton.setImageResource(
-                if (isMuted) R.drawable.ct_volume_off else R.drawable.ct_volume_on
-            )
-            muteButton.contentDescription = muteButton.context.getString(
-                if (isMuted) R.string.ct_unmute_button_content_description
-                else R.string.ct_mute_button_content_description
-            )
+            val iconRes = if (isMuted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+            val descRes = if (isMuted) R.string.ct_unmute_button_content_description
+                          else R.string.ct_mute_button_content_description
+            muteButton.setImageResource(iconRes)
+            muteButton.contentDescription = muteButton.context.getString(descRes)
+            minimalMuteButton?.setImageResource(iconRes)
+            minimalMuteButton?.contentDescription = muteButton.contentDescription
         }
+        muteButton.setOnClickListener(clickListener)
+        minimalMuteButton?.setOnClickListener(clickListener)
     }
 
     override fun setActionClickListener(onClick: () -> Unit) {
@@ -154,6 +158,16 @@ class Media3Handle : InAppVideoPlayerHandle {
         } else {
             playerView!!.layoutParams = playerViewLayoutParamsNormal
         }
+        setFullscreenIcon(isFullScreen)
+    }
+
+    private fun setFullscreenIcon(isFullScreen: Boolean) {
+        val iconRes = if (isFullScreen)
+            androidx.media3.ui.R.drawable.exo_icon_fullscreen_exit
+        else
+            androidx.media3.ui.R.drawable.exo_icon_fullscreen_enter
+        playerView?.findViewById<ImageButton>(R.id.exo_fullscreen)?.setImageResource(iconRes)
+        playerView?.findViewById<ImageButton>(R.id.exo_minimal_fullscreen)?.setImageResource(iconRes)
     }
 
     override fun videoSurface(): View {

@@ -12,4 +12,12 @@
     <dimen name="txt_size_inapp_footer_title">16sp</dimen>
     <dimen name="txt_size_inapp_footer_message">12sp</dimen>
     <dimen name="txt_size_inapp_footer_button">14sp</dimen>
+
+    <dimen name="ct_video_bottom_bar_height">60dp</dimen>
+    <dimen name="ct_video_bottom_bar_margin_top">10dp</dimen>
+    <dimen name="ct_video_time_padding">10dp</dimen>
+    <dimen name="ct_video_progress_height">48dp</dimen>
+    <dimen name="ct_video_progress_margin_bottom">52dp</dimen>
+    <dimen name="ct_video_minimal_controls_margin_bottom">4dp</dimen>
+    <dimen name="ct_video_controls_padding">0dp</dimen>
 </resources>
