@@ -150,7 +150,7 @@ internal class NetworkMonitor constructor(
         }
     }
 
-    private fun getCurrentNetworkState(): NetworkState {
+    internal fun getCurrentNetworkState(): NetworkState {
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             calculateCurrentNetworkState()
         } else {
