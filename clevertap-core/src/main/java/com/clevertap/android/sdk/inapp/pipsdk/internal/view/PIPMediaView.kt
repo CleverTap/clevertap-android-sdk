@@ -69,7 +69,7 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
             }
             addView(scrim, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
             wrapper.notifyWhenFirstFrame {
-                scrim.animate().alpha(0f).setDuration(150).withEndAction { removeView(scrim) }.start()
+                removeView(scrim)
             }
         }
     }
