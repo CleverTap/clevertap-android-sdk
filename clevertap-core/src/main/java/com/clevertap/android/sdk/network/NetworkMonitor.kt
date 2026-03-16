@@ -160,15 +160,25 @@ internal class NetworkMonitor constructor(
 
     fun isNetworkOnline(): Boolean {
         val state = getCurrentNetworkState()
-        return state.isAvailable || state.networkType == NetworkType.UNDETECTED
+        val online = state.isAvailable || state.networkType == NetworkType.UNDETECTED
+        logger.verbose(config.accountId, "isNetworkOnline: state=$state, result=$online")
+        return online
     }
 
-    fun isWifiConnected(): Boolean = getCurrentNetworkState().isWifiConnected
+    fun isWifiConnected(): Boolean {
+        val connected = getCurrentNetworkState().isWifiConnected
+        logger.verbose(config.accountId, "isWifiConnected: result=$connected")
+        return connected
+    }
 
-    fun getNetworkType(): NetworkType = getCurrentNetworkState().networkType
+    fun getNetworkType(): NetworkType {
+        val type = getCurrentNetworkState().networkType
+        logger.verbose(config.accountId, "getNetworkType: result=$type")
+        return type
+    }
 
     fun getNetworkTypeString(): String? {
-        return when (getNetworkType()) {
+        val typeString = when (getNetworkType()) {
             NetworkType.WIFI -> "WiFi"
             NetworkType.CELLULAR -> Utils.getDeviceNetworkType(appContext)
             NetworkType.ETHERNET -> "Ethernet"
@@ -177,6 +187,8 @@ internal class NetworkMonitor constructor(
             NetworkType.UNKNOWN -> "Unknown"
             NetworkType.UNDETECTED -> null
         }
+        logger.verbose(config.accountId, "getNetworkTypeString: result=$typeString")
+        return typeString
     }
 
     private fun getNetworkTypeFromCapabilities(capabilities: NetworkCapabilities): NetworkType {
@@ -192,6 +204,7 @@ internal class NetworkMonitor constructor(
     private fun NetworkCapabilities.hasInternet(): Boolean =
         hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+
 
     fun cleanup() {
         val callback = networkCallback
