@@ -7,7 +7,9 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 
@@ -24,14 +26,16 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 internal class PIPExpandedView(
     context: Context,
     private val showCloseButton: Boolean,
+    private val redirectUrl: String?,
     private val onCollapse: () -> Unit,
     private val onClose: () -> Unit,
+    private val onRedirect: () -> Unit,
 ) : FrameLayout(context) {
 
     internal val mediaContainer: FrameLayout
     private val controlsOverlay: PIPControlsOverlay
-    private var playPauseBtn: TextView? = null
-    private var muteBtn: TextView? = null
+    private var playPauseBtn: ImageView? = null
+    private var muteBtn: ImageView? = null
 
     init {
         setBackgroundColor(Color.BLACK)
@@ -45,19 +49,20 @@ internal class PIPExpandedView(
         controlsOverlay.alpha = 0f
 
         val padPx = 16.dpToPx(context)
+        val iconSizePx = 58.dpToPx(context)
+        val playPauseSizePx = 64.dpToPx(context)
 
-        // Collapse button — top-left
-        val collapseBtn = TextView(context).apply {
-            text = "\u2190"     // ← left arrow
-            textSize = 20f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
+        // Deeplink button — top-left (hidden if redirectUrl is null)
+        val deeplinkBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_action)
+            scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
-            setOnClickListener { onCollapse() }
+            visibility = if (redirectUrl != null) View.VISIBLE else View.GONE
+            setOnClickListener { onRedirect() }
         }
         controlsOverlay.addView(
-            collapseBtn,
-            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.TOP or Gravity.START),
+            deeplinkBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.START),
         )
 
         // Close button — top-right (hidden if showCloseButton = false)
@@ -76,29 +81,37 @@ internal class PIPExpandedView(
         )
 
         // Play/Pause button — centre (video only; hidden until bindMedia)
-        val ppBtn = TextView(context).apply {
-            text = "\u23F8"     // ⏸
-            textSize = 36f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
+        val ppBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_pause)
+            scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = View.GONE
         }
         playPauseBtn = ppBtn
-        controlsOverlay.addView(ppBtn, LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.CENTER))
+        controlsOverlay.addView(ppBtn, LayoutParams(playPauseSizePx, playPauseSizePx, Gravity.CENTER))
 
-        // Mute button — bottom-right (video only; hidden until bindMedia)
-        val mBtn = TextView(context).apply {
-            text = "\uD83D\uDD07"   // 🔇
-            textSize = 24f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
+        // Mute button — bottom-left (video only; hidden until bindMedia)
+        val mBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_volume_off)
+            scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = View.GONE
         }
         muteBtn = mBtn
         controlsOverlay.addView(
             mBtn,
-            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.END),
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
+        )
+
+        // Collapse button — bottom-right
+        val collapseBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_collapse)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setPadding(padPx, padPx, padPx, padPx)
+            setOnClickListener { onCollapse() }
+        }
+        controlsOverlay.addView(
+            collapseBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.END),
         )
 
         addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
@@ -150,10 +163,14 @@ internal class PIPExpandedView(
     fun detach() = controlsOverlay.detach()
 
     private fun updatePlayPauseIcon(playing: Boolean) {
-        playPauseBtn?.text = if (playing) "\u23F8" else "\u25B6"    // ⏸ or ▶
+        playPauseBtn?.setImageResource(
+            if (playing) R.drawable.ct_ic_pause else R.drawable.ct_ic_play
+        )
     }
 
     private fun updateMuteIcon(muted: Boolean) {
-        muteBtn?.text = if (muted) "\uD83D\uDD07" else "\uD83D\uDD0A"  // 🔇 or 🔊
+        muteBtn?.setImageResource(
+            if (muted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+        )
     }
 }
