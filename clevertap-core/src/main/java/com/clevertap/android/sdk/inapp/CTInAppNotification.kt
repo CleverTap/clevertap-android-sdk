@@ -82,6 +82,9 @@ class CTInAppNotification : Parcelable {
     internal var customTemplateData: CustomTemplateInAppData? = null
         private set
 
+    internal var pipConfigJson: JSONObject? = null
+        private set
+
     internal var type: String? = null
         private set
 
@@ -226,6 +229,7 @@ class CTInAppNotification : Parcelable {
             parcel.readParcelable<CustomTemplateInAppData?>(CustomTemplateInAppData::class.java.getClassLoader())
         aspectRatio = parcel.readDouble()
         isRequestForPushPermission = parcel.readByte().toInt() != 0x00
+        pipConfigJson = _jsonDescription.optJSONObject("pip")
     }
 
     override fun describeContents(): Int {
@@ -402,6 +406,7 @@ class CTInAppNotification : Parcelable {
             isRequestForPushPermission =
                 jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false)
             customTemplateData = createFromJson(jsonObject)
+            pipConfigJson = jsonObject.optJSONObject("pip")
 
             when (inAppType) {
                 CTInAppType.CTInAppTypeFooter,
@@ -421,6 +426,12 @@ class CTInAppNotification : Parcelable {
                 CTInAppType.CTInAppTypeInterstitialImageOnly -> {
                     if (_mediaList.isEmpty()) {
                         error = "No media type for template"
+                    }
+                }
+
+                CTInAppType.CTInAppTypePIP -> {
+                    if (_mediaList.isEmpty()) {
+                        error = "PIP type requires media"
                     }
                 }
 

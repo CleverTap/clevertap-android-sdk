@@ -5,6 +5,7 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.core.content.res.ResourcesCompat
@@ -80,11 +81,8 @@ class Media3Handle : InAppVideoPlayerHandle {
             return
         }
 
-        val playerWidth = playerWidth(context = context, isTablet = isTablet)
-        val playerHeight = playerHeight(context = context, isTablet = isTablet)
-
         playerView = (LayoutInflater.from(context).inflate(R.layout.ct_media3_inapp_player_view, null) as PlayerView).apply {
-            playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
+            playerViewLayoutParamsNormal = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
             setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
             useArtwork = true
@@ -172,35 +170,5 @@ class Media3Handle : InAppVideoPlayerHandle {
 
     override fun videoSurface(): View {
         return playerView!!
-    }
-
-    private fun playerWidth(
-        context: Context,
-        isTablet: Boolean
-    ): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            if (isTablet) {
-                InAppVideoPlayerHandle.PLAYER_WIDTH_TABLET_DP
-            } else {
-                InAppVideoPlayerHandle.PLAYER_WIDTH_PHONE_DP
-            },
-            context.resources.displayMetrics
-        ).toInt()
-    }
-
-    private fun playerHeight(
-        context: Context,
-        isTablet: Boolean
-    ): Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            if (isTablet) {
-                InAppVideoPlayerHandle.PLAYER_HEIGHT_TABLET_DP
-            } else {
-                InAppVideoPlayerHandle.PLAYER_HEIGHT_PHONE_DP
-            },
-            context.resources.displayMetrics
-        ).toInt()
     }
 }
