@@ -9,7 +9,9 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPDragHandler
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
@@ -27,11 +29,13 @@ internal class PIPCompactView(
     private val session: PIPSession,
     private val onExpand: () -> Unit,
     private val onClose: () -> Unit,
+    private val onRedirect: () -> Unit,
     private val onSnap: (PIPPosition) -> Unit,
 ) : FrameLayout(context) {
 
     internal val controlsOverlay: PIPControlsOverlay
     private val dragHandler: PIPDragHandler
+    private var muteBtn: ImageView? = null
 
     init {
         // Rounded card appearance with configurable corner radius and border
@@ -63,6 +67,20 @@ internal class PIPCompactView(
         controlsOverlay.alpha = 0f
 
         val padPx = 10.dpToPx(context)
+        val iconSizePx = 30.dpToPx(context)
+
+        // Deeplink button — top-left (hidden if redirectUrl is null)
+        val deeplinkBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_action)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+//            setPadding(padPx, padPx, padPx, padPx)
+            visibility = if (cfg.redirectUrl != null) View.VISIBLE else View.GONE
+            setOnClickListener { onRedirect() }
+        }
+        controlsOverlay.addView(
+            deeplinkBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.START),
+        )
 
         // Close button — top-right (hidden if showCloseButton = false)
         val closeBtn = TextView(context).apply {
@@ -77,20 +95,31 @@ internal class PIPCompactView(
         controlsOverlay.addView(
             closeBtn,
             LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.TOP or Gravity.END),
-        ) // TODO: can't we move controlsOverlay construction inside it's class itself?
+        )
+
+        // Mute button — bottom-left (video only; hidden until bindVideoControls)
+        val mBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_volume_off)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            //setPadding(padPx, padPx, padPx, padPx)
+            visibility = View.GONE
+        }
+        muteBtn = mBtn
+        controlsOverlay.addView(
+            mBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
+        )
 
         // Expand button — bottom-right
-        val expandBtn = TextView(context).apply {
-            text = "\u26F6"    // ⛶ (fullscreen-like square)
-            textSize = 14f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            setPadding(padPx, padPx, padPx, padPx)
+        val expandBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_expand)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+//            setPadding(padPx, padPx, padPx, padPx)
             setOnClickListener { onExpand() }
         }
         controlsOverlay.addView(
             expandBtn,
-            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.END),
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.END),
         )
 
         addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
@@ -104,6 +133,26 @@ internal class PIPCompactView(
                 onSnap(newPos)
             },
             onTap = { controlsOverlay.showControls() },
+        )
+    }
+
+    /**
+     * Wires mute button for video media. Call after media is attached.
+     */
+    fun bindVideoControls(mv: PIPMediaView) {
+        if (!mv.isVideoType) return
+        muteBtn?.visibility = View.VISIBLE
+        updateMuteIcon(mv.isMuted)
+        muteBtn?.setOnClickListener {
+            mv.toggleMute()
+            updateMuteIcon(mv.isMuted)
+            controlsOverlay.resetAutoHideTimer()
+        }
+    }
+
+    private fun updateMuteIcon(muted: Boolean) {
+        muteBtn?.setImageResource(
+            if (muted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
         )
     }
 
