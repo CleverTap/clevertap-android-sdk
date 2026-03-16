@@ -2,24 +2,33 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 
 import android.content.Context
 import android.view.View
+import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.PlayerView
-import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 
 /**
- * Adapter wrapping [InAppVideoPlayerHandle] for PIPViewSDK's rotation-surviving lifecycle.
+ * Self-contained video player for PIP in-app notifications.
  *
- * The CT SDK's [InAppVideoPlayerHandle.pause] is destructive (calls stop + release),
- * which is unsuitable for rotation where we need to keep the player alive, detach the
- * surface, and rebind on the new Activity instance. This wrapper reaches through
- * [InAppVideoPlayerHandle.videoSurface] to access the underlying ExoPlayer/Media3 player
- * and performs non-destructive surface management.
- *
- * **Preferred long-term fix:** Add `detachSurface()` and `rebindSurface()` to
- * [InAppVideoPlayerHandle] interface in the shared module.
+ * Owns the [ExoPlayer] and [PlayerView] directly (Media3 only), providing
+ * non-destructive surface management needed for rotation survival.
+ * PIP has its own overlay controls ([com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPControlsOverlay]),
+ * so the PlayerView is created with `useController = false`.
  */
-internal class PIPVideoPlayerWrapper(private val handle: InAppVideoPlayerHandle) {
+@UnstableApi
+internal class PIPVideoPlayerWrapper {
+
+    private var player: ExoPlayer? = null
+    private var playerView: PlayerView? = null
 
     private var savedPositionMs: Long = 0L
     private var _isMuted: Boolean = true
@@ -30,29 +39,73 @@ internal class PIPVideoPlayerWrapper(private val handle: InAppVideoPlayerHandle)
     private var onFirstFrame: (() -> Unit)? = null
 
     val isMuted: Boolean get() = _isMuted
-    val isPlaying: Boolean get() = resolvePlayer()?.isPlaying ?: _isPlaying
+    val isPlaying: Boolean get() = player?.isPlaying ?: _isPlaying
 
     val currentPositionMs: Long
-        get() = resolvePlayer()?.currentPosition ?: savedPositionMs
+        get() = player?.currentPosition ?: savedPositionMs
+
+    /**
+     * Creates and prepares the [ExoPlayer] with an HLS source.
+     * Starts muted with repeat-one mode.
+     */
+    fun initPlayer(context: Context, url: String) {
+        if (player != null) return
+
+        val bandwidthMeter = DefaultBandwidthMeter.Builder(context).build()
+        val trackSelector = DefaultTrackSelector(context, AdaptiveTrackSelection.Factory())
+
+        val userAgent = Util.getUserAgent(context, context.packageName)
+        val httpFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent(userAgent)
+            .setTransferListener(bandwidthMeter.transferListener)
+        val dataSourceFactory = DefaultDataSource.Factory(context, httpFactory)
+        val hlsMediaSource = HlsMediaSource.Factory(dataSourceFactory)
+            .createMediaSource(MediaItem.fromUri(url))
+
+        player = ExoPlayer.Builder(context)
+            .setTrackSelector(trackSelector)
+            .build()
+            .apply {
+                setMediaSource(hlsMediaSource)
+                prepare()
+                repeatMode = Player.REPEAT_MODE_ONE
+                volume = 0f
+            }
+    }
+
+    /**
+     * Creates a bare [PlayerView] with no built-in controls and attaches the player.
+     *
+     * @return the [PlayerView] to add to the container.
+     */
+    fun createSurface(context: Context): View {
+        val pv = PlayerView(context).apply {
+            useController = false
+            setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+            player = this@PIPVideoPlayerWrapper.player
+        }
+        playerView = pv
+        return pv
+    }
 
     fun play() {
-        resolvePlayer()?.play() ?: handle.play()
+        player?.play()
         _isPlaying = true
     }
 
     fun softPause() {
-        resolvePlayer()?.pause()
+        player?.pause()
         _isPlaying = false
     }
 
     fun toggleMute() {
         _isMuted = !_isMuted
-        resolvePlayer()?.volume = if (_isMuted) 0f else 1f
+        player?.volume = if (_isMuted) 0f else 1f
     }
 
     fun setMuted(muted: Boolean) {
         _isMuted = muted
-        resolvePlayer()?.volume = if (muted) 0f else 1f
+        player?.volume = if (muted) 0f else 1f
     }
 
     /**
@@ -62,11 +115,12 @@ internal class PIPVideoPlayerWrapper(private val handle: InAppVideoPlayerHandle)
     fun detachSurface() {
         firstFrameReady = false
         onFirstFrame = null
-        val player = resolvePlayer() ?: return
-        savedPositionMs = player.currentPosition
-        _isPlaying = player.isPlaying
-        player.clearVideoSurface()
-        player.pause()
+        val p = player ?: return
+        savedPositionMs = p.currentPosition
+        _isPlaying = p.isPlaying
+        playerView?.player = null
+        playerView = null
+        p.pause()
     }
 
     /**
@@ -76,24 +130,25 @@ internal class PIPVideoPlayerWrapper(private val handle: InAppVideoPlayerHandle)
      * @return the new [PlayerView] to add to the container, or null if the player is gone.
      */
     fun rebindSurface(context: Context): View? {
-        val player = resolvePlayer() ?: return null
-        player.seekTo(savedPositionMs)
-        // Create a fresh PlayerView and attach the existing player
-        handle.initPlayerView(context, false)
-        val surface = handle.videoSurface()
+        val p = player ?: return null
+        p.seekTo(savedPositionMs)
+
+        val surface = createSurface(context)
+
         // Register one-shot first-frame listener before play() so it is never missed
         firstFrameReady = false
-        player.addListener(object : Player.Listener {
+        p.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
                 firstFrameReady = true
                 onFirstFrame?.invoke()
                 onFirstFrame = null
-                player.removeListener(this)
+                p.removeListener(this)
             }
         })
+
         // Restore state
-        if (_isPlaying) player.play() else player.pause()
-        player.volume = if (_isMuted) 0f else 1f
+        if (_isPlaying) p.play() else p.pause()
+        p.volume = if (_isMuted) 0f else 1f
         return surface
     }
 
@@ -110,39 +165,29 @@ internal class PIPVideoPlayerWrapper(private val handle: InAppVideoPlayerHandle)
     }
 
     /**
-     * Full cleanup — delegates to the handle's destructive [InAppVideoPlayerHandle.pause]
-     * for final resource release.
+     * Full cleanup — stops and releases the player.
      */
     fun release() {
         firstFrameReady = false
         onFirstFrame = null
-        handle.pause()
+        playerView?.player = null
+        playerView = null
+        player?.stop()
+        player?.release()
+        player = null
     }
 
-    fun videoSurface(): View = handle.videoSurface()
+    fun videoSurface(): View = playerView!!
 
     /**
      * Registers a [Player.Listener] on the underlying player to receive error events.
-     * The [onError] callback is invoked on the main thread when a playback error occurs.
      */
     fun setErrorListener(onError: (PlaybackException) -> Unit) {
-        val player = resolvePlayer() ?: return
-        player.addListener(object : Player.Listener {
+        val p = player ?: return
+        p.addListener(object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
                 onError(error)
             }
         })
-    }
-
-    /**
-     * Resolves the underlying [Player] by reaching through the handle's video surface.
-     * Falls back to null if the surface is not a [PlayerView] or player is not set.
-     */
-    private fun resolvePlayer(): Player? {
-        return try {
-            (handle.videoSurface() as? PlayerView)?.player
-        } catch (_: IllegalStateException) {
-            null
-        }
     }
 }
