@@ -111,6 +111,9 @@ internal class PIPVideoPlayerWrapper {
     /**
      * Saves playback position and detaches the video surface WITHOUT destroying the player.
      * Called before view hierarchy removal during rotation.
+     *
+     * Uses [Player.setPlayWhenReady] instead of [Player.pause] to keep the decoder warm,
+     * avoiding a full seek + decode cycle on rebind.
      */
     fun detachSurface() {
         firstFrameReady = false
@@ -120,22 +123,24 @@ internal class PIPVideoPlayerWrapper {
         _isPlaying = p.isPlaying
         playerView?.player = null
         playerView = null
-        p.pause()
+        p.playWhenReady = false
     }
 
     /**
-     * Creates a new [PlayerView], reattaches the player, and seeks to the saved position.
+     * Creates a new [PlayerView] and reattaches the player.
      * Called after re-layout on the new Activity instance post-rotation.
+     *
+     * No seek is needed because [detachSurface] uses `playWhenReady = false`
+     * which preserves the player's position without flushing the decoder.
      *
      * @return the new [PlayerView] to add to the container, or null if the player is gone.
      */
     fun rebindSurface(context: Context): View? {
         val p = player ?: return null
-        p.seekTo(savedPositionMs)
 
         val surface = createSurface(context)
 
-        // Register one-shot first-frame listener before play() so it is never missed
+        // Register one-shot first-frame listener before resuming so it is never missed
         firstFrameReady = false
         p.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
@@ -147,7 +152,7 @@ internal class PIPVideoPlayerWrapper {
         })
 
         // Restore state
-        if (_isPlaying) p.play() else p.pause()
+        p.playWhenReady = _isPlaying
         p.volume = if (_isMuted) 0f else 1f
         return surface
     }
