@@ -454,7 +454,13 @@ class UtilsTest : BaseTestCase() {
     fun test_getNotificationBitmap_when_context_is_passed_and_network_is_unavailable_and_fallbackIsFalse_shouldReturnNull(){
         val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val shadowConnectivityManager = Shadows.shadowOf(connectivityManager)
-        shadowConnectivityManager.setActiveNetworkInfo(null)
+        val networkInfo = ShadowNetworkInfo.newInstance(
+            android.net.NetworkInfo.DetailedState.CONNECTED,
+            ConnectivityManager.TYPE_WIFI, 0, true, true
+        )
+        shadowConnectivityManager.setActiveNetworkInfo(networkInfo)
+        val activeNetwork = connectivityManager.activeNetwork!!
+        shadowConnectivityManager.setNetworkCapabilities(activeNetwork, ShadowNetworkCapabilities.newInstance())
 
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_NOTIFICATION_BITMAP,
