@@ -5,18 +5,15 @@ import android.widget.ImageView
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
-import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 import com.clevertap.android.sdk.video.VideoLibChecker
 import com.clevertap.android.sdk.video.VideoLibraryIntegrated
-import com.clevertap.android.sdk.video.inapps.ExoplayerHandle
-import com.clevertap.android.sdk.video.inapps.Media3Handle
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
 
 /**
  * Renderer for [com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType.VIDEO].
  *
- * Delegates playback to [PIPVideoPlayerWrapper] (which wraps [com.clevertap.android.sdk.video.InAppVideoPlayerHandle]).
+ * Delegates playback to [PIPVideoPlayerWrapper] which owns the player directly.
  * Uses [FileResourceProvider] for fallback image loading on video error.
  */
 internal class VideoRenderer(
@@ -57,26 +54,17 @@ internal class VideoRenderer(
                 ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
             )
         } else {
-            // Create new handle + wrapper
-            val handle: InAppVideoPlayerHandle = if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
-                Media3Handle()
-            } else {
-                ExoplayerHandle()
-            }
-            handle.initExoplayer(container.context, config.mediaUrl)
-            handle.initPlayerView(container.context, false)
-            handle.setFullscreenClickListener {
+            // Create self-contained PIP video player
+            val w = PIPVideoPlayerWrapper()
+            w.initPlayer(container.context, config.mediaUrl)
+            val surface = w.createSurface(container.context)
 
-            }
-
-            val w = PIPVideoPlayerWrapper(handle)
             w.setMuted(true)
             wrapper = w
             s.videoPlayerWrapper = w
             s.isMuted = true
             s.isPlaying = true
 
-            val surface = handle.videoSurface()
             container.addView(
                 surface,
                 ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
