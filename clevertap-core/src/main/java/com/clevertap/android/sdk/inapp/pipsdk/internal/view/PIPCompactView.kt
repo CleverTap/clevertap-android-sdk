@@ -42,9 +42,9 @@ internal class PIPCompactView(
         val cfg = session.config
         val bg = GradientDrawable().apply {
             cornerRadius = cfg.cornerRadiusDp.dpToPx(context).toFloat()
-            setColor(Color.BLACK)// TODO: Check api docs of setColor() for any notes
+            setColor(Color.BLACK)
             if (cfg.border.enabled) {
-                setStroke(// TODO: Check api docs of setStroke() for any notes
+                setStroke(
                     cfg.border.widthDp.dpToPx(context),
                     Color.parseColor(cfg.border.color),
                 )
@@ -73,7 +73,6 @@ internal class PIPCompactView(
         val deeplinkBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_action)
             scaleType = ImageView.ScaleType.FIT_CENTER
-//            setPadding(padPx, padPx, padPx, padPx)
             visibility = if (cfg.redirectUrl != null) View.VISIBLE else View.GONE
             setOnClickListener { onRedirect() }
         }
@@ -101,7 +100,6 @@ internal class PIPCompactView(
         val mBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_volume_off)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            //setPadding(padPx, padPx, padPx, padPx)
             visibility = View.GONE
         }
         muteBtn = mBtn
