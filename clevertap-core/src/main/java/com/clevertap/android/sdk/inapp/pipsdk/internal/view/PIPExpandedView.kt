@@ -51,9 +51,9 @@ internal class PIPExpandedView(
         controlsOverlay = PIPControlsOverlay(context)
         controlsOverlay.alpha = 0f
 
-        val padPx = 16.dpToPx(context)
-        val iconSizePx = 58.dpToPx(context)
-        val playPauseSizePx = 64.dpToPx(context)
+        val padPx = ICON_PADDING_DP.dpToPx(context)
+        val iconSizePx = ICON_SIZE_DP.dpToPx(context)
+        val playPauseSizePx = PLAY_PAUSE_SIZE_DP.dpToPx(context)
 
         // Deeplink button — top-left (hidden if redirectUrl is null)
         val deeplinkBtn = ImageView(context).apply {
@@ -176,5 +176,11 @@ internal class PIPExpandedView(
         muteBtn?.setImageResource(
             if (muted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
         )
+    }
+
+    private companion object {
+        const val ICON_SIZE_DP = 58
+        const val PLAY_PAUSE_SIZE_DP = 64
+        const val ICON_PADDING_DP = 16
     }
 }

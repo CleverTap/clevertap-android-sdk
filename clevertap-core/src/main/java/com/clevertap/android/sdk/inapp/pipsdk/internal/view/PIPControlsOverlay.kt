@@ -20,14 +20,14 @@ internal class PIPControlsOverlay(context: Context) : FrameLayout(context) {
     fun showControls(autoHide: Boolean = true) {
         mainHandler.removeCallbacks(hideRunnable)
         animate().cancel()
-        animate().alpha(1f).setDuration(200).start()
+        animate().alpha(1f).setDuration(CONTROLS_FADE_DURATION_MS).start()
         if (autoHide) mainHandler.postDelayed(hideRunnable, AUTO_HIDE_DELAY_MS)
     }
 
     fun hideControls() {
         mainHandler.removeCallbacks(hideRunnable)
         animate().cancel()
-        animate().alpha(0f).setDuration(200).start()
+        animate().alpha(0f).setDuration(CONTROLS_FADE_DURATION_MS).start()
     }
 
     fun resetAutoHideTimer() {
@@ -39,5 +39,6 @@ internal class PIPControlsOverlay(context: Context) : FrameLayout(context) {
 
     companion object {
         private const val AUTO_HIDE_DELAY_MS = 3_000L
+        private const val CONTROLS_FADE_DURATION_MS = 200L
     }
 }
