@@ -31,6 +31,10 @@ internal class PIPInAppCallbacksBridge(
         )
     }
 
+    // The callbacks below are PIP-specific events with no corresponding InAppListener method.
+    // They are intentionally log-only for diagnostics. If SDK-level forwarding is needed in the
+    // future, add new methods to InAppListener and wire them here.
+
     override fun onExpand() {
         logger.debug(LOG_TAG, "PIP onExpand for campaign: ${inAppNotification.campaignId}")
     }
