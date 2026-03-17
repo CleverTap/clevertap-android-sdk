@@ -9,6 +9,18 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
 
 internal object PIPAnimator {
 
+    private const val DURATION_DISSOLVE_IN_MS = 300L
+    private const val DURATION_DISSOLVE_OUT_MS = 250L
+    private const val DURATION_MOVE_IN_MS = 350L
+    private const val DURATION_MOVE_OUT_MS = 300L
+    private const val DURATION_SNAP_MS = 250L
+    private const val DURATION_EXPAND_MS = 250L
+    private const val DURATION_COLLAPSE_MS = 200L
+    private const val EXPAND_INITIAL_SCALE = 0.85f
+    private const val SNAP_OVERSHOOT_TENSION = 1.2f
+    /** Fraction of container used to determine which edge to slide from/to in MOVE_IN animation. */
+    private const val EDGE_ZONE_FRACTION = 0.33f
+
     fun animateIn(
         view: View,
         anchor: PointF,
@@ -30,7 +42,7 @@ internal object PIPAnimator {
                 view.y = anchor.y
                 view.alpha = 0f
                 view.visibility = View.VISIBLE
-                view.animate().alpha(1f).setDuration(300)
+                view.animate().alpha(1f).setDuration(DURATION_DISSOLVE_IN_MS)
                     .withEndAction(onComplete).start()
             }
             PIPAnimation.MOVE_IN -> {
@@ -43,7 +55,7 @@ internal object PIPAnimator {
                 view.visibility = View.VISIBLE
                 view.animate()
                     .x(anchor.x).y(anchor.y)
-                    .setDuration(350)
+                    .setDuration(DURATION_MOVE_IN_MS)
                     .setInterpolator(DecelerateInterpolator())
                     .withEndAction(onComplete).start()
             }
@@ -57,7 +69,7 @@ internal object PIPAnimator {
                 onComplete()
             }
             PIPAnimation.DISSOLVE -> {
-                view.animate().alpha(0f).setDuration(250)
+                view.animate().alpha(0f).setDuration(DURATION_DISSOLVE_OUT_MS)
                     .withEndAction { view.visibility = View.GONE; onComplete() }.start()
             }
             PIPAnimation.MOVE_IN -> {
@@ -65,7 +77,7 @@ internal object PIPAnimator {
                 val delta = slideOutDelta(view, parent?.width ?: 0, parent?.height ?: 0)
                 view.animate()
                     .xBy(delta.x).yBy(delta.y)
-                    .setDuration(300)
+                    .setDuration(DURATION_MOVE_OUT_MS)
                     .withEndAction { view.visibility = View.GONE; onComplete() }.start()
             }
         }
@@ -74,8 +86,8 @@ internal object PIPAnimator {
     fun animateSnap(view: View, targetX: Float, targetY: Float, onComplete: () -> Unit) {
         view.animate()
             .x(targetX).y(targetY)
-            .setDuration(250)
-            .setInterpolator(OvershootInterpolator(1.2f))
+            .setDuration(DURATION_SNAP_MS)
+            .setInterpolator(OvershootInterpolator(SNAP_OVERSHOOT_TENSION))
             .withEndAction(onComplete)
             .start()
     }
@@ -83,18 +95,18 @@ internal object PIPAnimator {
     fun animateExpand(overlay: View, mediaContainer: View, onComplete: () -> Unit) {
         overlay.alpha = 0f
         overlay.visibility = View.VISIBLE
-        mediaContainer.scaleX = 0.85f
-        mediaContainer.scaleY = 0.85f
-        overlay.animate().alpha(1f).setDuration(250).start()
+        mediaContainer.scaleX = EXPAND_INITIAL_SCALE
+        mediaContainer.scaleY = EXPAND_INITIAL_SCALE
+        overlay.animate().alpha(1f).setDuration(DURATION_EXPAND_MS).start()
         mediaContainer.animate()
             .scaleX(1f).scaleY(1f)
-            .setDuration(250)
+            .setDuration(DURATION_EXPAND_MS)
             .setInterpolator(DecelerateInterpolator())
             .withEndAction(onComplete).start()
     }
 
     fun animateCollapse(overlay: View, onComplete: () -> Unit) {
-        overlay.animate().alpha(0f).setDuration(200)
+        overlay.animate().alpha(0f).setDuration(DURATION_COLLAPSE_MS)
             .withEndAction { overlay.visibility = View.GONE; onComplete() }.start()
     }
 
@@ -104,10 +116,10 @@ internal object PIPAnimator {
         val cx = anchor.x + pipW / 2f
         val cy = anchor.y + pipH / 2f
         return when {
-            cy < containerH * 0.33f -> PointF(0f, -(anchor.y + pipH))
-            cy > containerH * 0.66f -> PointF(0f, containerH - anchor.y)
-            cx < containerW * 0.33f -> PointF(-(anchor.x + pipW), 0f)
-            cx > containerW * 0.66f -> PointF(containerW - anchor.x, 0f)
+            cy < containerH * EDGE_ZONE_FRACTION -> PointF(0f, -(anchor.y + pipH))
+            cy > containerH * (1f - EDGE_ZONE_FRACTION) -> PointF(0f, containerH - anchor.y)
+            cx < containerW * EDGE_ZONE_FRACTION -> PointF(-(anchor.x + pipW), 0f)
+            cx > containerW * (1f - EDGE_ZONE_FRACTION) -> PointF(containerW - anchor.x, 0f)
             else -> PointF(0f, 0f)
         }
     }
@@ -116,9 +128,9 @@ internal object PIPAnimator {
         val cx = view.x + view.width / 2f
         val cy = view.y + view.height / 2f
         return when {
-            cy < containerH * 0.33f -> PointF(0f, -(view.y + view.height))
-            cy > containerH * 0.66f -> PointF(0f, (containerH - view.y))
-            cx < containerW * 0.33f -> PointF(-(view.x + view.width), 0f)
+            cy < containerH * EDGE_ZONE_FRACTION -> PointF(0f, -(view.y + view.height))
+            cy > containerH * (1f - EDGE_ZONE_FRACTION) -> PointF(0f, (containerH - view.y))
+            cx < containerW * EDGE_ZONE_FRACTION -> PointF(-(view.x + view.width), 0f)
             else -> PointF((containerW - view.x), 0f)
         }
     }

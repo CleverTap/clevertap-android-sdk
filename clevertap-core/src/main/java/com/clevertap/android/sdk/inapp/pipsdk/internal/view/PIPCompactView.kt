@@ -52,7 +52,7 @@ internal class PIPCompactView(
         }
         background = bg
         clipToOutline = true
-        elevation = 8.dpToPx(context).toFloat()
+        elevation = CARD_ELEVATION_DP.dpToPx(context).toFloat()
         // Inset content so the stroke isn't covered by the media view
         if (cfg.border.enabled) {
             val borderPx = cfg.border.widthDp.dpToPx(context)
@@ -66,8 +66,8 @@ internal class PIPCompactView(
         controlsOverlay = PIPControlsOverlay(context)
         controlsOverlay.alpha = 0f
 
-        val padPx = 10.dpToPx(context)
-        val iconSizePx = 30.dpToPx(context)
+        val padPx = ICON_PADDING_DP.dpToPx(context)
+        val iconSizePx = ICON_SIZE_DP.dpToPx(context)
 
         // Deeplink button — top-left (hidden if redirectUrl is null)
         val deeplinkBtn = ImageView(context).apply {
@@ -179,4 +179,10 @@ internal class PIPCompactView(
     }
 
     fun detach() = controlsOverlay.detach()
+
+    private companion object {
+        const val ICON_SIZE_DP = 30
+        const val ICON_PADDING_DP = 10
+        const val CARD_ELEVATION_DP = 8
+    }
 }
