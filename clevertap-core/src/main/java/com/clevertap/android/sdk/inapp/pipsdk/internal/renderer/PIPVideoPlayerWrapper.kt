@@ -85,6 +85,11 @@ internal class PIPVideoPlayerWrapper {
      * @return the [PlayerView] to add to the container.
      */
     fun createSurface(context: Context): View {
+        // Guard against calling createSurface() twice without releasing the first PlayerView.
+        // If this happens, the old PlayerView reference is overwritten and can't be cleaned up
+        // in release(), leading to two PlayerViews attached to one ExoPlayer (undefined behavior)
+        // and a memory leak of the first PlayerView.
+        check(playerView == null) { "createSurface() called twice — previous PlayerView not released" }
         val pv = PlayerView(context).apply {
             useController = false
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
