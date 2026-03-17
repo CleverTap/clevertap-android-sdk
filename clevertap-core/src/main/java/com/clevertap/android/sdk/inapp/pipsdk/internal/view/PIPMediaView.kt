@@ -68,9 +68,15 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
                 setBackgroundColor(Color.BLACK)
             }
             addView(scrim, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+
+            val removeScrim = Runnable { removeView(scrim) }
+
             wrapper.notifyWhenFirstFrame {
-                removeView(scrim)
+                handler?.removeCallbacks(removeScrim)
+                removeScrim.run()
             }
+            // Safety net: remove scrim after 3s even if first frame never fires (e.g., video error)
+            handler?.postDelayed(removeScrim, 3000L)
         }
     }
 
