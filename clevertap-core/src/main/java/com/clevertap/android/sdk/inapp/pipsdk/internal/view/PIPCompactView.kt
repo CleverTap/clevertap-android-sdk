@@ -176,6 +176,12 @@ internal class PIPCompactView(
         }
     }
 
+    /** Hides video-specific controls (mute). Called when video falls back to static image. */
+    fun hideVideoControls() {
+        muteBtn?.visibility = View.GONE
+        muteBtn?.setOnClickListener(null)
+    }
+
     fun detach() = controlsOverlay.detach()
 
     private companion object {

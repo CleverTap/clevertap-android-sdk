@@ -24,6 +24,11 @@ import java.util.concurrent.ExecutorService
 internal class PIPMediaView(context: Context) : FrameLayout(context) {
 
     private var renderer: MediaRenderer? = null
+    private var fellBackToImage = false
+
+    /** Called when a video renderer falls back to a static image after playback error.
+     *  Parent views should hide video-specific controls (mute, play/pause) when this fires. */
+    var onVideoFallback: (() -> Unit)? = null
 
     fun initialize(
         config: PIPConfig,
@@ -32,10 +37,14 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         mediaExecutor: ExecutorService,
     ) {
         removeAllViews()
+        fellBackToImage = false
         renderer = when (config.mediaType) {
             PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
             PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
-            PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { it.bindSession(session) }
+            PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
+                vr.bindSession(session)
+                vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
+            }
         }
         renderer?.attach(this, config, session)
     }
@@ -54,7 +63,10 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
             renderer = when (session.config.mediaType) {
                 PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
                 PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
-                PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { it.bindSession(session) }
+                PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
+                    vr.bindSession(session)
+                    vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
+                }
             }
         }
         renderer?.rebindSurface(this, session)
@@ -84,7 +96,8 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     fun togglePlayPause() = renderer?.togglePlayPause()
     fun toggleMute() = renderer?.toggleMute()
 
-    val isVideoType: Boolean get() = renderer is VideoRenderer
+    /** Returns true only if the renderer is video AND has not fallen back to a static image. */
+    val isVideoType: Boolean get() = renderer is VideoRenderer && !fellBackToImage
     val isPlaying: Boolean get() = renderer?.isPlaying ?: false
     val isMuted: Boolean get() = renderer?.isMuted ?: false
 }

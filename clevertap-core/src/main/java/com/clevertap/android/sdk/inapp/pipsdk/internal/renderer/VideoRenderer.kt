@@ -25,6 +25,10 @@ internal class VideoRenderer(
     private var containerRef: WeakReference<ViewGroup>? = null
     private var _isMuted = true
     private var _isPlaying = true
+
+    /** Called when video playback fails and a static fallback image is shown instead.
+     *  Used by [PIPMediaView] to notify parent views to hide video-specific controls. */
+    var onFallbackToImage: (() -> Unit)? = null
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
@@ -146,6 +150,7 @@ internal class VideoRenderer(
 
     private fun loadFallbackAsImage(container: ViewGroup, config: PIPConfig, errorMsg: String) {
         container.removeAllViews()
+        onFallbackToImage?.invoke()
         FallbackImageLoader.load(
             container = container,
             fallbackUrl = config.fallbackUrl,

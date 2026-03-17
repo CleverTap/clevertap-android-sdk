@@ -166,6 +166,14 @@ internal class PIPExpandedView(
     fun showControls() = controlsOverlay.showControls()
     fun detach() = controlsOverlay.detach()
 
+    /** Hides video-specific controls (play/pause, mute). Called when video falls back to static image. */
+    fun hideVideoControls() {
+        playPauseBtn?.visibility = View.GONE
+        playPauseBtn?.setOnClickListener(null)
+        muteBtn?.visibility = View.GONE
+        muteBtn?.setOnClickListener(null)
+    }
+
     private fun updatePlayPauseIcon(playing: Boolean) {
         playPauseBtn?.setImageResource(
             if (playing) R.drawable.ct_ic_pause else R.drawable.ct_ic_play
