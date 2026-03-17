@@ -107,6 +107,13 @@ internal object PIPManager {
         // Silently replace any existing session
         dismissInternal(notifyCallback = false)
 
+        // Clear stale rotation state from a previous session. Scenario: PIP is showing,
+        // user rotates (pendingRotationReattach = true), then PIP is dismissed before the
+        // new Activity starts. Without this reset, the stale flag would cause a spurious
+        // reattach when the next Activity of the same class starts.
+        pendingRotationReattach = false
+        pendingReattachClassName = null
+
         val newSession = PIPSession(
             config = config,
             currentPosition = config.initialPosition,
