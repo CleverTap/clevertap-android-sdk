@@ -272,6 +272,66 @@ class PIPConfigFactoryTest {
         assertEquals(false, config.showCloseButton)
     }
 
+    // ─── Aspect ratio ──────────────────────────────────────────────────────────────
+
+    @Test
+    fun `reads aspect ratio from pip json`() {
+        val pipJson = JSONObject().put("aspectRatio", JSONObject().apply {
+            put("numerator", 9)
+            put("denominator", 16)
+        })
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertEquals(9, config.aspectRatioNumerator)
+        assertEquals(16, config.aspectRatioDenominator)
+    }
+
+    @Test
+    fun `ignores invalid aspect ratio values`() {
+        val pipJson = JSONObject().put("aspectRatio", JSONObject().apply {
+            put("numerator", 0)
+            put("denominator", -1)
+        })
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        // Should keep defaults
+        assertEquals(16, config.aspectRatioNumerator)
+        assertEquals(9, config.aspectRatioDenominator)
+    }
+
+    // ─── Controls ─────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `reads controls from pip json`() {
+        val pipJson = JSONObject().put("controls", JSONObject().apply {
+            put("drag", false)
+            put("playPause", false)
+            put("mute", false)
+            put("expandCollapse", false)
+        })
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertEquals(false, config.dragEnabled)
+        assertEquals(false, config.showPlayPauseButton)
+        assertEquals(false, config.showMuteButton)
+        assertEquals(false, config.showExpandCollapseButton)
+    }
+
+    @Test
+    fun `controls default to true when not present`() {
+        val pipJson = JSONObject()
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertEquals(true, config.dragEnabled)
+        assertEquals(true, config.showPlayPauseButton)
+        assertEquals(true, config.showMuteButton)
+        assertEquals(true, config.showExpandCollapseButton)
+    }
+
     // ─── Builder validation failure ───────────────────────────────────────────────
 
     @Test

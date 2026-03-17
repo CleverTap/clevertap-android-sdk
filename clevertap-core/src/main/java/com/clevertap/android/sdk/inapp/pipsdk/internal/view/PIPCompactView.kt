@@ -110,11 +110,11 @@ internal class PIPCompactView(
             LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
         )
 
-        // Expand button — bottom-right
+        // Expand button — bottom-right (hidden if expandCollapse control disabled)
         val expandBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_expand)
             scaleType = ImageView.ScaleType.FIT_CENTER
-//            setPadding(padPx, padPx, padPx, padPx)
+            visibility = if (cfg.showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onExpand() }
         }
         controlsOverlay.addView(
@@ -126,6 +126,7 @@ internal class PIPCompactView(
 
         dragHandler = PIPDragHandler(
             view = this,
+            dragEnabled = cfg.dragEnabled,
             getHorizontalEdgeMarginDp = { session.config.horizontalEdgeMarginDp },
             getVerticalEdgeMarginDp = { session.config.verticalEdgeMarginDp },
             onSnapComplete = { newPos ->
@@ -141,7 +142,7 @@ internal class PIPCompactView(
      */
     fun bindVideoControls(mv: PIPMediaView) {
         if (!mv.isVideoType) return
-        muteBtn?.visibility = View.VISIBLE
+        muteBtn?.visibility = if (session.config.showMuteButton) View.VISIBLE else View.GONE
         updateMuteIcon(mv.isMuted)
         muteBtn?.setOnClickListener {
             mv.toggleMute()

@@ -14,6 +14,7 @@ import kotlin.math.abs
  */
 internal class PIPDragHandler(
     private val view: View,
+    private val dragEnabled: Boolean = true,
     private val getHorizontalEdgeMarginDp: () -> Int,
     private val getVerticalEdgeMarginDp: () -> Int,
     private val onSnapComplete: (PIPPosition) -> Unit,
@@ -36,6 +37,7 @@ internal class PIPDragHandler(
 
     /** Returns true once drag threshold is exceeded — triggers intercept. */
     fun shouldIntercept(event: MotionEvent): Boolean {
+        if (!dragEnabled) return false
         val dx = abs(event.rawX - touchStartX)
         val dy = abs(event.rawY - touchStartY)
         if (!isDragging && (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX)) {
@@ -48,6 +50,7 @@ internal class PIPDragHandler(
     fun onTouchEvent(event: MotionEvent): Boolean {
         return when (event.actionMasked) {
             MotionEvent.ACTION_MOVE -> {
+                if (!dragEnabled) return false
                 if (!isDragging) {
                     val dx = abs(event.rawX - touchStartX)
                     val dy = abs(event.rawY - touchStartY)

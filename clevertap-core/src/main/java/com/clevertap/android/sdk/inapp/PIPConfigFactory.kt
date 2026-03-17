@@ -85,6 +85,21 @@ internal object PIPConfigFactory {
             )
         }
 
+        // Aspect ratio
+        pipJson.optJSONObject("aspectRatio")?.let { ar ->
+            val num = ar.optInt("numerator", 16)
+            val den = ar.optInt("denominator", 9)
+            if (num > 0 && den > 0) builder.aspectRatio(num, den)
+        }
+
+        // Controls visibility
+        pipJson.optJSONObject("controls")?.let { ctrl ->
+            if (ctrl.has("drag")) builder.dragEnabled(ctrl.optBoolean("drag", true))
+            if (ctrl.has("playPause")) builder.showPlayPauseButton(ctrl.optBoolean("playPause", true))
+            if (ctrl.has("mute")) builder.showMuteButton(ctrl.optBoolean("mute", true))
+            if (ctrl.has("expandCollapse")) builder.showExpandCollapseButton(ctrl.optBoolean("expandCollapse", true))
+        }
+
         // Animation
         pipJson.optString("animation", "").takeIf { it.isNotBlank() }?.let { anim ->
             mapAnimation(anim)?.let { builder.animation(it) }

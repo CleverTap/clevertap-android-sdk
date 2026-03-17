@@ -32,6 +32,12 @@ data class PIPConfig internal constructor(
     val cornerRadiusDp: Int = 8,               // 0 = sharp corners
     val border: PIPBorderConfig = PIPBorderConfig(),
 
+    // Controls visibility (from server "controls" JSON object)
+    val dragEnabled: Boolean = true,
+    val showPlayPauseButton: Boolean = true,
+    val showMuteButton: Boolean = true,
+    val showExpandCollapseButton: Boolean = true,
+
     // Callbacks
     val callbacks: PIPCallbacks? = null,
 ) {
@@ -55,6 +61,10 @@ data class PIPConfig internal constructor(
         private var showCloseButton: Boolean = true
         private var cornerRadiusDp: Int = 8
         private var border: PIPBorderConfig = PIPBorderConfig()
+        private var dragEnabled: Boolean = true
+        private var showPlayPauseButton: Boolean = true
+        private var showMuteButton: Boolean = true
+        private var showExpandCollapseButton: Boolean = true
         private var callbacks: PIPCallbacks? = null
 
         fun fallbackUrl(url: String) = apply { fallbackUrl = url }
@@ -71,6 +81,10 @@ data class PIPConfig internal constructor(
         fun showCloseButton(show: Boolean) = apply { showCloseButton = show }
         fun cornerRadiusDp(dp: Int) = apply { cornerRadiusDp = dp }
         fun border(border: PIPBorderConfig) = apply { this.border = border }
+        fun dragEnabled(enabled: Boolean) = apply { dragEnabled = enabled }
+        fun showPlayPauseButton(show: Boolean) = apply { showPlayPauseButton = show }
+        fun showMuteButton(show: Boolean) = apply { showMuteButton = show }
+        fun showExpandCollapseButton(show: Boolean) = apply { showExpandCollapseButton = show }
         fun callbacks(callbacks: PIPCallbacks) = apply { this.callbacks = callbacks }
 
         fun build(): PIPConfig {
@@ -86,7 +100,8 @@ data class PIPConfig internal constructor(
                 mediaUrl, mediaType, fallbackUrl, widthPercent, aspectRatioNumerator,
                 aspectRatioDenominator, initialPosition, horizontalEdgeMarginDp,
                 verticalEdgeMarginDp, animation, redirectUrl, showCloseButton,
-                cornerRadiusDp, border, callbacks,
+                cornerRadiusDp, border, dragEnabled, showPlayPauseButton,
+                showMuteButton, showExpandCollapseButton, callbacks,
             )
         }
     }
