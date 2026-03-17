@@ -23,8 +23,11 @@ internal class ImageRenderer(
 
     private var imageView: ImageView? = null
     private var config: PIPConfig? = null
+    //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
+    @Volatile private var released = false
 
     override fun attach(container: ViewGroup, config: PIPConfig, session: PIPSession) {
+        released = false
         this.config = config
         val iv = ImageView(container.context).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
@@ -44,6 +47,7 @@ internal class ImageRenderer(
             mediaExecutor.execute {
                 val fetched = resourceProvider.fetchInAppImageV1(config.mediaUrl)
                 iv.post {
+                    if (released) return@post
                     if (fetched != null) {
                         iv.setImageBitmap(fetched)
                     } else {
@@ -62,6 +66,7 @@ internal class ImageRenderer(
     }
 
     override fun release() {
+        released = true
         imageView?.setImageBitmap(null)
         imageView = null
         config = null
@@ -86,6 +91,7 @@ internal class ImageRenderer(
             mediaExecutor.execute {
                 val fetched = resourceProvider.fetchInAppImageV1(fb)
                 iv.post {
+                    if (released) return@post
                     if (fetched != null) {
                         iv.setImageBitmap(fetched)
                     } else {

@@ -29,8 +29,11 @@ internal class GifRenderer(
     private var gifView: GifImageView? = null
     private var fallbackImageView: ImageView? = null
     private var config: PIPConfig? = null
+    //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
+    @Volatile private var released = false
 
     override fun attach(container: ViewGroup, config: PIPConfig, session: PIPSession) {
+        released = false
         this.config = config
         val gv = GifImageView(container.context).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
@@ -51,6 +54,7 @@ internal class GifRenderer(
             mediaExecutor.execute {
                 val fetched = resourceProvider.fetchInAppGifV1(config.mediaUrl)
                 gv.post {
+                    if (released) return@post
                     if (fetched != null) {
                         gv.setBytes(fetched)
                         gv.startAnimation()
@@ -71,6 +75,7 @@ internal class GifRenderer(
     }
 
     override fun release() {
+        released = true
         gifView?.stopAnimation()
         gifView?.clear()
         gifView = null
@@ -98,6 +103,7 @@ internal class GifRenderer(
             mediaExecutor.execute {
                 val fetched = resourceProvider.fetchInAppImageV1(fb)
                 container.post {
+                    if (released) return@post
                     if (fetched != null) {
                         showFallbackBitmap(container, fetched)
                     } else {
