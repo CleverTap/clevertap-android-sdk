@@ -26,12 +26,15 @@ internal class VideoRenderer(
     private var containerRef: WeakReference<ViewGroup>? = null
     private var _isMuted = true
     private var _isPlaying = true
+    //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
+    @Volatile private var released = false
 
     fun bindSession(s: PIPSession) {
         session = s
     }
 
     override fun attach(container: ViewGroup, config: PIPConfig, s: PIPSession) {
+        released = false
         session = s
         containerRef = WeakReference(container)
         _isMuted = s.isMuted
@@ -101,6 +104,7 @@ internal class VideoRenderer(
     }
 
     override fun release() {
+        released = true
         wrapper?.release()
         session?.videoPlayerWrapper = null
         wrapper = null
@@ -163,6 +167,7 @@ internal class VideoRenderer(
             mediaExecutor.execute {
                 val fetched = resourceProvider.fetchInAppImageV1(fb)
                 iv.post {
+                    if (released) return@post
                     if (fetched != null) {
                         iv.setImageBitmap(fetched)
                     } else {
