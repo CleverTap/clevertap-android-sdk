@@ -27,6 +27,9 @@ internal class PIPExpandedView(
     context: Context,
     private val showCloseButton: Boolean,
     private val redirectUrl: String?,
+    private val showExpandCollapseButton: Boolean = true,
+    private val showPlayPauseButton: Boolean = true,
+    private val showMuteButton: Boolean = true,
     private val onCollapse: () -> Unit,
     private val onClose: () -> Unit,
     private val onRedirect: () -> Unit,
@@ -102,11 +105,12 @@ internal class PIPExpandedView(
             LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
         )
 
-        // Collapse button — bottom-right
+        // Collapse button — bottom-right (hidden if expandCollapse control disabled)
         val collapseBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_collapse)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
+            visibility = if (showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onCollapse() }
         }
         controlsOverlay.addView(
@@ -134,10 +138,10 @@ internal class PIPExpandedView(
         mediaContainer.removeAllViews()
         mediaContainer.addView(mv, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // Wire video-only controls
+        // Wire video-only controls (respecting server-configured visibility)
         val isVideo = mv.isVideoType
-        playPauseBtn?.visibility = if (isVideo) View.VISIBLE else View.GONE
-        muteBtn?.visibility = if (isVideo) View.VISIBLE else View.GONE
+        playPauseBtn?.visibility = if (isVideo && showPlayPauseButton) View.VISIBLE else View.GONE
+        muteBtn?.visibility = if (isVideo && showMuteButton) View.VISIBLE else View.GONE
 
         if (isVideo) {
             updatePlayPauseIcon(mv.isPlaying)
