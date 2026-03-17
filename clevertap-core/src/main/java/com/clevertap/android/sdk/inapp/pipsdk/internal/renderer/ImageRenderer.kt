@@ -79,26 +79,16 @@ internal class ImageRenderer(
     override val isPlaying: Boolean = false
 
     private fun loadFallback(iv: ImageView, config: PIPConfig) {
-        val fb = config.fallbackUrl
-        if (fb.isNullOrBlank()) {
-            config.callbacks?.onMediaError(config.mediaUrl, "Image load failed and no fallback URL")
-            return
-        }
-        val cached = resourceProvider.cachedInAppImageV1(fb)
-        if (cached != null) {
-            iv.setImageBitmap(cached)
-        } else {
-            mediaExecutor.execute {
-                val fetched = resourceProvider.fetchInAppImageV1(fb)
-                iv.post {
-                    if (released) return@post
-                    if (fetched != null) {
-                        iv.setImageBitmap(fetched)
-                    } else {
-                        config.callbacks?.onMediaError(config.mediaUrl, "Image and fallback both failed")
-                    }
-                }
-            }
-        }
+        FallbackImageLoader.load(
+            container = iv.parent as ViewGroup,
+            fallbackUrl = config.fallbackUrl,
+            primaryUrl = config.mediaUrl,
+            resourceProvider = resourceProvider,
+            mediaExecutor = mediaExecutor,
+            isReleased = { released },
+            callbacks = config.callbacks,
+            errorContext = "Image load failed",
+            onBitmapReady = { bitmap -> iv.setImageBitmap(bitmap); true },
+        )
     }
 }

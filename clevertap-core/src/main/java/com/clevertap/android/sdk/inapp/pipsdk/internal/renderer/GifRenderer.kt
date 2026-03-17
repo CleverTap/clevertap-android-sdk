@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 
-import android.graphics.BitmapFactory
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.clevertap.android.sdk.gif.GifImageView
@@ -90,41 +89,21 @@ internal class GifRenderer(
     override val isPlaying: Boolean = false
 
     private fun loadFallback(container: ViewGroup, config: PIPConfig) {
-        val fb = config.fallbackUrl
-        if (fb.isNullOrBlank()) {
-            config.callbacks?.onMediaError(config.mediaUrl, "GIF load failed and no fallback URL")
-            return
-        }
-        // Try fallback as static image
-        val cached = resourceProvider.cachedInAppImageV1(fb)
-        if (cached != null) {
-            showFallbackBitmap(container, cached)
-        } else {
-            mediaExecutor.execute {
-                val fetched = resourceProvider.fetchInAppImageV1(fb)
-                container.post {
-                    if (released) return@post
-                    if (fetched != null) {
-                        showFallbackBitmap(container, fetched)
-                    } else {
-                        config.callbacks?.onMediaError(config.mediaUrl, "GIF and fallback both failed")
-                    }
-                }
-            }
-        }
-    }
-
-    private fun showFallbackBitmap(container: ViewGroup, bitmap: android.graphics.Bitmap) {
-        gifView?.let { (it.parent as? ViewGroup)?.removeView(it) }
-        gifView = null
-        val iv = ImageView(container.context).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            setImageBitmap(bitmap)
-        }
-        fallbackImageView = iv
-        container.addView(
-            iv,
-            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        FallbackImageLoader.load(
+            container = container,
+            fallbackUrl = config.fallbackUrl,
+            primaryUrl = config.mediaUrl,
+            resourceProvider = resourceProvider,
+            mediaExecutor = mediaExecutor,
+            isReleased = { released },
+            callbacks = config.callbacks,
+            errorContext = "GIF load failed",
+            onBitmapReady = { _ ->
+                // Remove GIF view before fallback ImageView is added by FallbackImageLoader
+                gifView?.let { (it.parent as? ViewGroup)?.removeView(it) }
+                gifView = null
+                false // let FallbackImageLoader add the default ImageView
+            },
         )
     }
 }
