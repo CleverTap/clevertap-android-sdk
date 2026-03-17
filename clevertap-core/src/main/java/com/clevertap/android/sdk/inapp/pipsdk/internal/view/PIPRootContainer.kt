@@ -40,6 +40,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     private var expandedView: PIPExpandedView? = null
     private var mediaView: PIPMediaView? = null
     private var backCallback: OnBackPressedCallback? = null
+    private var layoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     // ─── Public API called by PIPManager ─────────────────────────────────────────
 
@@ -109,6 +110,11 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
      * Does NOT release media — PIPManager controls that lifecycle.
      */
     fun detach() {
+        // Safety net: remove layout listener if it hasn't fired yet (e.g., rapid dismiss before first layout)
+        layoutListener?.let {
+            compactView?.viewTreeObserver?.removeOnGlobalLayoutListener(it)
+            layoutListener = null
+        }
         compactView?.detach()
         expandedView?.detach()
         backCallback?.remove()
@@ -201,9 +207,10 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         // Fresh show: wait for layout pass so cv.width/height are valid for MOVE_IN animation.
         cv.layoutParams = LayoutParams(pipW, pipH)
         cv.requestLayout() // TODO: do we need another layout pass? as setting layoutparams already calls requestLayout()
-        cv.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+        val listener = object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 cv.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                layoutListener = null
                 val anchors = PIPPositionResolver.resolveAnchors(
                     width, height, cv.width, cv.height, hMarginPx, vMarginPx,
                 )
@@ -213,6 +220,8 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
                     s.config.callbacks?.onShow()
                 }
             }
-        })
+        }
+        layoutListener = listener
+        cv.viewTreeObserver.addOnGlobalLayoutListener(listener)
     }
 }
