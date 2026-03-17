@@ -209,7 +209,6 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
 
         // Fresh show: wait for layout pass so cv.width/height are valid for MOVE_IN animation.
         cv.layoutParams = LayoutParams(pipW, pipH)
-        cv.requestLayout() // TODO: do we need another layout pass? as setting layoutparams already calls requestLayout()
         val listener = object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 cv.viewTreeObserver.removeOnGlobalLayoutListener(this)
