@@ -35,6 +35,11 @@ internal class PIPVideoPlayerWrapper {
     private var _isPlaying: Boolean = true
 
     // First-frame notification — used to delay compact-view visibility until video renders.
+    // Guarded by [firstFrameLock] because onRenderedFirstFrame() fires on ExoPlayer's internal
+    // thread while notifyWhenFirstFrame() is called from the main thread. A synchronized block
+    // is used (not AtomicBoolean) because the check-then-act on both fields must be atomic.
+    // ANR risk is zero — the lock body is only field reads/writes (~nanoseconds).
+    private val firstFrameLock = Any()
     private var firstFrameReady = false
     private var onFirstFrame: (() -> Unit)? = null
 
@@ -116,8 +121,10 @@ internal class PIPVideoPlayerWrapper {
      * avoiding a full seek + decode cycle on rebind.
      */
     fun detachSurface() {
-        firstFrameReady = false
-        onFirstFrame = null
+        synchronized(firstFrameLock) {
+            firstFrameReady = false
+            onFirstFrame = null
+        }
         val p = player ?: return
         savedPositionMs = p.currentPosition
         _isPlaying = p.isPlaying
@@ -141,12 +148,18 @@ internal class PIPVideoPlayerWrapper {
         val surface = createSurface(context)
 
         // Register one-shot first-frame listener before resuming so it is never missed
-        firstFrameReady = false
+        synchronized(firstFrameLock) {
+            firstFrameReady = false
+        }
         p.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
-                firstFrameReady = true
-                onFirstFrame?.invoke()
-                onFirstFrame = null
+                val cb: (() -> Unit)?
+                synchronized(firstFrameLock) {
+                    firstFrameReady = true
+                    cb = onFirstFrame
+                    onFirstFrame = null
+                }
+                cb?.invoke()
                 p.removeListener(this)
             }
         })
@@ -162,10 +175,12 @@ internal class PIPVideoPlayerWrapper {
      * If the first frame already arrived (race-safe), [callback] fires immediately.
      */
     fun notifyWhenFirstFrame(callback: () -> Unit) {
-        if (firstFrameReady) {
-            callback()
-        } else {
-            onFirstFrame = callback
+        synchronized(firstFrameLock) {
+            if (firstFrameReady) {
+                callback()
+            } else {
+                onFirstFrame = callback
+            }
         }
     }
 
@@ -173,8 +188,10 @@ internal class PIPVideoPlayerWrapper {
      * Full cleanup — stops and releases the player.
      */
     fun release() {
-        firstFrameReady = false
-        onFirstFrame = null
+        synchronized(firstFrameLock) {
+            firstFrameReady = false
+            onFirstFrame = null
+        }
         playerView?.player = null
         playerView = null
         player?.stop()
