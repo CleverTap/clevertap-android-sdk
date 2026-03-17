@@ -37,6 +37,7 @@ const val ZERO_BEZEL_CONTENT_PENDING_INTENT = 29
 const val TIMER_CONTENT_PENDING_INTENT = 30
 const val INPUT_BOX_CONTENT_PENDING_INTENT = 31
 const val INPUT_BOX_REPLY_PENDING_INTENT = 32
+const val VERTICAL_IMAGE_CONTENT_PENDING_INTENT = 33
 
 internal object PendingIntentFactory {
 
@@ -129,7 +130,7 @@ internal object PendingIntentFactory {
             BASIC_CONTENT_PENDING_INTENT, AUTO_CAROUSEL_CONTENT_PENDING_INTENT,
             MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, ZERO_BEZEL_CONTENT_PENDING_INTENT,
             TIMER_CONTENT_PENDING_INTENT, PRODUCT_DISPLAY_CONTENT_PENDING_INTENT,
-            INPUT_BOX_CONTENT_PENDING_INTENT -> {
+            INPUT_BOX_CONTENT_PENDING_INTENT, VERTICAL_IMAGE_CONTENT_PENDING_INTENT -> {
                 return if (deepLink != null) {
                     extras.putString(Constants.DEEP_LINK_KEY, deepLink)
                     setPendingIntent(
