@@ -42,6 +42,7 @@ internal class PIPVideoPlayerWrapper {
     private val firstFrameLock = Any()
     private var firstFrameReady = false
     private var onFirstFrame: (() -> Unit)? = null
+    private var errorListener: Player.Listener? = null
 
     val isMuted: Boolean get() = _isMuted
     val isPlaying: Boolean get() = player?.isPlaying ?: _isPlaying
@@ -192,6 +193,8 @@ internal class PIPVideoPlayerWrapper {
             firstFrameReady = false
             onFirstFrame = null
         }
+        errorListener?.let { player?.removeListener(it) }
+        errorListener = null
         playerView?.player = null
         playerView = null
         player?.stop()
@@ -206,10 +209,13 @@ internal class PIPVideoPlayerWrapper {
      */
     fun setErrorListener(onError: (PlaybackException) -> Unit) {
         val p = player ?: return
-        p.addListener(object : Player.Listener {
+        errorListener?.let { p.removeListener(it) }
+        val listener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
                 onError(error)
             }
-        })
+        }
+        errorListener = listener
+        p.addListener(listener)
     }
 }
