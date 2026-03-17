@@ -399,7 +399,8 @@ internal object CleverTapFactory {
             arpResponse = arpResponse,
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponseHandler = responseHandler
+            cleverTapResponseHandler = responseHandler,
+            networkMonitor = networkMonitor
         )
 
         val loginInfoProvider = LoginInfoProvider(

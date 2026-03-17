@@ -53,6 +53,7 @@ internal class NetworkManager constructor(
     private val networkRepo: NetworkRepo,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val cleverTapResponseHandler: ClevertapResponseHandler,
+    private val networkMonitor: NetworkMonitor,
     private val logger: ILogger = config.logger
 ) {
 
@@ -67,6 +68,8 @@ internal class NetworkManager constructor(
     private var minDelayFrequency = 0
 
     private val mNetworkHeadersListeners: MutableList<NetworkHeadersListener> = ArrayList()
+
+    fun isNetworkOnline(): Boolean = networkMonitor.isNetworkOnline()
 
     fun addNetworkHeadersListener(listener: NetworkHeadersListener) {
         mNetworkHeadersListeners.add(listener)

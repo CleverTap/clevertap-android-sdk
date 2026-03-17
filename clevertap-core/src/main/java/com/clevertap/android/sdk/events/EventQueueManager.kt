@@ -138,7 +138,7 @@ internal class EventQueueManager(
         isUserSwitchFlush: Boolean
     ) {
         // Check if network connectivity is available
-        if (!networkMonitor.isNetworkOnline()) {
+        if (!networkManager.isNetworkOnline()) {
             logger.verbose(
                 config.accountId,
                 "Network connectivity unavailable. Will retry later"
@@ -181,7 +181,7 @@ internal class EventQueueManager(
      * sendQueue for success.
      */
     override fun sendImmediately(context: Context, eventGroup: EventGroup, eventData: JSONObject?) {
-        if (!networkMonitor.isNetworkOnline()) {
+        if (!networkManager.isNetworkOnline()) {
             logger.verbose(
                 config.accountId,
                 "Network connectivity unavailable. Event won't be sent."

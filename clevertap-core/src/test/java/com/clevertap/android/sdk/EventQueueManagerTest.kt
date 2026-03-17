@@ -294,7 +294,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.currentSessionId = 1000
-            every { eventQueueManager.getNow() } returns 7000
+            every { eventQueueManager.now } returns 7000
             every {
                 eventQueueManager.flushQueueAsync(
                     application, PUSH_NOTIFICATION_VIEWED
@@ -340,7 +340,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.currentSessionId = 1000
-            every { eventQueueManager.getNow() } returns 7000
+            every { eventQueueManager.now } returns 7000
             every {
                 eventQueueManager.flushQueueAsync(
                     application, PUSH_NOTIFICATION_VIEWED
@@ -480,7 +480,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             corestate.coreMetaData.isOffline = false
-            every { corestate.networkMonitor.isNetworkOnline() } returns true
+            every { corestate.networkManager.isNetworkOnline() } returns true
             val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val shadowOfCM = shadowOf(cm)
             val netInfo =
@@ -504,7 +504,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.isOffline = false
-            every { corestate.networkMonitor.isNetworkOnline() } returns true
+            every { corestate.networkManager.isNetworkOnline() } returns true
             val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val shadowOfCM = shadowOf(cm)
             val netInfo =
@@ -983,7 +983,7 @@ class EventQueueManagerTest : BaseTestCase() {
             CoreMetaData.setActivityCount(0)
             val actualEvent = JSONObject()
 
-            every { eventQueueManager.getNow() } returns expectedEpoch
+            every { eventQueueManager.now } returns expectedEpoch
             every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
             // Act
@@ -1060,7 +1060,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
                 every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
                 every { corestate.networkMonitor.getNetworkTypeString() } returns expectedNetworkType
-                every { eventQueueManager.getNow() } returns expectedEpoch
+                every { eventQueueManager.now } returns expectedEpoch
                 every { eventQueueManager.scheduleQueueFlush(application) } just runs
 
                 val actualEvent = JSONObject()
