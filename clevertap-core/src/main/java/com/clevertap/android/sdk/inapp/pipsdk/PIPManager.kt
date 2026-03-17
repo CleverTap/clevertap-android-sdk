@@ -44,8 +44,8 @@ internal object PIPManager {
     @Volatile private var session: PIPSession? = null
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    // Registered once on the Application; never unregistered (SDK singleton pattern).
     private var callbacksRegistered = false
+    private var applicationRef: Application? = null
 
     // Rotation re-attach state
     @Volatile private var pendingRotationReattach = false
@@ -117,6 +117,7 @@ internal object PIPManager {
         // Register ActivityLifecycleCallbacks once on the Application process
         if (!callbacksRegistered) {
             activity.application.registerActivityLifecycleCallbacks(lifecycleCallbacks)
+            applicationRef = activity.application
             callbacksRegistered = true
         }
 
@@ -173,6 +174,7 @@ internal object PIPManager {
         }
 
         shutdownMediaExecutor()
+        unregisterCallbacks()
     }
 
     // ─── ActivityLifecycleCallbacks ───────────────────────────────────────────────
@@ -261,6 +263,13 @@ internal object PIPManager {
             (container.parent as? ViewGroup)?.removeView(container)
         }
         shutdownMediaExecutor()
+        unregisterCallbacks()
+    }
+
+    private fun unregisterCallbacks() {
+        applicationRef?.unregisterActivityLifecycleCallbacks(lifecycleCallbacks)
+        applicationRef = null
+        callbacksRegistered = false
     }
 
     // ─── Threading ────────────────────────────────────────────────────────────────
