@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 
 import android.view.ViewGroup
-import android.widget.ImageView
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
@@ -146,35 +145,16 @@ internal class VideoRenderer(
     }
 
     private fun loadFallbackAsImage(container: ViewGroup, config: PIPConfig, errorMsg: String) {
-        val fb = config.fallbackUrl
-        if (fb.isNullOrBlank()) {
-            config.callbacks?.onMediaError(config.mediaUrl, errorMsg)
-            return
-        }
         container.removeAllViews()
-        val iv = ImageView(container.context).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-        }
-        container.addView(
-            iv,
-            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        FallbackImageLoader.load(
+            container = container,
+            fallbackUrl = config.fallbackUrl,
+            primaryUrl = config.mediaUrl,
+            resourceProvider = resourceProvider,
+            mediaExecutor = mediaExecutor,
+            isReleased = { released },
+            callbacks = config.callbacks,
+            errorContext = errorMsg,
         )
-
-        val cached = resourceProvider.cachedInAppImageV1(fb)
-        if (cached != null) {
-            iv.setImageBitmap(cached)
-        } else {
-            mediaExecutor.execute {
-                val fetched = resourceProvider.fetchInAppImageV1(fb)
-                iv.post {
-                    if (released) return@post
-                    if (fetched != null) {
-                        iv.setImageBitmap(fetched)
-                    } else {
-                        config.callbacks?.onMediaError(config.mediaUrl, "Video error and fallback failed")
-                    }
-                }
-            }
-        }
     }
 }
