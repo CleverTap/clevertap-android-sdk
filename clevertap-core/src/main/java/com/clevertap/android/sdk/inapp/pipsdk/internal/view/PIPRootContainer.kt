@@ -81,6 +81,13 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             mv.initialize(s.config, s, resourceProvider!!, mediaExecutor!!)
         }
 
+        // When video falls back to a static image, hide video-specific controls (mute, play/pause)
+        // so the user doesn't see non-functional buttons over a static fallback image.
+        mv.onVideoFallback = {
+            compactView?.hideVideoControls()
+            expandedView?.hideVideoControls()
+        }
+
         // Compact view — invisible until positioned
         val cv = PIPCompactView(
             context, mv, s,
