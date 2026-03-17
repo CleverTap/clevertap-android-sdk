@@ -156,3 +156,54 @@ internal data class CancelTemplateData(
     val cancelNotificationId: String? = null,
     val cancelNotificationIds: ArrayList<Int>
 ) : TemplateData()
+
+internal enum class ButtonStyle(val key: String) {
+    SOLID("solid"),
+    GRADIENT("gradient");
+
+    companion object {
+        fun fromString(value: String?): ButtonStyle =
+            entries.firstOrNull { it.key == value } ?: SOLID
+    }
+}
+
+internal enum class GradientDirection(val key: String) {
+    LEFT_RIGHT("left_right"),
+    RIGHT_LEFT("right_left"),
+    TOP_BOTTOM("top_bottom"),
+    BOTTOM_TOP("bottom_top"),
+    DIAGONAL_TL_BR("diagonal_tl_br"),
+    DIAGONAL_BL_TR("diagonal_bl_tr"),
+    RADIAL("radial");
+
+    companion object {
+        fun fromString(value: String?): GradientDirection =
+            entries.firstOrNull { it.key == value } ?: LEFT_RIGHT
+    }
+}
+
+internal data class VerticalImageButtonData(
+    val name: String? = null,
+    val deepLink: String? = null,
+    val style: ButtonStyle = ButtonStyle.SOLID,
+    val buttonColor: String? = null,
+    val borderColor: String? = null,
+    val textColor: String? = null,
+    val gradientColor1: String? = null,
+    val gradientColor2: String? = null,
+    val gradientDirection: GradientDirection = GradientDirection.LEFT_RIGHT,
+)
+
+internal data class VerticalImageTemplateData(
+    override val templateType: TemplateType = TemplateType.VERTICAL_IMAGE,
+    val baseContent: BaseContent,
+    val mediaData: MediaData,
+    val collapsedMediaData: MediaData?,
+    val actions: JSONArray? = null,
+    val text1: String? = null,
+    val text2: String? = null,
+    val text1Color: String? = null,
+    val text2Color: String? = null,
+    val buttonData: VerticalImageButtonData? = null,
+    val collapsedButtonData: VerticalImageButtonData? = null,
+) : TemplateData()

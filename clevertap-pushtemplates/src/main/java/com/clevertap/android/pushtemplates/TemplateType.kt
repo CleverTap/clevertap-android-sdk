@@ -5,7 +5,8 @@ internal enum class TemplateType(private val templateType: String) {
     MANUAL_CAROUSEL("pt_manual_carousel"), RATING("pt_rating"),
     FIVE_ICONS("pt_five_icons"), PRODUCT_DISPLAY("pt_product_display"),
     ZERO_BEZEL("pt_zero_bezel"), TIMER("pt_timer"),
-    INPUT_BOX("pt_input"), VIDEO("pt_video"), CANCEL("pt_cancel");
+    INPUT_BOX("pt_input"), VIDEO("pt_video"), CANCEL("pt_cancel"),
+    VERTICAL_IMAGE("pt_vertical_img");
 
     override fun toString(): String {
         return templateType
@@ -27,6 +28,7 @@ internal enum class TemplateType(private val templateType: String) {
                 "pt_input" -> INPUT_BOX
                 "pt_video" -> VIDEO
                 "pt_cancel" -> CANCEL
+                "pt_vertical_img" -> VERTICAL_IMAGE
                 else -> null
             }
         }

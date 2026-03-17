@@ -21,7 +21,16 @@ import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 import com.clevertap.android.pushtemplates.media.TemplateRepository
-import com.clevertap.android.pushtemplates.styles.*
+import com.clevertap.android.pushtemplates.styles.AutoCarouselStyle
+import com.clevertap.android.pushtemplates.styles.BasicStyle
+import com.clevertap.android.pushtemplates.styles.FiveIconStyle
+import com.clevertap.android.pushtemplates.styles.InputBoxStyle
+import com.clevertap.android.pushtemplates.styles.ManualCarouselStyle
+import com.clevertap.android.pushtemplates.styles.ProductDisplayStyle
+import com.clevertap.android.pushtemplates.styles.RatingStyle
+import com.clevertap.android.pushtemplates.styles.TimerStyle
+import com.clevertap.android.pushtemplates.styles.VerticalImageStyle
+import com.clevertap.android.pushtemplates.styles.ZeroBezelStyle
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -183,6 +192,10 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
             is InputBoxTemplateData -> templateData.buildIfValid {
                 InputBoxStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is VerticalImageTemplateData -> templateData.buildIfValid {
+                VerticalImageStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
             }
 
             is CancelTemplateData -> {
