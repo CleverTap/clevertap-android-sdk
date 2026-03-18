@@ -12,14 +12,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/padding_micro"
-        android:layout_marginEnd="@dimen/padding_horizontal"
         android:layout_marginStart="@dimen/padding_micro">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toStartOf="@+id/chronometer">
-
+            android:layout_margin="4dp"
+            android:layout_toStartOf="@+id/chronometer_frame">
 
             <TextView
                 android:id="@+id/title"
@@ -45,16 +44,36 @@
 
         </RelativeLayout>
 
-        <Chronometer
-            android:id="@+id/chronometer"
+        <RelativeLayout
+            android:id="@+id/chronometer_frame"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:textColor="@color/titleColor"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:textAlignment="center"
-            android:textSize="@dimen/chronometer_font_size" />
+            android:layout_centerVertical="true">
+
+            <ImageView
+                android:id="@+id/chronometer_bg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/chronometer"
+                android:layout_alignEnd="@+id/chronometer"
+                android:layout_alignTop="@+id/chronometer"
+                android:layout_alignBottom="@+id/chronometer"
+                android:scaleType="fitXY"
+                android:visibility="gone"
+                tools:ignore="ContentDescription" />
+
+            <Chronometer
+                android:id="@+id/chronometer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="6dp"
+                android:background="@android:color/transparent"
+                android:textColor="@color/titleColor"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:textSize="@dimen/chronometer_font_size" />
+        </RelativeLayout>
 
     </RelativeLayout>
 
