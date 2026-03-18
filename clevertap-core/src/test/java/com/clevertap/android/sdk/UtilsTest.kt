@@ -452,15 +452,8 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getNotificationBitmap_when_context_is_passed_and_network_is_unavailable_and_fallbackIsFalse_shouldReturnNull(){
-        val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val shadowConnectivityManager = Shadows.shadowOf(connectivityManager)
-        val networkInfo = ShadowNetworkInfo.newInstance(
-            android.net.NetworkInfo.DetailedState.CONNECTED,
-            ConnectivityManager.TYPE_WIFI, 0, true, true
-        )
-        shadowConnectivityManager.setActiveNetworkInfo(networkInfo)
-        val activeNetwork = connectivityManager.activeNetwork!!
-        shadowConnectivityManager.setNetworkCapabilities(activeNetwork, ShadowNetworkCapabilities.newInstance())
+        val mockNetworkMonitor = mockk<com.clevertap.android.sdk.network.NetworkMonitor>(relaxed = true)
+        every { mockNetworkMonitor.isNetworkOnline() } returns false
 
         val bitmap41 = HttpBitmapLoader.getHttpBitmap(
             DOWNLOAD_NOTIFICATION_BITMAP,
@@ -468,7 +461,8 @@ class UtilsTest : BaseTestCase() {
                 "https://www.pod.cz/ico/favicon.ico",
                 false,
                 application.applicationContext
-            )
+            ),
+            mockNetworkMonitor
         )
         assertNull(bitmap41.bitmap)
         assertEquals(DownloadedBitmap.Status.NO_NETWORK,bitmap41.status)
