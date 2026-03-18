@@ -11,19 +11,36 @@
         layout="@layout/content_view_small_single_line_msg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toStartOf="@id/chronometer" />
+        android:layout_toStartOf="@id/chronometer_frame" />
 
-    <Chronometer
-        android:id="@+id/chronometer"
+    <RelativeLayout
+        android:id="@+id/chronometer_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:textColor="@color/titleColor"
         android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:textAlignment="center"
-        android:layout_marginEnd="@dimen/padding_vertical"
-        android:layout_gravity="center_horizontal"
-        android:textSize="@dimen/chronometer_font_size"/>
+        android:layout_centerVertical="true">
+
+        <ImageView
+            android:id="@+id/chronometer_bg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@+id/chronometer"
+            android:layout_alignEnd="@+id/chronometer"
+            android:layout_alignTop="@+id/chronometer"
+            android:layout_alignBottom="@+id/chronometer"
+            android:scaleType="fitXY"
+            android:visibility="gone" />
+
+        <Chronometer
+            android:id="@+id/chronometer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:background="@android:color/transparent"
+            android:textColor="@color/titleColor"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:textSize="@dimen/chronometer_font_size"/>
+    </RelativeLayout>
 
 </RelativeLayout>

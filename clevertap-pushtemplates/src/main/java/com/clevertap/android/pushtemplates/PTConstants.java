@@ -124,6 +124,13 @@ public class PTConstants {
 
     public static final String PT_CHRONO_TITLE_COLOUR = "pt_chrono_title_clr";
 
+    public static final String PT_CHRONO_BG_CLR = "pt_chrono_bg_clr";
+    public static final String PT_CHRONO_BORDER_CLR = "pt_chrono_border_clr";
+    public static final String PT_CHRONO_STYLE = "pt_chrono_style";
+    public static final String PT_CHRONO_GRAD_CLR1 = "pt_chrono_grad_clr1";
+    public static final String PT_CHRONO_GRAD_CLR2 = "pt_chrono_grad_clr2";
+    public static final String PT_CHRONO_GRAD_DIR = "pt_chrono_grad_dir";
+
     public static final String PT_PRODUCT_DISPLAY_ACTION = "pt_product_display_action";
 
     public static final String PT_PRODUCT_DISPLAY_ACTION_COLOUR = "pt_product_display_action_clr";
@@ -224,8 +231,12 @@ public class PTConstants {
             PT_BG,
             PT_META_CLR,
             PT_CHRONO_TITLE_COLOUR,
+            PT_CHRONO_BG_CLR,
+            PT_CHRONO_BORDER_CLR,
             PT_PRODUCT_DISPLAY_ACTION_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR,
+            PT_CHRONO_GRAD_CLR1,
+            PT_CHRONO_GRAD_CLR2,
             PT_TEXT1_COLOR,
             PT_TEXT2_COLOR,
             PT_BTN_CLR,

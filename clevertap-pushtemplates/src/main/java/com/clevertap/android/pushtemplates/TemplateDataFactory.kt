@@ -10,6 +10,12 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_TEXT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_COLLAPSED
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_COLLAPSED_ALT_TEXT
 import com.clevertap.android.pushtemplates.PTConstants.PT_CANCEL_NOTIF_ID
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BG_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_CLR
@@ -272,6 +278,12 @@ internal object TemplateDataFactory {
             terminalTextData = createTerminalTextData(extras, baseContent.textData),
             terminalMediaData = createTerminalMediaData(extras, defaultAltText, mediaData),
             chronometerTitleColor = colorMap[PT_CHRONO_TITLE_COLOUR],
+            chronometerBgColor = colorMap[PT_CHRONO_BG_CLR],
+            chronometerBorderColor = colorMap[PT_CHRONO_BORDER_CLR],
+            chronometerStyle = ButtonStyle.fromString(extras.getString(PT_CHRONO_STYLE)),
+            chronometerGradientColor1 = colorMap[PT_CHRONO_GRAD_CLR1],
+            chronometerGradientColor2 = colorMap[PT_CHRONO_GRAD_CLR2],
+            chronometerGradientDirection = GradientDirection.fromString(extras.getString(PT_CHRONO_GRAD_DIR)),
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )

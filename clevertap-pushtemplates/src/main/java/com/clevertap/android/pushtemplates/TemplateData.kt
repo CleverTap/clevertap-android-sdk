@@ -112,6 +112,12 @@ internal data class TimerTemplateData(
     val terminalTextData: BaseTextData,
     val terminalMediaData: MediaData,
     val chronometerTitleColor: String? = null,
+    val chronometerBgColor: String? = null,
+    val chronometerBorderColor: String? = null,
+    val chronometerStyle: ButtonStyle = ButtonStyle.SOLID,
+    val chronometerGradientColor1: String? = null,
+    val chronometerGradientColor2: String? = null,
+    val chronometerGradientDirection: GradientDirection = GradientDirection.LEFT_RIGHT,
     val renderTerminal: Boolean = true,
 ) : TemplateData()
 
