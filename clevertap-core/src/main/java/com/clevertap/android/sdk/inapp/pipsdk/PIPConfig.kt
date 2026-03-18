@@ -28,10 +28,6 @@ data class PIPConfig internal constructor(
     val redirectUrl: String? = null,            // null = redirect button hidden
     val showCloseButton: Boolean = true,        // false = close button hidden everywhere
 
-    // Compact view appearance
-    val cornerRadiusDp: Int = 8,               // 0 = sharp corners
-    val border: PIPBorderConfig = PIPBorderConfig(),
-
     // Controls visibility (from server "controls" JSON object)
     val dragEnabled: Boolean = true,
     val showPlayPauseButton: Boolean = true,
@@ -59,8 +55,6 @@ data class PIPConfig internal constructor(
         private var animation: PIPAnimation = PIPAnimation.DISSOLVE
         private var redirectUrl: String? = null
         private var showCloseButton: Boolean = true
-        private var cornerRadiusDp: Int = 8
-        private var border: PIPBorderConfig = PIPBorderConfig()
         private var dragEnabled: Boolean = true
         private var showPlayPauseButton: Boolean = true
         private var showMuteButton: Boolean = true
@@ -79,8 +73,6 @@ data class PIPConfig internal constructor(
         fun animation(animation: PIPAnimation) = apply { this.animation = animation }
         fun redirectUrl(url: String) = apply { redirectUrl = url }
         fun showCloseButton(show: Boolean) = apply { showCloseButton = show }
-        fun cornerRadiusDp(dp: Int) = apply { cornerRadiusDp = dp }
-        fun border(border: PIPBorderConfig) = apply { this.border = border }
         fun dragEnabled(enabled: Boolean) = apply { dragEnabled = enabled }
         fun showPlayPauseButton(show: Boolean) = apply { showPlayPauseButton = show }
         fun showMuteButton(show: Boolean) = apply { showMuteButton = show }
@@ -94,13 +86,11 @@ data class PIPConfig internal constructor(
             require(aspectRatioDenominator > 0) { "aspectRatioDenominator must be > 0" }
             require(horizontalEdgeMarginDp >= 0) { "horizontalEdgeMarginDp must be >= 0" }
             require(verticalEdgeMarginDp >= 0) { "verticalEdgeMarginDp must be >= 0" }
-            require(cornerRadiusDp >= 0) { "cornerRadiusDp must be >= 0" }
-            require(border.widthDp >= 0) { "border.widthDp must be >= 0" }
             return PIPConfig(
                 mediaUrl, mediaType, fallbackUrl, widthPercent, aspectRatioNumerator,
                 aspectRatioDenominator, initialPosition, horizontalEdgeMarginDp,
                 verticalEdgeMarginDp, animation, redirectUrl, showCloseButton,
-                cornerRadiusDp, border, dragEnabled, showPlayPauseButton,
+                dragEnabled, showPlayPauseButton,
                 showMuteButton, showExpandCollapseButton, callbacks,
             )
         }

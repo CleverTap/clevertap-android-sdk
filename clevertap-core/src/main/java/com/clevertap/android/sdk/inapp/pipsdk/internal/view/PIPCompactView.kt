@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.view
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -38,26 +37,7 @@ internal class PIPCompactView(
     private var muteBtn: ImageView? = null
 
     init {
-        // Rounded card appearance with configurable corner radius and border
         val cfg = session.config
-        val bg = GradientDrawable().apply {
-            cornerRadius = cfg.cornerRadiusDp.dpToPx(context).toFloat()
-            setColor(Color.BLACK)
-            if (cfg.border.enabled) {
-                setStroke(
-                    cfg.border.widthDp.dpToPx(context),
-                    Color.parseColor(cfg.border.color),
-                )
-            }
-        }
-        background = bg
-        clipToOutline = true
-        elevation = CARD_ELEVATION_DP.dpToPx(context).toFloat()
-        // Inset content so the stroke isn't covered by the media view
-        if (cfg.border.enabled) {
-            val borderPx = cfg.border.widthDp.dpToPx(context)
-            setPadding(borderPx, borderPx, borderPx, borderPx)
-        }
 
         // Media fills the view
         addView(mediaView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
@@ -187,6 +167,5 @@ internal class PIPCompactView(
     private companion object {
         const val ICON_SIZE_DP = 30
         const val ICON_PADDING_DP = 10
-        const val CARD_ELEVATION_DP = 8
     }
 }

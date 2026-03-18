@@ -194,11 +194,22 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     // ─── Helpers ──────────────────────────────────────────────────────────────────
 
     private fun positionAndShow(s: PIPSession, cv: PIPCompactView, isReattach: Boolean) {
-        val pipW = (width * s.config.widthPercent / 100f).toInt().coerceAtLeast(1)
-        val pipH = (pipW.toLong() * s.config.aspectRatioDenominator /
+        var pipW = (width * s.config.widthPercent / 100f).toInt().coerceAtLeast(1)
+        var pipH = (pipW.toLong() * s.config.aspectRatioDenominator /
                 s.config.aspectRatioNumerator).toInt().coerceAtLeast(1)
         val hMarginPx = s.config.horizontalEdgeMarginDp.dpToPx(context)
         val vMarginPx = s.config.verticalEdgeMarginDp.dpToPx(context)
+
+        // Clamp height to MAX_HEIGHT_PERCENT of container to prevent overflow in landscape
+        // with tall aspect ratios (e.g., 9:16 at 35% width). Using a percentage cap rather
+        // than full height minus margins ensures the 9-point snap grid still has meaningful
+        // vertical differentiation between TOP/CENTER/BOTTOM positions.
+        val maxH = (height * MAX_HEIGHT_PERCENT / 100f).toInt()
+        if (pipH > maxH) {
+            pipH = maxH.coerceAtLeast(1)
+            pipW = (pipH.toLong() * s.config.aspectRatioNumerator /
+                    s.config.aspectRatioDenominator).toInt().coerceAtLeast(1)
+        }
 
         if (isReattach) {
             // Skip the layout listener: pipW/pipH are the target sizes and MOVE_IN is never
@@ -232,5 +243,11 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         }
         layoutListener = listener
         cv.viewTreeObserver.addOnGlobalLayoutListener(listener)
+    }
+
+    private companion object {
+        /** Max PIP height as percentage of container height. Prevents overflow in landscape
+         *  with tall aspect ratios while leaving room for vertical snap positioning. */
+        const val MAX_HEIGHT_PERCENT = 60
     }
 }

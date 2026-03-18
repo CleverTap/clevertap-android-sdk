@@ -220,31 +220,6 @@ class PIPConfigFactoryTest {
     }
 
     @Test
-    fun `reads corner radius from pip json`() {
-        val pipJson = JSONObject().put("cornerRadius", 12)
-        val notification = mockNotification(pipJson = pipJson)
-        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
-        assertNotNull(config)
-        assertEquals(12, config.cornerRadiusDp)
-    }
-
-    @Test
-    fun `reads border config from pip json`() {
-        val pipJson = JSONObject().put("border", JSONObject().apply {
-            put("enabled", true)
-            put("color", "#FF0000")
-            put("width", 2)
-        })
-        val notification = mockNotification(pipJson = pipJson)
-        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
-        assertNotNull(config)
-        assertNotNull(config.border)
-        assertTrue(config.border!!.enabled)
-        assertEquals("#FF0000", config.border!!.color)
-        assertEquals(2, config.border!!.widthDp)
-    }
-
-    @Test
     fun `reads redirect url from onClick`() {
         val pipJson = JSONObject().put("onClick", JSONObject().apply {
             put("android", "https://www.example.com")

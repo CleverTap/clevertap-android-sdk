@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.inapp
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
-import com.clevertap.android.sdk.inapp.pipsdk.PIPBorderConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
@@ -67,22 +66,6 @@ internal object PIPConfigFactory {
         // Width
         if (pipJson.has("width")) {
             builder.widthPercent(pipJson.optInt("width", 35))
-        }
-
-        // Corner radius
-        if (pipJson.has("cornerRadius")) {
-            builder.cornerRadiusDp(pipJson.optInt("cornerRadius", 8))
-        }
-
-        // Border
-        pipJson.optJSONObject("border")?.let { borderJson ->
-            builder.border(
-                PIPBorderConfig(
-                    enabled = borderJson.optBoolean("enabled", false),
-                    color = borderJson.optString("color", "#FFFFFF"),
-                    widthDp = borderJson.optInt("width", 1)
-                )
-            )
         }
 
         // Aspect ratio
