@@ -17,6 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 
@@ -118,6 +119,32 @@ class NetworkMonitorTest : BaseTestCase() {
     fun test_networkStateFlow_isNotNull() {
         val monitor = createNetworkMonitor()
         assertNotNull(monitor.networkState)
+        monitor.cleanup()
+    }
+
+    // ─── onNetworkRestored callback tests ─────────────────────────────────────
+
+    @Test
+    fun test_onNetworkRestored_defaultIsNull() {
+        val monitor = createNetworkMonitor()
+        assertNull(monitor.onNetworkRestored)
+        monitor.cleanup()
+    }
+
+    @Test
+    fun test_onNetworkRestored_canBeSet() {
+        val monitor = createNetworkMonitor()
+        monitor.onNetworkRestored = {}
+        assertNotNull(monitor.onNetworkRestored)
+        monitor.cleanup()
+    }
+
+    @Test
+    fun test_onNetworkRestored_canBeCleared() {
+        val monitor = createNetworkMonitor()
+        monitor.onNetworkRestored = {}
+        monitor.onNetworkRestored = null
+        assertNull(monitor.onNetworkRestored)
         monitor.cleanup()
     }
 

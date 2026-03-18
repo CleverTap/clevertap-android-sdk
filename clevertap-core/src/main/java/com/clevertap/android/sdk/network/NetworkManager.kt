@@ -71,6 +71,12 @@ internal class NetworkManager constructor(
 
     fun isNetworkOnline(): Boolean = networkMonitor.isNetworkOnline()
 
+    fun setNetworkRestoreCallback(callback: () -> Unit) {
+        logger.debug(config.accountId, "NetworkManager: registering network restore callback")
+        networkMonitor.onNetworkRestored = callback
+        logger.debug(config.accountId, "NetworkManager: network restore callback registered successfully")
+    }
+
     fun addNetworkHeadersListener(listener: NetworkHeadersListener) {
         mNetworkHeadersListeners.add(listener)
     }

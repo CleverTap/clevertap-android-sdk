@@ -437,6 +437,40 @@ class EventQueueManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun test_init_registersNetworkRestoreCallback() {
+        // callback registration happens in init during setUp
+        verify { corestate.networkManager.setNetworkRestoreCallback(any()) }
+    }
+
+    @Test
+    fun test_networkRestoreCallback_whenInvoked_flushesREGULAREvents() {
+        withMockExecutors {
+            val callbackSlot = slot<() -> Unit>()
+            verify { corestate.networkManager.setNetworkRestoreCallback(capture(callbackSlot)) }
+
+            every { corestate.networkManager.isNetworkOnline() } returns true
+
+            callbackSlot.captured.invoke()
+
+            verify { corestate.networkManager.needsHandshakeForDomain(REGULAR) }
+        }
+    }
+
+    @Test
+    fun test_networkRestoreCallback_whenInvoked_flushesPUSH_NOTIFICATION_VIEWEDEvents() {
+        withMockExecutors {
+            val callbackSlot = slot<() -> Unit>()
+            verify { corestate.networkManager.setNetworkRestoreCallback(capture(callbackSlot)) }
+
+            every { corestate.networkManager.isNetworkOnline() } returns true
+
+            callbackSlot.captured.invoke()
+
+            verify { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) }
+        }
+    }
+
+    @Test
     fun test_flushQueueSync_when_net_is_offline() {
         withMockExecutors {
 
