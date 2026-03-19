@@ -127,7 +127,13 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         // Defer positioning until after the container's first layout pass
         post {
             if (width == 0 || height == 0) return@post
-            positionAndShow(s, cv, isReattach)
+            if (isReattach && s.isExpanded) {
+                // Restore expanded state after rotation — show full screen immediately
+                positionAndShow(s, cv, isReattach = true)
+                expandToFull()
+            } else {
+                positionAndShow(s, cv, isReattach)
+            }
         }
     }
 
@@ -175,6 +181,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         val mv = mediaView ?: return
 
         isExpanded = true
+        s.isExpanded = true
         backCallback?.isEnabled = true
         cv.visibility = View.INVISIBLE
 
@@ -202,6 +209,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         val mv = mediaView ?: return
 
         isExpanded = false
+        s.isExpanded = false
         backCallback?.isEnabled = false
 
         PIPAnimator.animateCollapse(ev) {
