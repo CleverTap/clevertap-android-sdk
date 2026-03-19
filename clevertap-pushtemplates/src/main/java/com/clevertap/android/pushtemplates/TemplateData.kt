@@ -120,6 +120,7 @@ internal data class TimerTemplateData(
     val chronometerGradientDirection: GradientDirection = GradientDirection.LEFT_RIGHT,
     val renderTerminal: Boolean = true,
     val chronometerBorderRadius: Float = 6f,
+    val chronometerBorderWidth: Float? = null,
     ) : TemplateData()
 
 internal data class ZeroBezelTemplateData(

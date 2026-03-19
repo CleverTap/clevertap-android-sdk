@@ -17,25 +17,28 @@ internal object NotificationBitmapUtils {
         borderColor: Int?,
         width: Int,
         height: Int,
-        cornerRadius: Float
+        cornerRadius: Float,
+        borderWidth: Float? = null
     ): Bitmap {
         val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
         val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor }
-        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
 
         if (borderColor != null) {
-            val strokeWidth = height * BORDER_STROKE_RATIO
-            val inset = height * BORDER_INSET_RATIO
+            val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
+            val inset = strokeWidth / 2f
+            val bgRect = RectF(inset, inset, width - inset, height - inset)
+            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, paint)
             val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = borderColor
                 style = Paint.Style.STROKE
                 this.strokeWidth = strokeWidth
             }
-            val borderRect = RectF(inset, inset, width - inset, height - inset)
-            canvas.drawRoundRect(borderRect, cornerRadius, cornerRadius, borderPaint)
+            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, borderPaint)
+        } else {
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
         }
 
         return bitmap
@@ -47,7 +50,9 @@ internal object NotificationBitmapUtils {
         direction: GradientDirection,
         width: Int,
         height: Int,
-        cornerRadius: Float
+        cornerRadius: Float,
+        borderColor: Int? = null,
+        borderWidth: Float? = null
     ): Bitmap {
         val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
@@ -55,8 +60,21 @@ internal object NotificationBitmapUtils {
 
         val shader = createShader(color1, color2, direction, width, height)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
-        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
 
+        if (borderColor != null) {
+            val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
+            val inset = strokeWidth / 2f
+            val bgRect = RectF(inset, inset, width - inset, height - inset)
+            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, paint)
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = borderColor
+                style = Paint.Style.STROKE
+                this.strokeWidth = strokeWidth
+            }
+            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, borderPaint)
+        } else {
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+        }
         return bitmap
     }
 
