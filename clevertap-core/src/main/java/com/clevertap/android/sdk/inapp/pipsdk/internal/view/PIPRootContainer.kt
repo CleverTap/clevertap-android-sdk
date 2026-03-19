@@ -10,6 +10,9 @@ import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPAnimator
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPPositionResolver
@@ -41,6 +44,25 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     private var mediaView: PIPMediaView? = null
     private var backCallback: OnBackPressedCallback? = null
     private var layoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+    private var safeInsets: Insets = Insets.NONE
+
+    init {
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, windowInsets ->
+            val newInsets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            if (newInsets != safeInsets) {
+                safeInsets = newInsets
+                repositionCompactIfNeeded()
+            }
+            windowInsets // pass through — do NOT consume
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        ViewCompat.requestApplyInsets(this)
+    }
 
     // ─── Public API called by PIPManager ─────────────────────────────────────────
 
@@ -97,6 +119,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             onSnap = {},   // session.currentPosition already updated inside PIPCompactView
         )
         cv.bindVideoControls(mv)
+        cv.getSafeInsets = { safeInsets }
         compactView = cv
         cv.visibility = View.INVISIBLE
         addView(cv)
@@ -216,7 +239,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             // played on reattach, so measured dimensions are not needed.
             cv.layoutParams = LayoutParams(pipW, pipH)
             val anchors = PIPPositionResolver.resolveAnchors(
-                width, height, pipW, pipH, hMarginPx, vMarginPx,
+                width, height, pipW, pipH, hMarginPx, vMarginPx, safeInsets,
             )
             val anchor = anchors[s.currentPosition] ?: return
             cv.x = anchor.x
@@ -232,7 +255,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
                 cv.viewTreeObserver.removeOnGlobalLayoutListener(this)
                 layoutListener = null
                 val anchors = PIPPositionResolver.resolveAnchors(
-                    width, height, cv.width, cv.height, hMarginPx, vMarginPx,
+                    width, height, cv.width, cv.height, hMarginPx, vMarginPx, safeInsets,
                 )
                 val anchor = anchors[s.currentPosition] ?: return
                 cv.visibility = View.VISIBLE
@@ -243,6 +266,21 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         }
         layoutListener = listener
         cv.viewTreeObserver.addOnGlobalLayoutListener(listener)
+    }
+
+    private fun repositionCompactIfNeeded() {
+        val s = session ?: return
+        val cv = compactView ?: return
+        if (cv.visibility != View.VISIBLE) return
+        if (width == 0 || height == 0) return
+        val hMarginPx = s.config.horizontalEdgeMarginDp.dpToPx(context)
+        val vMarginPx = s.config.verticalEdgeMarginDp.dpToPx(context)
+        val anchors = PIPPositionResolver.resolveAnchors(
+            width, height, cv.width, cv.height, hMarginPx, vMarginPx, safeInsets,
+        )
+        val anchor = anchors[s.currentPosition] ?: return
+        cv.x = anchor.x
+        cv.y = anchor.y
     }
 
     private companion object {

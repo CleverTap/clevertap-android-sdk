@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.engine
 
 import android.graphics.PointF
+import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 
 internal object PIPPositionResolver {
@@ -13,13 +14,14 @@ internal object PIPPositionResolver {
         pipHeight: Int,
         horizontalMarginPx: Int,
         verticalMarginPx: Int,
+        safeInsets: Insets = Insets.NONE,
     ): Map<PIPPosition, PointF> = buildMap {
-        val midX = (containerWidth - pipWidth) / 2f
-        val midY = (containerHeight - pipHeight) / 2f
-        val left = horizontalMarginPx.toFloat()
-        val top = verticalMarginPx.toFloat()
-        val right = (containerWidth - pipWidth - horizontalMarginPx).toFloat()
-        val bottom = (containerHeight - pipHeight - verticalMarginPx).toFloat()
+        val left = (horizontalMarginPx + safeInsets.left).toFloat()
+        val top = (verticalMarginPx + safeInsets.top).toFloat()
+        val right = (containerWidth - pipWidth - horizontalMarginPx - safeInsets.right).toFloat()
+        val bottom = (containerHeight - pipHeight - verticalMarginPx - safeInsets.bottom).toFloat()
+        val midX = (left + right) / 2f
+        val midY = (top + bottom) / 2f
 
         put(PIPPosition.TOP_LEFT,      PointF(left,  top))
         put(PIPPosition.TOP_CENTER,    PointF(midX,  top))
