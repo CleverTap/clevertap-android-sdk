@@ -130,6 +130,7 @@ public class PTConstants {
     public static final String PT_CHRONO_GRAD_CLR1 = "pt_chrono_grad_clr1";
     public static final String PT_CHRONO_GRAD_CLR2 = "pt_chrono_grad_clr2";
     public static final String PT_CHRONO_GRAD_DIR = "pt_chrono_grad_dir";
+    public static final String PT_CHRONO_BORDER_RADIUS = "pt_chrono_border_radius";
 
     public static final String PT_PRODUCT_DISPLAY_ACTION = "pt_product_display_action";
 

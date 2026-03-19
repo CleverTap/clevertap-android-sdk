@@ -41,7 +41,8 @@ internal open class TimerSmallContentView(
             data.chronometerBorderColor,
             data.chronometerGradientColor1,
             data.chronometerGradientColor2,
-            data.chronometerGradientDirection
+            data.chronometerGradientDirection,
+            data.chronometerBorderRadius
         )
 
         // Add a 3 second buffer to prevent negative timer values
@@ -63,21 +64,22 @@ internal open class TimerSmallContentView(
         borderColorStr: String?,
         gradientColor1: String?,
         gradientColor2: String?,
-        gradientDirection: GradientDirection
+        gradientDirection: GradientDirection,
+        cornerRadius: Float
     ) {
         val bitmap = if (style == ButtonStyle.GRADIENT) {
             val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
             val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
             NotificationBitmapUtils.createGradientBitmap(
                 color1, color2, gradientDirection,
-                CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, CHRONO_CORNER_RADIUS
+                CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius
             )
         } else {
             val bgColor = bgColorStr?.let { Utils.getColourOrNull(it) } ?: return
             val borderColor = borderColorStr?.let { Utils.getColourOrNull(it) }
             NotificationBitmapUtils.createSolidBitmap(
                 bgColor, borderColor,
-                CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, CHRONO_CORNER_RADIUS
+                CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius
             )
         }
         remoteView.setImageViewBitmap(R.id.chronometer_bg, bitmap)
@@ -98,6 +100,5 @@ internal open class TimerSmallContentView(
     companion object {
         private const val CHRONO_BITMAP_WIDTH = 100
         private const val CHRONO_BITMAP_HEIGHT = 40
-        private const val CHRONO_CORNER_RADIUS = 6f
     }
 }

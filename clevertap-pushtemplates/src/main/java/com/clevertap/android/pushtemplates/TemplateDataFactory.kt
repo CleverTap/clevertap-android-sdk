@@ -65,6 +65,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.TEXT_ONLY
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_RADIUS
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
@@ -284,6 +285,7 @@ internal object TemplateDataFactory {
             chronometerGradientColor1 = colorMap[PT_CHRONO_GRAD_CLR1],
             chronometerGradientColor2 = colorMap[PT_CHRONO_GRAD_CLR2],
             chronometerGradientDirection = GradientDirection.fromString(extras.getString(PT_CHRONO_GRAD_DIR)),
+            chronometerBorderRadius = extras.getString(PT_CHRONO_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )
