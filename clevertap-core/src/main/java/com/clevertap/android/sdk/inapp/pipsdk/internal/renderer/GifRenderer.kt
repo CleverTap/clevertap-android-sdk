@@ -28,6 +28,7 @@ internal class GifRenderer(
     private var gifView: GifImageView? = null
     private var fallbackImageView: ImageView? = null
     private var config: PIPConfig? = null
+    private var gifBytes: ByteArray? = null
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
@@ -46,6 +47,7 @@ internal class GifRenderer(
         // Cache-first: try memory cache on main thread
         val cached = resourceProvider.cachedInAppGifV1(config.mediaUrl)
         if (cached != null) {
+            gifBytes = cached
             gv.setBytes(cached)
             gv.startAnimation()
         } else {
@@ -55,6 +57,7 @@ internal class GifRenderer(
                 gv.post {
                     if (released) return@post
                     if (fetched != null) {
+                        gifBytes = fetched
                         gv.setBytes(fetched)
                         gv.startAnimation()
                     } else {
@@ -73,11 +76,39 @@ internal class GifRenderer(
         attach(container, cfg, session)
     }
 
+    /**
+     * Called after the PIPMediaView container is moved to a new parent (expand/collapse).
+     *
+     * GifImageView.onDetachedFromWindow() calls clear() which posts a cleanupRunnable that
+     * nullifies gifDecoder asynchronously. Reusing the same GifImageView would race with that
+     * pending cleanup. Instead, we replace it with a fresh instance using cached bytes.
+     */
+    override fun onContainerChanged() {
+        val container = gifView?.parent as? ViewGroup ?: return
+        val bytes = gifBytes ?: return
+
+        // Remove the old (cleared) GifImageView
+        gifView?.let { (it.parent as? ViewGroup)?.removeView(it) }
+
+        // Create a fresh GifImageView — no stale cleanupRunnables
+        val gv = GifImageView(container.context).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        gifView = gv
+        container.addView(
+            gv,
+            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        )
+        gv.setBytes(bytes)
+        gv.startAnimation()
+    }
+
     override fun release() {
         released = true
         gifView?.stopAnimation()
         gifView?.clear()
         gifView = null
+        gifBytes = null
         fallbackImageView = null
         config = null
     }
