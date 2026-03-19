@@ -9,6 +9,7 @@ import com.clevertap.android.pushtemplates.GradientDirection
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.TimerLayout
 import com.clevertap.android.pushtemplates.TimerTemplateData
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
@@ -57,6 +58,21 @@ internal open class TimerSmallContentView(
             remoteView.setChronometerCountDown(R.id.chronometer, true)
         }
         setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+
+        if (data.timerLayout == TimerLayout.SEGMENTED) {
+            remoteView.setViewVisibility(R.id.chronometer_frame, View.GONE)
+            remoteView.setViewVisibility(R.id.segmented_timer_layout, View.VISIBLE)
+
+            val totalSeconds = (timer_end!! / 1000).toInt()
+            val hours = totalSeconds / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+
+            remoteView.setTextViewText(R.id.hrs_value, String.format("%02d", hours))
+            remoteView.setTextViewText(R.id.mins_value, String.format("%02d", minutes))
+            remoteView.setTextViewText(R.id.secs_value, String.format("%02d", seconds))
+        }
+
     }
 
     private fun setupChronometerBackground(

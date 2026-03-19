@@ -18,7 +18,6 @@
         android:paddingRight="@dimen/padding_horizontal"
         android:paddingBottom="@dimen/padding_vertical">
 
-
         <include
             android:id="@+id/metadata"
             layout="@layout/metadata" />
@@ -27,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
-            android:layout_toStartOf="@+id/chronometer_frame" >
+            android:layout_toStartOf="@+id/timer_container">
 
             <TextView
                 android:id="@+id/title"
@@ -52,34 +51,188 @@
         </RelativeLayout>
 
         <RelativeLayout
-            android:id="@+id/chronometer_frame"
+            android:id="@+id/timer_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true">
+            android:layout_centerVertical="true"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp">
 
-            <ImageView
-                android:id="@+id/chronometer_bg"
+            <RelativeLayout
+                android:id="@+id/chronometer_frame"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/chronometer"
-                android:layout_alignEnd="@+id/chronometer"
-                android:layout_alignTop="@+id/chronometer"
-                android:layout_alignBottom="@+id/chronometer"
-                android:scaleType="fitXY"
-                android:visibility="gone"
-                tools:ignore="ContentDescription" />
+                android:layout_centerVertical="true">
 
-            <Chronometer
-                android:id="@+id/chronometer"
+                <ImageView
+                    android:id="@+id/chronometer_bg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignStart="@+id/chronometer"
+                    android:layout_alignEnd="@+id/chronometer"
+                    android:layout_alignTop="@+id/chronometer"
+                    android:layout_alignBottom="@+id/chronometer"
+                    android:scaleType="fitXY"
+                    android:visibility="gone"
+                    tools:ignore="ContentDescription" />
+
+                <Chronometer
+                    android:id="@+id/chronometer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:background="@android:color/transparent"
+                    android:textColor="@color/titleColor"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:textSize="@dimen/chronometer_font_size" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/segmented_timer_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:background="@android:color/transparent"
-                android:textColor="@color/titleColor"
-                android:textAlignment="center"
-                android:gravity="center"
-                android:textSize="@dimen/chronometer_font_size" />
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <!-- HRS block -->
+                <RelativeLayout
+                    android:id="@+id/hrs_frame"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp">
+                    <ImageView
+                        android:id="@+id/hrs_bg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignStart="@+id/hrs_value_layout"
+                        android:layout_alignEnd="@+id/hrs_value_layout"
+                        android:layout_alignTop="@+id/hrs_value_layout"
+                        android:layout_alignBottom="@+id/hrs_value_layout"
+                        android:scaleType="fitXY"
+                        android:visibility="gone"/>
+                    <LinearLayout
+                        android:id="@+id/hrs_value_layout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp">
+                        <TextView
+                            android:id="@+id/hrs_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="@dimen/chronometer_font_size"
+                            android:textColor="@color/titleColor"
+                            android:gravity="center"
+                            android:text="00"/>
+                        <TextView
+                            android:id="@+id/hrs_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="8sp"
+                            android:textColor="@color/titleColor"
+                            android:gravity="center"
+                            android:text="HRS"/>
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <!-- MIN block -->
+                <RelativeLayout
+                    android:id="@+id/mins_frame"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="2dp">
+                    <ImageView
+                        android:id="@+id/mins_bg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignStart="@+id/mins_value_layout"
+                        android:layout_alignEnd="@+id/mins_value_layout"
+                        android:layout_alignTop="@+id/mins_value_layout"
+                        android:layout_alignBottom="@+id/mins_value_layout"
+                        android:scaleType="fitXY"
+                        android:visibility="gone"/>
+                    <LinearLayout
+                        android:id="@+id/mins_value_layout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp">
+                        <TextView
+                            android:id="@+id/mins_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="@dimen/chronometer_font_size"
+                            android:textColor="@color/titleColor"
+                            android:gravity="center"
+                            android:text="00"/>
+                        <TextView
+                            android:id="@+id/mins_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="8sp"
+                            android:textColor="@color/titleColor"
+                            android:gravity="center"
+                            android:text="MIN"/>
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <!-- SEC block -->
+                <RelativeLayout
+                    android:id="@+id/secs_frame"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:id="@+id/secs_bg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignStart="@+id/secs_value_layout"
+                        android:layout_alignEnd="@+id/secs_value_layout"
+                        android:layout_alignTop="@+id/secs_value_layout"
+                        android:layout_alignBottom="@+id/secs_value_layout"
+                        android:scaleType="fitXY"
+                        android:visibility="gone"/>
+                    <LinearLayout
+                        android:id="@+id/secs_value_layout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp">
+                        <TextView
+                            android:id="@+id/secs_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="@dimen/chronometer_font_size"
+                            android:textColor="@color/titleColor"
+                            android:gravity="center"
+                            android:text="00"/>
+                        <TextView
+                            android:id="@+id/secs_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="8sp"
+                            android:textColor="@color/titleColor"
+                            android:gravity="center"
+                            android:text="SEC"/>
+                    </LinearLayout>
+                </RelativeLayout>
+
+            </LinearLayout>
+
         </RelativeLayout>
 
     </RelativeLayout>
@@ -92,3 +245,4 @@
         layout="@layout/action_buttons" />
 
 </LinearLayout>
+

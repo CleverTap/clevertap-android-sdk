@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BG
+import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_LAYOUT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_ALT_TEXT
@@ -288,6 +289,7 @@ internal object TemplateDataFactory {
             chronometerGradientDirection = GradientDirection.fromString(extras.getString(PT_CHRONO_GRAD_DIR)),
             chronometerBorderRadius = extras.getString(PT_CHRONO_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
             chronometerBorderWidth = extras.getString(PT_CHRONO_BORDER_WIDTH)?.toFloatOrNull(),
+            timerLayout = TimerLayout.fromString(extras.getString(PT_TIMER_LAYOUT)),
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )

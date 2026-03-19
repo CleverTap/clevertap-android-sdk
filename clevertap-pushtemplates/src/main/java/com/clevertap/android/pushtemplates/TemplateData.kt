@@ -121,6 +121,7 @@ internal data class TimerTemplateData(
     val renderTerminal: Boolean = true,
     val chronometerBorderRadius: Float = 6f,
     val chronometerBorderWidth: Float? = null,
+    val timerLayout: TimerLayout = TimerLayout.HH_MM_SS,
     ) : TemplateData()
 
 internal data class ZeroBezelTemplateData(
@@ -172,6 +173,16 @@ internal enum class ButtonStyle(val key: String) {
     companion object {
         fun fromString(value: String?): ButtonStyle =
             entries.firstOrNull { it.key == value } ?: SOLID
+    }
+}
+
+enum class TimerLayout(val value: String) {
+    HH_MM_SS("hh_mm_ss"),
+    SEGMENTED("segmented");
+
+    companion object {
+        fun fromString(value: String?): TimerLayout =
+            entries.firstOrNull { it.value == value } ?: HH_MM_SS
     }
 }
 

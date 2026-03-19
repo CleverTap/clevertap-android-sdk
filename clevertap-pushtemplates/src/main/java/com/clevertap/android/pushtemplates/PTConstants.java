@@ -130,6 +130,7 @@ public class PTConstants {
     public static final String PT_CHRONO_GRAD_CLR1 = "pt_chrono_grad_clr1";
     public static final String PT_CHRONO_GRAD_CLR2 = "pt_chrono_grad_clr2";
     public static final String PT_CHRONO_GRAD_DIR = "pt_chrono_grad_dir";
+    public static final String PT_TIMER_LAYOUT = "pt_timer_layout";
     public static final String PT_CHRONO_BORDER_RADIUS = "pt_chrono_border_radius";
     public static final String PT_CHRONO_BORDER_WIDTH = "pt_chrono_border_width";
 
@@ -219,6 +220,8 @@ public class PTConstants {
     public static final String PT_BTN_GRAD_CLR1 = "pt_btn_grad_clr1";
     public static final String PT_BTN_GRAD_CLR2 = "pt_btn_grad_clr2";
     public static final String PT_BTN_GRAD_DIR = "pt_btn_grad_dir";
+
+
 
     // Vertical Image Template - Collapsed button configuration
     public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
