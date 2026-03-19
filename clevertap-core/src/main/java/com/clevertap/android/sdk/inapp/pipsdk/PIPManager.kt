@@ -166,7 +166,7 @@ internal object PIPManager {
         val container = s.pipRootContainer
         val cleanup: () -> Unit = {
             container?.let { c ->
-                c.detach()
+                c.detach(releaseMedia = true)
                 (c.parent as? ViewGroup)?.removeView(c)
             }
             s.videoPlayerWrapper?.release()
@@ -266,7 +266,7 @@ internal object PIPManager {
         s.videoPlayerWrapper?.release()
         s.videoPlayerWrapper = null
         s.pipRootContainer?.let { container ->
-            container.detach()
+            container.detach(releaseMedia = true)
             (container.parent as? ViewGroup)?.removeView(container)
         }
         shutdownMediaExecutor()

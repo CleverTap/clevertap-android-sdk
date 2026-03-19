@@ -12,6 +12,8 @@ internal interface MediaRenderer {
     fun rebindSurface(container: ViewGroup, session: PIPSession)
     /** Full cleanup — releases player and media resources. */
     fun release()
+    /** Called after the container view is moved to a new parent (expand/collapse). No-op by default. */
+    fun onContainerChanged() {}
     fun togglePlayPause()
     fun toggleMute()
     val currentPositionMs: Long

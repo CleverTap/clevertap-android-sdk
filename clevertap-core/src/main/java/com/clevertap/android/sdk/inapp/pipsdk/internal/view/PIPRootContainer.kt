@@ -140,9 +140,12 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
 
     /**
      * Cancel timers and unregister back-press callback.
-     * Does NOT release media — PIPManager controls that lifecycle.
+     *
+     * @param releaseMedia true on final dismiss to release renderer resources (GIF bytes,
+     *   image bitmaps). Must be false on rotation — video ExoPlayer lives in PIPSession
+     *   and must survive for reattach.
      */
-    fun detach() {
+    fun detach(releaseMedia: Boolean = false) {
         // Safety net: remove layout listener if it hasn't fired yet (e.g., rapid dismiss before first layout)
         layoutListener?.let {
             compactView?.viewTreeObserver?.removeOnGlobalLayoutListener(it)
@@ -150,6 +153,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         }
         compactView?.detach()
         expandedView?.detach()
+        if (releaseMedia) mediaView?.release()
         backCallback?.remove()
     }
 
@@ -182,6 +186,8 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         (mv.parent as? ViewGroup)?.removeView(mv)
 
         ev.bindMedia(mv, s) {
+            // Restart GIF animation after reparenting (no-op for video/image)
+            mv.onContainerChanged()
             // onReady fires from post{} after layout — media container is correctly sized
             PIPAnimator.animateExpand(ev, ev.mediaContainer) {
                 s.config.callbacks?.onExpand()
@@ -202,6 +208,8 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             // Move shared media view back to compact (index 0 = beneath controls overlay)
             (mv.parent as? ViewGroup)?.removeView(mv)
             cv.addView(mv, 0, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            // Restart GIF animation after reparenting (no-op for video/image)
+            mv.onContainerChanged()
             ev.visibility = View.GONE
             cv.visibility = View.VISIBLE
             s.config.callbacks?.onCollapse()

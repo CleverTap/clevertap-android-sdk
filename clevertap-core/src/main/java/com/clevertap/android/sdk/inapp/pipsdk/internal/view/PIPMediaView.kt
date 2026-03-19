@@ -93,6 +93,7 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     }
 
     fun release() = renderer?.release()
+    fun onContainerChanged() = renderer?.onContainerChanged()
     fun togglePlayPause() = renderer?.togglePlayPause()
     fun toggleMute() = renderer?.toggleMute()
 
