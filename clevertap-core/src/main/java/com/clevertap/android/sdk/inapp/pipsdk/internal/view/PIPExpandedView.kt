@@ -9,6 +9,8 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
@@ -43,8 +45,12 @@ internal class PIPExpandedView(
     init {
         setBackgroundColor(Color.BLACK)
 
-        // Media container — fills full expanded view
+        // Media container — fills full expanded view (edge-to-edge).
+        // Consume insets here so ExoPlayer's PlayerView doesn't offset exo_content_frame.
         mediaContainer = FrameLayout(context)
+        ViewCompat.setOnApplyWindowInsetsListener(mediaContainer) { _, _ ->
+            WindowInsetsCompat.CONSUMED// TODO: check and see do we need this?
+        }
         addView(mediaContainer, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
         // Controls overlay covers full view (starts hidden)
@@ -122,6 +128,16 @@ internal class PIPExpandedView(
 
         // Tap anywhere on scrim to reveal controls
         setOnClickListener { controlsOverlay.showControls() }
+
+        // Inset controls so icons don't overlap system bars or display cutouts.
+        // Media stays edge-to-edge (no padding on mediaContainer).
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            controlsOverlay.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            windowInsets // pass through — do NOT consume
+        }
     }
 
     /**

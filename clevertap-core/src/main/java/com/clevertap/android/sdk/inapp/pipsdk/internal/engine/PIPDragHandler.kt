@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.engine
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import kotlin.math.abs
 
@@ -17,6 +18,7 @@ internal class PIPDragHandler(
     private val dragEnabled: Boolean = true,
     private val getHorizontalEdgeMarginDp: () -> Int,
     private val getVerticalEdgeMarginDp: () -> Int,
+    private val getSafeInsets: () -> Insets = { Insets.NONE },
     private val onSnapComplete: (PIPPosition) -> Unit,
     private val onTap: () -> Unit,
 ) {
@@ -85,6 +87,7 @@ internal class PIPDragHandler(
             parent.width, parent.height,
             view.width, view.height,
             hMarginPx, vMarginPx,
+            getSafeInsets(),
         )
         val centerX = view.x + view.width / 2f
         val centerY = view.y + view.height / 2f

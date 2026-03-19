@@ -10,6 +10,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPDragHandler
@@ -35,6 +36,7 @@ internal class PIPCompactView(
     internal val controlsOverlay: PIPControlsOverlay
     private val dragHandler: PIPDragHandler
     private var muteBtn: ImageView? = null
+    var getSafeInsets: () -> Insets = { Insets.NONE }
 
     init {
         val cfg = session.config
@@ -107,6 +109,7 @@ internal class PIPCompactView(
             dragEnabled = cfg.dragEnabled,
             getHorizontalEdgeMarginDp = { session.config.horizontalEdgeMarginDp },
             getVerticalEdgeMarginDp = { session.config.verticalEdgeMarginDp },
+            getSafeInsets = { getSafeInsets() },
             onSnapComplete = { newPos ->
                 session.currentPosition = newPos
                 onSnap(newPos)
