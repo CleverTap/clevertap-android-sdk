@@ -21,6 +21,7 @@ internal data class PIPSession(
     var isMuted: Boolean = true,
     var isPlaying: Boolean = true,
     var activityRef: WeakReference<Activity>,
+    var isExpanded: Boolean = false,
     var pipRootContainer: PIPRootContainer? = null,
     var lifecycleObserver: LifecycleEventObserver? = null,
 )
