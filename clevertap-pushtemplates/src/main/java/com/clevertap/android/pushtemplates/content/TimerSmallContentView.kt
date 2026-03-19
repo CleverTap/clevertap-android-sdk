@@ -102,6 +102,6 @@ internal open class TimerSmallContentView(
 
     companion object {
         private const val CHRONO_BITMAP_WIDTH = 100
-        private const val CHRONO_BITMAP_HEIGHT = 40
+        private const val CHRONO_BITMAP_HEIGHT = 24
     }
 }

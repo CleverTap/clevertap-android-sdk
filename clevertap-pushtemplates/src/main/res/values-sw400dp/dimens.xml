@@ -22,7 +22,7 @@
 
     <dimen name="rating_star">24dp</dimen>
 
-    <dimen name="chronometer_font_size">20sp</dimen>
+    <dimen name="chronometer_font_size">16sp</dimen>
 
     <dimen name="product_display_button_height">24dp</dimen>
     <dimen name="rating_big_img">120dp</dimen>
