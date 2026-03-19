@@ -63,7 +63,7 @@ internal class EventQueueManager(
         callbackManager.setFailureFlushListener(this)
     }
 
-    // only call async
+
     override fun addToQueue(
         context: Context,
         event: JSONObject,
