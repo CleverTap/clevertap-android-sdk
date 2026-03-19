@@ -220,6 +220,20 @@ public class PTConstants {
     public static final String PT_BTN_GRAD_CLR1 = "pt_btn_grad_clr1";
     public static final String PT_BTN_GRAD_CLR2 = "pt_btn_grad_clr2";
     public static final String PT_BTN_GRAD_DIR = "pt_btn_grad_dir";
+    public static final String PT_TIMER_UNIT_STYLE = "pt_timer_unit_style";
+    public static final String PT_TIMER_UNIT_BG_CLR = "pt_timer_unit_bg_clr";
+    public static final String PT_TIMER_UNIT_GRADIENT_CLR_1 = "pt_timer_unit_gradient_clr_1";
+    public static final String PT_TIMER_UNIT_GRADIENT_CLR_2 = "pt_timer_unit_gradient_clr_2";
+    public static final String PT_TIMER_UNIT_GRADIENT_DIRECTION = "pt_timer_unit_gradient_direction";
+    public static final String PT_TIMER_UNIT_TEXT_CLR = "pt_timer_unit_text_clr";
+    public static final String PT_TIMER_UNIT_BORDER_CLR = "pt_timer_unit_border_clr";
+    public static final String PT_TIMER_UNIT_BORDER_RADIUS = "pt_timer_unit_border_radius";
+    public static final String PT_TIMER_UNIT_BORDER_WIDTH = "pt_timer_unit_border_width";
+    public static final String PT_TIMER_SHOW_HRS = "pt_timer_show_hrs";
+    public static final String PT_TIMER_SHOW_MINS = "pt_timer_show_mins";
+    public static final String PT_TIMER_SHOW_SECS = "pt_timer_show_secs";
+
+
 
 
 
