@@ -101,12 +101,14 @@ internal class PIPCompactView(
 
         addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
+        val bottomOffsetPx = BOTTOM_NAV_OFFSET_DP.dpToPx(context)
         dragHandler = PIPDragHandler(
             view = this,
             dragEnabled = cfg.dragEnabled,
             getHorizontalEdgeMarginDp = { session.config.horizontalEdgeMarginDp },
             getVerticalEdgeMarginDp = { session.config.verticalEdgeMarginDp },
             getSafeInsets = { getSafeInsets() },
+            getBottomOffsetPx = { bottomOffsetPx },
             onSnapComplete = { newPos ->
                 session.currentPosition = newPos
                 onSnap(newPos)
@@ -167,5 +169,7 @@ internal class PIPCompactView(
     private companion object {
         const val ICON_SIZE_DP = 30
         const val ELEVATION_DP = 6
+        /** Extra bottom offset to clear a typical bottom navigation bar (Material 3 = 80dp). */
+        const val BOTTOM_NAV_OFFSET_DP = 80
     }
 }
