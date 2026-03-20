@@ -1631,4 +1631,261 @@ class TemplateDataFactoryTest {
         // Then
         assertNull(result)
     }
+
+    // Vertical Image Template Tests
+
+    @Test
+    fun `createTemplateData should create VerticalImageTemplateData for VERTICAL_IMAGE template type`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertNotNull(result)
+        assertTrue(result is VerticalImageTemplateData)
+        val data = result as VerticalImageTemplateData
+        assertEquals(TemplateType.VERTICAL_IMAGE, data.templateType)
+        assertNotNull(data.baseContent)
+        assertNotNull(data.mediaData)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should populate text1 and text2 when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TEXT1) } returns "Text One"
+        every { mockBundle.getString(PT_TEXT2) } returns "Text Two"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertEquals("Text One", data.text1)
+        assertEquals("Text Two", data.text2)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should have null text1 and text2 when not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TEXT1) } returns null
+        every { mockBundle.getString(PT_TEXT2) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNull(data.text1)
+        assertNull(data.text2)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create buttonData when button name is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "SHOP NOW"
+        every { mockBundle.getString(PT_BTN_DL) } returns "https://example.com/shop"
+        every { mockBundle.getString(PT_BTN_STYLE) } returns "solid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.buttonData)
+        assertEquals("SHOP NOW", data.buttonData?.name)
+        assertEquals("https://example.com/shop", data.buttonData?.deepLink)
+        assertEquals(ButtonStyle.SOLID, data.buttonData?.style)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should have null buttonData when button name is not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNull(data.buttonData)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should parse gradient button style and direction`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "BUY"
+        every { mockBundle.getString(PT_BTN_STYLE) } returns "gradient"
+        every { mockBundle.getString(PT_BTN_GRAD_DIR) } returns "top_bottom"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_TITLE_COLOR to SAMPLE_COLOR,
+            PT_MSG_COLOR to SAMPLE_COLOR,
+            PT_BG to SAMPLE_COLOR,
+            PT_META_CLR to SAMPLE_COLOR,
+            PT_BTN_GRAD_CLR1 to "#FF0000",
+            PT_BTN_GRAD_CLR2 to "#0000FF"
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.buttonData)
+        assertEquals(ButtonStyle.GRADIENT, data.buttonData?.style)
+        assertEquals(GradientDirection.TOP_BOTTOM, data.buttonData?.gradientDirection)
+        assertEquals("#FF0000", data.buttonData?.gradientColor1)
+        assertEquals("#0000FF", data.buttonData?.gradientColor2)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create collapsedButtonData when collapsed button name is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "VIEW"
+        every { mockBundle.getString(PT_BTN_DL + "_collapsed") } returns "https://example.com/view"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.collapsedButtonData)
+        assertEquals("VIEW", data.collapsedButtonData?.name)
+        assertEquals("https://example.com/view", data.collapsedButtonData?.deepLink)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should have null collapsedMediaData when no collapsed image or gif`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns null
+        every { mockBundle.getString(PT_GIF_COLLAPSED) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNull(data.collapsedMediaData)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create collapsedMediaData when collapsed image is provided`() {
+        // Given
+        setupBasicMockBundle()
+        val collapsedImageUrl = "https://example.com/collapsed.jpg"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns collapsedImageUrl
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, any()) } returns "Collapsed Alt"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.collapsedMediaData)
+        assertEquals(collapsedImageUrl, data.collapsedMediaData?.bigImage?.url)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create collapsedMediaData when collapsed gif is provided`() {
+        // Given
+        setupBasicMockBundle()
+        val collapsedGifUrl = "https://example.com/collapsed.gif"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns null
+        every { mockBundle.getString(PT_GIF_COLLAPSED) } returns collapsedGifUrl
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.collapsedMediaData)
+        assertEquals(collapsedGifUrl, data.collapsedMediaData?.gif?.url)
+    }
+
+    @Test
+    fun `getActions should return correct actions for VerticalImageTemplateData`() {
+        // Given
+        val actions = JSONArray().apply { put("vertical_action") }
+        val verticalData = VerticalImageTemplateData(
+            baseContent = createSampleBaseContent(),
+            mediaData = createSampleMediaData(),
+            collapsedMediaData = null,
+            actions = actions
+        )
+
+        // When
+        val result = with(TemplateDataFactory) { verticalData.getActions() }
+
+        // Then
+        assertEquals(actions, result)
+        assertEquals(1, result?.length())
+    }
 }
