@@ -19,6 +19,7 @@ internal class PIPDragHandler(
     private val getHorizontalEdgeMarginDp: () -> Int,
     private val getVerticalEdgeMarginDp: () -> Int,
     private val getSafeInsets: () -> Insets = { Insets.NONE },
+    private val getBottomOffsetPx: () -> Int = { 0 },
     private val onSnapComplete: (PIPPosition) -> Unit,
     private val onTap: () -> Unit,
 ) {
@@ -88,6 +89,7 @@ internal class PIPDragHandler(
             view.width, view.height,
             hMarginPx, vMarginPx,
             getSafeInsets(),
+            getBottomOffsetPx(),
         )
         val centerX = view.x + view.width / 2f
         val centerY = view.y + view.height / 2f

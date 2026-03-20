@@ -15,11 +15,12 @@ internal object PIPPositionResolver {
         horizontalMarginPx: Int,
         verticalMarginPx: Int,
         safeInsets: Insets = Insets.NONE,
+        bottomOffsetPx: Int = 0,
     ): Map<PIPPosition, PointF> = buildMap {
         val left = (horizontalMarginPx + safeInsets.left).toFloat()
         val top = (verticalMarginPx + safeInsets.top).toFloat()
         val right = (containerWidth - pipWidth - horizontalMarginPx - safeInsets.right).toFloat()
-        val bottom = (containerHeight - pipHeight - verticalMarginPx - safeInsets.bottom).toFloat()
+        val bottom = (containerHeight - pipHeight - verticalMarginPx - bottomOffsetPx - safeInsets.bottom).toFloat()
         val midX = (left + right) / 2f
         val midY = (top + bottom) / 2f
 
