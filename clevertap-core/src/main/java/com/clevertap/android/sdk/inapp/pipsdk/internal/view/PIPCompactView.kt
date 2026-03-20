@@ -38,6 +38,10 @@ internal class PIPCompactView(
     init {
         val cfg = session.config
 
+        // Drop shadow — BOUNDS outline needed because FrameLayout has no background
+        outlineProvider = android.view.ViewOutlineProvider.BOUNDS
+        elevation = ELEVATION_DP.dpToPx(context).toFloat()
+
         // Media fills the view
         addView(mediaView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
@@ -162,5 +166,6 @@ internal class PIPCompactView(
 
     private companion object {
         const val ICON_SIZE_DP = 30
+        const val ELEVATION_DP = 6
     }
 }
