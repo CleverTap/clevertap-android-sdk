@@ -1,15 +1,12 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.view
 
 import android.content.Context
-import android.graphics.Color
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
@@ -48,12 +45,11 @@ internal class PIPCompactView(
         controlsOverlay = PIPControlsOverlay(context)
         controlsOverlay.alpha = 0f
 
-        val padPx = ICON_PADDING_DP.dpToPx(context)
         val iconSizePx = ICON_SIZE_DP.dpToPx(context)
 
         // Deeplink button — top-left (hidden if redirectUrl is null)
         val deeplinkBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_action)
+            setImageResource(R.drawable.ct_ic_deeplink)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.redirectUrl != null) View.VISIBLE else View.GONE
             setOnClickListener { onRedirect() }
@@ -64,23 +60,20 @@ internal class PIPCompactView(
         )
 
         // Close button — top-right (hidden if showCloseButton = false)
-        val closeBtn = TextView(context).apply {
-            text = "\u2715"    // ✕
-            textSize = 16f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            setPadding(padPx, padPx, padPx, padPx)
+        val closeBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_close_pip)
+            scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.showCloseButton) View.VISIBLE else View.GONE
             setOnClickListener { onClose() }
         }
         controlsOverlay.addView(
             closeBtn,
-            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.TOP or Gravity.END),
+            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END),
         )
 
         // Mute button — bottom-left (video only; hidden until bindVideoControls)
         val mBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_volume_off)
+            setImageResource(R.drawable.ct_ic_volume_off_tint)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = View.GONE
         }
@@ -134,7 +127,7 @@ internal class PIPCompactView(
 
     private fun updateMuteIcon(muted: Boolean) {
         muteBtn?.setImageResource(
-            if (muted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+            if (muted) R.drawable.ct_ic_volume_off_tint else R.drawable.ct_ic_volume_on_tint
         )
     }
 
@@ -169,6 +162,5 @@ internal class PIPCompactView(
 
     private companion object {
         const val ICON_SIZE_DP = 30
-        const val ICON_PADDING_DP = 10
     }
 }
