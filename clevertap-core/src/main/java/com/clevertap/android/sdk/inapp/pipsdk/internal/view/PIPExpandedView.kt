@@ -5,10 +5,8 @@ import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.R
@@ -63,7 +61,7 @@ internal class PIPExpandedView(
 
         // Deeplink button — top-left (hidden if redirectUrl is null)
         val deeplinkBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_action)
+            setImageResource(R.drawable.ct_ic_deeplink)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = if (redirectUrl != null) View.VISIBLE else View.GONE
@@ -75,18 +73,16 @@ internal class PIPExpandedView(
         )
 
         // Close button — top-right (hidden if showCloseButton = false)
-        val closeBtn = TextView(context).apply {
-            text = "\u2715"     // ✕
-            textSize = 20f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
+        val closeBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_close_pip)
+            scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = if (showCloseButton) View.VISIBLE else View.GONE
             setOnClickListener { onClose() }
         }
         controlsOverlay.addView(
             closeBtn,
-            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.TOP or Gravity.END),
+            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END),
         )
 
         // Play/Pause button — centre (video only; hidden until bindMedia)
@@ -100,7 +96,7 @@ internal class PIPExpandedView(
 
         // Mute button — bottom-left (video only; hidden until bindMedia)
         val mBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_volume_off)
+            setImageResource(R.drawable.ct_ic_volume_off_tint)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = View.GONE
@@ -198,7 +194,7 @@ internal class PIPExpandedView(
 
     private fun updateMuteIcon(muted: Boolean) {
         muteBtn?.setImageResource(
-            if (muted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+            if (muted) R.drawable.ct_ic_volume_off_tint else R.drawable.ct_ic_volume_on_tint
         )
     }
 
