@@ -54,6 +54,7 @@
         android:layout_weight="1"
         android:layout_height="28dp"
         android:layout_marginEnd="6dp"
+        android:background="@color/verticalImgBtnBgColor"
         android:visibility="gone">
 
         <ImageView
@@ -74,6 +75,7 @@
             android:ellipsize="end"
             android:textSize="11sp"
             android:textStyle="bold"
+            android:textColor="@color/verticalImgBtnTextColor"
             tools:text="SHOP" />
     </FrameLayout>
 

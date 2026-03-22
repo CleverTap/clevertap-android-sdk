@@ -43,17 +43,19 @@ internal abstract class VerticalImageContentView(
 
         val bitmap = when (buttonData.style) {
             ButtonStyle.GRADIENT -> {
-                val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) } ?: FALLBACK_BTN_COLOR
-                val color2 = buttonData.gradientColor2?.let { Utils.getColourOrNull(it) } ?: FALLBACK_BTN_COLOR
-                createGradientButtonBitmap(color1, color2, buttonData.gradientDirection)
+                val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) }
+                val color2 = buttonData.gradientColor2?.let { Utils.getColourOrNull(it) }
+                if (color1 != null && color2 != null) {
+                    createGradientButtonBitmap(color1, color2, buttonData.gradientDirection)
+                } else null
             }
             ButtonStyle.SOLID -> {
                 val bgColor = buttonData.buttonColor?.let { Utils.getColourOrNull(it) }
                 val borderColor = buttonData.borderColor?.let { Utils.getColourOrNull(it) }
-                createSolidButtonBitmap(bgColor ?: FALLBACK_BTN_COLOR, borderColor)
+                if (bgColor != null) createSolidButtonBitmap(bgColor, borderColor) else null
             }
         }
-        remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, bitmap)
+        bitmap?.let { remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, it) }
 
         buttonData.deepLink?.let { dl ->
             val btnExtras = extras.clone() as Bundle
@@ -66,7 +68,6 @@ internal abstract class VerticalImageContentView(
     }
 
     companion object {
-        const val FALLBACK_BTN_COLOR = 0xFFE91E63.toInt() // Pink
         private const val BTN_BITMAP_WIDTH = 100
         private const val BTN_BITMAP_HEIGHT = 30
         private const val BTN_CORNER_RADIUS_RATIO = 0.125f  // 12.5% of height
