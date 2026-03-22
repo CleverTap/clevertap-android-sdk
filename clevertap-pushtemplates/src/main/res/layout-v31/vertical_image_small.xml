@@ -54,7 +54,7 @@
         android:layout_weight="1"
         android:layout_height="28dp"
         android:layout_marginEnd="6dp"
-        android:background="@drawable/vertical_img_btn_default_bg"
+        android:background="@drawable/pt_vertical_img_btn_default_bg"
         android:visibility="gone">
 
         <ImageView
