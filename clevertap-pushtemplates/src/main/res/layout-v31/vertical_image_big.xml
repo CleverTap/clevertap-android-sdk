@@ -99,7 +99,7 @@
                 android:layout_height="32dp"
                 android:layout_marginTop="8dp"
                 android:layout_gravity="start"
-                android:background="@color/verticalImgBtnBgColor"
+                android:background="@drawable/vertical_img_btn_default_bg"
                 android:visibility="gone">
 
                 <ImageView
