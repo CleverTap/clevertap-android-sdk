@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 
 import android.view.ViewGroup
+import android.widget.ImageView
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 
@@ -14,6 +15,9 @@ internal interface MediaRenderer {
     fun release()
     /** Called after the container view is moved to a new parent (expand/collapse). No-op by default. */
     fun onContainerChanged() {}
+    /** Changes the ScaleType of the media view. Used to switch between CENTER_CROP (compact)
+     *  and FIT_CENTER (expanded) for images/GIFs. No-op for video (uses player resize mode). */
+    fun setScaleType(scaleType: ImageView.ScaleType) {}
     fun togglePlayPause()
     fun toggleMute()
     val currentPositionMs: Long

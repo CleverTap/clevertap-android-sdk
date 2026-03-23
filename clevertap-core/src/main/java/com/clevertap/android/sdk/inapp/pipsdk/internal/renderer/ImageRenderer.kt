@@ -30,7 +30,7 @@ internal class ImageRenderer(
         released = false
         this.config = config
         val iv = ImageView(container.context).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_CENTER
         }
         imageView = iv
         container.addView(
@@ -70,6 +70,10 @@ internal class ImageRenderer(
         imageView?.setImageBitmap(null)
         imageView = null
         config = null
+    }
+
+    override fun setScaleType(scaleType: ImageView.ScaleType) {
+        imageView?.scaleType = scaleType
     }
 
     override fun togglePlayPause() = Unit

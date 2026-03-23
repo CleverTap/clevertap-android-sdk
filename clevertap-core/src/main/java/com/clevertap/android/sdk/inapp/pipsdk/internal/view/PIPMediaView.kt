@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
@@ -96,6 +97,7 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     fun onContainerChanged() = renderer?.onContainerChanged()
     fun togglePlayPause() = renderer?.togglePlayPause()
     fun toggleMute() = renderer?.toggleMute()
+    fun setMediaScaleType(scaleType: ImageView.ScaleType) = renderer?.setScaleType(scaleType)
 
     /** Returns true only if the renderer is video AND has not fallen back to a static image. */
     val isVideoType: Boolean get() = renderer is VideoRenderer && !fellBackToImage

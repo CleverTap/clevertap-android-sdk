@@ -5,8 +5,10 @@ import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.R
@@ -17,9 +19,10 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
  * Full-screen expanded PIP overlay.
  *
  * Layout (all programmatic):
- * - Dark semi-transparent background (scrim) fills the view
- * - [mediaContainer] is centred with the correct aspect ratio
- * - [controlsOverlay] covers the whole view; has Collapse, Close, Play/Pause, Mute buttons
+ * - Dark background (scrim) fills the view
+ * - [mediaContainer] fills the view (video uses FIT mode internally)
+ * - [controlsWrapper] is sized to match the video's aspect ratio and centred over the media;
+ *   it hosts [controlsOverlay] with close at top-right and a bottom control row
  *
  * [bindMedia] must be called after the view has been measured (use post/onReady callback).
  */
@@ -36,9 +39,16 @@ internal class PIPExpandedView(
 ) : FrameLayout(context) {
 
     internal val mediaContainer: FrameLayout
+    private val controlsWrapper: FrameLayout
     private val controlsOverlay: PIPControlsOverlay
     private var playPauseBtn: ImageView? = null
     private var muteBtn: ImageView? = null
+    private lateinit var bottomRow: LinearLayout
+    private lateinit var rowSpacer: View
+
+    // Aspect ratio set in bindMedia(); used by layout change listener to size controlsWrapper.
+    private var aspectRatioW = 16f
+    private var aspectRatioH = 9f
 
     init {
         setBackgroundColor(Color.BLACK)
@@ -47,32 +57,27 @@ internal class PIPExpandedView(
         // Consume insets here so ExoPlayer's PlayerView doesn't offset exo_content_frame.
         mediaContainer = FrameLayout(context)
         ViewCompat.setOnApplyWindowInsetsListener(mediaContainer) { _, _ ->
-            WindowInsetsCompat.CONSUMED// TODO: check and see do we need this?
+            WindowInsetsCompat.CONSUMED
         }
         addView(mediaContainer, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // Controls overlay covers full view (starts hidden)
+        // Controls wrapper — sized to video aspect ratio, centred over media.
+        // Starts as MATCH_PARENT; resized by layout change listener once dimensions are known.
+        controlsWrapper = FrameLayout(context)
+        addView(controlsWrapper, LayoutParams(MATCH_PARENT, MATCH_PARENT, Gravity.CENTER))
+
+        // Controls overlay inside the wrapper (starts hidden)
         controlsOverlay = PIPControlsOverlay(context)
         controlsOverlay.alpha = 0f
+        controlsWrapper.addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
         val padPx = ICON_PADDING_DP.dpToPx(context)
         val iconSizePx = ICON_SIZE_DP.dpToPx(context)
-        val playPauseSizePx = PLAY_PAUSE_SIZE_DP.dpToPx(context)
+        val iconMarginPx = ICON_MARGIN_DP.dpToPx(context)
+        val rowMarginPx = ROW_MARGIN_DP.dpToPx(context)
+        val iconGapPx = ICON_GAP_DP.dpToPx(context)
 
-        // Deeplink button — top-left (hidden if redirectUrl is null)
-        val deeplinkBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_deeplink)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            setPadding(padPx, padPx, padPx, padPx)
-            visibility = if (redirectUrl != null) View.VISIBLE else View.GONE
-            setOnClickListener { onRedirect() }
-        }
-        controlsOverlay.addView(
-            deeplinkBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.START),
-        )
-
-        // Close button — top-right (hidden if showCloseButton = false)
+        // Close button — top-right of video frame
         val closeBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_close_pip)
             scaleType = ImageView.ScaleType.FIT_CENTER
@@ -82,19 +87,31 @@ internal class PIPExpandedView(
         }
         controlsOverlay.addView(
             closeBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END),
+            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END).apply {
+                setMargins(iconMarginPx, iconMarginPx, iconMarginPx, iconMarginPx)
+            },
         )
 
-        // Play/Pause button — centre (video only; hidden until bindMedia)
-        val ppBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_pause)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            visibility = View.GONE
+        // Bottom control row — centred horizontally at bottom of video frame (video),
+        // or full-width with space-between for image/GIF.
+        bottomRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
-        playPauseBtn = ppBtn
-        controlsOverlay.addView(ppBtn, LayoutParams(playPauseSizePx, playPauseSizePx, Gravity.CENTER))
 
-        // Mute button — bottom-left (video only; hidden until bindMedia)
+        // Deeplink button (hidden if redirectUrl is null)
+        val deeplinkBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_deeplink)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setPadding(padPx, padPx, padPx, padPx)
+            visibility = if (redirectUrl != null) View.VISIBLE else View.GONE
+            setOnClickListener { onRedirect() }
+        }
+        bottomRow.addView(deeplinkBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginEnd = iconGapPx
+        })
+
+        // Mute button (video only; hidden until bindMedia)
         val mBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_volume_off_tint)
             scaleType = ImageView.ScaleType.FIT_CENTER
@@ -102,12 +119,29 @@ internal class PIPExpandedView(
             visibility = View.GONE
         }
         muteBtn = mBtn
-        controlsOverlay.addView(
-            mBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
-        )
+        bottomRow.addView(mBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginEnd = iconGapPx
+        })
 
-        // Collapse button — bottom-right (hidden if expandCollapse control disabled)
+        // Play/Pause button (video only; hidden until bindMedia)
+        val ppBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_pause)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setPadding(padPx, padPx, padPx, padPx)
+            visibility = View.GONE
+        }
+        playPauseBtn = ppBtn
+        bottomRow.addView(ppBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginEnd = iconGapPx
+        })
+
+        // Spacer — hidden for video (icons grouped center), visible for image/GIF (pushes
+        // deeplink to left and collapse to right within the row).
+        rowSpacer = View(context)
+        rowSpacer.visibility = View.GONE
+        bottomRow.addView(rowSpacer, LinearLayout.LayoutParams(0, 0, 1f))
+
+        // Collapse button (hidden if expandCollapse control disabled)
         val collapseBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_collapse)
             scaleType = ImageView.ScaleType.FIT_CENTER
@@ -115,30 +149,31 @@ internal class PIPExpandedView(
             visibility = if (showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onCollapse() }
         }
-        controlsOverlay.addView(
-            collapseBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.END),
-        )
+        bottomRow.addView(collapseBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
 
-        addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        controlsOverlay.addView(
+            bottomRow,
+            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                setMargins(rowMarginPx, rowMarginPx, rowMarginPx, rowMarginPx)
+            },
+        )
 
         // Tap anywhere on scrim to reveal controls
         setOnClickListener { controlsOverlay.showControls() }
 
-        // Inset controls so icons don't overlap system bars or display cutouts.
-        // Media stays edge-to-edge (no padding on mediaContainer).
-        ViewCompat.setOnApplyWindowInsetsListener(this) { _, windowInsets ->
-            val insets = windowInsets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            controlsOverlay.setPadding(insets.left, insets.top, insets.right, insets.bottom)
-            windowInsets // pass through — do NOT consume
+        // Resize controlsWrapper whenever this view's dimensions change (initial layout, rotation).
+        addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
+            val w = right - left
+            val h = bottom - top
+            if (w > 0 && h > 0) {
+                sizeControlsWrapper(w, h)
+            }
         }
     }
 
     /**
-     * Sizes [mediaContainer], inserts [mv], and wires video controls.
-     * [containerWidth]/[containerHeight] are the PIPRootContainer's dimensions (already laid out).
+     * Inserts [mv] into [mediaContainer] and wires video controls.
+     * Updates the aspect ratio used to size [controlsWrapper] over the video bounds.
      * [onReady] fires once layout is applied; used to start the entry animation.
      */
     fun bindMedia(
@@ -150,10 +185,15 @@ internal class PIPExpandedView(
         mediaContainer.removeAllViews()
         mediaContainer.addView(mv, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
+        // Update aspect ratio — layout change listener will resize controlsWrapper
+        aspectRatioW = session.config.aspectRatioNumerator.toFloat()
+        aspectRatioH = session.config.aspectRatioDenominator.toFloat()
+
         // Wire video-only controls (respecting server-configured visibility)
         val isVideo = mv.isVideoType
         playPauseBtn?.visibility = if (isVideo && showPlayPauseButton) View.VISIBLE else View.GONE
         muteBtn?.visibility = if (isVideo && showMuteButton) View.VISIBLE else View.GONE
+        applyBottomRowLayout(isVideo)
 
         if (isVideo) {
             updatePlayPauseIcon(mv.isPlaying)
@@ -184,6 +224,49 @@ internal class PIPExpandedView(
         playPauseBtn?.setOnClickListener(null)
         muteBtn?.visibility = View.GONE
         muteBtn?.setOnClickListener(null)
+        applyBottomRowLayout(isVideo = false)
+    }
+
+    /**
+     * Switches the bottom row between two layouts:
+     * - **Video:** WRAP_CONTENT centered (icons grouped in the middle)
+     * - **Image/GIF:** MATCH_PARENT with spacer (deeplink left, collapse right)
+     */
+    private fun applyBottomRowLayout(isVideo: Boolean) {
+        val rowMarginPx = ROW_MARGIN_DP.dpToPx(context)
+        if (isVideo) {
+            rowSpacer.visibility = View.GONE
+            bottomRow.layoutParams = LayoutParams(
+                WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            ).apply { setMargins(rowMarginPx, rowMarginPx, rowMarginPx, rowMarginPx) }
+        } else {
+            rowSpacer.visibility = View.VISIBLE
+            bottomRow.layoutParams = LayoutParams(
+                MATCH_PARENT, WRAP_CONTENT, Gravity.BOTTOM
+            ).apply { setMargins(rowMarginPx, rowMarginPx, rowMarginPx, rowMarginPx) }
+        }
+    }
+
+    /**
+     * Sizes [controlsWrapper] to the aspect-ratio-correct area that matches
+     * the video's visible bounds within [mediaContainer] (FIT mode).
+     */
+    private fun sizeControlsWrapper(containerW: Int, containerH: Int) {
+        val fitW: Int
+        val fitH: Int
+        if (containerW.toFloat() / containerH > aspectRatioW / aspectRatioH) {
+            // Container is wider than video — height-constrained
+            fitH = containerH
+            fitW = (fitH * aspectRatioW / aspectRatioH).toInt()
+        } else {
+            // Container is taller than video — width-constrained
+            fitW = containerW
+            fitH = (fitW * aspectRatioH / aspectRatioW).toInt()
+        }
+
+        val lp = controlsWrapper.layoutParams as? LayoutParams
+        if (lp != null && lp.width == fitW && lp.height == fitH) return // no change
+        controlsWrapper.layoutParams = LayoutParams(fitW, fitH, Gravity.CENTER)
     }
 
     private fun updatePlayPauseIcon(playing: Boolean) {
@@ -199,8 +282,10 @@ internal class PIPExpandedView(
     }
 
     private companion object {
-        const val ICON_SIZE_DP = 58
-        const val PLAY_PAUSE_SIZE_DP = 64
-        const val ICON_PADDING_DP = 16
+        const val ICON_SIZE_DP = 56
+        const val ICON_PADDING_DP = 14
+        const val ICON_MARGIN_DP = 8
+        const val ROW_MARGIN_DP = 12
+        const val ICON_GAP_DP = 12
     }
 }
