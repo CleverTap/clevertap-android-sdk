@@ -104,5 +104,4 @@ internal object NotificationBitmapUtils {
     }
 
     private const val BORDER_STROKE_RATIO = 0.10f
-    private const val BORDER_INSET_RATIO = BORDER_STROKE_RATIO / 6f
 }
