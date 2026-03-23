@@ -29,6 +29,7 @@ internal class GifRenderer(
     private var fallbackImageView: ImageView? = null
     private var config: PIPConfig? = null
     private var gifBytes: ByteArray? = null
+    private var currentScaleType: ImageView.ScaleType = ImageView.ScaleType.FIT_CENTER
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
@@ -36,7 +37,7 @@ internal class GifRenderer(
         released = false
         this.config = config
         val gv = GifImageView(container.context).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = currentScaleType
         }
         gifView = gv
         container.addView(
@@ -92,7 +93,7 @@ internal class GifRenderer(
 
         // Create a fresh GifImageView — no stale cleanupRunnables
         val gv = GifImageView(container.context).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = currentScaleType
         }
         gifView = gv
         container.addView(
@@ -111,6 +112,11 @@ internal class GifRenderer(
         gifBytes = null
         fallbackImageView = null
         config = null
+    }
+
+    override fun setScaleType(scaleType: ImageView.ScaleType) {
+        currentScaleType = scaleType
+        gifView?.scaleType = scaleType
     }
 
     override fun togglePlayPause() = Unit
