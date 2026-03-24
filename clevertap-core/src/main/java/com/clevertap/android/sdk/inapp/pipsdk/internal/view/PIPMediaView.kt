@@ -31,15 +31,6 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
      *  Parent views should hide video-specific controls (mute, play/pause) when this fires. */
     var onVideoFallback: (() -> Unit)? = null
 
-    /** Fires with actual media pixel dimensions once the image/GIF/video is loaded. */
-    var onMediaDimensionsReady: ((Int, Int) -> Unit)? = null
-
-    /** Last known media pixel dimensions; 0×0 until the first load completes. */
-    var mediaDimWidth: Int = 0
-        private set
-    var mediaDimHeight: Int = 0
-        private set
-
     fun initialize(
         config: PIPConfig,
         session: PIPSession,
@@ -49,16 +40,11 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         removeAllViews()
         fellBackToImage = false
         renderer = when (config.mediaType) {
-            PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor).also { r ->
-                r.onDimensionsKnown = { w, h -> mediaDimWidth = w; mediaDimHeight = h; onMediaDimensionsReady?.invoke(w, h) }
-            }
-            PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor).also { r ->
-                r.onDimensionsKnown = { w, h -> mediaDimWidth = w; mediaDimHeight = h; onMediaDimensionsReady?.invoke(w, h) }
-            }
+            PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
+            PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
             PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
                 vr.bindSession(session)
                 vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
-                vr.onDimensionsKnown = { w, h -> mediaDimWidth = w; mediaDimHeight = h; onMediaDimensionsReady?.invoke(w, h) }
             }
         }
         renderer?.attach(this, config, session)
@@ -76,16 +62,11 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         removeAllViews()
         if (renderer == null) {
             renderer = when (session.config.mediaType) {
-                PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor).also { r ->
-                    r.onDimensionsKnown = { w, h -> mediaDimWidth = w; mediaDimHeight = h; onMediaDimensionsReady?.invoke(w, h) }
-                }
-                PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor).also { r ->
-                    r.onDimensionsKnown = { w, h -> mediaDimWidth = w; mediaDimHeight = h; onMediaDimensionsReady?.invoke(w, h) }
-                }
+                PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
+                PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
                 PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
                     vr.bindSession(session)
                     vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
-                    vr.onDimensionsKnown = { w, h -> mediaDimWidth = w; mediaDimHeight = h; onMediaDimensionsReady?.invoke(w, h) }
                 }
             }
         }

@@ -185,21 +185,9 @@ internal class PIPExpandedView(
         mediaContainer.removeAllViews()
         mediaContainer.addView(mv, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // Start from config ratio; immediately override with actual dims if already loaded
-        // (image/GIF finishes loading in compact mode before user ever taps expand).
+        // Update aspect ratio — layout change listener will resize controlsWrapper
         aspectRatioW = session.config.aspectRatioNumerator.toFloat()
         aspectRatioH = session.config.aspectRatioDenominator.toFloat()
-        if (mv.mediaDimWidth > 0 && mv.mediaDimHeight > 0) {
-            aspectRatioW = mv.mediaDimWidth.toFloat()
-            aspectRatioH = mv.mediaDimHeight.toFloat()
-        }
-
-        // Still set callback for the late-loading case (expand before image finishes decoding).
-        mv.onMediaDimensionsReady = { w, h ->
-            aspectRatioW = w.toFloat()
-            aspectRatioH = h.toFloat()
-            if (width > 0 && height > 0) sizeControlsWrapper(width, height)
-        }
 
         // Wire video-only controls (respecting server-configured visibility)
         val isVideo = mv.isVideoType
