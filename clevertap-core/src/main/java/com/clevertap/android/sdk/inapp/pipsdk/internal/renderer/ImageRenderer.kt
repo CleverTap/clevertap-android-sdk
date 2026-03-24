@@ -26,6 +26,9 @@ internal class ImageRenderer(
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
+    /** Fires with the image's actual pixel dimensions once the bitmap is loaded. */
+    var onDimensionsKnown: ((Int, Int) -> Unit)? = null
+
     override fun attach(container: ViewGroup, config: PIPConfig, session: PIPSession) {
         released = false
         this.config = config
@@ -42,6 +45,7 @@ internal class ImageRenderer(
         val cached = resourceProvider.cachedInAppImageV1(config.mediaUrl)
         if (cached != null) {
             iv.setImageBitmap(cached)
+            onDimensionsKnown?.invoke(cached.width, cached.height)
         } else {
             // Background fetch
             mediaExecutor.execute {
@@ -50,6 +54,7 @@ internal class ImageRenderer(
                     if (released) return@post
                     if (fetched != null) {
                         iv.setImageBitmap(fetched)
+                        onDimensionsKnown?.invoke(fetched.width, fetched.height)
                     } else {
                         loadFallback(iv, config)
                     }

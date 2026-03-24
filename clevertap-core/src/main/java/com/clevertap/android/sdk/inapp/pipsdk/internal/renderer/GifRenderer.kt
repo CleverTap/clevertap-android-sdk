@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 
+import android.graphics.BitmapFactory
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.clevertap.android.sdk.gif.GifImageView
@@ -33,6 +34,9 @@ internal class GifRenderer(
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
+    /** Fires with the GIF's actual pixel dimensions once the bytes are loaded. */
+    var onDimensionsKnown: ((Int, Int) -> Unit)? = null
+
     override fun attach(container: ViewGroup, config: PIPConfig, session: PIPSession) {
         released = false
         this.config = config
@@ -51,6 +55,7 @@ internal class GifRenderer(
             gifBytes = cached
             gv.setBytes(cached)
             gv.startAnimation()
+            fireGifDimensions(cached)
         } else {
             // Background fetch
             mediaExecutor.execute {
@@ -61,6 +66,7 @@ internal class GifRenderer(
                         gifBytes = fetched
                         gv.setBytes(fetched)
                         gv.startAnimation()
+                        fireGifDimensions(fetched)
                     } else {
                         loadFallback(container, config)
                     }
@@ -124,6 +130,14 @@ internal class GifRenderer(
     override val currentPositionMs: Long = 0L
     override val isMuted: Boolean = false
     override val isPlaying: Boolean = false
+
+    private fun fireGifDimensions(bytes: ByteArray) {
+        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+        if (opts.outWidth > 0 && opts.outHeight > 0) {
+            onDimensionsKnown?.invoke(opts.outWidth, opts.outHeight)
+        }
+    }
 
     private fun loadFallback(container: ViewGroup, config: PIPConfig) {
         FallbackImageLoader.load(
