@@ -5,7 +5,6 @@ import android.view.View
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
@@ -45,19 +44,6 @@ internal class PIPVideoPlayerWrapper {
     private var onFirstFrame: (() -> Unit)? = null
     private var errorListener: Player.Listener? = null
 
-    /**
-     * Fires with actual video pixel dimensions when the video format is known.
-     * If the video size is already known when this is set, fires immediately.
-     */
-    var onDimensionsKnown: ((Int, Int) -> Unit)? = null
-        set(value) {
-            field = value
-            val vs = player?.videoSize
-            if (vs != null && vs.width > 0 && vs.height > 0) {
-                value?.invoke(vs.width, vs.height)
-            }
-        }
-
     val isMuted: Boolean get() = _isMuted
     val isPlaying: Boolean get() = player?.isPlaying ?: _isPlaying
 
@@ -90,13 +76,6 @@ internal class PIPVideoPlayerWrapper {
                 prepare()
                 repeatMode = Player.REPEAT_MODE_ONE
                 volume = 0f
-                addListener(object : Player.Listener {
-                    override fun onVideoSizeChanged(videoSize: VideoSize) {
-                        if (videoSize.width > 0 && videoSize.height > 0) {
-                            onDimensionsKnown?.invoke(videoSize.width, videoSize.height)
-                        }
-                    }
-                })
             }
     }
 

@@ -29,9 +29,6 @@ internal class VideoRenderer(
     /** Called when video playback fails and a static fallback image is shown instead.
      *  Used by [PIPMediaView] to notify parent views to hide video-specific controls. */
     var onFallbackToImage: (() -> Unit)? = null
-
-    /** Fires with actual video pixel dimensions once the video format is known. */
-    var onDimensionsKnown: ((Int, Int) -> Unit)? = null
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
@@ -56,7 +53,6 @@ internal class VideoRenderer(
         if (existingWrapper != null) {
             // Reuse existing wrapper (e.g. after expand/collapse)
             wrapper = existingWrapper
-            existingWrapper.onDimensionsKnown = { w, h -> onDimensionsKnown?.invoke(w, h) }
             val surface = existingWrapper.videoSurface()
             (surface.parent as? ViewGroup)?.removeView(surface)
             container.addView(
@@ -70,7 +66,6 @@ internal class VideoRenderer(
             val surface = w.createSurface(container.context)
 
             w.setMuted(true)
-            w.onDimensionsKnown = { width, height -> onDimensionsKnown?.invoke(width, height) }
             wrapper = w
             s.videoPlayerWrapper = w
             s.isMuted = true
@@ -102,10 +97,6 @@ internal class VideoRenderer(
         containerRef = WeakReference(container)
         val w = s.videoPlayerWrapper ?: return
         wrapper = w
-        // Re-wire dimension callback to the new renderer. PIPVideoPlayerWrapper.onDimensionsKnown
-        // has a self-invoking setter: if the player already knows the video size it fires
-        // immediately, populating PIPMediaView.mediaDimWidth/Height before expandToFull() runs.
-        w.onDimensionsKnown = { width, height -> onDimensionsKnown?.invoke(width, height) }
         val surface = w.rebindSurface(container.context) ?: return
         container.addView(
             surface,
