@@ -6,13 +6,10 @@ import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
+import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimationConfig
 
 internal object PIPAnimator {
 
-    private const val DURATION_DISSOLVE_IN_MS = 300L
-    private const val DURATION_DISSOLVE_OUT_MS = 250L
-    private const val DURATION_MOVE_IN_MS = 350L
-    private const val DURATION_MOVE_OUT_MS = 300L
     private const val DURATION_SNAP_MS = 250L
     private const val DURATION_EXPAND_MS = 250L
     private const val DURATION_COLLAPSE_MS = 200L
@@ -24,12 +21,15 @@ internal object PIPAnimator {
     fun animateIn(
         view: View,
         anchor: PointF,
-        animation: PIPAnimation,
+        animationConfig: PIPAnimationConfig,
         containerWidth: Int,
         containerHeight: Int,
         onComplete: () -> Unit = {},
     ) {
-        when (animation) {
+        val duration = animationConfig.durationMs
+        val interpolator = animationConfig.interpolator
+
+        when (animationConfig.type) {
             PIPAnimation.INSTANT -> {
                 view.x = anchor.x
                 view.y = anchor.y
@@ -42,12 +42,15 @@ internal object PIPAnimator {
                 view.y = anchor.y
                 view.alpha = 0f
                 view.visibility = View.VISIBLE
-                view.animate().alpha(1f).setDuration(DURATION_DISSOLVE_IN_MS)
+                view.animate().alpha(1f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
                     .withEndAction(onComplete).start()
             }
             PIPAnimation.MOVE_IN -> {
                 val startOffset = moveInStartOffset(
                     anchor, view.width, view.height, containerWidth, containerHeight,
+                    animationConfig.moveInDirection,
                 )
                 view.x = anchor.x + startOffset.x
                 view.y = anchor.y + startOffset.y
@@ -55,29 +58,36 @@ internal object PIPAnimator {
                 view.visibility = View.VISIBLE
                 view.animate()
                     .x(anchor.x).y(anchor.y)
-                    .setDuration(DURATION_MOVE_IN_MS)
-                    .setInterpolator(DecelerateInterpolator())
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
                     .withEndAction(onComplete).start()
             }
         }
     }
 
-    fun animateOut(view: View, animation: PIPAnimation, onComplete: () -> Unit) {
-        when (animation) {
+    fun animateOut(view: View, animationConfig: PIPAnimationConfig, onComplete: () -> Unit) {
+        val duration = animationConfig.durationMs
+        val interpolator = animationConfig.interpolator
+
+        when (animationConfig.type) {
             PIPAnimation.INSTANT -> {
                 view.visibility = View.GONE
                 onComplete()
             }
             PIPAnimation.DISSOLVE -> {
-                view.animate().alpha(0f).setDuration(DURATION_DISSOLVE_OUT_MS)
+                view.animate().alpha(0f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
                     .withEndAction { view.visibility = View.GONE; onComplete() }.start()
             }
             PIPAnimation.MOVE_IN -> {
+                // Exit direction is always auto-derived from current position (nearest edge)
                 val parent = view.parent as? ViewGroup
                 val delta = slideOutDelta(view, parent?.width ?: 0, parent?.height ?: 0)
                 view.animate()
                     .xBy(delta.x).yBy(delta.y)
-                    .setDuration(DURATION_MOVE_OUT_MS)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
                     .withEndAction { view.visibility = View.GONE; onComplete() }.start()
             }
         }
@@ -110,9 +120,26 @@ internal object PIPAnimator {
             .withEndAction { overlay.visibility = View.GONE; onComplete() }.start()
     }
 
+    /**
+     * Calculates the off-screen start offset for MOVE_IN entry animation.
+     *
+     * If [direction] is set (from server config), it takes precedence.
+     * Otherwise, direction is auto-derived from the anchor position relative to the container.
+     */
     private fun moveInStartOffset(
         anchor: PointF, pipW: Int, pipH: Int, containerW: Int, containerH: Int,
+        direction: PIPAnimationConfig.MoveInDirection?,
     ): PointF {
+        if (direction != null) {
+            return when (direction) {
+                PIPAnimationConfig.MoveInDirection.LEFT -> PointF(-(anchor.x + pipW), 0f)
+                PIPAnimationConfig.MoveInDirection.RIGHT -> PointF(containerW - anchor.x, 0f)
+                PIPAnimationConfig.MoveInDirection.TOP -> PointF(0f, -(anchor.y + pipH))
+                PIPAnimationConfig.MoveInDirection.BOTTOM -> PointF(0f, containerH - anchor.y)
+            }
+        }
+
+        // Auto-derive from anchor position
         val cx = anchor.x + pipW / 2f
         val cy = anchor.y + pipH / 2f
         return when {

@@ -2,7 +2,15 @@ package com.clevertap.android.sdk.inapp
 
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Logger
+import android.animation.TimeInterpolator
+import android.os.Build
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
+import android.view.animation.PathInterpolator
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
+import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimationConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
@@ -84,8 +92,8 @@ internal object PIPConfigFactory {
         }
 
         // Animation
-        pipJson.optString("animation", "").takeIf { it.isNotBlank() }?.let { anim ->
-            mapAnimation(anim)?.let { builder.animation(it) }
+        pipJson.optJSONObject("animation")?.let { animJson ->
+            mapAnimationConfig(animJson)?.let { builder.animationConfig(it) }
         }
 
         // Redirect URL
@@ -123,12 +131,52 @@ internal object PIPConfigFactory {
         }
     }
 
-    private fun mapAnimation(animation: String): PIPAnimation? {
-        return when (animation.lowercase()) {
+    private fun mapAnimationConfig(animJson: org.json.JSONObject): PIPAnimationConfig? {
+        val type = when (animJson.optString("type", "").lowercase()) {
             "instant" -> PIPAnimation.INSTANT
             "dissolve" -> PIPAnimation.DISSOLVE
             "move-in", "move_in", "movein" -> PIPAnimation.MOVE_IN
+            else -> return null
+        }
+
+        val durationMs = animJson.optLong("duration", PIPAnimationConfig.DEFAULT_DURATION_MS)
+            .coerceIn(0, 5000)
+
+        val interpolator = mapEasing(
+            animJson.optString("easing", ""),
+            animJson.optString("bezier", ""),
+        )
+
+        val moveInDirection = when (animJson.optString("moveInDirection", "").lowercase()) {
+            "left" -> PIPAnimationConfig.MoveInDirection.LEFT
+            "right" -> PIPAnimationConfig.MoveInDirection.RIGHT
+            "top" -> PIPAnimationConfig.MoveInDirection.TOP
+            "bottom" -> PIPAnimationConfig.MoveInDirection.BOTTOM
             else -> null
+        }
+
+        return PIPAnimationConfig(type, durationMs, interpolator, moveInDirection)
+    }
+
+    private fun mapEasing(easing: String, bezier: String): TimeInterpolator {
+        return when (easing.lowercase()) {
+            "linear" -> LinearInterpolator()
+            "ease-in" -> AccelerateInterpolator()
+            "ease-out" -> DecelerateInterpolator()
+            "ease-in-out" -> AccelerateDecelerateInterpolator()
+            "cubic-bezier" -> parseBezier(bezier) ?: PIPAnimationConfig.DEFAULT_INTERPOLATOR
+            else -> PIPAnimationConfig.DEFAULT_INTERPOLATOR
+        }
+    }
+
+    private fun parseBezier(bezier: String): TimeInterpolator? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return null
+        val parts = bezier.split(",").mapNotNull { it.trim().toFloatOrNull() }
+        if (parts.size != 4) return null
+        return try {
+            PathInterpolator(parts[0], parts[1], parts[2], parts[3])
+        } catch (_: Exception) {
+            null
         }
     }
 }
