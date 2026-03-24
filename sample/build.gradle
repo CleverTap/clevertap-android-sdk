@@ -181,12 +181,12 @@ dependencies {
 
     remoteImplementation("com.clevertap.android:clevertap-android-sdk:8.0.0")
     remoteImplementation("com.clevertap.android:clevertap-geofence-sdk:1.4.0")
-    remoteImplementation("com.clevertap.android:push-templates:2.2.0")
+    remoteImplementation("com.clevertap.android:push-templates:2.3.0")
     remoteImplementation("com.clevertap.android:clevertap-hms-sdk:1.5.1")
 
     stagingImplementation("com.clevertap.android:clevertap-android-sdk:8.0.0")
     stagingImplementation("com.clevertap.android:clevertap-geofence-sdk:1.4.0")
-    stagingImplementation("com.clevertap.android:push-templates:2.2.0")
+    stagingImplementation("com.clevertap.android:push-templates:2.3.0")
     stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.5.1")
 }
 
