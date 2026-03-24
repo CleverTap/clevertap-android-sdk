@@ -20,7 +20,7 @@ android {
     compileSdk 36
     defaultConfig {
         applicationId "com.clevertap.demo"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 36
         versionCode 8000000
         versionName "8.0.0"
