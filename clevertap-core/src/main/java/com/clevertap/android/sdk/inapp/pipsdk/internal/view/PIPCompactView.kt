@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.view
 
 import android.content.Context
+import android.graphics.Color
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -41,6 +42,7 @@ internal class PIPCompactView(
         // Drop shadow — BOUNDS outline needed because FrameLayout has no background
         outlineProvider = android.view.ViewOutlineProvider.BOUNDS
         elevation = ELEVATION_DP.dpToPx(context).toFloat()
+        setBackgroundColor(Color.BLACK)
 
         // Media fills the view
         addView(mediaView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
