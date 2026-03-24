@@ -33,6 +33,7 @@ internal class PIPCompactView(
 
     internal val controlsOverlay: PIPControlsOverlay
     private val dragHandler: PIPDragHandler
+    private var deeplinkBtn: ImageView? = null
     private var muteBtn: ImageView? = null
     var getSafeInsets: () -> Insets = { Insets.NONE }
 
@@ -53,16 +54,18 @@ internal class PIPCompactView(
 
         val iconSizePx = ICON_SIZE_DP.dpToPx(context)
 
-        // Deeplink button — top-left (hidden if redirectUrl is null)
-        val deeplinkBtn = ImageView(context).apply {
+        // Deeplink button — bottom-left by default (image/GIF); moved to top-left for video
+        // in bindVideoControls() to avoid overlap with the mute button.
+        val dlBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_deeplink)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.redirectUrl != null) View.VISIBLE else View.GONE
             setOnClickListener { onRedirect() }
         }
+        deeplinkBtn = dlBtn
         controlsOverlay.addView(
-            deeplinkBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.START),
+            dlBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
         )
 
         // Close button — top-right (hidden if showCloseButton = false)
@@ -124,6 +127,11 @@ internal class PIPCompactView(
      */
     fun bindVideoControls(mv: PIPMediaView) {
         if (!mv.isVideoType) return
+        // Move deeplink to top-left so it doesn't overlap with the mute button at bottom-left
+        deeplinkBtn?.let {
+            (it.layoutParams as LayoutParams).gravity = Gravity.TOP or Gravity.START
+            it.requestLayout()
+        }
         muteBtn?.visibility = if (session.config.showMuteButton) View.VISIBLE else View.GONE
         updateMuteIcon(mv.isMuted)
         muteBtn?.setOnClickListener {
