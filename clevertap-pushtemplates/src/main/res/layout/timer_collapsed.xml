@@ -15,7 +15,7 @@
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp">
 
-        <RelativeLayout
+        <FrameLayout
             android:id="@+id/chronometer_frame"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -23,12 +23,8 @@
 
             <ImageView
                 android:id="@+id/chronometer_bg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/chronometer"
-                android:layout_alignEnd="@+id/chronometer"
-                android:layout_alignTop="@+id/chronometer"
-                android:layout_alignBottom="@+id/chronometer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:scaleType="fitXY"
                 android:visibility="gone" />
 
@@ -45,7 +41,7 @@
                 android:textAlignment="center"
                 android:gravity="center"
                 android:textSize="@dimen/chronometer_font_size"/>
-        </RelativeLayout>
+        </FrameLayout>
 
         <LinearLayout
             android:id="@+id/segmented_timer_layout"

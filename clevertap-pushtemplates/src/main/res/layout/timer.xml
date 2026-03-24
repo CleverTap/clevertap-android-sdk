@@ -32,21 +32,21 @@
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="1"
                 android:ellipsize="end"
-                tools:text="title"
-                android:textAppearance="@style/PushTitle" />
+                android:maxLines="1"
+                android:textAppearance="@style/PushTitle"
+                tools:text="title" />
 
             <TextView
                 android:id="@+id/msg"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="4"
-                android:ellipsize="end"
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@+id/title"
-                tools:text="message"
-                android:textAppearance="@style/PushMessageMultiLine" />
+                android:ellipsize="end"
+                android:maxLines="4"
+                android:textAppearance="@style/PushMessageMultiLine"
+                tools:text="message" />
 
         </RelativeLayout>
 
@@ -59,7 +59,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp">
 
-            <RelativeLayout
+            <FrameLayout
                 android:id="@+id/chronometer_frame"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -67,12 +67,8 @@
 
                 <ImageView
                     android:id="@+id/chronometer_bg"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignStart="@+id/chronometer"
-                    android:layout_alignEnd="@+id/chronometer"
-                    android:layout_alignTop="@+id/chronometer"
-                    android:layout_alignBottom="@+id/chronometer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:scaleType="fitXY"
                     android:visibility="gone"
                     tools:ignore="ContentDescription" />
@@ -81,13 +77,13 @@
                     android:id="@+id/chronometer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="12dp"
                     android:background="@android:color/transparent"
-                    android:textColor="@color/titleColor"
-                    android:textAlignment="center"
                     android:gravity="center"
+                    android:padding="12dp"
+                    android:textAlignment="center"
+                    android:textColor="@color/titleColor"
                     android:textSize="@dimen/chronometer_font_size" />
-            </RelativeLayout>
+            </FrameLayout>
 
             <LinearLayout
                 android:id="@+id/segmented_timer_layout"
@@ -103,42 +99,46 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp">
+
                     <ImageView
                         android:id="@+id/hrs_bg"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignStart="@+id/hrs_value_layout"
-                        android:layout_alignEnd="@+id/hrs_value_layout"
                         android:layout_alignTop="@+id/hrs_value_layout"
+                        android:layout_alignEnd="@+id/hrs_value_layout"
                         android:layout_alignBottom="@+id/hrs_value_layout"
                         android:scaleType="fitXY"
-                        android:visibility="gone"/>
+                        android:visibility="gone" />
+
                     <LinearLayout
                         android:id="@+id/hrs_value_layout"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
                         android:gravity="center"
+                        android:orientation="vertical"
                         android:paddingStart="6dp"
-                        android:paddingEnd="6dp"
                         android:paddingTop="2dp"
+                        android:paddingEnd="6dp"
                         android:paddingBottom="2dp">
+
                         <TextView
                             android:id="@+id/hrs_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="@dimen/chronometer_font_size"
-                            android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="00"/>
+                            android:text="00"
+                            android:textColor="@color/titleColor"
+                            android:textSize="@dimen/chronometer_font_size" />
+
                         <TextView
                             android:id="@+id/hrs_label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="8sp"
-                            android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="@string/pt_timer_hrs"/>
+                            android:text="@string/pt_timer_hrs"
+                            android:textColor="@color/titleColor"
+                            android:textSize="8sp" />
                     </LinearLayout>
                 </RelativeLayout>
 
@@ -148,42 +148,46 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="2dp">
+
                     <ImageView
                         android:id="@+id/mins_bg"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignStart="@+id/mins_value_layout"
-                        android:layout_alignEnd="@+id/mins_value_layout"
                         android:layout_alignTop="@+id/mins_value_layout"
+                        android:layout_alignEnd="@+id/mins_value_layout"
                         android:layout_alignBottom="@+id/mins_value_layout"
                         android:scaleType="fitXY"
-                        android:visibility="gone"/>
+                        android:visibility="gone" />
+
                     <LinearLayout
                         android:id="@+id/mins_value_layout"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
                         android:gravity="center"
+                        android:orientation="vertical"
                         android:paddingStart="6dp"
-                        android:paddingEnd="6dp"
                         android:paddingTop="2dp"
+                        android:paddingEnd="6dp"
                         android:paddingBottom="2dp">
+
                         <TextView
                             android:id="@+id/mins_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="@dimen/chronometer_font_size"
-                            android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="00"/>
+                            android:text="00"
+                            android:textColor="@color/titleColor"
+                            android:textSize="@dimen/chronometer_font_size" />
+
                         <TextView
                             android:id="@+id/mins_label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="8sp"
-                            android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="@string/pt_timer_min"/>
+                            android:text="@string/pt_timer_min"
+                            android:textColor="@color/titleColor"
+                            android:textSize="8sp" />
                     </LinearLayout>
                 </RelativeLayout>
 
@@ -192,42 +196,46 @@
                     android:id="@+id/secs_frame"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
+
                     <ImageView
                         android:id="@+id/secs_bg"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignStart="@+id/secs_value_layout"
-                        android:layout_alignEnd="@+id/secs_value_layout"
                         android:layout_alignTop="@+id/secs_value_layout"
+                        android:layout_alignEnd="@+id/secs_value_layout"
                         android:layout_alignBottom="@+id/secs_value_layout"
                         android:scaleType="fitXY"
-                        android:visibility="gone"/>
+                        android:visibility="gone" />
+
                     <LinearLayout
                         android:id="@+id/secs_value_layout"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
                         android:gravity="center"
+                        android:orientation="vertical"
                         android:paddingStart="6dp"
-                        android:paddingEnd="6dp"
                         android:paddingTop="2dp"
+                        android:paddingEnd="6dp"
                         android:paddingBottom="2dp">
+
                         <TextView
                             android:id="@+id/secs_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="@dimen/chronometer_font_size"
-                            android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="00"/>
+                            android:text="00"
+                            android:textColor="@color/titleColor"
+                            android:textSize="@dimen/chronometer_font_size" />
+
                         <TextView
                             android:id="@+id/secs_label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="8sp"
-                            android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="@string/pt_timer_sec"/>
+                            android:text="@string/pt_timer_sec"
+                            android:textColor="@color/titleColor"
+                            android:textSize="8sp" />
                     </LinearLayout>
                 </RelativeLayout>
 
@@ -237,8 +245,9 @@
 
     </RelativeLayout>
 
-    <include layout="@layout/image_media_dynamic_linear"
-        android:id="@+id/big_media_configurable"/>
+    <include
+        android:id="@+id/big_media_configurable"
+        layout="@layout/image_media_dynamic_linear" />
 
     <include
         android:id="@+id/action_buttons"
