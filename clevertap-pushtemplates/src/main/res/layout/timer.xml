@@ -138,7 +138,7 @@
                             android:textSize="8sp"
                             android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="HRS"/>
+                            android:text="@string/pt_timer_hrs"/>
                     </LinearLayout>
                 </RelativeLayout>
 
@@ -183,7 +183,7 @@
                             android:textSize="8sp"
                             android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="MIN"/>
+                            android:text="@string/pt_timer_min"/>
                     </LinearLayout>
                 </RelativeLayout>
 
@@ -227,7 +227,7 @@
                             android:textSize="8sp"
                             android:textColor="@color/titleColor"
                             android:gravity="center"
-                            android:text="SEC"/>
+                            android:text="@string/pt_timer_sec"/>
                     </LinearLayout>
                 </RelativeLayout>
 

@@ -268,6 +268,11 @@ public class PTConstants {
             PT_BTN_BORDER_CLR_COLLAPSED,
             PT_BTN_TEXT_CLR_COLLAPSED,
             PT_BTN_GRAD_CLR1_COLLAPSED,
-            PT_BTN_GRAD_CLR2_COLLAPSED);
+            PT_BTN_GRAD_CLR2_COLLAPSED,
+            PT_TIMER_UNIT_BG_CLR,
+            PT_TIMER_UNIT_GRADIENT_CLR_1,
+            PT_TIMER_UNIT_GRADIENT_CLR_2,
+            PT_TIMER_UNIT_TEXT_CLR,
+            PT_TIMER_UNIT_BORDER_CLR);
 
 }

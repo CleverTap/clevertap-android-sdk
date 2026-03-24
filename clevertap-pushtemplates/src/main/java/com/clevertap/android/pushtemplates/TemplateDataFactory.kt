@@ -304,12 +304,12 @@ internal object TemplateDataFactory {
             timerLayout = TimerLayout.fromString(extras.getString(PT_TIMER_LAYOUT)),
             timerUnitStyle = TimerUnitStyle(
                 style = ButtonStyle.fromString(extras.getString(PT_TIMER_UNIT_STYLE)),
-                bgColor = extras.getString(PT_TIMER_UNIT_BG_CLR),
-                gradientColor1 = extras.getString(PT_TIMER_UNIT_GRADIENT_CLR_1),
-                gradientColor2 = extras.getString(PT_TIMER_UNIT_GRADIENT_CLR_2),
+                bgColor = colorMap[PT_TIMER_UNIT_BG_CLR],
+                gradientColor1 = colorMap[PT_TIMER_UNIT_GRADIENT_CLR_1],
+                gradientColor2 = colorMap[PT_TIMER_UNIT_GRADIENT_CLR_2],
                 gradientDirection = GradientDirection.fromString(extras.getString(PT_TIMER_UNIT_GRADIENT_DIRECTION)),
-                textColor = extras.getString(PT_TIMER_UNIT_TEXT_CLR),
-                borderColor = extras.getString(PT_TIMER_UNIT_BORDER_CLR),
+                textColor = colorMap[PT_TIMER_UNIT_TEXT_CLR],
+                borderColor = colorMap[PT_TIMER_UNIT_BORDER_CLR],
                 borderRadius = extras.getString(PT_TIMER_UNIT_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
                 borderWidth = extras.getString(PT_TIMER_UNIT_BORDER_WIDTH)?.toFloatOrNull()
             ),

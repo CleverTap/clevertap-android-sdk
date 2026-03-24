@@ -67,9 +67,19 @@ internal open class TimerSmallContentView(
             remoteView.setViewVisibility(R.id.segmented_timer_layout, View.VISIBLE)
 
             val totalSeconds = (timer_end!! / 1000).toInt()
-            val hours = totalSeconds / 3600
-            val minutes = (totalSeconds % 3600) / 60
-            val seconds = totalSeconds % 60
+            var hours = totalSeconds / 3600
+            var minutes = (totalSeconds % 3600) / 60
+            var seconds = totalSeconds % 60
+
+            // Roll hidden higher units into the next visible unit
+            if (!data.showHours) {
+                minutes += hours * 60
+                hours = 0
+            }
+            if (!data.showMinutes) {
+                seconds += minutes * 60
+                minutes = 0
+            }
 
             remoteView.setTextViewText(R.id.hrs_value, String.format("%02d", hours))
             remoteView.setTextViewText(R.id.mins_value, String.format("%02d", minutes))
