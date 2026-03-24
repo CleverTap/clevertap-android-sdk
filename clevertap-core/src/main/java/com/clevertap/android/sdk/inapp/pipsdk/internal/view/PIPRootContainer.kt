@@ -141,7 +141,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     fun dismiss(onDone: () -> Unit) {
         val s = session ?: run { onDone(); return }
         val activeView: View = if (isExpanded) expandedView ?: this else compactView ?: this
-        PIPAnimator.animateOut(activeView, s.config.animation, onDone)
+        PIPAnimator.animateOut(activeView, s.config.animationConfig, onDone)
     }
 
     /**
@@ -276,7 +276,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
                 )
                 val anchor = anchors[s.currentPosition] ?: return
                 cv.visibility = View.VISIBLE
-                PIPAnimator.animateIn(cv, anchor, s.config.animation, width, height) {
+                PIPAnimator.animateIn(cv, anchor, s.config.animationConfig, width, height) {
                     s.config.callbacks?.onShow()
                 }
             }

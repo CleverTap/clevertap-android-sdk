@@ -22,7 +22,7 @@ data class PIPConfig internal constructor(
     val verticalEdgeMarginDp: Int = 16,         // top/bottom margin from screen edges
 
     // Animation
-    val animation: PIPAnimation = PIPAnimation.DISSOLVE,
+    val animationConfig: PIPAnimationConfig = PIPAnimationConfig(),
 
     // Controls
     val redirectUrl: String? = null,            // null = redirect button hidden
@@ -52,7 +52,7 @@ data class PIPConfig internal constructor(
         private var initialPosition: PIPPosition = PIPPosition.BOTTOM_RIGHT
         private var horizontalEdgeMarginDp: Int = 16
         private var verticalEdgeMarginDp: Int = 16
-        private var animation: PIPAnimation = PIPAnimation.DISSOLVE
+        private var animationConfig: PIPAnimationConfig = PIPAnimationConfig()
         private var redirectUrl: String? = null
         private var showCloseButton: Boolean = true
         private var dragEnabled: Boolean = true
@@ -70,7 +70,7 @@ data class PIPConfig internal constructor(
         fun initialPosition(position: PIPPosition) = apply { initialPosition = position }
         fun horizontalEdgeMarginDp(dp: Int) = apply { horizontalEdgeMarginDp = dp }
         fun verticalEdgeMarginDp(dp: Int) = apply { verticalEdgeMarginDp = dp }
-        fun animation(animation: PIPAnimation) = apply { this.animation = animation }
+        fun animationConfig(config: PIPAnimationConfig) = apply { this.animationConfig = config }
         fun redirectUrl(url: String) = apply { redirectUrl = url }
         fun showCloseButton(show: Boolean) = apply { showCloseButton = show }
         fun dragEnabled(enabled: Boolean) = apply { dragEnabled = enabled }
@@ -89,7 +89,7 @@ data class PIPConfig internal constructor(
             return PIPConfig(
                 mediaUrl, mediaType, fallbackUrl, widthPercent, aspectRatioNumerator,
                 aspectRatioDenominator, initialPosition, horizontalEdgeMarginDp,
-                verticalEdgeMarginDp, animation, redirectUrl, showCloseButton,
+                verticalEdgeMarginDp, animationConfig, redirectUrl, showCloseButton,
                 dragEnabled, showPlayPauseButton,
                 showMuteButton, showExpandCollapseButton, callbacks,
             )

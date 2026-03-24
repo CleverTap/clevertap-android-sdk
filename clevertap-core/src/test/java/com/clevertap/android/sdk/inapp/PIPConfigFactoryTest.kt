@@ -160,7 +160,7 @@ class PIPConfigFactoryTest {
     // ─── Animation mapping ────────────────────────────────────────────────────────
 
     @Test
-    fun `maps animation strings correctly`() {
+    fun `maps animation object type correctly`() {
         val animMap = mapOf(
             "instant" to PIPAnimation.INSTANT,
             "dissolve" to PIPAnimation.DISSOLVE,
@@ -169,22 +169,24 @@ class PIPConfigFactoryTest {
             "movein" to PIPAnimation.MOVE_IN,
         )
         for ((jsonValue, expectedAnim) in animMap) {
-            val pipJson = JSONObject().put("animation", jsonValue)
+            val animJson = JSONObject().put("type", jsonValue).put("duration", 500)
+            val pipJson = JSONObject().put("animation", animJson)
             val notification = mockNotification(pipJson = pipJson)
             val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
-            assertNotNull(config, "Config should not be null for animation: $jsonValue")
-            assertEquals(expectedAnim, config.animation, "Animation mismatch for: $jsonValue")
+            assertNotNull(config, "Config should not be null for animation type: $jsonValue")
+            assertEquals(expectedAnim, config.animationConfig.type, "Animation type mismatch for: $jsonValue")
+            assertEquals(500L, config.animationConfig.durationMs)
         }
     }
 
     @Test
-    fun `unknown animation falls back to default`() {
-        val pipJson = JSONObject().put("animation", "slide-up")
+    fun `missing animation object falls back to default`() {
+        val pipJson = JSONObject() // no animation field
         val notification = mockNotification(pipJson = pipJson)
         val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
         assertNotNull(config)
         // Default animation is DISSOLVE (from PIPConfig.Builder)
-        assertEquals(PIPAnimation.DISSOLVE, config.animation)
+        assertEquals(PIPAnimation.DISSOLVE, config.animationConfig.type)
     }
 
     // ─── Config field extraction ──────────────────────────────────────────────────
