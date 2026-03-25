@@ -23,11 +23,33 @@ internal class PIPInAppCallbacksBridge(
         inAppListener.inAppNotificationDidDismiss(inAppNotification, null)
     }
 
-    override fun onRedirect(url: String) {
-        logger.debug(LOG_TAG, "PIP onRedirect for campaign: ${inAppNotification.campaignId}, url: $url")
-        val action = CTInAppAction.createOpenUrlAction(url)
+    override fun onAction() {
+        val button = inAppNotification.buttons.firstOrNull() ?: return
+        val action = button.action ?: return
+        logger.debug(LOG_TAG, "PIP onAction for campaign: ${inAppNotification.campaignId}, type: ${action.type}")
+        // Last parameter (activityContext) is null — here's why:
+        //
+        // Regular in-apps pass Activity context because they live inside
+        // InAppNotificationActivity (a transparent Activity). When the user taps a URL:
+        //   Task: [MainActivity → InAppNotificationActivity]
+        //   → InAppNotificationActivity FINISHES → task is now just [MainActivity]
+        //   → Browser opens in a separate task → [Chrome]
+        //   → Android might KILL [MainActivity] task (low memory, it's in background)
+        //   → Back from Chrome → launcher ❌ (app task was killed)
+        // Passing Activity context keeps Chrome in the app's task, avoiding this.
+        //
+        // PIP doesn't have this problem because PIP is a View overlay, NOT an Activity.
+        // When PIP dismisses, it just removes a View — the user's Activity stays running:
+        //   Task: [MainActivity]  ← PIP is a View on top, not in the task stack
+        //   → PIP dismisses (removes View, Activity stays alive)
+        //   → Browser opens in a separate task → [Chrome]
+        //   → [MainActivity] task is still alive (it was foreground just before Chrome)
+        //   → Back from Chrome → MainActivity ✓
+        //
+        // No Activity finishes, so the app's task is never at risk of being killed
+        // because it was never reduced to an empty/background state.
         inAppListener.inAppNotificationActionTriggered(
-            inAppNotification, action, url, null, null
+            inAppNotification, action, button.text, null, null
         )
     }
 

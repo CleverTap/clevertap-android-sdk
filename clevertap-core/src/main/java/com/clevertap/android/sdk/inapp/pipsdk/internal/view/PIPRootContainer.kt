@@ -74,21 +74,23 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     ) {
         session = s
 
-        val redirectAction: () -> Unit = {
-            s.config.redirectUrl?.let { url -> s.config.callbacks?.onRedirect(url) }
+        val actionHandler: () -> Unit = {
+            s.config.callbacks?.onAction()
+            // Dismiss PIP after action (same behavior as regular in-apps)
+            onDismissRequested?.invoke()
         }
 
         // Expanded view — GONE until user expands
         val ev = PIPExpandedView(
             context,
             showCloseButton = s.config.showCloseButton,
-            redirectUrl = s.config.redirectUrl,
+            hasAction = s.config.action != null,
             showExpandCollapseButton = s.config.showExpandCollapseButton,
             showPlayPauseButton = s.config.showPlayPauseButton,
             showMuteButton = s.config.showMuteButton,
             onCollapse = { collapseToCompact() },
             onClose = { onDismissRequested?.invoke() },
-            onRedirect = redirectAction,
+            onAction = actionHandler,
         )
         expandedView = ev
         ev.visibility = View.GONE
@@ -115,7 +117,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             context, mv, s,
             onExpand = { expandToFull() },
             onClose = { onDismissRequested?.invoke() },
-            onRedirect = redirectAction,
+            onAction = actionHandler,
             onSnap = {},   // session.currentPosition already updated inside PIPCompactView
         )
         cv.bindVideoControls(mv)

@@ -31,13 +31,13 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 internal class PIPExpandedView(
     context: Context,
     private val showCloseButton: Boolean,
-    private val redirectUrl: String?,
+    private val hasAction: Boolean,
     private val showExpandCollapseButton: Boolean = true,
     private val showPlayPauseButton: Boolean = true,
     private val showMuteButton: Boolean = true,
     private val onCollapse: () -> Unit,
     private val onClose: () -> Unit,
-    private val onRedirect: () -> Unit,
+    private val onAction: () -> Unit,
 ) : FrameLayout(context) {
 
     internal val mediaContainer: FrameLayout
@@ -109,13 +109,13 @@ internal class PIPExpandedView(
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        // Deeplink button (hidden if redirectUrl is null)
+        // Action button (hidden if no action configured)
         val deeplinkBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_deeplink)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
-            visibility = if (redirectUrl != null) View.VISIBLE else View.GONE
-            setOnClickListener { onRedirect() }
+            visibility = if (hasAction) View.VISIBLE else View.GONE
+            setOnClickListener { onAction() }
         }
         bottomRow.addView(deeplinkBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
             marginEnd = iconGapPx

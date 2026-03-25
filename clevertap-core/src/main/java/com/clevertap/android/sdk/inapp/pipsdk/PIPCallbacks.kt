@@ -11,7 +11,7 @@ interface PIPCallbacks {
     fun onClose() {}
     fun onExpand() {}
     fun onCollapse() {}
-    fun onRedirect(url: String) {}
+    fun onAction() {}
     fun onPlaybackStarted() {}
     fun onPlaybackPaused() {}
     fun onMediaError(url: String, error: String) {}
@@ -26,7 +26,7 @@ abstract class PIPCallbacksAdapter : PIPCallbacks {
     override fun onClose() {}
     override fun onExpand() {}
     override fun onCollapse() {}
-    override fun onRedirect(url: String) {}
+    override fun onAction() {}
     override fun onPlaybackStarted() {}
     override fun onPlaybackPaused() {}
     override fun onMediaError(url: String, error: String) {}
