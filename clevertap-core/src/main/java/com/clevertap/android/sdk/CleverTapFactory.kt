@@ -117,7 +117,7 @@ internal object CleverTapFactory {
 
         val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
-            FileResourceProvider.getInstance(context, config.logger)
+            FileResourceProvider.getInstance(context, config.logger, networkMonitor)
         }
 
         val repository = CryptRepository(
@@ -466,7 +466,7 @@ internal object CleverTapFactory {
             storeRegistry,
             templatesManager,
             executors,
-            { FileResourceProvider.getInstance(context, config.logger) }
+            { FileResourceProvider.getInstance(context, config.logger, networkMonitor) }
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)

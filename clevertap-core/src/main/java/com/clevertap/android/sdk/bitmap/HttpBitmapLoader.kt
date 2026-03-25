@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOW
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT
 import com.clevertap.android.sdk.network.DownloadedBitmap
-import com.clevertap.android.sdk.network.NetworkMonitor
 
 
 object HttpBitmapLoader {
@@ -46,15 +45,7 @@ object HttpBitmapLoader {
     fun getHttpBitmap(
         bitmapOperation: HttpBitmapOperation,
         bitmapDownloadRequest: BitmapDownloadRequest
-    ): DownloadedBitmap = getHttpBitmap(bitmapOperation, bitmapDownloadRequest, null)
-
-    internal fun getHttpBitmap(
-        bitmapOperation: HttpBitmapOperation,
-        bitmapDownloadRequest: BitmapDownloadRequest,
-        networkMonitor: NetworkMonitor?
     ): DownloadedBitmap {
-        val isNetworkOnline: () -> Boolean = { networkMonitor?.isNetworkOnline() ?: true }
-
         return when (bitmapOperation) {
             DOWNLOAD_NOTIFICATION_BITMAP -> {
                 NotificationBitmapDownloadRequestHandler(
@@ -62,8 +53,7 @@ object HttpBitmapLoader {
                         bitmapDownloader = BitmapDownloader(
                             httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                             bitmapInputStreamReader = BitmapInputStreamDecoder()
-                        ),
-                        isNetworkOnline = isNetworkOnline
+                        )
                     )
                 ).handleRequest(bitmapDownloadRequest)
             }
@@ -75,8 +65,7 @@ object HttpBitmapLoader {
                             bitmapDownloader = BitmapDownloader(
                                 httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                                 bitmapInputStreamReader = GzipBitmapInputStreamReader()
-                            ),
-                            isNetworkOnline = isNetworkOnline
+                            )
                         )
                     )
                 ).handleRequest(bitmapDownloadRequest)
@@ -89,8 +78,7 @@ object HttpBitmapLoader {
                             httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                             bitmapInputStreamReader = GzipBitmapInputStreamReader(),
                             sizeConstrainedPair = Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
-                        ),
-                        isNetworkOnline = isNetworkOnline
+                        )
                     )
                 ).handleRequest(bitmapDownloadRequest)
             }
@@ -103,8 +91,7 @@ object HttpBitmapLoader {
                                 httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                                 bitmapInputStreamReader = GzipBitmapInputStreamReader(),
                                 sizeConstrainedPair = Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
-                            ),
-                            isNetworkOnline = isNetworkOnline
+                            )
                         )
                     )
                 ).handleRequest(bitmapDownloadRequest)
@@ -115,8 +102,7 @@ object HttpBitmapLoader {
                     bitmapDownloader = BitmapDownloader(
                         httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
                         bitmapInputStreamReader = BitmapInputStreamDecoder(saveBytes = true)
-                    ),
-                    isNetworkOnline = isNetworkOnline
+                    )
                 ).handleRequest(bitmapDownloadRequest)
             }
 
@@ -125,8 +111,7 @@ object HttpBitmapLoader {
                     bitmapDownloader = BitmapDownloader(
                         httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                         bitmapInputStreamReader = GzipBitmapInputStreamReader()
-                    ),
-                    isNetworkOnline = isNetworkOnline
+                    )
                 ).handleRequest(bitmapDownloadRequest)
             }
 
@@ -135,8 +120,7 @@ object HttpBitmapLoader {
                     bitmapDownloader = BitmapDownloader(
                         httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
                         bitmapInputStreamReader = BitmapInputStreamDecoder(saveBitmap = false, saveBytes = true)
-                    ),
-                    isNetworkOnline = isNetworkOnline
+                    )
                 ).handleRequest(bitmapDownloadRequest)
             }
 
@@ -146,8 +130,7 @@ object HttpBitmapLoader {
                         bitmapDownloader = BitmapDownloader(
                             httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                             bitmapInputStreamReader = BitmapInputStreamDecoder(saveBitmap = false, saveBytes = true)
-                        ),
-                        isNetworkOnline = isNetworkOnline
+                        )
                     )
                 ).handleRequest(bitmapDownloadRequest)
             }

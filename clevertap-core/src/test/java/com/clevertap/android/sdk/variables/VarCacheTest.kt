@@ -43,7 +43,7 @@ class VarCacheTest : BaseTestCase() {
         variablesRepo = mockk(relaxed = true)
 
         mockkObject(FileResourceProvider.Companion)
-        every { FileResourceProvider.getInstance(any(), any()) } returns fileResourceProvider
+        every { FileResourceProvider.getInstance(any(), any(), any()) } returns fileResourceProvider
 
         varCache = VarCache(cleverTapInstanceConfig, application, fileResourcesRepoImpl, variablesRepo)
         ctVariables = CTVariables(varCache)

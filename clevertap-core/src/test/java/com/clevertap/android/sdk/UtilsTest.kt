@@ -455,18 +455,12 @@ class UtilsTest : BaseTestCase() {
         val mockNetworkMonitor = mockk<com.clevertap.android.sdk.network.NetworkMonitor>(relaxed = true)
         every { mockNetworkMonitor.isNetworkOnline() } returns false
 
-        val bitmap41 = HttpBitmapLoader.getHttpBitmap(
-            DOWNLOAD_NOTIFICATION_BITMAP,
-            BitmapDownloadRequest(
-                "https://www.pod.cz/ico/favicon.ico",
-                false,
-                application.applicationContext
-            ),
-            mockNetworkMonitor
+        val fileFetchApi = com.clevertap.android.sdk.inapp.images.FileFetchApi(mockNetworkMonitor)
+        val result = fileFetchApi.makeApiCallForFile(
+            Pair("https://www.pod.cz/ico/favicon.ico", com.clevertap.android.sdk.inapp.data.CtCacheType.IMAGE)
         )
-        assertNull(bitmap41.bitmap)
-        assertEquals(DownloadedBitmap.Status.NO_NETWORK,bitmap41.status)
-
+        assertNull(result.bitmap)
+        assertEquals(DownloadedBitmap.Status.NO_NETWORK, result.status)
     }
 
     @Test
