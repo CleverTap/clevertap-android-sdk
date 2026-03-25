@@ -96,11 +96,8 @@ internal object PIPConfigFactory {
             mapAnimationConfig(animJson)?.let { builder.animationConfig(it) }
         }
 
-        // Redirect URL
-        pipJson.optJSONObject("onClick")?.optString("android", "")
-            ?.takeIf { it.isNotBlank() }?.let {
-                builder.redirectUrl(it)
-            }
+        // Action from standard buttons array (first button only)
+        inAppNotification.buttons.firstOrNull()?.action?.let { builder.action(it) }
 
         // Close button: `close: true` in PIP JSON means show close button
         val rawJson = inAppNotification.jsonDescription

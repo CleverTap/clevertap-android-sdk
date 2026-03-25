@@ -27,7 +27,7 @@ internal class PIPCompactView(
     private val session: PIPSession,
     private val onExpand: () -> Unit,
     private val onClose: () -> Unit,
-    private val onRedirect: () -> Unit,
+    private val onAction: () -> Unit,
     private val onSnap: (PIPPosition) -> Unit,
 ) : FrameLayout(context) {
 
@@ -59,8 +59,8 @@ internal class PIPCompactView(
         val dlBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_deeplink)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            visibility = if (cfg.redirectUrl != null) View.VISIBLE else View.GONE
-            setOnClickListener { onRedirect() }
+            visibility = if (cfg.action != null) View.VISIBLE else View.GONE
+            setOnClickListener { onAction() }
         }
         deeplinkBtn = dlBtn
         controlsOverlay.addView(
