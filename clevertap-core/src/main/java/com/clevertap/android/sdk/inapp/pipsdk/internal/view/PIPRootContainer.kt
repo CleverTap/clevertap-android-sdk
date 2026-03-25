@@ -278,6 +278,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
                 cv.visibility = View.VISIBLE
                 PIPAnimator.animateIn(cv, anchor, s.config.animationConfig, width, height) {
                     s.config.callbacks?.onShow()
+                    mediaView?.onEntryAnimationComplete()
                 }
             }
         }

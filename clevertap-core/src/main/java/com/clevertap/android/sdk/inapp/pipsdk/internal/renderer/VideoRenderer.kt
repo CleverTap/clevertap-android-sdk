@@ -36,6 +36,46 @@ internal class VideoRenderer(
         session = s
     }
 
+    /**
+     * Creates the ExoPlayer, attaches the PlayerView, and starts playback.
+     *
+     * Called by [PIPMediaView.onEntryAnimationComplete] after the entry animation finishes.
+     * Player creation is deferred from [attach] so no SurfaceView exists during the dissolve
+     * animation (SurfaceView renders in a separate window layer and ignores parent alpha).
+     *
+     * If a wrapper already exists (expand/collapse reuse), just calls play().
+     */
+    fun startPlayback() {
+        val container = containerRef?.get() ?: return
+        val s = session ?: return
+
+        if (wrapper != null) {
+            // Already attached (reuse case from expand/collapse) — just play
+            wrapper?.play()
+            return
+        }
+
+        // Create player now (deferred from attach)
+        val w = PIPVideoPlayerWrapper()
+        w.initPlayer(container.context, s.config.mediaUrl)
+        val surface = w.createSurface(container.context)
+
+        w.setMuted(true)
+        wrapper = w
+        s.videoPlayerWrapper = w
+        s.isMuted = true
+        s.isPlaying = true
+
+        // Remove poster ImageView (shown during dissolve) so black bars show around video
+        container.removeAllViews()
+        container.addView(
+            surface,
+            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        )
+        w.play()
+        setupErrorListener(container, s.config)
+    }
+
     override fun attach(container: ViewGroup, config: PIPConfig, s: PIPSession) {
         released = false
         session = s
@@ -51,7 +91,7 @@ internal class VideoRenderer(
 
         val existingWrapper = s.videoPlayerWrapper
         if (existingWrapper != null) {
-            // Reuse existing wrapper (e.g. after expand/collapse)
+            // Reuse existing wrapper (e.g. after expand/collapse) — attach surface immediately
             wrapper = existingWrapper
             val surface = existingWrapper.videoSurface()
             (surface.parent as? ViewGroup)?.removeView(surface)
@@ -59,28 +99,22 @@ internal class VideoRenderer(
                 surface,
                 ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
             )
-        } else {
-            // Create self-contained PIP video player
-            val w = PIPVideoPlayerWrapper()
-            w.initPlayer(container.context, config.mediaUrl)
-            val surface = w.createSurface(container.context)
-
-            w.setMuted(true)
-            wrapper = w
-            s.videoPlayerWrapper = w
-            s.isMuted = true
-            s.isPlaying = true
-
-            container.addView(
-                surface,
-                ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        }
+        // For new sessions: player creation deferred to startPlayback() so no SurfaceView
+        // exists during the dissolve entry animation.
+        // Show poster/fallback image as placeholder — it respects parent alpha so dissolve
+        // fades in the poster visually. PlayerView is added on top in startPlayback().
+        if (config.fallbackUrl != null) {
+            FallbackImageLoader.load(
+                container = container,
+                fallbackUrl = config.fallbackUrl,
+                primaryUrl = config.mediaUrl,
+                resourceProvider = resourceProvider,
+                mediaExecutor = mediaExecutor,
+                isReleased = { released },
+                callbacks = config.callbacks,
+                errorContext = "Poster load",
             )
-
-            // Start playback
-            w.play()
-
-            // Error listener for fallback
-            setupErrorListener(container, config)
         }
     }
 
