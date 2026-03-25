@@ -12,16 +12,39 @@ import java.lang.ref.WeakReference
  * Holds ALL mutable runtime state for one PIP session.
  * Lives in [com.clevertap.android.sdk.inapp.pipsdk.PIPManager] singleton.
  * [activityRef] is a WeakReference to avoid leaking the Activity.
+ *
+ * Not a data class: mutable fields make copy()/equals()/hashCode() unsafe
+ * (shared videoPlayerWrapper reference, identity-based equality needed).
  */
-internal data class PIPSession(
+internal class PIPSession(
     val config: PIPConfig,
-    var currentPosition: PIPPosition,
-    var videoPlayerWrapper: PIPVideoPlayerWrapper? = null,
-    var playbackPositionMs: Long = 0L,
-    var isMuted: Boolean = true,
-    var isPlaying: Boolean = true,
-    var activityRef: WeakReference<Activity>,
-    var isExpanded: Boolean = false,
-    var pipRootContainer: PIPRootContainer? = null,
-    var lifecycleObserver: LifecycleEventObserver? = null,
-)
+    initialPosition: PIPPosition,
+    activity: Activity,
+) {
+    var currentPosition: PIPPosition = initialPosition
+        internal set
+
+    var videoPlayerWrapper: PIPVideoPlayerWrapper? = null
+        internal set
+
+    var playbackPositionMs: Long = 0L
+        internal set
+
+    var isMuted: Boolean = true
+        internal set
+
+    var isPlaying: Boolean = true
+        internal set
+
+    var activityRef: WeakReference<Activity> = WeakReference(activity)
+        internal set
+
+    var isExpanded: Boolean = false
+        internal set
+
+    var pipRootContainer: PIPRootContainer? = null
+        internal set
+
+    var lifecycleObserver: LifecycleEventObserver? = null
+        internal set
+}

@@ -116,8 +116,8 @@ internal object PIPManager {
 
         val newSession = PIPSession(
             config = config,
-            currentPosition = config.initialPosition,
-            activityRef = WeakReference(activity),
+            initialPosition = config.initialPosition,
+            activity = activity,
         )
         session = newSession
 
