@@ -14,6 +14,7 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPAnimator
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPPositionResolver
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
@@ -143,7 +144,15 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     fun dismiss(onDone: () -> Unit) {
         val s = session ?: run { onDone(); return }
         val activeView: View = if (isExpanded) expandedView ?: this else compactView ?: this
-        PIPAnimator.animateOut(activeView, s.config.animationConfig, onDone)
+        // SurfaceView ignores parent alpha — override dissolve to instant for video (same as entry).
+        val animConfig = if (mediaView?.isVideoType == true &&
+            s.config.animationConfig.type == PIPAnimation.DISSOLVE
+        ) {
+            s.config.animationConfig.copy(type = PIPAnimation.INSTANT)
+        } else {
+            s.config.animationConfig
+        }
+        PIPAnimator.animateOut(activeView, animConfig, onDone)
     }
 
     /**
@@ -278,9 +287,17 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
                 )
                 val anchor = anchors[s.currentPosition] ?: return
                 cv.visibility = View.VISIBLE
-                PIPAnimator.animateIn(cv, anchor, s.config.animationConfig, width, height) {
+                // SurfaceView ignores parent alpha, so dissolve animation doesn't work
+                // for video — override to INSTANT. Image/GIF use the configured animation.
+                val animConfig = if (mediaView?.isVideoType == true &&
+                    s.config.animationConfig.type == PIPAnimation.DISSOLVE
+                ) {
+                    s.config.animationConfig.copy(type = PIPAnimation.INSTANT)
+                } else {
+                    s.config.animationConfig
+                }
+                PIPAnimator.animateIn(cv, anchor, animConfig, width, height) {
                     s.config.callbacks?.onShow()
-                    mediaView?.onEntryAnimationComplete()
                 }
             }
         }
