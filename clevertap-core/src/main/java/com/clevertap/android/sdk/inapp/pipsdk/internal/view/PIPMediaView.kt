@@ -93,6 +93,19 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         }
     }
 
+    /**
+     * Called when the entry animation (dissolve/move-in/instant) completes.
+     *
+     * For video: creates the ExoPlayer + PlayerView and starts playback. Player creation is
+     * deferred from [initialize] so no SurfaceView exists during the dissolve animation
+     * (SurfaceView renders in a separate window layer and ignores parent alpha).
+     *
+     * No-op for image/GIF.
+     */
+    fun onEntryAnimationComplete() {
+        (renderer as? VideoRenderer)?.startPlayback()
+    }
+
     fun release() = renderer?.release()
     fun onContainerChanged() = renderer?.onContainerChanged()
     fun togglePlayPause() = renderer?.togglePlayPause()
