@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.view
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.view.MotionEvent
 import android.widget.FrameLayout
 
 /**
@@ -16,10 +17,17 @@ internal class PIPControlsOverlay(context: Context) : FrameLayout(context) {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val hideRunnable = Runnable { hideControls() }
+    private var controlsVisible = false
+
+    /** Block all touch events to children when controls are hidden (alpha=0 doesn't disable clicks). */
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        return !controlsVisible
+    }
 
     fun showControls(autoHide: Boolean = true) {
         mainHandler.removeCallbacks(hideRunnable)
         animate().cancel()
+        controlsVisible = true
         animate().alpha(1f).setDuration(CONTROLS_FADE_DURATION_MS).start()
         if (autoHide) mainHandler.postDelayed(hideRunnable, AUTO_HIDE_DELAY_MS)
     }
@@ -27,7 +35,9 @@ internal class PIPControlsOverlay(context: Context) : FrameLayout(context) {
     fun hideControls() {
         mainHandler.removeCallbacks(hideRunnable)
         animate().cancel()
-        animate().alpha(0f).setDuration(CONTROLS_FADE_DURATION_MS).start()
+        animate().alpha(0f).setDuration(CONTROLS_FADE_DURATION_MS)
+            .withEndAction { controlsVisible = false }
+            .start()
     }
 
     fun resetAutoHideTimer() {
