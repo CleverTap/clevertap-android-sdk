@@ -207,7 +207,9 @@ internal class PIPVideoPlayerWrapper {
         player = null
     }
 
-    fun videoSurface(): View = playerView!!
+    fun videoSurface(): View = checkNotNull(playerView) {
+        "videoSurface() called but no PlayerView exists — was createSurface() called?"
+    }
 
     /**
      * Registers a [Player.Listener] on the underlying player to receive error events.
