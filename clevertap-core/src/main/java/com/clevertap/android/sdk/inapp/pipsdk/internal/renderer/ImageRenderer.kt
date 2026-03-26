@@ -84,15 +84,17 @@ internal class ImageRenderer(
 
     private fun loadFallback(iv: ImageView, config: PIPConfig) {
         FallbackImageLoader.load(
-            container = iv.parent as ViewGroup,
-            fallbackUrl = config.fallbackUrl,
-            primaryUrl = config.mediaUrl,
-            resourceProvider = resourceProvider,
-            mediaExecutor = mediaExecutor,
-            isReleased = { released },
-            callbacks = config.callbacks,
-            errorContext = "Image load failed",
-            onBitmapReady = { bitmap -> iv.setImageBitmap(bitmap); true },
+            FallbackLoadRequest(
+                container = iv.parent as ViewGroup,
+                fallbackUrl = config.fallbackUrl,
+                primaryUrl = config.mediaUrl,
+                resourceProvider = resourceProvider,
+                mediaExecutor = mediaExecutor,
+                isReleased = { released },
+                callbacks = config.callbacks,
+                errorContext = "Image load failed",
+                onBitmapReady = { bitmap -> iv.setImageBitmap(bitmap); true },
+            )
         )
     }
 }

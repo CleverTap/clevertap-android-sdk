@@ -8,6 +8,8 @@ import android.widget.ImageView
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
+import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.FallbackImageLoader
+import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.FallbackLoadRequest
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.GifRenderer
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.ImageRenderer
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.MediaRenderer
@@ -58,6 +60,30 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     ) {
         removeAllViews()
         this.session = session
+
+        // If video previously failed and fell back to a static image, reload the fallback
+        // directly — there's no video player to rebind, so VideoRenderer.rebindSurface()
+        // would return early and leave the container blank.
+        // Note: can't use fellBackToImage here because a new PIPMediaView is created on
+        // rotation. Instead, infer from session: VIDEO type + no wrapper = video failed.
+        val videoFailedToImage = session.config.mediaType == PIPMediaType.VIDEO
+                && session.videoPlayerWrapper == null
+        if (videoFailedToImage) {
+            FallbackImageLoader.load(
+                FallbackLoadRequest(
+                    container = this,
+                    fallbackUrl = session.config.fallbackUrl,
+                    primaryUrl = session.config.mediaUrl,
+                    resourceProvider = resourceProvider,
+                    mediaExecutor = mediaExecutor,
+                    isReleased = { false },
+                    callbacks = session.config.callbacks,
+                    errorContext = "Fallback reload after rotation",
+                )
+            )
+            return
+        }
+
         if (renderer == null) {
             renderer = createRenderer(session.config.mediaType, resourceProvider, mediaExecutor, session)
         }
