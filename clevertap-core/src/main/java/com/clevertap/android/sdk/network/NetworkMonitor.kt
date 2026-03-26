@@ -22,7 +22,8 @@ import kotlinx.coroutines.Dispatchers
 internal class NetworkMonitor constructor(
     context: Context,
     private val config: CleverTapInstanceConfig,
-    private val logger: ILogger = config.logger
+    private val logger: ILogger = config.logger,
+    private val monitorScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
     private val appContext: Context = context.applicationContext
 
@@ -65,7 +66,6 @@ internal class NetworkMonitor constructor(
     private val _stateFlow = MutableStateFlow(NetworkState.UNDETECTED)
     val networkState: Flow<NetworkState> = _stateFlow.asStateFlow()
 
-    private val monitorScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     @field:Volatile
     var onNetworkRestored: (() -> Unit)? = null
         set(value) {
