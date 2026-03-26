@@ -242,7 +242,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
                 s.config.aspectRatioNumerator).toInt().coerceAtLeast(1)
         val hMarginPx = s.config.horizontalEdgeMarginDp.dpToPx(context)
         val vMarginPx = s.config.verticalEdgeMarginDp.dpToPx(context)
-        val bottomOffsetPx = BOTTOM_NAV_OFFSET_DP.dpToPx(context)
+        val bottomOffsetPx = PIPDimens.BOTTOM_NAV_OFFSET_DP.dpToPx(context)
 
         // Clamp height to MAX_HEIGHT_PERCENT of container to prevent overflow in landscape
         // with tall aspect ratios (e.g., 9:16 at 35% width). Using a percentage cap rather
@@ -296,7 +296,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         if (width == 0 || height == 0) return
         val hMarginPx = s.config.horizontalEdgeMarginDp.dpToPx(context)
         val vMarginPx = s.config.verticalEdgeMarginDp.dpToPx(context)
-        val bottomOffsetPx = BOTTOM_NAV_OFFSET_DP.dpToPx(context)
+        val bottomOffsetPx = PIPDimens.BOTTOM_NAV_OFFSET_DP.dpToPx(context)
         val anchors = PIPPositionResolver.resolveAnchors(
             width, height, cv.width, cv.height, hMarginPx, vMarginPx, safeInsets, bottomOffsetPx,
         )
@@ -320,7 +320,5 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         /** Max PIP height as percentage of container height. Prevents overflow in landscape
          *  with tall aspect ratios while leaving room for vertical snap positioning. */
         const val MAX_HEIGHT_PERCENT = 60
-        /** Extra bottom offset (dp) to clear a typical bottom navigation bar (Material 3 = 80dp). */
-        const val BOTTOM_NAV_OFFSET_DP = 80
     }
 }
