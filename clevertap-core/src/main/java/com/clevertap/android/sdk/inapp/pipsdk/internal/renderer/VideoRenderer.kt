@@ -150,16 +150,24 @@ internal class VideoRenderer(
 
     private fun loadFallbackAsImage(container: ViewGroup, config: PIPConfig, errorMsg: String) {
         container.removeAllViews()
+        // Release the failed video player — it's useless after an error and would otherwise
+        // leak resources. Clearing the wrapper also lets PIPMediaView detect the fallback
+        // state on rotation (videoPlayerWrapper == null means video failed).
+        wrapper?.release()
+        wrapper = null
+        stateListener?.onPlayerReleased()
         onFallbackToImage?.invoke()
         FallbackImageLoader.load(
-            container = container,
-            fallbackUrl = config.fallbackUrl,
-            primaryUrl = config.mediaUrl,
-            resourceProvider = resourceProvider,
-            mediaExecutor = mediaExecutor,
-            isReleased = { released },
-            callbacks = config.callbacks,
-            errorContext = errorMsg,
+            FallbackLoadRequest(
+                container = container,
+                fallbackUrl = config.fallbackUrl,
+                primaryUrl = config.mediaUrl,
+                resourceProvider = resourceProvider,
+                mediaExecutor = mediaExecutor,
+                isReleased = { released },
+                callbacks = config.callbacks,
+                errorContext = errorMsg,
+            )
         )
     }
 }

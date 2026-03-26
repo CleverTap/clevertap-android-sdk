@@ -127,20 +127,22 @@ internal class GifRenderer(
 
     private fun loadFallback(container: ViewGroup, config: PIPConfig) {
         FallbackImageLoader.load(
-            container = container,
-            fallbackUrl = config.fallbackUrl,
-            primaryUrl = config.mediaUrl,
-            resourceProvider = resourceProvider,
-            mediaExecutor = mediaExecutor,
-            isReleased = { released },
-            callbacks = config.callbacks,
-            errorContext = "GIF load failed",
-            onBitmapReady = { _ ->
-                // Remove GIF view before fallback ImageView is added by FallbackImageLoader
-                gifView?.let { (it.parent as? ViewGroup)?.removeView(it) }
-                gifView = null
-                false // let FallbackImageLoader add the default ImageView
-            },
+            FallbackLoadRequest(
+                container = container,
+                fallbackUrl = config.fallbackUrl,
+                primaryUrl = config.mediaUrl,
+                resourceProvider = resourceProvider,
+                mediaExecutor = mediaExecutor,
+                isReleased = { released },
+                callbacks = config.callbacks,
+                errorContext = "GIF load failed",
+                onBitmapReady = { _ ->
+                    // Remove GIF view before fallback ImageView is added by FallbackImageLoader
+                    gifView?.let { (it.parent as? ViewGroup)?.removeView(it) }
+                    gifView = null
+                    false // let FallbackImageLoader add the default ImageView
+                },
+            )
         )
     }
 }
