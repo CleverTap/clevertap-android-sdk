@@ -16,8 +16,6 @@ interface ICryptRepository {
     fun isSSInAppDataMigrated(): Boolean
     fun updateIsSSInAppDataMigrated(migrated: Boolean)
     fun migrationFailureCount(): Int
-    fun localEncryptionKey(): String?
-    fun updateLocalEncryptionKey(key: String)
     fun updateEncryptionLevel(configEncryptionLevel: Int)
     fun updateMigrationFailureCount(migrationSuccessful: Boolean)
 }
@@ -57,15 +55,6 @@ class CryptRepository(
         MIGRATION_FAILURE_COUNT_KEY,
         MIGRATION_FIRST_UPGRADE
     )
-
-    override fun localEncryptionKey(): String? {
-        val encodedKey = StorageHelper.getString(context, ENCRYPTION_KEY, null)
-        return encodedKey
-    }
-
-    override fun updateLocalEncryptionKey(key: String) {
-        StorageHelper.putString(context, ENCRYPTION_KEY, key)
-    }
 
     override fun updateEncryptionLevel(configEncryptionLevel: Int) {
         StorageHelper.putInt(
