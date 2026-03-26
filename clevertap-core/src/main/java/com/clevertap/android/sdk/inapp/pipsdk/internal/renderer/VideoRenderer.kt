@@ -14,34 +14,37 @@ import java.util.concurrent.ExecutorService
  *
  * Delegates playback to [PIPVideoPlayerWrapper] which owns the player directly.
  * Uses [FileResourceProvider] for fallback image loading on video error.
+ *
+ * Reports state changes upward via [stateListener] instead of writing to
+ * [PIPSession] directly — the coordinator wires the listener and handles
+ * session updates.
  */
 internal class VideoRenderer(
     private val resourceProvider: FileResourceProvider,
     private val mediaExecutor: ExecutorService,
 ) : MediaRenderer {
 
-    private var session: PIPSession? = null
     private var wrapper: PIPVideoPlayerWrapper? = null
     private var containerRef: WeakReference<ViewGroup>? = null
     private var _isMuted = true
     private var _isPlaying = true
 
     /** Called when video playback fails and a static fallback image is shown instead.
-     *  Used by [PIPMediaView] to notify parent views to hide video-specific controls. */
+     *  Used by [com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPMediaView] to notify
+     *  parent views to hide video-specific controls. */
     var onFallbackToImage: (() -> Unit)? = null
+
+    /** Listener for reporting state changes upward (player created/released, playback state). */
+    var stateListener: RendererStateListener? = null
+
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
-    fun bindSession(s: PIPSession) {
-        session = s
-    }
-
-    override fun attach(container: ViewGroup, config: PIPConfig, s: PIPSession) {
+    override fun attach(container: ViewGroup, config: PIPConfig, session: PIPSession) {
         released = false
-        session = s
         containerRef = WeakReference(container)
-        _isMuted = s.isMuted
-        _isPlaying = s.isPlaying
+        _isMuted = session.isMuted
+        _isPlaying = session.isPlaying
 
         // Check video library availability
         if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.NONE) {
@@ -49,7 +52,7 @@ internal class VideoRenderer(
             return
         }
 
-        val existingWrapper = s.videoPlayerWrapper
+        val existingWrapper = session.videoPlayerWrapper
         if (existingWrapper != null) {
             // Reuse existing wrapper (e.g. after expand/collapse)
             wrapper = existingWrapper
@@ -67,9 +70,8 @@ internal class VideoRenderer(
 
             w.setMuted(true)
             wrapper = w
-            s.videoPlayerWrapper = w
-            s.isMuted = true
-            s.isPlaying = true
+            stateListener?.onPlayerCreated(w)
+            stateListener?.onPlaybackStateChanged(isPlaying = true, isMuted = true, positionMs = 0L)
 
             container.addView(
                 surface,
@@ -85,33 +87,34 @@ internal class VideoRenderer(
 
     override fun detachSurface() {
         val w = wrapper ?: return
-        session?.playbackPositionMs = w.currentPositionMs
-        session?.isPlaying = w.isPlaying
-        session?.isMuted = w.isMuted
+        stateListener?.onPlaybackStateChanged(
+            isPlaying = w.isPlaying,
+            isMuted = w.isMuted,
+            positionMs = w.currentPositionMs,
+        )
         w.detachSurface()
     }
 
-    override fun rebindSurface(container: ViewGroup, s: PIPSession) {
-        session = s
+    override fun rebindSurface(container: ViewGroup, session: PIPSession) {
         containerRef = WeakReference(container)
-        val w = s.videoPlayerWrapper ?: return
+        val w = session.videoPlayerWrapper ?: return
         wrapper = w
         val surface = w.rebindSurface(container.context) ?: return
         container.addView(
             surface,
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
-        _isMuted = s.isMuted
-        _isPlaying = s.isPlaying
+        _isMuted = session.isMuted
+        _isPlaying = session.isPlaying
     }
 
     override fun release() {
         released = true
         wrapper?.release()
-        session?.videoPlayerWrapper = null
+        stateListener?.onPlayerReleased()
         wrapper = null
         containerRef = null
-        session = null
+        stateListener = null
     }
 
     override fun togglePlayPause() {
@@ -119,20 +122,18 @@ internal class VideoRenderer(
         if (w.isPlaying) {
             w.softPause()
             _isPlaying = false
-            session?.config?.callbacks?.onPlaybackPaused()
         } else {
             w.play()
             _isPlaying = true
-            session?.config?.callbacks?.onPlaybackStarted()
         }
-        session?.isPlaying = _isPlaying
+        stateListener?.onPlayPauseToggled(_isPlaying)
     }
 
     override fun toggleMute() {
         val w = wrapper ?: return
         w.toggleMute()
         _isMuted = w.isMuted
-        session?.isMuted = _isMuted
+        stateListener?.onMuteToggled(_isMuted)
     }
 
     override val currentPositionMs: Long get() = wrapper?.currentPositionMs ?: 0L

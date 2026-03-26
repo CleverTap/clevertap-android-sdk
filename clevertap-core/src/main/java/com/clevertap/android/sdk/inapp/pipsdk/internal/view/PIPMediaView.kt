@@ -11,6 +11,8 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.GifRenderer
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.ImageRenderer
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.MediaRenderer
+import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.PIPVideoPlayerWrapper
+import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.RendererStateListener
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.VideoRenderer
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 import java.util.concurrent.ExecutorService
@@ -25,6 +27,7 @@ import java.util.concurrent.ExecutorService
 internal class PIPMediaView(context: Context) : FrameLayout(context) {
 
     private var renderer: MediaRenderer? = null
+    private var session: PIPSession? = null
     private var fellBackToImage = false
 
     /** Called when a video renderer falls back to a static image after playback error.
@@ -38,15 +41,9 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         mediaExecutor: ExecutorService,
     ) {
         removeAllViews()
+        this.session = session
         fellBackToImage = false
-        renderer = when (config.mediaType) {
-            PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
-            PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
-            PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
-                vr.bindSession(session)
-                vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
-            }
-        }
+        renderer = createRenderer(config.mediaType, resourceProvider, mediaExecutor, session)
         renderer?.attach(this, config, session)
     }
 
@@ -60,15 +57,9 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         mediaExecutor: ExecutorService,
     ) {
         removeAllViews()
+        this.session = session
         if (renderer == null) {
-            renderer = when (session.config.mediaType) {
-                PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
-                PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
-                PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
-                    vr.bindSession(session)
-                    vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
-                }
-            }
+            renderer = createRenderer(session.config.mediaType, resourceProvider, mediaExecutor, session)
         }
         renderer?.rebindSurface(this, session)
 
@@ -103,4 +94,46 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     val isVideoType: Boolean get() = renderer is VideoRenderer && !fellBackToImage
     val isPlaying: Boolean get() = renderer?.isPlaying ?: false
     val isMuted: Boolean get() = renderer?.isMuted ?: false
+
+    /**
+     * Creates the appropriate renderer for the given media type.
+     * For VIDEO, wires the [RendererStateListener] to bridge state changes back to the session.
+     */
+    private fun createRenderer(
+        mediaType: PIPMediaType,
+        resourceProvider: FileResourceProvider,
+        mediaExecutor: ExecutorService,
+        session: PIPSession,
+    ): MediaRenderer = when (mediaType) {
+        PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
+        PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
+        PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
+            vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
+            vr.stateListener = object : RendererStateListener {
+                override fun onPlayerCreated(wrapper: PIPVideoPlayerWrapper) {
+                    session.videoPlayerWrapper = wrapper
+                }
+
+                override fun onPlayerReleased() {
+                    session.videoPlayerWrapper = null
+                }
+
+                override fun onPlaybackStateChanged(isPlaying: Boolean, isMuted: Boolean, positionMs: Long) {
+                    session.isPlaying = isPlaying
+                    session.isMuted = isMuted
+                    session.playbackPositionMs = positionMs
+                }
+
+                override fun onPlayPauseToggled(isPlaying: Boolean) {
+                    session.isPlaying = isPlaying
+                    if (isPlaying) session.config.callbacks?.onPlaybackStarted()
+                    else session.config.callbacks?.onPlaybackPaused()
+                }
+
+                override fun onMuteToggled(isMuted: Boolean) {
+                    session.isMuted = isMuted
+                }
+            }
+        }
+    }
 }
