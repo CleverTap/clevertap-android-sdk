@@ -50,10 +50,12 @@ internal open class TimerSmallContentView(
         )
 
 
+        val timerEnd = timer_end ?: 0L
+
         // Add a 3 second buffer to prevent negative timer values
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timer_end!! + 3 * PTConstants.ONE_SECOND_LONG,
+            SystemClock.elapsedRealtime() + timerEnd + 3 * PTConstants.ONE_SECOND_LONG,
             null,
             true
         )
@@ -66,7 +68,7 @@ internal open class TimerSmallContentView(
             remoteView.setViewVisibility(R.id.chronometer_frame, View.GONE)
             remoteView.setViewVisibility(R.id.segmented_timer_layout, View.VISIBLE)
 
-            val totalSeconds = (timer_end!! / 1000).toInt()
+            val totalSeconds = (timerEnd / 1000).toInt()
             var hours = totalSeconds / 3600
             var minutes = (totalSeconds % 3600) / 60
             var seconds = totalSeconds % 60

@@ -22,25 +22,8 @@ internal object NotificationBitmapUtils {
     ): Bitmap {
         val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
-        val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
-
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor }
-
-        if (borderColor != null) {
-            val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
-            val inset = strokeWidth / 2f
-            val bgRect = RectF(inset, inset, width - inset, height - inset)
-            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, paint)
-            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = borderColor
-                style = Paint.Style.STROKE
-                this.strokeWidth = strokeWidth
-            }
-            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, borderPaint)
-        } else {
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-        }
-
+        drawBorderIfNeeded(canvas, paint, width, height, cornerRadius, borderColor, borderWidth)
         return bitmap
     }
 
@@ -56,11 +39,21 @@ internal object NotificationBitmapUtils {
     ): Bitmap {
         val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
-        val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
-
         val shader = createShader(color1, color2, direction, width, height)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
+        drawBorderIfNeeded(canvas, paint, width, height, cornerRadius, borderColor, borderWidth)
+        return bitmap
+    }
 
+    private fun drawBorderIfNeeded(
+        canvas: Canvas,
+        paint: Paint,
+        width: Int,
+        height: Int,
+        cornerRadius: Float,
+        borderColor: Int?,
+        borderWidth: Float?
+    ) {
         if (borderColor != null) {
             val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
             val inset = strokeWidth / 2f
@@ -73,9 +66,9 @@ internal object NotificationBitmapUtils {
             }
             canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, borderPaint)
         } else {
+            val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
         }
-        return bitmap
     }
 
     private fun createShader(

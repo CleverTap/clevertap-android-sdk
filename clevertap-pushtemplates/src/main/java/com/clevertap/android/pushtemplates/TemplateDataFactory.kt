@@ -313,9 +313,9 @@ internal object TemplateDataFactory {
                 borderRadius = extras.getString(PT_TIMER_UNIT_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
                 borderWidth = extras.getString(PT_TIMER_UNIT_BORDER_WIDTH)?.toFloatOrNull()
             ),
-            showHours = extras.getString(PT_TIMER_SHOW_HRS)?.equals("false", ignoreCase = true)?.not() ?: true,
-            showMinutes = extras.getString(PT_TIMER_SHOW_MINS)?.equals("false", ignoreCase = true)?.not() ?: true,
-            showSeconds = extras.getString(PT_TIMER_SHOW_SECS)?.equals("false", ignoreCase = true)?.not() ?: true,
+            showHours = extras.getString(PT_TIMER_SHOW_HRS)?.equals("true", ignoreCase = true) ?: true,
+            showMinutes = extras.getString(PT_TIMER_SHOW_MINS)?.equals("true", ignoreCase = true) ?: true,
+            showSeconds = extras.getString(PT_TIMER_SHOW_SECS)?.equals("true", ignoreCase = true) ?: true,
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )
