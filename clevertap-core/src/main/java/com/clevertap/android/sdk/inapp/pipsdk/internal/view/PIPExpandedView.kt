@@ -123,7 +123,7 @@ internal class PIPExpandedView(
 
         // Mute button (video only; hidden until bindMedia)
         val mBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_volume_off_tint)
+            setImageResource(PIPIcons.muteIcon(muted = true))
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = View.GONE
@@ -135,7 +135,7 @@ internal class PIPExpandedView(
 
         // Play/Pause button (video only; hidden until bindMedia)
         val ppBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_pause)
+            setImageResource(PIPIcons.playPauseIcon(playing = true))
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = View.GONE
@@ -289,15 +289,11 @@ private fun applyBottomRowMargins(rowMarginPx: Int) {
     }
 
     private fun updatePlayPauseIcon(playing: Boolean) {
-        playPauseBtn?.setImageResource(
-            if (playing) R.drawable.ct_ic_pause else R.drawable.ct_ic_play
-        )
+        playPauseBtn?.setImageResource(PIPIcons.playPauseIcon(playing))
     }
 
     private fun updateMuteIcon(muted: Boolean) {
-        muteBtn?.setImageResource(
-            if (muted) R.drawable.ct_ic_volume_off_tint else R.drawable.ct_ic_volume_on_tint
-        )
+        muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
     }
 
     private companion object {
