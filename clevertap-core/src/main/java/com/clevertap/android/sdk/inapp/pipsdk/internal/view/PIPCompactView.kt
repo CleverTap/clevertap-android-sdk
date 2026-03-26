@@ -82,7 +82,7 @@ internal class PIPCompactView(
 
         // Mute button — bottom-left (video only; hidden until bindVideoControls)
         val mBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_volume_off_tint)
+            setImageResource(PIPIcons.muteIcon(muted = true))
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = View.GONE
         }
@@ -142,9 +142,7 @@ internal class PIPCompactView(
     }
 
     private fun updateMuteIcon(muted: Boolean) {
-        muteBtn?.setImageResource(
-            if (muted) R.drawable.ct_ic_volume_off_tint else R.drawable.ct_ic_volume_on_tint
-        )
+        muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
     }
 
     // ─── Touch handling ──────────────────────────────────────────────────────────
