@@ -227,7 +227,7 @@ internal class EventQueueManager(
                     type = "page"
                 } else if (eventType == Constants.PING_EVENT) {
                     type = "ping"
-                    attachMeta(event, context)
+                    attachMeta(event)
                     if (event.has("bk")) {
                         cleverTapMetaData.isBgPing = true
                         event.remove("bk")
@@ -543,7 +543,7 @@ internal class EventQueueManager(
      * Attaches meta info about the current state of the device to an event.
      * Typically, this meta is added only to the ping event.
      */
-    private fun attachMeta(o: JSONObject, context: Context?) {
+    private fun attachMeta(o: JSONObject) {
         // Memory consumption
         try {
             o.put("mc", Utils.getMemoryConsumption())
@@ -553,10 +553,7 @@ internal class EventQueueManager(
 
         // Attach the network type
         try {
-            val networkType = networkMonitor.getNetworkTypeString()
-            if (networkType != null) {
-                o.put("nt", networkType)
-            }
+            o.put("nt", networkMonitor.getNetworkTypeString() ?: "Unavailable")
         } catch (_: Throwable) {
             // Ignore
         }

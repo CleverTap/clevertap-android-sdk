@@ -68,9 +68,12 @@ internal class FileResourceProvider(
         @Volatile
         private var instance: FileResourceProvider? = null
 
+        /**
+         * Initializes the singleton with a NetworkMonitor for network-aware downloads.
+         * Must be called by CleverTapFactory during SDK initialization before any other call.
+         */
         @JvmStatic
-        @JvmOverloads
-        fun getInstance(context: Context, logger: ILogger? = null, networkMonitor: NetworkMonitor? = null): FileResourceProvider {
+        fun initInstance(context: Context, logger: ILogger? = null, networkMonitor: NetworkMonitor): FileResourceProvider {
             return instance ?: synchronized(this) {
                 instance ?: FileResourceProvider(
                     images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
@@ -82,6 +85,14 @@ internal class FileResourceProvider(
                     logger = logger,
                     inAppRemoteSource = FileFetchApi(networkMonitor)
                 ).also { instance = it }
+            }
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun getInstance(context: Context, logger: ILogger? = null): FileResourceProvider {
+            return instance ?: synchronized(this) {
+                instance ?: FileResourceProvider(context, logger).also { instance = it }
             }
         }
     }
