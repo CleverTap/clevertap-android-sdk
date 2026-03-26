@@ -15,6 +15,10 @@ data class PIPAnimationConfig(
     val interpolator: TimeInterpolator = DEFAULT_INTERPOLATOR,
     val moveInDirection: MoveInDirection? = null,
 ) {
+    init {
+        require(durationMs >= 0) { "durationMs must be non-negative, was $durationMs" }
+    }
+
     /** Explicit direction for MOVE_IN entry animation. */
     enum class MoveInDirection { LEFT, RIGHT, TOP, BOTTOM }
 
