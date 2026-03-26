@@ -90,7 +90,12 @@ internal object PIPManager {
     @JvmStatic
     fun dismiss() = runOnMain { dismissInternal() }
 
-    /** Returns true if PIP is currently visible (compact or expanded). */
+    /**
+     * Returns true if PIP is currently visible (compact or expanded).
+     *
+     * Safe to call from any thread. Note: this is a point-in-time snapshot —
+     * the session may be dismissed between the check and a subsequent operation.
+     */
     @JvmStatic
     fun isVisible(): Boolean = session != null
 
