@@ -47,4 +47,9 @@ internal class PIPSession(
 
     var lifecycleObserver: LifecycleEventObserver? = null
         internal set
+
+    /** True if video was auto-paused when the Activity stopped (background).
+     *  Used to auto-resume only when WE paused it, not when the user paused manually. */
+    var pausedByBackground: Boolean = false
+        internal set
 }
