@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.inapp
 import android.content.res.Configuration
 import com.clevertap.android.sdk.Logger
 import android.animation.TimeInterpolator
-import android.os.Build
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
@@ -167,7 +166,6 @@ internal object PIPConfigFactory {
     }
 
     private fun parseBezier(bezier: String): TimeInterpolator? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return null
         val parts = bezier.split(",").mapNotNull { it.trim().toFloatOrNull() }
         if (parts.size != 4) return null
         return try {
