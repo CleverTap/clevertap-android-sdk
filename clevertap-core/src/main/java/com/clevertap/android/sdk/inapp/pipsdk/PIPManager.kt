@@ -133,9 +133,11 @@ internal object PIPManager {
             callbacksRegistered = true
         }
 
-        // SAA: observe Fragment's viewLifecycleOwner to auto-dismiss on view destruction
+        // SAA: observe Fragment's viewLifecycleOwner to auto-dismiss on view destruction.
+        // Note: ON_STOP fires both on fragment view destroy and app background. For SAA,
+        // dismissing on background is acceptable since the fragment view may not survive.
         if (lifecycleOwner != null) {
-            val observer = PIPLifecycleObserver { runOnMain { dismissInternal() } }
+            val observer = PIPLifecycleObserver { runOnMain { cleanupSession() } }
             newSession.lifecycleObserver = observer
             lifecycleOwner.lifecycle.addObserver(observer)
         }
@@ -159,10 +161,10 @@ internal object PIPManager {
     }
 
     /**
-     * Animates out the active view and releases all resources.
+     * Dismisses the active PIP session and releases all resources.
      *
-     * [notifyCallback] is false when replacing an existing session so that [PIPCallbacks.onClose]
-     * is not fired spuriously during the replace-show flow.
+     * @param notifyCallback false when replacing an existing session so that [PIPCallbacks.onClose]
+     *   is not fired spuriously during the replace-show flow.
      */
     internal fun dismissInternal(notifyCallback: Boolean = true) {
         val s = session ?: return
@@ -200,17 +202,23 @@ internal object PIPManager {
                 pendingReattachClassName = null
                 reattachTo(activity, s)
             }
+            // Resume video if we auto-paused it on background
+            if (s.activityRef.get() == activity && s.pausedByBackground) {
+                s.videoPlayerWrapper?.play()
+                s.pausedByBackground = false
+            }
         }
 
         override fun onActivityStopped(activity: Activity) {
             val s = session ?: return
             if (s.activityRef.get() != activity) return
-            // Skip if this is a rotation stop — onActivityDestroyed handles that
             if (activity.isChangingConfigurations) return
-            // SAA: the LifecycleObserver handles dismiss via onStop
-            if (s.lifecycleObserver != null) return
-            // Multi-Activity: dismiss when the host Activity actually stops
-            dismissInternal()
+            // Pause video playback while backgrounded (saves battery, stops audio).
+            // PIP view stays attached — consistent with how regular in-apps survive background.
+            if (s.isPlaying && s.videoPlayerWrapper != null) {
+                s.videoPlayerWrapper?.softPause()
+                s.pausedByBackground = true
+            }
         }
 
         override fun onActivityDestroyed(activity: Activity) {
@@ -219,7 +227,7 @@ internal object PIPManager {
             if (activity.isChangingConfigurations) {
                 detachForRotation(s, activity)
             } else {
-                // Safeguard: onActivityStopped should have cleaned up already
+                // Activity is being destroyed (finish() or system kill) — clean up PIP
                 if (session != null) cleanupSession()
             }
         }
