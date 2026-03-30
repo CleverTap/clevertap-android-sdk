@@ -307,6 +307,17 @@ internal class ValidatorFactory {
                         .build()
                 }
 
+                is VerticalImageTemplateData -> {
+                    builder
+                        .addBasicTextValidation(templateData.baseContent.textData)
+                        .addStringValidation(
+                            templateData.mediaData.bigImage.url,
+                            PT_BIG_IMG,
+                            "Display Image is missing or empty"
+                        )
+                        .build()
+                }
+
                 is CancelTemplateData -> {
                     // No validation needed for cancel template
                     emptyMap()
@@ -331,6 +342,7 @@ internal class ValidatorFactory {
                 TemplateType.ZERO_BEZEL -> ZeroBezelTemplateValidator(ContentValidator(keys))
                 TemplateType.TIMER -> ContentValidator(keys)
                 TemplateType.INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
+                TemplateType.VERTICAL_IMAGE -> VerticalImageTemplateValidator(ContentValidator(keys))
                 else -> null
             }
         }
