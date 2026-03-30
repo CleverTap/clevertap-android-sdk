@@ -10,7 +10,4 @@
     <string name="rating_star_4">Rating Four Star</string>
     <string name="rating_star_5">Rating Five Star</string>
     <string name="pt_big_image_alt">Notification Image</string>
-    <string name="pt_timer_hrs">HRS</string>
-    <string name="pt_timer_min">MIN</string>
-    <string name="pt_timer_sec">SEC</string>
 </resources>

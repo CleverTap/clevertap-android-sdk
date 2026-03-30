@@ -16,7 +16,7 @@
 
     <dimen name="manual_carousel_arrow">36dp</dimen>
 
-    <dimen name="chronometer_font_size">16sp</dimen>
+    <dimen name="chronometer_font_size">20sp</dimen>
 
     <dimen name="rating_big_img">108dp</dimen>
 
