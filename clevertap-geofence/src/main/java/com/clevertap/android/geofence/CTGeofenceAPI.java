@@ -498,7 +498,8 @@ public class CTGeofenceAPI implements GeofenceCallback {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Exception while processing last location for geofences", e);
         }
 
         return future;
