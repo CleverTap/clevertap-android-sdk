@@ -3,7 +3,6 @@ package com.clevertap.android.pushtemplates
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BG
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_LAYOUT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_ALT_TEXT
@@ -68,18 +67,6 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.TEXT_ONLY
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_RADIUS
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_WIDTH
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_STYLE
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_BG_CLR
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_GRADIENT_CLR_1
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_GRADIENT_CLR_2
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_GRADIENT_DIRECTION
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_TEXT_CLR
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_BORDER_CLR
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_BORDER_RADIUS
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_UNIT_BORDER_WIDTH
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_SHOW_HRS
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_SHOW_MINS
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_SHOW_SECS
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
@@ -301,21 +288,6 @@ internal object TemplateDataFactory {
             chronometerGradientDirection = GradientDirection.fromString(extras.getString(PT_CHRONO_GRAD_DIR)),
             chronometerBorderRadius = extras.getString(PT_CHRONO_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
             chronometerBorderWidth = extras.getString(PT_CHRONO_BORDER_WIDTH)?.toFloatOrNull(),
-            timerLayout = TimerLayout.fromString(extras.getString(PT_TIMER_LAYOUT)),
-            timerUnitStyle = TimerUnitStyle(
-                style = ButtonStyle.fromString(extras.getString(PT_TIMER_UNIT_STYLE)),
-                bgColor = colorMap[PT_TIMER_UNIT_BG_CLR],
-                gradientColor1 = colorMap[PT_TIMER_UNIT_GRADIENT_CLR_1],
-                gradientColor2 = colorMap[PT_TIMER_UNIT_GRADIENT_CLR_2],
-                gradientDirection = GradientDirection.fromString(extras.getString(PT_TIMER_UNIT_GRADIENT_DIRECTION)),
-                textColor = colorMap[PT_TIMER_UNIT_TEXT_CLR],
-                borderColor = colorMap[PT_TIMER_UNIT_BORDER_CLR],
-                borderRadius = extras.getString(PT_TIMER_UNIT_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
-                borderWidth = extras.getString(PT_TIMER_UNIT_BORDER_WIDTH)?.toFloatOrNull()
-            ),
-            showHours = extras.getString(PT_TIMER_SHOW_HRS)?.equals("true", ignoreCase = true) ?: true,
-            showMinutes = extras.getString(PT_TIMER_SHOW_MINS)?.equals("true", ignoreCase = true) ?: true,
-            showSeconds = extras.getString(PT_TIMER_SHOW_SECS)?.equals("true", ignoreCase = true) ?: true,
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )

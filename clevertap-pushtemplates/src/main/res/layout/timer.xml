@@ -89,13 +89,6 @@
                     android:textSize="@dimen/chronometer_font_size" />
             </RelativeLayout>
 
-            <include
-                android:id="@+id/segmented_timer_layout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                layout="@layout/segmented_timer_block" />
-
         </RelativeLayout>
 
     </RelativeLayout>

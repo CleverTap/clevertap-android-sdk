@@ -104,18 +104,6 @@ internal data class RatingTemplateData(
     val defaultDeepLink: String? = null,
 ) : TemplateData()
 
-internal data class TimerUnitStyle(
-    val style: ButtonStyle = ButtonStyle.SOLID,
-    val bgColor: String? = null,
-    val gradientColor1: String? = null,
-    val gradientColor2: String? = null,
-    val gradientDirection: GradientDirection = GradientDirection.LEFT_RIGHT,
-    val textColor: String? = null,
-    val borderColor: String? = null,
-    val borderRadius: Float = 6f,
-    val borderWidth: Float? = null
-)
-
 internal data class TimerTemplateData(
     override val templateType: TemplateType = TemplateType.TIMER,
     val baseContent: BaseContent,
@@ -133,11 +121,6 @@ internal data class TimerTemplateData(
     val renderTerminal: Boolean = true,
     val chronometerBorderRadius: Float = 6f,
     val chronometerBorderWidth: Float? = null,
-    val timerLayout: TimerLayout = TimerLayout.HH_MM_SS,
-    val timerUnitStyle: TimerUnitStyle = TimerUnitStyle(),
-    val showHours: Boolean = true,
-    val showMinutes: Boolean = true,
-    val showSeconds: Boolean = true,
     ) : TemplateData()
 
 internal data class ZeroBezelTemplateData(
@@ -189,16 +172,6 @@ internal enum class ButtonStyle(val key: String) {
     companion object {
         fun fromString(value: String?): ButtonStyle =
             entries.firstOrNull { it.key == value } ?: SOLID
-    }
-}
-
-enum class TimerLayout(val value: String) {
-    HH_MM_SS("hh_mm_ss"),
-    SEGMENTED("segmented");
-
-    companion object {
-        fun fromString(value: String?): TimerLayout =
-            entries.firstOrNull { it.value == value } ?: HH_MM_SS
     }
 }
 
