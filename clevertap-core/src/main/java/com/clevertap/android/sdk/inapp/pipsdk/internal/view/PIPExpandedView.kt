@@ -90,6 +90,7 @@ internal class PIPExpandedView(
         // Close button — top-right of screen; inset margins keep it clear of status bar / cutout
         closeBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_close_pip)
+            contentDescription = context.getString(R.string.ct_inapp_close_btn)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = if (showCloseButton) View.VISIBLE else View.GONE
@@ -112,6 +113,7 @@ internal class PIPExpandedView(
         // Action button (hidden if no action configured)
         val deeplinkBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_deeplink)
+            contentDescription = context.getString(R.string.ct_action_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = if (hasAction) View.VISIBLE else View.GONE
@@ -124,6 +126,7 @@ internal class PIPExpandedView(
         // Mute button (video only; hidden until bindMedia)
         val mBtn = ImageView(context).apply {
             setImageResource(PIPIcons.muteIcon(muted = true))
+            contentDescription = context.getString(PIPIcons.muteContentDescription(muted = true))
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = View.GONE
@@ -136,6 +139,7 @@ internal class PIPExpandedView(
         // Play/Pause button (video only; hidden until bindMedia)
         val ppBtn = ImageView(context).apply {
             setImageResource(PIPIcons.playPauseIcon(playing = true))
+            contentDescription = context.getString(PIPIcons.playPauseContentDescription(playing = true))
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = View.GONE
@@ -154,6 +158,7 @@ internal class PIPExpandedView(
         // Collapse button (hidden if expandCollapse control disabled)
         val collapseBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_collapse)
+            contentDescription = context.getString(R.string.ct_pip_collapse_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padPx, padPx, padPx, padPx)
             visibility = if (showExpandCollapseButton) View.VISIBLE else View.GONE
@@ -290,10 +295,12 @@ private fun applyBottomRowMargins(rowMarginPx: Int) {
 
     private fun updatePlayPauseIcon(playing: Boolean) {
         playPauseBtn?.setImageResource(PIPIcons.playPauseIcon(playing))
+        playPauseBtn?.contentDescription = playPauseBtn?.context?.getString(PIPIcons.playPauseContentDescription(playing))
     }
 
     private fun updateMuteIcon(muted: Boolean) {
         muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
+        muteBtn?.contentDescription = muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
     }
 
     private companion object {

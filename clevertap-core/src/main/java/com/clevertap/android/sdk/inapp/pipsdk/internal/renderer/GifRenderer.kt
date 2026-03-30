@@ -38,6 +38,9 @@ internal class GifRenderer(
         this.config = config
         val gv = GifImageView(container.context).apply {
             scaleType = currentScaleType
+            if (config.mediaContentDescription.isNotBlank()) {
+                contentDescription = config.mediaContentDescription
+            }
         }
         gifView = gv
         container.addView(

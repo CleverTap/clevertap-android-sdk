@@ -47,6 +47,9 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         fellBackToImage = false
         renderer = createRenderer(config.mediaType, resourceProvider, mediaExecutor, session)
         renderer?.attach(this, config, session)
+        if (config.mediaContentDescription.isNotBlank()) {
+            contentDescription = config.mediaContentDescription
+        }
     }
 
     /** Rotation: detach Surface from ExoPlayer. No-op for images. */

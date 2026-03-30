@@ -12,6 +12,7 @@ data class PIPConfig internal constructor(
     val mediaUrl: String,
     val mediaType: PIPMediaType,
     val fallbackUrl: String? = null,            // static image shown if primary media fails
+    val mediaContentDescription: String = "",  // from media.alt_text JSON field (accessibility)
 
     // Sizing
     val widthPercent: Int = 35,
@@ -48,6 +49,7 @@ data class PIPConfig internal constructor(
 
     class Builder(private val mediaUrl: String, private val mediaType: PIPMediaType) {
         private var fallbackUrl: String? = null
+        private var mediaContentDescription: String = ""
         private var widthPercent: Int = 35
         private var aspectRatioNumerator: Int = 16
         private var aspectRatioDenominator: Int = 9
@@ -64,6 +66,7 @@ data class PIPConfig internal constructor(
         private var callbacks: PIPCallbacks? = null
 
         fun fallbackUrl(url: String) = apply { fallbackUrl = url }
+        fun mediaContentDescription(desc: String) = apply { mediaContentDescription = desc }
         fun widthPercent(value: Int) = apply { widthPercent = value }
         fun aspectRatio(numerator: Int, denominator: Int) = apply {
             aspectRatioNumerator = numerator
@@ -89,7 +92,7 @@ data class PIPConfig internal constructor(
             require(horizontalEdgeMarginDp >= 0) { "horizontalEdgeMarginDp must be >= 0" }
             require(verticalEdgeMarginDp >= 0) { "verticalEdgeMarginDp must be >= 0" }
             return PIPConfig(
-                mediaUrl, mediaType, fallbackUrl, widthPercent, aspectRatioNumerator,
+                mediaUrl, mediaType, fallbackUrl, mediaContentDescription, widthPercent, aspectRatioNumerator,
                 aspectRatioDenominator, initialPosition, horizontalEdgeMarginDp,
                 verticalEdgeMarginDp, animationConfig, action, showCloseButton,
                 dragEnabled, showPlayPauseButton,

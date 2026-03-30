@@ -31,6 +31,9 @@ internal class ImageRenderer(
         this.config = config
         val iv = ImageView(container.context).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
+            if (config.mediaContentDescription.isNotBlank()) {
+                contentDescription = config.mediaContentDescription
+            }
         }
         imageView = iv
         container.addView(
