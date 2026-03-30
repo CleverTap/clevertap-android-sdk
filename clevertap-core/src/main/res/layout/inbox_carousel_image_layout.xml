@@ -22,4 +22,14 @@
         android:scaleType="centerCrop"
         android:src="@drawable/ct_audio"
         android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/defaultImageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ct_audio"
+        android:visibility="gone" />
 </LinearLayout>
