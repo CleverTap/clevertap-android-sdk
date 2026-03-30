@@ -58,6 +58,7 @@ internal class PIPCompactView(
         // in bindVideoControls() to avoid overlap with the mute button.
         val dlBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_deeplink)
+            contentDescription = context.getString(R.string.ct_action_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.action != null) View.VISIBLE else View.GONE
             setOnClickListener { onAction() }
@@ -71,6 +72,7 @@ internal class PIPCompactView(
         // Close button — top-right (hidden if showCloseButton = false)
         val closeBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_close_pip)
+            contentDescription = context.getString(R.string.ct_inapp_close_btn)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.showCloseButton) View.VISIBLE else View.GONE
             setOnClickListener { onClose() }
@@ -83,6 +85,7 @@ internal class PIPCompactView(
         // Mute button — bottom-left (video only; hidden until bindVideoControls)
         val mBtn = ImageView(context).apply {
             setImageResource(PIPIcons.muteIcon(muted = true))
+            contentDescription = context.getString(PIPIcons.muteContentDescription(muted = true))
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = View.GONE
         }
@@ -95,6 +98,7 @@ internal class PIPCompactView(
         // Expand button — bottom-right (hidden if expandCollapse control disabled)
         val expandBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_expand)
+            contentDescription = context.getString(R.string.ct_pip_expand_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onExpand() }
@@ -143,6 +147,7 @@ internal class PIPCompactView(
 
     private fun updateMuteIcon(muted: Boolean) {
         muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
+        muteBtn?.contentDescription = muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
     }
 
     // ─── Touch handling ──────────────────────────────────────────────────────────

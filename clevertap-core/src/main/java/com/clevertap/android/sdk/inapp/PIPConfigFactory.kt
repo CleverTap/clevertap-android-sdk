@@ -49,6 +49,11 @@ internal object PIPConfigFactory {
         val builder = PIPConfig.builder(media.mediaUrl, mediaType)
             .callbacks(callbacks)
 
+        // Accessibility: media alt text
+        media.contentDescription.takeIf { it.isNotBlank() }?.let {
+            builder.mediaContentDescription(it)
+        }
+
         // Fallback URL from raw JSON media object
         val rawMediaJson = inAppNotification.jsonDescription.optJSONObject("media")
         rawMediaJson?.optString("fallback_url", "")?.takeIf { it.isNotBlank() }?.let {
