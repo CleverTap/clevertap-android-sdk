@@ -39,7 +39,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     FrameLayout frameLayout;
 
-    ImageView mediaImage, squareImage;
+    ImageView mediaImage, squareImage, defaultImage;
 
     RelativeLayout mediaLayout;
 
@@ -89,14 +89,30 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             if (message.getOrientation().equalsIgnoreCase("l")) {
                 width = Math.round(this.mediaImage.getMeasuredHeight() * 1.76f);
                 height = this.mediaImage.getMeasuredHeight();
-            } else {
+            } else if (message.getOrientation().equalsIgnoreCase("p")) {
                 height = this.squareImage.getMeasuredHeight();
                 //noinspection all
                 width = height;
+            } else {
+                width = this.defaultImage.getMeasuredWidth();
+                height = this.defaultImage.getMeasuredHeight();
+                if (width == 0 || height == 0) {
+                    width = resources.getDisplayMetrics().widthPixels / 2;
+                    height = Math.round(width * 0.5625f);
+                }
             }
         } else {
             width = resources.getDisplayMetrics().widthPixels;
-            height = message.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
+            if (message.getOrientation().equalsIgnoreCase("l")) {
+                height = Math.round(width * 0.5625f);
+            } else if (message.getOrientation().equalsIgnoreCase("p")) {
+                height = width;
+            } else {
+                height = this.defaultImage.getMeasuredHeight();
+                if (height == 0) {
+                    height = Math.round(width * 0.5625f);
+                }
+            }
         }
 
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));

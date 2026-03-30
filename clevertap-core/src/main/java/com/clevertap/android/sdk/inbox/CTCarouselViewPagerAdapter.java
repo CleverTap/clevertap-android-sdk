@@ -76,6 +76,10 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             } else if (inboxMessage.getOrientation().equalsIgnoreCase("p")) {
                 ImageView imageView = view.findViewById(R.id.squareImageView);
                 addImageAndSetClick(imageView, view, position, container);
+            } else {
+                ImageView imageView = view.findViewById(R.id.defaultImageView);
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                addImageAndSetClick(imageView, view, position, container);
             }
         } catch (NoClassDefFoundError error) {
             Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info");
