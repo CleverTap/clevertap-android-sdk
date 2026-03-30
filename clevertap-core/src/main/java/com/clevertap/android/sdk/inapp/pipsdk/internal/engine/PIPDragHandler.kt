@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.engine
 
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
@@ -23,6 +24,7 @@ internal class PIPDragHandler(
     private val onSnapComplete: (PIPPosition) -> Unit,
     private val onTap: () -> Unit,
 ) {
+    private val touchSlop = ViewConfiguration.get(view.context).scaledTouchSlop.toFloat()
     private var touchStartX = 0f
     private var touchStartY = 0f
     private var viewStartX = 0f
@@ -43,7 +45,7 @@ internal class PIPDragHandler(
         if (!dragEnabled) return false
         val dx = abs(event.rawX - touchStartX)
         val dy = abs(event.rawY - touchStartY)
-        if (!isDragging && (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX)) {
+        if (!isDragging && (dx > touchSlop || dy > touchSlop)) {
             isDragging = true
         }
         return isDragging
@@ -57,7 +59,7 @@ internal class PIPDragHandler(
                 if (!isDragging) {
                     val dx = abs(event.rawX - touchStartX)
                     val dy = abs(event.rawY - touchStartY)
-                    isDragging = dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX
+                    isDragging = dx > touchSlop || dy > touchSlop
                 }
                 if (isDragging) {
                     val dx = event.rawX - touchStartX
@@ -98,9 +100,5 @@ internal class PIPDragHandler(
         PIPAnimator.animateSnap(view, anchor.x, anchor.y) {
             onSnapComplete(target)
         }
-    }
-
-    companion object {
-        private const val DRAG_THRESHOLD_PX = 12f
     }
 }
