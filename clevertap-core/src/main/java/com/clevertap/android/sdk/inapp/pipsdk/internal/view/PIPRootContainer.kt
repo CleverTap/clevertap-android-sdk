@@ -319,6 +319,6 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     private companion object {
         /** Max PIP height as percentage of container height. Prevents overflow in landscape
          *  with tall aspect ratios while leaving room for vertical snap positioning. */
-        const val MAX_HEIGHT_PERCENT = 60
+        const val MAX_HEIGHT_PERCENT = 40
     }
 }

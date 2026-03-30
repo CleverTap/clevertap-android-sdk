@@ -19,8 +19,18 @@ internal object PIPPositionResolver {
     ): Map<PIPPosition, PointF> = buildMap {
         val left = (horizontalMarginPx + safeInsets.left).toFloat()
         val top = (verticalMarginPx + safeInsets.top).toFloat()
-        val right = (containerWidth - pipWidth - horizontalMarginPx - safeInsets.right).toFloat()
-        val bottom = (containerHeight - pipHeight - verticalMarginPx - bottomOffsetPx - safeInsets.bottom).toFloat()
+        // Why coerceAtLeast?
+        // 'right' and 'bottom' represent the farthest edge where the PIP's top-left corner
+        // can be placed. When the PIP is very tall (e.g., 9:16 in landscape), subtracting
+        // pipHeight + margins + bottomOffset + insets from containerHeight can make 'bottom'
+        // smaller than 'top'. This inverts the 9-point grid: TOP_CENTER would get a larger
+        // y-value than BOTTOM_CENTER, causing positions to flip after rotation.
+        //
+        // coerceAtLeast(top/left) collapses the grid axis instead of inverting it — all
+        // vertical (or horizontal) positions share the same coordinate, so the PIP stays
+        // at the correct edge rather than jumping to the opposite one.
+        val right = (containerWidth - pipWidth - horizontalMarginPx - safeInsets.right).toFloat().coerceAtLeast(left)
+        val bottom = (containerHeight - pipHeight - verticalMarginPx - bottomOffsetPx - safeInsets.bottom).toFloat().coerceAtLeast(top)
         val midX = (left + right) / 2f
         val midY = (top + bottom) / 2f
 
