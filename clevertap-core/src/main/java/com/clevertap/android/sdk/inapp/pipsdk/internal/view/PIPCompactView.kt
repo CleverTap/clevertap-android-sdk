@@ -175,6 +175,12 @@ internal class PIPCompactView(
     fun hideVideoControls() {
         muteBtn?.visibility = View.GONE
         muteBtn?.setOnClickListener(null)
+        // Restore deeplink button to default position (bottom-left) since
+        // bindVideoControls() moved it to top-left to avoid mute button overlap.
+        deeplinkBtn?.let {
+            (it.layoutParams as LayoutParams).gravity = Gravity.BOTTOM or Gravity.START
+            it.requestLayout()
+        }
     }
 
     fun detach() = controlsOverlay.detach()
