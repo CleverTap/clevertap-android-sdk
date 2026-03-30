@@ -30,7 +30,7 @@ internal abstract class VerticalImageContentView(
     protected fun setupButton(
         buttonData: VerticalImageButtonData?,
     ) {
-        if (buttonData == null || buttonData.name.isNullOrEmpty()) return
+        if (buttonData == null) return
 
         remoteView.setViewVisibility(R.id.vertical_img_btn_frame, View.VISIBLE)
         remoteView.setTextViewText(R.id.vertical_img_btn, buttonData.name)

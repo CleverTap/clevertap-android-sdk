@@ -330,7 +330,7 @@ internal object TemplateDataFactory {
         collapsed: Boolean = false,
     ): VerticalImageButtonData? {
         val suffix = if (collapsed) "_collapsed" else ""
-        val btnName = extras.getString(PT_BTN_NAME + suffix) ?: return null
+        val btnName = extras.getString(PT_BTN_NAME + suffix)?.takeIf { it.isNotEmpty() } ?: return null
         return VerticalImageButtonData(
             name = btnName,
             deepLink = extras.getString(PT_BTN_DL + suffix),

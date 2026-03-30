@@ -183,7 +183,7 @@ internal enum class GradientDirection(val key: String) {
 }
 
 internal data class VerticalImageButtonData(
-    val name: String? = null,
+    val name: String,
     val deepLink: String? = null,
     val style: ButtonStyle = ButtonStyle.SOLID,
     val buttonColor: String? = null,
