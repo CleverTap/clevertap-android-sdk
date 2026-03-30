@@ -86,9 +86,10 @@ internal class ImageRenderer(
     override val isPlaying: Boolean = false
 
     private fun loadFallback(iv: ImageView, config: PIPConfig) {
+        val container = iv.parent as? ViewGroup ?: return
         FallbackImageLoader.load(
             FallbackLoadRequest(
-                container = iv.parent as ViewGroup,
+                container = container,
                 fallbackUrl = config.fallbackUrl,
                 primaryUrl = config.mediaUrl,
                 resourceProvider = resourceProvider,
