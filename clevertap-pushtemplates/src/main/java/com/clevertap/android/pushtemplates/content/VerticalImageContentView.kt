@@ -35,11 +35,7 @@ internal abstract class VerticalImageContentView(
         remoteView.setViewVisibility(R.id.vertical_img_btn_frame, View.VISIBLE)
         remoteView.setTextViewText(R.id.vertical_img_btn, buttonData.name)
 
-        buttonData.textColor?.let { color ->
-            Utils.getColourOrNull(color)?.let {
-                remoteView.setTextColor(R.id.vertical_img_btn, it)
-            }
-        }
+        setCustomTextColour(buttonData.textColor, R.id.vertical_img_btn)
 
         val bitmap = when (buttonData.style) {
             ButtonStyle.GRADIENT -> {
