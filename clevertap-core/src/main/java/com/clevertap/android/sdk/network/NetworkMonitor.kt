@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ILogger
@@ -86,8 +87,8 @@ internal class NetworkMonitor constructor(
         }
 
         _stateFlow.value = calculateCurrentNetworkState()
-        registerNetworkCallback()
         observeNetworkRestore()
+        registerNetworkCallback()
 
         logger.debug(config.accountId, "NetworkMonitor initialized with state: ${_stateFlow.value}")
     }
@@ -159,7 +160,13 @@ internal class NetworkMonitor constructor(
                 networkCallback = callback
                 logger.verbose(config.accountId, "Network callback registered successfully")
             } else {
-                logger.verbose(config.accountId, "API < 24: using synchronous network check")
+                val request = NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    .build()
+                connectivityManager?.registerNetworkCallback(request, callback)
+                networkCallback = callback
+                logger.verbose(config.accountId, "API < 24: registered NetworkCallback via NetworkRequest")
             }
         } catch (e: Exception) {
             logger.debug(config.accountId, "Network callback registration failed: ${e.message}")
