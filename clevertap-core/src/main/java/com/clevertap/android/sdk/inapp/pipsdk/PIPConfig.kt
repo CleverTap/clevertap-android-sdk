@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp.pipsdk
 
+import com.clevertap.android.sdk.inapp.CTInAppAction
+
 /**
  * Immutable configuration for a PIP session.
  *
@@ -25,7 +27,7 @@ data class PIPConfig internal constructor(
     val animationConfig: PIPAnimationConfig = PIPAnimationConfig(),
 
     // Controls
-    internal val action: com.clevertap.android.sdk.inapp.CTInAppAction? = null, // null = action button hidden
+    internal val action: CTInAppAction? = null, // null = action button hidden
     val showCloseButton: Boolean = true,        // false = close button hidden everywhere
 
     // Controls visibility (from server "controls" JSON object)
@@ -53,7 +55,7 @@ data class PIPConfig internal constructor(
         private var horizontalEdgeMarginDp: Int = 16
         private var verticalEdgeMarginDp: Int = 16
         private var animationConfig: PIPAnimationConfig = PIPAnimationConfig()
-        private var action: com.clevertap.android.sdk.inapp.CTInAppAction? = null
+        private var action: CTInAppAction? = null
         private var showCloseButton: Boolean = true
         private var dragEnabled: Boolean = true
         private var showPlayPauseButton: Boolean = true
@@ -71,7 +73,7 @@ data class PIPConfig internal constructor(
         fun horizontalEdgeMarginDp(dp: Int) = apply { horizontalEdgeMarginDp = dp }
         fun verticalEdgeMarginDp(dp: Int) = apply { verticalEdgeMarginDp = dp }
         fun animationConfig(config: PIPAnimationConfig) = apply { this.animationConfig = config }
-        internal fun action(action: com.clevertap.android.sdk.inapp.CTInAppAction) = apply { this.action = action }
+        internal fun action(action: CTInAppAction) = apply { this.action = action }
         fun showCloseButton(show: Boolean) = apply { showCloseButton = show }
         fun dragEnabled(enabled: Boolean) = apply { dragEnabled = enabled }
         fun showPlayPauseButton(show: Boolean) = apply { showPlayPauseButton = show }
