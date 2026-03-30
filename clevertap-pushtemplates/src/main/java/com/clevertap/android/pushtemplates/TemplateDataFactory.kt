@@ -18,6 +18,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_DL
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_CLR1
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_CLR2
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_DIR_DEFAULT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_NAME
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_TEXT_CLR
@@ -340,7 +341,7 @@ internal object TemplateDataFactory {
             textColor = colorMap[PT_BTN_TEXT_CLR + suffix],
             gradientColor1 = colorMap[PT_BTN_GRAD_CLR1 + suffix],
             gradientColor2 = colorMap[PT_BTN_GRAD_CLR2 + suffix],
-            gradientDirection = GradientDirection.fromString(extras.getString(PT_BTN_GRAD_DIR + suffix)),
+            gradientDirection = extras.getString(PT_BTN_GRAD_DIR + suffix)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
         )
     }
 

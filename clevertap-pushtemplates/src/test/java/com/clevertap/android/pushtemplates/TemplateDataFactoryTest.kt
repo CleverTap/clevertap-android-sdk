@@ -1747,12 +1747,12 @@ class TemplateDataFactoryTest {
     }
 
     @Test
-    fun `createVerticalImageTemplateData should parse gradient button style and direction`() {
+    fun `createVerticalImageTemplateData should parse linear_gradient button style and direction`() {
         // Given
         setupBasicMockBundle()
         every { mockBundle.getString(PT_BTN_NAME) } returns "BUY"
-        every { mockBundle.getString(PT_BTN_STYLE) } returns "gradient"
-        every { mockBundle.getString(PT_BTN_GRAD_DIR) } returns "top_bottom"
+        every { mockBundle.getString(PT_BTN_STYLE) } returns "linear_gradient"
+        every { mockBundle.getString(PT_BTN_GRAD_DIR) } returns "180"
         every { Utils.createColorMap(any(), any()) } returns mapOf(
             PT_TITLE_COLOR to SAMPLE_COLOR,
             PT_MSG_COLOR to SAMPLE_COLOR,
@@ -1774,8 +1774,8 @@ class TemplateDataFactoryTest {
         // Then
         val data = result as VerticalImageTemplateData
         assertNotNull(data.buttonData)
-        assertEquals(ButtonStyle.GRADIENT, data.buttonData?.style)
-        assertEquals(GradientDirection.TOP_BOTTOM, data.buttonData?.gradientDirection)
+        assertEquals(ButtonStyle.GRADIENT_LINEAR, data.buttonData?.style)
+        assertEquals(180.0, data.buttonData?.gradientDirection)
         assertEquals("#FF0000", data.buttonData?.gradientColor1)
         assertEquals("#0000FF", data.buttonData?.gradientColor2)
     }

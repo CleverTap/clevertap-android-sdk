@@ -210,6 +210,8 @@ public class PTConstants {
     public static final String PT_BTN_GRAD_CLR2 = "pt_btn_grad_clr2";
     public static final String PT_BTN_GRAD_DIR = "pt_btn_grad_dir";
 
+    public static final double PT_BTN_GRAD_DIR_DEFAULT = 90.0;
+
     // Vertical Image Template - Collapsed button configuration
     public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
     public static final String PT_BTN_BORDER_CLR_COLLAPSED = "pt_btn_border_clr_collapsed";

@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.graphics.createBitmap
 import com.clevertap.android.pushtemplates.ButtonStyle
-import com.clevertap.android.pushtemplates.GradientDirection
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -20,6 +19,8 @@ import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.VerticalImageButtonData
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
+import kotlin.math.cos
+import kotlin.math.sin
 
 internal abstract class VerticalImageContentView(
     context: Context,
@@ -42,12 +43,17 @@ internal abstract class VerticalImageContentView(
         setCustomTextColour(buttonData.textColor, R.id.vertical_img_btn)
 
         val bitmap = when (buttonData.style) {
-            ButtonStyle.GRADIENT -> {
+            ButtonStyle.GRADIENT_LINEAR -> {
                 val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) }
                 val color2 = buttonData.gradientColor2?.let { Utils.getColourOrNull(it) }
                 if (color1 != null && color2 != null) {
-                    createGradientButtonBitmap(color1, color2, buttonData.gradientDirection)
+                    createLinearGradientButtonBitmap(color1, color2, buttonData.gradientDirection)
                 } else null
+            }
+            ButtonStyle.GRADIENT_RADIAL -> {
+                val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) }
+                val color2 = buttonData.gradientColor2?.let { Utils.getColourOrNull(it) }
+                if (color1 != null && color2 != null) createRadialGradientButtonBitmap(color1, color2) else null
             }
             ButtonStyle.SOLID -> {
                 val bgColor = buttonData.buttonColor?.let { Utils.getColourOrNull(it) }
@@ -101,45 +107,42 @@ internal abstract class VerticalImageContentView(
             return bitmap
         }
 
-        fun createGradientButtonBitmap(
+        fun createLinearGradientButtonBitmap(
             color1: Int,
             color2: Int,
-            direction: GradientDirection,
+            direction: Double,
         ): Bitmap {
             val bitmap = createBitmap(BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT)
             val canvas = Canvas(bitmap)
             val rect = RectF(0f, 0f, BTN_BITMAP_WIDTH.toFloat(), BTN_BITMAP_HEIGHT.toFloat())
-
-            val shader = createShader(color1, color2, direction, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT)
+            val w = BTN_BITMAP_WIDTH.toFloat()
+            val h = BTN_BITMAP_HEIGHT.toFloat()
+            val rad = Math.toRadians(direction)
+            val sinA = sin(rad).toFloat()
+            val cosA = cos(rad).toFloat()
+            val shader = LinearGradient(
+                w * (0.5f - 0.5f * sinA), h * (0.5f + 0.5f * cosA),
+                w * (0.5f + 0.5f * sinA), h * (0.5f - 0.5f * cosA),
+                color1, color2, Shader.TileMode.CLAMP
+            )
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
             canvas.drawRoundRect(rect, BTN_CORNER_RADIUS, BTN_CORNER_RADIUS, paint)
-
             return bitmap
         }
 
-        private fun createShader(
+        fun createRadialGradientButtonBitmap(
             color1: Int,
             color2: Int,
-            direction: GradientDirection,
-            width: Int,
-            height: Int
-        ): Shader {
-            val w = width.toFloat()
-            val h = height.toFloat()
-            return when (direction) {
-                GradientDirection.RIGHT_LEFT   -> LinearGradient(w, 0f, 0f, 0f, color1, color2, Shader.TileMode.CLAMP)
-                GradientDirection.TOP_BOTTOM   -> LinearGradient(0f, 0f, 0f, h, color1, color2, Shader.TileMode.CLAMP)
-                GradientDirection.BOTTOM_TOP   -> LinearGradient(0f, h, 0f, 0f, color1, color2, Shader.TileMode.CLAMP)
-                GradientDirection.DIAGONAL_TL_BR -> LinearGradient(0f, 0f, w, h, color1, color2, Shader.TileMode.CLAMP)
-                GradientDirection.DIAGONAL_BL_TR -> LinearGradient(0f, h, w, 0f, color1, color2, Shader.TileMode.CLAMP)
-                GradientDirection.RADIAL       -> RadialGradient(
-                    w / 2f, h / 2f,
-                    maxOf(w, h) / 2f,
-                    color1, color2,
-                    Shader.TileMode.CLAMP
-                )
-                GradientDirection.LEFT_RIGHT   -> LinearGradient(0f, 0f, w, 0f, color1, color2, Shader.TileMode.CLAMP)
-            }
+        ): Bitmap {
+            val bitmap = createBitmap(BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT)
+            val canvas = Canvas(bitmap)
+            val rect = RectF(0f, 0f, BTN_BITMAP_WIDTH.toFloat(), BTN_BITMAP_HEIGHT.toFloat())
+            val w = BTN_BITMAP_WIDTH.toFloat()
+            val h = BTN_BITMAP_HEIGHT.toFloat()
+            val shader = RadialGradient(w / 2f, h / 2f, maxOf(w, h) / 2f, color1, color2, Shader.TileMode.CLAMP)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
+            canvas.drawRoundRect(rect, BTN_CORNER_RADIUS, BTN_CORNER_RADIUS, paint)
+            return bitmap
         }
     }
 }
