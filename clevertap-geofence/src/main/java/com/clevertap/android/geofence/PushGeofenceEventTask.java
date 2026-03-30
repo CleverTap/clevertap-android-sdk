@@ -3,19 +3,23 @@ package com.clevertap.android.geofence;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
-import java.util.List;
-import java.util.concurrent.Future;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * A task of type {@link CTGeofenceTask} responsible for processing and sending {@code GeoCluster Entered}
@@ -120,8 +124,8 @@ class PushGeofenceEventTask implements CTGeofenceTask {
      */
     @WorkerThread
     private void pushGeofenceEvents(@Nullable List<Geofence> triggeringGeofences,
-            @Nullable Location triggeringLocation,
-            int geofenceTransition) {
+                                    @Nullable Location triggeringLocation,
+                                    int geofenceTransition) {
 
         if (triggeringGeofences == null) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
@@ -225,10 +229,8 @@ class PushGeofenceEventTask implements CTGeofenceTask {
                             } catch (Exception e) {
                                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                                         "Failed to push geofence event with id = " +
-                                                triggeredGeofence.getRequestId());
-                                e.printStackTrace();
+                                                triggeredGeofence.getRequestId(), e);
                             }
-
                             break;
                         }
                     }
@@ -250,8 +252,7 @@ class PushGeofenceEventTask implements CTGeofenceTask {
                 }
             } catch (Exception e) {
                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to read triggered geofences from file");
-                e.printStackTrace();
+                        "Failed to read triggered geofences from file", e);
             }
         }
     }

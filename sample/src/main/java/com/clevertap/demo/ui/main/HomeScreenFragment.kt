@@ -83,8 +83,8 @@ class HomeScreenFragment : Fragment() {
 
         viewModel.clickCommand.observe(viewLifecycleOwner) { commandPosition ->
             when (commandPosition) {
-                "6-0" -> startActivity(Intent(activity, WebViewActivity::class.java))
-                "7-0" -> { // init Geofence API
+                "7-0" -> startActivity(Intent(activity, WebViewActivity::class.java))
+                "8-0" -> { // init Geofence API
                     when {
                         // proceed only if cleverTap instance is not null
                         cleverTapInstance == null -> println("cleverTapInstance is null")
@@ -93,7 +93,7 @@ class HomeScreenFragment : Fragment() {
                     }
                 }
 
-                "7-1" -> { // trigger location
+                "8-1" -> { // trigger location
                     try {
                         CTGeofenceAPI.getInstance(context).triggerLocation()
                     } catch (e: IllegalStateException) {
@@ -104,8 +104,8 @@ class HomeScreenFragment : Fragment() {
                     }
                 }
 
-                "7-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
-                "2-16" -> startActivity(Intent(activity, CustomInboxComposeActivity::class.java)) // Launch Compose Inbox
+                "8-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
+                "3-16" -> startActivity(Intent(activity, CustomInboxComposeActivity::class.java)) // Launch Compose Inbox
             }
         }
     }

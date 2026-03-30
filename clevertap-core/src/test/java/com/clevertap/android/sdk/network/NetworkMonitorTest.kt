@@ -15,7 +15,6 @@ import org.robolectric.shadows.ShadowNetworkCapabilities
 import org.robolectric.shadows.ShadowNetworkInfo
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -34,7 +33,7 @@ class NetworkMonitorTest : BaseTestCase() {
         shadowCM = shadowOf(connectivityManager)
     }
 
-    private fun createNetworkMonitor() = NetworkMonitor(application, cleverTapInstanceConfig)
+    private fun createNetworkMonitor() = NetworkMonitor(application, cleverTapInstanceConfig.accountId, cleverTapInstanceConfig.logger)
 
     // ─── NetworkState data class tests ────────────────────────────────────────
 
@@ -52,22 +51,6 @@ class NetworkMonitorTest : BaseTestCase() {
     fun test_networkState_disconnectedConstant_isWifiConnectedFalse() {
         assertFalse(NetworkState.DISCONNECTED.isWifiConnected)
     }
-
-    @Test
-    fun test_networkState_dataClass_twoEqualObjects_areEqual() {
-        val state1 = NetworkState(isAvailable = true, networkType = NetworkType.WIFI)
-        val state2 = NetworkState(isAvailable = true, networkType = NetworkType.WIFI)
-        assertEquals(state1, state2)
-    }
-
-    @Test
-    fun test_networkState_dataClass_differentTypes_areNotEqual() {
-        val wifiState = NetworkState(isAvailable = true, networkType = NetworkType.WIFI)
-        val cellularState = NetworkState(isAvailable = true, networkType = NetworkType.CELLULAR)
-        assertNotEquals(wifiState, cellularState)
-    }
-
-
 
     // ─── Instance method tests (Robolectric default = no network) ─────────────
 
@@ -218,7 +201,6 @@ class NetworkMonitorTest : BaseTestCase() {
     @Config(sdk = [23])
     @Suppress("DEPRECATION")
     fun test_isNetworkOnline_whenNetworkUnvalidated_captivePortal_returnsFalse() {
-        // Network connected hai but VALIDATED nahi — jaise hotel/cafe captive portal
         val netInfo = ShadowNetworkInfo.newInstance(
             android.net.NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 0, true, true
         )

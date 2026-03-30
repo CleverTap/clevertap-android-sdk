@@ -108,7 +108,7 @@ internal object CleverTapFactory {
         val ctLockManager = CTLockManager()
         val mainLooperHandler = MainLooperHandler()
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
-        val networkMonitor = NetworkMonitor(context, config)
+        val networkMonitor = NetworkMonitor(context, config.accountId, config.logger)
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
@@ -117,7 +117,7 @@ internal object CleverTapFactory {
 
         val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
-            FileResourceProvider.getInstance(context, config.logger)
+            FileResourceProvider.initInstance(context, config.logger, networkMonitor)
         }
 
         val repository = CryptRepository(
@@ -467,7 +467,7 @@ internal object CleverTapFactory {
             storeRegistry,
             templatesManager,
             executors,
-            { FileResourceProvider.getInstance(context, config.logger) }
+            { FileResourceProvider.initInstance(context, config.logger, networkMonitor) }
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
