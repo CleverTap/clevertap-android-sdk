@@ -60,15 +60,11 @@ internal class EventQueueManager(
 
     init {
         callbackManager.setFailureFlushListener(this)
-        logger.verbose(config.accountId, "EventQueueManager: registering network restore callback")
-        networkManager.setNetworkRestoreCallback {
+        networkManager.observeNetworkRestore {
             logger.debug(config.accountId, "EventQueueManager: network restored, triggering flush for all event groups")
             flushQueueAsync(context, EventGroup.REGULAR)
-            logger.verbose(config.accountId, "EventQueueManager: flush triggered for REGULAR events")
             flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
-            logger.verbose(config.accountId, "EventQueueManager: flush triggered for PUSH_NOTIFICATION_VIEWED events")
         }
-        logger.verbose(config.accountId, "EventQueueManager: network restore callback registered")
     }
 
     // only call async

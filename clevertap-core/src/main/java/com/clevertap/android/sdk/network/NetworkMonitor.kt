@@ -8,22 +8,18 @@ import android.net.NetworkRequest
 import android.os.Build
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Utils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 
 internal class NetworkMonitor constructor(
     context: Context,
     private val config: CleverTapInstanceConfig,
-    private val logger: ILogger = config.logger,
-    private val monitorScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val logger: ILogger = config.logger
 ) {
     private val appContext: Context = context.applicationContext
 
@@ -65,12 +61,11 @@ internal class NetworkMonitor constructor(
     private val _stateFlow = MutableStateFlow(NetworkState.UNDETECTED)
     val networkState: Flow<NetworkState> = _stateFlow.asStateFlow()
 
-    @field:Volatile
-    var onNetworkRestored: (() -> Unit)? = null
-        set(value) {
-            field = value
-            logger.debug(config.accountId, "NetworkMonitor: onNetworkRestored callback ${if (value != null) "set" else "cleared"}")
-        }
+    val networkRestoreEvents: Flow<Unit> = _stateFlow
+        .drop(1)
+        .distinctUntilChanged { old, new -> old.isAvailable == new.isAvailable }
+        .filter { it.isAvailable }
+        .map { }
 
     init {
         logger.debug(accountId, "NetworkMonitor initializing...")
@@ -85,7 +80,6 @@ internal class NetworkMonitor constructor(
         }
 
         _stateFlow.value = calculateCurrentNetworkState()
-        observeNetworkRestore()
         registerNetworkCallback()
 
         logger.debug(accountId, "NetworkMonitor initialized with state: ${_stateFlow.value}")
@@ -226,20 +220,6 @@ internal class NetworkMonitor constructor(
         hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
 
-
-    private fun observeNetworkRestore() {
-        logger.debug(config.accountId, "NetworkMonitor: starting network restore observer")
-        monitorScope.launch {
-            _stateFlow
-                .drop(1)
-                .distinctUntilChanged { old, new -> old.isAvailable == new.isAvailable }
-                .filter { it.isAvailable }
-                .collect {
-                    logger.debug(config.accountId, "NetworkMonitor: network restored, state=$it, invoking onNetworkRestored callback")
-                    onNetworkRestored?.invoke()
-                }
-        }
-    }
 
     fun cleanup() {
         val callback = networkCallback

@@ -439,14 +439,14 @@ class EventQueueManagerTest : BaseTestCase() {
     @Test
     fun test_init_registersNetworkRestoreCallback() {
         // callback registration happens in init during setUp
-        verify { corestate.networkManager.setNetworkRestoreCallback(any()) }
+        verify { corestate.networkManager.observeNetworkRestore(any()) }
     }
 
     @Test
     fun test_networkRestoreCallback_whenInvoked_flushesREGULAREvents() {
         withMockExecutors {
             val callbackSlot = slot<() -> Unit>()
-            verify { corestate.networkManager.setNetworkRestoreCallback(capture(callbackSlot)) }
+            verify { corestate.networkManager.observeNetworkRestore(capture(callbackSlot)) }
 
             every { corestate.networkManager.isNetworkOnline() } returns true
 
@@ -460,7 +460,7 @@ class EventQueueManagerTest : BaseTestCase() {
     fun test_networkRestoreCallback_whenInvoked_flushesPUSH_NOTIFICATION_VIEWEDEvents() {
         withMockExecutors {
             val callbackSlot = slot<() -> Unit>()
-            verify { corestate.networkManager.setNetworkRestoreCallback(capture(callbackSlot)) }
+            verify { corestate.networkManager.observeNetworkRestore(capture(callbackSlot)) }
 
             every { corestate.networkManager.isNetworkOnline() } returns true
 

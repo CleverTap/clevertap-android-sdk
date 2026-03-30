@@ -35,6 +35,10 @@ import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -61,6 +65,8 @@ internal class NetworkManager constructor(
         private const val BATCH_SIZE = 50
     }
 
+    private val networkManagerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private var responseFailureCount = 0
 
     private var networkRetryCount = 0
@@ -71,10 +77,14 @@ internal class NetworkManager constructor(
 
     fun isNetworkOnline(): Boolean = networkMonitor.isNetworkOnline()
 
-    fun setNetworkRestoreCallback(callback: () -> Unit) {
-        logger.debug(config.accountId, "NetworkManager: registering network restore callback")
-        networkMonitor.onNetworkRestored = callback
-        logger.debug(config.accountId, "NetworkManager: network restore callback registered successfully")
+    fun observeNetworkRestore(onRestored: () -> Unit) {
+        logger.debug(config.accountId, "NetworkManager: starting network restore observer")
+        networkManagerScope.launch {
+            networkMonitor.networkRestoreEvents.collect {
+                logger.debug(config.accountId, "NetworkManager: network restored, invoking callback")
+                onRestored()
+            }
+        }
     }
 
     fun addNetworkHeadersListener(listener: NetworkHeadersListener) {

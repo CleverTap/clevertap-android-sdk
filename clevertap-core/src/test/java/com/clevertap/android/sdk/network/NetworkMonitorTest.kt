@@ -16,7 +16,6 @@ import org.robolectric.shadows.ShadowNetworkInfo
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 
@@ -105,29 +104,12 @@ class NetworkMonitorTest : BaseTestCase() {
         monitor.cleanup()
     }
 
-    // ─── onNetworkRestored callback tests ─────────────────────────────────────
+    // ─── networkRestoreEvents flow tests ─────────────────────────────────────
 
     @Test
-    fun test_onNetworkRestored_defaultIsNull() {
+    fun test_networkRestoreEvents_isNotNull() {
         val monitor = createNetworkMonitor()
-        assertNull(monitor.onNetworkRestored)
-        monitor.cleanup()
-    }
-
-    @Test
-    fun test_onNetworkRestored_canBeSet() {
-        val monitor = createNetworkMonitor()
-        monitor.onNetworkRestored = {}
-        assertNotNull(monitor.onNetworkRestored)
-        monitor.cleanup()
-    }
-
-    @Test
-    fun test_onNetworkRestored_canBeCleared() {
-        val monitor = createNetworkMonitor()
-        monitor.onNetworkRestored = {}
-        monitor.onNetworkRestored = null
-        assertNull(monitor.onNetworkRestored)
+        assertNotNull(monitor.networkRestoreEvents)
         monitor.cleanup()
     }
 
