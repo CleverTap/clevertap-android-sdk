@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -24,7 +25,6 @@ import androidx.media3.ui.PlayerView
  * PIP has its own overlay controls ([com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPControlsOverlay]),
  * so the PlayerView is created with `useController = false`.
  */
-@UnstableApi
 internal class PIPVideoPlayerWrapper {
 
     private var player: ExoPlayer? = null
@@ -54,6 +54,7 @@ internal class PIPVideoPlayerWrapper {
      * Creates and prepares the [ExoPlayer] with an HLS source.
      * Starts muted with repeat-one mode.
      */
+    @OptIn(UnstableApi::class)
     fun initPlayer(context: Context, url: String) {
         if (player != null) return
 
@@ -84,6 +85,7 @@ internal class PIPVideoPlayerWrapper {
      *
      * @return the [PlayerView] to add to the container.
      */
+    @OptIn(UnstableApi::class)
     fun createSurface(context: Context): View {
         // Guard against calling createSurface() twice without releasing the first PlayerView.
         // If this happens, the old PlayerView reference is overwritten and can't be cleaned up
