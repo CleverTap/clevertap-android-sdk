@@ -13,6 +13,7 @@ import android.view.View
 import androidx.core.graphics.createBitmap
 import com.clevertap.android.pushtemplates.ButtonStyle
 import com.clevertap.android.pushtemplates.GradientDirection
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
@@ -30,7 +31,10 @@ internal abstract class VerticalImageContentView(
     protected fun setupButton(
         buttonData: VerticalImageButtonData?,
     ) {
-        if (buttonData == null) return
+        if (buttonData == null) {
+            PTLog.debug("VerticalImageContentView: buttonData is null, skipping button setup")
+            return
+        }
 
         remoteView.setViewVisibility(R.id.vertical_img_btn_frame, View.VISIBLE)
         remoteView.setTextViewText(R.id.vertical_img_btn, buttonData.name)
