@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.clevertap.demo"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 556
         versionName = "1.7.0-instant"

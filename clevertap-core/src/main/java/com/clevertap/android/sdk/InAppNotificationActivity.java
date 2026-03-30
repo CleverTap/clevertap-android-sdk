@@ -407,7 +407,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         AlertDialog alertDialog;
         CTInAppNotificationButton positiveButton = buttons.get(0);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+
             alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this,
                     android.R.style.Theme_Material_Light_Dialog_Alert)
                     .setCancelable(false)
@@ -423,22 +423,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                         negativeButton.getText(),
                         (dialog, which) -> onAlertButtonClick(negativeButton, false));
             }
-        } else {
-            alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this)
-                    .setCancelable(false)
-                    .setTitle(inAppNotification.getTitle())
-                    .setMessage(inAppNotification.getMessage())
-                    .setPositiveButton(positiveButton.getText(),
-                            (dialogInterface, i) -> onAlertButtonClickLegacy(positiveButton))
-                    .create();
 
-            if (inAppNotification.getButtons().size() == 2) {
-                CTInAppNotificationButton negativeButton = buttons.get(1);
-                alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
-                        negativeButton.getText(),
-                        (dialog, which) -> onAlertButtonClickLegacy(negativeButton));
-            }
-        }
         //By default, we will allow 2 button alerts and set a third button if it is configured
         if (buttons.size() > 2) {
             CTInAppNotificationButton button = buttons.get(2);
