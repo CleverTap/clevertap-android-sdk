@@ -63,14 +63,16 @@ internal abstract class VerticalImageContentView(
         }
         bitmap?.let { remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, it) }
 
-        buttonData.deepLink?.let { dl ->
-            val btnExtras = extras.clone() as Bundle
-            btnExtras.putString(Constants.DEEP_LINK_KEY, dl)
-            remoteView.setOnClickPendingIntent(
-                R.id.vertical_img_btn_frame,
-                LaunchPendingIntentFactory.getLaunchPendingIntent(btnExtras, context)
-            )
-        }
+        setupButtonDeepLink(extras, buttonData.deepLink)
+    }
+
+    private fun setupButtonDeepLink(extras: Bundle, buttonDeepLink: String?) {
+        val btnExtras = extras.clone() as Bundle
+        btnExtras.putString(Constants.DEEP_LINK_KEY, buttonDeepLink)
+        remoteView.setOnClickPendingIntent(
+            R.id.vertical_img_btn_frame,
+            LaunchPendingIntentFactory.getLaunchPendingIntent(btnExtras, context)
+        )
     }
 
     companion object {
