@@ -106,6 +106,10 @@ internal class VideoRenderer(
         )
         _isMuted = session.isMuted
         _isPlaying = session.isPlaying
+
+        // Re-register error listener with the new container so fallback loads
+        // into the post-rotation view, not the old (detached) one.
+        setupErrorListener(container, session.config)
     }
 
     override fun release() {
