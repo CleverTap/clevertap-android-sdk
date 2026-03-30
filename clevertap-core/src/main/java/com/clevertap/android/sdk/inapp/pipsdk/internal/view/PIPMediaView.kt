@@ -105,11 +105,13 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
             val removeScrim = Runnable { removeView(scrim) }
 
             wrapper.notifyWhenFirstFrame {
-                handler?.removeCallbacks(removeScrim)
+                removeCallbacks(removeScrim)
                 removeScrim.run()
             }
             // Safety net: remove scrim after 3s even if first frame never fires (e.g., video error)
-            handler?.postDelayed(removeScrim, 3000L)
+            // Use View.postDelayed() instead of handler?.postDelayed() because handler is null
+            // before the view is attached. View queues callbacks internally until attachment.
+            postDelayed(removeScrim, 3000L)
         }
     }
 
