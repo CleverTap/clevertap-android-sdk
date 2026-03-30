@@ -976,6 +976,7 @@ internal class InAppController(
                 } catch (t: Throwable) {
                     logger.verbose("Failed to show PIP in-app", t)
                     currentlyDisplayingInApp = null
+                    showNotificationIfAvailable()
                 }
                 return
             }
