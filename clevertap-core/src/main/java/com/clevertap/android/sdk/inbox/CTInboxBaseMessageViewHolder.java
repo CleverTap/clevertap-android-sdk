@@ -94,9 +94,11 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                 //noinspection all
                 width = height;
             } else {
-                width = this.defaultImage.getMeasuredWidth();
-                height = this.defaultImage.getMeasuredHeight();
-                if (width == 0 || height == 0) {
+                if (this.defaultImage != null) {
+                    width = this.defaultImage.getMeasuredWidth();
+                    height = this.defaultImage.getMeasuredHeight();
+                }
+                if (this.defaultImage == null || width == 0 || height == 0) {
                     width = resources.getDisplayMetrics().widthPixels / 2;
                     height = Math.round(width * 0.5625f);
                 }
@@ -108,8 +110,10 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             } else if (message.getOrientation().equalsIgnoreCase("p")) {
                 height = width;
             } else {
-                height = this.defaultImage.getMeasuredHeight();
-                if (height == 0) {
+                if (this.defaultImage != null) {
+                    height = this.defaultImage.getMeasuredHeight();
+                }
+                if (this.defaultImage == null || height == 0) {
                     height = Math.round(width * 0.5625f);
                 }
             }

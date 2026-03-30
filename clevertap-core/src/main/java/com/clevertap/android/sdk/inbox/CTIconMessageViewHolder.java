@@ -168,6 +168,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         this.defaultImage.setVisibility(View.GONE);
         this.defaultImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
+        this.defaultImage.setContentDescription(null);
         this.mediaLayout.setVisibility(View.GONE);
         this.progressBarFrameLayout.setVisibility(View.GONE);
         try {
@@ -471,7 +472,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
             } else if (inboxMessage.getOrientation().equalsIgnoreCase("p")) {
                 height = width;
             } else {
-                height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+                height = Math.round(width * 0.5625f);
             }
         }
         this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
