@@ -83,6 +83,25 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         }
 
         // Expanded view — GONE until user expands
+        val ev = createExpandedView(s, actionHandler)
+        // Shared media view — initialized or rebound post-rotation
+        val mv = createMediaView(s, isReattach, resourceProvider!!, mediaExecutor!!)
+        // Compact view — invisible until positioned
+        val cv = createCompactView(s, mv, actionHandler)
+
+        // Defer positioning until after the container's first layout pass
+        post {
+            if (width == 0 || height == 0) return@post
+            if (isReattach && s.isExpanded) {
+                positionAndShow(s, cv, isReattach = true)
+                expandToFull()
+            } else {
+                positionAndShow(s, cv, isReattach)
+            }
+        }
+    }
+
+    private fun createExpandedView(s: PIPSession, actionHandler: () -> Unit): PIPExpandedView {
         val ev = PIPExpandedView(
             context,
             showCloseButton = s.config.showCloseButton,
@@ -97,14 +116,21 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         expandedView = ev
         ev.visibility = View.GONE
         addView(ev, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        return ev
+    }
 
-        // Shared media view — initialized or rebound post-rotation
+    private fun createMediaView(
+        s: PIPSession,
+        isReattach: Boolean,
+        resourceProvider: FileResourceProvider,
+        mediaExecutor: ExecutorService,
+    ): PIPMediaView {
         val mv = PIPMediaView(context)
         mediaView = mv
         if (isReattach) {
-            mv.rebindSurface(s, resourceProvider!!, mediaExecutor!!)
+            mv.rebindSurface(s, resourceProvider, mediaExecutor)
         } else {
-            mv.initialize(s.config, s, resourceProvider!!, mediaExecutor!!)
+            mv.initialize(s.config, s, resourceProvider, mediaExecutor)
         }
 
         // When video falls back to a static image, hide video-specific controls (mute, play/pause)
@@ -113,8 +139,14 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             compactView?.hideVideoControls()
             expandedView?.hideVideoControls()
         }
+        return mv
+    }
 
-        // Compact view — invisible until positioned
+    private fun createCompactView(
+        s: PIPSession,
+        mv: PIPMediaView,
+        actionHandler: () -> Unit,
+    ): PIPCompactView {
         val cv = PIPCompactView(
             context, mv, s,
             onExpand = { expandToFull() },
@@ -127,18 +159,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         compactView = cv
         cv.visibility = View.INVISIBLE
         addView(cv)
-
-        // Defer positioning until after the container's first layout pass
-        post {
-            if (width == 0 || height == 0) return@post
-            if (isReattach && s.isExpanded) {
-                // Restore expanded state after rotation — show full screen immediately
-                positionAndShow(s, cv, isReattach = true)
-                expandToFull()
-            } else {
-                positionAndShow(s, cv, isReattach)
-            }
-        }
+        return cv
     }
 
     /** Animate the active view out, then call [onDone] for final cleanup. */
@@ -194,7 +215,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         ev.visibility = View.VISIBLE
 
         // Move shared media view from compact → expanded
-        (mv.parent as? ViewGroup)?.removeView(mv)
+        cv.removeView(mv)
 
         ev.bindMedia(mv, s) {
             // Restart GIF animation after reparenting (no-op for video/image)
@@ -218,7 +239,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
 
         PIPAnimator.animateCollapse(ev) {
             // Move shared media view back to compact (index 0 = beneath controls overlay)
-            (mv.parent as? ViewGroup)?.removeView(mv)
+            ev.mediaContainer.removeView(mv)
             cv.addView(mv, 0, LayoutParams(MATCH_PARENT, MATCH_PARENT))
             // Restart GIF animation after reparenting (no-op for video/image)
             mv.onContainerChanged()
