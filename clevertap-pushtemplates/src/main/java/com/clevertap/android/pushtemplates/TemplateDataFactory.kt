@@ -286,7 +286,7 @@ internal object TemplateDataFactory {
             chronometerStyle = ButtonStyle.fromString(extras.getString(PT_CHRONO_STYLE)),
             chronometerGradientColor1 = colorMap[PT_CHRONO_GRAD_CLR1],
             chronometerGradientColor2 = colorMap[PT_CHRONO_GRAD_CLR2],
-            chronometerGradientDirection = GradientDirection.fromString(extras.getString(PT_CHRONO_GRAD_DIR)),
+            chronometerGradientDirection = extras.getString(PT_CHRONO_GRAD_DIR)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
             chronometerBorderRadius = extras.getString(PT_CHRONO_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
             chronometerBorderWidth = extras.getString(PT_CHRONO_BORDER_WIDTH)?.toFloatOrNull(),
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)

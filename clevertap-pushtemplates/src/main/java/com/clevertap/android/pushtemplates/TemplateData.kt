@@ -117,7 +117,7 @@ internal data class TimerTemplateData(
     val chronometerStyle: ButtonStyle = ButtonStyle.SOLID,
     val chronometerGradientColor1: String? = null,
     val chronometerGradientColor2: String? = null,
-    val chronometerGradientDirection: GradientDirection = GradientDirection.LEFT_RIGHT,
+    val chronometerGradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
     val renderTerminal: Boolean = true,
     val chronometerBorderRadius: Float = 6f,
     val chronometerBorderWidth: Float? = null,
@@ -185,7 +185,7 @@ internal data class VerticalImageButtonData(
     val textColor: String? = null,
     val gradientColor1: String? = null,
     val gradientColor2: String? = null,
-    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
+    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT
 )
 
 internal data class VerticalImageTemplateData(

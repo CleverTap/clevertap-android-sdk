@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.SystemClock
 import android.view.View
 import com.clevertap.android.pushtemplates.ButtonStyle
-import com.clevertap.android.pushtemplates.GradientDirection
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -70,25 +69,35 @@ internal open class TimerSmallContentView(
         borderColorStr: String?,
         gradientColor1: String?,
         gradientColor2: String?,
-        gradientDirection: GradientDirection,
+        gradientDirection: Double,
         cornerRadius: Float,
         borderWidth: Float?
     ) {
-        val bitmap = if (style == ButtonStyle.GRADIENT) {
-            val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
-            val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
-            val borderColor = borderColorStr?.let { Utils.getColourOrNull(it) }
-            NotificationBitmapUtils.createGradientBitmap(
-                color1, color2, gradientDirection,
-                CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderColor, borderWidth
-            )
-        } else {
-            val bgColor = bgColorStr?.let { Utils.getColourOrNull(it) } ?: return
-            val borderColor = borderColorStr?.let { Utils.getColourOrNull(it) }
-            NotificationBitmapUtils.createSolidBitmap(
-                bgColor, borderColor,
-                CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderWidth
-            )
+        val borderColor = borderColorStr?.let { Utils.getColourOrNull(it) }
+        val bitmap = when (style) {
+            ButtonStyle.GRADIENT_LINEAR -> {
+                val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
+                val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
+                NotificationBitmapUtils.createLinearGradientBitmap(
+                    color1, color2, gradientDirection,
+                    CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderColor, borderWidth
+                )
+            }
+            ButtonStyle.GRADIENT_RADIAL -> {
+                val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
+                val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
+                NotificationBitmapUtils.createRadialBitmap(
+                    color1, color2,
+                    CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderColor, borderWidth
+                )
+            }
+            ButtonStyle.SOLID -> {
+                val bgColor = bgColorStr?.let { Utils.getColourOrNull(it) } ?: return
+                NotificationBitmapUtils.createSolidBitmap(
+                    bgColor, borderColor,
+                    CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderWidth
+                )
+            }
         }
         remoteView.setImageViewBitmap(R.id.chronometer_bg, bitmap)
         remoteView.setViewVisibility(R.id.chronometer_bg, View.VISIBLE)

@@ -8,7 +8,8 @@ import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import androidx.core.graphics.createBitmap
-import com.clevertap.android.pushtemplates.GradientDirection
+import kotlin.math.cos
+import kotlin.math.sin
 
 internal object NotificationBitmapUtils {
 
@@ -23,14 +24,14 @@ internal object NotificationBitmapUtils {
         val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor }
-        drawBorderIfNeeded(canvas, paint, width, height, cornerRadius, borderColor, borderWidth)
+        drawRoundRect(canvas, paint, width, height, cornerRadius, borderColor, borderWidth)
         return bitmap
     }
 
-    fun createGradientBitmap(
+    fun createLinearGradientBitmap(
         color1: Int,
         color2: Int,
-        direction: GradientDirection,
+        direction: Double,
         width: Int,
         height: Int,
         cornerRadius: Float,
@@ -39,13 +40,41 @@ internal object NotificationBitmapUtils {
     ): Bitmap {
         val bitmap = createBitmap(width, height)
         val canvas = Canvas(bitmap)
-        val shader = createShader(color1, color2, direction, width, height)
+        val w = width.toFloat()
+        val h = height.toFloat()
+        val rad = Math.toRadians(direction)
+        val sinA = sin(rad).toFloat()
+        val cosA = cos(rad).toFloat()
+        val shader = LinearGradient(
+            w * (0.5f - 0.5f * sinA), h * (0.5f + 0.5f * cosA),
+            w * (0.5f + 0.5f * sinA), h * (0.5f - 0.5f * cosA),
+            color1, color2, Shader.TileMode.CLAMP
+        )
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
-        drawBorderIfNeeded(canvas, paint, width, height, cornerRadius, borderColor, borderWidth)
+        drawRoundRect(canvas, paint, width, height, cornerRadius, borderColor, borderWidth)
         return bitmap
     }
 
-    private fun drawBorderIfNeeded(
+    fun createRadialBitmap(
+        color1: Int,
+        color2: Int,
+        width: Int,
+        height: Int,
+        cornerRadius: Float,
+        borderColor: Int? = null,
+        borderWidth: Float? = null
+    ): Bitmap {
+        val bitmap = createBitmap(width, height)
+        val canvas = Canvas(bitmap)
+        val w = width.toFloat()
+        val h = height.toFloat()
+        val shader = RadialGradient(w / 2f, h / 2f, maxOf(w, h) / 2f, color1, color2, Shader.TileMode.CLAMP)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.shader = shader }
+        drawRoundRect(canvas, paint, width, height, cornerRadius, borderColor, borderWidth)
+        return bitmap
+    }
+
+    private fun drawRoundRect(
         canvas: Canvas,
         paint: Paint,
         width: Int,
@@ -57,42 +86,17 @@ internal object NotificationBitmapUtils {
         if (borderColor != null) {
             val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
             val inset = strokeWidth / 2f
-            val bgRect = RectF(inset, inset, width - inset, height - inset)
-            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, paint)
+            val rect = RectF(inset, inset, width - inset, height - inset)
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
             val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = borderColor
                 style = Paint.Style.STROKE
                 this.strokeWidth = strokeWidth
             }
-            canvas.drawRoundRect(bgRect, cornerRadius, cornerRadius, borderPaint)
+            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, borderPaint)
         } else {
             val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-        }
-    }
-
-    private fun createShader(
-        color1: Int,
-        color2: Int,
-        direction: GradientDirection,
-        width: Int,
-        height: Int
-    ): Shader {
-        val w = width.toFloat()
-        val h = height.toFloat()
-        return when (direction) {
-            GradientDirection.RIGHT_LEFT     -> LinearGradient(w, 0f, 0f, 0f, color1, color2, Shader.TileMode.CLAMP)
-            GradientDirection.TOP_BOTTOM     -> LinearGradient(0f, 0f, 0f, h, color1, color2, Shader.TileMode.CLAMP)
-            GradientDirection.BOTTOM_TOP     -> LinearGradient(0f, h, 0f, 0f, color1, color2, Shader.TileMode.CLAMP)
-            GradientDirection.DIAGONAL_TL_BR -> LinearGradient(0f, 0f, w, h, color1, color2, Shader.TileMode.CLAMP)
-            GradientDirection.DIAGONAL_BL_TR -> LinearGradient(0f, h, w, 0f, color1, color2, Shader.TileMode.CLAMP)
-            GradientDirection.RADIAL         -> RadialGradient(
-                w / 2f, h / 2f,
-                maxOf(w, h) / 2f,
-                color1, color2,
-                Shader.TileMode.CLAMP
-            )
-            GradientDirection.LEFT_RIGHT     -> LinearGradient(0f, 0f, w, 0f, color1, color2, Shader.TileMode.CLAMP)
         }
     }
 
