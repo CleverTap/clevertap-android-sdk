@@ -89,7 +89,7 @@ public class PTConstants {
     public static final String PT_SCALE_TYPE_COLLAPSED = "pt_scale_type_collapsed";
     public static final String PT_BIG_IMG_COLLAPSED = "pt_big_img_collapsed";
     public static final String PT_BIG_IMG_COLLAPSED_ALT_TEXT = "pt_big_img_collapsed_alt_text";
-    
+
     public static final String PT_JSON = "pt_json";
 
     public static final String PT_BUY_NOW_DL = "pt_buy_now_dl";
@@ -123,6 +123,16 @@ public class PTConstants {
     public static final String PT_DISMISS_ON_CLICK = "pt_dismiss_on_click";
 
     public static final String PT_CHRONO_TITLE_COLOUR = "pt_chrono_title_clr";
+
+    public static final String PT_CHRONO_BG_CLR = "pt_chrono_bg_clr";
+    public static final String PT_CHRONO_BORDER_CLR = "pt_chrono_border_clr";
+    public static final String PT_CHRONO_STYLE = "pt_chrono_style";
+    public static final String PT_CHRONO_GRAD_CLR1 = "pt_chrono_grad_clr1";
+    public static final String PT_CHRONO_GRAD_CLR2 = "pt_chrono_grad_clr2";
+    public static final String PT_CHRONO_GRAD_DIR = "pt_chrono_grad_dir";
+    public static final String PT_CHRONO_BORDER_RADIUS = "pt_chrono_border_radius";
+    public static final String PT_CHRONO_BORDER_WIDTH = "pt_chrono_border_width";
+
 
     public static final String PT_PRODUCT_DISPLAY_ACTION = "pt_product_display_action";
 
@@ -219,15 +229,18 @@ public class PTConstants {
     public static final String PT_BTN_GRAD_CLR1_COLLAPSED = "pt_btn_grad_clr1_collapsed";
     public static final String PT_BTN_GRAD_CLR2_COLLAPSED = "pt_btn_grad_clr2_collapsed";
 
-
     public static final Set<String> COLOR_KEYS = Set.of(
             PT_TITLE_COLOR,
             PT_MSG_COLOR,
             PT_BG,
             PT_META_CLR,
             PT_CHRONO_TITLE_COLOUR,
+            PT_CHRONO_BG_CLR,
+            PT_CHRONO_BORDER_CLR,
             PT_PRODUCT_DISPLAY_ACTION_COLOUR,
             PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR,
+            PT_CHRONO_GRAD_CLR1,
+            PT_CHRONO_GRAD_CLR2,
             PT_TEXT1_COLOR,
             PT_TEXT2_COLOR,
             PT_BTN_CLR,

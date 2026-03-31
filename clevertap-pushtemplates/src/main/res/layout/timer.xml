@@ -18,7 +18,6 @@
         android:paddingRight="@dimen/padding_horizontal"
         android:paddingBottom="@dimen/padding_vertical">
 
-
         <include
             android:id="@+id/metadata"
             layout="@layout/metadata" />
@@ -27,50 +26,73 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
-            android:layout_toStartOf="@+id/chronometer" >
-
+            android:layout_toStartOf="@+id/chronometer_frame">
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="1"
                 android:ellipsize="end"
-                tools:text="title"
-                android:textAppearance="@style/PushTitle" />
+                android:maxLines="1"
+                android:textAppearance="@style/PushTitle"
+                tools:text="title" />
 
             <TextView
                 android:id="@+id/msg"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="4"
-                android:ellipsize="end"
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@+id/title"
-                tools:text="message"
-                android:textAppearance="@style/PushMessageMultiLine" />
+                android:ellipsize="end"
+                android:maxLines="4"
+                android:textAppearance="@style/PushMessageMultiLine"
+                tools:text="message" />
 
         </RelativeLayout>
 
-        <Chronometer
-            android:id="@+id/chronometer"
+        <RelativeLayout
+            android:id="@+id/chronometer_frame"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:textColor="@color/titleColor"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:textAlignment="center"
-            android:textSize="@dimen/chronometer_font_size"
-            android:layout_gravity="center_horizontal" />
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp">
+
+            <ImageView
+                android:id="@+id/chronometer_bg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/chronometer"
+                android:layout_alignEnd="@+id/chronometer"
+                android:layout_alignTop="@+id/chronometer"
+                android:layout_alignBottom="@+id/chronometer"
+                android:scaleType="fitXY"
+                android:visibility="gone"
+                tools:ignore="ContentDescription" />
+
+            <Chronometer
+                android:id="@+id/chronometer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:padding="12dp"
+                android:textAlignment="center"
+                android:textColor="@color/titleColor"
+                android:textSize="@dimen/chronometer_font_size" />
+
+        </RelativeLayout>
 
     </RelativeLayout>
 
-    <include layout="@layout/image_media_dynamic_linear"
-        android:id="@+id/big_media_configurable"/>
+    <include
+        android:id="@+id/big_media_configurable"
+        layout="@layout/image_media_dynamic_linear" />
 
     <include
         android:id="@+id/action_buttons"
         layout="@layout/action_buttons" />
 
 </LinearLayout>
+
