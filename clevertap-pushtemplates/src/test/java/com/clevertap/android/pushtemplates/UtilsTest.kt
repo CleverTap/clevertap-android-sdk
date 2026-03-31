@@ -2940,7 +2940,6 @@ class UtilsTest {
         verify { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) }
     }
 
-
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `getNotificationIds should return empty list when no notifications match package`() {

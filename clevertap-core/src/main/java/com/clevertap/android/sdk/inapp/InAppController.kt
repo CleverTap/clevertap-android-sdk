@@ -49,7 +49,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
-import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
@@ -75,7 +75,8 @@ internal class InAppController(
     private val inAppNotificationInflater: InAppNotificationInflater,
     private val inAppDelayManager: InAppScheduler<DelayedInAppResult>,
     private val inAppInActionManager: InAppScheduler<InActionResult>,
-    private val clock: Clock
+    private val clock: Clock,
+    private val networkMonitor: NetworkMonitor
 ) : InAppListener {
 
     private enum class InAppState {
@@ -887,7 +888,7 @@ internal class InAppController(
         }
 
         val isHtmlType = Constants.KEY_CUSTOM_HTML == inAppNotification.type
-        if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
+        if (isHtmlType && !networkMonitor.isNetworkOnline()) {
             logger.debug(
                 defaultLogTag,
                 "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp"
