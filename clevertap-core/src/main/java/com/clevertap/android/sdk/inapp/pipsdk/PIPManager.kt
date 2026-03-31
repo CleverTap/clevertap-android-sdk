@@ -278,12 +278,11 @@ internal object PIPManager {
         val s = session ?: return
         session = null
         removeLifecycleObserver(s)
-        s.videoPlayerWrapper?.release()
-        s.videoPlayerWrapper = null
         s.pipRootContainer?.let { container ->
             container.detach(releaseMedia = true)
             (container.parent as? ViewGroup)?.removeView(container)
         }
+        s.videoPlayerWrapper = null
         shutdownMediaExecutor()
         unregisterCallbacks()
     }
