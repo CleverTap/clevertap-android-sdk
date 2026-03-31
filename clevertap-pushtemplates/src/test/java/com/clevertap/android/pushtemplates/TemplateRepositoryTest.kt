@@ -1,6 +1,9 @@
 package com.clevertap.android.pushtemplates
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader
@@ -25,7 +28,15 @@ class TemplateRepositoryTest {
     fun setUp() {
         mockContext = mockk<Context>(relaxed = true)
         mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
-        
+
+        val mockNetwork = mockk<Network>()
+        val mockCapabilities = mockk<NetworkCapabilities>()
+        val mockCM = mockk<ConnectivityManager>()
+        every { mockContext.getSystemService(Context.CONNECTIVITY_SERVICE) } returns mockCM
+        every { mockCM.activeNetwork } returns mockNetwork
+        every { mockCM.getNetworkCapabilities(mockNetwork) } returns mockCapabilities
+        every { mockCapabilities.hasCapability(any()) } returns true
+
         templateRepository = TemplateRepository(mockContext, mockConfig)
 
         // Mock static methods
@@ -107,7 +118,7 @@ class TemplateRepositoryTest {
                 PTHttpBitmapLoader.PTHttpBitmapOperation.DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT,
                 match { request ->
                     request.bitmapPath == url &&
-                    request.fallbackToAppIcon == false &&
+                    !request.fallbackToAppIcon &&
                     request.context == mockContext &&
                     request.instanceConfig == mockConfig &&
                     request.downloadTimeLimitInMillis == 5000L
@@ -188,7 +199,7 @@ class TemplateRepositoryTest {
         verify { 
             PTHttpBitmapLoader.getHttpBitmap(
                 any(),
-                match { request -> request.fallbackToAppIcon == false }
+                match { request -> !request.fallbackToAppIcon }
             )
         }
     }
@@ -247,7 +258,7 @@ class TemplateRepositoryTest {
                 HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
                 match { request ->
                     request.bitmapPath == url &&
-                    request.fallbackToAppIcon == false &&
+                    !request.fallbackToAppIcon &&
                     request.context == mockContext &&
                     request.instanceConfig == null
                 }
@@ -330,7 +341,7 @@ class TemplateRepositoryTest {
         verify { 
             HttpBitmapLoader.getHttpBitmap(
                 any(),
-                match { request -> request.fallbackToAppIcon == false }
+                match { request -> !request.fallbackToAppIcon }
             )
         }
     }

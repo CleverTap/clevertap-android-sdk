@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOW
 import com.clevertap.android.sdk.bitmap.HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT
 import com.clevertap.android.sdk.network.DownloadedBitmap
 
+
 object HttpBitmapLoader {
 
     private const val RESOURCE_CONNECTION_TIMEOUT = 5000
@@ -45,7 +46,6 @@ object HttpBitmapLoader {
         bitmapOperation: HttpBitmapOperation,
         bitmapDownloadRequest: BitmapDownloadRequest
     ): DownloadedBitmap {
-
         return when (bitmapOperation) {
             DOWNLOAD_NOTIFICATION_BITMAP -> {
                 NotificationBitmapDownloadRequestHandler(
@@ -55,9 +55,7 @@ object HttpBitmapLoader {
                             bitmapInputStreamReader = BitmapInputStreamDecoder()
                         )
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
 
             DOWNLOAD_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT -> {
@@ -70,9 +68,7 @@ object HttpBitmapLoader {
                             )
                         )
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
 
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP -> {
@@ -84,9 +80,7 @@ object HttpBitmapLoader {
                             sizeConstrainedPair = Pair(true, bitmapDownloadRequest.downloadSizeLimitInBytes)
                         )
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
 
             DOWNLOAD_SIZE_CONSTRAINED_GZIP_NOTIFICATION_BITMAP_WITH_TIME_LIMIT -> {
@@ -100,9 +94,7 @@ object HttpBitmapLoader {
                             )
                         )
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
 
             DOWNLOAD_INAPP_BITMAP -> {
@@ -111,9 +103,7 @@ object HttpBitmapLoader {
                         httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
                         bitmapInputStreamReader = BitmapInputStreamDecoder(saveBytes = true)
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
 
             HttpBitmapOperation.DOWNLOAD_ANY_BITMAP -> {
@@ -122,9 +112,7 @@ object HttpBitmapLoader {
                         httpUrlConnectionParams = standardGzipHttpUrlConnectionParams,
                         bitmapInputStreamReader = GzipBitmapInputStreamReader()
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
 
             HttpBitmapOperation.DOWNLOAD_BYTES -> {
@@ -133,9 +121,7 @@ object HttpBitmapLoader {
                         httpUrlConnectionParams = inAppStandardHttpUrlConnectionParams,
                         bitmapInputStreamReader = BitmapInputStreamDecoder(saveBitmap = false, saveBytes = true)
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
 
             HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT -> {
@@ -146,9 +132,7 @@ object HttpBitmapLoader {
                             bitmapInputStreamReader = BitmapInputStreamDecoder(saveBitmap = false, saveBytes = true)
                         )
                     )
-                ).handleRequest(
-                    bitmapDownloadRequest = bitmapDownloadRequest
-                )
+                ).handleRequest(bitmapDownloadRequest)
             }
         }
     }

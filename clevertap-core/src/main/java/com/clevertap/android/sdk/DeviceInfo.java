@@ -16,8 +16,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Insets;
 import android.hardware.display.DisplayManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -41,6 +39,8 @@ import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.validation.ValidationError;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
+import com.clevertap.android.sdk.network.NetworkMonitor;
+
 
 import org.json.JSONObject;
 
@@ -74,6 +74,7 @@ public class DeviceInfo {
 
         private final String countryCode;
 
+
         private final int dpi;
 
         private final double height;
@@ -81,8 +82,6 @@ public class DeviceInfo {
         private final String manufacturer;
 
         private final String model;
-
-        private final String networkType;
 
         private final String osName;
 
@@ -108,7 +107,6 @@ public class DeviceInfo {
             model = getModel();
             carrier = getCarrier();
             build = getBuild();
-            networkType = getNetworkType();
             bluetoothVersion = getBluetoothVersion();
             countryCode = getCountryCode();
             sdkVersion = getSdkVersion();
@@ -272,11 +270,6 @@ public class DeviceInfo {
             return model;
         }
 
-        @SuppressLint("MissingPermission")
-        private String getNetworkType() {
-            return Utils.getDeviceNetworkType(context);
-        }
-
         private String getOsName() {
             return OS_NAME;
         }
@@ -432,6 +425,8 @@ public class DeviceInfo {
 
     private String customLocale;
 
+    private final  NetworkMonitor networkMonitor;
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -477,12 +472,14 @@ public class DeviceInfo {
     }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-               CoreMetaData coreMetaData) {
+               CoreMetaData coreMetaData, NetworkMonitor networkMonitor) {
         this.context = context;
         this.config = config;
         this.library = null;
         this.customLocale = null;
+        this.networkMonitor = networkMonitor;
         mCoreMetaData = coreMetaData;
+
     }
 
     public void forceNewDeviceID() {
@@ -598,7 +595,8 @@ public class DeviceInfo {
     }
 
     public String getNetworkType() {
-        return getDeviceCachedInfo().networkType;
+        if (networkMonitor == null) return null;
+        return networkMonitor.getNetworkTypeString();
     }
 
     public String getOsName() {
@@ -684,22 +682,20 @@ public class DeviceInfo {
     }
 
     public Boolean isWifiConnected() {
-        Boolean ret = null;
-
-        if (PackageManager.PERMISSION_GRANTED == context
+        if (PackageManager.PERMISSION_GRANTED != context
                 .checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
-            ConnectivityManager connManager = (ConnectivityManager) context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connManager != null) {
-                @SuppressLint("MissingPermission")
-                NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-                ret = (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI && networkInfo
-                        .isConnected());
-            }
+            return null;
         }
-
-        return ret;
+        if (networkMonitor == null) {
+            return null;
+        }
+        if (networkMonitor.getNetworkType() == NetworkMonitor.NetworkType.UNDETECTED) {
+            return null;
+        }
+        return networkMonitor.isWifiConnected();
     }
+
+
 
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;

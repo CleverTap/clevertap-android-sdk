@@ -2910,7 +2910,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Use this method to manage the user's consent for event and profile tracking.
      * You must call this method separately for each active user profile (e.g., when switching user profiles using
      * onUserLogin).
-     *
      * This method supports the following consent management scenarios:
      *
      * <ol>
@@ -3461,6 +3460,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return null;
         }
 
+        CoreState coreState = cleverTapAPI.getCoreState();
+        if (coreState != null && !coreState.getNetworkMonitor().isNetworkOnline()) {
+            Logger.v("Network unavailable. Not downloading notification bitmap!");
+            return null;
+        }
+
         return Utils.getNotificationBitmapWithTimeoutAndSize(bitmapSrcUrl, fallbackToAppIcon, context, cleverTapAPI.getConfig(),
                 timeoutInMillis, sizeInBytes).getBitmap();
     }
@@ -3513,6 +3518,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CleverTapAPI cleverTapAPI = fromBundle(context, bundle);
         if (cleverTapAPI == null) {
             Logger.v("cleverTapAPI is null. Not downloading bitmap!");
+            return null;
+        }
+
+        CoreState coreState = cleverTapAPI.getCoreState();
+        if (coreState != null && !coreState.getNetworkMonitor().isNetworkOnline()) {
+            Logger.v("Network unavailable. Not downloading notification bitmap!");
             return null;
         }
 

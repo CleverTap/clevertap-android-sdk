@@ -46,6 +46,7 @@ import com.clevertap.android.sdk.network.FetchInAppListener
 import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -107,6 +108,7 @@ internal object CleverTapFactory {
         val ctLockManager = CTLockManager()
         val mainLooperHandler = MainLooperHandler()
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
+        val networkMonitor = NetworkMonitor(context, config.accountId, config.logger)
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)
@@ -115,7 +117,7 @@ internal object CleverTapFactory {
 
         val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
-            FileResourceProvider.getInstance(context, config.logger)
+            FileResourceProvider.initInstance(context, config.logger, networkMonitor)
         }
 
         val repository = CryptRepository(
@@ -187,7 +189,7 @@ internal object CleverTapFactory {
             )
         }
 
-        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData)
+        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, networkMonitor)
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }.build()
@@ -421,7 +423,8 @@ internal object CleverTapFactory {
             ctLockManager,
             localDataStore,
             controllerManager,
-            loginInfoProvider
+            loginInfoProvider,
+            networkMonitor
         )
 
         val inAppResponseForSendTestInApp = InAppResponse(
@@ -463,7 +466,7 @@ internal object CleverTapFactory {
             storeRegistry,
             templatesManager,
             executors,
-            { FileResourceProvider.getInstance(context, config.logger) }
+            { FileResourceProvider.initInstance(context, config.logger, networkMonitor) }
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
@@ -485,7 +488,8 @@ internal object CleverTapFactory {
             inAppNotificationInflater,
             inAppDelayManager,
             inAppInActionManager,
-            SYSTEM
+            SYSTEM,
+            networkMonitor
         )
         controllerManager.inAppController = inAppController
 
@@ -561,6 +565,7 @@ internal object CleverTapFactory {
             validationResultStack = validationResultStack,
             mainLooperHandler = mainLooperHandler,
             networkManager = networkManager,
+            networkMonitor = networkMonitor,
             pushProviders = pushProviders,
             varCache = varCache,
             parser = parser,
