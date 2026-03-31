@@ -137,6 +137,7 @@ internal object PIPManager {
         // dismissing on background is acceptable since the fragment view may not survive.
         if (lifecycleOwner != null) {
             val observer = PIPLifecycleObserver { runOnMain { cleanupSession() } }
+            newSession.lifecycleOwner = lifecycleOwner
             newSession.lifecycleObserver = observer
             lifecycleOwner.lifecycle.addObserver(observer)
         }
@@ -168,6 +169,7 @@ internal object PIPManager {
     internal fun dismissInternal(notifyCallback: Boolean = true) {
         val s = session ?: return
         session = null      // Mark not visible immediately; prevents re-entry
+        removeLifecycleObserver(s)
 
         val container = s.pipRootContainer
         val cleanup: () -> Unit = {
@@ -275,6 +277,7 @@ internal object PIPManager {
     private fun cleanupSession() {
         val s = session ?: return
         session = null
+        removeLifecycleObserver(s)
         s.videoPlayerWrapper?.release()
         s.videoPlayerWrapper = null
         s.pipRootContainer?.let { container ->
@@ -283,6 +286,13 @@ internal object PIPManager {
         }
         shutdownMediaExecutor()
         unregisterCallbacks()
+    }
+
+    private fun removeLifecycleObserver(s: PIPSession) {
+        val observer = s.lifecycleObserver ?: return
+        s.lifecycleOwner?.lifecycle?.removeObserver(observer)
+        s.lifecycleObserver = null
+        s.lifecycleOwner = null
     }
 
     private fun unregisterCallbacks() {

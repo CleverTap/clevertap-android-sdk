@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.session
 
 import android.app.Activity
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import com.clevertap.android.sdk.inapp.pipsdk.internal.renderer.PIPVideoPlayerWrapper
@@ -43,6 +44,9 @@ internal class PIPSession(
         internal set
 
     var pipRootContainer: PIPRootContainer? = null
+        internal set
+
+    var lifecycleOwner: LifecycleOwner? = null
         internal set
 
     var lifecycleObserver: LifecycleEventObserver? = null
