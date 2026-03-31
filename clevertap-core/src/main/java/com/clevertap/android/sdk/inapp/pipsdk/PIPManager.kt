@@ -166,23 +166,27 @@ internal object PIPManager {
      * @param notifyCallback false when replacing an existing session so that [PIPCallbacks.onClose]
      *   is not fired spuriously during the replace-show flow.
      */
-    internal fun dismissInternal(notifyCallback: Boolean = true) {
+    internal fun dismissInternal(notifyCallback: Boolean = true, animate: Boolean = true) {
         val s = session ?: return
         session = null      // Mark not visible immediately; prevents re-entry
         removeLifecycleObserver(s)
 
         val container = s.pipRootContainer
         val cleanup: () -> Unit = {
-            container?.let { c ->
-                c.detach(releaseMedia = true)
-                (c.parent as? ViewGroup)?.removeView(c)
+            if (container != null) {
+                // Normal path: release player through the view/renderer chain
+                container.detach(releaseMedia = true)
+                (container.parent as? ViewGroup)?.removeView(container)
+            } else {
+                // Edge case: dismiss during rotation (container already detached).
+                // Release player directly since there's no view chain to do it.
+                s.videoPlayerWrapper?.release()
             }
-            s.videoPlayerWrapper?.release()
             s.videoPlayerWrapper = null
             if (notifyCallback) s.config.callbacks?.onClose()
         }
 
-        if (container != null) {
+        if (animate && container != null) {
             container.dismiss(cleanup)
         } else {
             cleanup()
@@ -275,16 +279,9 @@ internal object PIPManager {
     }
 
     private fun cleanupSession() {
-        val s = session ?: return
-        session = null
-        removeLifecycleObserver(s)
-        s.pipRootContainer?.let { container ->
-            container.detach(releaseMedia = true)
-            (container.parent as? ViewGroup)?.removeView(container)
-        }
-        s.videoPlayerWrapper = null
-        shutdownMediaExecutor()
-        unregisterCallbacks()
+        // Called from ActivityLifecycleCallbacks when Activity is destroyed (non-config).
+        // No animation, no onClose callback — just tear down immediately.
+        dismissInternal(notifyCallback = false, animate = false)
     }
 
     private fun removeLifecycleObserver(s: PIPSession) {
