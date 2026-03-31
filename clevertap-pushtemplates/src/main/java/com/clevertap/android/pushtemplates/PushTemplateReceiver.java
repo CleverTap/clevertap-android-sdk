@@ -582,6 +582,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     @SuppressLint("MissingPermission")
     private void handleVerticalImageButtonClick(final Context context, final Bundle extras) {
+        CleverTapAPI.handleNotificationClicked(context, extras);
+
         int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID, -1);
         if (notificationId > -1) {
             notificationManager.cancel(notificationId);
