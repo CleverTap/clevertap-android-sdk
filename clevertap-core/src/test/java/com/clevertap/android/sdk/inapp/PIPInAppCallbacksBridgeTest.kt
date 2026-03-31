@@ -4,9 +4,12 @@ import com.clevertap.android.sdk.Logger
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.json.JSONObject
 import org.junit.Test
-import kotlin.test.assertEquals
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class PIPInAppCallbacksBridgeTest {
 
     private val mockNotification = mockk<CTInAppNotification> {
@@ -32,24 +35,32 @@ class PIPInAppCallbacksBridgeTest {
     }
 
     @Test
-    fun `onRedirect calls inAppNotificationActionTriggered with url`() {
-        val url = "https://www.example.com"
-        bridge.onRedirect(url)
+    fun `onAction calls inAppNotificationActionTriggered with button action`() {
+        val buttonJson = JSONObject().apply {
+            put("text", "Learn More")
+            put("actions", JSONObject().apply {
+                put("type", "url")
+                put("android", "https://www.example.com")
+            })
+        }
+        val button = CTInAppNotificationButton(buttonJson)
+        every { mockNotification.buttons } returns listOf(button)
+
+        bridge.onAction()
         verify(exactly = 1) {
             mockListener.inAppNotificationActionTriggered(
-                mockNotification, any(), eq(url), isNull(), isNull()
+                mockNotification, button.action!!, "Learn More", isNull(), isNull()
             )
         }
     }
 
     @Test
-    fun `onRedirect creates open url action with correct type`() {
-        val url = "https://www.example.com"
-        bridge.onRedirect(url)
-        verify {
-            mockListener.inAppNotificationActionTriggered(
-                any(), match { it.type == InAppActionType.OPEN_URL }, any(), any(), any()
-            )
+    fun `onAction does nothing when no buttons`() {
+        every { mockNotification.buttons } returns emptyList()
+
+        bridge.onAction()
+        verify(exactly = 0) {
+            mockListener.inAppNotificationActionTriggered(any(), any(), any(), any(), any())
         }
     }
 
