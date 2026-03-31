@@ -112,8 +112,16 @@ internal data class TimerTemplateData(
     val terminalTextData: BaseTextData,
     val terminalMediaData: MediaData,
     val chronometerTitleColor: String? = null,
+    val chronometerBgColor: String? = null,
+    val chronometerBorderColor: String? = null,
+    val chronometerStyle: ButtonStyle = ButtonStyle.SOLID,
+    val chronometerGradientColor1: String? = null,
+    val chronometerGradientColor2: String? = null,
+    val chronometerGradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
     val renderTerminal: Boolean = true,
-) : TemplateData()
+    val chronometerBorderRadius: Float = 6f,
+    val chronometerBorderWidth: Float? = null,
+    ) : TemplateData()
 
 internal data class ZeroBezelTemplateData(
     override val templateType: TemplateType = TemplateType.ZERO_BEZEL,
@@ -177,7 +185,7 @@ internal data class VerticalImageButtonData(
     val textColor: String? = null,
     val gradientColor1: String? = null,
     val gradientColor2: String? = null,
-    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
+    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT
 )
 
 internal data class VerticalImageTemplateData(

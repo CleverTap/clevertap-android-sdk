@@ -10,6 +10,12 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_TEXT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_COLLAPSED
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_COLLAPSED_ALT_TEXT
 import com.clevertap.android.pushtemplates.PTConstants.PT_CANCEL_NOTIF_ID
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BG_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_CLR
@@ -60,6 +66,8 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.TEXT_ONLY
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_WIDTH
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
@@ -273,6 +281,14 @@ internal object TemplateDataFactory {
             terminalTextData = createTerminalTextData(extras, baseContent.textData),
             terminalMediaData = createTerminalMediaData(extras, defaultAltText, mediaData),
             chronometerTitleColor = colorMap[PT_CHRONO_TITLE_COLOUR],
+            chronometerBgColor = colorMap[PT_CHRONO_BG_CLR],
+            chronometerBorderColor = colorMap[PT_CHRONO_BORDER_CLR],
+            chronometerStyle = ButtonStyle.fromString(extras.getString(PT_CHRONO_STYLE)),
+            chronometerGradientColor1 = colorMap[PT_CHRONO_GRAD_CLR1],
+            chronometerGradientColor2 = colorMap[PT_CHRONO_GRAD_CLR2],
+            chronometerGradientDirection = extras.getString(PT_CHRONO_GRAD_DIR)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
+            chronometerBorderRadius = extras.getString(PT_CHRONO_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
+            chronometerBorderWidth = extras.getString(PT_CHRONO_BORDER_WIDTH)?.toFloatOrNull(),
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )
