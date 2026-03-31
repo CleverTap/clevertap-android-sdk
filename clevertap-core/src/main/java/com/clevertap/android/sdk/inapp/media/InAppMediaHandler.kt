@@ -21,7 +21,6 @@ internal interface InAppMediaHandler : DefaultLifecycleObserver {
         clickListener: View.OnClickListener? = null
     )
     fun cleanup() {}
-    fun clear() {}
 
     companion object {
         /**

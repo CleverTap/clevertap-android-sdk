@@ -143,7 +143,6 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaHandler.clear()
             activity?.finish()
         }
 

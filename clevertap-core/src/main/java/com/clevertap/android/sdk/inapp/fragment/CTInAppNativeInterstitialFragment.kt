@@ -94,7 +94,6 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
             closeImageView?.setVisibility(View.VISIBLE)
             closeImageView?.setOnClickListener {
                 didDismiss(null)
-                mediaHandler.clear()
                 activity?.finish()
             }
         }

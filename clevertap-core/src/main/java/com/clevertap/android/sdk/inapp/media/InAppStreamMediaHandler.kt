@@ -8,11 +8,9 @@ import android.widget.RelativeLayout
 import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
-import androidx.core.view.size
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 import com.clevertap.android.sdk.video.VideoLibChecker
@@ -125,10 +123,8 @@ internal class InAppStreamMediaHandler
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        if (videoFrameLayout?.size == 0) {
+        if (videoSurface.parent == null) {
             videoFrameLayout?.addView(videoSurface)
-        } else {
-            Logger.d("Video views and controls are already added, not re-attaching")
         }
     }
 

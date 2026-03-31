@@ -93,7 +93,6 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
 
         closeImageView.setOnClickListener {
             didDismiss(null)
-            mediaHandler.clear()
             activity?.finish()
         }
 

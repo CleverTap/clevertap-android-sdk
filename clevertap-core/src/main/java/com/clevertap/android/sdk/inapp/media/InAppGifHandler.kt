@@ -49,10 +49,6 @@ internal class InAppGifHandler(
         clearGif()
     }
 
-    override fun clear() {
-        clearGif()
-    }
-
     private fun clearGif() {
         gifImageView?.clear()
     }
