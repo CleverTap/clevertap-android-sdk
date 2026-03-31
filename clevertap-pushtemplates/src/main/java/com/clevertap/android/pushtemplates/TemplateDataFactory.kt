@@ -24,6 +24,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_DL
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_CLR1
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_CLR2
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_DIR_DEFAULT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_NAME
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_TEXT_CLR
@@ -329,7 +330,7 @@ internal object TemplateDataFactory {
         return VerticalImageTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = mediaData,
-            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras),
+            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras, defaultAltText),
             actions = Utils.getActionKeys(extras),
             text1 = extras.getString(PT_TEXT1),
             text2 = extras.getString(PT_TEXT2),
@@ -346,7 +347,7 @@ internal object TemplateDataFactory {
         collapsed: Boolean = false,
     ): VerticalImageButtonData? {
         val suffix = if (collapsed) "_collapsed" else ""
-        val btnName = extras.getString(PT_BTN_NAME + suffix) ?: return null
+        val btnName = extras.getString(PT_BTN_NAME + suffix)?.takeIf { it.isNotEmpty() } ?: return null
         return VerticalImageButtonData(
             name = btnName,
             deepLink = extras.getString(PT_BTN_DL + suffix),
@@ -356,7 +357,7 @@ internal object TemplateDataFactory {
             textColor = colorMap[PT_BTN_TEXT_CLR + suffix],
             gradientColor1 = colorMap[PT_BTN_GRAD_CLR1 + suffix],
             gradientColor2 = colorMap[PT_BTN_GRAD_CLR2 + suffix],
-            gradientDirection = GradientDirection.fromString(extras.getString(PT_BTN_GRAD_DIR + suffix)),
+            gradientDirection = extras.getString(PT_BTN_GRAD_DIR + suffix)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
         )
     }
 
@@ -447,14 +448,14 @@ internal object TemplateDataFactory {
         )
     }
 
-    private fun createCollapsedMediaDataWithoutFallback(extras: Bundle): MediaData? {
+    private fun createCollapsedMediaDataWithoutFallback(extras: Bundle, defaultAltText: String): MediaData? {
         val bigImageCollapsed = extras.getString(PT_BIG_IMG_COLLAPSED)
         val gifCollapsed = extras.getString(PT_GIF_COLLAPSED)
         if (bigImageCollapsed == null && gifCollapsed == null) return null
         return MediaData(
             bigImage = ImageData(
                 url = bigImageCollapsed,
-                altText = extras.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, "")
+                altText = extras.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, defaultAltText)
             ),
             gif = GifData(
                 url = gifCollapsed,

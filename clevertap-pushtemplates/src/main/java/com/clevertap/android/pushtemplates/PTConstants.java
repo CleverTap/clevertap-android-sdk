@@ -89,7 +89,7 @@ public class PTConstants {
     public static final String PT_SCALE_TYPE_COLLAPSED = "pt_scale_type_collapsed";
     public static final String PT_BIG_IMG_COLLAPSED = "pt_big_img_collapsed";
     public static final String PT_BIG_IMG_COLLAPSED_ALT_TEXT = "pt_big_img_collapsed_alt_text";
-    
+
     public static final String PT_JSON = "pt_json";
 
     public static final String PT_BUY_NOW_DL = "pt_buy_now_dl";
@@ -220,6 +220,7 @@ public class PTConstants {
     public static final String PT_BTN_GRAD_CLR2 = "pt_btn_grad_clr2";
     public static final String PT_BTN_GRAD_DIR = "pt_btn_grad_dir";
 
+    public static final double PT_BTN_GRAD_DIR_DEFAULT = 90.0;
 
     // Vertical Image Template - Collapsed button configuration
     public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
@@ -227,7 +228,6 @@ public class PTConstants {
     public static final String PT_BTN_TEXT_CLR_COLLAPSED = "pt_btn_text_clr_collapsed";
     public static final String PT_BTN_GRAD_CLR1_COLLAPSED = "pt_btn_grad_clr1_collapsed";
     public static final String PT_BTN_GRAD_CLR2_COLLAPSED = "pt_btn_grad_clr2_collapsed";
-
 
     public static final Set<String> COLOR_KEYS = Set.of(
             PT_TITLE_COLOR,

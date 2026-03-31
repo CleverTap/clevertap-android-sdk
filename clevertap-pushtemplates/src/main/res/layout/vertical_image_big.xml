@@ -20,6 +20,7 @@
         android:id="@+id/vertical_img_body"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:paddingEnd="@dimen/padding_horizontal">
 
         <!-- Left: Vertical/portrait product image -->
@@ -39,8 +40,7 @@
             android:layout_toEndOf="@id/big_media_configurable"
             android:layout_alignParentTop="true"
             android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingTop="8dp">
+            android:paddingStart="12dp">
 
             <TextView
                 android:id="@+id/title"
@@ -102,10 +102,10 @@
             <!-- CTA Button: FrameLayout with ImageView bg for gradient support -->
             <FrameLayout
                 android:id="@+id/vertical_img_btn_frame"
-                android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:layout_marginTop="8dp"
                 android:layout_gravity="start"
+                android:background="@drawable/pt_vertical_img_btn_default_bg"
                 android:visibility="gone">
 
                 <ImageView
@@ -126,6 +126,7 @@
                     android:ellipsize="end"
                     android:textSize="12sp"
                     android:textStyle="bold"
+                    android:textColor="@color/verticalImgBtnTextColor"
                     tools:text="SHOP" />
             </FrameLayout>
 

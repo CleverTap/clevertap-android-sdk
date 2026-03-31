@@ -54,6 +54,7 @@
         android:layout_weight="1"
         android:layout_height="28dp"
         android:layout_marginEnd="6dp"
+        android:background="@drawable/pt_vertical_img_btn_default_bg"
         android:visibility="gone">
 
         <ImageView
@@ -65,7 +66,7 @@
 
         <TextView
             android:id="@+id/vertical_img_btn"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
@@ -74,6 +75,7 @@
             android:ellipsize="end"
             android:textSize="11sp"
             android:textStyle="bold"
+            android:textColor="@color/verticalImgBtnTextColor"
             tools:text="SHOP" />
     </FrameLayout>
 

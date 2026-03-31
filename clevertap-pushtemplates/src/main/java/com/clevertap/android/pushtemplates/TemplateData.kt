@@ -167,7 +167,8 @@ internal data class CancelTemplateData(
 
 internal enum class ButtonStyle(val key: String) {
     SOLID("solid"),
-    GRADIENT("gradient");
+    GRADIENT_LINEAR("gradient_linear"),
+    GRADIENT_RADIAL("gradient_radial");
 
     companion object {
         fun fromString(value: String?): ButtonStyle =
@@ -175,23 +176,8 @@ internal enum class ButtonStyle(val key: String) {
     }
 }
 
-internal enum class GradientDirection(val key: String) {
-    LEFT_RIGHT("left_right"),
-    RIGHT_LEFT("right_left"),
-    TOP_BOTTOM("top_bottom"),
-    BOTTOM_TOP("bottom_top"),
-    DIAGONAL_TL_BR("diagonal_tl_br"),
-    DIAGONAL_BL_TR("diagonal_bl_tr"),
-    RADIAL("radial");
-
-    companion object {
-        fun fromString(value: String?): GradientDirection =
-            entries.firstOrNull { it.key == value } ?: LEFT_RIGHT
-    }
-}
-
 internal data class VerticalImageButtonData(
-    val name: String? = null,
+    val name: String,
     val deepLink: String? = null,
     val style: ButtonStyle = ButtonStyle.SOLID,
     val buttonColor: String? = null,
@@ -199,7 +185,7 @@ internal data class VerticalImageButtonData(
     val textColor: String? = null,
     val gradientColor1: String? = null,
     val gradientColor2: String? = null,
-    val gradientDirection: GradientDirection = GradientDirection.LEFT_RIGHT,
+    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
 )
 
 internal data class VerticalImageTemplateData(
