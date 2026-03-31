@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stubs required because ExoPlayer/Media3 is a compileOnly dependency.
+         PlayerControlView finds these views by ID at runtime, so the names must
+         stay exo_-prefixed exactly as the library expects.
+         controller_layout_id is read via obtainStyledAttributes by PlayerView/StyledPlayerView. -->
+
+    <attr name="controller_layout_id" format="reference" />
+
+    <item name="exo_controls_background" type="id" />
+    <item name="exo_bottom_bar" type="id" />
+    <item name="exo_time" type="id" />
+    <item name="exo_position" type="id" />
+    <item name="exo_duration" type="id" />
+    <item name="exo_basic_controls" type="id" />
+    <item name="exo_fullscreen" type="id" />
+    <item name="exo_progress_placeholder" type="id" />
+    <item name="exo_minimal_controls" type="id" />
+    <item name="exo_minimal_fullscreen" type="id" />
+    <item name="exo_center_controls" type="id" />
+    <item name="exo_play_pause" type="id" />
+</resources>

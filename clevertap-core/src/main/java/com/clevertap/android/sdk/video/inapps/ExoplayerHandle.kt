@@ -2,9 +2,11 @@ package com.clevertap.android.sdk.video.inapps
 
 import android.content.Context
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import androidx.core.content.res.ResourcesCompat
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
@@ -41,6 +43,7 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
 
+    private var isMuted = true
     private var mediaPosition = 0L
 
     override fun initExoplayer(
@@ -68,6 +71,7 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
             setMediaSource(hlsMediaSource)
             prepare()
             repeatMode = Player.REPEAT_MODE_ONE
+            volume = InAppVideoPlayerHandle.VOLUME_MUTED
             seekTo(mediaPosition)
         }
     }
@@ -83,7 +87,7 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         val playerWidth = playerWidth(context = context, isTablet = isTablet)
         val playerHeight = playerHeight(context = context, isTablet = isTablet)
 
-        playerView = StyledPlayerView(context).apply {
+        playerView = (LayoutInflater.from(context).inflate(R.layout.ct_exo_inapp_styled_player_view, null) as StyledPlayerView).apply {
             playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
             setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING)
@@ -122,6 +126,35 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         }
     }
 
+    override fun setFullscreenClickListener(onClick: (isFullScreen: Boolean) -> Unit) {
+        playerView?.setFullscreenButtonClickListener(onClick)
+        setFullscreenIcon(isFullScreen = false)
+    }
+
+    override fun setMuteClickListener() {
+        val muteButton = playerView?.findViewById<ImageButton>(R.id.exo_mute) ?: return
+        val minimalMuteButton = playerView?.findViewById<ImageButton>(R.id.exo_minimal_mute)
+        val clickListener = View.OnClickListener {
+            isMuted = !isMuted
+            player?.volume = if (isMuted) InAppVideoPlayerHandle.VOLUME_MUTED else InAppVideoPlayerHandle.VOLUME_UNMUTED
+            val iconRes = if (isMuted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+            val descRes = if (isMuted) R.string.ct_unmute_button_content_description
+                          else R.string.ct_mute_button_content_description
+            muteButton.setImageResource(iconRes)
+            muteButton.contentDescription = muteButton.context.getString(descRes)
+            minimalMuteButton?.setImageResource(iconRes)
+            minimalMuteButton?.contentDescription = muteButton.contentDescription
+        }
+        muteButton.setOnClickListener(clickListener)
+        minimalMuteButton?.setOnClickListener(clickListener)
+    }
+
+    override fun setActionClickListener(onClick: () -> Unit) {
+        val actionButton = playerView?.findViewById<ImageButton>(R.id.ct_action_button) ?: return
+        actionButton.visibility = View.VISIBLE
+        actionButton.setOnClickListener { onClick() }
+    }
+
     override fun switchToFullScreen(isFullScreen: Boolean) {
         if (isFullScreen) {
             playerViewLayoutParamsNormal = playerView!!.layoutParams
@@ -129,37 +162,47 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         } else {
             playerView!!.layoutParams = playerViewLayoutParamsNormal
         }
+        setFullscreenIcon(isFullScreen)
+    }
+
+    private fun setFullscreenIcon(isFullScreen: Boolean) {
+        val iconRes = if (isFullScreen)
+            com.google.android.exoplayer2.ui.R.drawable.exo_icon_fullscreen_exit
+        else
+            com.google.android.exoplayer2.ui.R.drawable.exo_icon_fullscreen_enter
+        playerView?.findViewById<ImageButton>(R.id.exo_fullscreen)?.setImageResource(iconRes)
+        playerView?.findViewById<ImageButton>(R.id.exo_minimal_fullscreen)?.setImageResource(iconRes)
     }
 
     override fun videoSurface(): View {
         return playerView!!
     }
 
-    fun playerWidth(
+    private fun playerWidth(
         context: Context,
         isTablet: Boolean
     ) : Int {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             if (isTablet) {
-                408f
+                InAppVideoPlayerHandle.PLAYER_WIDTH_TABLET_DP
             } else {
-                240f
+                InAppVideoPlayerHandle.PLAYER_WIDTH_PHONE_DP
             },
             context.resources.displayMetrics
         ).toInt()
     }
 
-    fun playerHeight(
+    private fun playerHeight(
         context: Context,
         isTablet: Boolean
     ) : Int {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             if (isTablet) {
-                299f
+                InAppVideoPlayerHandle.PLAYER_HEIGHT_TABLET_DP
             } else {
-                134f
+                InAppVideoPlayerHandle.PLAYER_HEIGHT_PHONE_DP
             },
             context.resources.displayMetrics
         ).toInt()

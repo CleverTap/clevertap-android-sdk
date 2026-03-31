@@ -1,0 +1,8 @@
+package com.clevertap.android.sdk.inapp.media
+
+internal data class InAppMediaConfig(
+    val imageViewId: Int,
+    val clickableMedia: Boolean,
+    val videoFrameId: Int = 0,
+    val gifImageId: Int = 0,
+)

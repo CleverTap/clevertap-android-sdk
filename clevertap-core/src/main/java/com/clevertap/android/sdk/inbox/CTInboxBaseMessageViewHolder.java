@@ -138,8 +138,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     private void setMuteIconState(ImageView icon, Context context, float volume) {
         boolean isMuted = volume <= 0;
         int drawableRes = isMuted ? R.drawable.ct_volume_off : R.drawable.ct_volume_on;
-        int contentDescRes = isMuted ? R.string.ct_inbox_mute_button_content_description
-                : R.string.ct_inbox_unmute_button_content_description;
+        int contentDescRes = isMuted ? R.string.ct_mute_button_content_description
+                : R.string.ct_unmute_button_content_description;
 
         icon.setContentDescription(context.getString(contentDescRes));
         icon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), drawableRes, null));
