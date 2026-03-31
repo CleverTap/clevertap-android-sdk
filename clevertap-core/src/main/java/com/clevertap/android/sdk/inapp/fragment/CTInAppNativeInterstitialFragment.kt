@@ -81,9 +81,9 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
     }
 
     override fun cleanup() {
-        super.cleanup()
         lifecycle.removeObserver(mediaHandler)
         mediaHandler.cleanup()
+        super.cleanup()
     }
 
     private fun handleCloseButton() {
