@@ -38,6 +38,7 @@ const val TIMER_CONTENT_PENDING_INTENT = 30
 const val INPUT_BOX_CONTENT_PENDING_INTENT = 31
 const val INPUT_BOX_REPLY_PENDING_INTENT = 32
 const val VERTICAL_IMAGE_CONTENT_PENDING_INTENT = 33
+const val VERTICAL_IMAGE_BUTTON_PENDING_INTENT = 34
 
 internal object PendingIntentFactory {
 
@@ -65,15 +66,13 @@ internal object PendingIntentFactory {
             launchIntent.flags =
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsLaunchPendingIntent = flagsLaunchPendingIntent or
-                        if (launchIntent.hasExtra(PTConstants.PT_INPUT_FEEDBACK)) {
-                            //  PendingIntents attached to actions with remote inputs must be mutable
-                            PendingIntent.FLAG_MUTABLE
-                        } else {
-                            PendingIntent.FLAG_IMMUTABLE
-                        }
-            }
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or
+                    if (launchIntent.hasExtra(PTConstants.PT_INPUT_FEEDBACK)) {
+                        //  PendingIntents attached to actions with remote inputs must be mutable
+                        PendingIntent.FLAG_MUTABLE
+                    } else {
+                        PendingIntent.FLAG_IMMUTABLE
+                    }
             return PendingIntent.getBroadcast(
                 context, requestCode,
                 launchIntent, flagsLaunchPendingIntent
@@ -87,9 +86,7 @@ internal object PendingIntentFactory {
         intent.putExtra(PTConstants.PT_DISMISS_INTENT, true)
 
         var flagsLaunchPendingIntent = PendingIntent.FLAG_CANCEL_CURRENT
-        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-        }
+        flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
         return PendingIntent.getBroadcast(
             context, Random().nextInt(),
             intent, flagsLaunchPendingIntent
@@ -121,9 +118,7 @@ internal object PendingIntentFactory {
         }
 
         var flagsLaunchPendingIntent = 0
-        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-        }
+        flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
 
         val requestCode = Random().nextInt()
         when (identifier) {
@@ -177,7 +172,7 @@ internal object PendingIntentFactory {
                 return setDismissIntent(context, extras, dismissIntent)
             }
 
-            RATING_CONTENT_PENDING_INTENT -> {
+            RATING_CONTENT_PENDING_INTENT, VERTICAL_IMAGE_BUTTON_PENDING_INTENT -> {
                 extras.putString(Constants.DEEP_LINK_KEY, deepLink)
                 return if (VERSION.SDK_INT < VERSION_CODES.S) {
                     setPendingIntent(
@@ -265,7 +260,7 @@ internal object PendingIntentFactory {
         var clazz: Class<*>? = null
         try {
             clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
-        } catch (ex: ClassNotFoundException) {
+        } catch (_: ClassNotFoundException) {
             PTLog.debug("No Intent Service found")
         }
 
@@ -281,9 +276,7 @@ internal object PendingIntentFactory {
             launchIntent!!.putExtra(Constants.KEY_CT_TYPE, CTNotificationIntentService.TYPE_BUTTON_CLICK)
 
             var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-            }
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
             PendingIntent.getService(
                 context,
                 Random().nextInt(),
