@@ -85,6 +85,11 @@ public class VarCache {
             return;
         }
 
+        if (var.nameComponents().length == 0) {
+            log("mergeVariable() called, but var has empty `nameComponents`. Var name: [" + var.name() + "]");
+            return;
+        }
+
         String firstComponent = var.nameComponents()[0];
         Object defaultValue = valuesFromClient.get(firstComponent);
         Map<String, Object> mergedMap = JsonUtil.uncheckedCast(merged);

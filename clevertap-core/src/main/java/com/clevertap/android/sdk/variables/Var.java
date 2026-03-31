@@ -93,6 +93,10 @@ public class Var<T> {
         try {
             var.name = name;
             var.nameComponents = CTVariableUtils.getNameComponents(name);
+            if (var.nameComponents.length == 0) {
+                log("Variable name could not be parsed into components, skipping: " + name);
+                return null;
+            }
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;

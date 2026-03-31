@@ -559,4 +559,15 @@ class VarCacheTest : BaseTestCase() {
         }
         verify(exactly = 2) { handler.run() }
     }
+
+    @Test
+    fun `test mergeVariable with empty nameComponents does not crash`() {
+        ctVariables.init()
+        val var1: Var<String> = Var.define("var1", null, "file", ctVariables)
+        varCache.merged = mutableMapOf<String, Any>("var1" to "http://example.com/file.png")
+        val field = Var::class.java.getDeclaredField("nameComponents")
+        field.isAccessible = true
+        field.set(var1, emptyArray<String>())
+        varCache.mergeVariable(var1) // should return gracefully without ArrayIndexOutOfBoundsException
+    }
 }
