@@ -93,7 +93,7 @@ internal class InAppStreamMediaHandler
     private fun prepareMedia() {
         val handle = handle ?: return
         handle.initPlayerView(fragment.requireContext(), isTablet)
-        handle.setFullscreenClickListener {
+        handle.setFullscreenClickListener { isFullScreen ->
             if (!exoPlayerFullscreen) {
                 onBackPressedCallback.isEnabled = true
                 openFullscreenDialog()

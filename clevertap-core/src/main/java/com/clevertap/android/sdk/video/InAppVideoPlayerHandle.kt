@@ -18,7 +18,7 @@ interface InAppVideoPlayerHandle {
     fun pause()
     fun savePosition()
     fun switchToFullScreen(isFullScreen: Boolean)
-    fun setFullscreenClickListener(onClick: () -> Unit)
+    fun setFullscreenClickListener(onClick: (isFullScreen: Boolean) -> Unit)
     fun setMuteClickListener()
     fun setActionClickListener(onClick: () -> Unit)
     fun videoSurface(): View

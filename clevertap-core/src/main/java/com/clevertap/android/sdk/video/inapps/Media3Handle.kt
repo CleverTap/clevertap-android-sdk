@@ -122,8 +122,8 @@ class Media3Handle : InAppVideoPlayerHandle {
         }
     }
 
-    override fun setFullscreenClickListener(onClick: () -> Unit) {
-        playerView?.setFullscreenButtonClickListener { onClick() }
+    override fun setFullscreenClickListener(onClick: (isFullScreen: Boolean) -> Unit) {
+        playerView?.setFullscreenButtonClickListener(onClick)
         setFullscreenIcon(isFullScreen = false)
     }
 
