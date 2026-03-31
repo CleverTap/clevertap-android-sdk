@@ -349,6 +349,7 @@ class VarCacheTest : BaseTestCase() {
         assertEquals(4, varCache.getMergedValue("var4"))
     }
 
+    @Test
     fun `test getMergedValue with groups`() {
         ctVariables.init()
 
@@ -360,7 +361,7 @@ class VarCacheTest : BaseTestCase() {
         assertEquals(1, varCache.getMergedValue("group1.var1"))
         assertEquals(2, varCache.getMergedValue("group1.var2"))
         assertEquals(3, varCache.getMergedValue("group1.group2.var3"))
-        assertEquals(3, varCache.getMergedValue("group1.group2.var4"))
+        assertEquals(4, varCache.getMergedValue("group1.group2.var4"))
     }
 
     @Test
@@ -565,9 +566,17 @@ class VarCacheTest : BaseTestCase() {
         ctVariables.init()
         val var1: Var<String> = Var.define("var1", null, "file", ctVariables)
         varCache.merged = mutableMapOf<String, Any>("var1" to "http://example.com/file.png")
+        val mergedBefore = (varCache.merged as Map<*, *>).toMap()
+
+        // Force empty nameComponents via reflection to simulate a corrupted state,
+        // bypassing Var.define()'s own guard, and verify VarCache's defensive fallback.
         val field = Var::class.java.getDeclaredField("nameComponents")
         field.isAccessible = true
         field.set(var1, emptyArray<String>())
-        varCache.mergeVariable(var1) // should return gracefully without ArrayIndexOutOfBoundsException
+
+        varCache.mergeVariable(var1)
+
+        // guard returned early — merged map should remain unchanged
+        assertEquals(mergedBefore, varCache.merged)
     }
 }
