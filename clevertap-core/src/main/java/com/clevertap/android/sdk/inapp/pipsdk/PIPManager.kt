@@ -28,14 +28,9 @@ import java.util.concurrent.Executors
  * PIPManager.init(fileResourceProvider)
  * ```
  *
- * **Typical usage (Kotlin):**
+ * **Typical usage:**
  * ```kotlin
- * PIPManager.show(activity, PIPConfig.builder(url, PIPMediaType.IMAGE).build())
- * ```
- *
- * **Typical usage (Java):**
- * ```java
- * PIPManager.show(activity, PIPConfig.builder(url, PIPMediaType.IMAGE).build());
+ * PIPManager.show(activity, PIPConfig(mediaUrl = url, mediaType = PIPMediaType.IMAGE))
  * ```
  */
 internal object PIPManager {

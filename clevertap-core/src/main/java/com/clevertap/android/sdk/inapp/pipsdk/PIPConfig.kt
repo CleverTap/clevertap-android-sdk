@@ -5,7 +5,10 @@ import com.clevertap.android.sdk.inapp.CTInAppAction
 /**
  * Immutable configuration for a PIP session.
  *
- * Construct via [PIPConfig.builder] (Java-friendly) or the [Builder] directly.
+ * Construct with named arguments:
+ * ```
+ * PIPConfig(mediaUrl = url, mediaType = PIPMediaType.IMAGE)
+ * ```
  */
 data class PIPConfig internal constructor(
     // Media
@@ -40,64 +43,12 @@ data class PIPConfig internal constructor(
     // Callbacks
     val callbacks: PIPCallbacks? = null,
 ) {
-    companion object {
-        /** Primary entry point. Kotlin callers use named args; Java callers use Builder. */
-        @JvmStatic
-        fun builder(mediaUrl: String, mediaType: PIPMediaType): Builder =
-            Builder(mediaUrl, mediaType)
-    }
-
-    class Builder(private val mediaUrl: String, private val mediaType: PIPMediaType) {
-        private var fallbackUrl: String? = null
-        private var mediaContentDescription: String = ""
-        private var widthPercent: Int = 35
-        private var aspectRatioNumerator: Int = 16
-        private var aspectRatioDenominator: Int = 9
-        private var initialPosition: PIPPosition = PIPPosition.BOTTOM_RIGHT
-        private var horizontalEdgeMarginDp: Int = 16
-        private var verticalEdgeMarginDp: Int = 16
-        private var animationConfig: PIPAnimationConfig = PIPAnimationConfig()
-        private var action: CTInAppAction? = null
-        private var showCloseButton: Boolean = true
-        private var dragEnabled: Boolean = true
-        private var showPlayPauseButton: Boolean = true
-        private var showMuteButton: Boolean = true
-        private var showExpandCollapseButton: Boolean = true
-        private var callbacks: PIPCallbacks? = null
-
-        fun fallbackUrl(url: String) = apply { fallbackUrl = url }
-        fun mediaContentDescription(desc: String) = apply { mediaContentDescription = desc }
-        fun widthPercent(value: Int) = apply { widthPercent = value }
-        fun aspectRatio(numerator: Int, denominator: Int) = apply {
-            aspectRatioNumerator = numerator
-            aspectRatioDenominator = denominator
-        }
-        fun initialPosition(position: PIPPosition) = apply { initialPosition = position }
-        fun horizontalEdgeMarginDp(dp: Int) = apply { horizontalEdgeMarginDp = dp }
-        fun verticalEdgeMarginDp(dp: Int) = apply { verticalEdgeMarginDp = dp }
-        fun animationConfig(config: PIPAnimationConfig) = apply { this.animationConfig = config }
-        internal fun action(action: CTInAppAction) = apply { this.action = action }
-        fun showCloseButton(show: Boolean) = apply { showCloseButton = show }
-        fun dragEnabled(enabled: Boolean) = apply { dragEnabled = enabled }
-        fun showPlayPauseButton(show: Boolean) = apply { showPlayPauseButton = show }
-        fun showMuteButton(show: Boolean) = apply { showMuteButton = show }
-        fun showExpandCollapseButton(show: Boolean) = apply { showExpandCollapseButton = show }
-        fun callbacks(callbacks: PIPCallbacks) = apply { this.callbacks = callbacks }
-
-        fun build(): PIPConfig {
-            require(mediaUrl.isNotBlank()) { "mediaUrl must not be blank" }
-            require(widthPercent in 10..90) { "widthPercent must be 10–90, got $widthPercent" }
-            require(aspectRatioNumerator > 0) { "aspectRatioNumerator must be > 0" }
-            require(aspectRatioDenominator > 0) { "aspectRatioDenominator must be > 0" }
-            require(horizontalEdgeMarginDp >= 0) { "horizontalEdgeMarginDp must be >= 0" }
-            require(verticalEdgeMarginDp >= 0) { "verticalEdgeMarginDp must be >= 0" }
-            return PIPConfig(
-                mediaUrl, mediaType, fallbackUrl, mediaContentDescription, widthPercent, aspectRatioNumerator,
-                aspectRatioDenominator, initialPosition, horizontalEdgeMarginDp,
-                verticalEdgeMarginDp, animationConfig, action, showCloseButton,
-                dragEnabled, showPlayPauseButton,
-                showMuteButton, showExpandCollapseButton, callbacks,
-            )
-        }
+    init {
+        require(mediaUrl.isNotBlank()) { "mediaUrl must not be blank" }
+        require(widthPercent in 10..90) { "widthPercent must be 10–90, got $widthPercent" }
+        require(aspectRatioNumerator > 0) { "aspectRatioNumerator must be > 0" }
+        require(aspectRatioDenominator > 0) { "aspectRatioDenominator must be > 0" }
+        require(horizontalEdgeMarginDp >= 0) { "horizontalEdgeMarginDp must be >= 0" }
+        require(verticalEdgeMarginDp >= 0) { "verticalEdgeMarginDp must be >= 0" }
     }
 }

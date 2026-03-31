@@ -46,72 +46,69 @@ internal object PIPConfigFactory {
             }
         }
 
-        val builder = PIPConfig.builder(media.mediaUrl, mediaType)
-            .callbacks(callbacks)
-
         // Accessibility: media alt text
-        media.contentDescription.takeIf { it.isNotBlank() }?.let {
-            builder.mediaContentDescription(it)
-        }
+        val contentDesc = media.contentDescription.takeIf { it.isNotBlank() } ?: ""
 
         // Fallback URL from raw JSON media object
         val rawMediaJson = inAppNotification.jsonDescription.optJSONObject("media")
-        rawMediaJson?.optString("fallback_url", "")?.takeIf { it.isNotBlank() }?.let {
-            builder.fallbackUrl(it)
-        }
+        val fallbackUrl = rawMediaJson?.optString("fallback_url", "")?.takeIf { it.isNotBlank() }
 
         // Position
-        pipJson.optString("position", "").takeIf { it.isNotBlank() }?.let { pos ->
-            mapPosition(pos)?.let { builder.initialPosition(it) }
-        }
+        val position = pipJson.optString("position", "").takeIf { it.isNotBlank() }
+            ?.let { mapPosition(it) } ?: PIPPosition.BOTTOM_RIGHT
 
         // Margins
-        pipJson.optJSONObject("margins")?.let { margins ->
-            if (margins.has("vertical")) {
-                builder.verticalEdgeMarginDp(margins.optInt("vertical", 16))
-            }
-            if (margins.has("horizontal")) {
-                builder.horizontalEdgeMarginDp(margins.optInt("horizontal", 16))
-            }
-        }
+        val margins = pipJson.optJSONObject("margins")
+        val verticalMargin = margins?.optInt("vertical", 16) ?: 16
+        val horizontalMargin = margins?.optInt("horizontal", 16) ?: 16
 
         // Width
-        if (pipJson.has("width")) {
-            builder.widthPercent(pipJson.optInt("width", 35))
-        }
+        val widthPercent = pipJson.optInt("width", 35)
 
         // Aspect ratio
-        pipJson.optJSONObject("aspectRatio")?.let { ar ->
-            val num = ar.optInt("numerator", 16)
-            val den = ar.optInt("denominator", 9)
-            if (num > 0 && den > 0) builder.aspectRatio(num, den)
-        }
+        val arJson = pipJson.optJSONObject("aspectRatio")
+        val arNum = arJson?.optInt("numerator", 16)?.takeIf { it > 0 } ?: 16
+        val arDen = arJson?.optInt("denominator", 9)?.takeIf { it > 0 } ?: 9
 
         // Controls visibility
-        pipJson.optJSONObject("controls")?.let { ctrl ->
-            if (ctrl.has("drag")) builder.dragEnabled(ctrl.optBoolean("drag", true))
-            if (ctrl.has("playPause")) builder.showPlayPauseButton(ctrl.optBoolean("playPause", true))
-            if (ctrl.has("mute")) builder.showMuteButton(ctrl.optBoolean("mute", true))
-            if (ctrl.has("expandCollapse")) builder.showExpandCollapseButton(ctrl.optBoolean("expandCollapse", true))
-        }
+        val ctrl = pipJson.optJSONObject("controls")
+        val dragEnabled = ctrl?.optBoolean("drag", true) ?: true
+        val showPlayPause = ctrl?.optBoolean("playPause", true) ?: true
+        val showMute = ctrl?.optBoolean("mute", true) ?: true
+        val showExpandCollapse = ctrl?.optBoolean("expandCollapse", true) ?: true
 
         // Animation
-        pipJson.optJSONObject("animation")?.let { animJson ->
-            mapAnimationConfig(animJson)?.let { builder.animationConfig(it) }
-        }
+        val animConfig = pipJson.optJSONObject("animation")?.let { mapAnimationConfig(it) }
+            ?: PIPAnimationConfig()
 
-        pipJson.optJSONObject("onClick")?.let {
-            CTInAppAction.createFromJson(it)?.let { action -> builder.action(action) }
-        }
+        // Action
+        val action = pipJson.optJSONObject("onClick")?.let { CTInAppAction.createFromJson(it) }
 
         // Close button: `close: true` in PIP JSON means show close button
         val rawJson = inAppNotification.jsonDescription
-        if (rawJson.has("close")) {
-            builder.showCloseButton(rawJson.optBoolean("close", true))
-        }
+        val showClose = rawJson.optBoolean("close", true)
 
         return try {
-            builder.build()
+            PIPConfig(
+                mediaUrl = media.mediaUrl,
+                mediaType = mediaType,
+                fallbackUrl = fallbackUrl,
+                mediaContentDescription = contentDesc,
+                widthPercent = widthPercent,
+                aspectRatioNumerator = arNum,
+                aspectRatioDenominator = arDen,
+                initialPosition = position,
+                horizontalEdgeMarginDp = horizontalMargin,
+                verticalEdgeMarginDp = verticalMargin,
+                animationConfig = animConfig,
+                action = action,
+                showCloseButton = showClose,
+                dragEnabled = dragEnabled,
+                showPlayPauseButton = showPlayPause,
+                showMuteButton = showMute,
+                showExpandCollapseButton = showExpandCollapse,
+                callbacks = callbacks,
+            )
         } catch (e: IllegalArgumentException) {
             logger.debug(LOG_TAG, "Failed to build PIPConfig: ${e.message}")
             null

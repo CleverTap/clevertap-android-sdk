@@ -34,6 +34,7 @@ class PIPConfigFactoryTest {
         val media = mockk<CTInAppNotificationMedia> {
             every { this@mockk.mediaUrl } returns mediaUrl
             every { this@mockk.contentType } returns contentType
+            every { this@mockk.contentDescription } returns ""
             every { isVideo() } returns isVideo
             every { isGIF() } returns isGIF
             every { isImage() } returns isImage
