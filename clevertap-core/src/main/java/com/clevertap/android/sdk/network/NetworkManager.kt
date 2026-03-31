@@ -273,13 +273,32 @@ internal class NetworkManager constructor(
             ?.let { muteCommand ->
                 // muteCommand is guaranteed to be non-null and non-empty here
                 if (muteCommand == "true") {
-                    setMuted(true)
+                    val muteExpiryMs = parseMuteExpiryMs(response)
+                    setMuted(true, muteExpiryMs)
                     return true
                 } else {
                     setMuted(false)
                 }
             }
         return false
+    }
+
+    /**
+     * Parses the X-WZRK-MUTE-DURATION header value as an absolute epoch timestamp in milliseconds.
+     * @return The mute expiry epoch ms, or null if the header is absent or invalid.
+     */
+    private fun parseMuteExpiryMs(response: Response): Long? {
+        val value = response.getHeaderValue(CtApi.HEADER_MUTE_DURATION)
+            ?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return try {
+            value.toLong()
+        } catch (_: NumberFormatException) {
+            logger.verbose(
+                config.accountId,
+                "Invalid X-WZRK-MUTE-DURATION value: $value, falling back to default mute"
+            )
+            null
+        }
     }
 
     /**
@@ -755,10 +774,20 @@ internal class NetworkManager constructor(
         ctApiWrapper.ctApi.cachedSpikyDomain = spikyDomainName
     }
 
+    /**
+     * @param mute Whether to mute or unmute the SDK.
+     * @param muteExpiryMs The absolute epoch timestamp in milliseconds when the mute should expire.
+     *                     If null, the default 24-hour mute duration is used. Only relevant when [mute] is true.
+     */
     @WorkerThread
-    private fun setMuted(mute: Boolean) {
+    private fun setMuted(mute: Boolean, muteExpiryMs: Long? = null) {
         if (mute) {
-            networkRepo.setMuted(true)
+            if (muteExpiryMs != null) {
+                networkRepo.setMuteExpiry(muteExpiryMs)
+            } else {
+                // Fallback to default 24-hour mute for older backend responses
+                networkRepo.setMuted(true)
+            }
             networkRepo.setDomain(null)
 
             // Clear all the queues
@@ -769,5 +798,14 @@ internal class NetworkManager constructor(
         } else {
             networkRepo.setMuted(false)
         }
+    }
+
+    /**
+     * Clears any active mute state set by the backend, allowing the SDK to resume
+     * normal event tracking and network operations immediately.
+     */
+    fun unmute() {
+        logger.debug(config.accountId, "unmute called, clearing mute state")
+        networkRepo.unmute()
     }
 }

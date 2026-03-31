@@ -38,6 +38,7 @@ internal class CtApi(
 
         // Response Headers
         const val HEADER_MUTE: String = "X-WZRK-MUTE"
+        const val HEADER_MUTE_DURATION: String = "X-WZRK-MUTE-DURATION"
         const val HEADER_DOMAIN_NAME: String = "X-WZRK-RD"
         const val SPIKY_HEADER_DOMAIN_NAME: String = "X-WZRK-SPIKY-RD"
 

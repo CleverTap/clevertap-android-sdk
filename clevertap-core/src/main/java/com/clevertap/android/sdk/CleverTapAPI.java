@@ -2878,6 +2878,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Clears any active mute state set by the backend, allowing the SDK to resume
+     * normal event tracking and network operations immediately.
+     * <p>
+     * The CleverTap backend can mute a client for a set duration (e.g., during a
+     * detected abuse scenario). Call this method to override that mute and restore
+     * normal SDK operation without waiting for the mute period to expire.
+     */
+    @SuppressWarnings({"unused"})
+    public void unmute() {
+        coreState.getNetworkManager().unmute();
+    }
+
+    /**
      * Use this method to opt the current user out of all event/profile tracking.
      * You must call this method separately for each active user profile (e.g. when switching user profiles using
      * onUserLogin).

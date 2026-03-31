@@ -144,6 +144,8 @@ public interface Constants {
     String KEY_OLD_VALUE = "oldValue";
     String KEY_ITEMS = "Items";
     String KEY_MUTED = "comms_mtd";
+    String KEY_MUTE_EXPIRY = "comms_mute_expiry_ts";
+    long DEFAULT_MUTE_DURATION_MS = 24 * 60 * 60 * 1000L;
     int EMPTY_NOTIFICATION_ID = -1000;
     String KEY_MAX_PER_DAY = "istmcd_inapp";
     String KEY_COUNTS_SHOWN_TODAY = "istc_inapp";
