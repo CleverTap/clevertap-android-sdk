@@ -108,7 +108,7 @@ internal object CleverTapFactory {
         val ctLockManager = CTLockManager()
         val mainLooperHandler = MainLooperHandler()
         val config = CleverTapInstanceConfig(cleverTapInstanceConfig)
-        val networkMonitor = NetworkMonitor(context, config.accountId, config.logger)
+        val networkMonitor = NetworkMonitor(context, config)
         val networkRepo = NetworkRepo(context = context, config = config)
         val ijRepo = IJRepo(config = config)
         val executors = CTExecutorFactory.executors(config)

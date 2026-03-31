@@ -6,6 +6,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Utils
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ internal class NetworkMonitor constructor(
     private val logger: ILogger = config.logger
 ) {
     private val appContext: Context = context.applicationContext
+    private val accountId: String = config.accountId
 
     enum class NetworkType {
         WIFI,

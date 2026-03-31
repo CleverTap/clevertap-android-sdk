@@ -32,7 +32,7 @@ class NetworkMonitorTest : BaseTestCase() {
         shadowCM = shadowOf(connectivityManager)
     }
 
-    private fun createNetworkMonitor() = NetworkMonitor(application, cleverTapInstanceConfig.accountId, cleverTapInstanceConfig.logger)
+    private fun createNetworkMonitor() = NetworkMonitor(application, cleverTapInstanceConfig)
 
     // ─── NetworkState data class tests ────────────────────────────────────────
 
