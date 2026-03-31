@@ -4,11 +4,14 @@ import android.content.Context
 import android.os.Build
 import android.os.SystemClock
 import android.view.View
+import com.clevertap.android.pushtemplates.ButtonStyle
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
+
 
 internal open class TimerSmallContentView(
     context: Context,
@@ -24,7 +27,6 @@ internal open class TimerSmallContentView(
         setCustomContentViewTitle(data.baseContent.textData.title)
         setCustomContentViewMessage(data.baseContent.textData.message)
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_small)
-        setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.chronometer)
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomContentViewChronometerTitleColour(
             data.chronometerTitleColor,
@@ -33,10 +35,24 @@ internal open class TimerSmallContentView(
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
         remoteView.setViewVisibility(R.id.large_icon, View.GONE)
 
+        setupChronometerBackground(
+            data.chronometerStyle,
+            data.chronometerBgColor,
+            data.chronometerBorderColor,
+            data.chronometerGradientColor1,
+            data.chronometerGradientColor2,
+            data.chronometerGradientDirection,
+            data.chronometerBorderRadius,
+            data.chronometerBorderWidth
+        )
+
+
+        val timerEnd = timer_end ?: 0L
+
         // Add a 3 second buffer to prevent negative timer values
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timer_end!! + 3 * PTConstants.ONE_SECOND_LONG,
+            SystemClock.elapsedRealtime() + timerEnd + 3 * PTConstants.ONE_SECOND_LONG,
             null,
             true
         )
@@ -44,6 +60,47 @@ internal open class TimerSmallContentView(
             remoteView.setChronometerCountDown(R.id.chronometer, true)
         }
         setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+
+    }
+
+    private fun setupChronometerBackground(
+        style: ButtonStyle,
+        bgColorStr: String?,
+        borderColorStr: String?,
+        gradientColor1: String?,
+        gradientColor2: String?,
+        gradientDirection: Double,
+        cornerRadius: Float,
+        borderWidth: Float?
+    ) {
+        val borderColor = borderColorStr?.let { Utils.getColourOrNull(it) }
+        val bitmap = when (style) {
+            ButtonStyle.GRADIENT_LINEAR -> {
+                val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
+                val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
+                NotificationBitmapUtils.createLinearGradientBitmap(
+                    color1, color2, gradientDirection,
+                    CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderColor, borderWidth
+                )
+            }
+            ButtonStyle.GRADIENT_RADIAL -> {
+                val color1 = gradientColor1?.let { Utils.getColourOrNull(it) } ?: return
+                val color2 = gradientColor2?.let { Utils.getColourOrNull(it) } ?: return
+                NotificationBitmapUtils.createRadialBitmap(
+                    color1, color2,
+                    CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderColor, borderWidth
+                )
+            }
+            ButtonStyle.SOLID -> {
+                val bgColor = bgColorStr?.let { Utils.getColourOrNull(it) } ?: return
+                NotificationBitmapUtils.createSolidBitmap(
+                    bgColor, borderColor,
+                    CHRONO_BITMAP_WIDTH, CHRONO_BITMAP_HEIGHT, cornerRadius, borderWidth
+                )
+            }
+        }
+        remoteView.setImageViewBitmap(R.id.chronometer_bg, bitmap)
+        remoteView.setViewVisibility(R.id.chronometer_bg, View.VISIBLE)
     }
 
     private fun setCustomContentViewChronometerTitleColour(
@@ -55,5 +112,10 @@ internal open class TimerSmallContentView(
         } else if (pt_title_clr.isNotNullAndEmpty()) {
             setCustomTextColour(pt_title_clr, R.id.chronometer)
         }
+    }
+
+    companion object {
+        private const val CHRONO_BITMAP_WIDTH = 100
+        private const val CHRONO_BITMAP_HEIGHT = 50
     }
 }
