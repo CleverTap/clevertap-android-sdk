@@ -38,6 +38,7 @@ const val TIMER_CONTENT_PENDING_INTENT = 30
 const val INPUT_BOX_CONTENT_PENDING_INTENT = 31
 const val INPUT_BOX_REPLY_PENDING_INTENT = 32
 const val VERTICAL_IMAGE_CONTENT_PENDING_INTENT = 33
+const val VERTICAL_IMAGE_BUTTON_PENDING_INTENT = 34
 
 internal object PendingIntentFactory {
 
@@ -171,7 +172,7 @@ internal object PendingIntentFactory {
                 return setDismissIntent(context, extras, dismissIntent)
             }
 
-            RATING_CONTENT_PENDING_INTENT -> {
+            RATING_CONTENT_PENDING_INTENT, VERTICAL_IMAGE_BUTTON_PENDING_INTENT -> {
                 extras.putString(Constants.DEEP_LINK_KEY, deepLink)
                 return if (VERSION.SDK_INT < VERSION_CODES.S) {
                     setPendingIntent(
@@ -259,7 +260,7 @@ internal object PendingIntentFactory {
         var clazz: Class<*>? = null
         try {
             clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
-        } catch (ex: ClassNotFoundException) {
+        } catch (_: ClassNotFoundException) {
             PTLog.debug("No Intent Service found")
         }
 

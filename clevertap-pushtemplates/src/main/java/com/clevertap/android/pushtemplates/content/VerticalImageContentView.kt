@@ -67,7 +67,7 @@ internal abstract class VerticalImageContentView(
     private fun setupButtonDeepLink(extras: Bundle, buttonDeepLink: String?, notificationId: Int) {
         val btnExtras = extras.clone() as Bundle
         val pendingIntent = PendingIntentFactory.getPendingIntent(
-            context, notificationId, btnExtras, false, VERTICAL_IMAGE_CONTENT_PENDING_INTENT, buttonDeepLink
+            context, notificationId, btnExtras, false, VERTICAL_IMAGE_BUTTON_PENDING_INTENT, buttonDeepLink
         ) ?: return
         remoteView.setOnClickPendingIntent(R.id.vertical_img_btn_frame, pendingIntent)
     }
