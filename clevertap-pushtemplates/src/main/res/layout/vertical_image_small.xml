@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_view_small"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
+    android:paddingStart="@dimen/padding_horizontal"
+    android:paddingTop="@dimen/padding_micro"
+    android:paddingEnd="@dimen/padding_horizontal"
+    android:paddingBottom="@dimen/padding_micro">
+
+    <!-- Metadata: app icon, app name, timestamp (pre-v31 only) -->
+    <include
+        android:id="@+id/metadata"
+        layout="@layout/metadata"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" />
+
+    <!-- Content row below metadata: title/msg + thumbnail + button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/metadata"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Left: Title + msg — fills all remaining space -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:orientation="vertical"
+            android:layout_marginEnd="6dp">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Airy Blur Blush..."
+                android:textAppearance="@style/PushTitle" />
+
+            <TextView
+                android:id="@+id/msg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="New Launch fro..."
+                android:textAppearance="@style/PushMessage" />
+
+        </LinearLayout>
+
+        <!-- Middle: Small product image thumbnail -->
+        <include
+            android:id="@+id/big_media_configurable"
+            layout="@layout/image_media_dynamic_linear"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="6dp" />
+
+        <!-- Right: CTA button — hugs right edge -->
+        <FrameLayout
+            android:id="@+id/vertical_img_btn_frame"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="28dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/pt_vertical_img_btn_default_bg"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/vertical_img_btn_bg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/vertical_img_btn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:gravity="center"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/verticalImgBtnTextColor"
+                tools:text="SHOP" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

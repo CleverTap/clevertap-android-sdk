@@ -112,8 +112,16 @@ internal data class TimerTemplateData(
     val terminalTextData: BaseTextData,
     val terminalMediaData: MediaData,
     val chronometerTitleColor: String? = null,
+    val chronometerBgColor: String? = null,
+    val chronometerBorderColor: String? = null,
+    val chronometerStyle: ButtonStyle = ButtonStyle.SOLID,
+    val chronometerGradientColor1: String? = null,
+    val chronometerGradientColor2: String? = null,
+    val chronometerGradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
     val renderTerminal: Boolean = true,
-) : TemplateData()
+    val chronometerBorderRadius: Float = 6f,
+    val chronometerBorderWidth: Float? = null,
+    ) : TemplateData()
 
 internal data class ZeroBezelTemplateData(
     override val templateType: TemplateType = TemplateType.ZERO_BEZEL,
@@ -155,4 +163,41 @@ internal data class CancelTemplateData(
     override val templateType: TemplateType = TemplateType.CANCEL,
     val cancelNotificationId: String? = null,
     val cancelNotificationIds: ArrayList<Int>
+) : TemplateData()
+
+internal enum class ButtonStyle(val key: String) {
+    SOLID("solid"),
+    GRADIENT_LINEAR("gradient_linear"),
+    GRADIENT_RADIAL("gradient_radial");
+
+    companion object {
+        fun fromString(value: String?): ButtonStyle =
+            entries.firstOrNull { it.key == value } ?: SOLID
+    }
+}
+
+internal data class VerticalImageButtonData(
+    val name: String,
+    val deepLink: String? = null,
+    val style: ButtonStyle = ButtonStyle.SOLID,
+    val buttonColor: String? = null,
+    val borderColor: String? = null,
+    val textColor: String? = null,
+    val gradientColor1: String? = null,
+    val gradientColor2: String? = null,
+    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT
+)
+
+internal data class VerticalImageTemplateData(
+    override val templateType: TemplateType = TemplateType.VERTICAL_IMAGE,
+    val baseContent: BaseContent,
+    val mediaData: MediaData,
+    val collapsedMediaData: MediaData?,
+    val actions: JSONArray? = null,
+    val text1: String? = null,
+    val text2: String? = null,
+    val text1Color: String? = null,
+    val text2Color: String? = null,
+    val buttonData: VerticalImageButtonData? = null,
+    val collapsedButtonData: VerticalImageButtonData? = null,
 ) : TemplateData()

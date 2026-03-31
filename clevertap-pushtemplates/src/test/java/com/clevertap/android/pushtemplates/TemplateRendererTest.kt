@@ -89,6 +89,9 @@ class TemplateRendererTest {
     @MockK(relaxed = true)
     private lateinit var mockCancelTemplateData: CancelTemplateData
 
+    @MockK(relaxed = true)
+    private lateinit var mockVerticalImageTemplateData: VerticalImageTemplateData
+
     private lateinit var testBundle: Bundle
     private lateinit var templateRenderer: TemplateRenderer
     private lateinit var context: Context
@@ -2136,6 +2139,85 @@ class TemplateRendererTest {
         assertTrue(result.isEmpty())
     }
 
+
+    @Test
+    fun test_renderNotification_vertical_image_template_valid() {
+        val verticalBundle = Bundle(testBundle)
+        verticalBundle.putString(PTConstants.PT_ID, "pt_vertical_img")
+
+        val templateRendererLocal = TemplateRenderer(context, verticalBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.VERTICAL_IMAGE,
+                verticalBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockVerticalImageTemplateData
+        every { ValidatorFactory.getValidator(mockVerticalImageTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        mockkConstructor(VerticalImageStyle::class)
+        every {
+            anyConstructed<VerticalImageStyle>().builderFromStyle(any(), any(), any(), any())
+        } returns mockNotificationBuilder
+
+        val result = templateRendererLocal.renderNotification(
+            verticalBundle, context, mockNotificationBuilder, mockConfig, 123
+        )
+
+        verify {
+            anyConstructed<VerticalImageStyle>().builderFromStyle(
+                any(), verticalBundle, 123, mockNotificationBuilder
+            )
+        }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    fun test_renderNotification_vertical_image_template_invalid() {
+        val verticalBundle = Bundle(testBundle)
+        verticalBundle.putString(PTConstants.PT_ID, "pt_vertical_img")
+
+        val templateRendererLocal = TemplateRenderer(context, verticalBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.VERTICAL_IMAGE, verticalBundle, false, any(), any()
+            )
+        } returns mockVerticalImageTemplateData
+        every { ValidatorFactory.getValidator(mockVerticalImageTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+
+        val result = templateRendererLocal.renderNotification(
+            verticalBundle, context, mockNotificationBuilder, mockConfig, 123
+        )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun test_renderNotification_vertical_image_template_null_validator() {
+        val verticalBundle = Bundle(testBundle)
+        verticalBundle.putString(PTConstants.PT_ID, "pt_vertical_img")
+
+        val templateRendererLocal = TemplateRenderer(context, verticalBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.VERTICAL_IMAGE, verticalBundle, false, any(), any()
+            )
+        } returns mockVerticalImageTemplateData
+        every { ValidatorFactory.getValidator(mockVerticalImageTemplateData) } returns null
+
+        val result = templateRendererLocal.renderNotification(
+            verticalBundle, context, mockNotificationBuilder, mockConfig, 123
+        )
+
+        assertNull(result)
+    }
 
     @Test
     fun test_renderNotification_cancel_template_valid() {

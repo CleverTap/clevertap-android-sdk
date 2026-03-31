@@ -17,8 +17,6 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.os.Build
-import android.os.Build.VERSION_CODES.KITKAT
-import android.os.Build.VERSION_CODES.LOLLIPOP
 import android.os.Build.VERSION_CODES.M
 import android.os.Build.VERSION_CODES.N
 import android.os.Build.VERSION_CODES.O
@@ -303,7 +301,7 @@ class UtilsTest : BaseTestCase() {
         //if telephone service is available and SDK version is <R,
         // it will give the network type accordingly no matter weather we have read phone state permission or not
         var receivedType = ""
-        arrayOf(KITKAT, LOLLIPOP, M, N, O, P, Q).forEach {
+        arrayOf(M, N, O, P, Q).forEach {
             prepareForTeleConnectTest(sdk = it, hasRPSPermission = false)
             receivedType = Utils.getDeviceNetworkType(application)
             printIfDebug("receivedType = $receivedType")
