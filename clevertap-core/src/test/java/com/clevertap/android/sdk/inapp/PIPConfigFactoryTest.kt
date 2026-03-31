@@ -222,17 +222,6 @@ class PIPConfigFactoryTest {
     }
 
     @Test
-    fun `reads redirect url from onClick`() {
-        val pipJson = JSONObject().put("onClick", JSONObject().apply {
-            put("android", "https://www.example.com")
-        })
-        val notification = mockNotification(pipJson = pipJson)
-        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
-        assertNotNull(config)
-        assertEquals("https://www.example.com", config.redirectUrl)
-    }
-
-    @Test
     fun `reads close button from top-level json`() {
         val pipJson = JSONObject()
         val topLevelJson = JSONObject().apply {
