@@ -100,8 +100,9 @@ internal object PIPConfigFactory {
             mapAnimationConfig(animJson)?.let { builder.animationConfig(it) }
         }
 
-        // Action from standard buttons array (first button only)
-        inAppNotification.buttons.firstOrNull()?.action?.let { builder.action(it) }
+        pipJson.optJSONObject("onClick")?.let {
+            CTInAppAction.createFromJson(it)?.let { action -> builder.action(action) }
+        }
 
         // Close button: `close: true` in PIP JSON means show close button
         val rawJson = inAppNotification.jsonDescription
