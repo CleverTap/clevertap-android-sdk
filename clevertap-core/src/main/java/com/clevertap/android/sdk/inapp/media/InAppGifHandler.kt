@@ -42,14 +42,10 @@ internal class InAppGifHandler(
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        clearGif()
+        gifImageView?.clear()
     }
 
     override fun cleanup() {
-        clearGif()
-    }
-
-    private fun clearGif() {
         gifImageView?.clear()
     }
 }
