@@ -430,10 +430,8 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             // Create and return the PendingIntent
             val requestCode = Random().nextInt()
             var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsActionLaunchPendingIntent =
-                    flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-            }
+            flagsActionLaunchPendingIntent =
+                flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
 
             return if (sendToCTIntentService) {
                 PendingIntent.getService(
