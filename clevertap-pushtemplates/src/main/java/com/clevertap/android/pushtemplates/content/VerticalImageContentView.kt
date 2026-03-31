@@ -9,8 +9,6 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.VerticalImageButtonData
-import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 
 internal abstract class VerticalImageContentView(
     context: Context,
@@ -21,6 +19,7 @@ internal abstract class VerticalImageContentView(
 
     protected fun setupButton(
         buttonData: VerticalImageButtonData?,
+        notificationId: Int,
     ) {
         if (buttonData == null) {
             PTLog.debug("VerticalImageContentView: buttonData is null, skipping button setup")
@@ -62,16 +61,15 @@ internal abstract class VerticalImageContentView(
         }
         bitmap?.let { remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, it) }
 
-        setupButtonDeepLink(extras, buttonData.deepLink)
+        setupButtonDeepLink(extras, buttonData.deepLink, notificationId)
     }
 
-    private fun setupButtonDeepLink(extras: Bundle, buttonDeepLink: String?) {
+    private fun setupButtonDeepLink(extras: Bundle, buttonDeepLink: String?, notificationId: Int) {
         val btnExtras = extras.clone() as Bundle
-        btnExtras.putString(Constants.DEEP_LINK_KEY, buttonDeepLink)
-        remoteView.setOnClickPendingIntent(
-            R.id.vertical_img_btn_frame,
-            LaunchPendingIntentFactory.getLaunchPendingIntent(btnExtras, context)
-        )
+        val pendingIntent = PendingIntentFactory.getPendingIntent(
+            context, notificationId, btnExtras, false, VERTICAL_IMAGE_CONTENT_PENDING_INTENT, buttonDeepLink
+        ) ?: return
+        remoteView.setOnClickPendingIntent(R.id.vertical_img_btn_frame, pendingIntent)
     }
 
     companion object {

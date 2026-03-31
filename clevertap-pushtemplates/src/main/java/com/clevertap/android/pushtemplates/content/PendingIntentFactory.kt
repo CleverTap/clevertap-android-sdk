@@ -65,15 +65,13 @@ internal object PendingIntentFactory {
             launchIntent.flags =
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsLaunchPendingIntent = flagsLaunchPendingIntent or
-                        if (launchIntent.hasExtra(PTConstants.PT_INPUT_FEEDBACK)) {
-                            //  PendingIntents attached to actions with remote inputs must be mutable
-                            PendingIntent.FLAG_MUTABLE
-                        } else {
-                            PendingIntent.FLAG_IMMUTABLE
-                        }
-            }
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or
+                    if (launchIntent.hasExtra(PTConstants.PT_INPUT_FEEDBACK)) {
+                        //  PendingIntents attached to actions with remote inputs must be mutable
+                        PendingIntent.FLAG_MUTABLE
+                    } else {
+                        PendingIntent.FLAG_IMMUTABLE
+                    }
             return PendingIntent.getBroadcast(
                 context, requestCode,
                 launchIntent, flagsLaunchPendingIntent
@@ -87,9 +85,7 @@ internal object PendingIntentFactory {
         intent.putExtra(PTConstants.PT_DISMISS_INTENT, true)
 
         var flagsLaunchPendingIntent = PendingIntent.FLAG_CANCEL_CURRENT
-        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-        }
+        flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
         return PendingIntent.getBroadcast(
             context, Random().nextInt(),
             intent, flagsLaunchPendingIntent
@@ -121,9 +117,7 @@ internal object PendingIntentFactory {
         }
 
         var flagsLaunchPendingIntent = 0
-        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-        }
+        flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
 
         val requestCode = Random().nextInt()
         when (identifier) {
@@ -281,9 +275,7 @@ internal object PendingIntentFactory {
             launchIntent!!.putExtra(Constants.KEY_CT_TYPE, CTNotificationIntentService.TYPE_BUTTON_CLICK)
 
             var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
-            }
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
             PendingIntent.getService(
                 context,
                 Random().nextInt(),

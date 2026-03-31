@@ -37,7 +37,7 @@ internal class VerticalImageBigContentView(
         setAdditionalText(data.text1, R.id.vertical_img_text1, data.text1Color)
         setAdditionalText(data.text2, R.id.vertical_img_text2, data.text2Color)
 
-        setupButton(data.buttonData)
+        setupButton(data.buttonData, renderer.notificationId)
     }
 
     private fun setAdditionalText(text: String?, viewId: Int, color: String?) {
