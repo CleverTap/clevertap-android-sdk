@@ -64,55 +64,72 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         removeAllViews()
         this.session = session
 
-        // If video previously failed and fell back to a static image, reload the fallback
-        // directly — there's no video player to rebind, so VideoRenderer.rebindSurface()
-        // would return early and leave the container blank.
-        // Note: can't use fellBackToImage here because a new PIPMediaView is created on
-        // rotation. Instead, infer from session: VIDEO type + no wrapper = video failed.
-        val videoFailedToImage = session.config.mediaType == PIPMediaType.VIDEO
-                && session.videoPlayerWrapper == null
-        if (videoFailedToImage) {
-            FallbackImageLoader.load(
-                FallbackLoadRequest(
-                    container = this,
-                    fallbackUrl = session.config.fallbackUrl,
-                    primaryUrl = session.config.mediaUrl,
-                    resourceProvider = resourceProvider,
-                    mediaExecutor = mediaExecutor,
-                    isReleased = { false },
-                    callbacks = session.config.callbacks,
-                    errorContext = "Fallback reload after rotation",
-                )
-            )
-            return
-        }
+        if (reloadFallbackIfVideoFailed(session, resourceProvider, mediaExecutor)) return
 
         if (renderer == null) {
             renderer = createRenderer(session.config.mediaType, resourceProvider, mediaExecutor, session)
         }
         renderer?.rebindSurface(this, session)
 
-        // For video: overlay a black scrim on top of the PlayerView (SurfaceView renders *behind*
-        // window Views, so this scrim covers the black surface while ExoPlayer seeks/decodes).
-        // Fade the scrim out once the first frame is rendered.
-        val wrapper = session.videoPlayerWrapper
-        if (wrapper != null) {
-            val scrim = View(context).apply {
-                setBackgroundColor(Color.BLACK)
-            }
-            addView(scrim, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        attachVideoScrim(session.videoPlayerWrapper)
+    }
 
-            val removeScrim = Runnable { removeView(scrim) }
+    /**
+     * If video previously failed and fell back to a static image, reload the fallback
+     * directly — there's no video player to rebind, so VideoRenderer.rebindSurface()
+     * would return early and leave the container blank.
+     *
+     * Can't use [fellBackToImage] here because a new PIPMediaView is created on
+     * rotation. Instead, infer from session: VIDEO type + no wrapper = video failed.
+     *
+     * @return true if fallback was reloaded (caller should return early)
+     */
+    private fun reloadFallbackIfVideoFailed(
+        session: PIPSession,
+        resourceProvider: FileResourceProvider,
+        mediaExecutor: ExecutorService,
+    ): Boolean {
+        val videoFailedToImage = session.config.mediaType == PIPMediaType.VIDEO
+                && session.videoPlayerWrapper == null
+        if (!videoFailedToImage) return false
 
-            wrapper.notifyWhenFirstFrame {
-                removeCallbacks(removeScrim)
-                removeScrim.run()
-            }
-            // Safety net: remove scrim after 3s even if first frame never fires (e.g., video error)
-            // Use View.postDelayed() instead of handler?.postDelayed() because handler is null
-            // before the view is attached. View queues callbacks internally until attachment.
-            postDelayed(removeScrim, 3000L)
+        FallbackImageLoader.load(
+            FallbackLoadRequest(
+                container = this,
+                fallbackUrl = session.config.fallbackUrl,
+                primaryUrl = session.config.mediaUrl,
+                resourceProvider = resourceProvider,
+                mediaExecutor = mediaExecutor,
+                isReleased = { false },
+                callbacks = session.config.callbacks,
+                errorContext = "Fallback reload after rotation",
+            )
+        )
+        return true
+    }
+
+    /**
+     * For video: overlay a black scrim on top of the PlayerView.
+     *
+     * SurfaceView renders *behind* window Views, so this scrim covers the black surface
+     * while ExoPlayer seeks/decodes. Fades out once the first frame is rendered, with a
+     * 3-second safety timeout.
+     */
+    private fun attachVideoScrim(wrapper: PIPVideoPlayerWrapper?) {
+        wrapper ?: return
+
+        val scrim = View(context).apply { setBackgroundColor(Color.BLACK) }
+        addView(scrim, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+
+        val removeScrim = Runnable { removeView(scrim) }
+
+        wrapper.notifyWhenFirstFrame {
+            removeCallbacks(removeScrim)
+            removeScrim.run()
         }
+        // Use View.postDelayed() instead of handler?.postDelayed() because handler is null
+        // before the view is attached. View queues callbacks internally until attachment.
+        postDelayed(removeScrim, 3000L)
     }
 
     fun release() = renderer?.release()
