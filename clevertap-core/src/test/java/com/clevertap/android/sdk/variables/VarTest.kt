@@ -231,14 +231,18 @@ class VarTest : BaseTestCase() {
     @Test
     fun `define() should return null when nameComponents is empty`() {
         mockkStatic(CTVariableUtils::class)
-        val variableName = "validName"
-        every { varCache.getVariable<String>(variableName) } returns null
-        every { CTVariableUtils.getNameComponents(variableName) } returns emptyArray()
+        try {
+            val variableName = "validName"
+            every { varCache.getVariable<String>(variableName) } returns null
+            every { CTVariableUtils.getNameComponents(variableName) } returns emptyArray()
 
-        val result = Var.define(variableName, "default", "string", ctVariables)
+            val result = Var.define(variableName, "default", "string", ctVariables)
 
-        assertNull(result)
-        verify { Logger.v("variable", "Variable name could not be parsed into components, skipping: $variableName") }
+            assertNull(result)
+            verify { Logger.v("variable", "Variable name could not be parsed into components, skipping: $variableName") }
+        } finally {
+            unmockkStatic(CTVariableUtils::class)
+        }
     }
 
     @Test

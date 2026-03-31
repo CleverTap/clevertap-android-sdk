@@ -3526,8 +3526,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param name Name of the variable.
      * @param defaultValue Default value of variable, used when resolving the underlying value type.
      * @param <T> Type of value.
-     * @return Returns the Var instance.
+     * @return Returns the Var instance, or null if the name is empty, invalid, or cannot be parsed.
      */
+    @Nullable
     public <T> Var<T> defineVariable(String name, T defaultValue) {
         return Var.define(name, defaultValue,coreState.getCTVariables());
     }
@@ -3536,8 +3537,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Defines a new file variable. Disclaimer: cannot be used with @Variable annotation.
      *
      * @param name Name of the variable.
-     * @return Returns the Var instance.
+     * @return Returns the Var instance, or null if the name is empty, invalid, or cannot be parsed.
      */
+    @Nullable
     public Var<String> defineFileVariable(String name) {
         return Var.define(name, null , CTVariableUtils.FILE, coreState.getCTVariables());
     }
