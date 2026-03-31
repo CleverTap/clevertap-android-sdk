@@ -25,62 +25,9 @@ import com.clevertap.android.sdk.task.Task;
 import java.util.List;
 import kotlin.Pair;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class InAppResponse extends CleverTapResponseDecorator {
-
-    // DEBUG flag — set to true to inject PIP test in-app into every server response
-    private static final boolean INJECT_TEST_PIP = true;
-
-    private static JSONObject buildTestPIPJson() {
-        try {
-            return new JSONObject()
-                .put("type", "pip")
-                .put("close", true)
-                .put("is_native", true)
-                .put("ti", 1772029257)
-                .put("wzrk_id", "test_pip_debug_001")
-                .put("wzrk_pivot", "wzrk_default")
-                .put("priority", 1)
-                .put("wzrk_ttl_offset", 172800)
-                .put("whenTriggers", new JSONArray().put(new JSONObject().put("eventName", "aib")))
-                .put("frequencyLimits", new JSONArray())
-                .put("excludeGlobalFCaps", -1)
-                .put("occurrenceLimits", new JSONArray())
-                .put("media", new JSONObject()
-                    .put("url", "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
-                    .put("poster", "")
-                    .put("key", "test_pip_video")
-                    .put("content_type", "video/mp4")
-                    .put("alt_text", "Big Buck Bunny test")
-                    .put("fallback_url", ""))
-                .put("pip", new JSONObject()
-                    .put("position", "bottom-right")
-                    .put("margins", new JSONObject().put("vertical", 16).put("horizontal", 16))
-                    .put("width", 35)
-                    .put("aspectRatio", new JSONObject().put("numerator", 9).put("denominator", 16))
-                    .put("cornerRadius", 8)
-                    .put("border", new JSONObject()
-                        .put("enabled", false)
-                        .put("color", "#FFFFFF")
-                        .put("width", 1))
-                    .put("controls", new JSONObject()
-                        .put("drag", true)
-                        .put("playPause", true)
-                        .put("mute", true)
-                        .put("expandCollapse", true))
-                    .put("animation", "dissolve")
-                    .put("onClick", new JSONObject()
-                        .put("type", "url")
-                        .put("android", "https://www.clevertap.com")
-                        .put("kv", new JSONObject())
-                        .put("close", false)
-                        .put("ios", "")));
-        } catch (JSONException e) {
-            return null;
-        }
-    }
 
     private final CleverTapInstanceConfig config;
 
@@ -147,19 +94,6 @@ public class InAppResponse extends CleverTapResponseDecorator {
                         "There is no inapps data to handle"
                 );
                 return;
-            }
-
-            // Debug injection: append a test PIP in-app to the response
-            if (INJECT_TEST_PIP) {
-                JSONObject testPIP = buildTestPIPJson();
-                if (testPIP != null) {
-                    JSONArray inappNotifs = response.optJSONArray(Constants.INAPP_JSON_RESPONSE_KEY);
-                    if (inappNotifs == null) {
-                        inappNotifs = new JSONArray();
-                    }
-                    inappNotifs.put(testPIP);
-                    response.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
-                }
             }
 
             InAppResponseAdapter res = new InAppResponseAdapter(response, templatesManager);
