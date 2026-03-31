@@ -149,8 +149,9 @@ internal class InAppStreamMediaHandler
         videoFrameLayout?.removeAllViews()
 
         if (fullScreenDialog == null) {
+            val context = fragment.requireContext()
             val dialog = ComponentDialog(
-                fragment.requireContext(),
+                context,
                 android.R.style.Theme_Black_NoTitleBar_Fullscreen
             )
             this.fullScreenDialog = dialog
@@ -158,7 +159,7 @@ internal class InAppStreamMediaHandler
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            val frame = FrameLayout(fragment.requireContext())
+            val frame = FrameLayout(context)
             this.videoFrameInDialog = frame
             dialog.addContentView(frame, fullScreenParams)
 
