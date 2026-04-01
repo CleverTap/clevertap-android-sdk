@@ -8,6 +8,7 @@ import android.widget.RelativeLayout
 import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
+import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
@@ -162,6 +163,13 @@ internal class InAppStreamMediaHandler
             val frame = FrameLayout(context)
             this.videoFrameInDialog = frame
             dialog.addContentView(frame, fullScreenParams)
+
+            frame.applyInsetsWithMarginAdjustment { insets, mlp ->
+                mlp.leftMargin = insets.left
+                mlp.topMargin = insets.top
+                mlp.rightMargin = insets.right
+                mlp.bottomMargin = insets.bottom
+            }
 
             val activity = fragment.activity
             if (activity != null) {
