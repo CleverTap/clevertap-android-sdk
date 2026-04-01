@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.pipsdk
 
+import android.graphics.Color
 import com.clevertap.android.sdk.inapp.CTInAppAction
 
 /**
@@ -40,6 +41,12 @@ data class PIPConfig internal constructor(
     val showMuteButton: Boolean = true,
     val showExpandCollapseButton: Boolean = true,
 
+    // Border & corner radius (image/GIF only; ignored for video)
+    val cornerRadiusDp: Int = 0,
+    val borderEnabled: Boolean = false,
+    val borderColor: Int = Color.BLACK,
+    val borderWidthDp: Int = 0,
+
     // Callbacks
     val callbacks: PIPCallbacks? = null,
 ) {
@@ -50,5 +57,7 @@ data class PIPConfig internal constructor(
         require(aspectRatioDenominator > 0) { "aspectRatioDenominator must be > 0" }
         require(horizontalEdgeMarginDp >= 0) { "horizontalEdgeMarginDp must be >= 0" }
         require(verticalEdgeMarginDp >= 0) { "verticalEdgeMarginDp must be >= 0" }
+        require(cornerRadiusDp >= 0) { "cornerRadiusDp must be >= 0" }
+        require(borderWidthDp >= 0) { "borderWidthDp must be >= 0" }
     }
 }

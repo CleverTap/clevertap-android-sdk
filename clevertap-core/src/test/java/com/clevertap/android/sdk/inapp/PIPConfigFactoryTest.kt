@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
+import android.graphics.Color
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
@@ -9,11 +10,14 @@ import io.mockk.every
 import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+@RunWith(RobolectricTestRunner::class)
 class PIPConfigFactoryTest {
 
     private val mockLogger = mockk<Logger>(relaxed = true)
@@ -299,10 +303,60 @@ class PIPConfigFactoryTest {
         assertEquals(true, config.showExpandCollapseButton)
     }
 
-    // ─── Builder validation failure ───────────────────────────────────────────────
+    // ─── Border & corner radius ──────────────────────────────────────────────────
 
     @Test
-    fun `returns null when builder validation fails`() {
+    fun `reads cornerRadius from pip json`() {
+        val pipJson = JSONObject().put("cornerRadius", 12)
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertEquals(12, config.cornerRadiusDp)
+    }
+
+    @Test
+    fun `reads border config from pip json`() {
+        val pipJson = JSONObject().put("border", JSONObject().apply {
+            put("enabled", true)
+            put("color", "#FF0000")
+            put("width", 2)
+        })
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertTrue(config.borderEnabled)
+        assertEquals(Color.RED, config.borderColor)
+        assertEquals(2, config.borderWidthDp)
+    }
+
+    @Test
+    fun `border defaults to disabled when not present`() {
+        val pipJson = JSONObject()
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertEquals(false, config.borderEnabled)
+        assertEquals(0, config.cornerRadiusDp)
+        assertEquals(0, config.borderWidthDp)
+    }
+
+    @Test
+    fun `invalid border color falls back to black`() {
+        val pipJson = JSONObject().put("border", JSONObject().apply {
+            put("enabled", true)
+            put("color", "not-a-color")
+            put("width", 1)
+        })
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertEquals(Color.BLACK, config.borderColor)
+    }
+
+    // ─── Validation failure ───────────────────────────────────────────────────────
+
+    @Test
+    fun `returns null when validation fails`() {
         // width=0 is outside the valid range 10..90
         val pipJson = JSONObject().put("width", 0)
         val notification = mockNotification(pipJson = pipJson)

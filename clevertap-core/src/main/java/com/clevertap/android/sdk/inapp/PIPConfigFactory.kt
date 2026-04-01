@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp
 
 import android.content.res.Configuration
+import android.graphics.Color
 import com.clevertap.android.sdk.Logger
 import android.animation.TimeInterpolator
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -14,6 +15,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
+import androidx.core.graphics.toColorInt
 
 internal object PIPConfigFactory {
 
@@ -84,6 +86,16 @@ internal object PIPConfigFactory {
         // Action
         val action = pipJson.optJSONObject("onClick")?.let { CTInAppAction.createFromJson(it) }
 
+        // Corner radius
+        val cornerRadiusDp = pipJson.optInt("cornerRadius", 0)
+
+        // Border
+        val borderJson = pipJson.optJSONObject("border")
+        val borderEnabled = borderJson?.optBoolean("enabled", false) ?: false
+        val borderColor = borderJson?.optString("color", "")
+            ?.let { parseColor(it) } ?: Color.BLACK
+        val borderWidthDp = borderJson?.optInt("width", 0) ?: 0
+
         // Close button: `close: true` in PIP JSON means show close button
         val rawJson = inAppNotification.jsonDescription
         val showClose = rawJson.optBoolean("close", true)
@@ -107,6 +119,10 @@ internal object PIPConfigFactory {
                 showPlayPauseButton = showPlayPause,
                 showMuteButton = showMute,
                 showExpandCollapseButton = showExpandCollapse,
+                cornerRadiusDp = cornerRadiusDp,
+                borderEnabled = borderEnabled,
+                borderColor = borderColor,
+                borderWidthDp = borderWidthDp,
                 callbacks = callbacks,
             )
         } catch (e: IllegalArgumentException) {
@@ -174,6 +190,15 @@ internal object PIPConfigFactory {
         return try {
             PathInterpolator(parts[0], parts[1], parts[2], parts[3])
         } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun parseColor(hex: String): Int? {
+        if (hex.isBlank()) return null
+        return try {
+            hex.toColorInt()
+        } catch (_: IllegalArgumentException) {
             null
         }
     }

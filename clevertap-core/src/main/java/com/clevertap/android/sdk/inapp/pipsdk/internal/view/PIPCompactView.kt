@@ -2,14 +2,19 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.view
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Outline
+import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPDragHandler
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
@@ -40,10 +45,8 @@ internal class PIPCompactView(
     init {
         val cfg = session.config
 
-        // Drop shadow — BOUNDS outline needed because FrameLayout has no background
-        outlineProvider = android.view.ViewOutlineProvider.BOUNDS
         elevation = ELEVATION_DP.dpToPx(context).toFloat()
-        setBackgroundColor(Color.BLACK)
+        applyBorderStyle(cfg)
 
         // Media fills the view
         addView(mediaView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
@@ -184,6 +187,44 @@ internal class PIPCompactView(
     }
 
     fun detach() = controlsOverlay.detach()
+
+    private fun applyBorderStyle(cfg: PIPConfig) {
+        val hasBorderStyle = cfg.mediaType != PIPMediaType.VIDEO &&
+                (cfg.cornerRadiusDp > 0 || cfg.borderEnabled)
+
+        if (!hasBorderStyle) {
+            // Default: simple black background with BOUNDS outline for shadow
+            outlineProvider = ViewOutlineProvider.BOUNDS
+            setBackgroundColor(Color.BLACK)
+            return
+        }
+
+        val radiusPx = cfg.cornerRadiusDp.dpToPx(context).toFloat()
+
+        val borderPx = if (cfg.borderEnabled && cfg.borderWidthDp > 0)
+            cfg.borderWidthDp.dpToPx(context) else 0
+
+        background = GradientDrawable().apply {
+            setColor(Color.BLACK)
+            cornerRadius = radiusPx
+            if (borderPx > 0) {
+                setStroke(borderPx, cfg.borderColor)
+            }
+        }
+
+        if (borderPx > 0) {
+            setPadding(borderPx, borderPx, borderPx, borderPx)
+        }
+
+        if (radiusPx > 0f) {
+            clipToOutline = true
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setRoundRect(0, 0, view.width, view.height, radiusPx)
+                }
+            }
+        }
+    }
 
     private companion object {
         const val ICON_SIZE_DP = 30
