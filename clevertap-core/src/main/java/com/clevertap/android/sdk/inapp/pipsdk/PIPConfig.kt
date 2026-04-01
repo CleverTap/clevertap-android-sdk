@@ -20,8 +20,8 @@ data class PIPConfig internal constructor(
 
     // Sizing
     val widthPercent: Int = 35,
-    val aspectRatioNumerator: Int = 16,
-    val aspectRatioDenominator: Int = 9,
+    val aspectRatioNumerator: Double = 16.0,
+    val aspectRatioDenominator: Double = 9.0,
 
     // Positioning
     val initialPosition: PIPPosition = PIPPosition.BOTTOM_RIGHT,
@@ -53,8 +53,8 @@ data class PIPConfig internal constructor(
     init {
         require(mediaUrl.isNotBlank()) { "mediaUrl must not be blank" }
         require(widthPercent in 10..90) { "widthPercent must be 10–90, got $widthPercent" }
-        require(aspectRatioNumerator > 0) { "aspectRatioNumerator must be > 0" }
-        require(aspectRatioDenominator > 0) { "aspectRatioDenominator must be > 0" }
+        require(aspectRatioNumerator > 0.0) { "aspectRatioNumerator must be > 0" }
+        require(aspectRatioDenominator > 0.0) { "aspectRatioDenominator must be > 0" }
         require(horizontalEdgeMarginDp >= 0) { "horizontalEdgeMarginDp must be >= 0" }
         require(verticalEdgeMarginDp >= 0) { "verticalEdgeMarginDp must be >= 0" }
         require(cornerRadiusDp >= 0) { "cornerRadiusDp must be >= 0" }

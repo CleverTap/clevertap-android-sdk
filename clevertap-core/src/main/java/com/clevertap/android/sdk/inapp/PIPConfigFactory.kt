@@ -69,8 +69,8 @@ internal object PIPConfigFactory {
 
         // Aspect ratio
         val arJson = pipJson.optJSONObject("aspectRatio")
-        val arNum = arJson?.optInt("numerator", 16)?.takeIf { it > 0 } ?: 16
-        val arDen = arJson?.optInt("denominator", 9)?.takeIf { it > 0 } ?: 9
+        val arNum = arJson?.optDouble("numerator", 16.0)?.takeIf { it > 0.0 } ?: 16.0
+        val arDen = arJson?.optDouble("denominator", 9.0)?.takeIf { it > 0.0 } ?: 9.0
 
         // Controls visibility
         val ctrl = pipJson.optJSONObject("controls")

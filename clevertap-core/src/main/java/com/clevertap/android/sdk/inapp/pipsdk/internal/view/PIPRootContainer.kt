@@ -16,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimation
 import com.clevertap.android.sdk.inapp.pipsdk.PIPAnimationConfig
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPAnimator
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPPositionResolver
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
@@ -259,8 +260,9 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
 
     private fun positionAndShow(s: PIPSession, cv: PIPCompactView, isReattach: Boolean) {
         var pipW = (width * s.config.widthPercent / 100f).toInt().coerceAtLeast(1)
-        var pipH = (pipW.toLong() * s.config.aspectRatioDenominator /
+        var pipH = (pipW * s.config.aspectRatioDenominator /
                 s.config.aspectRatioNumerator).toInt().coerceAtLeast(1)
+
         val hMarginPx = s.config.horizontalEdgeMarginDp.dpToPx(context)
         val vMarginPx = s.config.verticalEdgeMarginDp.dpToPx(context)
         val bottomOffsetPx = PIPDimens.BOTTOM_NAV_OFFSET_DP.dpToPx(context)
@@ -272,8 +274,18 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         val maxH = (height * MAX_HEIGHT_PERCENT / 100f).toInt()
         if (pipH > maxH) {
             pipH = maxH.coerceAtLeast(1)
-            pipW = (pipH.toLong() * s.config.aspectRatioNumerator /
+            pipW = (pipH * s.config.aspectRatioNumerator /
                     s.config.aspectRatioDenominator).toInt().coerceAtLeast(1)
+        }
+
+        // Add border padding AFTER clamping so media area keeps the correct aspect ratio
+        val borderPx = if (s.config.borderEnabled && s.config.borderWidthDp > 0
+            && s.config.mediaType != PIPMediaType.VIDEO)
+            s.config.borderWidthDp.dpToPx(context) else 0
+        if (borderPx > 0) {
+            val totalPadding = borderPx * 2
+            pipW += totalPadding
+            pipH += totalPadding
         }
 
         if (isReattach) {

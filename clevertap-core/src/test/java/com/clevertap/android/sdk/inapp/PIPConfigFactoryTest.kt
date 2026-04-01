@@ -254,8 +254,8 @@ class PIPConfigFactoryTest {
         val notification = mockNotification(pipJson = pipJson)
         val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
         assertNotNull(config)
-        assertEquals(9, config.aspectRatioNumerator)
-        assertEquals(16, config.aspectRatioDenominator)
+        assertEquals(9.0, config.aspectRatioNumerator)
+        assertEquals(16.0, config.aspectRatioDenominator)
     }
 
     @Test
@@ -268,8 +268,8 @@ class PIPConfigFactoryTest {
         val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
         assertNotNull(config)
         // Should keep defaults
-        assertEquals(16, config.aspectRatioNumerator)
-        assertEquals(9, config.aspectRatioDenominator)
+        assertEquals(16.0, config.aspectRatioNumerator)
+        assertEquals(9.0, config.aspectRatioDenominator)
     }
 
     // ─── Controls ─────────────────────────────────────────────────────────────────
