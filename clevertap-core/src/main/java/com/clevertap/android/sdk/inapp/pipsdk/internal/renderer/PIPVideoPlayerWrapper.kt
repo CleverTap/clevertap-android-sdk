@@ -11,7 +11,7 @@ import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
@@ -51,7 +51,8 @@ internal class PIPVideoPlayerWrapper {
         get() = player?.currentPosition ?: savedPositionMs
 
     /**
-     * Creates and prepares the [ExoPlayer] with an HLS source.
+     * Creates and prepares the [ExoPlayer] with auto-detected media source.
+     * Supports HLS, MP4, DASH, and other formats via [DefaultMediaSourceFactory].
      * Starts muted with repeat-one mode.
      */
     @OptIn(UnstableApi::class)
@@ -66,14 +67,13 @@ internal class PIPVideoPlayerWrapper {
             .setUserAgent(userAgent)
             .setTransferListener(bandwidthMeter.transferListener)
         val dataSourceFactory = DefaultDataSource.Factory(context, httpFactory)
-        val hlsMediaSource = HlsMediaSource.Factory(dataSourceFactory)
-            .createMediaSource(MediaItem.fromUri(url))
 
         player = ExoPlayer.Builder(context)
             .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
             .build()
             .apply {
-                setMediaSource(hlsMediaSource)
+                setMediaItem(MediaItem.fromUri(url))
                 prepare()
                 repeatMode = Player.REPEAT_MODE_ONE
                 volume = 0f
