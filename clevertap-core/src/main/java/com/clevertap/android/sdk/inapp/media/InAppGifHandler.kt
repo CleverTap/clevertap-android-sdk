@@ -47,5 +47,6 @@ internal class InAppGifHandler(
 
     override fun cleanup() {
         gifImageView?.clear()
+        gifImageView = null
     }
 }
