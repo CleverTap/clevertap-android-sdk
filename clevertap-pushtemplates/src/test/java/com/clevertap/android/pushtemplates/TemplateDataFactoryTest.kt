@@ -1751,7 +1751,7 @@ class TemplateDataFactoryTest {
         // Given
         setupBasicMockBundle()
         every { mockBundle.getString(PT_BTN_NAME) } returns "BUY"
-        every { mockBundle.getString(PT_BTN_STYLE) } returns "linear_gradient"
+        every { mockBundle.getString(PT_BTN_STYLE) } returns "gradient_linear"
         every { mockBundle.getString(PT_BTN_GRAD_DIR) } returns "180"
         every { Utils.createColorMap(any(), any()) } returns mapOf(
             PT_TITLE_COLOR to SAMPLE_COLOR,
