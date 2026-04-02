@@ -46,9 +46,9 @@ internal class VideoRenderer(
         _isMuted = session.isMuted
         _isPlaying = session.isPlaying
 
-        // Check video library availability
-        if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.NONE) {
-            loadFallbackAsImage(container, config, "No video library available")
+        // PIPVideoPlayerWrapper uses Media3 APIs exclusively — old ExoPlayer is not supported.
+        if (VideoLibChecker.mediaLibType != VideoLibraryIntegrated.MEDIA3) {
+            loadFallbackAsImage(container, config, "Media3 video library not available")
             return
         }
 
