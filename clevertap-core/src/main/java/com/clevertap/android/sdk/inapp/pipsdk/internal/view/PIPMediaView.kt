@@ -129,7 +129,11 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         }
         // Use View.postDelayed() instead of handler?.postDelayed() because handler is null
         // before the view is attached. View queues callbacks internally until attachment.
-        postDelayed(removeScrim, 3000L)
+        postDelayed(removeScrim, SCRIM_SAFETY_TIMEOUT_MS)
+    }
+
+    private companion object {
+        const val SCRIM_SAFETY_TIMEOUT_MS = 3000L
     }
 
     fun release() = renderer?.release()
