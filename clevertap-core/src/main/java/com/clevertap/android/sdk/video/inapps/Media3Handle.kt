@@ -108,6 +108,18 @@ class Media3Handle : InAppVideoPlayerHandle {
         }
     }
 
+    override fun softPause() {
+        player?.pause()
+    }
+
+    override fun detachSurface() {
+        val p = player ?: return
+        mediaPosition = p.currentPosition
+        playerView?.player = null
+        playerView = null   // null so initPlayerView() creates a fresh view post-rotation
+        p.playWhenReady = false
+    }
+
     override fun pause() {
         player?.let { ep ->
             ep.stop()
@@ -143,6 +155,15 @@ class Media3Handle : InAppVideoPlayerHandle {
         }
         muteButton.setOnClickListener(clickListener)
         minimalMuteButton?.setOnClickListener(clickListener)
+        // Sync icon with current mute state — important after rotation where a fresh
+        // PlayerView is created but isMuted may already be false from a prior user toggle.
+        val iconRes = if (isMuted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+        val descRes = if (isMuted) R.string.ct_unmute_button_content_description
+                      else R.string.ct_mute_button_content_description
+        muteButton.setImageResource(iconRes)
+        muteButton.contentDescription = muteButton.context.getString(descRes)
+        minimalMuteButton?.setImageResource(iconRes)
+        minimalMuteButton?.contentDescription = muteButton.contentDescription
     }
 
     override fun setActionClickListener(onClick: () -> Unit) {
