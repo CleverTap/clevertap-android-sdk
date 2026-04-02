@@ -1,12 +1,12 @@
 package com.clevertap.android.sdk.inapp
 
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
 
 internal class PIPInAppCallbacksBridge(
     private val inAppNotification: CTInAppNotification,
     private val inAppListener: InAppListener,
-    private val logger: Logger
+    private val logger: ILogger
 ) : PIPCallbacks {
 
     private companion object {

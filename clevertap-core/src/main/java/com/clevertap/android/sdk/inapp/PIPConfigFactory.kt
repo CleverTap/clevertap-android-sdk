@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inapp
 
 import android.content.res.Configuration
 import android.graphics.Color
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import android.animation.TimeInterpolator
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
@@ -24,7 +24,7 @@ internal object PIPConfigFactory {
     fun create(
         inAppNotification: CTInAppNotification,
         callbacks: PIPCallbacks,
-        logger: Logger
+        logger: ILogger
     ): PIPConfig? {
         val pipJson = inAppNotification.pipConfigJson
         if (pipJson == null) {
