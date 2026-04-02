@@ -449,8 +449,8 @@ internal object TemplateDataFactory {
     }
 
     private fun createCollapsedMediaDataWithoutFallback(extras: Bundle, defaultAltText: String): MediaData? {
-        val bigImageCollapsed = extras.getString(PT_BIG_IMG_COLLAPSED)
-        val gifCollapsed = extras.getString(PT_GIF_COLLAPSED)
+        val bigImageCollapsed = extras.getString(PT_BIG_IMG_COLLAPSED)?.takeIf { it.isNotBlank() }
+        val gifCollapsed = extras.getString(PT_GIF_COLLAPSED)?.takeIf { it.isNotBlank() }
         if (bigImageCollapsed == null && gifCollapsed == null) return null
         return MediaData(
             bigImage = ImageData(
