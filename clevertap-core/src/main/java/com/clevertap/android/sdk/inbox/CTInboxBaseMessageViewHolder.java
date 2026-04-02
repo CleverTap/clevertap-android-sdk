@@ -83,8 +83,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         final Resources resources = context.getResources();
         final DisplayMetrics displayMetrics = resources.getDisplayMetrics();
 
-        int width;
-        int height;
+        int width = 0;
+        int height = 0;
         if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if (message.getOrientation().equalsIgnoreCase("l")) {
                 width = Math.round(this.mediaImage.getMeasuredHeight() * 1.76f);
