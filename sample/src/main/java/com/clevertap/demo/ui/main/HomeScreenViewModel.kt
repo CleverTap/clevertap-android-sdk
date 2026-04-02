@@ -1169,8 +1169,8 @@ class HomeScreenViewModel(
 
     private fun printAbVariants() {
         logStep("VARIABLES", "Printing AB Variants")
-        /*val variants = cleverTapAPI?.variants()
-        printVar("AB Variants", variants)*/
+        val variants = cleverTapAPI?.variants()
+        printVar("AB Variants", variants)
     }
 
     // ========== FILE TYPE VARIABLES SECTION ==========
