@@ -26,6 +26,10 @@ public class PTConstants {
 
     public static final String PT_5CTA_C2A_KEY = "5cta_";
 
+    public static final String PT_VT_C2A_KEY = "vt_btn";
+
+    public static final String PT_VT_C2A_COLLAPSED_KEY = "vt_btn_collapsed";
+
     public static final String PT_PRICE_LIST = "pt_price_list";
 
     public static final String PT_SMALLTEXT_LIST = "pt_small_text_list";
@@ -41,8 +45,6 @@ public class PTConstants {
     public static final long ONE_SECOND_LONG = 1000L;
 
     public static final String DEFAULT_DL = "default_dl";
-
-    public static final String NOTIF_TAG = "wzrk_pn";
 
     public static final String PT_ID = "pt_id";
 
@@ -190,8 +192,6 @@ public class PTConstants {
     public static final String PT_SILENT_CHANNEL_DESC = "A channel to silently update notifications";
 
     public static final String PT_RATING_TOAST = "pt_rating_toast";
-
-    public static final String PT_DOT_SEP = "pt_dot_sep";
 
     public static final String PT_COLOUR_GREY = "#A6A6A6";
 
