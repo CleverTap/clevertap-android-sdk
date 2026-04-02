@@ -42,11 +42,11 @@ internal class PIPExpandedView(
 
     internal val mediaContainer: FrameLayout
     private val controlsOverlay: PIPControlsOverlay
-    private lateinit var closeBtn: ImageView
+    private val closeBtn: ImageView
     private var playPauseBtn: ImageView? = null
     private var muteBtn: ImageView? = null
-    private lateinit var bottomRow: LinearLayout
-    private lateinit var rowSpacer: View
+    private val bottomRow: LinearLayout
+    private val rowSpacer: View
 
     /** Current system insets — updated by the insets listener, used for per-button margins. */
     private var currentInsets = Insets.NONE
