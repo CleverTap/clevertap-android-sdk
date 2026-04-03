@@ -78,7 +78,8 @@ internal class InAppController(
     private val inAppDelayManager: InAppScheduler<DelayedInAppResult>,
     private val inAppInActionManager: InAppScheduler<InActionResult>,
     private val clock: Clock,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    private val pipManager: PIPManager,
 ) : InAppListener {
 
     private enum class InAppState {
@@ -424,7 +425,7 @@ internal class InAppController(
 
         logger.verbose(defaultLogTag, "Hiding currently displaying InApp: ${inApp.campaignId}")
         if (inApp.inAppType == CTInAppTypePIP) {
-            PIPManager.dismiss()
+            pipManager.dismiss()
         } else {
             inAppDisplayListener?.get()?.hideInApp()
         }
@@ -962,7 +963,6 @@ internal class InAppController(
                     if (activity == null) {
                         throw IllegalStateException("Current activity reference not found for PIP")
                     }
-                    initPIPManagerIfNeeded()
                     val bridge = PIPInAppCallbacksBridge(inAppNotification, this, logger)
                     val pipConfig = PIPConfigFactory.create(inAppNotification, bridge, logger)
                     if (pipConfig == null) {
@@ -972,7 +972,7 @@ internal class InAppController(
                         return
                     }
                     logger.debug("Displaying PIP In-App: ${inAppNotification.campaignId}")
-                    PIPManager.show(activity, pipConfig, null)
+                    pipManager.show(activity, pipConfig, null)
                 } catch (t: Throwable) {
                     logger.verbose("Failed to show PIP in-app", t)
                     currentlyDisplayingInApp = null
@@ -1018,10 +1018,6 @@ internal class InAppController(
             this,
             FileResourceProvider.getInstance(context, logger)
         )
-    }
-
-    private fun initPIPManagerIfNeeded() {
-        PIPManager.init(FileResourceProvider.getInstance(context, logger))
     }
 
     private fun filterNonRegisteredCustomTemplates(inAppNotifications: List<JSONObject>): List<JSONObject> {

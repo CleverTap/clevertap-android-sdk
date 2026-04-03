@@ -17,23 +17,22 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Singleton entry point for the PIP SDK.
+ * Entry point for the PIP SDK.
  *
  * All public methods are safe to call from any thread — they dispatch to the main thread
  * internally. Only one PIP session can be active at a time; calling [show] while a session
  * is already visible replaces it.
  *
- * **Setup (must be called once before [show]):**
- * ```kotlin
- * PIPManager.init(fileResourceProvider)
- * ```
- *
  * **Typical usage:**
  * ```kotlin
- * PIPManager.show(activity, PIPConfig(mediaUrl = url, mediaType = PIPMediaType.IMAGE))
+ * pipManager.show(activity, PIPConfig(mediaUrl = url, mediaType = PIPMediaType.IMAGE))
  * ```
  */
-internal object PIPManager {
+internal class PIPManager(
+    fileResourceProvider: () -> FileResourceProvider,
+) {
+
+    private val resourceProvider: FileResourceProvider by lazy(fileResourceProvider)
 
     @Volatile private var session: PIPSession? = null
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -45,43 +44,25 @@ internal object PIPManager {
     @Volatile private var pendingRotationReattach = false
     @Volatile private var pendingReattachClassName: String? = null
 
-    // Media dependencies — set via init()
-    private var resourceProvider: FileResourceProvider? = null
     private var mediaExecutor: ExecutorService? = null
 
     // ─── Public API ───────────────────────────────────────────────────────────────
-
-    /**
-     * Initializes the PIP SDK with required media dependencies.
-     * Must be called once before [show].
-     *
-     * @param resourceProvider The [FileResourceProvider] for media caching/fetching.
-     */
-    @JvmStatic
-    fun init(resourceProvider: FileResourceProvider) {
-        this.resourceProvider = resourceProvider
-    }
-
 
     /**
      * Shows PIP. Replaces any existing PIP session. Safe to call from any thread.
      *
      * @param activity The host Activity. Should be an [androidx.appcompat.app.AppCompatActivity]
      *   for back-press handling to work correctly.
-     * @param config   Immutable session configuration built via [PIPConfig.Builder].
+     * @param config   Immutable session configuration.
      * @param lifecycleOwner Pass [androidx.fragment.app.Fragment.viewLifecycleOwner] for single-
      *   activity apps to auto-dismiss when the Fragment's view is destroyed. Pass null to manage
      *   lifetime via Activity lifecycle (dismiss on Activity stop).
-     * @throws IllegalStateException if [init] has not been called.
      */
-    @JvmStatic
-    @JvmOverloads
     fun show(activity: Activity, config: PIPConfig, lifecycleOwner: LifecycleOwner? = null) {
         runOnMain { showInternal(activity, config, lifecycleOwner) }
     }
 
     /** Dismisses PIP with the configured exit animation. No-op if not visible. */
-    @JvmStatic
     fun dismiss() = runOnMain { dismissInternal() }
 
     /**
@@ -90,19 +71,14 @@ internal object PIPManager {
      * Safe to call from any thread. Note: this is a point-in-time snapshot —
      * the session may be dismissed between the check and a subsequent operation.
      */
-    @JvmStatic
     fun isVisible(): Boolean = session != null
 
     /** The last snapped [PIPPosition]. Null when PIP is hidden. Persists across rotation. */
-    @JvmStatic
     val currentPosition: PIPPosition? get() = session?.currentPosition
 
     // ─── Internal implementation ──────────────────────────────────────────────────
 
     private fun showInternal(activity: Activity, config: PIPConfig, lifecycleOwner: LifecycleOwner?) {
-        if (resourceProvider == null)
-            throw IllegalStateException("PIPManager.init(resourceProvider) must be called before show()")
-
         // Silently replace any existing session
         dismissInternal(notifyCallback = false)
 
@@ -161,7 +137,7 @@ internal object PIPManager {
      * @param notifyCallback false when replacing an existing session so that [PIPCallbacks.onClose]
      *   is not fired spuriously during the replace-show flow.
      */
-    internal fun dismissInternal(notifyCallback: Boolean = true, animate: Boolean = true) {
+    private fun dismissInternal(notifyCallback: Boolean = true, animate: Boolean = true) {
         val s = session ?: return
         session = null      // Mark not visible immediately; prevents re-entry
         removeLifecycleObserver(s)
