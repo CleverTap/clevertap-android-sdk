@@ -1,4 +1,16 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.1.0 (April 6, 2026)
+
+#### New Features
+* **InApp Media Support:** Adds GIF and Video support for all InApp notification templates, enabling richer in-app experiences.
+
+#### Improvements
+* **Network Monitoring:** Replaces deprecated network APIs with a modern `NetworkMonitor` for more accurate connectivity detection, including captive portal support.
+* **Minimum SDK Version Updated:** Bumps the minimum supported Android API level from 21 (Android 5.0) to 23 (Android 6.0).
+
+#### Bug Fixes
+* Fixes an `IndexOutOfBoundsException` in file cleanup by using a thread-safe collection.
+
 ### Version 8.0.0 (February 20, 2026)
 #### New Features
 * **Android 16 Support:** Adds support for Android 16, making the SDK compliant with Android 16 requirements. Details [here](https://developer.android.com/about/versions/16/summary)
