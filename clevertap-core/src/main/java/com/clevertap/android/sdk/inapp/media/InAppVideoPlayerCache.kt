@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.media
 
+import androidx.annotation.MainThread
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 
 /**
@@ -11,9 +12,9 @@ import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
  */
 internal object InAppVideoPlayerCache {
 
-    @Volatile private var handle: InAppVideoPlayerHandle? = null
-    @Volatile private var cachedUrl: String? = null
-    @Volatile private var cachedIsFullscreen: Boolean = false
+    private var handle: InAppVideoPlayerHandle? = null
+    private var cachedUrl: String? = null
+    private var cachedIsFullscreen: Boolean = false
 
     /**
      * Stores [handle] keyed by [url] so the new Fragment can reclaim it after rotation.
@@ -31,6 +32,7 @@ internal object InAppVideoPlayerCache {
      * A URL mismatch means the cache holds a stale handle from a previous in-app session;
      * in that case [release] is called automatically to clean it up.
      */
+    @MainThread
     fun consume(url: String): InAppVideoPlayerHandle? {
         if (cachedUrl != url) {
             release()
@@ -42,6 +44,7 @@ internal object InAppVideoPlayerCache {
         return h
     }
 
+    @MainThread
     fun consumeFullscreen(): Boolean {
         val fs = cachedIsFullscreen
         cachedIsFullscreen = false
@@ -52,6 +55,7 @@ internal object InAppVideoPlayerCache {
      * Fully releases any cached player. Call on explicit in-app dismissal to ensure no
      * orphaned player survives if the cache was never consumed (e.g., dismiss during rotation).
      */
+    @MainThread
     fun release() {
         handle?.pause()
         handle = null
