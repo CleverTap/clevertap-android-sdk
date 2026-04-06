@@ -21,6 +21,7 @@ internal object InAppVideoPlayerCache {
      * [isFullscreen] preserves the fullscreen state so the new Fragment can restore it.
      * Any previously stored entry is replaced (shouldn't happen in practice).
      */
+    @MainThread
     fun store(handle: InAppVideoPlayerHandle, url: String, isFullscreen: Boolean = false) {
         this.handle = handle
         this.cachedUrl = url
