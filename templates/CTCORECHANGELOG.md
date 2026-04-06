@@ -4,6 +4,7 @@
 #### New Features
 * **InApp Media Support:** Adds GIF and Video support for all InApp notification templates, enabling richer in-app experiences.
 * **App Inbox Default Media View:** Adds a fallback media view for App Inbox when the backend does not provide a media orientation, rendering images, GIFs, video posters, and audio thumbnails at their natural aspect ratio.
+* **Picture-in-Picture (PIP) In-App Notifications:** Adds support for Picture-in-Picture in-app notifications — compact, draggable floating windows that overlay app content. Supports image, GIF, and video media with expand/collapse, drag-to-reposition (9-point snap grid), and configurable controls. Video playback requires AndroidX Media3 dependencies.
 
 #### Improvements
 * **Network Monitoring:** Replaces deprecated network APIs with a modern `NetworkMonitor` for more accurate connectivity detection, including captive portal support.

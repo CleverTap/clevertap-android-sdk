@@ -92,6 +92,14 @@ Interstitial InApp Notification templates support Audio and Video with the help 
     implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
 ```  
 
+PIP (Picture-in-Picture) In-App Notifications with video media require `AndroidX Media3`. Add the following dependencies in your `build.gradle` file:
+```groovy
+    implementation "androidx.media3:media3-exoplayer:1.4.0"
+    implementation "androidx.media3:media3-exoplayer-hls:1.4.0"
+    implementation "androidx.media3:media3-ui:1.4.0"
+```
+**Note:** PIP image and GIF media types work without Media3. The dependency is only required for PIP video playback.
+
 Once you've updated your module `build.gradle` file, make sure you have specified `mavenCentral()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 
 ## 🎉 Integration
