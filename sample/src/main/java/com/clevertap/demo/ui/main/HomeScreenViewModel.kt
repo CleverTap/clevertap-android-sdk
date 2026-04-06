@@ -2,6 +2,7 @@ package com.clevertap.demo.ui.main
 
 import android.os.Looper
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.clevertap.android.sdk.CTInboxStyleConfig
@@ -26,9 +27,15 @@ class HomeScreenViewModel(
 ) : ViewModel() {
 
     val clickCommand: MutableLiveData<String> by lazy { MutableLiveData<String>() }
-    val showCustomEventDialog: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
+
+    private val _showCustomEventDialog: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
+    val showCustomEventDialog: LiveData<Boolean> get() = _showCustomEventDialog
 
     private val exampleVariables by lazy { ExampleVariables() }
+
+    fun resetShowCustomEventDialog() {
+        _showCustomEventDialog.value = false
+    }
 
     /**
      * Handles child item clicks from the expandable list
@@ -78,7 +85,7 @@ class HomeScreenViewModel(
             6 -> recordScreenEvent()
             7 -> recordAppRatingEvent()
             8 -> recordShareEvent()
-            9 -> showCustomEventDialog.value = true
+            9 -> _showCustomEventDialog.value = true
         }
     }
 

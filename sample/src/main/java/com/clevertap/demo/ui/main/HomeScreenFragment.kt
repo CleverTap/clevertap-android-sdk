@@ -115,7 +115,7 @@ class HomeScreenFragment : Fragment() {
         viewModel.showCustomEventDialog.observe(viewLifecycleOwner) { show ->
             if (show == true) {
                 showCustomEventDialog()
-                viewModel.showCustomEventDialog.value = false
+                viewModel.resetShowCustomEventDialog()
             }
         }
     }
