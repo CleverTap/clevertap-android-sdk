@@ -132,12 +132,6 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         }
     }
 
-    override fun savePosition() {
-        if (player != null) {
-            mediaPosition = player!!.currentPosition
-        }
-    }
-
     override fun setFullscreenClickListener(onClick: (isFullScreen: Boolean) -> Unit) {
         playerView?.setFullscreenButtonClickListener(onClick)
         setFullscreenIcon(isFullScreen = false)
