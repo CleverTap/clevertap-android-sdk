@@ -14,7 +14,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ExpandableListView
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -108,6 +111,70 @@ class HomeScreenFragment : Fragment() {
                 "3-16" -> startActivity(Intent(activity, CustomInboxComposeActivity::class.java)) // Launch Compose Inbox
             }
         }
+
+        viewModel.showCustomEventDialog.observe(viewLifecycleOwner) { show ->
+            if (show == true) {
+                showCustomEventDialog()
+                viewModel.showCustomEventDialog.value = false
+            }
+        }
+    }
+
+    private fun showCustomEventDialog() {
+        val ctx = requireContext()
+        val padding = (16 * resources.displayMetrics.density).toInt()
+
+        val layout = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(padding, padding, padding, 0)
+        }
+
+        val eventNameInput = EditText(ctx).apply {
+            hint = "Event Name"
+            setSingleLine()
+        }
+
+        val propertiesInput = EditText(ctx).apply {
+            hint = "Properties (key1:value1, key2:value2)"
+            setSingleLine()
+        }
+
+        layout.addView(eventNameInput)
+        layout.addView(propertiesInput)
+
+        AlertDialog.Builder(ctx)
+            .setTitle("Push Custom Event")
+            .setView(layout)
+            .setPositiveButton("Push") { _, _ ->
+                val eventName = eventNameInput.text.toString().trim()
+                if (eventName.isEmpty()) {
+                    Toast.makeText(ctx, "Event name cannot be empty", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                val propertiesText = propertiesInput.text.toString().trim()
+                val properties = parseProperties(propertiesText)
+                viewModel.pushCustomEvent(eventName, properties)
+                Toast.makeText(ctx, "Event '$eventName' pushed", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun parseProperties(text: String): Map<String, Any>? {
+        if (text.isEmpty()) return null
+        val map = mutableMapOf<String, Any>()
+        text.split(",").forEach { pair ->
+            val trimmed = pair.trim()
+            val colonIndex = trimmed.indexOf(':')
+            if (colonIndex > 0) {
+                val key = trimmed.substring(0, colonIndex).trim()
+                val value = trimmed.substring(colonIndex + 1).trim()
+                if (key.isNotEmpty()) {
+                    map[key] = value
+                }
+            }
+        }
+        return map.ifEmpty { null }
     }
 
     private fun setupListAdapter() {

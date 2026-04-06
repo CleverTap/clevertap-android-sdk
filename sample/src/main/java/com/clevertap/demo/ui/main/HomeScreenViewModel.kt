@@ -26,6 +26,7 @@ class HomeScreenViewModel(
 ) : ViewModel() {
 
     val clickCommand: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    val showCustomEventDialog: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
     private val exampleVariables by lazy { ExampleVariables() }
 
@@ -77,6 +78,18 @@ class HomeScreenViewModel(
             6 -> recordScreenEvent()
             7 -> recordAppRatingEvent()
             8 -> recordShareEvent()
+            9 -> showCustomEventDialog.value = true
+        }
+    }
+
+    fun pushCustomEvent(eventName: String, properties: Map<String, Any>?) {
+        logStep("EVENTS", "Recording custom event")
+        printVar("Event Name", eventName)
+        if (properties.isNullOrEmpty()) {
+            cleverTapAPI?.pushEvent(eventName)
+        } else {
+            printMap("Event Properties", properties)
+            cleverTapAPI?.pushEvent(eventName, properties)
         }
     }
 
