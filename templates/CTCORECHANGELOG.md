@@ -3,6 +3,7 @@
 
 #### New Features
 * **InApp Media Support:** Adds GIF and Video support for all InApp notification templates, enabling richer in-app experiences.
+* **App Inbox Default Media View:** Adds a fallback media view for App Inbox when the backend does not provide a media orientation, rendering images, GIFs, video posters, and audio thumbnails at their natural aspect ratio.
 
 #### Improvements
 * **Network Monitoring:** Replaces deprecated network APIs with a modern `NetworkMonitor` for more accurate connectivity detection, including captive portal support.
