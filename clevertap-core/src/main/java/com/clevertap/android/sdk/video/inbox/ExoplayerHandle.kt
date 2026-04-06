@@ -26,7 +26,14 @@ import com.google.android.exoplayer2.util.Util
  * Handle wrapping exoplayer library used to render video and audio for Inbox feature.
  * All the player and surface related functionality to be limited to this class to we can have multiple
  * handles for video/audio support.
+ *
+ * @deprecated ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed
+ * in v9.0.0. Migrate to Media3 (androidx.media3) and use [com.clevertap.android.sdk.video.inbox.Media3Handle] instead.
  */
+@Deprecated(
+    message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead.",
+    replaceWith = ReplaceWith("Media3Handle()", "com.clevertap.android.sdk.video.inbox.Media3Handle")
+)
 class ExoplayerHandle : InboxVideoPlayerHandle {
 
     private var videoSurfaceView: StyledPlayerView? = null

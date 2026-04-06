@@ -16,6 +16,7 @@ internal object VideoLibChecker {
             VideoLibraryIntegrated.MEDIA3
         }
         hasExoplayer -> {
+            Logger.i("ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Please migrate to Media3 (androidx.media3).")
             VideoLibraryIntegrated.EXOPLAYER
         }
         else -> {
@@ -88,5 +89,11 @@ internal object VideoLibChecker {
 }
 
 enum class VideoLibraryIntegrated {
-    EXOPLAYER, MEDIA3, NONE
+    @Deprecated(
+        message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3).",
+        replaceWith = ReplaceWith("MEDIA3")
+    )
+    EXOPLAYER,
+    MEDIA3,
+    NONE
 }
