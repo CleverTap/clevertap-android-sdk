@@ -17,8 +17,8 @@ import kotlin.math.abs
 internal class PIPDragHandler(
     private val view: View,
     private val dragEnabled: Boolean = true,
-    private val getHorizontalEdgeMarginDp: () -> Int,
-    private val getVerticalEdgeMarginDp: () -> Int,
+    private val getHorizontalEdgeMarginPercent: () -> Int,
+    private val getVerticalEdgeMarginPercent: () -> Int,
     private val getSafeInsets: () -> Insets = { Insets.NONE },
     private val getBottomOffsetPx: () -> Int = { 0 },
     private val onSnapComplete: (PIPPosition) -> Unit,
@@ -84,8 +84,8 @@ internal class PIPDragHandler(
 
     private fun snapToNearest() {
         val parent = view.parent as? ViewGroup ?: return
-        val hMarginPx = getHorizontalEdgeMarginDp().dpToPx(view.context)
-        val vMarginPx = getVerticalEdgeMarginDp().dpToPx(view.context)
+        val hMarginPx = getHorizontalEdgeMarginPercent().percentOf(parent.width)
+        val vMarginPx = getVerticalEdgeMarginPercent().percentOf(parent.height)
         val anchors = PIPPositionResolver.resolveAnchors(
             parent.width, parent.height,
             view.width, view.height,

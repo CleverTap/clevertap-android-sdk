@@ -117,8 +117,8 @@ internal class PIPCompactView(
         dragHandler = PIPDragHandler(
             view = this,
             dragEnabled = cfg.dragEnabled,
-            getHorizontalEdgeMarginDp = { session.config.horizontalEdgeMarginDp },
-            getVerticalEdgeMarginDp = { session.config.verticalEdgeMarginDp },
+            getHorizontalEdgeMarginPercent = { session.config.horizontalEdgeMarginPercent },
+            getVerticalEdgeMarginPercent = { session.config.verticalEdgeMarginPercent },
             getSafeInsets = { getSafeInsets() },
             getBottomOffsetPx = { bottomOffsetPx },
             onSnapComplete = { newPos ->

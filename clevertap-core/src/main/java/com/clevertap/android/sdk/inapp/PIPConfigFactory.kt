@@ -59,10 +59,10 @@ internal object PIPConfigFactory {
         val position = pipJson.optString("position", "").takeIf { it.isNotBlank() }
             ?.let { mapPosition(it) } ?: PIPPosition.BOTTOM_RIGHT
 
-        // Margins
+        // Margins (percentage of screen)
         val margins = pipJson.optJSONObject("margins")
-        val verticalMargin = margins?.optInt("vertical", 16) ?: 16
-        val horizontalMargin = margins?.optInt("horizontal", 16) ?: 16
+        val verticalMargin = margins?.optInt("vertical", 3) ?: 3
+        val horizontalMargin = margins?.optInt("horizontal", 3) ?: 3
 
         // Width
         val widthPercent = pipJson.optInt("width", 35)
@@ -110,8 +110,8 @@ internal object PIPConfigFactory {
                 aspectRatioNumerator = arNum,
                 aspectRatioDenominator = arDen,
                 initialPosition = position,
-                horizontalEdgeMarginDp = horizontalMargin,
-                verticalEdgeMarginDp = verticalMargin,
+                horizontalEdgeMarginPercent = horizontalMargin,
+                verticalEdgeMarginPercent = verticalMargin,
                 animationConfig = animConfig,
                 action = action,
                 showCloseButton = showClose,

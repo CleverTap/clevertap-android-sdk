@@ -213,8 +213,8 @@ class PIPConfigFactoryTest {
         val notification = mockNotification(pipJson = pipJson)
         val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
         assertNotNull(config)
-        assertEquals(10, config.verticalEdgeMarginDp)
-        assertEquals(20, config.horizontalEdgeMarginDp)
+        assertEquals(10, config.verticalEdgeMarginPercent)
+        assertEquals(20, config.horizontalEdgeMarginPercent)
     }
 
     @Test

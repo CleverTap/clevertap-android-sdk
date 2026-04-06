@@ -25,8 +25,8 @@ data class PIPConfig internal constructor(
 
     // Positioning
     val initialPosition: PIPPosition = PIPPosition.BOTTOM_RIGHT,
-    val horizontalEdgeMarginDp: Int = 16,       // left/right margin from screen edges
-    val verticalEdgeMarginDp: Int = 16,         // top/bottom margin from screen edges
+    val horizontalEdgeMarginPercent: Int = 3,   // left/right margin as % of screen width
+    val verticalEdgeMarginPercent: Int = 3,     // top/bottom margin as % of screen height
 
     // Animation
     val animationConfig: PIPAnimationConfig = PIPAnimationConfig(),
@@ -55,8 +55,6 @@ data class PIPConfig internal constructor(
         require(widthPercent in 10..90) { "widthPercent must be 10–90, got $widthPercent" }
         require(aspectRatioNumerator > 0.0) { "aspectRatioNumerator must be > 0" }
         require(aspectRatioDenominator > 0.0) { "aspectRatioDenominator must be > 0" }
-        require(horizontalEdgeMarginDp >= 0) { "horizontalEdgeMarginDp must be >= 0" }
-        require(verticalEdgeMarginDp >= 0) { "verticalEdgeMarginDp must be >= 0" }
         require(cornerRadiusDp >= 0) { "cornerRadiusDp must be >= 0" }
         require(borderWidthDp >= 0) { "borderWidthDp must be >= 0" }
     }

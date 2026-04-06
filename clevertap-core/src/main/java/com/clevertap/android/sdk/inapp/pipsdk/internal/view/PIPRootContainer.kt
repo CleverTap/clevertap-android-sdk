@@ -20,6 +20,7 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPAnimator
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPPositionResolver
 import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
+import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.percentOf
 import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 import java.util.concurrent.ExecutorService
 
@@ -263,8 +264,8 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         var pipH = (pipW * s.config.aspectRatioDenominator /
                 s.config.aspectRatioNumerator).toInt().coerceAtLeast(1)
 
-        val hMarginPx = s.config.horizontalEdgeMarginDp.dpToPx(context)
-        val vMarginPx = s.config.verticalEdgeMarginDp.dpToPx(context)
+        val hMarginPx = s.config.horizontalEdgeMarginPercent.percentOf(width)
+        val vMarginPx = s.config.verticalEdgeMarginPercent.percentOf(height)
         val bottomOffsetPx = PIPDimens.BOTTOM_NAV_OFFSET_DP.dpToPx(context)
 
         // Clamp height to MAX_HEIGHT_PERCENT of container to prevent overflow in landscape
@@ -327,8 +328,8 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         val cv = compactView ?: return
         if (cv.visibility != View.VISIBLE) return
         if (width == 0 || height == 0) return
-        val hMarginPx = s.config.horizontalEdgeMarginDp.dpToPx(context)
-        val vMarginPx = s.config.verticalEdgeMarginDp.dpToPx(context)
+        val hMarginPx = s.config.horizontalEdgeMarginPercent.percentOf(width)
+        val vMarginPx = s.config.verticalEdgeMarginPercent.percentOf(height)
         val bottomOffsetPx = PIPDimens.BOTTOM_NAV_OFFSET_DP.dpToPx(context)
         val anchors = PIPPositionResolver.resolveAnchors(
             width, height, cv.width, cv.height, hMarginPx, vMarginPx, safeInsets, bottomOffsetPx,
