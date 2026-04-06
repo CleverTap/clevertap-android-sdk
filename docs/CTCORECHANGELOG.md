@@ -7,6 +7,7 @@
 #### Improvements
 * **Network Monitoring:** Replaces deprecated network APIs with a modern `NetworkMonitor` for more accurate connectivity detection, including captive portal support.
 * **Minimum SDK Version Updated:** Bumps the minimum supported Android API level from 21 (Android 5.0) to 23 (Android 6.0).
+* **ExoPlayer Deprecated:** Deprecates ExoPlayer (`com.google.android.exoplayer2`) support. Developers using ExoPlayer for video playback should migrate to Media3 (`androidx.media3`) before v9.0.0, when ExoPlayer support will be removed. IDE tooling provides automatic migration suggestions.
 
 #### Bug Fixes
 * Fixes an `IndexOutOfBoundsException` in file cleanup by using a thread-safe collection.

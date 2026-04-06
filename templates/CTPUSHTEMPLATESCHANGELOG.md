@@ -5,9 +5,6 @@
 * **Vertical Image Template:** Adds a new `pt_vertical_image` push notification template with support for multiple images, action buttons, gradient backgrounds, and rounded corners.
 * **Timer Template Enhancements:** Adds configurable border radius (`pt_chrono_border_radius`), border width (`pt_chrono_border_width`), border color (`pt_chrono_border_clr`), and gradient background support (`pt_chrono_style`, `pt_chrono_grad_clr1`, `pt_chrono_grad_clr2`, `pt_chrono_grad_dir`) for the chronometer display.
 
-#### Bug Fixes
-* Fixes button click tracking for the `Vertical Image` template.
-
 ### Version 2.3.0 (March 6, 2026)
 
 #### New features
