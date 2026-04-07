@@ -1,0 +1,233 @@
+package com.clevertap.android.sdk.inapp.pipsdk.internal.view
+
+import android.content.Context
+import android.graphics.Color
+import android.graphics.Outline
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
+import android.widget.ImageView
+import androidx.core.graphics.Insets
+import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
+import com.clevertap.android.sdk.inapp.pipsdk.PIPPosition
+import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.PIPDragHandler
+import com.clevertap.android.sdk.inapp.pipsdk.internal.engine.dpToPx
+import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
+
+/**
+ * Compact draggable PIP window.
+ *
+ * Contains the shared [mediaView] (moved out during expand), a [PIPControlsOverlay]
+ * with Close and Expand buttons, and a [PIPDragHandler] for drag-to-reposition + snap.
+ */
+internal class PIPCompactView(
+    context: Context,
+    val mediaView: PIPMediaView,
+    private val session: PIPSession,
+    private val onExpand: () -> Unit,
+    private val onClose: () -> Unit,
+    private val onAction: () -> Unit,
+    private val onSnap: (PIPPosition) -> Unit,
+) : FrameLayout(context) {
+
+    internal val controlsOverlay: PIPControlsOverlay
+    private val dragHandler: PIPDragHandler
+    private var deeplinkBtn: ImageView? = null
+    private var muteBtn: ImageView? = null
+    var getSafeInsets: () -> Insets = { Insets.NONE }
+
+    init {
+        val cfg = session.config
+
+        elevation = ELEVATION_DP.dpToPx(context).toFloat()
+        applyBorderStyle(cfg)
+
+        // Media fills the view
+        addView(mediaView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+
+        // Controls overlay (initially hidden)
+        controlsOverlay = PIPControlsOverlay(context)
+        controlsOverlay.alpha = 0f
+
+        val iconSizePx = ICON_SIZE_DP.dpToPx(context)
+
+        // Deeplink button — bottom-left by default (image/GIF); moved to top-left for video
+        // in bindVideoControls() to avoid overlap with the mute button.
+        val dlBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_deeplink)
+            contentDescription = context.getString(R.string.ct_action_button_content_description)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            visibility = if (cfg.action != null) View.VISIBLE else View.GONE
+            setOnClickListener { onAction() }
+        }
+        deeplinkBtn = dlBtn
+        controlsOverlay.addView(
+            dlBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
+        )
+
+        // Close button — top-right (hidden if showCloseButton = false)
+        val closeBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_close_pip)
+            contentDescription = context.getString(R.string.ct_inapp_close_btn)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            visibility = if (cfg.showCloseButton) View.VISIBLE else View.GONE
+            setOnClickListener { onClose() }
+        }
+        controlsOverlay.addView(
+            closeBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END),
+        )
+
+        // Mute button — bottom-left (video only; hidden until bindVideoControls)
+        val mBtn = ImageView(context).apply {
+            setImageResource(PIPIcons.muteIcon(muted = true))
+            contentDescription = context.getString(PIPIcons.muteContentDescription(muted = true))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            visibility = View.GONE
+        }
+        muteBtn = mBtn
+        controlsOverlay.addView(
+            mBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
+        )
+
+        // Expand button — bottom-right (hidden if expandCollapse control disabled)
+        val expandBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_expand)
+            contentDescription = context.getString(R.string.ct_pip_expand_button_content_description)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            visibility = if (cfg.showExpandCollapseButton) View.VISIBLE else View.GONE
+            setOnClickListener { onExpand() }
+        }
+        controlsOverlay.addView(
+            expandBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.END),
+        )
+
+        addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+
+        val bottomOffsetPx = PIPDimens.BOTTOM_NAV_OFFSET_DP.dpToPx(context)
+        dragHandler = PIPDragHandler(
+            view = this,
+            dragEnabled = cfg.dragEnabled,
+            getHorizontalEdgeMarginPercent = { session.config.horizontalEdgeMarginPercent },
+            getVerticalEdgeMarginPercent = { session.config.verticalEdgeMarginPercent },
+            getSafeInsets = { getSafeInsets() },
+            getBottomOffsetPx = { bottomOffsetPx },
+            onSnapComplete = { newPos ->
+                session.currentPosition = newPos
+                onSnap(newPos)
+            },
+            onTap = { controlsOverlay.showControls() },
+        )
+    }
+
+    /**
+     * Wires mute button for video media. Call after media is attached.
+     */
+    fun bindVideoControls(mv: PIPMediaView) {
+        if (!mv.isVideoType) return
+        // Move deeplink to top-left so it doesn't overlap with the mute button at bottom-left
+        deeplinkBtn?.let {
+            (it.layoutParams as LayoutParams).gravity = Gravity.TOP or Gravity.START
+            it.requestLayout()
+        }
+        muteBtn?.visibility = if (session.config.showMuteButton) View.VISIBLE else View.GONE
+        updateMuteIcon(mv.isMuted)
+        muteBtn?.setOnClickListener {
+            mv.toggleMute()
+            updateMuteIcon(mv.isMuted)
+            controlsOverlay.resetAutoHideTimer()
+        }
+    }
+
+    private fun updateMuteIcon(muted: Boolean) {
+        muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
+        muteBtn?.contentDescription = muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
+    }
+
+    // ─── Touch handling ──────────────────────────────────────────────────────────
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        return when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                // Always store starting position; don't intercept yet so buttons can fire
+                dragHandler.onInterceptDown(ev)
+                false
+            }
+            MotionEvent.ACTION_MOVE -> dragHandler.shouldIntercept(ev)
+            else -> false
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> true     // claim gesture stream when no child consumed
+            else -> dragHandler.onTouchEvent(event)
+        }
+    }
+
+    /** Hides video-specific controls (mute). Called when video falls back to static image. */
+    fun hideVideoControls() {
+        muteBtn?.visibility = View.GONE
+        muteBtn?.setOnClickListener(null)
+        // Restore deeplink button to default position (bottom-left) since
+        // bindVideoControls() moved it to top-left to avoid mute button overlap.
+        deeplinkBtn?.let {
+            (it.layoutParams as LayoutParams).gravity = Gravity.BOTTOM or Gravity.START
+            it.requestLayout()
+        }
+    }
+
+    fun detach() = controlsOverlay.detach()
+
+    private fun applyBorderStyle(cfg: PIPConfig) {
+        val hasBorderStyle = cfg.mediaType != PIPMediaType.VIDEO &&
+                (cfg.cornerRadiusDp > 0 || cfg.borderEnabled)
+
+        if (!hasBorderStyle) {
+            // Default: simple black background with BOUNDS outline for shadow
+            outlineProvider = ViewOutlineProvider.BOUNDS
+            setBackgroundColor(Color.BLACK)
+            return
+        }
+
+        val radiusPx = cfg.cornerRadiusDp.dpToPx(context).toFloat()
+
+        val borderPx = if (cfg.borderEnabled && cfg.borderWidthDp > 0)
+            cfg.borderWidthDp.dpToPx(context) else 0
+
+        background = GradientDrawable().apply {
+            setColor(Color.BLACK)
+            cornerRadius = radiusPx
+            if (borderPx > 0) {
+                setStroke(borderPx, cfg.borderColor)
+            }
+        }
+
+        if (borderPx > 0) {
+            setPadding(borderPx, borderPx, borderPx, borderPx)
+        }
+
+        if (radiusPx > 0f) {
+            clipToOutline = true
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setRoundRect(0, 0, view.width, view.height, radiusPx)
+                }
+            }
+        }
+    }
+
+    private companion object {
+        const val ICON_SIZE_DP = 30
+        const val ELEVATION_DP = 6
+    }
+}
