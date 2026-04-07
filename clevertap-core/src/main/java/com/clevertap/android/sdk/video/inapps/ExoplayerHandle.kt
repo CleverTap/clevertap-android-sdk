@@ -14,7 +14,7 @@ import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.ExoTrackSelection
@@ -73,10 +73,12 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         val dsf = DefaultHttpDataSource.Factory().setUserAgent(userAgent).setTransferListener(listener)
         val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context, dsf)
         val mediaItem = MediaItem.fromUri(url)
-        val hlsMediaSource = HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
 
-        player = ExoPlayer.Builder(context).setTrackSelector(trackSelector).build().apply {
-            setMediaSource(hlsMediaSource)
+        player = ExoPlayer.Builder(context)
+            .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .build().apply {
+            setMediaItem(mediaItem)
             prepare()
             repeatMode = Player.REPEAT_MODE_ONE
             volume = InAppVideoPlayerHandle.VOLUME_MUTED

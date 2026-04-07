@@ -9,16 +9,15 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
-import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.trackselection.ExoTrackSelection
 import androidx.media3.exoplayer.trackselection.TrackSelector
-import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
@@ -41,8 +40,15 @@ class Media3Handle: InboxVideoPlayerHandle {
         val videoTrackSelectionFactory: ExoTrackSelection.Factory = AdaptiveTrackSelection.Factory()
         val trackSelector: TrackSelector = DefaultTrackSelector(context, videoTrackSelectionFactory)
 
+        val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(context).build()
+        val userAgent = Util.getUserAgent(context, context.packageName)
+        val dsf = DefaultHttpDataSource.Factory().setUserAgent(userAgent)
+            .setTransferListener(defaultBandwidthMeter)
+        val dataSourceFactory = DefaultDataSource.Factory(context, dsf)
+
         player = ExoPlayer.Builder(context)
             .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
             .build()
             .apply {
                 volume = 0f // start off muted
@@ -140,15 +146,8 @@ class Media3Handle: InboxVideoPlayerHandle {
         }
         // Prepare the player with the source.
         player?.let { ep ->
-            val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(ctx).build()
-            val userAgent = Util.getUserAgent(ctx, ctx.packageName)
             val mediaItem: MediaItem = MediaItem.fromUri(uriString)
-            val dsf = DefaultHttpDataSource.Factory().setUserAgent(userAgent)
-                .setTransferListener(defaultBandwidthMeter)
-            val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(ctx, dsf)
-            val hlsMediaSource = HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
-
-            ep.setMediaSource(hlsMediaSource)
+            ep.setMediaItem(mediaItem)
             ep.prepare()
             if (isMediaAudio) {
                 videoSurfaceView?.showController() //show controller for audio as it is not autoplay
