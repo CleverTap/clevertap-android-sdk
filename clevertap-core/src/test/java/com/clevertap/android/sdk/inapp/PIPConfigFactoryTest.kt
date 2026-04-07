@@ -353,6 +353,35 @@ class PIPConfigFactoryTest {
         assertEquals(Color.BLACK, config.borderColor)
     }
 
+    // ─── Action / onClick ───────────────────────────────────────────────────────
+
+    @Test
+    fun `action is null when onClick type is empty (no action)`() {
+        val pipJson = JSONObject().put("onClick", JSONObject().apply {
+            put("type", "")
+            put("android", "")
+            put("ios", "")
+            put("kv", JSONObject())
+            put("close", false)
+        })
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertNull(config.action)
+    }
+
+    @Test
+    fun `action is set when onClick type is url`() {
+        val pipJson = JSONObject().put("onClick", JSONObject().apply {
+            put("type", "url")
+            put("android", "https://example.com")
+        })
+        val notification = mockNotification(pipJson = pipJson)
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertNotNull(config.action)
+    }
+
     // ─── Validation failure ───────────────────────────────────────────────────────
 
     @Test

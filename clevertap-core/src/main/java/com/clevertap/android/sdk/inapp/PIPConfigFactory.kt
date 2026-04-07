@@ -84,7 +84,9 @@ internal object PIPConfigFactory {
             ?: PIPAnimationConfig()
 
         // Action
-        val action = pipJson.optJSONObject("onClick")?.let { CTInAppAction.createFromJson(it) }
+        val action = pipJson.optJSONObject("onClick")
+            ?.let { CTInAppAction.createFromJson(it) }
+            ?.takeIf { it.type != null }
 
         // Corner radius
         val cornerRadiusDp = pipJson.optInt("cornerRadius", 0)
