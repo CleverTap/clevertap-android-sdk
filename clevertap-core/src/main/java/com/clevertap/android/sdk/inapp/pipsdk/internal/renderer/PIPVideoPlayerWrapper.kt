@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.pipsdk.internal.renderer
 import android.content.Context
 import android.view.View
 import androidx.annotation.OptIn
+import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -16,12 +17,15 @@ import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.PlayerView
+import com.clevertap.android.sdk.R
 
 /**
- * Self-contained video player for PIP in-app notifications.
+ * Self-contained media player for PIP in-app notifications.
  *
  * Owns the [ExoPlayer] and [PlayerView] directly (Media3 only), providing
  * non-destructive surface management needed for rotation survival.
+ * Supports both video and audio playback. For audio, displays the `ct_audio`
+ * drawable as default artwork on the PlayerView.
  * PIP has its own overlay controls ([com.clevertap.android.sdk.inapp.pipsdk.internal.view.PIPControlsOverlay]),
  * so the PlayerView is created with `useController = false`.
  */
@@ -29,6 +33,7 @@ internal class PIPVideoPlayerWrapper {
 
     private var player: ExoPlayer? = null
     private var playerView: PlayerView? = null
+    var isAudio: Boolean = false
 
     private var savedPositionMs: Long = 0L
     private var _isMuted: Boolean = true
@@ -52,8 +57,8 @@ internal class PIPVideoPlayerWrapper {
 
     /**
      * Creates and prepares the [ExoPlayer] with auto-detected media source.
-     * Supports HLS, MP4, DASH, and other formats via [DefaultMediaSourceFactory].
-     * Starts muted with repeat-one mode.
+     * Supports HLS, MP4, DASH, audio, and other formats via [DefaultMediaSourceFactory].
+     * Video starts muted; audio starts unmuted. Both use repeat-one mode.
      */
     @OptIn(UnstableApi::class)
     fun initPlayer(context: Context, url: String) {
@@ -96,6 +101,9 @@ internal class PIPVideoPlayerWrapper {
             useController = false
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
             player = this@PIPVideoPlayerWrapper.player
+            if (isAudio) {
+                defaultArtwork = ContextCompat.getDrawable(context, R.drawable.ct_audio)
+            }
         }
         playerView = pv
         return pv

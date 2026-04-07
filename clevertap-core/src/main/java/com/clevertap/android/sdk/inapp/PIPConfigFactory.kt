@@ -39,6 +39,7 @@ internal object PIPConfigFactory {
         }
 
         val mediaType = when {
+            media.isAudio() -> PIPMediaType.AUDIO
             media.isVideo() -> PIPMediaType.VIDEO
             media.isGIF() -> PIPMediaType.GIF
             media.isImage() -> PIPMediaType.IMAGE

@@ -71,7 +71,10 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         }
         renderer?.rebindSurface(this, session)
 
-        attachVideoScrim(session.videoPlayerWrapper)
+        // Audio has no video frames → onRenderedFirstFrame() never fires → skip scrim
+        if (session.config.mediaType != PIPMediaType.AUDIO) {
+            attachVideoScrim(session.videoPlayerWrapper)
+        }
     }
 
     /**
@@ -89,8 +92,9 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
         resourceProvider: FileResourceProvider,
         mediaExecutor: ExecutorService,
     ): Boolean {
-        val videoFailedToImage = session.config.mediaType == PIPMediaType.VIDEO
-                && session.videoPlayerWrapper == null
+        val isStreamMedia = session.config.mediaType == PIPMediaType.VIDEO
+                || session.config.mediaType == PIPMediaType.AUDIO
+        val videoFailedToImage = isStreamMedia && session.videoPlayerWrapper == null
         if (!videoFailedToImage) return false
 
         FallbackImageLoader.load(
@@ -159,7 +163,9 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     ): MediaRenderer = when (mediaType) {
         PIPMediaType.IMAGE -> ImageRenderer(resourceProvider, mediaExecutor)
         PIPMediaType.GIF -> GifRenderer(resourceProvider, mediaExecutor)
-        PIPMediaType.VIDEO -> VideoRenderer(resourceProvider, mediaExecutor).also { vr ->
+        PIPMediaType.VIDEO, PIPMediaType.AUDIO -> VideoRenderer(
+            resourceProvider, mediaExecutor, isAudio = mediaType == PIPMediaType.AUDIO,
+        ).also { vr ->
             vr.onFallbackToImage = { fellBackToImage = true; onVideoFallback?.invoke() }
             vr.stateListener = object : RendererStateListener {
                 override fun onPlayerCreated(wrapper: PIPVideoPlayerWrapper) {

@@ -31,6 +31,7 @@ class PIPConfigFactoryTest {
         isVideo: Boolean = true,
         isGIF: Boolean = false,
         isImage: Boolean = false,
+        isAudio: Boolean = false,
         contentType: String = "video/mp4",
         fallbackUrl: String = "",
         topLevelJson: JSONObject? = null,
@@ -42,6 +43,7 @@ class PIPConfigFactoryTest {
             every { isVideo() } returns isVideo
             every { isGIF() } returns isGIF
             every { isImage() } returns isImage
+            every { isAudio() } returns isAudio
         }
 
         val rawJson = topLevelJson ?: JSONObject().apply {
@@ -114,6 +116,18 @@ class PIPConfigFactoryTest {
         val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
         assertNotNull(config)
         assertEquals(PIPMediaType.GIF, config.mediaType)
+    }
+
+    @Test
+    fun `maps audio content type to AUDIO`() {
+        val notification = mockNotification(
+            mediaUrl = "https://example.com/audio.mp3",
+            isVideo = false, isGIF = false, isImage = false, isAudio = true,
+            contentType = "audio/mpeg"
+        )
+        val config = PIPConfigFactory.create(notification, mockCallbacks, mockLogger)
+        assertNotNull(config)
+        assertEquals(PIPMediaType.AUDIO, config.mediaType)
     }
 
     @Test

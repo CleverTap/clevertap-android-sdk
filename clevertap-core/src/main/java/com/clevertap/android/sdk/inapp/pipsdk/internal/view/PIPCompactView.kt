@@ -153,6 +153,9 @@ internal class PIPCompactView(
         muteBtn?.contentDescription = muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
     }
 
+    /** Syncs mute icon with current state — called after collapsing from expanded view. */
+    fun syncMuteIcon(muted: Boolean) = updateMuteIcon(muted)
+
     // ─── Touch handling ──────────────────────────────────────────────────────────
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
@@ -189,8 +192,8 @@ internal class PIPCompactView(
     fun detach() = controlsOverlay.detach()
 
     private fun applyBorderStyle(cfg: PIPConfig) {
-        val hasBorderStyle = cfg.mediaType != PIPMediaType.VIDEO &&
-                (cfg.cornerRadiusDp > 0 || cfg.borderEnabled)
+        val isStreamMedia = cfg.mediaType == PIPMediaType.VIDEO || cfg.mediaType == PIPMediaType.AUDIO
+        val hasBorderStyle = !isStreamMedia && (cfg.cornerRadiusDp > 0 || cfg.borderEnabled)
 
         if (!hasBorderStyle) {
             // Default: simple black background with BOUNDS outline for shadow

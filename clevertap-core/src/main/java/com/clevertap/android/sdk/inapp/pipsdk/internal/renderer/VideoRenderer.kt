@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService
 internal class VideoRenderer(
     private val resourceProvider: FileResourceProvider,
     private val mediaExecutor: ExecutorService,
+    private val isAudio: Boolean = false,
 ) : MediaRenderer {
 
     private var wrapper: PIPVideoPlayerWrapper? = null
@@ -63,15 +64,17 @@ internal class VideoRenderer(
                 ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
             )
         } else {
-            // Create self-contained PIP video player
-            val w = PIPVideoPlayerWrapper()
+            // Create self-contained PIP media player
+            val w = PIPVideoPlayerWrapper().apply { this.isAudio = this@VideoRenderer.isAudio }
             w.initPlayer(container.context, config.mediaUrl)
             val surface = w.createSurface(container.context)
 
-            w.setMuted(true)
+            val initialMuted = !isAudio  // Audio starts unmuted; video starts muted
+            w.setMuted(initialMuted)
+            _isMuted = initialMuted
             wrapper = w
             stateListener?.onPlayerCreated(w)
-            stateListener?.onPlaybackStateChanged(isPlaying = true, isMuted = true, positionMs = 0L)
+            stateListener?.onPlaybackStateChanged(isPlaying = true, isMuted = initialMuted, positionMs = 0L)
 
             container.addView(
                 surface,
