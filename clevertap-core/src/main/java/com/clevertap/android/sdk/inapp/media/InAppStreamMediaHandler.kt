@@ -48,11 +48,13 @@ internal class InAppStreamMediaHandler
     }
 
     init {
-        handle = if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
-            Media3Handle()
-        } else {
-            ExoplayerHandle()
-        }
+         // Reclaim a live player that survived rotation, falling back to a fresh handle.
+        handle = InAppVideoPlayerCache.consume(media.mediaUrl)
+            ?: if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
+                Media3Handle()
+            } else {
+                ExoplayerHandle()
+            }
     }
 
     override fun setup(
@@ -66,6 +68,12 @@ internal class InAppStreamMediaHandler
         relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility = View.GONE
         prepareMedia()
         playMedia()
+        // Restore fullscreen state if this Fragment was recreated after a rotation that
+        // happened while the video was in fullscreen mode.
+        if (InAppVideoPlayerCache.consumeFullscreen()) {
+            onBackPressedCallback.isEnabled = true
+            openFullscreenDialog()
+        }
         videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
     }
 
@@ -75,20 +83,31 @@ internal class InAppStreamMediaHandler
     }
 
     override fun onPause(owner: LifecycleOwner) {
-        if (exoPlayerFullscreen) {
-            closeFullscreenDialog()
-            onBackPressedCallback.isEnabled = false
+        if (fragment.activity?.isChangingConfigurations == true) {
+            // Rotation: the Activity (and its dialog) is being destroyed, so we must close the
+            // fullscreen dialog explicitly. Save the state first so setup() can restore it.
+            val wasFullscreen = exoPlayerFullscreen
+            if (exoPlayerFullscreen) {
+                closeFullscreenDialog()
+                onBackPressedCallback.isEnabled = false
+            }
+            val h = handle ?: return
+            h.detachSurface()
+            InAppVideoPlayerCache.store(h, media.mediaUrl, isFullscreen = wasFullscreen)
+        } else {
+            // Background: leave fullscreen dialog intact — it will still be there on resume.
+            handle?.softPause()
         }
-        handle?.savePosition()
-        handle?.pause()
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        handle?.pause()
+        if (fragment.activity?.isChangingConfigurations == true) return
+        handle?.softPause()
     }
 
     override fun cleanup() {
         handle?.pause()
+        InAppVideoPlayerCache.release()
     }
 
     private fun prepareMedia() {

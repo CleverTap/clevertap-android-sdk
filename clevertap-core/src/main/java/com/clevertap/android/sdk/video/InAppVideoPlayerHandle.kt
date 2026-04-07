@@ -16,12 +16,28 @@ interface InAppVideoPlayerHandle {
 
     fun play()
     fun pause()
-    fun savePosition()
     fun switchToFullScreen(isFullScreen: Boolean)
     fun setFullscreenClickListener(onClick: (isFullScreen: Boolean) -> Unit)
     fun setMuteClickListener()
     fun setActionClickListener(onClick: () -> Unit)
     fun videoSurface(): View
+
+    /**
+     * Detaches the video surface without releasing the player.
+     * Called before view hierarchy removal during a configuration change (rotation).
+     * Saves playback position and mute state so they survive across the config change.
+     * The player instance stays alive for reattachment in the next Fragment instance.
+     *
+     * Default is a no-op — only handles that support rotation-survival override this.
+     */
+    fun detachSurface() {}
+
+    /**
+     * Pauses playback without releasing the player.
+     * Called when the app goes to background so the player can resume seamlessly on foreground
+     * without re-buffering or seeking. Default is a no-op.
+     */
+    fun softPause() {}
 
     companion object {
         const val PLAYER_WIDTH_PHONE_DP = 240f
