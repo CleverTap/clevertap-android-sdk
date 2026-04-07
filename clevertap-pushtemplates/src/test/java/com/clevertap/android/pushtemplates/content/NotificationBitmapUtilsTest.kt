@@ -1,7 +1,9 @@
 package com.clevertap.android.pushtemplates.content
 
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -21,6 +23,14 @@ class NotificationBitmapUtilsTest {
     private val color2 = Color.BLUE
     private val borderColor = Color.BLACK
 
+    private val bitmapsToRecycle = mutableListOf<Bitmap>()
+
+    @After
+    fun tearDown() {
+        bitmapsToRecycle.forEach { it.recycle() }
+        bitmapsToRecycle.clear()
+    }
+
     // createSolidBitmap tests
 
     @Test
@@ -35,7 +45,7 @@ class NotificationBitmapUtilsTest {
             width = width,
             height = height,
             cornerRadius = cornerRadius
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -55,7 +65,7 @@ class NotificationBitmapUtilsTest {
             width = width,
             height = height,
             cornerRadius = cornerRadius
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -76,7 +86,7 @@ class NotificationBitmapUtilsTest {
             height = height,
             cornerRadius = cornerRadius,
             borderWidth = null
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -97,7 +107,7 @@ class NotificationBitmapUtilsTest {
             height = height,
             cornerRadius = cornerRadius,
             borderWidth = 4f
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -120,7 +130,7 @@ class NotificationBitmapUtilsTest {
             width = width,
             height = height,
             cornerRadius = cornerRadius
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -142,7 +152,7 @@ class NotificationBitmapUtilsTest {
             height = height,
             cornerRadius = cornerRadius,
             borderColor = borderColor
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -163,7 +173,7 @@ class NotificationBitmapUtilsTest {
             width = width,
             height = height,
             cornerRadius = cornerRadius
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -186,7 +196,7 @@ class NotificationBitmapUtilsTest {
             cornerRadius = cornerRadius,
             borderColor = borderColor,
             borderWidth = 4f
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -208,7 +218,7 @@ class NotificationBitmapUtilsTest {
             width = width,
             height = height,
             cornerRadius = cornerRadius
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -229,7 +239,7 @@ class NotificationBitmapUtilsTest {
             height = height,
             cornerRadius = cornerRadius,
             borderColor = borderColor
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
@@ -251,7 +261,7 @@ class NotificationBitmapUtilsTest {
             cornerRadius = cornerRadius,
             borderColor = borderColor,
             borderWidth = 4f
-        )
+        ).also { bitmapsToRecycle.add(it) }
 
         // Then
         assertNotNull(bitmap)
