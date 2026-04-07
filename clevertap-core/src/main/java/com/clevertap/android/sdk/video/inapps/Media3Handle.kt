@@ -17,7 +17,7 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.trackselection.ExoTrackSelection
@@ -62,10 +62,12 @@ class Media3Handle : InAppVideoPlayerHandle {
         val dsf = DefaultHttpDataSource.Factory().setUserAgent(userAgent).setTransferListener(listener)
         val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context, dsf)
         val mediaItem = MediaItem.fromUri(url)
-        val hlsMediaSource = HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
 
-        player = ExoPlayer.Builder(context).setTrackSelector(trackSelector).build().apply {
-            setMediaSource(hlsMediaSource)
+        player = ExoPlayer.Builder(context)
+            .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .build().apply {
+            setMediaItem(mediaItem)
             prepare()
             repeatMode = Player.REPEAT_MODE_ONE
             volume = InAppVideoPlayerHandle.VOLUME_MUTED
