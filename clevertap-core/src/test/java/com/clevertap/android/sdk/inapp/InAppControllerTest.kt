@@ -818,7 +818,8 @@ class InAppControllerTest {
             inAppDelayManager = mockInAppDelayManager,
             inAppInActionManager = mockInAppInActionManager,
             networkMonitor = mockNetworkMonitor,
-            clock = fakeClock
+            clock = fakeClock,
+            pipManager = mockk(relaxed = true),
         )
     }
 

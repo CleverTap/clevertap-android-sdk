@@ -31,6 +31,7 @@ import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
@@ -471,6 +472,8 @@ internal object CleverTapFactory {
 
         networkManager.addNetworkHeadersListener(evaluationManager)
 
+        val pipManager = PIPManager { FileResourceProvider.initInstance(context, config.logger, networkMonitor) }
+
         val inAppController = InAppController(
             context,
             config,
@@ -489,7 +492,8 @@ internal object CleverTapFactory {
             inAppDelayManager,
             inAppInActionManager,
             SYSTEM,
-            networkMonitor
+            networkMonitor,
+            pipManager,
         )
         controllerManager.inAppController = inAppController
 
