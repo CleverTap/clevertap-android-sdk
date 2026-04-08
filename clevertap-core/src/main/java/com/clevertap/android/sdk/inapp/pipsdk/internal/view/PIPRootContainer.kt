@@ -247,7 +247,6 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             mv.onContainerChanged()
             ev.visibility = View.GONE
             cv.visibility = View.VISIBLE
-            cv.syncMuteIcon(mv.isMuted)
             s.config.callbacks?.onCollapse()
         }
     }
@@ -281,8 +280,8 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         }
 
         // Add border padding AFTER clamping so media area keeps the correct aspect ratio
-        val isStreamMedia = s.config.mediaType == PIPMediaType.VIDEO || s.config.mediaType == PIPMediaType.AUDIO
-        val borderPx = if (s.config.borderEnabled && s.config.borderWidthDp > 0 && !isStreamMedia)
+        val borderPx = if (s.config.borderEnabled && s.config.borderWidthDp > 0
+            && s.config.mediaType != PIPMediaType.VIDEO)
             s.config.borderWidthDp.dpToPx(context) else 0
         if (borderPx > 0) {
             val totalPadding = borderPx * 2
