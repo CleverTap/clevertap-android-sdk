@@ -14,6 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.minutes
 
@@ -27,7 +28,7 @@ internal class FilePreloaderCoroutine @JvmOverloads constructor(
     private val deepLogging: Boolean = false
 ) : FilePreloaderStrategy {
 
-    private val jobs: MutableList<Job> = mutableListOf()
+    private val jobs: ConcurrentLinkedQueue<Job> = ConcurrentLinkedQueue()
     private val handler = CoroutineExceptionHandler { _, throwable ->
         logger?.verbose("Cancelled image pre fetch \n ${throwable.stackTrace}")
     }

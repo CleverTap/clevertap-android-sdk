@@ -66,7 +66,8 @@ class EventQueueManagerTest : BaseTestCase() {
                 corestate.cTLockManager,
                 corestate.localDataStore,
                 corestate.controllerManager,
-                loginInfoProvider
+                loginInfoProvider,
+                corestate.networkMonitor
             )
         )
         json = JSONObject()

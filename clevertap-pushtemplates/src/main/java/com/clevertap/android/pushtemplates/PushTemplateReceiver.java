@@ -36,9 +36,7 @@ import com.clevertap.android.pushtemplates.media.TemplateRepository;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -166,6 +164,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                         case MANUAL_CAROUSEL:
                                             handleManualCarouselNotification(context, extras);
                                             break;
+                                        case VERTICAL_IMAGE:
+                                            handleVerticalImageButtonClick(context, extras);
+                                            break;
                                     }
                                 }
                             } catch (Throwable t) {
@@ -191,92 +192,84 @@ public class PushTemplateReceiver extends BroadcastReceiver {
              * but recreating remote views creates performance issue and notification lag,
              * hence using below method to get remote views from existing notification
              */
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
-                Notification notification = Utils.getNotificationById(context, notificationId);
-                if (notification == null) {
-                    PTLog.verbose("Manual Carousel Notification is null, returning");
-                    return;
-                }
-                contentViewManualCarousel = notification.bigContentView;
-                contentViewSmall = notification.contentView;
+            int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
+            Notification notification = Utils.getNotificationById(context, notificationId);
+            if (notification == null) {
+                PTLog.verbose("Manual Carousel Notification is null, returning");
+                return;
+            }
+            contentViewManualCarousel = notification.bigContentView;
+            contentViewSmall = notification.contentView;
 
-                setCustomContentViewBasicKeys(contentViewManualCarousel, context);
+            setCustomContentViewBasicKeys(contentViewManualCarousel, context);
 
-                final boolean rightSwipe = extras.getBoolean(PTConstants.PT_RIGHT_SWIPE);
+            final boolean rightSwipe = extras.getBoolean(PTConstants.PT_RIGHT_SWIPE);
 
-                imageList = extras.getStringArrayList(PTConstants.PT_IMAGE_LIST);
-                deepLinkList = extras.getStringArrayList(PTConstants.PT_DEEPLINK_LIST);
+            imageList = extras.getStringArrayList(PTConstants.PT_IMAGE_LIST);
+            deepLinkList = extras.getStringArrayList(PTConstants.PT_DEEPLINK_LIST);
 
-                int currPosition = extras.getInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT);
-                int newPosition;
-                if (rightSwipe) {
-                    contentViewManualCarousel.showNext(R.id.carousel_image);
-                    contentViewManualCarousel.showNext(R.id.carousel_image_right);
-                    contentViewManualCarousel.showNext(R.id.carousel_image_left);
-                    if (currPosition == imageList.size() - 1) {
-                        newPosition = 0;
-                    } else {
-                        newPosition = currPosition + 1;
-                    }
+            int currPosition = extras.getInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT);
+            int newPosition;
+            if (rightSwipe) {
+                contentViewManualCarousel.showNext(R.id.carousel_image);
+                contentViewManualCarousel.showNext(R.id.carousel_image_right);
+                contentViewManualCarousel.showNext(R.id.carousel_image_left);
+                if (currPosition == imageList.size() - 1) {
+                    newPosition = 0;
                 } else {
-                    contentViewManualCarousel.showPrevious(R.id.carousel_image);
-                    contentViewManualCarousel.showPrevious(R.id.carousel_image_right);
-                    contentViewManualCarousel.showPrevious(R.id.carousel_image_left);
-                    if (currPosition == 0) {
-                        newPosition = imageList.size() - 1;
-                    } else {
-                        newPosition = currPosition - 1;
-                    }
+                    newPosition = currPosition + 1;
                 }
-                String dl = "";
-
-                if (deepLinkList != null && deepLinkList.size() == imageList.size()) {
-                    dl = deepLinkList.get(newPosition);
-                } else if (deepLinkList != null && deepLinkList.size() == 1) {
-                    dl = deepLinkList.get(0);
-                } else if (deepLinkList != null && deepLinkList.size() > newPosition) {
-                    dl = deepLinkList.get(newPosition);
-                } else if (deepLinkList != null && deepLinkList.size() < newPosition) {
-                    dl = deepLinkList.get(0);
-                }
-
-                extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, newPosition);
-                extras.remove(PTConstants.PT_RIGHT_SWIPE);
-                extras.putString(Constants.DEEP_LINK_KEY, dl);
-                extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_FROM, currPosition);
-
-                contentViewManualCarousel.setOnClickPendingIntent(R.id.rightArrowPos0, PendingIntentFactory
-                        .getPendingIntent(context, notificationId, extras, false,
-                                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT));
-
-                contentViewManualCarousel.setOnClickPendingIntent(R.id.leftArrowPos0, PendingIntentFactory
-                        .getPendingIntent(context, notificationId, extras, false,
-                                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT));
-
-                PendingIntent pIntent = PendingIntentFactory.getPendingIntent(context, notificationId, extras, true,
-                        MANUAL_CAROUSEL_CONTENT_PENDING_INTENT);
-
-                NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
-
-                PendingIntent dIntent = PendingIntentFactory.getPendingIntent(context, notificationId, extras, false,
-                        MANUAL_CAROUSEL_DISMISS_PENDING_INTENT, null);
-
-                setSmallIcon(context);
-
-                setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewManualCarousel,
-                        pt_title, pIntent, dIntent);
-
-                notification = notificationBuilder.build();
-
-                notificationManager.notify(notificationId, notification);
             } else {
-                extras.putString(Constants.EXTRAS_FROM, "PTReceiver");
-                NotificationHandler notificationHandler = CleverTapAPI.getNotificationHandler();
-                if (notificationHandler != null) {
-                    notificationHandler.onMessageReceived(context, extras, "FCM");
+                contentViewManualCarousel.showPrevious(R.id.carousel_image);
+                contentViewManualCarousel.showPrevious(R.id.carousel_image_right);
+                contentViewManualCarousel.showPrevious(R.id.carousel_image_left);
+                if (currPosition == 0) {
+                    newPosition = imageList.size() - 1;
+                } else {
+                    newPosition = currPosition - 1;
                 }
             }
+            String dl = "";
+
+            if (deepLinkList != null && deepLinkList.size() == imageList.size()) {
+                dl = deepLinkList.get(newPosition);
+            } else if (deepLinkList != null && deepLinkList.size() == 1) {
+                dl = deepLinkList.get(0);
+            } else if (deepLinkList != null && deepLinkList.size() > newPosition) {
+                dl = deepLinkList.get(newPosition);
+            } else if (deepLinkList != null && deepLinkList.size() < newPosition) {
+                dl = deepLinkList.get(0);
+            }
+
+            extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, newPosition);
+            extras.remove(PTConstants.PT_RIGHT_SWIPE);
+            extras.putString(Constants.DEEP_LINK_KEY, dl);
+            extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_FROM, currPosition);
+
+            contentViewManualCarousel.setOnClickPendingIntent(R.id.rightArrowPos0, PendingIntentFactory
+                    .getPendingIntent(context, notificationId, extras, false,
+                            MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT));
+
+            contentViewManualCarousel.setOnClickPendingIntent(R.id.leftArrowPos0, PendingIntentFactory
+                    .getPendingIntent(context, notificationId, extras, false,
+                            MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT));
+
+            PendingIntent pIntent = PendingIntentFactory.getPendingIntent(context, notificationId, extras, true,
+                    MANUAL_CAROUSEL_CONTENT_PENDING_INTENT);
+
+            Builder notificationBuilder = new Builder(context, notification);
+
+            PendingIntent dIntent = PendingIntentFactory.getPendingIntent(context, notificationId, extras, false,
+                    MANUAL_CAROUSEL_DISMISS_PENDING_INTENT, null);
+
+            setSmallIcon(context);
+
+            setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewManualCarousel,
+                    pt_title, pIntent, dIntent);
+
+            notification = notificationBuilder.build();
+
+            notificationManager.notify(notificationId, notification);
         } catch (Throwable t) {
             PTLog.verbose("Error creating manual carousel notification ", t);
         }
@@ -456,97 +449,84 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 }
             }
 
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                Notification notification = Utils.getNotificationById(context, notificationId);
-                if (notification == null) {
-                    PTLog.verbose("Rating Notification is null, returning");
-                    return;
-                }
-                contentViewRating = notification.bigContentView;
-                contentViewSmall = notification.contentView;
+            Notification notification = Utils.getNotificationById(context, notificationId);
+            if (notification == null) {
+                PTLog.verbose("Rating Notification is null, returning");
+                return;
+            }
+            contentViewRating = notification.bigContentView;
+            contentViewSmall = notification.contentView;
 
-                if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    clicked1 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_outline);
-                }
-                if (2 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    clicked2 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_outline);
-                }
-                if (3 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                    clicked3 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_outline);
-                }
-                if (4 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
-                    clicked4 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_outline);
-                }
-                if (5 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_filled);
-                    clicked5 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
-                }
-                cancelRatingClickIntents(context,intent);
-                extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
-                contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation,
-                        LaunchPendingIntentFactory.getActivityIntent(extras, context));
-
-                setSmallIcon(context);
-
-                NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
-                Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
-                PendingIntent dIntent;
-                dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
-
-                if (notificationManager != null) {
-                    //Use the Builder to build notification
-                    notificationBuilder.setSmallIcon(smallIcon)
-                            .setCustomContentView(contentViewSmall)
-                            .setCustomBigContentView(contentViewRating)
-                            .setContentTitle(pt_title)
-                            .setDeleteIntent(dIntent)
-                            .setAutoCancel(true);
-
-                    notification = notificationBuilder.build();
-
-                    notificationManager.notify(notificationId, notification);
-                }
-
-                Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                        Utils.convertRatingBundleObjectToHashMap(extras));
-                if (VERSION.SDK_INT < VERSION_CODES.S) {
-                    handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked, this.config);
-                }
+            if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                clicked1 = false;
             } else {
-                extras.putString(Constants.EXTRAS_FROM, "PTReceiver");
-                Bundle clonedExtras = (Bundle) extras.clone();
-                NotificationHandler notificationHandler = CleverTapAPI.getNotificationHandler();
-                if (notificationHandler != null) {
-                    notificationHandler.onMessageReceived(context, extras, "FCM");
-                    clonedExtras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
-                    Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                            Utils.convertRatingBundleObjectToHashMap(extras));
-                    handleRatingDeepLink(context, clonedExtras, notificationId, pt_dl_clicked, this.config);
-                }
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_outline);
+            }
+            if (2 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                clicked2 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_outline);
+            }
+            if (3 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                clicked3 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_outline);
+            }
+            if (4 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
+                clicked4 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_outline);
+            }
+            if (5 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_filled);
+                clicked5 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
+            }
+            cancelRatingClickIntents(context,intent);
+            extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
+            contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation,
+                    LaunchPendingIntentFactory.getActivityIntent(extras, context));
+
+            setSmallIcon(context);
+
+            Builder notificationBuilder = new Builder(context, notification);
+            Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
+            PendingIntent dIntent;
+            dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
+
+            if (notificationManager != null) {
+                //Use the Builder to build notification
+                notificationBuilder.setSmallIcon(smallIcon)
+                        .setCustomContentView(contentViewSmall)
+                        .setCustomBigContentView(contentViewRating)
+                        .setContentTitle(pt_title)
+                        .setDeleteIntent(dIntent)
+                        .setAutoCancel(true);
+
+                notification = notificationBuilder.build();
+
+                notificationManager.notify(notificationId, notification);
+            }
+
+            Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                    Utils.convertRatingBundleObjectToHashMap(extras));
+            if (VERSION.SDK_INT < VERSION_CODES.S) {
+                handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked, this.config);
             }
         } catch (Throwable t) {
             PTLog.verbose("Error creating rating notification ", t);
@@ -561,9 +541,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
      */
     private void cancelRatingClickIntents(Context context, Intent intent) {
         int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-        }
+        flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
         int[] requestCodes = intent.getIntArrayExtra(PTConstants.KEY_REQUEST_CODES);
 
         for (int requestCode : requestCodes)
@@ -602,88 +580,108 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         context.startActivity(launchIntent);
     }
 
+    @SuppressLint("MissingPermission")
+    private void handleVerticalImageButtonClick(final Context context, final Bundle extras) {
+        CleverTapAPI.handleNotificationClicked(context, extras);
+
+        int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID, -1);
+        if (notificationId > -1) {
+            notificationManager.cancel(notificationId);
+        }
+
+        context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+
+        String deepLink = extras.getString(Constants.DEEP_LINK_KEY);
+        Intent launchIntent;
+        if (deepLink != null && !deepLink.isEmpty()) {
+            launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(deepLink));
+            com.clevertap.android.sdk.Utils.setPackageNameFromResolveInfoList(context, launchIntent);
+        } else {
+            launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            if (launchIntent == null) return;
+        }
+        launchIntent.putExtras(extras);
+        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
+        launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+        launchIntent.setFlags(
+                Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(launchIntent);
+    }
+
     private void handleProductDisplayNotification(Context context, Bundle extras) {
         try {
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
-                Notification notification = Utils.getNotificationById(context, notificationId);
-                if (notification == null) {
-                    PTLog.verbose("Product Display Notification is null, returning");
-                    return;
-                }
-                contentViewBig = notification.bigContentView;
-                contentViewSmall = notification.contentView;
+            int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
+            Notification notification = Utils.getNotificationById(context, notificationId);
+            if (notification == null) {
+                PTLog.verbose("Product Display Notification is null, returning");
+                return;
+            }
+            contentViewBig = notification.bigContentView;
+            contentViewSmall = notification.contentView;
 
-                boolean isLinear = false;
-                if (pt_product_display_linear == null || pt_product_display_linear.isEmpty()) {
-                } else {
-                    isLinear = true;
-                }
-
-                setCustomContentViewBasicKeys(contentViewBig, context);
-                if (!isLinear) {
-                    setCustomContentViewBasicKeys(contentViewSmall, context);
-                }
-
-                int currentPosition = extras.getInt(PTConstants.PT_CURRENT_POSITION);
-
-                contentViewBig.setDisplayedChild(R.id.carousel_image, currentPosition);
-                imageList = extras.getStringArrayList(PTConstants.PT_IMAGE_LIST);
-                deepLinkList = extras.getStringArrayList(PTConstants.PT_DEEPLINK_LIST);
-                bigTextList = extras.getStringArrayList(PTConstants.PT_BIGTEXT_LIST);
-                smallTextList = extras.getStringArrayList(PTConstants.PT_SMALLTEXT_LIST);
-                priceList = extras.getStringArrayList(PTConstants.PT_PRICE_LIST);
-
-                String dl = deepLinkList.get(currentPosition);
-                if (!isLinear) {
-                    contentViewBig.setTextViewText(R.id.title, bigTextList.get(currentPosition));
-                } else {
-                    contentViewBig.setTextViewText(R.id.product_name, bigTextList.get(currentPosition));
-                }
-                contentViewBig.setTextViewText(R.id.msg, smallTextList.get(currentPosition));
-                contentViewBig.setTextViewText(R.id.product_price, priceList.get(currentPosition));
-                extras.remove(PTConstants.PT_CURRENT_POSITION);
-
-                Bundle bundleBuyNow = (Bundle) extras.clone();
-                bundleBuyNow.putBoolean(PTConstants.PT_IMAGE_1, true);
-                bundleBuyNow.putInt(PTConstants.PT_NOTIF_ID, notificationId);
-                bundleBuyNow.putString(PTConstants.PT_BUY_NOW_DL, dl);
-                bundleBuyNow.putBoolean(PTConstants.PT_BUY_NOW, true);
-
-                contentViewBig.setOnClickPendingIntent(R.id.product_action,
-                        PendingIntentFactory.getCtaLaunchPendingIntent(context,
-                                bundleBuyNow, dl, notificationId));
-
-                NotificationCompat.Builder notificationBuilder = new Builder(context, notification);
-
-                PendingIntent pIntent;
-                Bundle bundleLaunchIntent = (Bundle) extras.clone();
-                bundleLaunchIntent.putString(Constants.DEEP_LINK_KEY, dl);
-                pIntent = PendingIntentFactory.getPendingIntent(context, notificationId, bundleLaunchIntent, true,
-                        PRODUCT_DISPLAY_CONTENT_PENDING_INTENT, null
-                );
-
-                if (notificationManager != null) {
-                    //Use the Builder to build notification
-                    Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
-                    PendingIntent dIntent;
-                    dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
-                    setSmallIcon(context);
-
-                    setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewBig, pt_title,
-                            pIntent,
-                            dIntent);
-
-                    notification = notificationBuilder.build();
-
-                    notificationManager.notify(notificationId, notification);
-                }
+            boolean isLinear = false;
+            if (pt_product_display_linear == null || pt_product_display_linear.isEmpty()) {
             } else {
-                extras.putString(Constants.EXTRAS_FROM, "PTReceiver");
-                NotificationHandler notificationHandler = CleverTapAPI.getNotificationHandler();
-                if (notificationHandler != null) {
-                    notificationHandler.onMessageReceived(context, extras, "FCM");
-                }
+                isLinear = true;
+            }
+
+            setCustomContentViewBasicKeys(contentViewBig, context);
+            if (!isLinear) {
+                setCustomContentViewBasicKeys(contentViewSmall, context);
+            }
+
+            int currentPosition = extras.getInt(PTConstants.PT_CURRENT_POSITION);
+
+            contentViewBig.setDisplayedChild(R.id.carousel_image, currentPosition);
+            imageList = extras.getStringArrayList(PTConstants.PT_IMAGE_LIST);
+            deepLinkList = extras.getStringArrayList(PTConstants.PT_DEEPLINK_LIST);
+            bigTextList = extras.getStringArrayList(PTConstants.PT_BIGTEXT_LIST);
+            smallTextList = extras.getStringArrayList(PTConstants.PT_SMALLTEXT_LIST);
+            priceList = extras.getStringArrayList(PTConstants.PT_PRICE_LIST);
+
+            String dl = deepLinkList.get(currentPosition);
+            if (!isLinear) {
+                contentViewBig.setTextViewText(R.id.title, bigTextList.get(currentPosition));
+            } else {
+                contentViewBig.setTextViewText(R.id.product_name, bigTextList.get(currentPosition));
+            }
+            contentViewBig.setTextViewText(R.id.msg, smallTextList.get(currentPosition));
+            contentViewBig.setTextViewText(R.id.product_price, priceList.get(currentPosition));
+            extras.remove(PTConstants.PT_CURRENT_POSITION);
+
+            Bundle bundleBuyNow = (Bundle) extras.clone();
+            bundleBuyNow.putBoolean(PTConstants.PT_IMAGE_1, true);
+            bundleBuyNow.putInt(PTConstants.PT_NOTIF_ID, notificationId);
+            bundleBuyNow.putString(PTConstants.PT_BUY_NOW_DL, dl);
+            bundleBuyNow.putBoolean(PTConstants.PT_BUY_NOW, true);
+
+            contentViewBig.setOnClickPendingIntent(R.id.product_action,
+                    PendingIntentFactory.getCtaLaunchPendingIntent(context,
+                            bundleBuyNow, dl, notificationId));
+
+            Builder notificationBuilder = new Builder(context, notification);
+
+            PendingIntent pIntent;
+            Bundle bundleLaunchIntent = (Bundle) extras.clone();
+            bundleLaunchIntent.putString(Constants.DEEP_LINK_KEY, dl);
+            pIntent = PendingIntentFactory.getPendingIntent(context, notificationId, bundleLaunchIntent, true,
+                    PRODUCT_DISPLAY_CONTENT_PENDING_INTENT, null
+            );
+
+            if (notificationManager != null) {
+                //Use the Builder to build notification
+                Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
+                PendingIntent dIntent;
+                dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
+                setSmallIcon(context);
+
+                setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewBig, pt_title,
+                        pIntent,
+                        dIntent);
+
+                notification = notificationBuilder.build();
+
+                notificationManager.notify(notificationId, notification);
             }
 
         } catch (Throwable t) {

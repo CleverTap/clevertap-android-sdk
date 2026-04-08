@@ -4,13 +4,15 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import com.clevertap.android.pushtemplates.ButtonStyle
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTConstants.PT_ACTION_ID
+import com.clevertap.android.pushtemplates.PTConstants.PT_NOTIF_ID
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.VerticalImageButtonData
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 
 internal abstract class VerticalImageContentView(
     context: Context,
@@ -21,6 +23,8 @@ internal abstract class VerticalImageContentView(
 
     protected fun setupButton(
         buttonData: VerticalImageButtonData?,
+        notificationId: Int,
+        isCollapsed: Boolean = false,
     ) {
         if (buttonData == null) {
             PTLog.debug("VerticalImageContentView: buttonData is null, skipping button setup")
@@ -62,16 +66,42 @@ internal abstract class VerticalImageContentView(
         }
         bitmap?.let { remoteView.setImageViewBitmap(R.id.vertical_img_btn_bg, it) }
 
-        setupButtonDeepLink(extras, buttonData.deepLink)
+        setupButtonDeepLink(extras, buttonData.deepLink, notificationId, isCollapsed)
     }
 
-    private fun setupButtonDeepLink(extras: Bundle, buttonDeepLink: String?) {
+    private fun setupButtonDeepLink(
+        extras: Bundle,
+        buttonDeepLink: String?,
+        notificationId: Int,
+        isCollapsed: Boolean
+    ) {
         val btnExtras = extras.clone() as Bundle
-        btnExtras.putString(Constants.DEEP_LINK_KEY, buttonDeepLink)
-        remoteView.setOnClickPendingIntent(
-            R.id.vertical_img_btn_frame,
-            LaunchPendingIntentFactory.getLaunchPendingIntent(btnExtras, context)
+        val actionId = if (isCollapsed) PTConstants.PT_VT_C2A_COLLAPSED_KEY else PTConstants.PT_VT_C2A_KEY
+
+        btnExtras.putString(
+            PT_ACTION_ID,
+            actionId
         )
+
+        btnExtras.putString(
+            Constants.KEY_C2A,
+            actionId
+        )
+
+        btnExtras.putInt(
+            PT_NOTIF_ID,
+            notificationId
+        )
+
+        val pendingIntent = PendingIntentFactory.getPendingIntent(
+            context,
+            notificationId,
+            btnExtras,
+            false,
+            VERTICAL_IMAGE_BUTTON_PENDING_INTENT,
+            buttonDeepLink
+        ) ?: return
+        remoteView.setOnClickPendingIntent(R.id.vertical_img_btn_frame, pendingIntent)
     }
 
     companion object {

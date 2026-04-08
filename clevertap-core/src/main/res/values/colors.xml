@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ct_video_controls_bg">#98000000</color>
+    <color name="ct_video_bottom_bar_bg">#b0000000</color>
+</resources>

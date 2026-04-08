@@ -2,16 +2,19 @@ package com.clevertap.android.sdk.video.inapps
 
 import android.content.Context
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import androidx.core.content.res.ResourcesCompat
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.ExoTrackSelection
@@ -28,7 +31,14 @@ import com.google.android.exoplayer2.util.Util
  * Handle wrapping exoplayer library used to render video and audio for Inapps feature.
  * All the player and surface related functionality to be limited to this class to we can have multiple
  * handles for video/audio support.
+ *
+ * @deprecated ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed
+ * in v9.0.0. Migrate to Media3 (androidx.media3) and use [com.clevertap.android.sdk.video.inapps.Media3Handle] instead.
  */
+@Deprecated(
+    message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead.",
+    replaceWith = ReplaceWith("Media3Handle()", "com.clevertap.android.sdk.video.inapps.Media3Handle")
+)
 class ExoplayerHandle : InAppVideoPlayerHandle {
 
     private var player: ExoPlayer? = null
@@ -37,10 +47,11 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
     private var playerViewLayoutParamsNormal: ViewGroup.LayoutParams? = null
     private var playerViewLayoutParamsFullScreen =
         FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
+            MATCH_PARENT,
+            MATCH_PARENT
         )
 
+    private var isMuted = true
     private var mediaPosition = 0L
 
     override fun initExoplayer(
@@ -62,12 +73,15 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         val dsf = DefaultHttpDataSource.Factory().setUserAgent(userAgent).setTransferListener(listener)
         val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context, dsf)
         val mediaItem = MediaItem.fromUri(url)
-        val hlsMediaSource = HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
 
-        player = ExoPlayer.Builder(context).setTrackSelector(trackSelector).build().apply {
-            setMediaSource(hlsMediaSource)
+        player = ExoPlayer.Builder(context)
+            .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .build().apply {
+            setMediaItem(mediaItem)
             prepare()
             repeatMode = Player.REPEAT_MODE_ONE
+            volume = InAppVideoPlayerHandle.VOLUME_MUTED
             seekTo(mediaPosition)
         }
     }
@@ -80,11 +94,8 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
             return
         }
 
-        val playerWidth = playerWidth(context = context, isTablet = isTablet)
-        val playerHeight = playerHeight(context = context, isTablet = isTablet)
-
-        playerView = StyledPlayerView(context).apply {
-            playerViewLayoutParamsNormal = FrameLayout.LayoutParams(playerWidth, playerHeight)
+        playerView = (LayoutInflater.from(context).inflate(R.layout.ct_exo_inapp_styled_player_view, null) as StyledPlayerView).apply {
+            playerViewLayoutParamsNormal = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
             setLayoutParams(playerViewLayoutParamsNormal)
             setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING)
             useArtwork = true
@@ -108,6 +119,18 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         }
     }
 
+    override fun softPause() {
+        player?.pause()
+    }
+
+    override fun detachSurface() {
+        val p = player ?: return
+        mediaPosition = p.currentPosition
+        playerView?.player = null
+        playerView = null   // null so initPlayerView() creates a fresh view post-rotation
+        p.playWhenReady = false
+    }
+
     override fun pause() {
         player?.let { ep ->
             ep.stop()
@@ -116,10 +139,43 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         }
     }
 
-    override fun savePosition() {
-        if (player != null) {
-            mediaPosition = player!!.currentPosition
+    override fun setFullscreenClickListener(onClick: (isFullScreen: Boolean) -> Unit) {
+        playerView?.setFullscreenButtonClickListener(onClick)
+        setFullscreenIcon(isFullScreen = false)
+    }
+
+    override fun setMuteClickListener() {
+        val muteButton = playerView?.findViewById<ImageButton>(R.id.exo_mute) ?: return
+        val minimalMuteButton = playerView?.findViewById<ImageButton>(R.id.exo_minimal_mute)
+        val clickListener = View.OnClickListener {
+            isMuted = !isMuted
+            player?.volume = if (isMuted) InAppVideoPlayerHandle.VOLUME_MUTED else InAppVideoPlayerHandle.VOLUME_UNMUTED
+            val iconRes = if (isMuted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+            val descRes = if (isMuted) R.string.ct_unmute_button_content_description
+                          else R.string.ct_mute_button_content_description
+            muteButton.setImageResource(iconRes)
+            muteButton.contentDescription = muteButton.context.getString(descRes)
+            minimalMuteButton?.setImageResource(iconRes)
+            minimalMuteButton?.contentDescription = muteButton.contentDescription
         }
+        muteButton.setOnClickListener(clickListener)
+        minimalMuteButton?.setOnClickListener(clickListener)
+
+        // Sync icon with current mute state — important after rotation where a fresh
+        // PlayerView is created but isMuted may already be false from a prior user toggle.
+        val iconRes = if (isMuted) R.drawable.ct_ic_volume_off else R.drawable.ct_ic_volume_on
+        val descRes = if (isMuted) R.string.ct_unmute_button_content_description
+                      else R.string.ct_mute_button_content_description
+        muteButton.setImageResource(iconRes)
+        muteButton.contentDescription = muteButton.context.getString(descRes)
+        minimalMuteButton?.setImageResource(iconRes)
+        minimalMuteButton?.contentDescription = muteButton.contentDescription
+    }
+
+    override fun setActionClickListener(onClick: () -> Unit) {
+        val actionButton = playerView?.findViewById<ImageButton>(R.id.ct_action_button) ?: return
+        actionButton.visibility = View.VISIBLE
+        actionButton.setOnClickListener { onClick() }
     }
 
     override fun switchToFullScreen(isFullScreen: Boolean) {
@@ -129,39 +185,20 @@ class ExoplayerHandle : InAppVideoPlayerHandle {
         } else {
             playerView!!.layoutParams = playerViewLayoutParamsNormal
         }
+        setFullscreenIcon(isFullScreen)
+    }
+
+    private fun setFullscreenIcon(isFullScreen: Boolean) {
+        val iconRes = if (isFullScreen)
+            com.google.android.exoplayer2.ui.R.drawable.exo_icon_fullscreen_exit
+        else
+            com.google.android.exoplayer2.ui.R.drawable.exo_icon_fullscreen_enter
+        playerView?.findViewById<ImageButton>(R.id.exo_fullscreen)?.setImageResource(iconRes)
+        playerView?.findViewById<ImageButton>(R.id.exo_minimal_fullscreen)?.setImageResource(iconRes)
     }
 
     override fun videoSurface(): View {
         return playerView!!
     }
 
-    fun playerWidth(
-        context: Context,
-        isTablet: Boolean
-    ) : Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            if (isTablet) {
-                408f
-            } else {
-                240f
-            },
-            context.resources.displayMetrics
-        ).toInt()
-    }
-
-    fun playerHeight(
-        context: Context,
-        isTablet: Boolean
-    ) : Int {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            if (isTablet) {
-                299f
-            } else {
-                134f
-            },
-            context.resources.displayMetrics
-        ).toInt()
-    }
 }

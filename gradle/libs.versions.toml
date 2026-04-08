@@ -49,11 +49,11 @@ lifecycleRuntimeTesting = "2.9.4"
 installreferrer = "2.2"
 
 #SDK Versions
-clevertap_android_sdk = "8.0.0"
+clevertap_android_sdk = "8.1.0"
 clevertap_rendermax_sdk = "1.0.3"
 clevertap_geofence_sdk = "1.4.0"
 clevertap_hms_sdk = "1.5.1"
-clevertap_push_templates_sdk = "2.3.0"
+clevertap_push_templates_sdk = "2.4.0"
 
 # Glide
 glide = "4.12.0"

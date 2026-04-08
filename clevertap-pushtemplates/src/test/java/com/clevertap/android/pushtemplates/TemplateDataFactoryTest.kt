@@ -1751,7 +1751,7 @@ class TemplateDataFactoryTest {
         // Given
         setupBasicMockBundle()
         every { mockBundle.getString(PT_BTN_NAME) } returns "BUY"
-        every { mockBundle.getString(PT_BTN_STYLE) } returns "linear_gradient"
+        every { mockBundle.getString(PT_BTN_STYLE) } returns "gradient_linear"
         every { mockBundle.getString(PT_BTN_GRAD_DIR) } returns "180"
         every { Utils.createColorMap(any(), any()) } returns mapOf(
             PT_TITLE_COLOR to SAMPLE_COLOR,
@@ -1887,5 +1887,337 @@ class TemplateDataFactoryTest {
         // Then
         assertEquals(actions, result)
         assertEquals(1, result?.length())
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default border radius of 6f when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(6f, result.chronometerBorderRadius)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse custom border radius when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_RADIUS) } returns "12.5"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(12.5f, result.chronometerBorderRadius)
+    }
+
+    @Test
+    fun `createTimerTemplateData should return null border width when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertNull(result.chronometerBorderWidth)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse custom border width when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_WIDTH) } returns "4.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(4.0f, result.chronometerBorderWidth)
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default gradient direction of 90 when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse custom gradient direction when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_GRAD_DIR) } returns "45.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(45.0, result.chronometerGradientDirection, 0.0)
+    }
+
+    @Test
+    fun `createTimerTemplateData should default chronometerStyle to SOLID when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.SOLID, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerStyle as SOLID`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "solid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.SOLID, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerStyle as GRADIENT_LINEAR`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "gradient_linear"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.GRADIENT_LINEAR, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerStyle as GRADIENT_RADIAL`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "gradient_radial"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.GRADIENT_RADIAL, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerBorderColor from colorMap`() {
+        // Given
+        setupBasicMockBundle()
+        val borderColor = "#FF0000"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_CHRONO_BORDER_CLR to borderColor
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(borderColor, result.chronometerBorderColor)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse gradient colors from colorMap`() {
+        // Given
+        setupBasicMockBundle()
+        val gradColor1 = "#FF0000"
+        val gradColor2 = "#0000FF"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_CHRONO_GRAD_CLR1 to gradColor1,
+            PT_CHRONO_GRAD_CLR2 to gradColor2
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(gradColor1, result.chronometerGradientColor1)
+        assertEquals(gradColor2, result.chronometerGradientColor2)
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default border radius when invalid string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_RADIUS) } returns "abc"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(6f, result.chronometerBorderRadius)
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default gradient direction when invalid string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_GRAD_DIR) } returns "abc"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+    }
+
+
+    @Test
+    fun `createTimerTemplateData should return null border width when invalid string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_WIDTH) } returns "abc"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertNull(result.chronometerBorderWidth)
+    }
+
+    @Test
+    fun `createTimerTemplateData should default chronometerStyle to SOLID when unknown string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "unknown_style"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.SOLID, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerBgColor from colorMap`() {
+        // Given
+        setupBasicMockBundle()
+        val bgColor = "#FFFF00"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_CHRONO_BG_CLR to bgColor
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(bgColor, result.chronometerBgColor)
     }
 }

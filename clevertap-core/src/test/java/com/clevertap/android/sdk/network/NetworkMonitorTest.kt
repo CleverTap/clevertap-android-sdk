@@ -32,7 +32,7 @@ class NetworkMonitorTest : BaseTestCase() {
         shadowCM = shadowOf(connectivityManager)
     }
 
-    private fun createNetworkMonitor() = NetworkMonitor(application, cleverTapInstanceConfig)
+    private fun createNetworkMonitor() = NetworkMonitor(application, cleverTapInstanceConfig.accountId, cleverTapInstanceConfig.logger)
 
     // ─── NetworkState data class tests ────────────────────────────────────────
 
@@ -101,15 +101,6 @@ class NetworkMonitorTest : BaseTestCase() {
     fun test_networkStateFlow_isNotNull() {
         val monitor = createNetworkMonitor()
         assertNotNull(monitor.networkState)
-        monitor.cleanup()
-    }
-
-    // ─── networkRestoreEvents flow tests ─────────────────────────────────────
-
-    @Test
-    fun test_networkRestoreEvents_isNotNull() {
-        val monitor = createNetworkMonitor()
-        assertNotNull(monitor.networkRestoreEvents)
         monitor.cleanup()
     }
 

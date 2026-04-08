@@ -37,7 +37,7 @@ internal class VerticalImageSmallContentView(
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)
         }
 
-        setupButton(data.collapsedButtonData)
+        setupButton(data.collapsedButtonData, renderer.notificationId, isCollapsed = true)
     }
 
 }
