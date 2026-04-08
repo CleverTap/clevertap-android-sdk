@@ -6,7 +6,6 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
-import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Utils
 import kotlinx.coroutines.flow.Flow
@@ -19,11 +18,10 @@ import kotlinx.coroutines.flow.map
 
 internal class NetworkMonitor constructor(
     context: Context,
-    private val config: CleverTapInstanceConfig,
-    private val logger: ILogger = config.logger
+    private val accountId: String,
+    private val logger: ILogger
 ) {
     private val appContext: Context = context.applicationContext
-    private val accountId: String = config.accountId
 
     enum class NetworkType {
         WIFI,
@@ -160,7 +158,7 @@ internal class NetworkMonitor constructor(
                     .build()
                 connectivityManager?.registerNetworkCallback(request, callback)
                 networkCallback = callback
-                logger.verbose(config.accountId, "API < 24: registered NetworkCallback via NetworkRequest")
+                logger.verbose(accountId, "API < 24: registered NetworkCallback via NetworkRequest")
             }
         } catch (e: Exception) {
             logger.debug(accountId, "Network callback registration failed: ${e.message}")
