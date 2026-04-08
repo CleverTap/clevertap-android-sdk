@@ -424,8 +424,7 @@ internal object CleverTapFactory {
             ctLockManager,
             localDataStore,
             controllerManager,
-            loginInfoProvider,
-            networkMonitor
+            loginInfoProvider
         )
 
         val inAppResponseForSendTestInApp = InAppResponse(

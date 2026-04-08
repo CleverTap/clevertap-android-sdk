@@ -66,8 +66,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 corestate.cTLockManager,
                 corestate.localDataStore,
                 corestate.controllerManager,
-                loginInfoProvider,
-                corestate.networkMonitor
+                loginInfoProvider
             )
         )
         json = JSONObject()
@@ -1093,7 +1092,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 CoreMetaData.setActivityCount(expectedActivityCount)
 
                 every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
-                every { corestate.networkMonitor.getNetworkTypeString() } returns expectedNetworkType
+                every { corestate.networkManager.getNetworkTypeString() } returns expectedNetworkType
                 every { eventQueueManager.now } returns expectedEpoch
                 every { eventQueueManager.scheduleQueueFlush(application) } just runs
 

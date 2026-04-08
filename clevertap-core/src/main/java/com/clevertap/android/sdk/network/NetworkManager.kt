@@ -77,6 +77,8 @@ internal class NetworkManager constructor(
 
     fun isNetworkOnline(): Boolean = networkMonitor.isNetworkOnline()
 
+    fun getNetworkTypeString(): String? = networkMonitor.getNetworkTypeString()
+
     fun observeNetworkRestore(onRestored: () -> Unit) {
         logger.debug(config.accountId, "NetworkManager: starting network restore observer")
         networkManagerScope.launch {

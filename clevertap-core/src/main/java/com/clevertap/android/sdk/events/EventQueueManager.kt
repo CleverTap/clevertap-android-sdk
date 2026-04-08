@@ -21,7 +21,6 @@ import com.clevertap.android.sdk.events.FlattenedEventData.ProfileChanges
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.NetworkManager
-import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.profile.ProfileStateTraverser.Companion.toNestedMap
 import com.clevertap.android.sdk.task.CTExecutorFactory.executors
 import com.clevertap.android.sdk.task.MainLooperHandler
@@ -48,7 +47,7 @@ internal class EventQueueManager(
     private val ctLockManager: CTLockManager,
     private val localDataStore: LocalDataStore,
     private val controllerManager: ControllerManager,
-    private val loginInfoProvider: LoginInfoProvider, private val networkMonitor: NetworkMonitor
+    private val loginInfoProvider: LoginInfoProvider
 ) : BaseEventQueueManager(), FailureFlushListener {
     private var commsRunnable: Runnable? = null
 
@@ -322,7 +321,7 @@ internal class EventQueueManager(
         }
 
         val flattenedEventProps = (flattenedEventData as EventProperties).properties
-        val isOffline = !networkMonitor.isNetworkOnline()
+        val isOffline = !networkManager.isNetworkOnline()
         val isRegularEvent = eventMediator.isEvent(event)
         val isAppLaunchedEvent = eventMediator.isAppLaunchedEvent(event)
 
@@ -557,7 +556,7 @@ internal class EventQueueManager(
 
         // Attach the network type
         try {
-            o.put("nt", networkMonitor.getNetworkTypeString() ?: "Unavailable")
+            o.put("nt", networkManager.getNetworkTypeString() ?: "Unavailable")
         } catch (_: Throwable) {
             // Ignore
         }
