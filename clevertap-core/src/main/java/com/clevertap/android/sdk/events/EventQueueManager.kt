@@ -67,7 +67,7 @@ internal class EventQueueManager(
         }
     }
 
-    // only call async
+    @WorkerThread
     override fun addToQueue(
         context: Context,
         event: JSONObject,
