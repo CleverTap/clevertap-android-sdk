@@ -21,6 +21,8 @@ import java.util.concurrent.ExecutorService
  * @param onBitmapReady   Optional callback invoked with the loaded bitmap on main thread,
  *                        before the default ImageView is added. Return true to handle display
  *                        yourself (skips default ImageView creation), false to use the default.
+ * @param onSuccess       Called when fallback image loaded successfully (cached or fetched)
+ * @param onTotalFailure  Called when both primary and fallback failed — no media available
  */
 internal data class FallbackLoadRequest(
     val container: ViewGroup,
@@ -32,6 +34,8 @@ internal data class FallbackLoadRequest(
     val callbacks: PIPCallbacks?,
     val errorContext: String,
     val onBitmapReady: ((Bitmap) -> Boolean)? = null,
+    val onSuccess: (() -> Unit)? = null,
+    val onTotalFailure: (() -> Unit)? = null,
 )
 
 /**
@@ -46,30 +50,32 @@ internal data class FallbackLoadRequest(
 internal object FallbackImageLoader {
 
     fun load(request: FallbackLoadRequest) {
-        val (container, fallbackUrl, primaryUrl, resourceProvider, mediaExecutor,
-            isReleased, callbacks, errorContext, onBitmapReady) = request
-
-        if (fallbackUrl.isNullOrBlank()) {
-            callbacks?.onMediaError(primaryUrl, "$errorContext and no fallback URL")
+        if (request.fallbackUrl.isNullOrBlank()) {
+            request.callbacks?.onMediaError(request.primaryUrl, "${request.errorContext} and no fallback URL")
+            request.onTotalFailure?.invoke()
             return
         }
 
-        val cached = resourceProvider.cachedInAppImageV1(fallbackUrl)
+        val fallbackUrl = request.fallbackUrl
+        val cached = request.resourceProvider.cachedInAppImageV1(fallbackUrl)
         if (cached != null) {
-            if (onBitmapReady?.invoke(cached) != true) {
-                addFallbackImageView(container, cached)
+            if (request.onBitmapReady?.invoke(cached) != true) {
+                addFallbackImageView(request.container, cached)
             }
+            request.onSuccess?.invoke()
         } else {
-            mediaExecutor.execute {
-                val fetched = resourceProvider.fetchInAppImageV1(fallbackUrl)
-                container.post {
-                    if (isReleased()) return@post
+            request.mediaExecutor.execute {
+                val fetched = request.resourceProvider.fetchInAppImageV1(fallbackUrl)
+                request.container.post {
+                    if (request.isReleased()) return@post
                     if (fetched != null) {
-                        if (onBitmapReady?.invoke(fetched) != true) {
-                            addFallbackImageView(container, fetched)
+                        if (request.onBitmapReady?.invoke(fetched) != true) {
+                            addFallbackImageView(request.container, fetched)
                         }
+                        request.onSuccess?.invoke()
                     } else {
-                        callbacks?.onMediaError(primaryUrl, "$errorContext and fallback failed")
+                        request.callbacks?.onMediaError(request.primaryUrl, "${request.errorContext} and fallback failed")
+                        request.onTotalFailure?.invoke()
                     }
                 }
             }

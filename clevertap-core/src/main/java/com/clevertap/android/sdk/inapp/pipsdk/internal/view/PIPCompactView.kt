@@ -153,6 +153,9 @@ internal class PIPCompactView(
         muteBtn?.contentDescription = muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
     }
 
+    /** Syncs mute icon with current state — called after collapsing from expanded view. */
+    fun syncMuteIcon(muted: Boolean) = updateMuteIcon(muted)
+
     // ─── Touch handling ──────────────────────────────────────────────────────────
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {

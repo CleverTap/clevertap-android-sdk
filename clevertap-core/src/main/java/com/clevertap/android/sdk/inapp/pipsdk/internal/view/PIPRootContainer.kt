@@ -39,6 +39,10 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     /** Called by internal close/dismiss actions — wired to PIPManager.dismissInternal. */
     var onDismissRequested: (() -> Unit)? = null
 
+    /** Called when media failed to load during fresh show — PIP was never visible.
+     *  Wired to silent cleanup in PIPManager (no animation, no onClose). */
+    var onShowFailed: (() -> Unit)? = null
+
     var isExpanded = false
         private set
 
@@ -86,20 +90,46 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
 
         // Expanded view — GONE until user expands
         val ev = createExpandedView(s, actionHandler)
-        // Shared media view — initialized or rebound post-rotation
-        val mv = createMediaView(s, isReattach, resourceProvider!!, mediaExecutor!!)
-        // Compact view — invisible until positioned
+        // Shared media view — created but not yet initialized
+        val mv = PIPMediaView(context)
+        mediaView = mv
+        // Compact view — invisible until positioned by onMediaReady
         val cv = createCompactView(s, mv, actionHandler)
 
-        // Defer positioning until after the container's first layout pass
-        post {
-            if (width == 0 || height == 0) return@post
-            if (isReattach && s.isExpanded) {
-                positionAndShow(s, cv, isReattach = true)
-                expandToFull()
-            } else {
-                positionAndShow(s, cv, isReattach)
+        // Wire callbacks BEFORE media init so synchronous signals (cached media) are caught
+        mv.onVideoFallback = {
+            cv.hideVideoControls()
+            ev.hideVideoControls()
+        }
+        mv.onMediaReady = {
+            post {
+                if (width == 0 || height == 0) return@post
+                cv.bindVideoControls(mv)
+                if (isReattach && s.isExpanded) {
+                    positionAndShow(s, cv, isReattach = true)
+                    expandToFull()
+                } else {
+                    positionAndShow(s, cv, isReattach)
+                }
             }
+        }
+        mv.onAllMediaFailed = {
+            post {
+                if (isReattach) {
+                    // PIP was visible before rotation — dismiss properly with onClose
+                    onDismissRequested?.invoke()
+                } else {
+                    // PIP was never shown — silent cleanup, no animation, no onClose
+                    onShowFailed?.invoke()
+                }
+            }
+        }
+
+        // Start media loading — onMediaReady or onAllMediaFailed will fire
+        if (isReattach) {
+            mv.rebindSurface(s, resourceProvider!!, mediaExecutor!!)
+        } else {
+            mv.initialize(s.config, s, resourceProvider!!, mediaExecutor!!)
         }
     }
 
@@ -121,29 +151,6 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         return ev
     }
 
-    private fun createMediaView(
-        s: PIPSession,
-        isReattach: Boolean,
-        resourceProvider: FileResourceProvider,
-        mediaExecutor: ExecutorService,
-    ): PIPMediaView {
-        val mv = PIPMediaView(context)
-        mediaView = mv
-        if (isReattach) {
-            mv.rebindSurface(s, resourceProvider, mediaExecutor)
-        } else {
-            mv.initialize(s.config, s, resourceProvider, mediaExecutor)
-        }
-
-        // When video falls back to a static image, hide video-specific controls (mute, play/pause)
-        // so the user doesn't see non-functional buttons over a static fallback image.
-        mv.onVideoFallback = {
-            compactView?.hideVideoControls()
-            expandedView?.hideVideoControls()
-        }
-        return mv
-    }
-
     private fun createCompactView(
         s: PIPSession,
         mv: PIPMediaView,
@@ -156,7 +163,6 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             onAction = actionHandler,
             onSnap = {},   // session.currentPosition already updated inside PIPCompactView
         )
-        cv.bindVideoControls(mv)
         cv.getSafeInsets = { safeInsets }
         compactView = cv
         cv.visibility = View.INVISIBLE
@@ -247,6 +253,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             mv.onContainerChanged()
             ev.visibility = View.GONE
             cv.visibility = View.VISIBLE
+            cv.syncMuteIcon(mv.isMuted)
             s.config.callbacks?.onCollapse()
         }
     }

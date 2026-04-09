@@ -37,6 +37,9 @@ internal class VideoRenderer(
     /** Listener for reporting state changes upward (player created/released, playback state). */
     var stateListener: RendererStateListener? = null
 
+    override var onMediaReady: (() -> Unit)? = null
+    override var onAllMediaFailed: (() -> Unit)? = null
+
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
@@ -62,6 +65,7 @@ internal class VideoRenderer(
                 surface,
                 ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
             )
+            onMediaReady?.invoke()
         } else {
             // Create self-contained PIP video player
             val w = PIPVideoPlayerWrapper()
@@ -79,6 +83,7 @@ internal class VideoRenderer(
             )
 
             w.play()
+            w.notifyWhenFirstFrame { onMediaReady?.invoke() }
 
             // Error listener for fallback
             setupErrorListener(container, config)
@@ -110,6 +115,8 @@ internal class VideoRenderer(
         // Re-register error listener with the new container so fallback loads
         // into the post-rotation view, not the old (detached) one.
         setupErrorListener(container, session.config)
+
+        onMediaReady?.invoke()
     }
 
     override fun release() {
@@ -171,6 +178,8 @@ internal class VideoRenderer(
                 isReleased = { released },
                 callbacks = config.callbacks,
                 errorContext = errorMsg,
+                onSuccess = { onMediaReady?.invoke() },
+                onTotalFailure = { onAllMediaFailed?.invoke() },
             )
         )
     }

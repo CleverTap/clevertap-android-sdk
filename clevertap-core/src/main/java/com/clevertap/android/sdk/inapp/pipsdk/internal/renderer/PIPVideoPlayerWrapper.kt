@@ -78,6 +78,8 @@ internal class PIPVideoPlayerWrapper {
                 repeatMode = Player.REPEAT_MODE_ONE
                 volume = 0f
             }
+
+        registerFirstFrameListener(player!!)
     }
 
     /**
@@ -159,18 +161,7 @@ internal class PIPVideoPlayerWrapper {
         synchronized(firstFrameLock) {
             firstFrameReady = false
         }
-        p.addListener(object : Player.Listener {
-            override fun onRenderedFirstFrame() {
-                val cb: (() -> Unit)?
-                synchronized(firstFrameLock) {
-                    firstFrameReady = true
-                    cb = onFirstFrame
-                    onFirstFrame = null
-                }
-                cb?.invoke()
-                p.removeListener(this)
-            }
-        })
+        registerFirstFrameListener(p)
 
         // Restore state
         p.playWhenReady = _isPlaying
@@ -211,6 +202,24 @@ internal class PIPVideoPlayerWrapper {
 
     fun videoSurface(): View = checkNotNull(playerView) {
         "videoSurface() called but no PlayerView exists — was createSurface() called?"
+    }
+
+    /** Registers a one-shot [Player.Listener] that fires [onFirstFrame] when the first
+     *  video frame is rendered. Used by both [initPlayer] (initial load) and
+     *  [rebindSurface] (post-rotation) so [notifyWhenFirstFrame] works in both cases. */
+    private fun registerFirstFrameListener(player: ExoPlayer) {
+        player.addListener(object : Player.Listener {
+            override fun onRenderedFirstFrame() {
+                val cb: (() -> Unit)?
+                synchronized(firstFrameLock) {
+                    firstFrameReady = true
+                    cb = onFirstFrame
+                    onFirstFrame = null
+                }
+                cb?.invoke()
+                player.removeListener(this)
+            }
+        })
     }
 
     /**

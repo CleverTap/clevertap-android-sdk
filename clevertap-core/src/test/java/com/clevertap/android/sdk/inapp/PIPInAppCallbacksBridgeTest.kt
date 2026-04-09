@@ -13,6 +13,7 @@ import org.robolectric.RobolectricTestRunner
 class PIPInAppCallbacksBridgeTest {
 
     private val mockListener = mockk<InAppListener>(relaxed = true)
+    private val mockShowFailureHandler = mockk<PIPShowFailureHandler>(relaxed = true)
     private val mockLogger = mockk<Logger>(relaxed = true)
 
     // ─── Callbacks that forward to InAppListener ──────────────────────────────────
@@ -22,7 +23,7 @@ class PIPInAppCallbacksBridgeTest {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onShow()
         verify(exactly = 1) { mockListener.inAppNotificationDidShow(notification, null) }
     }
@@ -32,7 +33,7 @@ class PIPInAppCallbacksBridgeTest {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onClose()
         verify(exactly = 1) { mockListener.inAppNotificationDidDismiss(notification, null) }
     }
@@ -48,7 +49,7 @@ class PIPInAppCallbacksBridgeTest {
             every { campaignId } returns "test_campaign_123"
             every { pipConfigJson } returns pipJson
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onAction()
         verify(exactly = 1) {
             mockListener.inAppNotificationActionTriggered(
@@ -63,7 +64,7 @@ class PIPInAppCallbacksBridgeTest {
             every { campaignId } returns "test_campaign_123"
             every { pipConfigJson } returns JSONObject() // no onClick key
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onAction()
         verify(exactly = 0) {
             mockListener.inAppNotificationActionTriggered(any(), any(), any(), any(), any())
@@ -76,7 +77,7 @@ class PIPInAppCallbacksBridgeTest {
             every { campaignId } returns "test_campaign_123"
             every { pipConfigJson } returns null
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onAction()
         verify(exactly = 0) {
             mockListener.inAppNotificationActionTriggered(any(), any(), any(), any(), any())
@@ -90,7 +91,7 @@ class PIPInAppCallbacksBridgeTest {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onExpand()
         verify(exactly = 0) { mockListener.inAppNotificationDidShow(any(), any()) }
         verify(exactly = 0) { mockListener.inAppNotificationDidDismiss(any(), any()) }
@@ -102,7 +103,7 @@ class PIPInAppCallbacksBridgeTest {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onCollapse()
         verify(exactly = 0) { mockListener.inAppNotificationDidShow(any(), any()) }
         verify(exactly = 0) { mockListener.inAppNotificationDidDismiss(any(), any()) }
@@ -114,7 +115,7 @@ class PIPInAppCallbacksBridgeTest {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onPlaybackStarted()
         verify(exactly = 0) { mockListener.inAppNotificationDidShow(any(), any()) }
         verify(exactly = 0) { mockListener.inAppNotificationDidDismiss(any(), any()) }
@@ -126,7 +127,7 @@ class PIPInAppCallbacksBridgeTest {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onPlaybackPaused()
         verify(exactly = 0) { mockListener.inAppNotificationDidShow(any(), any()) }
         verify(exactly = 0) { mockListener.inAppNotificationDidDismiss(any(), any()) }
@@ -138,7 +139,7 @@ class PIPInAppCallbacksBridgeTest {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
         }
-        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockLogger)
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, mockLogger)
         bridge.onMediaError("https://example.com/video.m3u8", "Playback error")
         verify(exactly = 0) { mockListener.inAppNotificationDidShow(any(), any()) }
         verify(exactly = 0) { mockListener.inAppNotificationDidDismiss(any(), any()) }
