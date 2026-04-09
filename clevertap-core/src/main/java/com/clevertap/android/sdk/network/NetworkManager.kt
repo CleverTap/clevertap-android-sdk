@@ -69,6 +69,7 @@ internal class NetworkManager constructor(
     private val networkManagerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var networkRestoreJob: Job? = null
+    private val networkRestoreLock = Any()
 
     private var responseFailureCount = 0
 
@@ -83,12 +84,14 @@ internal class NetworkManager constructor(
     fun getNetworkTypeString(): String? = networkMonitor.getNetworkTypeString()
 
     fun observeNetworkRestore(onRestored: () -> Unit) {
-        if (networkRestoreJob != null) return
-        logger.debug(config.accountId, "NetworkManager: starting network restore observer")
-        networkRestoreJob = networkManagerScope.launch {
-            networkMonitor.networkRestoreEvents.collect {
-                logger.debug(config.accountId, "NetworkManager: network restored, invoking callback")
-                onRestored()
+        synchronized(networkRestoreLock) {
+            if (networkRestoreJob?.isActive == true) return
+            logger.debug(config.accountId, "NetworkManager: starting network restore observer")
+            networkRestoreJob = networkManagerScope.launch {
+                networkMonitor.networkRestoreEvents.collect {
+                    logger.debug(config.accountId, "NetworkManager: network restored, invoking callback")
+                    onRestored()
+                }
             }
         }
     }
