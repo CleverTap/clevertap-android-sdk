@@ -38,6 +38,7 @@ import com.clevertap.android.sdk.toJsonOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONException
@@ -67,6 +68,8 @@ internal class NetworkManager constructor(
 
     private val networkManagerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    private var networkRestoreJob: Job? = null
+
     private var responseFailureCount = 0
 
     private var networkRetryCount = 0
@@ -80,8 +83,9 @@ internal class NetworkManager constructor(
     fun getNetworkTypeString(): String? = networkMonitor.getNetworkTypeString()
 
     fun observeNetworkRestore(onRestored: () -> Unit) {
+        if (networkRestoreJob != null) return
         logger.debug(config.accountId, "NetworkManager: starting network restore observer")
-        networkManagerScope.launch {
+        networkRestoreJob = networkManagerScope.launch {
             networkMonitor.networkRestoreEvents.collect {
                 logger.debug(config.accountId, "NetworkManager: network restored, invoking callback")
                 onRestored()
