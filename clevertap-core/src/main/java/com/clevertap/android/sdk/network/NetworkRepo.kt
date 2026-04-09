@@ -80,17 +80,48 @@ internal class NetworkRepo(
     }
 
     /**
-     * @return true if the mute command was sent anytime between now and now - 24 hours.
+     * @return true if the current time is before the mute expiry timestamp.
+     * Also handles migration from the old SDK's comms_mtd key (epoch seconds)
+     * to the new comms_mute_expiry_ts key (absolute epoch milliseconds).
      */
     fun isMuted() : Boolean {
-        val now = clock.currentTimeSecondsInt()
-        val muteTS = getMuted()
-        return now - muteTS < 24 * 60 * 60
+        val now = clock.currentTimeMillis()
+        val muteExpiryMs = getMuteExpiry()
+        if (muteExpiryMs > 0) {
+            return now < muteExpiryMs
+        }
+        // Migration: check old key for an active mute from a previous SDK version
+        @Suppress("DEPRECATION")
+        val legacyMuteTs = getMuted()
+        if (legacyMuteTs > 0) {
+            val legacyExpiryMs = (legacyMuteTs + 24 * 60 * 60) * 1000L
+            if (now < legacyExpiryMs) {
+                // Migrate to new format so this path is only hit once
+                setMuteExpiry(legacyExpiryMs)
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * @return the mute expiry timestamp in epoch milliseconds, or 0 if not muted.
+     */
+    fun getMuteExpiry() : Long {
+        return StorageHelper.getLongFromPrefs(
+            context,
+            config.accountId,
+            Constants.KEY_MUTE_EXPIRY,
+            0L,
+            null
+        )
     }
 
     /**
      * @return timestamp from epoch since SDK was muted in seconds.
+     * @deprecated Use [getMuteExpiry] instead. Retained for migration from older SDK versions.
      */
+    @Deprecated("Use getMuteExpiry() instead")
     fun getMuted() : Int {
         return StorageHelper.getIntFromPrefs(
             context,
@@ -100,23 +131,37 @@ internal class NetworkRepo(
         )
     }
 
+    /**
+     * Sets the mute state with the default 24-hour duration.
+     * When muted, stores an absolute expiry timestamp (now + 24h) in milliseconds.
+     */
     fun setMuted(mute: Boolean) {
         if (mute) {
-            val now = clock.currentTimeSecondsInt()
-            StorageHelper.putInt(
-                context,
-                config.accountId,
-                Constants.KEY_MUTED,
-                now
-            )
+            val expiryMs = clock.currentTimeMillis() + Constants.DEFAULT_MUTE_DURATION_MS
+            setMuteExpiry(expiryMs)
         } else {
-            StorageHelper.putInt(
-                context,
-                config.accountId,
-                Constants.KEY_MUTED,
-                0
-            )
+            setMuteExpiry(0L)
         }
+    }
+
+    /**
+     * Sets the mute expiry to a specific absolute epoch timestamp in milliseconds.
+     * The backend sends this value via the X-WZRK-MUTE-DURATION header.
+     */
+    fun setMuteExpiry(expiryMs: Long) {
+        StorageHelper.putLong(
+            context,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTE_EXPIRY),
+            expiryMs
+        )
+    }
+
+    /**
+     * Clears any active mute state, allowing the SDK to resume
+     * normal event tracking and network operations immediately.
+     */
+    fun unmute() {
+        setMuteExpiry(0L)
     }
 
     fun setDomain(domainName: String?) {
