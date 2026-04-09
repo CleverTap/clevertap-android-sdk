@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.network.http
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.utils.Clock
@@ -148,24 +150,24 @@ class NetworkRepoTest : BaseTestCase() {
         assertEquals(timestamp, result)
     }
 
-    // Test cases for setMuted(), getMuted(), and isMuted()
+    // Test cases for setMuted(), getMuteExpiry(), unmute(), and isMuted()
     @Test
-    fun `setMuted with true should store current timestamp and getMuted should return it`() {
+    fun `setMuted with true should store expiry timestamp and isMuted should return true`() {
         // Given
         val testClock = TestClock(1000000L * 1000) // Set fixed time
         networkRepo = createNetworkRepo(testClock)
-        val expectedTimestamp = testClock.currentTimeSecondsInt()
 
         // When
         networkRepo.setMuted(true)
         
         // Then
-        assertEquals("getMuted should return the timestamp when muted", expectedTimestamp, networkRepo.getMuted())
+        val expectedExpiry = testClock.currentTimeMillis() + 24 * 60 * 60 * 1000L
+        assertEquals("getMuteExpiry should return now + 24h", expectedExpiry, networkRepo.getMuteExpiry())
         assertTrue("Should be muted when setMuted(true) is called", networkRepo.isMuted())
     }
 
     @Test
-    fun `setMuted with false should store zero and getMuted should return zero`() {
+    fun `setMuted with false should clear expiry and isMuted should return false`() {
         // Given
         val testClock = TestClock()
         networkRepo = createNetworkRepo(testClock)
@@ -178,20 +180,20 @@ class NetworkRepoTest : BaseTestCase() {
         networkRepo.setMuted(false)
 
         // Then
-        assertEquals("getMuted should return 0 when setMuted(false)", 0, networkRepo.getMuted())
+        assertEquals("getMuteExpiry should return 0 when setMuted(false)", 0L, networkRepo.getMuteExpiry())
         assertFalse("Should not be muted when setMuted(false)", networkRepo.isMuted())
     }
 
     @Test
-    fun `getMuted should return default value 0 when no mute value stored`() {
+    fun `getMuteExpiry should return default value 0 when no mute value stored`() {
         // Given
         networkRepo = createNetworkRepo()
 
         // When
-        val result = networkRepo.getMuted()
+        val result = networkRepo.getMuteExpiry()
 
         // Then
-        assertEquals("Default muted value should be 0", 0, result)
+        assertEquals("Default mute expiry value should be 0", 0L, result)
     }
 
     @Test
@@ -264,6 +266,123 @@ class NetworkRepoTest : BaseTestCase() {
     }
 
     @Test
+    fun `setMuteExpiry should store absolute epoch ms and isMuted should respect it`() {
+        // Given
+        val testClock = TestClock(1000000L * 1000) // now = 1,000,000,000 ms
+        networkRepo = createNetworkRepo(testClock)
+        val expiryMs = testClock.currentTimeMillis() + 3 * 60 * 60 * 1000L // 3 hours from now
+
+        // When
+        networkRepo.setMuteExpiry(expiryMs)
+
+        // Then
+        assertTrue("Should be muted when expiry is in the future", networkRepo.isMuted())
+        assertEquals("getMuteExpiry should return the stored expiry", expiryMs, networkRepo.getMuteExpiry())
+
+        // Advance past expiry
+        testClock.advanceTime(4 * 60 * 60 * 1000) // 4 hours
+        assertFalse("Should not be muted after expiry has passed", networkRepo.isMuted())
+    }
+
+    @Test
+    fun `unmute should clear mute state immediately`() {
+        // Given
+        val testClock = TestClock(1000000L * 1000)
+        networkRepo = createNetworkRepo(testClock)
+        networkRepo.setMuted(true)
+        assertTrue("Should be muted initially", networkRepo.isMuted())
+
+        // When
+        networkRepo.unmute()
+
+        // Then
+        assertFalse("Should not be muted after unmute()", networkRepo.isMuted())
+        assertEquals("getMuteExpiry should return 0 after unmute()", 0L, networkRepo.getMuteExpiry())
+    }
+
+    // Migration tests: old SDK (comms_mtd) → new SDK (comms_mute_expiry_ts)
+    @Test
+    fun `isMuted should migrate active mute from old comms_mtd key`() {
+        // Given - Simulate old SDK: write epoch seconds directly to the legacy key
+        val nowMs = 1000000L * 1000 // 1,000,000,000 ms
+        val testClock = TestClock(nowMs)
+        val legacyMuteTs = (nowMs / 1000).toInt() // epoch seconds, as old SDK stored it
+        StorageHelper.putInt(
+            appCtx,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),
+            legacyMuteTs
+        )
+        networkRepo = createNetworkRepo(testClock)
+
+        // When - New SDK checks isMuted, no new key exists yet
+        val result = networkRepo.isMuted()
+
+        // Then - Should detect old mute and migrate it
+        assertTrue("Should be muted via migration from old key", result)
+        val expectedExpiry = (legacyMuteTs + 24 * 60 * 60) * 1000L
+        assertEquals("Should have migrated to new key", expectedExpiry, networkRepo.getMuteExpiry())
+    }
+
+    @Test
+    fun `isMuted should not migrate expired mute from old comms_mtd key`() {
+        // Given - Simulate old SDK mute that has expired (set 25h ago)
+        val nowMs = 1000000L * 1000
+        val testClock = TestClock(nowMs)
+        val legacyMuteTs = ((nowMs / 1000) - 25 * 60 * 60).toInt() // 25h ago
+        StorageHelper.putInt(
+            appCtx,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),
+            legacyMuteTs
+        )
+        networkRepo = createNetworkRepo(testClock)
+
+        // When
+        val result = networkRepo.isMuted()
+
+        // Then - Old mute was expired, should not be muted
+        assertFalse("Should not be muted when old mute has expired", result)
+        assertEquals("Should not have migrated expired mute", 0L, networkRepo.getMuteExpiry())
+    }
+
+    @Test
+    fun `isMuted should prefer new key over old key when both exist`() {
+        // Given - Both old and new keys exist (e.g. after migration + new mute)
+        val nowMs = 1000000L * 1000
+        val testClock = TestClock(nowMs)
+        // Old key with some value
+        StorageHelper.putInt(
+            appCtx,
+            StorageHelper.storageKeyWithSuffix(config.accountId, Constants.KEY_MUTED),
+            (nowMs / 1000).toInt()
+        )
+        // New key cleared (unmuted via new SDK)
+        networkRepo = createNetworkRepo(testClock)
+        networkRepo.setMuteExpiry(nowMs + 5 * 60 * 60 * 1000L) // 5h from now
+
+        // When
+        val result = networkRepo.isMuted()
+
+        // Then - New key takes precedence
+        assertTrue("New key should take precedence", result)
+    }
+
+    @Test
+    fun `unmute should clear custom expiry mute`() {
+        // Given
+        val testClock = TestClock(1000000L * 1000)
+        networkRepo = createNetworkRepo(testClock)
+        // Set a far-future expiry (simulating backend-set infinite mute)
+        networkRepo.setMuteExpiry(253402300799000L) // 9999-12-31
+        assertTrue("Should be muted with far-future expiry", networkRepo.isMuted())
+
+        // When
+        networkRepo.unmute()
+
+        // Then
+        assertFalse("Should not be muted after unmute()", networkRepo.isMuted())
+    }
+
+    @Test
     fun `mute methods should work independently with other storage operations`() {
         // Given
         val testClock = TestClock()
@@ -280,16 +399,16 @@ class NetworkRepoTest : BaseTestCase() {
         assertEquals("Domain should be stored independently", domain, networkRepo.getDomain())
         assertEquals("First request timestamp should be stored independently", firstTs, networkRepo.getFirstRequestTs())
         assertTrue("Should be muted", networkRepo.isMuted())
-        assertTrue("Muted timestamp should be non-zero", networkRepo.getMuted() > 0)
+        assertTrue("Mute expiry should be non-zero", networkRepo.getMuteExpiry() > 0)
         
         // When - Unmute
-        networkRepo.setMuted(false)
+        networkRepo.unmute()
         
         // Then - Other values should remain, mute should be cleared
         assertEquals("Domain should still be stored", domain, networkRepo.getDomain())
         assertEquals("First request timestamp should still be stored", firstTs, networkRepo.getFirstRequestTs())
         assertFalse("Should not be muted", networkRepo.isMuted())
-        assertEquals("Muted timestamp should be zero", 0, networkRepo.getMuted())
+        assertEquals("Mute expiry should be zero", 0L, networkRepo.getMuteExpiry())
     }
 
     // Test cases for setDomain()
