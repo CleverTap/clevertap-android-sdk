@@ -61,6 +61,8 @@ internal class EventQueueManager(
         callbackManager.setFailureFlushListener(this)
         networkManager.observeNetworkRestore {
             logger.debug(config.accountId, "EventQueueManager: network restored, triggering flush for all event groups")
+            commsRunnable?.let { mainLooperHandler.removeCallbacks(it) }
+            pushNotificationViewedRunnable?.let { mainLooperHandler.removeCallbacks(it) }
             flushQueueAsync(context, EventGroup.REGULAR)
             flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
         }
