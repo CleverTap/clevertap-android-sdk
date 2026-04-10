@@ -13,7 +13,8 @@ internal interface RendererStateListener {
     fun onPlayerReleased()
     /** Playback state snapshot — called before rotation detach so session can persist state. */
     fun onPlaybackStateChanged(isPlaying: Boolean, isMuted: Boolean, positionMs: Long)
-    /** User toggled play/pause. */
+    /** Play/pause state changed — fired on user toggle or player state transition
+     *  (e.g., buffering → playing after network recovery). */
     fun onPlayPauseToggled(isPlaying: Boolean)
     /** User toggled mute. */
     fun onMuteToggled(isMuted: Boolean)

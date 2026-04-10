@@ -10,12 +10,16 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.ui.PlayerView
+import kotlin.math.min
 
 /**
  * Self-contained video player for PIP in-app notifications.
@@ -43,6 +47,12 @@ internal class PIPVideoPlayerWrapper {
     private var firstFrameReady = false
     private var onFirstFrame: (() -> Unit)? = null
     private var errorListener: Player.Listener? = null
+    private var playingChangedListener: Player.Listener? = null
+    @Volatile private var networkRetryEnabled = false
+
+    /** Called when ExoPlayer's isPlaying state changes (e.g., buffering → playing after
+     *  network recovery). Used to sync UI controls that don't observe the player directly. */
+    var onPlayingChanged: ((isPlaying: Boolean) -> Unit)? = null
 
     val isMuted: Boolean get() = _isMuted
     val isPlaying: Boolean get() = player?.isPlaying ?: _isPlaying
@@ -68,9 +78,12 @@ internal class PIPVideoPlayerWrapper {
             .setTransferListener(bandwidthMeter.transferListener)
         val dataSourceFactory = DefaultDataSource.Factory(context, httpFactory)
 
+        val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
+            .setLoadErrorHandlingPolicy(PIPLoadErrorPolicy())
+
         player = ExoPlayer.Builder(context)
             .setTrackSelector(trackSelector)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .setMediaSourceFactory(mediaSourceFactory)
             .build()
             .apply {
                 setMediaItem(MediaItem.fromUri(url))
@@ -80,6 +93,7 @@ internal class PIPVideoPlayerWrapper {
             }
 
         registerFirstFrameListener(player!!)
+        registerPlayingChangedListener(player!!)
     }
 
     /**
@@ -137,7 +151,10 @@ internal class PIPVideoPlayerWrapper {
         }
         val p = player ?: return
         savedPositionMs = p.currentPosition
-        _isPlaying = p.isPlaying
+        // Save playWhenReady (intent to play), not isPlaying (current state).
+        // During buffering: isPlaying=false but playWhenReady=true. Saving isPlaying
+        // would set playWhenReady=false after rotation, killing the retry + hiding the spinner.
+        _isPlaying = p.playWhenReady
         playerView?.player = null
         playerView = null
         p.playWhenReady = false
@@ -183,16 +200,45 @@ internal class PIPVideoPlayerWrapper {
         }
     }
 
+    /** True after PIP becomes visible. Used by [VideoRenderer] to decide whether to
+     *  retry on network error or fall through to the fallback image path. */
+    val isNetworkRetryEnabled: Boolean get() = networkRetryEnabled
+
+    /** Enable infinite retry for network errors. Call after first frame renders (PIP visible).
+     *  Before this is called, default 3-retry behavior applies so pre-show errors still
+     *  propagate to [onPlayerError] and trigger the fallback path. */
+    fun enableNetworkRetry() { networkRetryEnabled = true }
+
+    /**
+     * Re-prepares the player after a network error that escaped the Loader's retry loop.
+     *
+     * Why this is needed:
+     * ExoPlayer's Loader captures [getMinimumLoadableRetryCount] when a segment starts loading.
+     * If that segment started BEFORE [enableNetworkRetry] was called, it has the old limit (3).
+     * After 3 failures, the error propagates to onPlayerError even though we want infinite retry.
+     *
+     * Calling [ExoPlayer.prepare] resets the error state and starts a fresh load attempt.
+     * The new load captures the UPDATED [getMinimumLoadableRetryCount] (Int.MAX_VALUE),
+     * so from this point ExoPlayer retries indefinitely and shows the buffering spinner.
+     */
+    fun retryAfterNetworkError() {
+        player?.prepare()
+    }
+
     /**
      * Full cleanup — stops and releases the player.
      */
     fun release() {
+        networkRetryEnabled = false
         synchronized(firstFrameLock) {
             firstFrameReady = false
             onFirstFrame = null
         }
         errorListener?.let { player?.removeListener(it) }
         errorListener = null
+        playingChangedListener?.let { player?.removeListener(it) }
+        playingChangedListener = null
+        onPlayingChanged = null
         playerView?.player = null
         playerView = null
         player?.stop()
@@ -202,6 +248,20 @@ internal class PIPVideoPlayerWrapper {
 
     fun videoSurface(): View = checkNotNull(playerView) {
         "videoSurface() called but no PlayerView exists — was createSurface() called?"
+    }
+
+    /** Observes [Player.isPlaying] changes so UI controls (play/pause button) stay in sync
+     *  when ExoPlayer transitions between states on its own (e.g., buffering → playing
+     *  after network recovery). Without this, controls only update on user tap.
+     *  Registered once in [initPlayer] — survives rotation since the player is not recreated. */
+    private fun registerPlayingChangedListener(player: ExoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                onPlayingChanged?.invoke(isPlaying)
+            }
+        }
+        playingChangedListener = listener
+        player.addListener(listener)
     }
 
     /** Registers a one-shot [Player.Listener] that fires [onFirstFrame] when the first
@@ -235,5 +295,32 @@ internal class PIPVideoPlayerWrapper {
         }
         errorListener = listener
         p.addListener(listener)
+    }
+    /**
+     * Retries network connectivity errors indefinitely once [enableNetworkRetry] is called.
+     * Before that, falls back to [DefaultLoadErrorHandlingPolicy] (3 retries, then error propagates).
+     * HTTP status errors (404, 500) are never retried — they are permanent failures.
+     */
+    @OptIn(UnstableApi::class)
+    private inner class PIPLoadErrorPolicy : DefaultLoadErrorHandlingPolicy() {
+        override fun getRetryDelayMsFor(loadErrorInfo: LoadErrorHandlingPolicy.LoadErrorInfo): Long {
+            val exception = loadErrorInfo.exception
+            if (networkRetryEnabled
+                && exception is HttpDataSource.HttpDataSourceException
+                && exception !is HttpDataSource.InvalidResponseCodeException
+            ) {
+                return min(loadErrorInfo.errorCount * 2000L, 16_000L)
+            }
+            return super.getRetryDelayMsFor(loadErrorInfo)
+        }
+
+        // Loader.maybeThrowError(minRetryCount) bypasses getRetryDelayMsFor entirely —
+        // if errorCount > minRetryCount, it throws directly to onPlayerError. Override to
+        // prevent this when network retry is enabled. Safe for non-network errors because
+        // getRetryDelayMsFor returns C.TIME_UNSET for them, making the Loader set fatalError
+        // immediately — the retry count is never reached.
+        override fun getMinimumLoadableRetryCount(dataType: Int): Int {
+            return if (networkRetryEnabled) Int.MAX_VALUE else super.getMinimumLoadableRetryCount(dataType)
+        }
     }
 }

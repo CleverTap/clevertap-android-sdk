@@ -101,6 +101,12 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             cv.hideVideoControls()
             ev.hideVideoControls()
         }
+        // Sync play/pause icon when ExoPlayer's playing state changes on its own
+        // (e.g., buffering → playing after network recovery). Without this, the
+        // button only updates on user tap.
+        mv.onPlayStateChanged = { isPlaying ->
+            ev.syncPlayPauseIcon(isPlaying)
+        }
         mv.onMediaReady = {
             post {
                 if (width == 0 || height == 0) return@post

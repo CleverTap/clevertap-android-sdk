@@ -293,6 +293,10 @@ private fun applyBottomRowMargins(rowMarginPx: Int) {
         bottomRow.requestLayout()
     }
 
+    /** Syncs play/pause icon with current state — called when ExoPlayer's playing state
+     *  changes independently (e.g., buffering → playing after network recovery). */
+    fun syncPlayPauseIcon(playing: Boolean) = updatePlayPauseIcon(playing)
+
     private fun updatePlayPauseIcon(playing: Boolean) {
         playPauseBtn?.setImageResource(PIPIcons.playPauseIcon(playing))
         playPauseBtn?.contentDescription = playPauseBtn?.context?.getString(PIPIcons.playPauseContentDescription(playing))

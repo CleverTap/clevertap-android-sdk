@@ -41,6 +41,10 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
     /** Called when all media URLs failed — nothing to display. */
     var onAllMediaFailed: (() -> Unit)? = null
 
+    /** Called when ExoPlayer's playing state changes (e.g., buffering → playing).
+     *  Used by parent views to sync play/pause button icons. */
+    var onPlayStateChanged: ((isPlaying: Boolean) -> Unit)? = null
+
     fun initialize(
         config: PIPConfig,
         session: PIPSession,
@@ -187,6 +191,7 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
                     session.isPlaying = isPlaying
                     if (isPlaying) session.config.callbacks?.onPlaybackStarted()
                     else session.config.callbacks?.onPlaybackPaused()
+                    onPlayStateChanged?.invoke(isPlaying)
                 }
 
                 override fun onMuteToggled(isMuted: Boolean) {
