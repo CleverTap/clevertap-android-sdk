@@ -38,8 +38,13 @@ internal interface InAppMediaHandler : DefaultLifecycleObserver {
             supportsStreamMedia: Boolean = false,
             onActionClick: (() -> Unit)? = null
         ): InAppMediaHandler {
-            val media = inAppNotification.getInAppMediaForOrientation(currentOrientation)
-                ?: inAppNotification.mediaList.firstOrNull() ?: return NoOpMediaHandler
+            // If a video player survived a configuration change (rotation), prefer its URL so the
+            // same player can be reclaimed rather than starting a new one with a different URL.
+            val media = InAppVideoPlayerCache.peekUrl()
+                ?.let { url -> inAppNotification.mediaList.firstOrNull { it.mediaUrl == url } }
+                ?: inAppNotification.getInAppMediaForOrientation(currentOrientation)
+                ?: inAppNotification.mediaList.firstOrNull()
+                ?: return NoOpMediaHandler
 
             return when {
                 media.isImage() -> InAppImageHandler(media, resourceProvider)
