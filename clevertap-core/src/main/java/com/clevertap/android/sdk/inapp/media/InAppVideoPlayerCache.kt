@@ -53,6 +53,14 @@ internal object InAppVideoPlayerCache {
     }
 
     /**
+     * Returns the URL of the cached player without consuming it, or null if no player is cached.
+     * Used to re-select the same media URL after a configuration change (e.g. rotation) so the
+     * existing player can be reclaimed instead of discarded.
+     */
+    @MainThread
+    fun peekUrl(): String? = cachedUrl
+
+    /**
      * Fully releases any cached player. Call on explicit in-app dismissal to ensure no
      * orphaned player survives if the cache was never consumed (e.g., dismiss during rotation).
      */
