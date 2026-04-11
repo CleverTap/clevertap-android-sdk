@@ -39,7 +39,9 @@ internal class PIPCompactView(
     internal val controlsOverlay: PIPControlsOverlay
     private val dragHandler: PIPDragHandler
     private var deeplinkBtn: ImageView? = null
+    private var closeBtn: ImageView? = null
     private var muteBtn: ImageView? = null
+    private var expandBtn: ImageView? = null
     var getSafeInsets: () -> Insets = { Insets.NONE }
 
     init {
@@ -55,7 +57,7 @@ internal class PIPCompactView(
         controlsOverlay = PIPControlsOverlay(context)
         controlsOverlay.alpha = 0f
 
-        val iconSizePx = ICON_SIZE_DP.dpToPx(context)
+        val iconSizePx = MIN_ICON_SIZE_DP.dpToPx(context) // provisional; updated by updateIconSizes()
 
         // Deeplink button — bottom-left by default (image/GIF); moved to top-left for video
         // in bindVideoControls() to avoid overlap with the mute button.
@@ -73,15 +75,16 @@ internal class PIPCompactView(
         )
 
         // Close button — top-right (hidden if showCloseButton = false)
-        val closeBtn = ImageView(context).apply {
+        val clsBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_close_pip)
             contentDescription = context.getString(R.string.ct_inapp_close_btn)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.showCloseButton) View.VISIBLE else View.GONE
             setOnClickListener { onClose() }
         }
+        closeBtn = clsBtn
         controlsOverlay.addView(
-            closeBtn,
+            clsBtn,
             LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END),
         )
 
@@ -99,15 +102,16 @@ internal class PIPCompactView(
         )
 
         // Expand button — bottom-right (hidden if expandCollapse control disabled)
-        val expandBtn = ImageView(context).apply {
+        val expBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_expand)
             contentDescription = context.getString(R.string.ct_pip_expand_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onExpand() }
         }
+        expandBtn = expBtn
         controlsOverlay.addView(
-            expandBtn,
+            expBtn,
             LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.END),
         )
 
@@ -189,6 +193,31 @@ internal class PIPCompactView(
         }
     }
 
+    /**
+     * Recomputes icon sizes based on actual PIP dimensions.
+     * Called from [PIPRootContainer.positionAndShow] after pipW/pipH are finalized
+     * (accounts for height clamping and border padding in both portrait and landscape).
+     *
+     * Uses [maxOf] so vertical PIP (height > width) produces proportionally larger icons
+     * instead of undersizing them based on the narrow width alone.
+     */
+    fun updateIconSizes(pipWidthPx: Int, pipHeightPx: Int) {
+        val iconSizePx = resolveIconSize(pipWidthPx, pipHeightPx)
+        listOfNotNull(deeplinkBtn, closeBtn, muteBtn, expandBtn).forEach { btn ->
+            btn.layoutParams.width = iconSizePx
+            btn.layoutParams.height = iconSizePx
+        }
+    }
+
+    private fun resolveIconSize(pipWidthPx: Int, pipHeightPx: Int): Int {
+        val referencePx = maxOf(pipWidthPx, pipHeightPx)
+        val iconSizePx = (referencePx * ICON_SIZE_FRACTION).toInt()
+        return iconSizePx.coerceIn(
+            MIN_ICON_SIZE_DP.dpToPx(context),
+            MAX_ICON_SIZE_DP.dpToPx(context),
+        )
+    }
+
     fun detach() = controlsOverlay.detach()
 
     private fun applyBorderStyle(cfg: PIPConfig) {
@@ -230,7 +259,11 @@ internal class PIPCompactView(
     }
 
     private companion object {
-        const val ICON_SIZE_DP = 30
         const val ELEVATION_DP = 6
+
+        /** Icon size as a fraction of computed PIP width (18%). */
+        private const val ICON_SIZE_FRACTION = 0.18f
+        private const val MIN_ICON_SIZE_DP = 24
+        private const val MAX_ICON_SIZE_DP = 44
     }
 }

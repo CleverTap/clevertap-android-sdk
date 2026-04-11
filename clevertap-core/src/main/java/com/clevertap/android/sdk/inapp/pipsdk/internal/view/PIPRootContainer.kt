@@ -302,6 +302,8 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             pipH += totalPadding
         }
 
+        cv.updateIconSizes(pipW, pipH)
+
         if (isReattach) {
             // Skip the layout listener: pipW/pipH are the target sizes and MOVE_IN is never
             // played on reattach, so measured dimensions are not needed.
