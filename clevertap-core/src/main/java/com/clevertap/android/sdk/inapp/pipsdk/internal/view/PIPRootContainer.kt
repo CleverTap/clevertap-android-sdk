@@ -105,6 +105,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         // (e.g., buffering → playing after network recovery). Without this, the
         // button only updates on user tap.
         mv.onPlayStateChanged = { isPlaying ->
+            cv.syncPlayPauseIcon(isPlaying)
             ev.syncPlayPauseIcon(isPlaying)
         }
         mv.onMediaReady = {
@@ -260,6 +261,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             ev.visibility = View.GONE
             cv.visibility = View.VISIBLE
             cv.syncMuteIcon(mv.isMuted)
+            cv.syncPlayPauseIcon(mv.isPlaying)
             s.config.callbacks?.onCollapse()
         }
     }
@@ -302,7 +304,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             pipH += totalPadding
         }
 
-        cv.updateIconSizes(pipW, pipH)
+        cv.updateIconSizes(pipW)
 
         if (isReattach) {
             // Skip the layout listener: pipW/pipH are the target sizes and MOVE_IN is never
