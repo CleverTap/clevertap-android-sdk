@@ -35,6 +35,11 @@ import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.toJsonOrNull
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -53,12 +58,18 @@ internal class NetworkManager constructor(
     private val networkRepo: NetworkRepo,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val cleverTapResponseHandler: ClevertapResponseHandler,
+    private val networkMonitor: NetworkMonitor,
     private val logger: ILogger = config.logger
 ) {
 
     companion object {
         private const val BATCH_SIZE = 50
     }
+
+    private val networkManagerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private var networkRestoreJob: Job? = null
+    private val networkRestoreLock = Any()
 
     private var responseFailureCount = 0
 
@@ -67,6 +78,23 @@ internal class NetworkManager constructor(
     private var minDelayFrequency = 0
 
     private val mNetworkHeadersListeners: MutableList<NetworkHeadersListener> = ArrayList()
+
+    fun isNetworkOnline(): Boolean = networkMonitor.isNetworkOnline()
+
+    fun getNetworkTypeString(): String? = networkMonitor.getNetworkTypeString()
+
+    fun observeNetworkRestore(onRestored: () -> Unit) {
+        synchronized(networkRestoreLock) {
+            if (networkRestoreJob?.isActive == true) return
+            logger.debug(config.accountId, "NetworkManager: starting network restore observer")
+            networkRestoreJob = networkManagerScope.launch {
+                networkMonitor.networkRestoreEvents.collect {
+                    logger.debug(config.accountId, "NetworkManager: network restored, invoking callback")
+                    onRestored()
+                }
+            }
+        }
+    }
 
     fun addNetworkHeadersListener(listener: NetworkHeadersListener) {
         mNetworkHeadersListeners.add(listener)

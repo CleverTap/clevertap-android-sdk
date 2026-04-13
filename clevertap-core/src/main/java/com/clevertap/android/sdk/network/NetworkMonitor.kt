@@ -4,12 +4,17 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Utils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 internal class NetworkMonitor constructor(
     context: Context,
@@ -55,6 +60,12 @@ internal class NetworkMonitor constructor(
 
     private val _stateFlow = MutableStateFlow(NetworkState.UNDETECTED)
     val networkState: Flow<NetworkState> = _stateFlow.asStateFlow()
+
+    val networkRestoreEvents: Flow<Unit> = _stateFlow
+        .drop(1)
+        .distinctUntilChanged { old, new -> old.isAvailable == new.isAvailable }
+        .filter { it.isAvailable }
+        .map { }
 
     init {
         logger.debug(accountId, "NetworkMonitor initializing...")
@@ -141,7 +152,13 @@ internal class NetworkMonitor constructor(
                 networkCallback = callback
                 logger.verbose(accountId, "Network callback registered successfully")
             } else {
-                logger.verbose(accountId, "API < 24: using synchronous network check")
+                val request = NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    .build()
+                connectivityManager?.registerNetworkCallback(request, callback)
+                networkCallback = callback
+                logger.verbose(accountId, "API < 24: registered NetworkCallback via NetworkRequest")
             }
         } catch (e: Exception) {
             logger.debug(accountId, "Network callback registration failed: ${e.message}")

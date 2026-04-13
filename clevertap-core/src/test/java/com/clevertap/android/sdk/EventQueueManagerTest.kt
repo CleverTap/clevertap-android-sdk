@@ -437,6 +437,40 @@ class EventQueueManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun test_init_registersNetworkRestoreCallback() {
+        // callback registration happens in init during setUp
+        verify { corestate.networkManager.observeNetworkRestore(any()) }
+    }
+
+    @Test
+    fun test_networkRestoreCallback_whenInvoked_flushesREGULAREvents() {
+        withMockExecutors {
+            val callbackSlot = slot<() -> Unit>()
+            verify { corestate.networkManager.observeNetworkRestore(capture(callbackSlot)) }
+
+            every { corestate.networkManager.isNetworkOnline() } returns true
+
+            callbackSlot.captured.invoke()
+
+            verify { corestate.networkManager.needsHandshakeForDomain(REGULAR) }
+        }
+    }
+
+    @Test
+    fun test_networkRestoreCallback_whenInvoked_flushesPUSH_NOTIFICATION_VIEWEDEvents() {
+        withMockExecutors {
+            val callbackSlot = slot<() -> Unit>()
+            verify { corestate.networkManager.observeNetworkRestore(capture(callbackSlot)) }
+
+            every { corestate.networkManager.isNetworkOnline() } returns true
+
+            callbackSlot.captured.invoke()
+
+            verify { corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED) }
+        }
+    }
+
+    @Test
     fun test_flushQueueSync_when_net_is_offline() {
         withMockExecutors {
 
@@ -480,7 +514,7 @@ class EventQueueManagerTest : BaseTestCase() {
         withMockExecutors {
 
             corestate.coreMetaData.isOffline = false
-            every { corestate.networkMonitor.isNetworkOnline() } returns true
+            every { corestate.networkManager.isNetworkOnline() } returns true
             val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val shadowOfCM = shadowOf(cm)
             val netInfo =
@@ -504,7 +538,7 @@ class EventQueueManagerTest : BaseTestCase() {
 
             val runnableSlot = slot<Runnable>()
             corestate.coreMetaData.isOffline = false
-            every { corestate.networkMonitor.isNetworkOnline() } returns true
+            every { corestate.networkManager.isNetworkOnline() } returns true
             val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val shadowOfCM = shadowOf(cm)
             val netInfo =
@@ -1059,7 +1093,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 CoreMetaData.setActivityCount(expectedActivityCount)
 
                 every { Utils.getMemoryConsumption() } returns expectedMemoryConsumption
-                every { corestate.networkMonitor.getNetworkTypeString() } returns expectedNetworkType
+                every { corestate.networkManager.getNetworkTypeString() } returns expectedNetworkType
                 every { eventQueueManager.now } returns expectedEpoch
                 every { eventQueueManager.scheduleQueueFlush(application) } just runs
 

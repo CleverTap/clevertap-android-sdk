@@ -21,7 +21,6 @@ import com.clevertap.android.sdk.events.FlattenedEventData.ProfileChanges
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.NetworkManager
-import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.profile.ProfileStateTraverser.Companion.toNestedMap
 import com.clevertap.android.sdk.task.CTExecutorFactory.executors
 import com.clevertap.android.sdk.task.MainLooperHandler
@@ -48,7 +47,7 @@ internal class EventQueueManager(
     private val ctLockManager: CTLockManager,
     private val localDataStore: LocalDataStore,
     private val controllerManager: ControllerManager,
-    private val loginInfoProvider: LoginInfoProvider, private val networkMonitor: NetworkMonitor
+    private val loginInfoProvider: LoginInfoProvider
 ) : BaseEventQueueManager(), FailureFlushListener {
     private var commsRunnable: Runnable? = null
 
@@ -59,11 +58,17 @@ internal class EventQueueManager(
 
 
     init {
-
         callbackManager.setFailureFlushListener(this)
+        networkManager.observeNetworkRestore {
+            logger.debug(config.accountId, "EventQueueManager: network restored, triggering flush for all event groups")
+            commsRunnable?.let { mainLooperHandler.removeCallbacks(it) }
+            pushNotificationViewedRunnable?.let { mainLooperHandler.removeCallbacks(it) }
+            flushQueueAsync(context, EventGroup.REGULAR)
+            flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
+        }
     }
 
-
+    @WorkerThread
     override fun addToQueue(
         context: Context,
         event: JSONObject,
@@ -138,7 +143,7 @@ internal class EventQueueManager(
         isUserSwitchFlush: Boolean
     ) {
         // Check if network connectivity is available
-        if (!networkMonitor.isNetworkOnline()) {
+        if (!networkManager.isNetworkOnline()) {
             logger.verbose(
                 config.accountId,
                 "Network connectivity unavailable. Will retry later"
@@ -181,7 +186,7 @@ internal class EventQueueManager(
      * sendQueue for success.
      */
     override fun sendImmediately(context: Context, eventGroup: EventGroup, eventData: JSONObject?) {
-        if (!networkMonitor.isNetworkOnline()) {
+        if (!networkManager.isNetworkOnline()) {
             logger.verbose(
                 config.accountId,
                 "Network connectivity unavailable. Event won't be sent."
@@ -318,7 +323,7 @@ internal class EventQueueManager(
         }
 
         val flattenedEventProps = (flattenedEventData as EventProperties).properties
-        val isOffline = !networkMonitor.isNetworkOnline()
+        val isOffline = !networkManager.isNetworkOnline()
         val isRegularEvent = eventMediator.isEvent(event)
         val isAppLaunchedEvent = eventMediator.isAppLaunchedEvent(event)
 
@@ -553,7 +558,7 @@ internal class EventQueueManager(
 
         // Attach the network type
         try {
-            o.put("nt", networkMonitor.getNetworkTypeString() ?: "Unavailable")
+            o.put("nt", networkManager.getNetworkTypeString() ?: "Unavailable")
         } catch (_: Throwable) {
             // Ignore
         }

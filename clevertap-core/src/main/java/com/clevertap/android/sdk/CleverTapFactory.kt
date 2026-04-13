@@ -400,7 +400,8 @@ internal object CleverTapFactory {
             arpResponse = arpResponse,
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
-            cleverTapResponseHandler = responseHandler
+            cleverTapResponseHandler = responseHandler,
+            networkMonitor = networkMonitor
         )
 
         val loginInfoProvider = LoginInfoProvider(
@@ -424,8 +425,7 @@ internal object CleverTapFactory {
             ctLockManager,
             localDataStore,
             controllerManager,
-            loginInfoProvider,
-            networkMonitor
+            loginInfoProvider
         )
 
         val inAppResponseForSendTestInApp = InAppResponse(

@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.TestLogger
-import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.events.EventGroup.REGULAR
@@ -771,6 +770,7 @@ class NetworkManagerTest : BaseTestCase() {
             networkRepo = networkRepo,
             queueHeaderBuilder = queueHeaderBuilder,
             cleverTapResponseHandler = clevertapResponseHandler,
+            networkMonitor = mockk(relaxed = true),
             logger = TestLogger()
         )
     }
