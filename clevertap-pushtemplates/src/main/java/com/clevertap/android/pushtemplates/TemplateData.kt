@@ -185,7 +185,9 @@ internal data class VerticalImageButtonData(
     val textColor: String? = null,
     val gradientColor1: String? = null,
     val gradientColor2: String? = null,
-    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT
+    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
+    val borderRadius: Float = PTConstants.PT_BTN_BORDER_RADIUS_DEFAULT,
+    val borderWidth: Float = PTConstants.PT_BTN_BORDER_WIDTH_DEFAULT,
 )
 
 internal data class VerticalImageTemplateData(
