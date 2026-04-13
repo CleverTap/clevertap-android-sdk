@@ -12,7 +12,6 @@ internal class PIPInAppCallbacksBridge(
 
     private companion object {
         const val LOG_TAG = "PIPInAppCallbacksBridge"
-        const val PIP_CTA = "pip_cta"
     }
 
     override fun onShow() {
@@ -28,6 +27,7 @@ internal class PIPInAppCallbacksBridge(
     override fun onAction() {
         val onClick = inAppNotification.pipConfigJson?.optJSONObject("onClick")
         val action = CTInAppAction.createFromJson(onClick) ?: return
+        val callToAction = onClick?.optString("c2a", "") ?: ""
         logger.debug(LOG_TAG, "PIP onAction for campaign: ${inAppNotification.campaignId}, type: ${action.type}")
         // Last parameter (activityContext) is null — here's why:
         //
@@ -51,7 +51,7 @@ internal class PIPInAppCallbacksBridge(
         // No Activity finishes, so the app's task is never at risk of being killed
         // because it was never reduced to an empty/background state.
         inAppListener.inAppNotificationActionTriggered(
-            inAppNotification, action, PIP_CTA, null, null
+            inAppNotification, action, callToAction, null, null
         )
     }
 

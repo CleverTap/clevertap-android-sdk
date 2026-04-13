@@ -273,7 +273,7 @@ internal class PIPExpandedView(
 
     private companion object {
         const val ICON_SIZE_DP = 48
-        const val CENTER_ICON_SIZE_DP = 72
+        const val CENTER_ICON_SIZE_DP = 48
         const val ICON_MARGIN_DP = 8
         const val ROW_MARGIN_DP = 12
         const val ICON_GAP_DP = 12

@@ -325,6 +325,6 @@ internal class PIPCompactView(
         private const val MAX_ICON_SIZE_DP = 40
 
         /** Center play/pause is proportionally larger than corner icons. */
-        private const val CENTER_ICON_SCALE = 1.6f
+        private const val CENTER_ICON_SCALE = 1f
     }
 }
