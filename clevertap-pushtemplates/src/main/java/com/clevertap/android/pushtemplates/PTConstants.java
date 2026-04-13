@@ -219,8 +219,12 @@ public class PTConstants {
     public static final String PT_BTN_GRAD_CLR1 = "pt_btn_grad_clr1";
     public static final String PT_BTN_GRAD_CLR2 = "pt_btn_grad_clr2";
     public static final String PT_BTN_GRAD_DIR = "pt_btn_grad_dir";
+    public static final String PT_BTN_BORDER_RADIUS = "pt_btn_border_radius";
+    public static final String PT_BTN_BORDER_WIDTH = "pt_btn_border_width";
 
     public static final double PT_BTN_GRAD_DIR_DEFAULT = 90.0;
+    public static final float PT_BTN_BORDER_RADIUS_DEFAULT = 4f;
+    public static final float PT_BTN_BORDER_WIDTH_DEFAULT = 1f;
 
     // Vertical Image Template - Collapsed button configuration
     public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";

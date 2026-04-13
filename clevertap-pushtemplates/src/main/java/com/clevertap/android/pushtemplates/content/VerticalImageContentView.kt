@@ -36,6 +36,9 @@ internal abstract class VerticalImageContentView(
 
         setCustomTextColour(buttonData.textColor, R.id.vertical_img_btn)
 
+        val borderColor = buttonData.borderColor?.let { Utils.getColourOrNull(it) }
+        val borderWidth = buttonData.borderWidth
+        val borderRadius = buttonData.borderRadius
         val bitmap = when (buttonData.style) {
             ButtonStyle.GRADIENT_LINEAR -> {
                 val color1 = buttonData.gradientColor1?.let { Utils.getColourOrNull(it) }
@@ -43,7 +46,8 @@ internal abstract class VerticalImageContentView(
                 if (color1 != null && color2 != null) {
                     NotificationBitmapUtils.createLinearGradientBitmap(
                         color1, color2, buttonData.gradientDirection,
-                        BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, BTN_CORNER_RADIUS
+                        BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
+                        borderColor, borderWidth
                     )
                 } else null
             }
@@ -52,15 +56,18 @@ internal abstract class VerticalImageContentView(
                 val color2 = buttonData.gradientColor2?.let { Utils.getColourOrNull(it) }
                 if (color1 != null && color2 != null) {
                     NotificationBitmapUtils.createRadialBitmap(
-                        color1, color2, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, BTN_CORNER_RADIUS
+                        color1, color2, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
+                        borderColor, borderWidth
                     )
                 } else null
             }
             ButtonStyle.SOLID -> {
                 val bgColor = buttonData.buttonColor?.let { Utils.getColourOrNull(it) }
-                val borderColor = buttonData.borderColor?.let { Utils.getColourOrNull(it) }
                 if (bgColor != null) {
-                    NotificationBitmapUtils.createSolidBitmap(bgColor, borderColor, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, BTN_CORNER_RADIUS)
+                    NotificationBitmapUtils.createSolidBitmap(
+                        bgColor, borderColor, BTN_BITMAP_WIDTH, BTN_BITMAP_HEIGHT, borderRadius,
+                        borderWidth
+                    )
                 } else null
             }
         }
@@ -107,7 +114,5 @@ internal abstract class VerticalImageContentView(
     companion object {
         const val BTN_BITMAP_WIDTH = 100
         const val BTN_BITMAP_HEIGHT = 30
-        private const val BTN_CORNER_RADIUS_RATIO = 0.125f
-        const val BTN_CORNER_RADIUS = BTN_BITMAP_HEIGHT * BTN_CORNER_RADIUS_RATIO
     }
 }
