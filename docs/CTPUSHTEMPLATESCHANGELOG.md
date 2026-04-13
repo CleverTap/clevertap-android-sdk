@@ -2,7 +2,7 @@
 ### Version 2.4.0 (April 13, 2026)
 
 #### New Features
-* **Image with CTA:** Adds a new `pt_vertical_image` push notification template with support for multiple images, action buttons, gradient backgrounds, and rounded corners. Button border radius (`pt_btn_border_radius`) and width (`pt_btn_border_width`) are also configurable.
+* **Image with CTA:** Adds a new `pt_vertical_img` push notification template with support for multiple images, action buttons, gradient backgrounds, and rounded corners. Button border radius (`pt_btn_border_radius`) and width (`pt_btn_border_width`) are also configurable.
 * **Timer Template Enhancements:** Adds configurable border radius (`pt_chrono_border_radius`), border width (`pt_chrono_border_width`), border color (`pt_chrono_border_clr`), and gradient background support (`pt_chrono_style`, `pt_chrono_grad_clr1`, `pt_chrono_grad_clr2`, `pt_chrono_grad_dir`) for the chronometer display.
 
 ### Version 2.3.0 (March 6, 2026)
