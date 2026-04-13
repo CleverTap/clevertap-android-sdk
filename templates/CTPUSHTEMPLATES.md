@@ -171,6 +171,12 @@ The library will fallback to the Basic Template if the image can't be downloaded
 
 ![Zero Bezel](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/zerobezel.gif)
 
+## Image with CTA Template
+
+The Image with CTA Template displays a vertical image along with configurable call-to-action (CTA) buttons. Each button supports multiple styles (solid, linear gradient, radial gradient), configurable border radius and width, and raises the `Notification Clicked` event with the property `wzrk_c2a` capturing the button identifier.
+
+The library falls back to the Basic Template if the image can't be downloaded.
+
 ## Input Box Template
 
 The Input Box Template lets you collect any kind of input including feedback from your users. It has four variants.
@@ -501,6 +507,43 @@ pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_ico | Optional | Large Icon
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
+pt_json | Optional | Above keys in JSON format
+
+### Image with CTA Template
+
+Image with CTA Template Keys | Required | Description
+ ---:|:---:|:---
+pt_id | Required | Value - `pt_vertical_img`
+pt_title | Required | Title
+pt_msg | Required | Message
+pt_msg_summary | Optional | Message line when Notification is expanded
+pt_subtitle | Optional | Subtitle
+pt_big_img | Required | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
+pt_scale_type | Optional | ScaleType for the big image in the ImageView (`center_crop`/`fit_center`)
+pt_text1 | Optional | Additional text label 1
+pt_text2 | Optional | Additional text label 2
+pt_text1_clr | Optional | Color for `pt_text1` in HEX
+pt_text2_clr | Optional | Color for `pt_text2` in HEX
+pt_bg | Optional | Background Color in HEX
+pt_ico | Optional | Large Icon
+pt_dl1 | Optional | Default Deep Link
+pt_title_clr | Optional | Title Color in HEX
+pt_msg_clr | Optional | Message Color in HEX
+pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_btn_name | Required | Button Name (label shown on CTA button)
+pt_btn_dl | Optional | Button Deep Link
+pt_btn_style | Optional | Button Style (`solid`/`gradient_linear`/`gradient_radial`)
+pt_btn_clr | Optional | Button Background Color in HEX (for `solid` style)
+pt_btn_border_clr | Optional | Button Border Color in HEX
+pt_btn_text_clr | Optional | Button Text Color in HEX
+pt_btn_grad_clr1 | Optional | Gradient Start Color in HEX (for gradient styles)
+pt_btn_grad_clr2 | Optional | Gradient End Color in HEX (for gradient styles)
+pt_btn_grad_dir | Optional | Gradient Direction in degrees (default `90.0`)
+pt_btn_border_radius | Optional | Button Border Radius in dp (default `4`)
+pt_btn_border_width | Optional | Button Border Width in dp (default `1`)
 pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
 pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
