@@ -472,6 +472,14 @@ pt_gif_frames_alt | Optional | Number of frames to extract from the alternate GI
 pt_big_img_alt_alt_text | Optional | Alt Text for Image to show when timer expires
 pt_bg | Optional | Background Color in HEX
 pt_chrono_title_clr | Optional | Color for timer text in HEX
+pt_chrono_bg_clr | Optional | Chronometer background color in HEX (for `solid` style)
+pt_chrono_border_clr | Optional | Chronometer border color in HEX
+pt_chrono_border_radius | Optional | Chronometer border radius in dp
+pt_chrono_border_width | Optional | Chronometer border width in dp
+pt_chrono_style | Optional | Chronometer style (`solid`/`gradient_linear`/`gradient_radial`)
+pt_chrono_grad_clr1 | Optional | Gradient start color in HEX (for gradient styles)
+pt_chrono_grad_clr2 | Optional | Gradient end color in HEX (for gradient styles)
+pt_chrono_grad_dir | Optional | Gradient direction in degrees
 pt_timer_threshold | Required | Timer duration in seconds (minimum 10). Will be given higher priority. 
 pt_timer_end | Optional | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
 pt_render_terminal | Optional | Should terminal notification be rendered? ("true"/"false")
@@ -522,7 +530,7 @@ pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_big_img | Required | Image
 pt_big_img_alt_text | Optional | Alt Text for Image
-pt_scale_type | Optional | ScaleType for the big image in the ImageView (`center_crop`/`fit_center`)
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
 pt_text1 | Optional | Additional text label 1
 pt_text2 | Optional | Additional text label 2
 pt_text1_clr | Optional | Color for `pt_text1` in HEX
