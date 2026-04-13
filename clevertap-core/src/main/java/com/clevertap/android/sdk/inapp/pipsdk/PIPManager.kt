@@ -154,9 +154,10 @@ internal class PIPManager(
         val cleanup: () -> Unit = {
             performCleanup(s)
             when (reason) {
-                DismissReason.UserClose -> s.config.callbacks?.onClose()
+                DismissReason.UserClose,
+                DismissReason.SessionCleanup -> s.config.callbacks?.onClose()
                 DismissReason.ShowFailed -> s.config.callbacks?.onShowFailed()
-                DismissReason.SessionCleanup, DismissReason.Replaced -> {}
+                DismissReason.Replaced -> {}
             }
         }
 
