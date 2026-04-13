@@ -114,9 +114,7 @@ internal class PIPCompactView(
             setOnClickListener { onAction() }
         }
         deeplinkBtn = dlBtn
-        bottomRow.addView(dlBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
-            marginEnd = iconGapPx
-        })
+        bottomRow.addView(dlBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
 
         // Mute button (video-only, initially hidden)
         val mBtn = ImageView(context).apply {
@@ -127,7 +125,7 @@ internal class PIPCompactView(
         }
         muteBtn = mBtn
         bottomRow.addView(mBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
-            marginEnd = iconGapPx
+            marginStart = iconGapPx
         })
 
         // Expand button
@@ -139,7 +137,9 @@ internal class PIPCompactView(
             setOnClickListener { onExpand() }
         }
         expandBtn = expBtn
-        bottomRow.addView(expBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
+        bottomRow.addView(expBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginStart = iconGapPx
+        })
 
         controlsOverlay.addView(
             bottomRow,

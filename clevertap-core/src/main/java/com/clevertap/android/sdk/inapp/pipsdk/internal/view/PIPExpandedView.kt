@@ -132,9 +132,7 @@ internal class PIPExpandedView(
             visibility = if (hasAction) View.VISIBLE else View.GONE
             setOnClickListener { onAction() }
         }
-        bottomRow.addView(deeplinkBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
-            marginEnd = iconGapPx
-        })
+        bottomRow.addView(deeplinkBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
 
         // Mute button (video only; hidden until bindMedia)
         val mBtn = ImageView(context).apply {
@@ -146,7 +144,7 @@ internal class PIPExpandedView(
         }
         muteBtn = mBtn
         bottomRow.addView(mBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
-            marginEnd = iconGapPx
+            marginStart = iconGapPx
         })
 
         // Collapse button (hidden if expandCollapse control disabled)
@@ -158,7 +156,9 @@ internal class PIPExpandedView(
             visibility = if (showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onCollapse() }
         }
-        bottomRow.addView(collapseBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
+        bottomRow.addView(collapseBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginStart = iconGapPx
+        })
 
         controlsOverlay.addView(
             bottomRow,
