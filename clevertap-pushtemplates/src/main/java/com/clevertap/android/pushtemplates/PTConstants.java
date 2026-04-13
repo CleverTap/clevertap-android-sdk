@@ -26,6 +26,10 @@ public class PTConstants {
 
     public static final String PT_5CTA_C2A_KEY = "5cta_";
 
+    public static final String PT_VT_C2A_KEY = "vt_btn";
+
+    public static final String PT_VT_C2A_COLLAPSED_KEY = "vt_btn_collapsed";
+
     public static final String PT_PRICE_LIST = "pt_price_list";
 
     public static final String PT_SMALLTEXT_LIST = "pt_small_text_list";
@@ -36,17 +40,11 @@ public class PTConstants {
 
     public static final String PT_MANUAL_CAROUSEL_FILMSTRIP = "filmstrip";
 
-    public static boolean PT_FALLBACK = false;
-
-    public static String PT_IMAGE_PATH_LIST = "";
-
     public static final int ONE_SECOND = 1000;
 
     public static final long ONE_SECOND_LONG = 1000L;
 
     public static final String DEFAULT_DL = "default_dl";
-
-    public static final String NOTIF_TAG = "wzrk_pn";
 
     public static final String PT_ID = "pt_id";
 
@@ -94,8 +92,6 @@ public class PTConstants {
     public static final String PT_BIG_IMG_COLLAPSED = "pt_big_img_collapsed";
     public static final String PT_BIG_IMG_COLLAPSED_ALT_TEXT = "pt_big_img_collapsed_alt_text";
 
-    public static final String PT_SMALL_IMG = "pt_small_img";
-
     public static final String PT_JSON = "pt_json";
 
     public static final String PT_BUY_NOW_DL = "pt_buy_now_dl";
@@ -129,6 +125,16 @@ public class PTConstants {
     public static final String PT_DISMISS_ON_CLICK = "pt_dismiss_on_click";
 
     public static final String PT_CHRONO_TITLE_COLOUR = "pt_chrono_title_clr";
+
+    public static final String PT_CHRONO_BG_CLR = "pt_chrono_bg_clr";
+    public static final String PT_CHRONO_BORDER_CLR = "pt_chrono_border_clr";
+    public static final String PT_CHRONO_STYLE = "pt_chrono_style";
+    public static final String PT_CHRONO_GRAD_CLR1 = "pt_chrono_grad_clr1";
+    public static final String PT_CHRONO_GRAD_CLR2 = "pt_chrono_grad_clr2";
+    public static final String PT_CHRONO_GRAD_DIR = "pt_chrono_grad_dir";
+    public static final String PT_CHRONO_BORDER_RADIUS = "pt_chrono_border_radius";
+    public static final String PT_CHRONO_BORDER_WIDTH = "pt_chrono_border_width";
+
 
     public static final String PT_PRODUCT_DISPLAY_ACTION = "pt_product_display_action";
 
@@ -187,8 +193,6 @@ public class PTConstants {
 
     public static final String PT_RATING_TOAST = "pt_rating_toast";
 
-    public static final String PT_DOT_SEP = "pt_dot_sep";
-
     public static final String PT_COLOUR_GREY = "#A6A6A6";
 
     public static final String PT_META_CLR_DEFAULTS = PT_COLOUR_GREY;
@@ -199,13 +203,59 @@ public class PTConstants {
 
     public static final String KEY_REQUEST_CODES = "requestCodes";
 
+    // Vertical Image Template Keys
+    public static final String PT_TEXT1 = "pt_text1";
+    public static final String PT_TEXT2 = "pt_text2";
+    public static final String PT_TEXT1_COLOR = "pt_text1_clr";
+    public static final String PT_TEXT2_COLOR = "pt_text2_clr";
+
+    // Vertical Image Template - Button configuration
+    public static final String PT_BTN_NAME = "pt_btn_name";
+    public static final String PT_BTN_DL = "pt_btn_dl";
+    public static final String PT_BTN_STYLE = "pt_btn_style";
+    public static final String PT_BTN_CLR = "pt_btn_clr";
+    public static final String PT_BTN_BORDER_CLR = "pt_btn_border_clr";
+    public static final String PT_BTN_TEXT_CLR = "pt_btn_text_clr";
+    public static final String PT_BTN_GRAD_CLR1 = "pt_btn_grad_clr1";
+    public static final String PT_BTN_GRAD_CLR2 = "pt_btn_grad_clr2";
+    public static final String PT_BTN_GRAD_DIR = "pt_btn_grad_dir";
+    public static final String PT_BTN_BORDER_RADIUS = "pt_btn_border_radius";
+    public static final String PT_BTN_BORDER_WIDTH = "pt_btn_border_width";
+
+    public static final double PT_BTN_GRAD_DIR_DEFAULT = 90.0;
+    public static final float PT_BTN_BORDER_RADIUS_DEFAULT = 4f;
+    public static final float PT_BTN_BORDER_WIDTH_DEFAULT = 1f;
+
+    // Vertical Image Template - Collapsed button configuration
+    public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
+    public static final String PT_BTN_BORDER_CLR_COLLAPSED = "pt_btn_border_clr_collapsed";
+    public static final String PT_BTN_TEXT_CLR_COLLAPSED = "pt_btn_text_clr_collapsed";
+    public static final String PT_BTN_GRAD_CLR1_COLLAPSED = "pt_btn_grad_clr1_collapsed";
+    public static final String PT_BTN_GRAD_CLR2_COLLAPSED = "pt_btn_grad_clr2_collapsed";
+
     public static final Set<String> COLOR_KEYS = Set.of(
             PT_TITLE_COLOR,
             PT_MSG_COLOR,
             PT_BG,
             PT_META_CLR,
             PT_CHRONO_TITLE_COLOUR,
+            PT_CHRONO_BG_CLR,
+            PT_CHRONO_BORDER_CLR,
             PT_PRODUCT_DISPLAY_ACTION_COLOUR,
-            PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
+            PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR,
+            PT_CHRONO_GRAD_CLR1,
+            PT_CHRONO_GRAD_CLR2,
+            PT_TEXT1_COLOR,
+            PT_TEXT2_COLOR,
+            PT_BTN_CLR,
+            PT_BTN_BORDER_CLR,
+            PT_BTN_TEXT_CLR,
+            PT_BTN_GRAD_CLR1,
+            PT_BTN_GRAD_CLR2,
+            PT_BTN_CLR_COLLAPSED,
+            PT_BTN_BORDER_CLR_COLLAPSED,
+            PT_BTN_TEXT_CLR_COLLAPSED,
+            PT_BTN_GRAD_CLR1_COLLAPSED,
+            PT_BTN_GRAD_CLR2_COLLAPSED);
 
 }

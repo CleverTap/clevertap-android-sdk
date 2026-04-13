@@ -6,4 +6,6 @@
     <color name="actionButtonBackground">#000000</color>
     <color name="buttonClicked">#121314</color>
     <color name="customButtonBackground">#404040</color>
+    <color name="verticalImgBtnBgColor">#A0A0A0</color>
+    <color name="verticalImgBtnTextColor">#191919</color>
 </resources>
