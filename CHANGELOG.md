@@ -1,5 +1,8 @@
 ## CHANGE LOG.
 
+### April 13, 2026
+* [CleverTap Push Templates SDK v2.4.0](docs/CTPUSHTEMPLATESCHANGELOG.md).
+
 ### March 6, 2026
 * [CleverTap Push Templates SDK v2.3.0](docs/CTPUSHTEMPLATESCHANGELOG.md).
 

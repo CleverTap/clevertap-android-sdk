@@ -1631,4 +1631,786 @@ class TemplateDataFactoryTest {
         // Then
         assertNull(result)
     }
+
+    // Vertical Image Template Tests
+
+    @Test
+    fun `createTemplateData should create VerticalImageTemplateData for VERTICAL_IMAGE template type`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        assertNotNull(result)
+        assertTrue(result is VerticalImageTemplateData)
+        val data = result as VerticalImageTemplateData
+        assertEquals(TemplateType.VERTICAL_IMAGE, data.templateType)
+        assertNotNull(data.baseContent)
+        assertNotNull(data.mediaData)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should populate text1 and text2 when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TEXT1) } returns "Text One"
+        every { mockBundle.getString(PT_TEXT2) } returns "Text Two"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertEquals("Text One", data.text1)
+        assertEquals("Text Two", data.text2)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should have null text1 and text2 when not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TEXT1) } returns null
+        every { mockBundle.getString(PT_TEXT2) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNull(data.text1)
+        assertNull(data.text2)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create buttonData when button name is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "SHOP NOW"
+        every { mockBundle.getString(PT_BTN_DL) } returns "https://example.com/shop"
+        every { mockBundle.getString(PT_BTN_STYLE) } returns "solid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.buttonData)
+        assertEquals("SHOP NOW", data.buttonData?.name)
+        assertEquals("https://example.com/shop", data.buttonData?.deepLink)
+        assertEquals(ButtonStyle.SOLID, data.buttonData?.style)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should have null buttonData when button name is not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNull(data.buttonData)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should parse linear_gradient button style and direction`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "BUY"
+        every { mockBundle.getString(PT_BTN_STYLE) } returns "gradient_linear"
+        every { mockBundle.getString(PT_BTN_GRAD_DIR) } returns "180"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_TITLE_COLOR to SAMPLE_COLOR,
+            PT_MSG_COLOR to SAMPLE_COLOR,
+            PT_BG to SAMPLE_COLOR,
+            PT_META_CLR to SAMPLE_COLOR,
+            PT_BTN_GRAD_CLR1 to "#FF0000",
+            PT_BTN_GRAD_CLR2 to "#0000FF"
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.buttonData)
+        assertEquals(ButtonStyle.GRADIENT_LINEAR, data.buttonData?.style)
+        assertEquals(180.0, data.buttonData?.gradientDirection)
+        assertEquals("#FF0000", data.buttonData?.gradientColor1)
+        assertEquals("#0000FF", data.buttonData?.gradientColor2)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create collapsedButtonData when collapsed button name is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "VIEW"
+        every { mockBundle.getString(PT_BTN_DL + "_collapsed") } returns "https://example.com/view"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.collapsedButtonData)
+        assertEquals("VIEW", data.collapsedButtonData?.name)
+        assertEquals("https://example.com/view", data.collapsedButtonData?.deepLink)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should have null collapsedMediaData when no collapsed image or gif`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns null
+        every { mockBundle.getString(PT_GIF_COLLAPSED) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNull(data.collapsedMediaData)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create collapsedMediaData when collapsed image is provided`() {
+        // Given
+        setupBasicMockBundle()
+        val collapsedImageUrl = "https://example.com/collapsed.jpg"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns collapsedImageUrl
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, any()) } returns "Collapsed Alt"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.collapsedMediaData)
+        assertEquals(collapsedImageUrl, data.collapsedMediaData?.bigImage?.url)
+    }
+
+    @Test
+    fun `createVerticalImageTemplateData should create collapsedMediaData when collapsed gif is provided`() {
+        // Given
+        setupBasicMockBundle()
+        val collapsedGifUrl = "https://example.com/collapsed.gif"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns null
+        every { mockBundle.getString(PT_GIF_COLLAPSED) } returns collapsedGifUrl
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val data = result as VerticalImageTemplateData
+        assertNotNull(data.collapsedMediaData)
+        assertEquals(collapsedGifUrl, data.collapsedMediaData?.gif?.url)
+    }
+
+    @Test
+    fun `getActions should return correct actions for VerticalImageTemplateData`() {
+        // Given
+        val actions = JSONArray().apply { put("vertical_action") }
+        val verticalData = VerticalImageTemplateData(
+            baseContent = createSampleBaseContent(),
+            mediaData = createSampleMediaData(),
+            collapsedMediaData = null,
+            actions = actions
+        )
+
+        // When
+        val result = with(TemplateDataFactory) { verticalData.getActions() }
+
+        // Then
+        assertEquals(actions, result)
+        assertEquals(1, result?.length())
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default border radius of 6f when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(6f, result.chronometerBorderRadius)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse custom border radius when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_RADIUS) } returns "12.5"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(12.5f, result.chronometerBorderRadius)
+    }
+
+    @Test
+    fun `createTimerTemplateData should return null border width when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertNull(result.chronometerBorderWidth)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse custom border width when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_WIDTH) } returns "4.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(4.0f, result.chronometerBorderWidth)
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default gradient direction of 90 when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse custom gradient direction when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_GRAD_DIR) } returns "45.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(45.0, result.chronometerGradientDirection, 0.0)
+    }
+
+    @Test
+    fun `createTimerTemplateData should default chronometerStyle to SOLID when not provided`() {
+        // Given
+        setupBasicMockBundle()
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.SOLID, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerStyle as SOLID`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "solid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.SOLID, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerStyle as GRADIENT_LINEAR`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "gradient_linear"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.GRADIENT_LINEAR, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerStyle as GRADIENT_RADIAL`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "gradient_radial"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.GRADIENT_RADIAL, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerBorderColor from colorMap`() {
+        // Given
+        setupBasicMockBundle()
+        val borderColor = "#FF0000"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_CHRONO_BORDER_CLR to borderColor
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(borderColor, result.chronometerBorderColor)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse gradient colors from colorMap`() {
+        // Given
+        setupBasicMockBundle()
+        val gradColor1 = "#FF0000"
+        val gradColor2 = "#0000FF"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_CHRONO_GRAD_CLR1 to gradColor1,
+            PT_CHRONO_GRAD_CLR2 to gradColor2
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(gradColor1, result.chronometerGradientColor1)
+        assertEquals(gradColor2, result.chronometerGradientColor2)
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default border radius when invalid string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_RADIUS) } returns "abc"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(6f, result.chronometerBorderRadius)
+    }
+
+    @Test
+    fun `createTimerTemplateData should use default gradient direction when invalid string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_GRAD_DIR) } returns "abc"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+    }
+
+
+    @Test
+    fun `createTimerTemplateData should return null border width when invalid string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_BORDER_WIDTH) } returns "abc"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertNull(result.chronometerBorderWidth)
+    }
+
+    @Test
+    fun `createTimerTemplateData should default chronometerStyle to SOLID when unknown string is provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_CHRONO_STYLE) } returns "unknown_style"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(ButtonStyle.SOLID, result.chronometerStyle)
+    }
+
+    @Test
+    fun `createTimerTemplateData should parse chronometerBgColor from colorMap`() {
+        // Given
+        setupBasicMockBundle()
+        val bgColor = "#FFFF00"
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_CHRONO_BG_CLR to bgColor
+        )
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.TIMER,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as TimerTemplateData
+
+        // Then
+        assertEquals(bgColor, result.chronometerBgColor)
+    }
+
+    // ==================== Vertical Image Button Tests ====================
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_radius when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS) } returns "8.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(8.0f, result.buttonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderRadius to PT_BTN_BORDER_RADIUS_DEFAULT when not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.buttonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderRadius to PT_BTN_BORDER_RADIUS_DEFAULT when value is invalid`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS) } returns "invalid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.buttonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_width when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH) } returns "2.5"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(2.5f, result.buttonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderWidth to PT_BTN_BORDER_WIDTH_DEFAULT when not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.buttonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderWidth to PT_BTN_BORDER_WIDTH_DEFAULT when value is invalid`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH) } returns "invalid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.buttonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_radius_collapsed for collapsed button`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "Shop"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS + "_collapsed") } returns "12.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.collapsedButtonData)
+        assertEquals(12.0f, result.collapsedButtonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_width_collapsed for collapsed button`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "Shop"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH + "_collapsed") } returns "3.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.collapsedButtonData)
+        assertEquals(3.0f, result.collapsedButtonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use defaults for collapsed button when keys are not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "Shop"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS + "_collapsed") } returns null
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH + "_collapsed") } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.collapsedButtonData)
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.collapsedButtonData!!.borderRadius)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.collapsedButtonData!!.borderWidth)
+    }
 }

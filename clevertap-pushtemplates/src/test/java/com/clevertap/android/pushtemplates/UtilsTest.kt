@@ -2942,19 +2942,6 @@ class UtilsTest {
 
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
-    fun `getNotificationIds should return empty list when API level is 21`() {
-        // Given
-        val mockContext = mockk<Context>()
-
-        // When
-        val result = Utils.getNotificationIds(mockContext)
-
-        // Then
-        assertTrue(result.isEmpty())
-    }
-
-    @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `getNotificationIds should return empty list when no notifications match package`() {
         // Given

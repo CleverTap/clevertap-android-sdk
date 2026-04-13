@@ -10,8 +10,28 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_ALT_TEXT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_COLLAPSED
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG_COLLAPSED_ALT_TEXT
 import com.clevertap.android.pushtemplates.PTConstants.PT_CANCEL_NOTIF_ID
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BG_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_DL
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_RADIUS_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_WIDTH_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_GRAD_DIR_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_NAME
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_STYLE
+import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_TEXT_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DISMISS
 import com.clevertap.android.pushtemplates.PTConstants.PT_DISMISS_ON_CLICK
 import com.clevertap.android.pushtemplates.PTConstants.PT_GIF
@@ -42,10 +62,16 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_SCALE_TYPE_COLLAPSED
 import com.clevertap.android.pushtemplates.PTConstants.PT_SMALL_VIEW
 import com.clevertap.android.pushtemplates.PTConstants.PT_STICKY
 import com.clevertap.android.pushtemplates.PTConstants.PT_SUBTITLE
+import com.clevertap.android.pushtemplates.PTConstants.PT_TEXT1
+import com.clevertap.android.pushtemplates.PTConstants.PT_TEXT1_COLOR
+import com.clevertap.android.pushtemplates.PTConstants.PT_TEXT2
+import com.clevertap.android.pushtemplates.PTConstants.PT_TEXT2_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_ALT
 import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.TEXT_ONLY
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_WIDTH
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
@@ -130,6 +156,12 @@ internal object TemplateDataFactory {
             TemplateType.CANCEL -> createCancelTemplateData(
                 extras,
                 notificationIdsProvider
+            )
+
+            TemplateType.VERTICAL_IMAGE -> createVerticalImageTemplateData(
+                extras,
+                darkModeAdaptiveColors,
+                defaultAltText
             )
 
             else -> null
@@ -253,6 +285,14 @@ internal object TemplateDataFactory {
             terminalTextData = createTerminalTextData(extras, baseContent.textData),
             terminalMediaData = createTerminalMediaData(extras, defaultAltText, mediaData),
             chronometerTitleColor = colorMap[PT_CHRONO_TITLE_COLOUR],
+            chronometerBgColor = colorMap[PT_CHRONO_BG_CLR],
+            chronometerBorderColor = colorMap[PT_CHRONO_BORDER_CLR],
+            chronometerStyle = ButtonStyle.fromString(extras.getString(PT_CHRONO_STYLE)),
+            chronometerGradientColor1 = colorMap[PT_CHRONO_GRAD_CLR1],
+            chronometerGradientColor2 = colorMap[PT_CHRONO_GRAD_CLR2],
+            chronometerGradientDirection = extras.getString(PT_CHRONO_GRAD_DIR)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
+            chronometerBorderRadius = extras.getString(PT_CHRONO_BORDER_RADIUS)?.toFloatOrNull() ?: 6f,
+            chronometerBorderWidth = extras.getString(PT_CHRONO_BORDER_WIDTH)?.toFloatOrNull(),
             renderTerminal = extras.getString(PT_RENDER_TERMINAL)
                 ?.equals("true", ignoreCase = true) ?: true
         )
@@ -285,7 +325,48 @@ internal object TemplateDataFactory {
         )
     }
 
-    // Helper methods for creating nested data objects
+    private fun createVerticalImageTemplateData(
+        extras: Bundle,
+        colorMap: Map<String, String>,
+        defaultAltText: String
+    ): VerticalImageTemplateData {
+        val mediaData = createMediaData(extras, defaultAltText)
+        return VerticalImageTemplateData(
+            baseContent = createBaseContent(extras, colorMap),
+            mediaData = mediaData,
+            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras, defaultAltText),
+            actions = Utils.getActionKeys(extras),
+            text1 = extras.getString(PT_TEXT1),
+            text2 = extras.getString(PT_TEXT2),
+            text1Color = colorMap[PT_TEXT1_COLOR],
+            text2Color = colorMap[PT_TEXT2_COLOR],
+            buttonData = createVerticalImageButtonData(extras, colorMap),
+            collapsedButtonData = createVerticalImageButtonData(extras, colorMap, collapsed = true)
+        )
+    }
+
+    private fun createVerticalImageButtonData(
+        extras: Bundle,
+        colorMap: Map<String, String>,
+        collapsed: Boolean = false,
+    ): VerticalImageButtonData? {
+        val suffix = if (collapsed) "_collapsed" else ""
+        val btnName = extras.getString(PT_BTN_NAME + suffix)?.takeIf { it.isNotEmpty() } ?: return null
+        return VerticalImageButtonData(
+            name = btnName,
+            deepLink = extras.getString(PT_BTN_DL + suffix),
+            style = ButtonStyle.fromString(extras.getString(PT_BTN_STYLE + suffix)),
+            buttonColor = colorMap[PT_BTN_CLR + suffix],
+            borderColor = colorMap[PT_BTN_BORDER_CLR + suffix],
+            textColor = colorMap[PT_BTN_TEXT_CLR + suffix],
+            gradientColor1 = colorMap[PT_BTN_GRAD_CLR1 + suffix],
+            gradientColor2 = colorMap[PT_BTN_GRAD_CLR2 + suffix],
+            gradientDirection = extras.getString(PT_BTN_GRAD_DIR + suffix)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
+            borderRadius = extras.getString(PT_BTN_BORDER_RADIUS + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_RADIUS_DEFAULT,
+            borderWidth = extras.getString(PT_BTN_BORDER_WIDTH + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_WIDTH_DEFAULT,
+        )
+    }
+
     private fun createBaseContent(extras: Bundle, colorMap: Map<String, String>): BaseContent {
         return BaseContent(
             textData = createBaseTextData(extras),
@@ -370,6 +451,23 @@ internal object TemplateDataFactory {
                     defaultMediaData.scaleType.name
                 )
             )
+        )
+    }
+
+    private fun createCollapsedMediaDataWithoutFallback(extras: Bundle, defaultAltText: String): MediaData? {
+        val bigImageCollapsed = extras.getString(PT_BIG_IMG_COLLAPSED)?.takeIf { it.isNotBlank() }
+        val gifCollapsed = extras.getString(PT_GIF_COLLAPSED)?.takeIf { it.isNotBlank() }
+        if (bigImageCollapsed == null && gifCollapsed == null) return null
+        return MediaData(
+            bigImage = ImageData(
+                url = bigImageCollapsed,
+                altText = extras.getString(PT_BIG_IMG_COLLAPSED_ALT_TEXT, defaultAltText)
+            ),
+            gif = GifData(
+                url = gifCollapsed,
+                numberOfFrames = extras.getString(PT_GIF_FRAMES_COLLAPSED)?.toIntOrNull() ?: 10
+            ),
+            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE_COLLAPSED))
         )
     }
 
@@ -530,6 +628,10 @@ internal object TemplateDataFactory {
             }
 
             is InputBoxTemplateData -> {
+                this.actions
+            }
+
+            is VerticalImageTemplateData -> {
                 this.actions
             }
 
