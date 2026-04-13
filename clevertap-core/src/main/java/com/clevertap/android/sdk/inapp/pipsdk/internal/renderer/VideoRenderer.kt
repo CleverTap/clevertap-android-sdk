@@ -109,6 +109,10 @@ internal class VideoRenderer(
             isMuted = w.isMuted,
             positionMs = w.currentPositionMs,
         )
+        // Clear stale callback before detach so any ExoPlayer state changes during
+        // the rotation gap don't route through the dead view hierarchy.
+        // Re-wired in rebindSurface() with the new renderer's stateListener.
+        w.onPlayingChanged = null
         w.detachSurface()
     }
 
@@ -123,6 +127,15 @@ internal class VideoRenderer(
         )
         _isMuted = session.isMuted
         _isPlaying = session.isPlaying
+
+        // Re-wire playing-state callback to this (new) renderer's stateListener.
+        // The wrapper survives rotation but its onPlayingChanged still points to the
+        // old renderer's lambda. Without this, ExoPlayer state changes (e.g., buffering
+        // → playing after network recovery) don't reach the new view hierarchy.
+        w.onPlayingChanged = { isPlaying ->
+            _isPlaying = isPlaying
+            stateListener?.onPlayPauseToggled(isPlaying)
+        }
 
         // Re-register error listener with the new container so fallback loads
         // into the post-rotation view, not the old (detached) one.
