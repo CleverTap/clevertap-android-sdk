@@ -2220,4 +2220,197 @@ class TemplateDataFactoryTest {
         // Then
         assertEquals(bgColor, result.chronometerBgColor)
     }
+
+    // ==================== Vertical Image Button Tests ====================
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_radius when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS) } returns "8.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(8.0f, result.buttonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderRadius to PT_BTN_BORDER_RADIUS_DEFAULT when not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.buttonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderRadius to PT_BTN_BORDER_RADIUS_DEFAULT when value is invalid`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS) } returns "invalid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.buttonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_width when provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH) } returns "2.5"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(2.5f, result.buttonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderWidth to PT_BTN_BORDER_WIDTH_DEFAULT when not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.buttonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should default borderWidth to PT_BTN_BORDER_WIDTH_DEFAULT when value is invalid`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME) } returns "Shop Now"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH) } returns "invalid"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.buttonData)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.buttonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_radius_collapsed for collapsed button`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "Shop"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS + "_collapsed") } returns "12.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.collapsedButtonData)
+        assertEquals(12.0f, result.collapsedButtonData!!.borderRadius)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use pt_btn_border_width_collapsed for collapsed button`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "Shop"
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH + "_collapsed") } returns "3.0"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.collapsedButtonData)
+        assertEquals(3.0f, result.collapsedButtonData!!.borderWidth)
+    }
+
+    @Test
+    fun `createVerticalImageButtonData should use defaults for collapsed button when keys are not provided`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_BTN_NAME + "_collapsed") } returns "Shop"
+        every { mockBundle.getString(PT_BTN_BORDER_RADIUS + "_collapsed") } returns null
+        every { mockBundle.getString(PT_BTN_BORDER_WIDTH + "_collapsed") } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.VERTICAL_IMAGE,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as VerticalImageTemplateData
+
+        // Then
+        assertNotNull(result.collapsedButtonData)
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.collapsedButtonData!!.borderRadius)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.collapsedButtonData!!.borderWidth)
+    }
 }
