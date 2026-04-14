@@ -130,12 +130,14 @@ internal object PIPAnimator {
         anchor: PointF, pipW: Int, pipH: Int, containerW: Int, containerH: Int,
         direction: PIPAnimationConfig.MoveInDirection?,
     ): PointF {
+        // Direction = which way the PIP moves (not where it comes from).
+        // LEFT = PIP slides leftward → starts off-screen RIGHT.
         if (direction != null) {
             return when (direction) {
-                PIPAnimationConfig.MoveInDirection.LEFT -> PointF(-(anchor.x + pipW), 0f)
-                PIPAnimationConfig.MoveInDirection.RIGHT -> PointF(containerW - anchor.x, 0f)
-                PIPAnimationConfig.MoveInDirection.TOP -> PointF(0f, -(anchor.y + pipH))
-                PIPAnimationConfig.MoveInDirection.BOTTOM -> PointF(0f, containerH - anchor.y)
+                PIPAnimationConfig.MoveInDirection.LEFT -> PointF(containerW - anchor.x, 0f)
+                PIPAnimationConfig.MoveInDirection.RIGHT -> PointF(-(anchor.x + pipW), 0f)
+                PIPAnimationConfig.MoveInDirection.TOP -> PointF(0f, containerH - anchor.y)
+                PIPAnimationConfig.MoveInDirection.BOTTOM -> PointF(0f, -(anchor.y + pipH))
             }
         }
 
