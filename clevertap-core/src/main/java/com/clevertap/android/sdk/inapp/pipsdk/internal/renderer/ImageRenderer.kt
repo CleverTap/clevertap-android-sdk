@@ -23,6 +23,9 @@ internal class ImageRenderer(
 
     private var imageView: ImageView? = null
     private var config: PIPConfig? = null
+
+    override var onMediaReady: (() -> Unit)? = null
+    override var onAllMediaFailed: (() -> Unit)? = null
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
@@ -45,6 +48,7 @@ internal class ImageRenderer(
         val cached = resourceProvider.cachedInAppImageV1(config.mediaUrl)
         if (cached != null) {
             iv.setImageBitmap(cached)
+            onMediaReady?.invoke()
         } else {
             // Background fetch
             mediaExecutor.execute {
@@ -53,6 +57,7 @@ internal class ImageRenderer(
                     if (released) return@post
                     if (fetched != null) {
                         iv.setImageBitmap(fetched)
+                        onMediaReady?.invoke()
                     } else {
                         loadFallback(iv, config)
                     }
@@ -98,6 +103,8 @@ internal class ImageRenderer(
                 callbacks = config.callbacks,
                 errorContext = "Image load failed",
                 onBitmapReady = { bitmap -> iv.setImageBitmap(bitmap); true },
+                onSuccess = { onMediaReady?.invoke() },
+                onTotalFailure = { onAllMediaFailed?.invoke() },
             )
         )
     }

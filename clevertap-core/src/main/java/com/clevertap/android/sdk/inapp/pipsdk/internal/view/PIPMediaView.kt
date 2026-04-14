@@ -36,6 +36,15 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
      *  Parent views should hide video-specific controls (mute, play/pause) when this fires. */
     var onVideoFallback: (() -> Unit)? = null
 
+    /** Called when at least one media URL loaded successfully (primary or fallback). */
+    var onMediaReady: (() -> Unit)? = null
+    /** Called when all media URLs failed — nothing to display. */
+    var onAllMediaFailed: (() -> Unit)? = null
+
+    /** Called when ExoPlayer's playing state changes (e.g., buffering → playing).
+     *  Used by parent views to sync play/pause button icons. */
+    var onPlayStateChanged: ((isPlaying: Boolean) -> Unit)? = null
+
     fun initialize(
         config: PIPConfig,
         session: PIPSession,
@@ -103,6 +112,8 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
                 isReleased = { false },
                 callbacks = session.config.callbacks,
                 errorContext = "Fallback reload after rotation",
+                onSuccess = { onMediaReady?.invoke() },
+                onTotalFailure = { onAllMediaFailed?.invoke() },
             )
         )
         return true
@@ -180,6 +191,7 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
                     session.isPlaying = isPlaying
                     if (isPlaying) session.config.callbacks?.onPlaybackStarted()
                     else session.config.callbacks?.onPlaybackPaused()
+                    onPlayStateChanged?.invoke(isPlaying)
                 }
 
                 override fun onMuteToggled(isMuted: Boolean) {
@@ -187,5 +199,8 @@ internal class PIPMediaView(context: Context) : FrameLayout(context) {
                 }
             }
         }
+    }.also { renderer ->
+        renderer.onMediaReady = { onMediaReady?.invoke() }
+        renderer.onAllMediaFailed = { onAllMediaFailed?.invoke() }
     }
 }

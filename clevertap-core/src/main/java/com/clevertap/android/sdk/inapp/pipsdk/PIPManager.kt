@@ -80,7 +80,7 @@ internal class PIPManager(
 
     private fun showInternal(activity: Activity, config: PIPConfig, lifecycleOwner: LifecycleOwner?) {
         // Silently replace any existing session
-        dismissInternal(notifyCallback = false)
+        dismissInternal(DismissReason.Replaced, animate = false)
 
         // Clear stale rotation state from a previous session. Scenario: PIP is showing,
         // user rotates (pendingRotationReattach = true), then PIP is dismissed before the
@@ -116,6 +116,7 @@ internal class PIPManager(
         // Attach PIPRootContainer to the Activity's content view
         val container = PIPRootContainer(activity)
         container.onDismissRequested = { runOnMain { dismissInternal() } }
+        container.onShowFailed = { runOnMain { dismissInternal(DismissReason.ShowFailed, animate = false) } }
         newSession.pipRootContainer = container
         container.setupBackPressCallback(activity)
 
@@ -131,32 +132,36 @@ internal class PIPManager(
         )
     }
 
-    /**
-     * Dismisses the active PIP session and releases all resources.
-     *
-     * @param notifyCallback false when replacing an existing session so that [PIPCallbacks.onClose]
-     *   is not fired spuriously during the replace-show flow.
-     */
-    private fun dismissInternal(notifyCallback: Boolean = true, animate: Boolean = true) {
+    private sealed interface DismissReason {
+        /** User tapped close, or action triggered dismiss. */
+        data object UserClose : DismissReason
+        /** All media URLs failed — PIP was never visible. */
+        data object ShowFailed : DismissReason
+        /** Activity destroyed (non-config) or Fragment view stopped (SAA). */
+        data object SessionCleanup : DismissReason
+        /** A new show() call is replacing the current session. */
+        data object Replaced : DismissReason
+    }
+
+    private fun dismissInternal(
+        reason: DismissReason = DismissReason.UserClose,
+        animate: Boolean = true,
+    ) {
         val s = session ?: return
         session = null      // Mark not visible immediately; prevents re-entry
         removeLifecycleObserver(s)
 
-        val container = s.pipRootContainer
         val cleanup: () -> Unit = {
-            if (container != null) {
-                // Normal path: release player through the view/renderer chain
-                container.detach(releaseMedia = true)
-                (container.parent as? ViewGroup)?.removeView(container)
-            } else {
-                // Edge case: dismiss during rotation (container already detached).
-                // Release player directly since there's no view chain to do it.
-                s.videoPlayerWrapper?.release()
+            performCleanup(s)
+            when (reason) {
+                DismissReason.UserClose,
+                DismissReason.SessionCleanup -> s.config.callbacks?.onClose()
+                DismissReason.ShowFailed -> s.config.callbacks?.onShowFailed()
+                DismissReason.Replaced -> {}
             }
-            s.videoPlayerWrapper = null
-            if (notifyCallback) s.config.callbacks?.onClose()
         }
 
+        val container = s.pipRootContainer
         if (animate && container != null) {
             container.dismiss(cleanup)
         } else {
@@ -165,6 +170,20 @@ internal class PIPManager(
 
         shutdownMediaExecutor()
         unregisterCallbacks()
+    }
+
+    private fun performCleanup(s: PIPSession) {
+        val container = s.pipRootContainer
+        if (container != null) {
+            // Normal path: release player through the view/renderer chain
+            container.detach(releaseMedia = true)
+            (container.parent as? ViewGroup)?.removeView(container)
+        } else {
+            // Edge case: dismiss during rotation (container already detached).
+            // Release player directly since there's no view chain to do it.
+            s.videoPlayerWrapper?.release()
+        }
+        s.videoPlayerWrapper = null
     }
 
     // ─── ActivityLifecycleCallbacks ───────────────────────────────────────────────
@@ -235,6 +254,7 @@ internal class PIPManager(
         s.activityRef = WeakReference(activity)
         val container = PIPRootContainer(activity)
         container.onDismissRequested = { runOnMain { dismissInternal() } }
+        container.onShowFailed = { runOnMain { dismissInternal(DismissReason.ShowFailed, animate = false) } }
         container.setupBackPressCallback(activity)
         s.pipRootContainer = container
         activity.contentView.addView(
@@ -252,7 +272,7 @@ internal class PIPManager(
     private fun cleanupSession() {
         // Called from ActivityLifecycleCallbacks when Activity is destroyed (non-config).
         // No animation, no onClose callback — just tear down immediately.
-        dismissInternal(notifyCallback = false, animate = false)
+        dismissInternal(DismissReason.SessionCleanup, animate = false)
     }
 
     private fun removeLifecycleObserver(s: PIPSession) {

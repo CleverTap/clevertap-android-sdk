@@ -80,7 +80,7 @@ internal class InAppController(
     private val clock: Clock,
     private val networkMonitor: NetworkMonitor,
     private val pipManager: PIPManager,
-) : InAppListener {
+) : InAppListener, PIPShowFailureHandler {
 
     private enum class InAppState {
         DISCARDED,
@@ -765,6 +765,19 @@ internal class InAppController(
         }
     }
 
+    override fun onPIPShowFailed(inAppNotification: CTInAppNotification) {
+        logger.verbose(defaultLogTag, "PIP failed to show: ${inAppNotification.campaignId}")
+        // Same threading pattern as inAppNotificationDidDismiss: clear the lock and advance
+        // the queue atomically on the async in-app thread. This avoids a race where
+        // currentlyDisplayingInApp is cleared on main but _showNotificationIfAvailable
+        // hasn't run yet on the async thread.
+        val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+        task.execute("InAppController#onPIPShowFailed") {
+            inAppDidDismiss(inAppNotification)
+            _showNotificationIfAvailable()
+        }
+    }
+
     private fun incrementLocalInAppCountInPersistentStore(
         context: Context,
         inAppNotification: CTInAppNotification
@@ -963,7 +976,7 @@ internal class InAppController(
                     if (activity == null) {
                         throw IllegalStateException("Current activity reference not found for PIP")
                     }
-                    val bridge = PIPInAppCallbacksBridge(inAppNotification, this, logger)
+                    val bridge = PIPInAppCallbacksBridge(inAppNotification, this, this, logger)
                     val pipConfig = PIPConfigFactory.create(inAppNotification, bridge, logger)
                     if (pipConfig == null) {
                         logger.debug(defaultLogTag, "Failed to create PIPConfig, skipping")

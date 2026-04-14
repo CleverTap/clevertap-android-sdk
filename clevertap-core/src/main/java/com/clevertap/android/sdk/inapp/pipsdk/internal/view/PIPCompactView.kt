@@ -8,9 +8,11 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.core.graphics.Insets
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.pipsdk.PIPConfig
@@ -23,8 +25,13 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
 /**
  * Compact draggable PIP window.
  *
+ * Layout:
+ * - Close button at top-right
+ * - Play/pause button centered (video-only)
+ * - Bottom-right row: deeplink, mute, expand
+ *
  * Contains the shared [mediaView] (moved out during expand), a [PIPControlsOverlay]
- * with Close and Expand buttons, and a [PIPDragHandler] for drag-to-reposition + snap.
+ * with controls, and a [PIPDragHandler] for drag-to-reposition + snap.
  */
 internal class PIPCompactView(
     context: Context,
@@ -38,8 +45,11 @@ internal class PIPCompactView(
 
     internal val controlsOverlay: PIPControlsOverlay
     private val dragHandler: PIPDragHandler
+    private var closeBtn: ImageView? = null
+    private var playPauseBtn: ImageView? = null
     private var deeplinkBtn: ImageView? = null
     private var muteBtn: ImageView? = null
+    private var expandBtn: ImageView? = null
     var getSafeInsets: () -> Insets = { Insets.NONE }
 
     init {
@@ -55,10 +65,47 @@ internal class PIPCompactView(
         controlsOverlay = PIPControlsOverlay(context)
         controlsOverlay.alpha = 0f
 
-        val iconSizePx = ICON_SIZE_DP.dpToPx(context)
+        val iconSizePx = MIN_ICON_SIZE_DP.dpToPx(context) // provisional; updated by updateIconSizes()
+        val centerIconSizePx = (iconSizePx * CENTER_ICON_SCALE).toInt()
+        val iconGapPx = ICON_GAP_DP.dpToPx(context)
+        val iconMarginPx = ICON_MARGIN_DP.dpToPx(context)
 
-        // Deeplink button — bottom-left by default (image/GIF); moved to top-left for video
-        // in bindVideoControls() to avoid overlap with the mute button.
+        // Close button — top-right
+        val clsBtn = ImageView(context).apply {
+            setImageResource(R.drawable.ct_ic_close_pip)
+            contentDescription = context.getString(R.string.ct_inapp_close_btn)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            visibility = if (cfg.showCloseButton) View.VISIBLE else View.GONE
+            setOnClickListener { onClose() }
+        }
+        closeBtn = clsBtn
+        controlsOverlay.addView(
+            clsBtn,
+            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END).apply {
+                setMargins(iconMarginPx, iconMarginPx, iconMarginPx, iconMarginPx)
+            },
+        )
+
+        // Play/Pause button — center (video-only, initially hidden)
+        val ppBtn = ImageView(context).apply {
+            setImageResource(PIPIcons.playPauseIcon(playing = true))
+            contentDescription = context.getString(PIPIcons.playPauseContentDescription(playing = true))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            visibility = View.GONE
+        }
+        playPauseBtn = ppBtn
+        controlsOverlay.addView(
+            ppBtn,
+            LayoutParams(centerIconSizePx, centerIconSizePx, Gravity.CENTER),
+        )
+
+        // Bottom-right row: deeplink, mute, expand
+        val bottomRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        // Deeplink button
         val dlBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_deeplink)
             contentDescription = context.getString(R.string.ct_action_button_content_description)
@@ -67,25 +114,9 @@ internal class PIPCompactView(
             setOnClickListener { onAction() }
         }
         deeplinkBtn = dlBtn
-        controlsOverlay.addView(
-            dlBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
-        )
+        bottomRow.addView(dlBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
 
-        // Close button — top-right (hidden if showCloseButton = false)
-        val closeBtn = ImageView(context).apply {
-            setImageResource(R.drawable.ct_ic_close_pip)
-            contentDescription = context.getString(R.string.ct_inapp_close_btn)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            visibility = if (cfg.showCloseButton) View.VISIBLE else View.GONE
-            setOnClickListener { onClose() }
-        }
-        controlsOverlay.addView(
-            closeBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.TOP or Gravity.END),
-        )
-
-        // Mute button — bottom-left (video only; hidden until bindVideoControls)
+        // Mute button (video-only, initially hidden)
         val mBtn = ImageView(context).apply {
             setImageResource(PIPIcons.muteIcon(muted = true))
             contentDescription = context.getString(PIPIcons.muteContentDescription(muted = true))
@@ -93,22 +124,28 @@ internal class PIPCompactView(
             visibility = View.GONE
         }
         muteBtn = mBtn
-        controlsOverlay.addView(
-            mBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.START),
-        )
+        bottomRow.addView(mBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginStart = iconGapPx
+        })
 
-        // Expand button — bottom-right (hidden if expandCollapse control disabled)
-        val expandBtn = ImageView(context).apply {
+        // Expand button
+        val expBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_expand)
             contentDescription = context.getString(R.string.ct_pip_expand_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
             visibility = if (cfg.showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onExpand() }
         }
+        expandBtn = expBtn
+        bottomRow.addView(expBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginStart = iconGapPx
+        })
+
         controlsOverlay.addView(
-            expandBtn,
-            LayoutParams(iconSizePx, iconSizePx, Gravity.BOTTOM or Gravity.END),
+            bottomRow,
+            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.END).apply {
+                setMargins(iconMarginPx, iconMarginPx, iconMarginPx, iconMarginPx)
+            },
         )
 
         addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
@@ -130,27 +167,70 @@ internal class PIPCompactView(
     }
 
     /**
-     * Wires mute button for video media. Call after media is attached.
+     * Wires video-specific controls: play/pause (center) and mute (bottom-right row).
+     * Call after media is attached.
      */
     fun bindVideoControls(mv: PIPMediaView) {
         if (!mv.isVideoType) return
-        // Move deeplink to top-left so it doesn't overlap with the mute button at bottom-left
-        deeplinkBtn?.let {
-            (it.layoutParams as LayoutParams).gravity = Gravity.TOP or Gravity.START
-            it.requestLayout()
+
+        // Show and wire play/pause button (center)
+        playPauseBtn?.apply {
+            visibility = if (session.config.showPlayPauseButton) View.VISIBLE else View.GONE
+            setOnClickListener {
+                mv.togglePlayPause()
+                updatePlayPauseIcon(mv.isPlaying)
+                controlsOverlay.resetAutoHideTimer()
+            }
         }
-        muteBtn?.visibility = if (session.config.showMuteButton) View.VISIBLE else View.GONE
+        updatePlayPauseIcon(mv.isPlaying)
+
+        // Show and wire mute button (in bottom-right row)
+        muteBtn?.apply {
+            visibility = if (session.config.showMuteButton) View.VISIBLE else View.GONE
+            setOnClickListener {
+                mv.toggleMute()
+                updateMuteIcon(mv.isMuted)
+                controlsOverlay.resetAutoHideTimer()
+            }
+        }
         updateMuteIcon(mv.isMuted)
-        muteBtn?.setOnClickListener {
-            mv.toggleMute()
-            updateMuteIcon(mv.isMuted)
-            controlsOverlay.resetAutoHideTimer()
-        }
     }
 
-    private fun updateMuteIcon(muted: Boolean) {
-        muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
-        muteBtn?.contentDescription = muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
+    /** Hides video-specific controls. Called when video falls back to static image. */
+    fun hideVideoControls() {
+        playPauseBtn?.visibility = View.GONE
+        playPauseBtn?.setOnClickListener(null)
+        muteBtn?.visibility = View.GONE
+        muteBtn?.setOnClickListener(null)
+    }
+
+    /** Syncs play/pause icon with current state — called after collapsing or on ExoPlayer state change. */
+    fun syncPlayPauseIcon(playing: Boolean) = updatePlayPauseIcon(playing)
+
+    /** Syncs mute icon with current state — called after collapsing from expanded view. */
+    fun syncMuteIcon(muted: Boolean) = updateMuteIcon(muted)
+
+    // ─── Icon sizing ────────────────────────────────────────────────────────────
+
+    /**
+     * Recomputes icon sizes based on actual PIP width.
+     * Called from [PIPRootContainer.positionAndShow] after pipW is finalized
+     * (accounts for height clamping and border padding in both portrait and landscape).
+     *
+     * Width is the constraining dimension because the bottom-right row of icons
+     * (deeplink, mute, expand) is laid out horizontally within the PIP width.
+     */
+    fun updateIconSizes(pipWidthPx: Int) {
+        val iconSizePx = resolveIconSize(pipWidthPx)
+        listOfNotNull(deeplinkBtn, closeBtn, muteBtn, expandBtn).forEach { btn ->
+            btn.layoutParams.width = iconSizePx
+            btn.layoutParams.height = iconSizePx
+        }
+        playPauseBtn?.let {
+            val centerSize = (iconSizePx * CENTER_ICON_SCALE).toInt()
+            it.layoutParams.width = centerSize
+            it.layoutParams.height = centerSize
+        }
     }
 
     // ─── Touch handling ──────────────────────────────────────────────────────────
@@ -174,33 +254,41 @@ internal class PIPCompactView(
         }
     }
 
-    /** Hides video-specific controls (mute). Called when video falls back to static image. */
-    fun hideVideoControls() {
-        muteBtn?.visibility = View.GONE
-        muteBtn?.setOnClickListener(null)
-        // Restore deeplink button to default position (bottom-left) since
-        // bindVideoControls() moved it to top-left to avoid mute button overlap.
-        deeplinkBtn?.let {
-            (it.layoutParams as LayoutParams).gravity = Gravity.BOTTOM or Gravity.START
-            it.requestLayout()
-        }
+    fun detach() = controlsOverlay.detach()
+
+    // ─── Private helpers ─────────────────────────────────────────────────────────
+
+    private fun updatePlayPauseIcon(playing: Boolean) {
+        playPauseBtn?.setImageResource(PIPIcons.playPauseIcon(playing))
+        playPauseBtn?.contentDescription =
+            playPauseBtn?.context?.getString(PIPIcons.playPauseContentDescription(playing))
     }
 
-    fun detach() = controlsOverlay.detach()
+    private fun updateMuteIcon(muted: Boolean) {
+        muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
+        muteBtn?.contentDescription =
+            muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
+    }
+
+    private fun resolveIconSize(pipWidthPx: Int): Int {
+        val iconSizePx = (pipWidthPx * ICON_SIZE_FRACTION).toInt()
+        return iconSizePx.coerceIn(
+            MIN_ICON_SIZE_DP.dpToPx(context),
+            MAX_ICON_SIZE_DP.dpToPx(context),
+        )
+    }
 
     private fun applyBorderStyle(cfg: PIPConfig) {
         val hasBorderStyle = cfg.mediaType != PIPMediaType.VIDEO &&
                 (cfg.cornerRadiusDp > 0 || cfg.borderEnabled)
 
         if (!hasBorderStyle) {
-            // Default: simple black background with BOUNDS outline for shadow
             outlineProvider = ViewOutlineProvider.BOUNDS
             setBackgroundColor(Color.BLACK)
             return
         }
 
         val radiusPx = cfg.cornerRadiusDp.dpToPx(context).toFloat()
-
         val borderPx = if (cfg.borderEnabled && cfg.borderWidthDp > 0)
             cfg.borderWidthDp.dpToPx(context) else 0
 
@@ -227,7 +315,16 @@ internal class PIPCompactView(
     }
 
     private companion object {
-        const val ICON_SIZE_DP = 30
         const val ELEVATION_DP = 6
+        const val ICON_GAP_DP = 8
+        const val ICON_MARGIN_DP = 4
+
+        /** Icon size as a fraction of the larger PIP dimension (18%). */
+        private const val ICON_SIZE_FRACTION = 0.18f
+        private const val MIN_ICON_SIZE_DP = 24
+        private const val MAX_ICON_SIZE_DP = 40
+
+        /** Center play/pause is proportionally larger than corner icons. */
+        private const val CENTER_ICON_SCALE = 1f
     }
 }

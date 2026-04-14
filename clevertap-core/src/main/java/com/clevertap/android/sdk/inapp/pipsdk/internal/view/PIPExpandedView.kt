@@ -23,8 +23,12 @@ import com.clevertap.android.sdk.inapp.pipsdk.internal.session.PIPSession
  * - Dark background (scrim) fills the view
  * - [mediaContainer] fills the view edge-to-edge (video uses FIT mode internally)
  * - [controlsOverlay] fills the view with **no padding**; individual controls use
- *   inset-based margins so centering stays relative to the full screen (matching the
- *   edge-to-edge media) while each button independently avoids unsafe edges
+ *   inset-based margins so centering stays relative to the full screen
+ *
+ * Controls layout:
+ * - Close button: top-right
+ * - Play/pause button: center (video-only)
+ * - Bottom-right row: deeplink, mute, collapse
  *
  * [bindMedia] must be called after the view has been measured (use post/onReady callback).
  */
@@ -46,13 +50,9 @@ internal class PIPExpandedView(
     private var playPauseBtn: ImageView? = null
     private var muteBtn: ImageView? = null
     private val bottomRow: LinearLayout
-    private val rowSpacer: View
 
     /** Current system insets — updated by the insets listener, used for per-button margins. */
     private var currentInsets = Insets.NONE
-
-    /** Whether the current media is video (affects bottom row margin strategy). */
-    private var isVideoMode = false
 
     init {
         setBackgroundColor(Color.BLACK)
@@ -81,18 +81,18 @@ internal class PIPExpandedView(
         }
         addView(controlsOverlay, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        val padPx = ICON_PADDING_DP.dpToPx(context)
         val iconSizePx = ICON_SIZE_DP.dpToPx(context)
+        val centerIconSizePx = CENTER_ICON_SIZE_DP.dpToPx(context)
         val iconMarginPx = ICON_MARGIN_DP.dpToPx(context)
         val rowMarginPx = ROW_MARGIN_DP.dpToPx(context)
         val iconGapPx = ICON_GAP_DP.dpToPx(context)
 
-        // Close button — top-right of screen; inset margins keep it clear of status bar / cutout
+        // Close button — top-right; inset margins keep it clear of status bar / cutout
         closeBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_close_pip)
             contentDescription = context.getString(R.string.ct_inapp_close_btn)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            setPadding(padPx, padPx, padPx, padPx)
+
             visibility = if (showCloseButton) View.VISIBLE else View.GONE
             setOnClickListener { onClose() }
         }
@@ -103,8 +103,21 @@ internal class PIPExpandedView(
             },
         )
 
-        // Bottom control row — anchored to screen bottom; inset margins keep it clear of nav bar.
-        // Centred horizontally for video, or full-width with spacer for image/GIF.
+        // Play/Pause button — center (video-only, initially hidden)
+        val ppBtn = ImageView(context).apply {
+            setImageResource(PIPIcons.playPauseIcon(playing = true))
+            contentDescription = context.getString(PIPIcons.playPauseContentDescription(playing = true))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+
+            visibility = View.GONE
+        }
+        playPauseBtn = ppBtn
+        controlsOverlay.addView(
+            ppBtn,
+            LayoutParams(centerIconSizePx, centerIconSizePx, Gravity.CENTER),
+        )
+
+        // Bottom-right control row: deeplink, mute, collapse
         bottomRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -115,61 +128,42 @@ internal class PIPExpandedView(
             setImageResource(R.drawable.ct_ic_deeplink)
             contentDescription = context.getString(R.string.ct_action_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            setPadding(padPx, padPx, padPx, padPx)
+
             visibility = if (hasAction) View.VISIBLE else View.GONE
             setOnClickListener { onAction() }
         }
-        bottomRow.addView(deeplinkBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
-            marginEnd = iconGapPx
-        })
+        bottomRow.addView(deeplinkBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
 
         // Mute button (video only; hidden until bindMedia)
         val mBtn = ImageView(context).apply {
             setImageResource(PIPIcons.muteIcon(muted = true))
             contentDescription = context.getString(PIPIcons.muteContentDescription(muted = true))
             scaleType = ImageView.ScaleType.FIT_CENTER
-            setPadding(padPx, padPx, padPx, padPx)
+
             visibility = View.GONE
         }
         muteBtn = mBtn
         bottomRow.addView(mBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
-            marginEnd = iconGapPx
+            marginStart = iconGapPx
         })
-
-        // Play/Pause button (video only; hidden until bindMedia)
-        val ppBtn = ImageView(context).apply {
-            setImageResource(PIPIcons.playPauseIcon(playing = true))
-            contentDescription = context.getString(PIPIcons.playPauseContentDescription(playing = true))
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            setPadding(padPx, padPx, padPx, padPx)
-            visibility = View.GONE
-        }
-        playPauseBtn = ppBtn
-        bottomRow.addView(ppBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
-            marginEnd = iconGapPx
-        })
-
-        // Spacer — hidden for video (icons grouped center), visible for image/GIF (pushes
-        // deeplink to left and collapse to right within the row).
-        rowSpacer = View(context)
-        rowSpacer.visibility = View.GONE
-        bottomRow.addView(rowSpacer, LinearLayout.LayoutParams(0, 0, 1f))
 
         // Collapse button (hidden if expandCollapse control disabled)
         val collapseBtn = ImageView(context).apply {
             setImageResource(R.drawable.ct_ic_collapse)
             contentDescription = context.getString(R.string.ct_pip_collapse_button_content_description)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            setPadding(padPx, padPx, padPx, padPx)
+
             visibility = if (showExpandCollapseButton) View.VISIBLE else View.GONE
             setOnClickListener { onCollapse() }
         }
-        bottomRow.addView(collapseBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx))
+        bottomRow.addView(collapseBtn, LinearLayout.LayoutParams(iconSizePx, iconSizePx).apply {
+            marginStart = iconGapPx
+        })
 
         controlsOverlay.addView(
             bottomRow,
-            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
-                setMargins(rowMarginPx, rowMarginPx, rowMarginPx, rowMarginPx)
+            LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.END).apply {
+                setMargins(rowMarginPx, rowMarginPx, iconMarginPx, rowMarginPx)
             },
         )
 
@@ -190,11 +184,12 @@ internal class PIPExpandedView(
         mediaContainer.removeAllViews()
         mediaContainer.addView(mv, LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // Wire video-only controls (respecting server-configured visibility)
         val isVideo = mv.isVideoType
+
+        // Center play/pause — video-only
         playPauseBtn?.visibility = if (isVideo && showPlayPauseButton) View.VISIBLE else View.GONE
+        // Bottom-right mute — video-only
         muteBtn?.visibility = if (isVideo && showMuteButton) View.VISIBLE else View.GONE
-        applyBottomRowLayout(isVideo)
 
         if (isVideo) {
             updatePlayPauseIcon(mv.isPlaying)
@@ -225,8 +220,13 @@ internal class PIPExpandedView(
         playPauseBtn?.setOnClickListener(null)
         muteBtn?.visibility = View.GONE
         muteBtn?.setOnClickListener(null)
-        applyBottomRowLayout(isVideo = false)
     }
+
+    /** Syncs play/pause icon with current state — called when ExoPlayer's playing state
+     *  changes independently (e.g., buffering → playing after network recovery). */
+    fun syncPlayPauseIcon(playing: Boolean) = updatePlayPauseIcon(playing)
+
+    // ─── Inset handling ──────────────────────────────────────────────────────────
 
     /**
      * Updates inset-based margins on the close button and bottom row.
@@ -245,67 +245,35 @@ internal class PIPExpandedView(
         }
         closeBtn.requestLayout()
 
-        // Bottom row: push away from bottom; side insets depend on mode
-        applyBottomRowMargins(rowMarginPx)
-    }
-
-    /**
-     * Switches the bottom row between two layouts:
-     * - **Video:** WRAP_CONTENT centered (icons grouped in the middle)
-     * - **Image/GIF:** MATCH_PARENT with spacer (deeplink left, collapse right)
-     *
-     * Also applies inset-based margins via [applyBottomRowMargins].
-     */
-    private fun applyBottomRowLayout(isVideo: Boolean) {
-        isVideoMode = isVideo
-        val rowMarginPx = ROW_MARGIN_DP.dpToPx(context)
-        if (isVideo) {
-            rowSpacer.visibility = View.GONE
-            bottomRow.layoutParams = LayoutParams(
-                WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            )
-        } else {
-            rowSpacer.visibility = View.VISIBLE
-            bottomRow.layoutParams = LayoutParams(
-                MATCH_PARENT, WRAP_CONTENT, Gravity.BOTTOM
-            )
-        }
-        applyBottomRowMargins(rowMarginPx)
-    }
-
-    /**
-     * Sets bottom row margins incorporating current insets.
-     * - **Video:** no side insets — centering stays relative to full screen (matching video)
-     * - **Image/GIF:** side insets applied (MATCH_PARENT row needs to avoid cutout)
-     */
-private fun applyBottomRowMargins(rowMarginPx: Int) {
+        // Bottom row: push away from bottom + right edges.
+        // Right margin uses iconMarginPx (not rowMarginPx) so the last icon in the row
+        // aligns with the close button's right edge.
         (bottomRow.layoutParams as LayoutParams).apply {
             bottomMargin = currentInsets.bottom + rowMarginPx
+            rightMargin = currentInsets.right + iconMarginPx
             topMargin = rowMarginPx
-            if (isVideoMode) {
-                leftMargin = rowMarginPx
-                rightMargin = rowMarginPx
-            } else {
-                leftMargin = currentInsets.left + rowMarginPx
-                rightMargin = currentInsets.right + rowMarginPx
-            }
+            leftMargin = rowMarginPx
         }
         bottomRow.requestLayout()
     }
 
+    // ─── Private helpers ─────────────────────────────────────────────────────────
+
     private fun updatePlayPauseIcon(playing: Boolean) {
         playPauseBtn?.setImageResource(PIPIcons.playPauseIcon(playing))
-        playPauseBtn?.contentDescription = playPauseBtn?.context?.getString(PIPIcons.playPauseContentDescription(playing))
+        playPauseBtn?.contentDescription =
+            playPauseBtn?.context?.getString(PIPIcons.playPauseContentDescription(playing))
     }
 
     private fun updateMuteIcon(muted: Boolean) {
         muteBtn?.setImageResource(PIPIcons.muteIcon(muted))
-        muteBtn?.contentDescription = muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
+        muteBtn?.contentDescription =
+            muteBtn?.context?.getString(PIPIcons.muteContentDescription(muted))
     }
 
     private companion object {
-        const val ICON_SIZE_DP = 56
-        const val ICON_PADDING_DP = 14
+        const val ICON_SIZE_DP = 48
+        const val CENTER_ICON_SIZE_DP = 48
         const val ICON_MARGIN_DP = 8
         const val ROW_MARGIN_DP = 12
         const val ICON_GAP_DP = 12

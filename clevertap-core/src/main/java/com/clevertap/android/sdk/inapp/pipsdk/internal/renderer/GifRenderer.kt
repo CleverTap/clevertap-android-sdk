@@ -30,6 +30,9 @@ internal class GifRenderer(
     private var config: PIPConfig? = null
     private var gifBytes: ByteArray? = null
     private var currentScaleType: ImageView.ScaleType = ImageView.ScaleType.FIT_CENTER
+
+    override var onMediaReady: (() -> Unit)? = null
+    override var onAllMediaFailed: (() -> Unit)? = null
     //The flag is written on main thread (`release()`) and read on main thread (`view.post {}` callback), but the write could happen between the executor submitting the `post` and the `post` actually running. `@Volatile` ensures visibility across the handler message queue boundary.
     @Volatile private var released = false
 
@@ -54,6 +57,7 @@ internal class GifRenderer(
             gifBytes = cached
             gv.setBytes(cached)
             gv.startAnimation()
+            onMediaReady?.invoke()
         } else {
             // Background fetch
             mediaExecutor.execute {
@@ -64,6 +68,7 @@ internal class GifRenderer(
                         gifBytes = fetched
                         gv.setBytes(fetched)
                         gv.startAnimation()
+                        onMediaReady?.invoke()
                     } else {
                         loadFallback(container, config)
                     }
@@ -145,6 +150,8 @@ internal class GifRenderer(
                     gifView = null
                     false // let FallbackImageLoader add the default ImageView
                 },
+                onSuccess = { onMediaReady?.invoke() },
+                onTotalFailure = { onAllMediaFailed?.invoke() },
             )
         )
     }
