@@ -22,7 +22,9 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         })
     }
 
-    override fun cleanup() { /* no-op */
+    override fun cleanup() {
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
     }
 
     override fun generateListener() {

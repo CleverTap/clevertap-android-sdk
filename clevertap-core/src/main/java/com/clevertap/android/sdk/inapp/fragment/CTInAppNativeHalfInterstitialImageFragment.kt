@@ -18,22 +18,18 @@ import com.clevertap.android.sdk.customviews.CloseImageView
 
 internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragment() {
 
-    private lateinit var mediaHandler: InAppMediaHandler
     private var relativeLayout: RelativeLayout? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mediaHandler = InAppMediaHandler.create(
-            fragment = this,
-            inAppNotification = inAppNotification,
-            currentOrientation = currentOrientation,
-            isTablet = inAppNotification.isTablet && isTablet(),
-            resourceProvider = resourceProvider(),
-            supportsStreamMedia = true,
-            onActionClick = if (inAppNotification.buttons.isNotEmpty()) {{ handleButtonClickAtIndex(0) }} else null
-        )
-        lifecycle.addObserver(mediaHandler)
-    }
+    override fun createMediaHandler() = InAppMediaHandler.create(
+        fragment = this,
+        inAppNotification = inAppNotification,
+        currentOrientation = currentOrientation,
+        isTablet = inAppNotification.isTablet && isTablet(),
+        resourceProvider = resourceProvider(),
+        supportsStreamMedia = true,
+        onActionClick = if (inAppNotification.buttons.isNotEmpty()) {{ handleButtonClickAtIndex(0) }} else null,
+        lockedMediaUrl = activeMediaUrl
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -155,9 +151,4 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
         return inAppView
     }
 
-    override fun cleanup() {
-        lifecycle.removeObserver(mediaHandler)
-        mediaHandler.cleanup()
-        super.cleanup()
-    }
 }

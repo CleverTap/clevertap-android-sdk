@@ -19,19 +19,14 @@ import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
 internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() {
 
-    private lateinit var mediaHandler: InAppMediaHandler
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mediaHandler = InAppMediaHandler.create(
-            fragment = this,
-            inAppNotification = inAppNotification,
-            currentOrientation = currentOrientation,
-            isTablet = false,
-            resourceProvider = resourceProvider()
-        )
-        lifecycle.addObserver(mediaHandler)
-    }
+    override fun createMediaHandler() = InAppMediaHandler.create(
+        fragment = this,
+        inAppNotification = inAppNotification,
+        currentOrientation = currentOrientation,
+        isTablet = false,
+        resourceProvider = resourceProvider(),
+        lockedMediaUrl = activeMediaUrl
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -103,9 +98,4 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         return inAppView
     }
 
-    override fun cleanup() {
-        lifecycle.removeObserver(mediaHandler)
-        mediaHandler.cleanup()
-        super.cleanup()
-    }
 }

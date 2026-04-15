@@ -23,6 +23,8 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
     }
 
     override fun cleanup() {
+        lifecycle.removeObserver(mediaHandler)
+        mediaHandler.cleanup()
         val activity = getActivity()
         if (activity != null && !Utils.isActivityDead(activity)
             && isCleanedUp.compareAndSet(false, true)

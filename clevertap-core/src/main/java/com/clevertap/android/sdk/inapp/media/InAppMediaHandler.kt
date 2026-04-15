@@ -24,11 +24,18 @@ internal interface InAppMediaHandler : DefaultLifecycleObserver {
 
     companion object {
         /**
-         * Creates the appropriate [InAppMediaHandler] based on the notification's media type.
-         *
-         * @param supportsStreamMedia When `true`, allows creation of [InAppStreamMediaHandler] for
-         *   video/audio playback. When `false` (default), video/audio media falls back to [NoOpMediaHandler].
+         * Resolves which media URL should be used for this in-app, without creating a handler.
+         * Call this once and store the result so rotation re-uses the same URL instead of
+         * picking a different one based on the new orientation.
          */
+        fun resolveMediaUrl(
+            inAppNotification: CTInAppNotification,
+            currentOrientation: Int
+        ): String? = (
+            inAppNotification.getInAppMediaForOrientation(currentOrientation)
+                ?: inAppNotification.mediaList.firstOrNull()
+        )?.mediaUrl
+
         fun create(
             fragment: Fragment,
             inAppNotification: CTInAppNotification,
@@ -36,11 +43,10 @@ internal interface InAppMediaHandler : DefaultLifecycleObserver {
             isTablet: Boolean,
             resourceProvider: FileResourceProvider,
             supportsStreamMedia: Boolean = false,
-            onActionClick: (() -> Unit)? = null
+            onActionClick: (() -> Unit)? = null,
+            lockedMediaUrl: String? = null
         ): InAppMediaHandler {
-            // If a video player survived a configuration change (rotation), prefer its URL so the
-            // same player can be reclaimed rather than starting a new one with a different URL.
-            val media = InAppVideoPlayerCache.peekUrl()
+            val media = lockedMediaUrl
                 ?.let { url -> inAppNotification.mediaList.firstOrNull { it.mediaUrl == url } }
                 ?: inAppNotification.getInAppMediaForOrientation(currentOrientation)
                 ?: inAppNotification.mediaList.firstOrNull()

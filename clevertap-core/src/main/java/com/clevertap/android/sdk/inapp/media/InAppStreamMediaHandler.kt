@@ -49,7 +49,7 @@ internal class InAppStreamMediaHandler
 
     init {
          // Reclaim a live player that survived rotation, falling back to a fresh handle.
-        handle = InAppVideoPlayerCache.consume(media.mediaUrl)
+        handle = InAppVideoPlayerCache.consume()
             ?: if (VideoLibChecker.mediaLibType == VideoLibraryIntegrated.MEDIA3) {
                 Media3Handle()
             } else {
@@ -93,7 +93,7 @@ internal class InAppStreamMediaHandler
             }
             val h = handle ?: return
             h.detachSurface()
-            InAppVideoPlayerCache.store(h, media.mediaUrl, isFullscreen = wasFullscreen)
+            InAppVideoPlayerCache.store(h, isFullscreen = wasFullscreen)
         } else {
             // Background: leave fullscreen dialog intact — it will still be there on resume.
             handle?.softPause()
