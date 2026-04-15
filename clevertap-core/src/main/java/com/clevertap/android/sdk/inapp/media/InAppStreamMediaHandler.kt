@@ -75,7 +75,6 @@ internal class InAppStreamMediaHandler
             openFullscreenDialog()
         }
         videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
-        InAppActiveMediaCache.store(media.mediaUrl)
     }
 
     override fun onResume(owner: LifecycleOwner) {
@@ -109,7 +108,6 @@ internal class InAppStreamMediaHandler
     override fun cleanup() {
         handle?.pause()
         InAppVideoPlayerCache.release()
-        InAppActiveMediaCache.release()
     }
 
     private fun prepareMedia() {

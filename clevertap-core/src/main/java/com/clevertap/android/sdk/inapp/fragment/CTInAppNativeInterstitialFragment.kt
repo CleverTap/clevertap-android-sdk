@@ -22,22 +22,17 @@ import com.clevertap.android.sdk.customviews.CloseImageView
 
 internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment() {
 
-    private lateinit var mediaHandler: InAppMediaHandler
     private var relativeLayout: RelativeLayout? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mediaHandler = InAppMediaHandler.create(
-            fragment = this,
-            inAppNotification = inAppNotification,
-            currentOrientation = currentOrientation,
-            isTablet = inAppNotification.isTablet && isTablet(),
-            resourceProvider = resourceProvider(),
-            supportsStreamMedia = true,
-            onActionClick = null
-        )
-        lifecycle.addObserver(mediaHandler)
-    }
+    override fun createMediaHandler() = InAppMediaHandler.create(
+        fragment = this,
+        inAppNotification = inAppNotification,
+        currentOrientation = currentOrientation,
+        isTablet = inAppNotification.isTablet && isTablet(),
+        resourceProvider = resourceProvider(),
+        supportsStreamMedia = true,
+        lockedMediaUrl = activeMediaUrl
+    )
 
     @SuppressLint("ResourceType")
     override fun onCreateView(
@@ -78,12 +73,6 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         handleCloseButton()
 
         return inAppView
-    }
-
-    override fun cleanup() {
-        lifecycle.removeObserver(mediaHandler)
-        mediaHandler.cleanup()
-        super.cleanup()
     }
 
     private fun handleCloseButton() {

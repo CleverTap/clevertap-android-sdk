@@ -10,8 +10,7 @@ import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
  *
  * Only one entry is kept at a time — in-apps show one at a time, so this is safe.
  *
- * URL tracking is handled by [InAppActiveMediaCache]; this cache is solely responsible for
- * the player handle and fullscreen state.
+ * This cache is solely responsible for the player handle and fullscreen state.
  */
 internal object InAppVideoPlayerCache {
 
