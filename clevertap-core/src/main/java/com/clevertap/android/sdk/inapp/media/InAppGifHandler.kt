@@ -32,6 +32,7 @@ internal class InAppGifHandler(
             gifImageView?.setOnClickListener(clickListener)
         }
         relativeLayout?.findViewById<ImageView>(config.imageViewId)?.visibility = View.GONE
+        InAppActiveMediaCache.store(media.mediaUrl)
     }
 
     override fun onStart(owner: LifecycleOwner) {
@@ -48,5 +49,6 @@ internal class InAppGifHandler(
     override fun cleanup() {
         gifImageView?.clear()
         gifImageView = null
+        InAppActiveMediaCache.release()
     }
 }

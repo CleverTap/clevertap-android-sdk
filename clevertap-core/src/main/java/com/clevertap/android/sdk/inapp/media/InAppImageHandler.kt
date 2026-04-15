@@ -29,5 +29,10 @@ internal class InAppImageHandler(
             imageView?.tag = 0
             imageView?.setOnClickListener(clickListener)
         }
+        InAppActiveMediaCache.store(media.mediaUrl)
+    }
+
+    override fun cleanup() {
+        InAppActiveMediaCache.release()
     }
 }
