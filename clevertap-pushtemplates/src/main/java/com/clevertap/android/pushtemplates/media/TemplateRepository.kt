@@ -1,6 +1,8 @@
 package com.clevertap.android.pushtemplates.media
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.clevertap.android.pushtemplates.PTHttpBitmapLoader
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -15,10 +17,27 @@ internal class TemplateRepository(val context: Context, val config: CleverTapIns
         private const val BYTES_DOWNLOAD_TIMEOUT_MS = 5000L
     }
 
+    private fun isNetworkAvailable(): Boolean {
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            val caps = cm?.getNetworkCapabilities(cm.activeNetwork) ?: return false
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        } catch (_: SecurityException) {
+            PTLog.verbose("Missing ACCESS_NETWORK_STATE permission. Add it to AndroidManifest.xml")
+            false
+        }
+    }
+
     internal fun getBytes(url: String): DownloadedBitmap {
         if (url.isBlank()) {
             PTLog.verbose("Cannot download GIF: URL is empty")
             return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.NO_IMAGE)
+        }
+
+        if (!isNetworkAvailable()) {
+            PTLog.verbose("Cannot download GIF: network unavailable")
+            return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.NO_NETWORK)
         }
 
         val request = BitmapDownloadRequest(
@@ -39,6 +58,11 @@ internal class TemplateRepository(val context: Context, val config: CleverTapIns
         if (url.isBlank()) {
             PTLog.verbose("Cannot download Bitmap: URL is empty")
             return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.NO_IMAGE)
+        }
+
+        if (!isNetworkAvailable()) {
+            PTLog.verbose("Cannot download Bitmap: network unavailable")
+            return DownloadedBitmapFactory.nullBitmapWithStatus(DownloadedBitmap.Status.NO_NETWORK)
         }
 
         val request = BitmapDownloadRequest(

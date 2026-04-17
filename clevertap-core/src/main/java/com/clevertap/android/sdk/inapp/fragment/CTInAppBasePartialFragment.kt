@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.fragment
 
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
 import com.clevertap.android.sdk.inapp.InAppDisplayListener
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -23,6 +24,10 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
     }
 
     override fun cleanup() {
+        if (mediaHandler !is NoOpMediaHandler) {
+            lifecycle.removeObserver(mediaHandler)
+            mediaHandler.cleanup()
+        }
         val activity = getActivity()
         if (activity != null && !Utils.isActivityDead(activity)
             && isCleanedUp.compareAndSet(false, true)

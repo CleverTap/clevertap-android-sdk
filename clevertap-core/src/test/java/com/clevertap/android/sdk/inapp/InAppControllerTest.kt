@@ -25,7 +25,7 @@ import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
-import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.FakeClock
@@ -66,6 +66,8 @@ class InAppControllerTest {
     private lateinit var mockInAppActionHandler: InAppActionHandler
     private lateinit var mockInAppInflater: InAppNotificationInflater
     private lateinit var fakeInAppQueue: FakeInAppQueue
+
+    private lateinit var mockNetworkMonitor: NetworkMonitor
     private val fakeClock = FakeClock(timeMillis = 1735686000000) // 01.01.2025
 
     @Before
@@ -86,9 +88,9 @@ class InAppControllerTest {
         mockkObject(CTInAppBaseFragment.Companion)
         every { CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any()) } returns true
 
-        mockkStatic(NetworkManager::class)
-        mockkObject(NetworkManager)
-        every { NetworkManager.isNetworkOnline(any()) } returns true
+        mockNetworkMonitor = mockk(relaxed = true)
+        every { mockNetworkMonitor.isNetworkOnline() } returns true
+
 
         mockInAppActionHandler = mockk(relaxed = true)
 
@@ -704,7 +706,7 @@ class InAppControllerTest {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV},${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA}]")
         fakeInAppQueue.enqueueAll(inApps.toList())
-        every { NetworkManager.isNetworkOnline(any()) } returns false
+        every { mockNetworkMonitor.isNetworkOnline() } returns false
 
         val inAppController = createInAppController()
         inAppController.showNotificationIfAvailable()
@@ -815,7 +817,9 @@ class InAppControllerTest {
             inAppNotificationInflater = mockInAppInflater,
             inAppDelayManager = mockInAppDelayManager,
             inAppInActionManager = mockInAppInActionManager,
-            clock = fakeClock
+            networkMonitor = mockNetworkMonitor,
+            clock = fakeClock,
+            pipManager = mockk(relaxed = true),
         )
     }
 

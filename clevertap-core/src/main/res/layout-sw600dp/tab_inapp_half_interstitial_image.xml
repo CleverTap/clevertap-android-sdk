@@ -21,6 +21,27 @@
             android:layout_alignParentTop="true"
             android:scaleType="centerCrop" />
 
+        <com.clevertap.android.sdk.gif.GifImageView
+            android:id="@+id/gifImage"
+            android:contentDescription="@string/ct_inapp_gif"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:scaleType="centerCrop"
+            android:focusable="true"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:id="@+id/video_frame"
+            android:contentDescription="@string/ct_inapp_media"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:focusable="true"
+            android:visibility="gone" />
+
     </RelativeLayout>
 
     <com.clevertap.android.sdk.customviews.CloseImageView

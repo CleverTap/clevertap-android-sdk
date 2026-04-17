@@ -13,9 +13,20 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 
 internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() {
+
+    override fun createMediaHandler() = InAppMediaHandler.create(
+        fragment = this,
+        inAppNotification = inAppNotification,
+        currentOrientation = currentOrientation,
+        isTablet = false,
+        resourceProvider = resourceProvider(),
+        lockedMediaUrl = activeMediaUrl
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,20 +50,16 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         inAppButtons.add(secondaryButton)
 
         val imageView = linearLayout1.findViewById<ImageView>(R.id.footer_icon)
-        if (!inAppNotification.mediaList.isEmpty()) {
-            val media = inAppNotification.mediaList[0]
-            if (media.contentDescription.isNotBlank()) {
-                imageView.contentDescription = media.contentDescription
-            }
-            val image = resourceProvider().cachedInAppImageV1(media.mediaUrl)
-            if (image != null) {
-                imageView.setImageBitmap(image)
-            } else {
-                imageView.setVisibility(View.GONE)
-            }
-        } else {
-            imageView.setVisibility(View.GONE)
-        }
+        imageView.visibility = View.GONE
+
+        mediaHandler.setup(
+            relativeLayout,
+            InAppMediaConfig(
+                imageViewId = R.id.footer_icon,
+                clickableMedia = false,
+                gifImageId = R.id.gifImage,
+            )
+        )
 
         val textView1 = linearLayout2.findViewById<TextView>(R.id.footer_title)
         textView1.text = inAppNotification.title
@@ -90,4 +97,5 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         }
         return inAppView
     }
+
 }

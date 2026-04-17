@@ -39,7 +39,7 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     FrameLayout frameLayout;
 
-    ImageView mediaImage, squareImage;
+    ImageView mediaImage, squareImage, defaultImage;
 
     RelativeLayout mediaLayout;
 
@@ -83,20 +83,40 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         final Resources resources = context.getResources();
         final DisplayMetrics displayMetrics = resources.getDisplayMetrics();
 
-        int width;
-        int height;
+        int width = 0;
+        int height = 0;
         if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if (message.getOrientation().equalsIgnoreCase("l")) {
                 width = Math.round(this.mediaImage.getMeasuredHeight() * 1.76f);
                 height = this.mediaImage.getMeasuredHeight();
-            } else {
+            } else if (message.getOrientation().equalsIgnoreCase("p")) {
                 height = this.squareImage.getMeasuredHeight();
                 //noinspection all
                 width = height;
+            } else {
+                if (this.defaultImage != null) {
+                    width = this.defaultImage.getMeasuredWidth();
+                    height = this.defaultImage.getMeasuredHeight();
+                }
+                if (this.defaultImage == null || width == 0 || height == 0) {
+                    width = resources.getDisplayMetrics().widthPixels / 2;
+                    height = Math.round(width * 0.5625f);
+                }
             }
         } else {
             width = resources.getDisplayMetrics().widthPixels;
-            height = message.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
+            if (message.getOrientation().equalsIgnoreCase("l")) {
+                height = Math.round(width * 0.5625f);
+            } else if (message.getOrientation().equalsIgnoreCase("p")) {
+                height = width;
+            } else {
+                if (this.defaultImage != null) {
+                    height = this.defaultImage.getMeasuredHeight();
+                }
+                if (this.defaultImage == null || height == 0) {
+                    height = Math.round(width * 0.5625f);
+                }
+            }
         }
 
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
@@ -138,8 +158,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     private void setMuteIconState(ImageView icon, Context context, float volume) {
         boolean isMuted = volume <= 0;
         int drawableRes = isMuted ? R.drawable.ct_volume_off : R.drawable.ct_volume_on;
-        int contentDescRes = isMuted ? R.string.ct_inbox_mute_button_content_description
-                : R.string.ct_inbox_unmute_button_content_description;
+        int contentDescRes = isMuted ? R.string.ct_mute_button_content_description
+                : R.string.ct_unmute_button_content_description;
 
         icon.setContentDescription(context.getString(contentDescRes));
         icon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), drawableRes, null));

@@ -26,7 +26,7 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:8.0.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:8.1.0"
     }
 ```
 
@@ -34,7 +34,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-8.0.0", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-8.1.0", ext: 'aar')
     }
 ```
 
@@ -46,7 +46,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:8.0.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:8.1.0"
          implementation "androidx.core:core:1.13.0"
          implementation "com.google.firebase:firebase-messaging:24.0.0"
          implementation "com.google.android.gms:play-services-ads:23.6.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
@@ -91,6 +91,14 @@ Interstitial InApp Notification templates support Audio and Video with the help 
     implementation "com.google.android.exoplayer:exoplayer-hls:2.19.1"
     implementation "com.google.android.exoplayer:exoplayer-ui:2.19.1"
 ```  
+
+PIP (Picture-in-Picture) In-App Notifications with video media require `AndroidX Media3`. Add the following dependencies in your `build.gradle` file:
+```groovy
+    implementation "androidx.media3:media3-exoplayer:1.4.0"
+    implementation "androidx.media3:media3-exoplayer-hls:1.4.0"
+    implementation "androidx.media3:media3-ui:1.4.0"
+```
+**Note:** PIP image and GIF media types work without Media3. The dependency is only required for PIP video playback.
 
 Once you've updated your module `build.gradle` file, make sure you have specified `mavenCentral()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 

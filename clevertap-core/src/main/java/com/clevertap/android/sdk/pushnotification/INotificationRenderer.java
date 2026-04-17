@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.pushnotification;
 
-import android.app.ActivityOptions;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -139,12 +138,10 @@ public interface INotificationRenderer {
                         actionLaunchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     }
 
+                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+
                     PendingIntent actionIntent;
                     int requestCode = new Random().nextInt();
-                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                        flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-                    }
                     if (sendToCTIntentService) {
                         actionIntent = PendingIntent.getService(context, requestCode,
                                 actionLaunchIntent, flagsActionLaunchPendingIntent);

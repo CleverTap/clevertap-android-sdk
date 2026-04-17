@@ -82,6 +82,9 @@ class CTInAppNotification : Parcelable {
     internal var customTemplateData: CustomTemplateInAppData? = null
         private set
 
+    internal var pipConfigJson: JSONObject? = null
+        private set
+
     internal var type: String? = null
         private set
 
@@ -193,10 +196,10 @@ class CTInAppNotification : Parcelable {
         }
         type = parcel.readString()
         title = parcel.readString()
-        titleColor = (parcel.readString() ?: titleColor).toValidColorOrFallback(Constants.BLACK);
-        backgroundColor = (parcel.readString() ?: backgroundColor).toValidColorOrFallback(Constants.WHITE);
+        titleColor = (parcel.readString() ?: titleColor).toValidColorOrFallback(Constants.BLACK)
+        backgroundColor = (parcel.readString() ?: backgroundColor).toValidColorOrFallback(Constants.WHITE)
         message = parcel.readString()
-        messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(Constants.BLACK);
+        messageColor = (parcel.readString() ?: messageColor).toValidColorOrFallback(Constants.BLACK)
         try {
             _buttons =
                 parcel.createTypedArrayList<CTInAppNotificationButton>(CTInAppNotificationButton.CREATOR)
@@ -226,6 +229,7 @@ class CTInAppNotification : Parcelable {
             parcel.readParcelable<CustomTemplateInAppData?>(CustomTemplateInAppData::class.java.getClassLoader())
         aspectRatio = parcel.readDouble()
         isRequestForPushPermission = parcel.readByte().toInt() != 0x00
+        pipConfigJson = _jsonDescription.optJSONObject("pip")
     }
 
     override fun describeContents(): Int {
@@ -284,10 +288,6 @@ class CTInAppNotification : Parcelable {
         dest.writeParcelable(customTemplateData, flags)
         dest.writeDouble(aspectRatio)
         dest.writeByte((if (isRequestForPushPermission) 0x01 else 0x00).toByte())
-    }
-
-    fun hasStreamMedia(): Boolean {
-        return !_mediaList.isEmpty() && _mediaList[0].isMediaStreamable()
     }
 
     internal fun getInAppMediaForOrientation(orientation: Int): CTInAppNotificationMedia? {
@@ -356,7 +356,7 @@ class CTInAppNotification : Parcelable {
             maxPerSession = jsonObject.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1)
             inAppType = CTInAppType.fromString(type)
             isTablet = jsonObject.optBoolean(Constants.KEY_IS_TABLET, false)
-            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(Constants.WHITE);
+            backgroundColor = jsonObject.optString(Constants.KEY_BG, backgroundColor).toValidColorOrFallback(Constants.WHITE)
             isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(
                 Constants.KEY_PORTRAIT
             )
@@ -366,13 +366,13 @@ class CTInAppNotification : Parcelable {
             val titleObject = jsonObject.optJSONObject(Constants.KEY_TITLE)
             if (titleObject != null) {
                 title = titleObject.optString(Constants.KEY_TEXT, "")
-                titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor).toValidColorOrFallback(Constants.BLACK);
+                titleColor = titleObject.optString(Constants.KEY_COLOR, titleColor).toValidColorOrFallback(Constants.BLACK)
             }
 
             val msgObject = jsonObject.optJSONObject(Constants.KEY_MESSAGE)
             if (msgObject != null) {
                 message = msgObject.optString(Constants.KEY_TEXT, "")
-                messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(Constants.BLACK);
+                messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(Constants.BLACK)
             }
 
             isHideCloseButton = jsonObject.optBoolean(Constants.KEY_HIDE_CLOSE, false)
@@ -406,6 +406,7 @@ class CTInAppNotification : Parcelable {
             isRequestForPushPermission =
                 jsonObject.optBoolean(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, false)
             customTemplateData = createFromJson(jsonObject)
+            pipConfigJson = jsonObject.optJSONObject("pip")
 
             when (inAppType) {
                 CTInAppType.CTInAppTypeFooter,
@@ -413,9 +414,9 @@ class CTInAppNotification : Parcelable {
                 CTInAppType.CTInAppTypeCover,
                 CTInAppType.CTInAppTypeHalfInterstitial -> {
                     for (inAppMedia in _mediaList) {
-                        if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo()) {
+                        if (inAppMedia.isAudio() || inAppMedia.isVideo()) {
                             inAppMedia.mediaUrl = ""
-                            Logger.d("Unable to download to media. Wrong media type for template")
+                            Logger.d("Unable to download media. Video/audio not supported for this template")
                         }
                     }
                 }
@@ -423,15 +424,14 @@ class CTInAppNotification : Parcelable {
                 CTInAppType.CTInAppTypeCoverImageOnly,
                 CTInAppType.CTInAppTypeHalfInterstitialImageOnly,
                 CTInAppType.CTInAppTypeInterstitialImageOnly -> {
-                    if (!_mediaList.isEmpty()) {
-                        for (inAppMedia in _mediaList) {
-                            if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo() || !inAppMedia.isImage()) {
-                                error = "Wrong media type for template"
-                                break // Exit the loop early if an error is found
-                            }
-                        }
-                    } else {
+                    if (_mediaList.isEmpty()) {
                         error = "No media type for template"
+                    }
+                }
+
+                CTInAppType.CTInAppTypePIP -> {
+                    if (_mediaList.isEmpty()) {
+                        error = "PIP type requires media"
                     }
                 }
 

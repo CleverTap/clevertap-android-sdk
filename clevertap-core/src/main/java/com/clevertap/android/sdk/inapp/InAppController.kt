@@ -35,6 +35,7 @@ import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeHeaderHTML
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeInterstitial
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeInterstitialHTML
 import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypeInterstitialImageOnly
+import com.clevertap.android.sdk.inapp.CTInAppType.CTInAppTypePIP
 import com.clevertap.android.sdk.inapp.CTLocalInApp.Companion.FALLBACK_TO_NOTIFICATION_SETTINGS
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
@@ -49,7 +50,8 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
-import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
@@ -75,8 +77,10 @@ internal class InAppController(
     private val inAppNotificationInflater: InAppNotificationInflater,
     private val inAppDelayManager: InAppScheduler<DelayedInAppResult>,
     private val inAppInActionManager: InAppScheduler<InActionResult>,
-    private val clock: Clock
-) : InAppListener {
+    private val clock: Clock,
+    private val networkMonitor: NetworkMonitor,
+    private val pipManager: PIPManager,
+) : InAppListener, PIPShowFailureHandler {
 
     private enum class InAppState {
         DISCARDED,
@@ -420,7 +424,11 @@ internal class InAppController(
         val inApp = currentlyDisplayingInApp ?: return
 
         logger.verbose(defaultLogTag, "Hiding currently displaying InApp: ${inApp.campaignId}")
-        inAppDisplayListener?.get()?.hideInApp()
+        if (inApp.inAppType == CTInAppTypePIP) {
+            pipManager.dismiss()
+        } else {
+            inAppDisplayListener?.get()?.hideInApp()
+        }
     }
 
     fun resumeInApps() {
@@ -757,6 +765,19 @@ internal class InAppController(
         }
     }
 
+    override fun onPIPShowFailed(inAppNotification: CTInAppNotification) {
+        logger.verbose(defaultLogTag, "PIP failed to show: ${inAppNotification.campaignId}")
+        // Same threading pattern as inAppNotificationDidDismiss: clear the lock and advance
+        // the queue atomically on the async in-app thread. This avoids a race where
+        // currentlyDisplayingInApp is cleared on main but _showNotificationIfAvailable
+        // hasn't run yet on the async thread.
+        val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+        task.execute("InAppController#onPIPShowFailed") {
+            inAppDidDismiss(inAppNotification)
+            _showNotificationIfAvailable()
+        }
+    }
+
     private fun incrementLocalInAppCountInPersistentStore(
         context: Context,
         inAppNotification: CTInAppNotification
@@ -887,7 +908,7 @@ internal class InAppController(
         }
 
         val isHtmlType = Constants.KEY_CUSTOM_HTML == inAppNotification.type
-        if (isHtmlType && !NetworkManager.isNetworkOnline(context)) {
+        if (isHtmlType && !networkMonitor.isNetworkOnline()) {
             logger.debug(
                 defaultLogTag,
                 "Not showing HTML InApp due to no internet. An active internet connection is required to display the HTML InApp"
@@ -948,6 +969,29 @@ internal class InAppController(
 
             CTInAppTypeHeader -> {
                 inAppFragment = CTInAppNativeHeaderFragment()
+            }
+
+            CTInAppTypePIP -> {
+                try {
+                    if (activity == null) {
+                        throw IllegalStateException("Current activity reference not found for PIP")
+                    }
+                    val bridge = PIPInAppCallbacksBridge(inAppNotification, this, this, logger)
+                    val pipConfig = PIPConfigFactory.create(inAppNotification, bridge, logger)
+                    if (pipConfig == null) {
+                        logger.debug(defaultLogTag, "Failed to create PIPConfig, skipping")
+                        currentlyDisplayingInApp = null
+                        showNotificationIfAvailable()
+                        return
+                    }
+                    logger.debug("Displaying PIP In-App: ${inAppNotification.campaignId}")
+                    pipManager.show(activity, pipConfig, null)
+                } catch (t: Throwable) {
+                    logger.verbose("Failed to show PIP in-app", t)
+                    currentlyDisplayingInApp = null
+                    showNotificationIfAvailable()
+                }
+                return
             }
 
             CTInAppTypeCustomCodeTemplate -> {

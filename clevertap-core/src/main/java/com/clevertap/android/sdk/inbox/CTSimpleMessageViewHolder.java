@@ -56,6 +56,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         relativeLayout = itemView.findViewById(R.id.simple_message_relative_layout);
         frameLayout = itemView.findViewById(R.id.simple_message_frame_layout);
         squareImage = itemView.findViewById(R.id.square_media_image);
+        defaultImage = itemView.findViewById(R.id.default_media_image);
         clickLayout = itemView.findViewById(R.id.click_relative_layout);
         ctaLinearLayout = itemView.findViewById(R.id.cta_linear_layout);
         bodyRelativeLayout = itemView.findViewById(R.id.body_linear_layout);
@@ -160,6 +161,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.mediaImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         this.squareImage.setVisibility(View.GONE);
         this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
+        this.defaultImage.setVisibility(View.GONE);
+        this.defaultImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
+        this.defaultImage.setContentDescription(null);
         this.mediaLayout.setVisibility(View.GONE);
         this.progressBarFrameLayout.setVisibility(View.GONE);
         try {
@@ -351,6 +355,95 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         }
                     }
                     break;
+                default:
+                    if (!TextUtils.isEmpty(content.getMedia())) {
+                        if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
+                            this.defaultImage.setContentDescription(content.getMediaContentDescription());
+                        }
+                        if (content.mediaIsImage()) {
+                            this.mediaLayout.setVisibility(View.VISIBLE);
+                            this.defaultImage.setVisibility(View.VISIBLE);
+                            this.defaultImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            try {
+                                Glide.with(this.defaultImage.getContext())
+                                        .load(content.getMedia())
+                                        .apply(new RequestOptions()
+                                                .placeholder(
+                                                        Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                                .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
+                                        .into(this.defaultImage);
+                            } catch (NoSuchMethodError error) {
+                                Logger.d(
+                                        "CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                                Glide.with(this.defaultImage.getContext())
+                                        .load(content.getMedia())
+                                        .into(this.defaultImage);
+                            }
+                        } else if (content.mediaIsGIF()) {
+                            this.mediaLayout.setVisibility(View.VISIBLE);
+                            this.defaultImage.setVisibility(View.VISIBLE);
+                            this.defaultImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            try {
+                                Glide.with(this.defaultImage.getContext())
+                                        .asGif()
+                                        .load(content.getMedia())
+                                        .apply(new RequestOptions()
+                                                .placeholder(
+                                                        Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                                .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
+                                        .into(this.defaultImage);
+                            } catch (NoSuchMethodError error) {
+                                Logger.d(
+                                        "CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                                Glide.with(this.defaultImage.getContext())
+                                        .asGif()
+                                        .load(content.getMedia())
+                                        .into(this.defaultImage);
+                            }
+                        } else if (content.mediaIsVideo()) {
+                            this.mediaLayout.setVisibility(View.VISIBLE);
+                            if (!content.getPosterUrl().isEmpty()) {
+                                this.defaultImage.setVisibility(View.VISIBLE);
+                                this.defaultImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                try {
+                                    Glide.with(this.defaultImage.getContext())
+                                            .load(content.getPosterUrl())
+                                            .apply(new RequestOptions()
+                                                    .placeholder(
+                                                            Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL))
+                                                    .error(Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL)))
+                                            .into(this.defaultImage);
+                                } catch (NoSuchMethodError error) {
+                                    Logger.d(
+                                            "CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                                    Glide.with(this.defaultImage.getContext())
+                                            .load(content.getPosterUrl())
+                                            .into(this.defaultImage);
+                                }
+                            } else {
+                                this.defaultImage.setVisibility(View.VISIBLE);
+                                this.defaultImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                int drawableId = Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL);
+                                if (drawableId != -1) {
+                                    Glide.with(this.defaultImage.getContext())
+                                            .load(drawableId)
+                                            .into(this.defaultImage);
+                                }
+                            }
+                        } else if (content.mediaIsAudio()) {
+                            this.mediaLayout.setVisibility(View.VISIBLE);
+                            this.defaultImage.setVisibility(View.VISIBLE);
+                            this.defaultImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            this.defaultImage.setBackgroundColor(getImageBackgroundColor());
+                            int drawableId = Utils.getThumbnailImage(context, Constants.AUDIO_THUMBNAIL);
+                            if (drawableId != -1) {
+                                Glide.with(this.defaultImage.getContext())
+                                        .load(drawableId)
+                                        .into(this.defaultImage);
+                            }
+                        }
+                    }
+                    break;
             }
         } catch (NoClassDefFoundError error) {
             Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info");
@@ -364,7 +457,13 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
             width = resources.getDisplayMetrics().widthPixels / 2;
         } else {
             width = resources.getDisplayMetrics().widthPixels;
-            height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
+            if (inboxMessage.getOrientation().equalsIgnoreCase("l")) {
+                height = Math.round(width * 0.5625f);
+            } else if (inboxMessage.getOrientation().equalsIgnoreCase("p")) {
+                height = width;
+            } else {
+                height = Math.round(width * 0.5625f);
+            }
         }
 
         this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));

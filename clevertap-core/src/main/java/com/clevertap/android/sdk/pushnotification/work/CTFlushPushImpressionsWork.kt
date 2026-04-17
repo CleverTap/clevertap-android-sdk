@@ -1,23 +1,17 @@
 package com.clevertap.android.sdk.pushnotification.work
 
 import android.content.Context
-import android.content.Context.BATTERY_SERVICE
-import android.os.BatteryManager
-import android.os.Build.VERSION_CODES
-import androidx.annotation.RequiresApi
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.flushPushImpressionsOnPostAsyncSafely
 
 class CTFlushPushImpressionsWork(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     val tag = "CTFlushPushImpressionsWork"
 
-    @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     override fun doWork(): Result {
         Logger.d(
             tag,

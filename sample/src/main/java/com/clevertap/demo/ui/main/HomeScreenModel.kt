@@ -13,7 +13,8 @@ object HomeScreenModel {
                 "Charged Event (Transaction)",
                 "Screen View Event",
                 "App Rating Event",
-                "Content Shared Event"
+                "Content Shared Event",
+                "Custom Event"
             ),
             "USER PROFILE" to listOf(
                 "Push Basic Profile",
