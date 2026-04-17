@@ -30,6 +30,5 @@
         android:layout_gravity="center"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
-        android:src="@drawable/ct_audio"
         android:visibility="gone" />
 </LinearLayout>
