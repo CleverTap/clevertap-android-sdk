@@ -21,7 +21,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 
 ```groovy
 implementation "com.clevertap.android:push-templates:2.4.0"
-implementation "com.clevertap.android:clevertap-android-sdk:8.0.0" // 4.4.0 and above
+implementation "com.clevertap.android:clevertap-android-sdk:8.1.0" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -465,7 +465,15 @@ pt_gif_alt | Optional | GIF to show when timer expires
 pt_gif_frames_alt | Optional | Number of frames to extract from the alternate GIF
 pt_big_img_alt_alt_text | Optional | Alt Text for Image to show when timer expires
 pt_bg | Optional | Background Color in HEX
-pt_chrono_title_clr | Optional | Color for timer text in HEX
+pt_chrono_title_clr | Optional | Color for timer text in HEX. Falls back to `pt_title_clr` if absent.
+pt_chrono_style | Optional | Chronometer box styling mode. One of `"solid"`, `"gradient_linear"`, or `"gradient_radial"`. If absent, no background is drawn on the chronometer box.
+pt_chrono_bg_clr | Optional | Chronometer box background fill color in HEX. Required when `pt_chrono_style` is `"solid"`; if missing, no background is drawn.
+pt_chrono_grad_clr1 | Optional | Gradient start color in HEX. Required (along with `pt_chrono_grad_clr2`) when `pt_chrono_style` is `"gradient_linear"` or `"gradient_radial"`.
+pt_chrono_grad_clr2 | Optional | Gradient end color in HEX. Required (along with `pt_chrono_grad_clr1`) for gradient styles.
+pt_chrono_grad_dir | Optional | Gradient angle in degrees (String). Applies to linear gradients only. Defaults to `"90"` (top → bottom).
+pt_chrono_border_clr | Optional | Chronometer box border color in HEX. Works with all styles. No border is drawn if absent.
+pt_chrono_border_width | Optional | Chronometer box border width in dp. No border is drawn if absent, even when `pt_chrono_border_clr` is set.
+pt_chrono_border_radius | Optional | Chronometer box corner radius in dp. Defaults to `"6"`.
 pt_timer_threshold | Required | Timer duration in seconds (minimum 10). Will be given higher priority. 
 pt_timer_end | Optional | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
 pt_render_terminal | Optional | Should terminal notification be rendered? ("true"/"false")
