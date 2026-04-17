@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.inapp.images.cleanup
 
-import android.content.Context
-import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
@@ -11,6 +9,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentLinkedQueue
+
 /**
  * A file cleanup strategy that utilizes Kotlin coroutines for asynchronous operations.
  *
@@ -25,7 +25,7 @@ internal class FileCleanupStrategyCoroutine @JvmOverloads constructor(
     private val dispatchers: DispatcherProvider = CtDefaultDispatchers()
 ) : FileCleanupStrategy {
 
-    private var jobs: MutableList<Job> = mutableListOf()
+    private val jobs: ConcurrentLinkedQueue<Job> = ConcurrentLinkedQueue()
     /**
      * Clears file assets associated with the given URLs asynchronously.
      *

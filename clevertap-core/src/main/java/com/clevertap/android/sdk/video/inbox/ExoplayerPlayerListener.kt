@@ -11,7 +11,14 @@ import com.google.android.exoplayer2.video.VideoSize
 /**
  * This class addresses an AbstractMethodError because of the Java 8 feature of default methods in interfaces.
  * Default methods are somewhat not supported if minSDKVersion < 24
+ *
+ * @deprecated ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed
+ * in v9.0.0. Migrate to Media3 (androidx.media3) and use [Media3PlayerListener] instead.
  */
+@Deprecated(
+    message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3PlayerListener instead.",
+    replaceWith = ReplaceWith("Media3PlayerListener()")
+)
 open class ExoplayerPlayerListener : Player.Listener {
     override fun onEvents(player: Player, events: Player.Events) {}
     override fun onTimelineChanged(timeline: Timeline, reason: Int) {}

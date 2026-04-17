@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationTyp
 import com.clevertap.android.sdk.inapp.images.memory.MemoryDataTransformationType.ToFile
 import com.clevertap.android.sdk.inapp.images.repo.TAG_FILE_DOWNLOAD
 import com.clevertap.android.sdk.network.DownloadedBitmap
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.utils.CTCaches
 import java.io.File
 
@@ -67,8 +68,12 @@ internal class FileResourceProvider(
         @Volatile
         private var instance: FileResourceProvider? = null
 
+        /**
+         * Initializes the singleton with a NetworkMonitor for network-aware downloads.
+         * Must be called by CleverTapFactory during SDK initialization before any other call.
+         */
         @JvmStatic
-        fun getInstance(context: Context, logger: ILogger? = null): FileResourceProvider {
+        fun initInstance(context: Context, logger: ILogger? = null, networkMonitor: NetworkMonitor): FileResourceProvider {
             return instance ?: synchronized(this) {
                 instance ?: FileResourceProvider(
                     images = context.getDir(IMAGE_DIRECTORY_NAME, Context.MODE_PRIVATE),
@@ -77,8 +82,17 @@ internal class FileResourceProvider(
                         ALL_FILE_TYPES_DIRECTORY_NAME,
                         Context.MODE_PRIVATE
                     ),
-                    logger = logger
+                    logger = logger,
+                    inAppRemoteSource = FileFetchApi(networkMonitor)
                 ).also { instance = it }
+            }
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        fun getInstance(context: Context, logger: ILogger? = null): FileResourceProvider {
+            return instance ?: synchronized(this) {
+                instance ?: FileResourceProvider(context, logger).also { instance = it }
             }
         }
     }

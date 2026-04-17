@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.pushnotification;
 
-import android.app.ActivityOptions;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +15,7 @@ import java.util.Random;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LaunchPendingIntentFactory {
+    private static final int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
 
     public static PendingIntent getLaunchPendingIntent(@NonNull Bundle extras, @NonNull Context context) {
         Intent launchIntent;
@@ -28,10 +28,6 @@ public class LaunchPendingIntentFactory {
             launchIntent.putExtras(extras);
             launchIntent.removeExtra(Constants.WZRK_ACTIONS);
 
-            int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-            }
             pIntent = PendingIntent.getBroadcast(context, new Random().nextInt(),
                     launchIntent, flagsLaunchPendingIntent);
         }
@@ -58,11 +54,6 @@ public class LaunchPendingIntentFactory {
         // Take all the properties from the notif and add it to the intent
         launchIntent.putExtras(extras);
         launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-
-        int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-        }
 
         return PendingIntent.getActivity(context, new Random().nextInt(), launchIntent,
                 flagsLaunchPendingIntent, null);

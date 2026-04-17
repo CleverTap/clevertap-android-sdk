@@ -175,30 +175,6 @@ public final class Utils {
     }
 
     @SuppressLint("MissingPermission")
-    public static String getCurrentNetworkType(final Context context) {
-        try {
-            // First attempt to check for WiFi connectivity
-            ConnectivityManager connManager = (ConnectivityManager) context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connManager == null) {
-                return "Unavailable";
-            }
-            NetworkInfo mWifi = connManager
-                    .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-            if (mWifi != null && mWifi.isConnected()) {
-                return "WiFi";
-            }
-
-            return getDeviceNetworkType(context);
-
-
-        } catch (Throwable t) {
-            return "Unavailable";
-        }
-    }
-
-    @SuppressLint("MissingPermission")
     public static String getDeviceNetworkType(@NonNull final Context context) {
         // Fall back to network type
         TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);

@@ -8,7 +8,7 @@ class MockDeviceInfo(
     coreMetaData: CoreMetaData?
 ) : DeviceInfo(
     context, config,
-    cleverTapID, coreMetaData
+    cleverTapID, coreMetaData, null
 ) {
 
     val ctId: String?

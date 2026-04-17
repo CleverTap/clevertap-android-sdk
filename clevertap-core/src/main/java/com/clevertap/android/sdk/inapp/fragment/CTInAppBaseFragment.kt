@@ -20,6 +20,8 @@ import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
 import com.clevertap.android.sdk.inapp.InAppActionType
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
+import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
 import com.clevertap.android.sdk.utils.UriHelper
 
 import java.lang.ref.WeakReference
@@ -28,6 +30,8 @@ import java.net.URLDecoder
 internal abstract class CTInAppBaseFragment : Fragment() {
 
     companion object {
+        private const val KEY_ACTIVE_MEDIA_URL = "ct_active_media_url"
+
         fun showOnActivity(
             inAppFragment: CTInAppBaseFragment,
             activity: Activity,
@@ -74,11 +78,15 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     protected lateinit var config: CleverTapInstanceConfig
     protected var currentOrientation: Int = 0
     protected var closeImageView: CloseImageView? = null
+    protected var activeMediaUrl: String? = null
+    protected lateinit var mediaHandler: InAppMediaHandler
     private var listenerWeakReference: WeakReference<InAppListener>? = null
     private var didClickForHardPermissionListener: DidClickForHardPermissionListener? = null
 
     protected abstract fun cleanup()
     protected abstract fun generateListener()
+
+    protected open fun createMediaHandler(): InAppMediaHandler = NoOpMediaHandler
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -93,6 +101,19 @@ internal abstract class CTInAppBaseFragment : Fragment() {
                 didClickForHardPermissionListener = context
             }
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        activeMediaUrl = savedInstanceState?.getString(KEY_ACTIVE_MEDIA_URL)
+            ?: InAppMediaHandler.resolveMediaUrl(inAppNotification, currentOrientation)
+        mediaHandler = createMediaHandler()
+        lifecycle.addObserver(mediaHandler)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        activeMediaUrl?.let { outState.putString(KEY_ACTIVE_MEDIA_URL, it) }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
