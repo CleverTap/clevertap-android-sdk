@@ -5,11 +5,15 @@
 * **InApp Media Support:** Adds GIF and Video support for all InApp notification templates, enabling richer in-app experiences.
 * **App Inbox Default Media View:** Adds a fallback media view for App Inbox when the backend does not provide a media orientation, rendering images, GIFs, video posters, and audio thumbnails at their natural aspect ratio.
 * **Picture-in-Picture (PIP) In-App Notifications:** Adds support for Picture-in-Picture in-app notifications — compact, draggable floating windows that overlay app content. Supports image, GIF, and video media with expand/collapse, drag-to-reposition (9-point snap grid), and configurable controls. Video playback requires AndroidX Media3 dependencies.
+* **Programmatic Unmute API:** Adds a public `unmute()` method on `CleverTapAPI` to clear an active mute state set by the backend, allowing the SDK to resume normal event tracking immediately without waiting for the mute period to expire. Also adds support for backend-driven mute durations via the `X-WZRK-MUTE-DURATION` response header for more precise, server-controlled mute windows.
+
+#### Breaking Changes
+* **Minimum SDK Version Updated:** Bumps the minimum supported Android API level from 21 (Android 5.0) to 23 (Android 6.0). Apps targeting API levels below 23 will no longer be able to integrate this SDK version.
 
 #### Improvements
 * **Network Monitoring:** Replaces deprecated network APIs with a modern `NetworkMonitor` for more accurate connectivity detection, including captive portal support.
-* **Minimum SDK Version Updated:** Bumps the minimum supported Android API level from 21 (Android 5.0) to 23 (Android 6.0).
 * **ExoPlayer Deprecated:** Deprecates ExoPlayer (`com.google.android.exoplayer2`) support. Developers using ExoPlayer for video playback should migrate to Media3 (`androidx.media3`) before v9.0.0, when ExoPlayer support will be removed. IDE tooling provides automatic migration suggestions.
+* **`getMuted()` Deprecated:** Deprecates the `getMuted()` API in favor of `getMuteExpiry()`, which exposes the absolute mute expiry timestamp for more accurate mute-state checks.
 
 #### Bug Fixes
 * Fixes an `IndexOutOfBoundsException` in file cleanup by using a thread-safe collection.
