@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.InAppListener
+import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
 
 internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
 
@@ -23,8 +24,10 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
     }
 
     override fun cleanup() {
-        lifecycle.removeObserver(mediaHandler)
-        mediaHandler.cleanup()
+        if (mediaHandler !is NoOpMediaHandler) {
+            lifecycle.removeObserver(mediaHandler)
+            mediaHandler.cleanup()
+        }
     }
 
     override fun generateListener() {
