@@ -181,8 +181,9 @@ public class CTMessageDAO {
                 inboxMessage.put("wzrk_id", campaignId);//For test inbox Notification Viewed
             }
             JSONObject wzrkParams = getWzrkFields(inboxMessage);
+            boolean read = inboxMessage.optBoolean(Constants.INBOX_V2_ISREAD_KEY, false);
             return (id == null) ? null
-                    : new CTMessageDAO(id, cellObject, false, date, expires, userId, tagsList, campaignId,
+                    : new CTMessageDAO(id, cellObject, read, date, expires, userId, tagsList, campaignId,
                             wzrkParams);
         } catch (JSONException e) {
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - " + e.getLocalizedMessage());
