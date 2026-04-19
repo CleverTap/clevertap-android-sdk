@@ -62,6 +62,11 @@ public class CTInboxController {
     }
 
     @AnyThread
+    public String getUserId() {
+        return userId;
+    }
+
+    @AnyThread
     public void deleteInboxMessage(final CTInboxMessage message) {
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("deleteInboxMessage", new Callable<Void>() {

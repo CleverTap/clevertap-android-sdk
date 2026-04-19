@@ -160,7 +160,7 @@ public class CTMessageDAO {
         }
     }
 
-    static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId) {
+    public static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId) {
         try {
             String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
             long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis() / 1000;
