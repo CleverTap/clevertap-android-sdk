@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
+import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
@@ -53,6 +54,7 @@ class LoginControllerTest : BaseTestCase() {
     private lateinit var loginController: LoginController
     private lateinit var loginInfoProvider: LoginInfoProvider
     private lateinit var contentFetchManager: ContentFetchManager
+    private lateinit var inboxV2Bridge: InboxV2Bridge
 
     override fun setUp() {
         super.setUp()
@@ -72,6 +74,7 @@ class LoginControllerTest : BaseTestCase() {
         cryptHandler = mockk(relaxed = true)
         pushProviders = mockk(relaxed = true)
         contentFetchManager = mockk(relaxed = true)
+        inboxV2Bridge = mockk(relaxed = true)
 
         every { controllerManager.pushProviders } returns pushProviders
 
@@ -93,7 +96,8 @@ class LoginControllerTest : BaseTestCase() {
             dbManager,
             ctLockManager,
             loginInfoProvider,
-            contentFetchManager
+            contentFetchManager,
+            inboxV2Bridge
         )
     }
 
@@ -206,6 +210,34 @@ class LoginControllerTest : BaseTestCase() {
     }
 
     @Test
+    fun `asyncProfileSwitchUser triggers bridge submit exactly once with respectThrottle=false`() {
+        val profile = mapOf("Name" to "John Doe")
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+
+            loginController.asyncProfileSwitchUser(profile, "12345", "54321")
+        }
+
+        verify(exactly = 1) { inboxV2Bridge.submit(false, null) }
+    }
+
+    @Test
+    fun `asyncProfileSwitchUser submits V2 fetch after resetInbox and before inAppFCManager changeUser`() {
+        val profile = mapOf("Name" to "John Doe")
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+
+            loginController.asyncProfileSwitchUser(profile, "12345", "54321")
+        }
+
+        verifyOrder {
+            pushProviders.forcePushDeviceToken(true)
+            inboxV2Bridge.submit(false, null)
+            controllerManager.inAppFCManager.changeUser(any())
+        }
+    }
+
+    @Test
     fun `asyncProfileSwitchUser when null cachedGuid and custom ID is enabled`() {
         val profile = mapOf("Name" to "John Doe", "Email" to "john.doe@example.com")
         val cacheGuid = null
@@ -272,7 +304,8 @@ class LoginControllerTest : BaseTestCase() {
             dbManager,
             ctLockManager,
             loginInfoProvider,
-            contentFetchManager
+            contentFetchManager,
+            inboxV2Bridge
         )
         //Act
         loginController.notifyChangeUserCallback()
@@ -307,7 +340,8 @@ class LoginControllerTest : BaseTestCase() {
             dbManager,
             ctLockManager,
             loginInfoProvider,
-            contentFetchManager
+            contentFetchManager,
+            inboxV2Bridge
         )
 
         var isPassed = true

@@ -581,7 +581,8 @@ internal object CleverTapFactory {
             context, config, deviceInfo,
             validationResultStack, baseEventQueueManager, analyticsManager,
             coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
+            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager,
+            inboxV2Bridge
         )
 
         return CoreState(
