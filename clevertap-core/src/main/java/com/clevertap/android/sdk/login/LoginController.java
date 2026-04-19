@@ -21,6 +21,7 @@ import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.inbox.InboxV2Bridge;
 import com.clevertap.android.sdk.network.ContentFetchManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
@@ -70,6 +71,8 @@ public class LoginController {
 
     private final ContentFetchManager contentFetchManager;
 
+    private final InboxV2Bridge inboxV2Bridge;
+
     public LoginController(Context context,
             CleverTapInstanceConfig config,
             DeviceInfo deviceInfo,
@@ -84,7 +87,8 @@ public class LoginController {
             DBManager dbManager,
             CTLockManager ctLockManager,
             LoginInfoProvider loginInfoProvider,
-            ContentFetchManager contentFetchManager
+            ContentFetchManager contentFetchManager,
+            InboxV2Bridge inboxV2Bridge
     ) {
         this.config = config;
         this.context = context;
@@ -102,6 +106,7 @@ public class LoginController {
         this.ctLockManager = ctLockManager;
         this.loginInfoProvider = loginInfoProvider;
         this.contentFetchManager = contentFetchManager;
+        this.inboxV2Bridge = inboxV2Bridge;
     }
 
     public void asyncProfileSwitchUser(final Map<String, Object> profile, final String cacheGuid,
@@ -155,6 +160,7 @@ public class LoginController {
                     }
                     pushProviders.forcePushDeviceToken(true);
                     resetInbox();
+                    inboxV2Bridge.submit(false, null);
                     resetFeatureFlags();
                     resetProductConfigs();
                     recordDeviceIDErrors();
