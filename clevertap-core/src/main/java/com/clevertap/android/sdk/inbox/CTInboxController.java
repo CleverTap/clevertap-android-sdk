@@ -15,6 +15,9 @@ import com.clevertap.android.sdk.task.Task;
 import org.json.JSONArray;
 import org.json.JSONException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -198,6 +201,42 @@ public class CTInboxController {
             }
         }
         return haveUpdates;
+    }
+
+    /**
+     * Applies an already-parsed V2 message list to the store.
+     * Caller must hold {@code inboxControllerLock}; firing the UI callback
+     * is the caller's responsibility (mirrors the V1 {@link #updateMessages}
+     * contract). The dual-filter math lives in {@link InboxV2Merger} as pure
+     * functions; this method only sequences DB reads/writes around it.
+     */
+    @WorkerThread
+    public boolean processV2Response(List<CTMessageDAO> incoming) {
+        // Pending sets are intentionally empty until T3.1 adds the tables and
+        // T3.3 wires the dbAdapter calls here.
+        Set<String> pendingDeletes = Collections.emptySet();
+        Set<String> pendingReads = Collections.emptySet();
+        long nowSec = System.currentTimeMillis() / 1000L;
+
+        List<CTMessageDAO> toUpsert = InboxV2Merger.INSTANCE.preWriteFilter(
+                incoming, pendingDeletes, pendingReads, videoSupported, nowSec);
+        if (!toUpsert.isEmpty()) {
+            dbAdapter.upsertMessages(toUpsert);
+        }
+        boolean updated = !toUpsert.isEmpty();
+
+        synchronized (messagesLock) {
+            List<CTMessageDAO> full = dbAdapter.getMessages(userId);
+            CleanupResult cleanup = InboxV2Merger.INSTANCE.postReadCleanup(
+                    full, pendingDeletes, pendingReads, videoSupported, nowSec);
+
+            if (!cleanup.getToDelete().isEmpty()) {
+                dbAdapter.deleteMessagesForIDs(cleanup.getToDelete(), userId);
+                updated = true;
+            }
+            this.messages = new ArrayList<>(cleanup.getFinalList());
+        }
+        return updated;
     }
 
     @AnyThread

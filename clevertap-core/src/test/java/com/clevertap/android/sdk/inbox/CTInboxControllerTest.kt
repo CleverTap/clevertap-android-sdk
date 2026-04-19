@@ -267,6 +267,74 @@ class CTInboxControllerTest : BaseTestCase() {
         }
     }
 
+    @Test
+    fun `processV2Response upserts filtered incoming and returns true`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        val updated = controller.processV2Response(listOf(getCtMsgDao("m1", userId)))
+
+        verify { dbAdapter.upsertMessages(match { it.size == 1 && it[0].id == "m1" }) }
+        assertTrue(updated)
+    }
+
+    @Test
+    fun `processV2Response does not notify callback manager itself`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        controller.processV2Response(listOf(getCtMsgDao("m1", userId)))
+
+        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+    }
+
+    @Test
+    fun `processV2Response with empty incoming and empty DB returns false`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        val updated = controller.processV2Response(emptyList())
+
+        verify(exactly = 0) { dbAdapter.upsertMessages(any()) }
+        verify(exactly = 0) { dbAdapter.deleteMessagesForIDs(any(), any()) }
+        assertFalse(updated)
+    }
+
+    @Test
+    fun `processV2Response removes expired rows found during re-read`() {
+        val expired = getCtMsgDao("m1", userId, expires = 1L)
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(expired)
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        val updated = controller.processV2Response(emptyList())
+
+        verify { dbAdapter.deleteMessagesForIDs(match { it.contains("m1") }, userId) }
+        assertTrue(updated)
+    }
+
+    @Test
+    fun `processV2Response replaces in-memory list with cleanup finalList`() {
+        val survivor = getCtMsgDao("m1", userId)
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(survivor)
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        controller.processV2Response(emptyList())
+
+        val inMemory = controller.messages
+        assertEquals(1, inMemory.size)
+        assertEquals("m1", inMemory[0].id)
+    }
+
     private fun getCtMsgDao(
         id: String = "1",
         userId: String = "1",
