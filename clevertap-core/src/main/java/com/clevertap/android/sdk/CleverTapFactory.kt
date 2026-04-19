@@ -532,27 +532,6 @@ internal object CleverTapFactory {
                 analyticsManager, controllerManager, ctWorkManager, SYSTEM
             )
 
-        val activityLifeCycleManager = ActivityLifeCycleManager(
-            context,
-            config,
-            analyticsManager,
-            coreMetaData,
-            sessionManager,
-            pushProviders,
-            callbackManager,
-            inAppController,
-            baseEventQueueManager,
-            executors,
-            SYSTEM
-        )
-
-        val loginController = LoginController(
-            context, config, deviceInfo,
-            validationResultStack, baseEventQueueManager, analyticsManager,
-            coreMetaData, controllerManager, sessionManager,
-            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
-        )
-
         val networkScope = NetworkScope()
 
         val inboxV2Response = InboxV2Response(
@@ -581,6 +560,28 @@ internal object CleverTapFactory {
         val inboxV2Bridge = InboxV2Bridge(
             fetcher = inboxV2Fetcher,
             networkScope = networkScope
+        )
+
+        val activityLifeCycleManager = ActivityLifeCycleManager(
+            context,
+            config,
+            analyticsManager,
+            coreMetaData,
+            sessionManager,
+            pushProviders,
+            callbackManager,
+            inAppController,
+            baseEventQueueManager,
+            executors,
+            SYSTEM,
+            inboxV2Bridge
+        )
+
+        val loginController = LoginController(
+            context, config, deviceInfo,
+            validationResultStack, baseEventQueueManager, analyticsManager,
+            coreMetaData, controllerManager, sessionManager,
+            localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
         )
 
         return CoreState(

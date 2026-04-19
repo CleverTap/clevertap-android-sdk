@@ -4,6 +4,7 @@ import android.app.Activity
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
+import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FakeClock
@@ -32,6 +33,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
     private lateinit var listener: CTPushProviderListener
     private lateinit var manifestInfo: ManifestInfo
     private lateinit var coreState: CoreState
+    private lateinit var inboxV2Bridge: InboxV2Bridge
 
     @Before
     @Throws(Exception::class)
@@ -40,12 +42,14 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         coreState = MockCoreStateKotlin(cleverTapInstanceConfig)
         listener = mockk()
         manifestInfo = mockk()
+        inboxV2Bridge = mockk(relaxed = true)
         activityLifeCycleManager = ActivityLifeCycleManager(
             appCtx, cleverTapInstanceConfig, coreState.analyticsManager, coreState.coreMetaData,
             coreState.sessionManager, coreState.pushProviders, coreState.callbackManager, coreState.inAppController,
             coreState.baseEventQueueManager,
             MockCTExecutors(),
-            FakeClock()
+            FakeClock(),
+            inboxV2Bridge
         )
     }
 
@@ -91,6 +95,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         verify { coreState.sessionManager.checkTimeoutSession() }
         verify(exactly = 0) { coreState.analyticsManager.pushAppLaunchedEvent() }
         verify(exactly = 0) { coreState.analyticsManager.fetchFeatureFlags() }
+        verify(exactly = 0) { inboxV2Bridge.submit(any(), any()) }
         verify(exactly = 0) { coreState.pushProviders.onTokenRefresh() }
         verify(exactly = 0) { geofenceCallbackSpy.triggerLocation() }
         verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }
@@ -149,10 +154,22 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             verify { coreState.sessionManager.checkTimeoutSession() }
             verify { coreState.analyticsManager.pushAppLaunchedEvent() }
             verify { coreState.analyticsManager.fetchFeatureFlags() }
+            verify(exactly = 1) { inboxV2Bridge.submit(false, null) }
             verify { coreState.pushProviders.onTokenRefresh() }
             verify { geofenceCallbackSpy.triggerLocation() }
             verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }
             verify { coreState.inAppController.showNotificationIfAvailable() }
         }
+    }
+
+    @Test
+    fun `subsequent activityResumed calls within the same launch do not re-submit V2 fetch`() {
+        val mockActivity = mockk<Activity>(relaxed = true)
+        coreState.coreMetaData.isAppLaunchPushed = true
+
+        activityLifeCycleManager.activityResumed(mockActivity)
+        activityLifeCycleManager.activityResumed(mockActivity)
+
+        verify(exactly = 0) { inboxV2Bridge.submit(any(), any()) }
     }
 }
