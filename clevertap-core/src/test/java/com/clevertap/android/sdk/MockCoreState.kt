@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk
 
+import com.clevertap.android.sdk.network.fetch.NetworkScope
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResultStack
 import io.mockk.mockk
@@ -34,5 +35,6 @@ internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceCon
     mockk(relaxed = true),
     mockk(relaxed = true),
     mockk(relaxed = true),
-    MockCTExecutors()
+    MockCTExecutors(),
+    NetworkScope()
 )
