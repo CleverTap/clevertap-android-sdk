@@ -106,6 +106,30 @@ internal class CtApi(
             )
         )
 
+    fun sendInboxFetch(body: String): Response =
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
+                relativeUrl = "inbox/v2/getMessages",
+                body = body,
+                headers = defaultHeaders
+            )
+        )
+
+    // Working assumption: delete shares V2 fetch's URL shape. Point at the same
+    // relative URL for now. CONFIRM with backend before merging T3.2 — if it's
+    // actually a sibling path like "inbox/v2/deleteMessage" change this single
+    // literal. Nothing else in the pipeline cares about the path.
+    fun sendInboxDelete(body: String): Response =
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
+                relativeUrl = "inbox/v2/getMessages",
+                body = body,
+                headers = defaultHeaders
+            )
+        )
+
     /**
      * Fetches content from an arbitrary URL (e.g., S3 URLs for in-app preview payloads).
      * This is a simple GET request without CleverTap-specific headers or query parameters.
@@ -262,8 +286,8 @@ internal class CtApi(
         val builder = Uri.Builder()
             .scheme("https")
             .authority(baseUrl)
-            .appendPath(relativeUrl)
-            .appendDefaultQueryParams()
+        relativeUrl.split("/").filter { it.isNotEmpty() }.forEach { builder.appendPath(it) }
+        builder.appendDefaultQueryParams()
         if (includeTs) {
             builder.appendTsQueryParam()
         }
