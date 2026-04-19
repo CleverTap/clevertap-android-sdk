@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk
 
+import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.network.fetch.NetworkScope
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -36,5 +37,6 @@ internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceCon
     mockk(relaxed = true),
     mockk(relaxed = true),
     MockCTExecutors(),
-    NetworkScope()
+    NetworkScope(),
+    mockk<InboxV2Bridge>(relaxed = true)
 )

@@ -32,6 +32,8 @@ import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
+import com.clevertap.android.sdk.inbox.InboxV2Bridge
+import com.clevertap.android.sdk.inbox.InboxV2Fetcher
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
@@ -48,6 +50,8 @@ import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkMonitor
+import com.clevertap.android.sdk.network.fetch.FetchThrottle
+import com.clevertap.android.sdk.network.fetch.InboxFetchCall
 import com.clevertap.android.sdk.network.fetch.NetworkScope
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
@@ -66,6 +70,7 @@ import com.clevertap.android.sdk.response.FetchVariablesResponse
 import com.clevertap.android.sdk.response.GeofenceResponse
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.response.InboxResponse
+import com.clevertap.android.sdk.response.InboxV2Response
 import com.clevertap.android.sdk.response.MetadataResponse
 import com.clevertap.android.sdk.response.ProductConfigResponse
 import com.clevertap.android.sdk.response.PushAmpResponse
@@ -550,6 +555,34 @@ internal object CleverTapFactory {
 
         val networkScope = NetworkScope()
 
+        val inboxV2Response = InboxV2Response(
+            config = config,
+            ctLockManager = ctLockManager,
+            callbackManager = callbackManager,
+            controllerManager = controllerManager
+        )
+        val inboxFetchCall = InboxFetchCall(
+            ctApi = ctApiWrapper.ctApi,
+            queueHeaderBuilder = queueHeaderBuilder,
+            logger = config.logger
+        )
+        val inboxFetchThrottle = FetchThrottle(
+            context = context,
+            config = config,
+            prefKey = Constants.INBOX_V2_LAST_FETCH_TS_KEY,
+            windowMs = Constants.INBOX_V2_THROTTLE_WINDOW_MS
+        )
+        val inboxV2Fetcher = InboxV2Fetcher(
+            endpoint = inboxFetchCall,
+            throttle = inboxFetchThrottle,
+            inboxV2Response = inboxV2Response,
+            logger = config.logger
+        )
+        val inboxV2Bridge = InboxV2Bridge(
+            fetcher = inboxV2Fetcher,
+            networkScope = networkScope
+        )
+
         return CoreState(
             locationManager = locationManager,
             config = config,
@@ -581,7 +614,8 @@ internal object CleverTapFactory {
             templatesManager = templatesManager,
             cTVariables = ctVariables,
             executors = executors,
-            networkScope = networkScope
+            networkScope = networkScope,
+            inboxV2Bridge = inboxV2Bridge
         )
     }
 
