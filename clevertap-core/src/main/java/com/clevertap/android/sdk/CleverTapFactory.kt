@@ -48,6 +48,7 @@ import com.clevertap.android.sdk.network.IJRepo
 import com.clevertap.android.sdk.network.NetworkEncryptionManager
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.network.NetworkMonitor
+import com.clevertap.android.sdk.network.fetch.NetworkScope
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
@@ -547,6 +548,8 @@ internal object CleverTapFactory {
             localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager
         )
 
+        val networkScope = NetworkScope()
+
         return CoreState(
             locationManager = locationManager,
             config = config,
@@ -577,7 +580,8 @@ internal object CleverTapFactory {
             storeRegistry = storeRegistry,
             templatesManager = templatesManager,
             cTVariables = ctVariables,
-            executors = executors
+            executors = executors,
+            networkScope = networkScope
         )
     }
 
