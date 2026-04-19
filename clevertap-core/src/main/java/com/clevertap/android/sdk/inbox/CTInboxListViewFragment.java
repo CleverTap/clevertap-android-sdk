@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inbox;
 
 import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -23,6 +24,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -112,6 +114,8 @@ public class CTInboxListViewFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_list_view, container, false);
+        SwipeRefreshLayout swipeRefreshLayout = allView.findViewById(R.id.ct_inbox_swipe_refresh);
+        wireSwipeToRefresh(swipeRefreshLayout);
         linearLayout = allView.findViewById(R.id.list_view_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         TextView noMessageView = allView.findViewById(R.id.list_view_no_message_view);
@@ -218,6 +222,29 @@ public class CTInboxListViewFragment extends Fragment {
         if (mediaRecyclerView != null) {
             mediaRecyclerView.stop();
         }
+    }
+
+    void wireSwipeToRefresh(@NonNull final SwipeRefreshLayout swipeRefreshLayout) {
+        // Direct child is a LinearLayout, whose canScrollVertically(-1) is always false.
+        // Delegate to whichever RecyclerView is actually on screen so mid-scroll pulls
+        // don't falsely trigger a refresh.
+        swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> {
+            RecyclerView target = mediaRecyclerView != null ? mediaRecyclerView : recyclerView;
+            return target != null && target.canScrollVertically(-1);
+        });
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            CleverTapAPI api = CleverTapAPI.instanceWithConfig(getActivity(), config);
+            if (api == null) {
+                swipeRefreshLayout.setRefreshing(false);
+                return;
+            }
+            api.fetchInbox(success -> {
+                Activity activity = getActivity();
+                if (activity != null) {
+                    activity.runOnUiThread(() -> swipeRefreshLayout.setRefreshing(false));
+                }
+            });
+        });
     }
 
     void didClick(Bundle data, int position, int contentPageIndex, HashMap<String, String> keyValuePayload, int buttonIndex) {

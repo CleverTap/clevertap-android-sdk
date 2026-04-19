@@ -51,6 +51,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.installreferrer)
     implementation(libs.androidx.work.runtime)
