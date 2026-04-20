@@ -999,18 +999,25 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
+        String msgId = data.getMessageId();
+
+        if (!clicked && data.isRead()) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Inbox: Skipping Viewed for " + msgId + " — already read on another device");
+            return;
+        }
+
+        EventSuppressor gate = clicked ? inboxClickedSuppressor : inboxViewedSuppressor;
+        if (msgId != null && gate.shouldSuppress(msgId)) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Inbox: " + (clicked ? "Clicked" : "Viewed") + " suppressed for " + msgId);
+            return;
+        }
+
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(data);
-            String msgId = data.getMessageId();
             notif.put("_id", msgId);
-
-            EventSuppressor gate = clicked ? inboxClickedSuppressor : inboxViewedSuppressor;
-            if (msgId != null && gate.shouldSuppress(msgId)) {
-                config.getLogger().verbose(config.getAccountId(),
-                        "Inbox: " + (clicked ? "Clicked" : "Viewed") + " suppressed for " + msgId);
-                return;
-            }
 
             if (customData != null) {
                 for (String x : customData.keySet()) {

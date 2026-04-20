@@ -1298,6 +1298,64 @@ class AnalyticsManagerTest {
         verifyRapidRepeatSuppressed(isClicked = true)
     }
 
+    @Test
+    fun `Viewed is skipped when message isRead=true`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-read"
+            every { inboxMessage.isRead } returns true
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
+
+            verify(exactly = 0) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
+    @Test
+    fun `Clicked on isRead=true message still queues`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-read"
+            every { inboxMessage.isRead } returns true
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(true, inboxMessage, null)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
+    @Test
+    fun `Viewed on isRead=false message fires normally`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-unread"
+            every { inboxMessage.isRead } returns false
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
     private fun verifyRapidRepeatSuppressed(isClicked: Boolean) {
         mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
