@@ -1288,6 +1288,40 @@ class AnalyticsManagerTest {
         verifyPushInboxMessageStateEventIncludesId(isClicked = true)
     }
 
+    @Test
+    fun `two rapid Viewed events for same message — only first queues`() {
+        verifyRapidRepeatSuppressed(isClicked = false)
+    }
+
+    @Test
+    fun `two rapid Clicked events for same message — only first queues`() {
+        verifyRapidRepeatSuppressed(isClicked = true)
+    }
+
+    private fun verifyRapidRepeatSuppressed(isClicked: Boolean) {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "msg-rapid"
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(
+                    any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>()
+                )
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(isClicked, inboxMessage, null)
+            analyticsManagerSUT.pushInboxMessageStateEvent(isClicked, inboxMessage, null)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(
+                    any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>()
+                )
+            }
+        }
+    }
+
     private fun verifyPushInboxMessageStateEventIncludesId(isClicked: Boolean) {
         mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)

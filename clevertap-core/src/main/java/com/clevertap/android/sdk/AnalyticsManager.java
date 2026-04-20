@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.events.FlattenedEventData;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.inbox.EventSuppressor;
 import com.clevertap.android.sdk.profile.ProfileCommand;
 import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
 import com.clevertap.android.sdk.profile.traversal.ProfileChange;
@@ -65,6 +66,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final Object notificationMapLock = new Object();
     private final LocalDataStore localDataStore;
     private final InAppPreviewHandler inAppPreviewHandler;
+    private final EventSuppressor inboxViewedSuppressor = new EventSuppressor(2_000L);
+    private final EventSuppressor inboxClickedSuppressor = new EventSuppressor(5_000L);
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
@@ -999,7 +1002,15 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(data);
-            notif.put("_id", data.getMessageId());
+            String msgId = data.getMessageId();
+            notif.put("_id", msgId);
+
+            EventSuppressor gate = clicked ? inboxClickedSuppressor : inboxViewedSuppressor;
+            if (msgId != null && gate.shouldSuppress(msgId)) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "Inbox: " + (clicked ? "Clicked" : "Viewed") + " suppressed for " + msgId);
+                return;
+            }
 
             if (customData != null) {
                 for (String x : customData.keySet()) {
