@@ -15,7 +15,6 @@ import com.clevertap.android.sdk.task.Task;
 import org.json.JSONArray;
 import org.json.JSONException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -217,11 +216,26 @@ public class CTInboxController {
      */
     @WorkerThread
     public boolean processV2Response(List<CTMessageDAO> incoming) {
-        // Pending sets are intentionally empty until T3.1 adds the tables and
-        // T3.3 wires the dbAdapter calls here.
-        Set<String> pendingDeletes = Collections.emptySet();
-        Set<String> pendingReads = Collections.emptySet();
+        Set<String> pendingDeletes = dbAdapter.getPendingDeletes(userId);
+        Set<String> pendingReads = dbAdapter.getPendingReads(userId);
         long nowSec = System.currentTimeMillis() / 1000L;
+
+        // Server-caught-up: any incoming message with isRead=1 that was still
+        // pending locally confirms the read — drop the pending row. Must run
+        // BEFORE preWriteFilter, which mutates the incoming DAOs in-place via
+        // the pending-read override and would make every pending id look
+        // server-confirmed.
+        if (!pendingReads.isEmpty()) {
+            List<String> confirmedReads = new ArrayList<>();
+            for (CTMessageDAO dao : incoming) {
+                if (dao.isRead() == 1 && pendingReads.contains(dao.getId())) {
+                    confirmedReads.add(dao.getId());
+                }
+            }
+            if (!confirmedReads.isEmpty()) {
+                dbAdapter.removePendingReads(confirmedReads, userId);
+            }
+        }
 
         List<CTMessageDAO> toUpsert = InboxV2Merger.INSTANCE.preWriteFilter(
                 incoming, pendingDeletes, pendingReads, videoSupported, nowSec);
@@ -314,6 +328,7 @@ public class CTInboxController {
             @WorkerThread
             public Void call() {
                 dbAdapter.markReadMessageForId(messageId, userId);
+                dbAdapter.addPendingRead(messageId, userId);
                 return null;
             }
         });
@@ -346,6 +361,7 @@ public class CTInboxController {
             @WorkerThread
             public Void call() {
                 dbAdapter.markReadMessagesForIds(messageIDs, userId);
+                dbAdapter.addPendingReads(messageIDs, userId);
                 return null;
             }
         });
