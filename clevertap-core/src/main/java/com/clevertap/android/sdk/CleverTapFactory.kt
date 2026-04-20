@@ -32,6 +32,7 @@ import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
+import com.clevertap.android.sdk.inbox.InboxDeleteCoordinator
 import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.inbox.InboxV2Fetcher
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
@@ -562,6 +563,15 @@ internal object CleverTapFactory {
             networkScope = networkScope
         )
 
+        val inboxDeleteCoordinator = InboxDeleteCoordinator(
+            networkScope = networkScope,
+            ctApi = ctApiWrapper.ctApi,
+            queueHeaderBuilder = queueHeaderBuilder,
+            dbAdapterProvider = { databaseManager.loadDBAdapter(context) },
+            logger = config.logger
+        )
+        controllerManager.inboxDeleteCoordinator = inboxDeleteCoordinator
+
         val activityLifeCycleManager = ActivityLifeCycleManager(
             context,
             config,
@@ -617,7 +627,8 @@ internal object CleverTapFactory {
             cTVariables = ctVariables,
             executors = executors,
             networkScope = networkScope,
-            inboxV2Bridge = inboxV2Bridge
+            inboxV2Bridge = inboxV2Bridge,
+            inboxDeleteCoordinator = inboxDeleteCoordinator
         )
     }
 

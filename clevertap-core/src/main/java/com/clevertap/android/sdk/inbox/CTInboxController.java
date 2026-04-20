@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.task.Task;
 import org.json.JSONArray;
 import org.json.JSONException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -41,12 +42,15 @@ public class CTInboxController {
 
     private final CleverTapInstanceConfig config;
 
+    private final InboxDeleteCoordinator inboxDeleteCoordinator;
+
     // always call async
     @WorkerThread
     public CTInboxController(CleverTapInstanceConfig config, String guid, DBAdapter adapter,
                              CTLockManager ctLockManager,
                              BaseCallbackManager callbackManager,
-                             boolean videoSupported) {
+                             boolean videoSupported,
+                             InboxDeleteCoordinator inboxDeleteCoordinator) {
         this.userId = guid;
         this.dbAdapter = adapter;
         this.messages = this.dbAdapter.getMessages(this.userId);
@@ -54,6 +58,7 @@ public class CTInboxController {
         this.ctLockManager = ctLockManager;
         this.callbackManager = callbackManager;
         this.config = config;
+        this.inboxDeleteCoordinator = inboxDeleteCoordinator;
     }
 
     public int count() {
@@ -71,11 +76,15 @@ public class CTInboxController {
         task.execute("deleteInboxMessage", new Callable<Void>() {
             @Override
             public Void call() {
+                dbAdapter.addPendingDelete(message.getMessageId(), userId);
                 synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessageWithId(message.getMessageId());
                     if (update) {
                         callbackManager._notifyInboxMessagesDidUpdate();
                     }
+                }
+                if (inboxDeleteCoordinator != null) {
+                    inboxDeleteCoordinator.syncDelete(Collections.singletonList(message), userId);
                 }
                 return null;
             }
@@ -88,15 +97,33 @@ public class CTInboxController {
         task.execute("deleteInboxMessagesForIDs", new Callable<Void>() {
             @Override
             public Void call() {
+                // Gather CTInboxMessage objects BEFORE the local delete wipes
+                // the cache — otherwise the coordinator call below lands on
+                // an empty list.
+                List<CTInboxMessage> messagesToSync = new ArrayList<>(messageIDs.size());
+                for (String id : messageIDs) {
+                    CTInboxMessage m = getInboxMessageForId(id);
+                    if (m != null) messagesToSync.add(m);
+                }
+                dbAdapter.addPendingDeletes(messageIDs, userId);
                 synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessagesForIds(messageIDs);
                     if (update) {
                         callbackManager._notifyInboxMessagesDidUpdate();
                     }
                 }
+                if (inboxDeleteCoordinator != null && !messagesToSync.isEmpty()) {
+                    inboxDeleteCoordinator.syncDelete(messagesToSync, userId);
+                }
                 return null;
             }
         });
+    }
+
+    @AnyThread
+    private CTInboxMessage getInboxMessageForId(String messageId) {
+        CTMessageDAO dao = findMessageById(messageId);
+        return dao == null ? null : new CTInboxMessage(dao.toJSON());
     }
 
     @AnyThread

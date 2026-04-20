@@ -26,6 +26,7 @@ class CTInboxControllerTest : BaseTestCase() {
     private lateinit var ctLockManager: CTLockManager
     private lateinit var callbackManager: CallbackManager
     private lateinit var controller: CTInboxController
+    private lateinit var inboxDeleteCoordinator: InboxDeleteCoordinator
     private val videoSupported = true
 
     @Before
@@ -36,6 +37,7 @@ class CTInboxControllerTest : BaseTestCase() {
         dbAdapter = mockk(relaxed = true)
         ctLockManager = mockk(relaxed = true)
         callbackManager = mockk(relaxed = true)
+        inboxDeleteCoordinator = mockk(relaxed = true)
 
         val messageDAOList =
             arrayListOf(getCtMsgDao("msg_1", userId, false), getCtMsgDao("msg_2", userId, false))
@@ -51,7 +53,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         mockkStatic(CTExecutorFactory::class) {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
@@ -82,7 +85,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         mockkStatic(CTExecutorFactory::class) {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
@@ -113,7 +117,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         messageIDs = arrayListOf("msg_3", "msg_4")
 
@@ -133,7 +138,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         messageIDs = arrayListOf("msg_1", "msg_2")
 
@@ -163,7 +169,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         messageIDs = arrayListOf("msg_3", "msg_4")
 
@@ -183,7 +190,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         messageIDs = arrayListOf("msg_1", "msg_2")
 
@@ -214,7 +222,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         mockkStatic(CTExecutorFactory::class) {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
@@ -245,7 +254,8 @@ class CTInboxControllerTest : BaseTestCase() {
             dbAdapter,
             ctLockManager,
             callbackManager,
-            videoSupported
+            videoSupported,
+            inboxDeleteCoordinator
         )
         mockkStatic(CTExecutorFactory::class) {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
@@ -271,7 +281,8 @@ class CTInboxControllerTest : BaseTestCase() {
     fun `processV2Response upserts filtered incoming and returns true`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         val updated = controller.processV2Response(listOf(getCtMsgDao("m1", userId)))
@@ -284,7 +295,8 @@ class CTInboxControllerTest : BaseTestCase() {
     fun `processV2Response does not notify callback manager itself`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf()
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         controller.processV2Response(listOf(getCtMsgDao("m1", userId)))
@@ -296,7 +308,8 @@ class CTInboxControllerTest : BaseTestCase() {
     fun `processV2Response with empty incoming and empty DB returns false`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf()
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         val updated = controller.processV2Response(emptyList())
@@ -311,7 +324,8 @@ class CTInboxControllerTest : BaseTestCase() {
         val expired = getCtMsgDao("m1", userId, expires = 1L)
         every { dbAdapter.getMessages(userId) } returns arrayListOf(expired)
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         val updated = controller.processV2Response(emptyList())
@@ -325,7 +339,8 @@ class CTInboxControllerTest : BaseTestCase() {
         val survivor = getCtMsgDao("m1", userId)
         every { dbAdapter.getMessages(userId) } returns arrayListOf(survivor)
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         controller.processV2Response(emptyList())
@@ -339,7 +354,8 @@ class CTInboxControllerTest : BaseTestCase() {
     fun `markReadInboxMessage records a pendingRead for the tapped message`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         mockkStatic(CTExecutorFactory::class) {
@@ -358,7 +374,8 @@ class CTInboxControllerTest : BaseTestCase() {
             getCtMsgDao("m1", userId), getCtMsgDao("m2", userId)
         )
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         mockkStatic(CTExecutorFactory::class) {
@@ -378,7 +395,8 @@ class CTInboxControllerTest : BaseTestCase() {
         every { dbAdapter.getPendingReads(userId) } returns setOf("m1")
         every { dbAdapter.getMessages(userId) } returns arrayListOf()
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         val incomingUnread = getCtMsgDao("m1", userId, read = false)
@@ -392,7 +410,8 @@ class CTInboxControllerTest : BaseTestCase() {
         every { dbAdapter.getPendingReads(userId) } returns setOf("m1", "m2")
         every { dbAdapter.getMessages(userId) } returns arrayListOf()
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         controller.processV2Response(
@@ -406,11 +425,55 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
+    fun `deleteInboxMessage records a pending-delete and fires the coordinator`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val message = mockk<CTInboxMessage>(relaxed = true) { every { messageId } returns "m1" }
+            controller.deleteInboxMessage(message)
+
+            verify(exactly = 1) { dbAdapter.addPendingDelete("m1", userId) }
+            verify(exactly = 1) { inboxDeleteCoordinator.syncDelete(listOf(message), userId) }
+        }
+    }
+
+    @Test
+    fun `deleteInboxMessagesForIDs records pending-deletes as batch and fires one coordinator call`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId), getCtMsgDao("m2", userId)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val ids = arrayListOf("m1", "m2")
+            controller.deleteInboxMessagesForIDs(ids)
+
+            verify(exactly = 1) { dbAdapter.addPendingDeletes(ids, userId) }
+            verify(exactly = 0) { dbAdapter.addPendingDelete(any(), any()) }
+            verify(exactly = 1) {
+                inboxDeleteCoordinator.syncDelete(match { it.size == 2 }, userId)
+            }
+        }
+    }
+
+    @Test
     fun `processV2Response with empty pending-reads skips removePendingReads`() {
         every { dbAdapter.getPendingReads(userId) } returns emptySet()
         every { dbAdapter.getMessages(userId) } returns arrayListOf()
         controller = CTInboxController(
-            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
         )
 
         controller.processV2Response(listOf(getCtMsgDao("m1", userId, read = true)))

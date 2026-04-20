@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.inbox.InboxDeleteCoordinator
 import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.login.LoginController
 import com.clevertap.android.sdk.network.NetworkManager
@@ -58,7 +59,8 @@ internal open class CoreState(
     val cTVariables: CTVariables,
     val executors: CTExecutors,
     val networkScope: NetworkScope,
-    val inboxV2Bridge: InboxV2Bridge
+    val inboxV2Bridge: InboxV2Bridge,
+    val inboxDeleteCoordinator: InboxDeleteCoordinator
 ) {
     /**
      *
