@@ -335,6 +335,89 @@ class CTInboxControllerTest : BaseTestCase() {
         assertEquals("m1", inMemory[0].id)
     }
 
+    @Test
+    fun `markReadInboxMessage records a pendingRead for the tapped message`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            controller.markReadInboxMessage(mockk(relaxed = true) { every { messageId } returns "m1" })
+
+            verify(exactly = 1) { dbAdapter.addPendingRead("m1", userId) }
+        }
+    }
+
+    @Test
+    fun `markReadInboxMessagesForIDs records pending reads as a single batch`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId), getCtMsgDao("m2", userId)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val ids = arrayListOf("m1", "m2")
+            controller.markReadInboxMessagesForIDs(ids)
+
+            verify(exactly = 1) { dbAdapter.addPendingReads(ids, userId) }
+            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `processV2Response with pending-read applies isRead=1 override on upsert`() {
+        every { dbAdapter.getPendingReads(userId) } returns setOf("m1")
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        val incomingUnread = getCtMsgDao("m1", userId, read = false)
+        controller.processV2Response(listOf(incomingUnread))
+
+        verify { dbAdapter.upsertMessages(match { it.size == 1 && it[0].id == "m1" && it[0].isRead == 1 }) }
+    }
+
+    @Test
+    fun `processV2Response clears pending-read when server returns isRead=true for the same id`() {
+        every { dbAdapter.getPendingReads(userId) } returns setOf("m1", "m2")
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        controller.processV2Response(
+            listOf(
+                getCtMsgDao("m1", userId, read = true),
+                getCtMsgDao("m2", userId, read = false)
+            )
+        )
+
+        verify { dbAdapter.removePendingReads(listOf("m1"), userId) }
+    }
+
+    @Test
+    fun `processV2Response with empty pending-reads skips removePendingReads`() {
+        every { dbAdapter.getPendingReads(userId) } returns emptySet()
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported
+        )
+
+        controller.processV2Response(listOf(getCtMsgDao("m1", userId, read = true)))
+
+        verify(exactly = 0) { dbAdapter.removePendingReads(any<List<String>>(), any()) }
+    }
+
     private fun getCtMsgDao(
         id: String = "1",
         userId: String = "1",
