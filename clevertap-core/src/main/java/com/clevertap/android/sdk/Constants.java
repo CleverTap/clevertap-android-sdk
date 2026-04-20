@@ -101,7 +101,6 @@ public interface Constants {
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String INBOX_V2_JSON_RESPONSE_KEY = "inbox_notifs_v2";
     String INBOX_V2_ISREAD_KEY = "isRead";
-    String INBOX_V2_LAST_FETCH_TS_KEY = "inbox_v2_last_fetch_ts";
     long INBOX_V2_THROTTLE_WINDOW_MS = 5L * 60L * 1000L;
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";

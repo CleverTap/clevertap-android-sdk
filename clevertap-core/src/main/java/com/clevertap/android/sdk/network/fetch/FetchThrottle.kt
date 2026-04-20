@@ -1,41 +1,28 @@
 package com.clevertap.android.sdk.network.fetch
 
-import android.content.Context
 import androidx.annotation.RestrictTo
-import androidx.annotation.WorkerThread
-import com.clevertap.android.sdk.CleverTapInstanceConfig
-import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.utils.Clock
+import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Persistent per-account throttle for a single network fetch feature.
+ * In-memory per-instance throttle for a single network fetch feature.
  *
- * The window is absolute across sessions — closing and reopening the app
- * doesn't reset it. Storage key is suffixed with the account id so
- * different accounts can't read each other's timestamps.
- *
- * Read/write is disk I/O — always call from a background context.
+ * Each SDK instance owns its own [FetchThrottle]; independent instances
+ * don't share state. The window resets on process death — subsequent
+ * un-throttled callers (cold launch, onUserLogin) re-stamp the timestamp
+ * via [recordFetch] before any throttled caller can read it.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 internal class FetchThrottle(
-    private val context: Context,
-    private val config: CleverTapInstanceConfig,
-    private val prefKey: String,
     private val windowMs: Long,
     private val clock: Clock = Clock.SYSTEM
 ) {
-    @WorkerThread
-    fun shouldThrottle(): Boolean = (clock.currentTimeMillis() - readLast()) < windowMs
+    private val lastFetchMs = AtomicLong(0L)
 
-    @WorkerThread
+    fun shouldThrottle(): Boolean =
+        (clock.currentTimeMillis() - lastFetchMs.get()) < windowMs
+
     fun recordFetch() {
-        StorageHelper.putLong(context, keyed(), clock.currentTimeMillis())
+        lastFetchMs.set(clock.currentTimeMillis())
     }
-
-    @WorkerThread
-    private fun readLast(): Long =
-        StorageHelper.getLong(context, keyed(), 0L)
-
-    private fun keyed(): String =
-        StorageHelper.storageKeyWithSuffix(config.accountId, prefKey)
 }
