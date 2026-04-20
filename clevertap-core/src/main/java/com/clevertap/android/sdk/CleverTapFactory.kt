@@ -547,9 +547,6 @@ internal object CleverTapFactory {
             logger = config.logger
         )
         val inboxFetchThrottle = FetchThrottle(
-            context = context,
-            config = config,
-            prefKey = Constants.INBOX_V2_LAST_FETCH_TS_KEY,
             windowMs = Constants.INBOX_V2_THROTTLE_WINDOW_MS
         )
         val inboxV2Fetcher = InboxV2Fetcher(

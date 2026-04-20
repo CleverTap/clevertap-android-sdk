@@ -21,11 +21,6 @@ class ConstantsTest {
     }
 
     @Test
-    fun `INBOX_V2_LAST_FETCH_TS_KEY matches prefs contract`() {
-        assertEquals("inbox_v2_last_fetch_ts", Constants.INBOX_V2_LAST_FETCH_TS_KEY)
-    }
-
-    @Test
     fun `INBOX_V2_THROTTLE_WINDOW_MS is 5 minutes`() {
         assertEquals(5L * 60L * 1000L, Constants.INBOX_V2_THROTTLE_WINDOW_MS)
     }
