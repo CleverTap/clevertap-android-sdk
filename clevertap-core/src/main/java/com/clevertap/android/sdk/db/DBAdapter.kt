@@ -50,6 +50,7 @@ internal class DBAdapter constructor(
     private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger, dbEncryptionHandler) }
     private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
+    private val inboxPendingActionsDAO: InboxPendingActionsDAO by lazy { InboxPendingActionsDAOImpl(dbHelper, logger, clock) }
 
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
@@ -133,6 +134,76 @@ internal class DBAdapter constructor(
             } else false
         } else false
     }
+
+    // =====================================================
+    // INBOX PENDING ACTIONS (user-deleted / user-read locally, not yet confirmed by server)
+    // =====================================================
+
+    @WorkerThread
+    @Synchronized
+    fun getPendingDeletes(userId: String?): Set<String> =
+        if (userId != null) inboxPendingActionsDAO.getPendingDeletes(userId) else emptySet()
+
+    @WorkerThread
+    @Synchronized
+    fun getPendingReads(userId: String?): Set<String> =
+        if (userId != null) inboxPendingActionsDAO.getPendingReads(userId) else emptySet()
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingDelete(messageId: String?, userId: String?): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.addPendingDelete(messageId, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingDelete(messageId: String?, userId: String?): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.removePendingDelete(messageId, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingRead(messageId: String?, userId: String?): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.addPendingRead(messageId, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingRead(messageId: String?, userId: String?): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.removePendingRead(messageId, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingDeletes(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.addPendingDeletes(messageIds, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingDeletes(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.removePendingDeletes(messageIds, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingReads(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.addPendingReads(messageIds, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingReads(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.removePendingReads(messageIds, userId)
+        else false
 
     // =====================================================
     // USER PROFILE OPERATIONS
