@@ -999,6 +999,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(data);
+            notif.put("_id", data.getMessageId());
 
             if (customData != null) {
                 for (String x : customData.keySet()) {

@@ -32,6 +32,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
@@ -1277,6 +1278,46 @@ class AnalyticsManagerTest {
         verifyPushInboxMessageStateEvent(false)
     }
 
+    @Test
+    fun `pushInboxMessageStateEvent viewed includes the message _id in evtData`() {
+        verifyPushInboxMessageStateEventIncludesId(isClicked = false)
+    }
+
+    @Test
+    fun `pushInboxMessageStateEvent clicked includes the message _id in evtData`() {
+        verifyPushInboxMessageStateEventIncludesId(isClicked = true)
+    }
+
+    private fun verifyPushInboxMessageStateEventIncludesId(isClicked: Boolean) {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "msg-xyz"
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            val captured = slot<JSONObject>()
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(
+                    context,
+                    capture(captured),
+                    Constants.RAISED_EVENT,
+                    any<FlattenedEventData.EventProperties>()
+                )
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(isClicked, inboxMessage, null)
+
+            val expectedEventName = if (isClicked) {
+                Constants.NOTIFICATION_CLICKED_EVENT_NAME
+            } else {
+                Constants.NOTIFICATION_VIEWED_EVENT_NAME
+            }
+            assertEquals(expectedEventName, captured.captured.getString(Constants.KEY_EVT_NAME))
+            val evtData = captured.captured.getJSONObject(Constants.KEY_EVT_DATA)
+            assertEquals("msg-xyz", evtData.getString("_id"))
+        }
+    }
+
     private fun verifyPushInboxMessageStateEvent(isClicked: Boolean) {
         mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
@@ -1289,6 +1330,7 @@ class AnalyticsManagerTest {
 
             val expectedEvtData = JSONObject()
             expectedEvtData.put("test", "test")
+            expectedEvtData.put("_id", "")
             expectedEvtData.put("key", "value")
 
             val expectedEvent = JSONObject()
