@@ -1,7 +1,9 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.text.Html
 import android.view.View
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -43,7 +45,11 @@ internal class VerticalImageBigContentView(
     private fun setAdditionalText(text: String?, viewId: Int, color: String?) {
         if (text.isNotNullAndEmpty()) {
             remoteView.setViewVisibility(viewId, View.VISIBLE)
-            remoteView.setTextViewText(viewId, text)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                remoteView.setTextViewText(viewId, Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY))
+            } else {
+                remoteView.setTextViewText(viewId, Html.fromHtml(text))
+            }
             setCustomTextColour(color, viewId)
         }
     }
