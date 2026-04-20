@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk
 
+import com.clevertap.android.sdk.inbox.InboxDeleteCoordinator
 import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.network.fetch.NetworkScope
 import com.clevertap.android.sdk.task.MockCTExecutors
@@ -38,5 +39,6 @@ internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceCon
     mockk(relaxed = true),
     MockCTExecutors(),
     NetworkScope(),
-    mockk<InboxV2Bridge>(relaxed = true)
+    mockk<InboxV2Bridge>(relaxed = true),
+    mockk<InboxDeleteCoordinator>(relaxed = true)
 )
