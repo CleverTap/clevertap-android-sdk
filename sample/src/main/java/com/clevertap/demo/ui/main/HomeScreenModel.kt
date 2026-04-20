@@ -7,24 +7,19 @@ object HomeScreenModel {
             "EVENTS" to listOf(
                 "Simple Event (App Opened)",
                 "Product Viewed Event",
-                "Add to Cart Event",
-                "Video Watched Event",
-                "Search Event",
                 "Charged Event (Transaction)",
                 "Screen View Event",
-                "App Rating Event",
-                "Content Shared Event",
-                "Custom Event"
+                "Custom Event",
+                "Nested Object Event"
             ),
             "USER PROFILE" to listOf(
                 "Push Basic Profile",
                 "Push Complete User Profile",
-                "Push E-commerce Profile",
                 "Update User Preferences",
-                "Update Subscription Info",
                 "Set Profile Location",
-                "Get User Profile Properties",
-                "User Login"
+                "Get All User Profile Properties",
+                "User Login",
+                "Push Nested Object Profile"
             ),
             "PROFILE OPERATIONS" to listOf(
                 "Remove Single Property",
@@ -32,7 +27,10 @@ object HomeScreenModel {
                 "Add to Multi-Value Property",
                 "Remove from Multi-Value Property",
                 "Increment Loyalty Points",
-                "Decrement Cart Count"
+                "Decrement Cart Count",
+                "Increment Nested Property (dot notation)",
+                "Decrement Nested Property (dot notation)",
+                "Get Specific Nested Property (dot notation)"
             ),
             "INBOX" to listOf(
                 "Open Inbox(with tabs)",

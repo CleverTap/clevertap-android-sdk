@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
 import com.clevertap.demo.MyApplication
-import org.json.JSONArray
 import java.util.Date
 
 private const val TAG = "HomeScreenViewModel"
@@ -78,14 +77,10 @@ class HomeScreenViewModel(
         when (item) {
             0 -> recordSimpleEvent()
             1 -> recordProductViewedEvent()
-            2 -> recordAddToCartEvent()
-            3 -> recordVideoWatchedEvent()
-            4 -> recordSearchEvent()
-            5 -> recordChargedEvent()
-            6 -> recordScreenEvent()
-            7 -> recordAppRatingEvent()
-            8 -> recordShareEvent()
-            9 -> _showCustomEventDialog.value = true
+            2 -> recordChargedEvent()
+            3 -> recordScreenEvent()
+            4 -> _showCustomEventDialog.value = true
+            5 -> recordNestedObjectEvent()
         }
     }
 
@@ -128,82 +123,27 @@ class HomeScreenViewModel(
         cleverTapAPI?.pushEvent("Product Viewed", eventProperties)
     }
 
-    private fun recordAddToCartEvent() {
-        logStep("EVENTS", "Recording Add to Cart event")
+    private fun recordNestedObjectEvent() {
+        logStep("EVENTS", "Recording event with nested object properties (SDK v7.8.0+)")
 
-        val eventProperties = mapOf(
-            "Product ID" to "PROD-67890",
-            "Product Name" to "Smart Watch",
-            "Quantity" to 1,
-            "Price" to 299.99,
-            "Total Amount" to 299.99,
-            "Cart Total" to 449.98,
-            "Items in Cart" to 2
+        val eventProperties = hashMapOf<String, Any>(
+            "Order ID" to "ORD-55321",
+            "Total" to 189.97,
+            "ShippingAddress" to hashMapOf<String, Any>(
+                "city" to "Austin",
+                "state" to "TX",
+                "country" to "USA",
+                "pinCode" to "78701"
+            ),
+            "PaymentInfo" to hashMapOf(
+                "method" to listOf("Credit Card", "Debit Card", "Cash"),
+                "last4" to "4242",
+                "currency" to "USD"
+            )
         )
 
         printMap("Event Properties", eventProperties)
-        cleverTapAPI?.pushEvent("Add to Cart", eventProperties)
-    }
-
-    private fun recordVideoWatchedEvent() {
-        logStep("EVENTS", "Recording Video Watched event")
-
-        val eventProperties = mapOf(
-            "Video ID" to "VID-001",
-            "Video Title" to "Getting Started Tutorial",
-            "Duration" to 180,
-            "Watched Duration" to 150,
-            "Completion Percentage" to 83,
-            "Video Category" to "Tutorial",
-            "Quality" to "1080p",
-            "Platform" to "Android"
-        )
-
-        printMap("Event Properties", eventProperties)
-        cleverTapAPI?.pushEvent("Video Watched", eventProperties)
-    }
-
-    private fun recordSearchEvent() {
-        logStep("EVENTS", "Recording Search event")
-
-        val eventProperties = mapOf(
-            "Search Query" to "wireless headphones",
-            "Results Count" to 24,
-            "Filters Applied" to arrayListOf("Price: Under $200", "Rating: 4+ stars"),
-            "Search Category" to "Electronics",
-            "Time Spent" to 45
-        )
-
-        printMap("Event Properties", eventProperties)
-        cleverTapAPI?.pushEvent("Search", eventProperties)
-    }
-
-    private fun recordAppRatingEvent() {
-        logStep("EVENTS", "Recording App Rating event")
-
-        val eventProperties = mapOf(
-            "Rating" to 5,
-            "Review Text" to "Great app! Easy to use.",
-            "Platform" to "Google Play",
-            "App Version" to "2.4.1"
-        )
-
-        printMap("Event Properties", eventProperties)
-        cleverTapAPI?.pushEvent("App Rated", eventProperties)
-    }
-
-    private fun recordShareEvent() {
-        logStep("EVENTS", "Recording Share event")
-
-        val eventProperties = mapOf(
-            "Content Type" to "Product",
-            "Content ID" to "PROD-12345",
-            "Share Method" to "WhatsApp",
-            "Platform" to "Android"
-        )
-
-        printMap("Event Properties", eventProperties)
-        cleverTapAPI?.pushEvent("Content Shared", eventProperties)
+        cleverTapAPI?.pushEvent("Order Placed", eventProperties)
     }
 
     private fun recordChargedEvent() {
@@ -267,12 +207,11 @@ class HomeScreenViewModel(
         when (item) {
             0 -> pushBasicProfile()
             1 -> pushCompleteUserProfile()
-            2 -> pushEcommerceProfile()
-            3 -> updateUserPreferences()
-            4 -> updateSubscriptionInfo()
-            5 -> setProfileLocation()
-            6 -> getUserProfileProperties()
-            7 -> performUserLogin()
+            2 -> updateUserPreferences()
+            3 -> setProfileLocation()
+            4 -> getAllProfileProperties()
+            5 -> performUserLogin()
+            6 -> pushNestedObjectProfile()
         }
     }
 
@@ -322,20 +261,24 @@ class HomeScreenViewModel(
         cleverTapAPI?.pushProfile(profileUpdate)
     }
 
-    private fun pushEcommerceProfile() {
-        logStep("USER PROFILE", "Pushing e-commerce specific profile")
+    private fun pushNestedObjectProfile() {
+        logStep("USER PROFILE", "Pushing profile with nested object properties (SDK v7.8.0+)")
 
-        val profileUpdate = mapOf(
-            "Name" to "Emily Davis",
-            "Email" to "emily.davis@example.com",
-            "Loyalty Points" to 2500,
-            "Customer Tier" to "Gold",
-            "Total Orders" to 42,
-            "Total Spend" to 3450.75,
-            "Favorite Categories" to arrayListOf("Electronics", "Fashion", "Home Decor"),
-            "Preferred Payment" to "Credit Card",
-            "Last Purchase Date" to Date(),
-            "Newsletter Subscribed" to true
+        val profileUpdate = hashMapOf<String, Any>(
+            "Name" to "James Wilson",
+            "Email" to "james.wilson@example.com",
+            "Address" to hashMapOf<String, Any>(
+                "city" to "San Francisco",
+                "state" to "CA",
+                "country" to "USA",
+                "pinCode" to "94105"
+            ),
+            "ShoppingProfile" to hashMapOf<String, Any>(
+                "tier" to "Gold",
+                "loyaltyPoints" to 4200,
+                "preferredCategory" to "Electronics",
+                "autoReorder" to true
+            )
         )
 
         printMap("Profile Update", profileUpdate)
@@ -351,21 +294,6 @@ class HomeScreenViewModel(
             "Preferred Language" to "English",
             "Currency" to "USD",
             "Content Interests" to arrayListOf("Technology", "Business", "Sports")
-        )
-
-        printMap("Profile Update", profileUpdate)
-        cleverTapAPI?.pushProfile(profileUpdate)
-    }
-
-    private fun updateSubscriptionInfo() {
-        logStep("USER PROFILE", "Updating subscription information")
-
-        val profileUpdate = mapOf(
-            "Subscription Plan" to "Premium Annual",
-            "Subscription Status" to "Active",
-            "Subscription Start" to Date(),
-            "Auto Renew" to true,
-            "Features Access" to arrayListOf("Ad-Free", "Unlimited Downloads", "Priority Support")
         )
 
         printMap("Profile Update", profileUpdate)
@@ -431,17 +359,47 @@ class HomeScreenViewModel(
         cleverTapAPI?.decrementValue("Cart Items", decrementBy)
     }
 
+    private fun incrementNestedProperty() {
+        logStep("PROFILE OPERATIONS", "Incrementing nested property via dot notation")
+
+        val key = "ShoppingProfile.loyaltyPoints"
+        val amount = 100
+        printVar("Key (dot notation)", key)
+        printVar("Increment By", amount)
+
+        cleverTapAPI?.incrementValue(key, amount)
+    }
+
+    private fun decrementNestedProperty() {
+        logStep("PROFILE OPERATIONS", "Decrementing nested property via dot notation")
+
+        val key = "ShoppingProfile.loyaltyPoints"
+        val amount = 50
+        printVar("Key (dot notation)", key)
+        printVar("Decrement By", amount)
+
+        cleverTapAPI?.decrementValue(key, amount)
+    }
+
+    private fun getIndividualProfileProperties() {
+        logStep("PROFILE OPERATIONS", "Reading nested profile properties via dot notation")
+
+        val keys = listOf("Address.city", "Address.country", "ShoppingProfile.tier", "ShoppingProfile.loyaltyPoints")
+        keys.forEach { key ->
+            printVar(key, cleverTapAPI?.getProperty(key))
+        }
+    }
+
     private fun setProfileLocation() {
         logStep("USER PROFILE", "Setting profile location")
-        cleverTapAPI?.location = cleverTapAPI?.location
+        cleverTapAPI?.location = cleverTapAPI.location
         printVar("Location", cleverTapAPI?.location.toString())
     }
 
-    private fun getUserProfileProperties() {
+    private fun getAllProfileProperties() {
         logStep("USER PROFILE", "Getting user profile properties")
-        logAllProfileProperties()
+        printVar("Profile", cleverTapAPI?.profile)
         printVar("CleverTapId", cleverTapAPI?.cleverTapID.orEmpty())
-        printVar("CleverTap AttributionIdentifier", cleverTapAPI?.cleverTapAttributionIdentifier.orEmpty())
     }
 
     private fun performUserLogin() {
@@ -459,6 +417,9 @@ class HomeScreenViewModel(
             3 -> removeFromMultiValueProperty()
             4 -> incrementLoyaltyPoints()
             5 -> decrementCartCount()
+            6 -> incrementNestedProperty()
+            7 -> decrementNestedProperty()
+            8 -> getIndividualProfileProperties()
         }
     }
 
@@ -553,7 +514,7 @@ class HomeScreenViewModel(
         val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
 
         firstMessageId?.also { id ->
-            val message = cleverTapAPI?.getInboxMessageForId(id)
+            val message = cleverTapAPI.getInboxMessageForId(id)
             printVar("Message ID", id)
             printVar("Message Data", message?.data.toString())
         } ?: log("No inbox messages found")
@@ -563,7 +524,7 @@ class HomeScreenViewModel(
         logStep("INBOX", "Deleting inbox message by ID")
 
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId?.also { id ->
-            cleverTapAPI?.deleteInboxMessage(id)
+            cleverTapAPI.deleteInboxMessage(id)
             printVar("Deleted Message ID", id)
         } ?: log("No inbox messages found")
     }
@@ -572,7 +533,7 @@ class HomeScreenViewModel(
         logStep("INBOX", "Deleting inbox message by object")
 
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.also { message ->
-            cleverTapAPI?.deleteInboxMessage(message)
+            cleverTapAPI.deleteInboxMessage(message)
             printVar("Deleted Message ID", message.messageId)
         } ?: log("No inbox messages found")
     }
@@ -590,7 +551,7 @@ class HomeScreenViewModel(
         logStep("INBOX", "Marking message as read by ID")
 
         cleverTapAPI?.unreadInboxMessages?.firstOrNull()?.messageId?.also { id ->
-            cleverTapAPI?.markReadInboxMessage(id)
+            cleverTapAPI.markReadInboxMessage(id)
             printVar("Marked Read - Message ID", id)
         } ?: log("No unread messages found")
     }
@@ -599,7 +560,7 @@ class HomeScreenViewModel(
         logStep("INBOX", "Marking message as read by object")
 
         cleverTapAPI?.unreadInboxMessages?.firstOrNull()?.also { message ->
-            cleverTapAPI?.markReadInboxMessage(message)
+            cleverTapAPI.markReadInboxMessage(message)
             printVar("Marked Read - Message ID", message.messageId)
         } ?: log("No unread messages found")
     }
@@ -617,7 +578,7 @@ class HomeScreenViewModel(
         logStep("INBOX", "Raising notification viewed event")
 
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId?.also { id ->
-            cleverTapAPI?.pushInboxNotificationViewedEvent(id)
+            cleverTapAPI.pushInboxNotificationViewedEvent(id)
             printVar("Viewed Event - Message ID", id)
         } ?: log("No inbox messages found")
     }
@@ -626,7 +587,7 @@ class HomeScreenViewModel(
         logStep("INBOX", "Raising notification clicked event")
 
         cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId?.also { id ->
-            cleverTapAPI?.pushInboxNotificationClickedEvent(id)
+            cleverTapAPI.pushInboxNotificationClickedEvent(id)
             printVar("Clicked Event - Message ID", id)
         } ?: log("No inbox messages found")
     }
@@ -652,7 +613,7 @@ class HomeScreenViewModel(
         logStep("DISPLAY UNITS", "Getting display unit by ID")
 
         cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID?.also { id ->
-            val displayUnit = cleverTapAPI?.getDisplayUnitForId(id)
+            val displayUnit = cleverTapAPI.getDisplayUnitForId(id)
             printVar("Display Unit ID", id)
             printVar("Display Unit", displayUnit.toString())
         } ?: log("No display units found")
@@ -667,7 +628,7 @@ class HomeScreenViewModel(
         logStep("DISPLAY UNITS", "Raising display unit viewed event")
 
         cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID?.also { id ->
-            cleverTapAPI?.pushDisplayUnitViewedEventForID(id)
+            cleverTapAPI.pushDisplayUnitViewedEventForID(id)
             printVar("Viewed Event - Display Unit ID", id)
         } ?: log("No display units found")
     }
@@ -676,7 +637,7 @@ class HomeScreenViewModel(
         logStep("DISPLAY UNITS", "Raising display unit clicked event")
 
         cleverTapAPI?.allDisplayUnits?.firstOrNull()?.unitID?.also { id ->
-            cleverTapAPI?.pushDisplayUnitClickedEventForID(id)
+            cleverTapAPI.pushDisplayUnitClickedEventForID(id)
             printVar("Clicked Event - Display Unit ID", id)
         } ?: log("No display units found")
     }
@@ -1077,7 +1038,7 @@ class HomeScreenViewModel(
         FileVarsData.defineFileVars(cleverTapAPI!!)
 
         log("Printing file variables values (may be null if not yet fetched):")
-        FileVarsData.printFileVariables(cleverTapAPI!!)
+        FileVarsData.printFileVariables(cleverTapAPI)
     }
 
     private fun fetchVariables() {
@@ -1145,7 +1106,7 @@ class HomeScreenViewModel(
                 override fun variablesChanged() {
                     log("Files downloaded, onVariablesChangedAndNoDownloadsPending callback triggered")
                     log("Reprinting file variable data:")
-                    FileVarsData.printFileVariables(cleverTapAPI!!)
+                    FileVarsData.printFileVariables(cleverTapAPI)
                 }
             })
         }
@@ -1211,7 +1172,7 @@ class HomeScreenViewModel(
         FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG)
 
         log("Printing file variables values (may be null if not yet fetched):")
-        FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
+        FileVarsData.printFileVariables(cleverTapAPI, tag = TAG)
     }
 
     private fun defineFileVariablesWithMultipleListeners() {
@@ -1221,14 +1182,14 @@ class HomeScreenViewModel(
         FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG, fileReadyListenerCount = 3)
 
         log("Printing file variables values (may be null if not yet fetched):")
-        FileVarsData.printFileVariables(cleverTapAPI!!, tag = TAG)
+        FileVarsData.printFileVariables(cleverTapAPI, tag = TAG)
     }
 
     private fun defineGlobalListenersThenFileVars() {
         logStep("FILE TYPE VARIABLES", "Adding global listeners then defining file variables")
 
         FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG)
-        FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG)
+        FileVarsData.defineFileVars(cleverTapAPI, tag = TAG)
     }
 
     private fun defineMultipleGlobalListenersThenFileVars() {
@@ -1236,7 +1197,7 @@ class HomeScreenViewModel(
         printVar("Listener Count", 3)
 
         FileVarsData.addGlobalCallbacks(cleverTapAPI!!, tag = TAG, listenerCount = 3)
-        FileVarsData.defineFileVars(cleverTapAPI!!, tag = TAG, fileReadyListenerCount = 3)
+        FileVarsData.defineFileVars(cleverTapAPI, tag = TAG, fileReadyListenerCount = 3)
     }
 
     private fun printFileVariables() {
@@ -1310,12 +1271,17 @@ class HomeScreenViewModel(
         val randomN = (0..10_000).random()
         val randomP = (10_000..99_999).random()
 
-        val newProfile = buildMap {
-            put("Name", "Don Joe $randomN")
-            put("Email", listOf("donjoe$randomN@gmail.com"))
-            put("Phone", "+141566$randomP")
-            put("CustomOca", "fasdsa")
-        }
+        val newProfile = hashMapOf<String, Any>(
+            "Name" to "Don Joe $randomN",
+            "Email" to "donjoe$randomN@gmail.com",
+            "Phone" to "+141566$randomP",
+            "Address" to hashMapOf<String, Any>(
+                "city" to "New York",
+                "state" to "NY",
+                "country" to "USA",
+                "pinCode" to "10001"
+            )
+        )
 
         printMap("Login Profile", newProfile)
         cleverTapAPI.onUserLogin(newProfile)
@@ -1378,32 +1344,6 @@ class HomeScreenViewModel(
                 appendLine("var_boolean: ${ct.getVariableValue("var_boolean")}")
             }.also { log(it) }
         }
-    }
-
-    private fun logAllProfileProperties() {
-        buildString {
-            appendLine("Profile Properties:")
-            appendLine("  Name: ${cleverTapAPI?.getProperty("Name")}")
-            appendLine("  Email: ${cleverTapAPI?.getProperty("Email")}")
-            appendLine("  Phone: ${cleverTapAPI?.getProperty("Phone")}")
-            appendLine("  Gender: ${cleverTapAPI?.getProperty("Gender")}")
-            appendLine("  Employed: ${cleverTapAPI?.getProperty("Employed")}")
-            appendLine("  Education: ${cleverTapAPI?.getProperty("Education")}")
-            appendLine("  Married: ${cleverTapAPI?.getProperty("Married")}")
-            appendLine("  DOB: ${cleverTapAPI?.getProperty("DOB")}")
-            appendLine("  Age: ${cleverTapAPI?.getProperty("Age")}")
-            appendLine("  MSG-email: ${cleverTapAPI?.getProperty("MSG-email")}")
-            appendLine("  MSG-push: ${cleverTapAPI?.getProperty("MSG-push")}")
-            appendLine("  MSG-sms: ${cleverTapAPI?.getProperty("MSG-sms")}")
-            appendLine("  MyStuffList: ${cleverTapAPI?.getProperty("MyStuffList")}")
-            appendLine("  MyStuffArray: ${cleverTapAPI?.getProperty("MyStuffArray")}")
-            appendLine("  HeightCm: ${cleverTapAPI?.getProperty("HeightCm")}")
-            appendLine("  HairColor: ${cleverTapAPI?.getProperty("HairColor")}")
-            appendLine("  Race: ${cleverTapAPI?.getProperty("Race")}")
-            appendLine("  County: ${cleverTapAPI?.getProperty("County")}")
-            appendLine("  Sport: ${cleverTapAPI?.getProperty("Sport")}")
-            appendLine("  MyCarsList: ${cleverTapAPI?.getProperty("MyCarsList")}")
-        }.also { log(it) }
     }
 
     // ========== LOGGING UTILITIES ==========
