@@ -17,6 +17,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -76,14 +77,21 @@ public class CTInboxController {
         task.execute("deleteInboxMessage", new Callable<Void>() {
             @Override
             public Void call() {
-                dbAdapter.addPendingDelete(message.getMessageId(), userId);
+                // Look up the DAO directly. Must happen BEFORE
+                // the local delete wipes the DAO from cache.
+                final CTMessageDAO dao = findMessageById(message.getMessageId());
+                final boolean isV2 = dao != null && dao.getSource() == InboxMessageSource.V2;
+
+                if (isV2) {
+                    dbAdapter.addPendingDelete(message.getMessageId(), userId);
+                }
                 synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessageWithId(message.getMessageId());
                     if (update) {
                         callbackManager._notifyInboxMessagesDidUpdate();
                     }
                 }
-                if (inboxDeleteCoordinator != null) {
+                if (isV2 && inboxDeleteCoordinator != null) {
                     inboxDeleteCoordinator.syncDelete(Collections.singletonList(message), userId);
                 }
                 return null;
@@ -97,23 +105,31 @@ public class CTInboxController {
         task.execute("deleteInboxMessagesForIDs", new Callable<Void>() {
             @Override
             public Void call() {
-                // Gather CTInboxMessage objects BEFORE the local delete wipes
-                // the cache — otherwise the coordinator call below lands on
-                // an empty list.
-                List<CTInboxMessage> messagesToSync = new ArrayList<>(messageIDs.size());
-                for (String id : messageIDs) {
-                    CTInboxMessage m = getInboxMessageForId(id);
-                    if (m != null) messagesToSync.add(m);
+                // Partition ids into V1 and V2 BEFORE the local delete wipes
+                // the cache.
+                final Set<String> idSet = new HashSet<>(messageIDs);
+                final List<String> v2Ids = new ArrayList<>();
+                final List<CTInboxMessage> v2Messages = new ArrayList<>();
+                synchronized (messagesLock) {
+                    for (CTMessageDAO d : messages) {
+                        if (!idSet.contains(d.getId())) continue;
+                        if (d.getSource() != InboxMessageSource.V2) continue;
+                        v2Ids.add(d.getId());
+                        v2Messages.add(new CTInboxMessage(d.toJSON()));
+                    }
                 }
-                dbAdapter.addPendingDeletes(messageIDs, userId);
+
+                if (!v2Ids.isEmpty()) {
+                    dbAdapter.addPendingDeletes(v2Ids, userId);
+                }
                 synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessagesForIds(messageIDs);
                     if (update) {
                         callbackManager._notifyInboxMessagesDidUpdate();
                     }
                 }
-                if (inboxDeleteCoordinator != null && !messagesToSync.isEmpty()) {
-                    inboxDeleteCoordinator.syncDelete(messagesToSync, userId);
+                if (inboxDeleteCoordinator != null && !v2Messages.isEmpty()) {
+                    inboxDeleteCoordinator.syncDelete(v2Messages, userId);
                 }
                 return null;
             }
@@ -344,6 +360,8 @@ public class CTInboxController {
             return false;
         }
 
+        final boolean isV2 = messageDAO.getSource() == InboxMessageSource.V2;
+
         synchronized (messagesLock) {
             messageDAO.setRead(1);
         }
@@ -356,7 +374,9 @@ public class CTInboxController {
             @WorkerThread
             public Void call() {
                 dbAdapter.markReadMessageForId(messageId, userId);
-                dbAdapter.addPendingRead(messageId, userId);
+                if (isV2) {
+                    dbAdapter.addPendingRead(messageId, userId);
+                }
                 return null;
             }
         });
@@ -365,18 +385,22 @@ public class CTInboxController {
 
     @AnyThread
     boolean _markReadForMessagesWithIds(final ArrayList<String> messageIDs) {
-        Boolean atleastOneMessageIsValid = false;
-        for (String messageId : messageIDs) {
-            CTMessageDAO messageDAO = findMessageById(messageId);
-            if (messageDAO == null) {
-                continue;
-            } else {
+        // One pass over `messages` under a single lock
+        final Set<String> idSet = new HashSet<>(messageIDs);
+        final ArrayList<String> v2Ids = new ArrayList<>();
+        boolean atleastOneMessageIsValid = false;
+
+        synchronized (messagesLock) {
+            for (CTMessageDAO dao : messages) {
+                if (!idSet.contains(dao.getId())) continue;
                 atleastOneMessageIsValid = true;
-                synchronized (messagesLock) {
-                    messageDAO.setRead(1);
+                dao.setRead(1);
+                if (dao.getSource() == InboxMessageSource.V2) {
+                    v2Ids.add(dao.getId());
                 }
             }
         }
+
         if (!atleastOneMessageIsValid)
             return false;
 
@@ -389,7 +413,9 @@ public class CTInboxController {
             @WorkerThread
             public Void call() {
                 dbAdapter.markReadMessagesForIds(messageIDs, userId);
-                dbAdapter.addPendingReads(messageIDs, userId);
+                if (!v2Ids.isEmpty()) {
+                    dbAdapter.addPendingReads(v2Ids, userId);
+                }
                 return null;
             }
         });
