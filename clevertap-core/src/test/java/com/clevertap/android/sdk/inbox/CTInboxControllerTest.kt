@@ -351,8 +351,10 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun `markReadInboxMessage records a pendingRead for the tapped message`() {
-        every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
+    fun `markReadInboxMessage records a pendingRead for the tapped V2 message`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        )
         controller = CTInboxController(
             cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
             inboxDeleteCoordinator
@@ -369,9 +371,10 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun `markReadInboxMessagesForIDs records pending reads as a single batch`() {
+    fun `markReadInboxMessagesForIDs records pending reads as a single batch when all are V2`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf(
-            getCtMsgDao("m1", userId), getCtMsgDao("m2", userId)
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2),
+            getCtMsgDao("m2", userId, source = InboxMessageSource.V2)
         )
         controller = CTInboxController(
             cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
@@ -425,8 +428,10 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun `deleteInboxMessage records a pending-delete and fires the coordinator`() {
-        every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
+    fun `deleteInboxMessage records a pending-delete and fires the coordinator for V2`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        )
         controller = CTInboxController(
             cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
             inboxDeleteCoordinator
@@ -444,9 +449,10 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun `deleteInboxMessagesForIDs records pending-deletes as batch and fires one coordinator call`() {
+    fun `deleteInboxMessagesForIDs records pending-deletes as batch and fires one coordinator call for V2`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf(
-            getCtMsgDao("m1", userId), getCtMsgDao("m2", userId)
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2),
+            getCtMsgDao("m2", userId, source = InboxMessageSource.V2)
         )
         controller = CTInboxController(
             cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
@@ -464,6 +470,105 @@ class CTInboxControllerTest : BaseTestCase() {
             verify(exactly = 1) {
                 inboxDeleteCoordinator.syncDelete(match { it.size == 2 }, userId)
             }
+        }
+    }
+
+    @Test
+    fun `deleteInboxMessage V1 — local only, no pending, no coordinator`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V1)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val message = mockk<CTInboxMessage>(relaxed = true) { every { messageId } returns "m1" }
+            controller.deleteInboxMessage(message)
+
+            verify(exactly = 0) { dbAdapter.addPendingDelete(any(), any()) }
+            verify(exactly = 0) { inboxDeleteCoordinator.syncDelete(any(), any()) }
+            verify { dbAdapter.deleteMessageForId("m1", userId) }
+        }
+    }
+
+    @Test
+    fun `deleteInboxMessagesForIDs mixed — only V2 ids go to pending and coordinator, all locally deleted`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("v1a", userId, source = InboxMessageSource.V1),
+            getCtMsgDao("v2a", userId, source = InboxMessageSource.V2),
+            getCtMsgDao("v1b", userId, source = InboxMessageSource.V1),
+            getCtMsgDao("v2b", userId, source = InboxMessageSource.V2)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val ids = arrayListOf("v1a", "v2a", "v1b", "v2b")
+            controller.deleteInboxMessagesForIDs(ids)
+
+            verify(exactly = 1) {
+                dbAdapter.addPendingDeletes(match { it.sorted() == listOf("v2a", "v2b") }, userId)
+            }
+            verify(exactly = 1) {
+                inboxDeleteCoordinator.syncDelete(
+                    match { msgs -> msgs.map { it.messageId }.sorted() == listOf("v2a", "v2b") },
+                    userId
+                )
+            }
+            verify { dbAdapter.deleteMessagesForIDs(ids, userId) }
+        }
+    }
+
+    @Test
+    fun `markReadInboxMessage V1 — local only, no pending_reads`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V1)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            controller.markReadInboxMessage(mockk(relaxed = true) { every { messageId } returns "m1" })
+
+            verify { dbAdapter.markReadMessageForId("m1", userId) }
+            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any()) }
+        }
+    }
+
+    @Test
+    fun `markReadInboxMessagesForIDs mixed — only V2 ids in pending_reads`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("v1", userId, source = InboxMessageSource.V1),
+            getCtMsgDao("v2", userId, source = InboxMessageSource.V2)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val ids = arrayListOf("v1", "v2")
+            controller.markReadInboxMessagesForIDs(ids)
+
+            verify { dbAdapter.markReadMessagesForIds(ids, userId) }
+            verify(exactly = 1) {
+                dbAdapter.addPendingReads(match { it == listOf("v2") }, userId)
+            }
+            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any()) }
         }
     }
 
