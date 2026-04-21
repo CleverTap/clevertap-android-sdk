@@ -18,7 +18,9 @@ import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.FlattenedEventData;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
+import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.inbox.EventSuppressor;
 import com.clevertap.android.sdk.profile.ProfileCommand;
 import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
 import com.clevertap.android.sdk.profile.traversal.ProfileChange;
@@ -65,6 +67,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final Object notificationMapLock = new Object();
     private final LocalDataStore localDataStore;
     private final InAppPreviewHandler inAppPreviewHandler;
+    private final EventSuppressor inboxViewedSuppressor = new EventSuppressor(2_000L);
+    private final EventSuppressor inboxClickedSuppressor = new EventSuppressor(5_000L);
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
@@ -996,9 +1000,27 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
+        String msgId = data.getMessageId();
+
+        if (!clicked && data.isRead()) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Inbox: Skipping Viewed for " + msgId + " — already read on another device");
+            return;
+        }
+
+        EventSuppressor gate = clicked ? inboxClickedSuppressor : inboxViewedSuppressor;
+        if (msgId != null && gate.shouldSuppress(msgId)) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Inbox: " + (clicked ? "Clicked" : "Viewed") + " suppressed for " + msgId);
+            return;
+        }
+
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(data);
+            if (isV2InboxMessage(msgId)) {
+                notif.put("_id", msgId);  // backend rejects _id for V1; V2 only
+            }
 
             if (customData != null) {
                 for (String x : customData.keySet()) {
@@ -1026,6 +1048,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable ignored) {
             // We won't get here
         }
+    }
+
+    /**
+     * V1 inbox messages must NOT carry {@code _id} in Viewed/Clicked events —
+     * the backend rejects them. Safe defaults: null id, null controller, or
+     * an id the controller doesn't know about all fall through to V1 behavior.
+     */
+    private boolean isV2InboxMessage(String msgId) {
+        if (msgId == null) return false;
+        CTInboxController controller = controllerManager.getCTInboxController();
+        return controller != null && controller.isV2Message(msgId);
     }
 
     private FlattenedEventData getFlattenedEventProperties(JSONObject properties) {

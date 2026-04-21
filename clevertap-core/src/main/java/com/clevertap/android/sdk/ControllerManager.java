@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
+import com.clevertap.android.sdk.inbox.InboxDeleteCoordinator;
 import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -61,6 +62,8 @@ public class ControllerManager {
     private PushProviders pushProviders;
 
     private  CTVariables ctVariables;
+
+    private InboxDeleteCoordinator inboxDeleteCoordinator;
 
     public ControllerManager(Context context,
             CleverTapInstanceConfig config,
@@ -171,6 +174,14 @@ public class ControllerManager {
         this.pushProviders = pushProviders;
     }
 
+    public InboxDeleteCoordinator getInboxDeleteCoordinator() {
+        return inboxDeleteCoordinator;
+    }
+
+    public void setInboxDeleteCoordinator(final InboxDeleteCoordinator inboxDeleteCoordinator) {
+        this.inboxDeleteCoordinator = inboxDeleteCoordinator;
+    }
+
     @AnyThread
     public void initializeInbox() {
         if (config.isAnalyticsOnly()) {
@@ -204,10 +215,14 @@ public class ControllerManager {
                                 baseDatabaseManager.loadDBAdapter(context),
                                 ctLockManager,
                                 callbackManager,
-                                VideoLibChecker.haveVideoPlayerSupport
+                                VideoLibChecker.haveVideoPlayerSupport,
+                                inboxDeleteCoordinator
                         )
                 );
                 callbackManager._notifyInboxInitialized();
+                if (inboxDeleteCoordinator != null) {
+                    inboxDeleteCoordinator.retryPending(deviceInfo.getDeviceID());
+                }
             } else {
                 config.getLogger().info("CRITICAL : No device ID found!");
             }

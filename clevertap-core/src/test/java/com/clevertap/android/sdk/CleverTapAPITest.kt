@@ -421,6 +421,41 @@ class CleverTapAPITest : BaseTestCase() {
     }
 
     @Test
+    fun `fetchInbox with null controller invokes callback with false and skips bridge`() {
+        every { coreState.controllerManager.ctInboxController } returns null
+        initializeCleverTapAPI()
+
+        var received: Boolean? = null
+        cleverTapAPI.fetchInbox(FetchInboxCallback { received = it })
+
+        assertEquals(false, received)
+        verify(exactly = 0) { coreState.inboxV2Bridge.submit(any(), any()) }
+    }
+
+    @Test
+    fun `fetchInbox with initialized controller delegates to bridge with respectThrottle=true`() {
+        val inboxController = mockk<CTInboxController>(relaxed = true)
+        every { coreState.controllerManager.ctInboxController } returns inboxController
+        initializeCleverTapAPI()
+
+        val cb = FetchInboxCallback { /* no-op */ }
+        cleverTapAPI.fetchInbox(cb)
+
+        verify(exactly = 1) { coreState.inboxV2Bridge.submit(true, cb) }
+    }
+
+    @Test
+    fun `fetchInbox no-arg overload delegates to bridge with a null callback`() {
+        val inboxController = mockk<CTInboxController>(relaxed = true)
+        every { coreState.controllerManager.ctInboxController } returns inboxController
+        initializeCleverTapAPI()
+
+        cleverTapAPI.fetchInbox()
+
+        verify(exactly = 1) { coreState.inboxV2Bridge.submit(true, null) }
+    }
+
+    @Test
     fun `test getUserEventLogCount`() {
         // Arrange
         val evt = UserEventLogTestData.EventNames.TEST_EVENT

@@ -31,7 +31,7 @@ class DatabaseHelper internal constructor(
 
     companion object {
 
-        private const val DATABASE_VERSION = 6
+        private const val DATABASE_VERSION = 7
         private const val DB_LIMIT = 24 * 1024 * 1024 //24mb
     }
 
@@ -52,6 +52,8 @@ class DatabaseHelper internal constructor(
         executeStatement(db, CREATE_UNINSTALL_TS_TABLE)
         executeStatement(db, CREATE_NOTIFICATION_VIEWED_TABLE)
         executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
+        executeStatement(db, CREATE_INBOX_PENDING_DELETES_TABLE)
+        executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
         executeStatement(db, EVENTS_TIME_INDEX)
         executeStatement(db, PROFILE_EVENTS_TIME_INDEX)
         executeStatement(db, UNINSTALL_TS_INDEX)
@@ -98,6 +100,11 @@ class DatabaseHelper internal constructor(
         }
         if (oldVersion < 6) {
             executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
+        }
+        if (oldVersion < 7) {
+            executeStatement(db, CREATE_INBOX_PENDING_DELETES_TABLE)
+            executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
+            executeStatement(db, ALTER_INBOX_MESSAGES_ADD_SOURCE)
         }
     }
 
@@ -210,7 +217,9 @@ class DatabaseHelper internal constructor(
     UNINSTALL_TS("uninstallTimestamp"),
     PUSH_NOTIFICATION_VIEWED("notificationViewed"),
     USER_EVENT_LOGS_TABLE("userEventLogs"),
-    DELAYED_LEGACY_INAPPS("delayedLegacyInApps")
+    DELAYED_LEGACY_INAPPS("delayedLegacyInApps"),
+    INBOX_PENDING_DELETES("inbox_pending_deletes"),
+    INBOX_PENDING_READS("inbox_pending_reads")
 }
 
 object Column {
@@ -232,6 +241,7 @@ object Column {
     const val COUNT = "count"
     const val INAPP_ID = "inAppId"
     const val DELAY = "delay"
+    const val SOURCE = "source"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -263,6 +273,24 @@ private val CREATE_DELAYED_LEGACY_INAPPS_TABLE = """
     );
 """
 
+private val CREATE_INBOX_PENDING_DELETES_TABLE = """
+    CREATE TABLE ${Table.INBOX_PENDING_DELETES.tableName} (
+        ${Column.USER_ID} STRING NOT NULL,
+        ${Column.ID} STRING NOT NULL,
+        ${Column.CREATED_AT} INTEGER NOT NULL,
+        PRIMARY KEY (${Column.USER_ID}, ${Column.ID})
+    );
+"""
+
+private val CREATE_INBOX_PENDING_READS_TABLE = """
+    CREATE TABLE ${Table.INBOX_PENDING_READS.tableName} (
+        ${Column.USER_ID} STRING NOT NULL,
+        ${Column.ID} STRING NOT NULL,
+        ${Column.CREATED_AT} INTEGER NOT NULL,
+        PRIMARY KEY (${Column.USER_ID}, ${Column.ID})
+    );
+"""
+
 private val CREATE_PROFILE_EVENTS_TABLE = """
     CREATE TABLE ${PROFILE_EVENTS.tableName} (
         ${Column.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -271,7 +299,7 @@ private val CREATE_PROFILE_EVENTS_TABLE = """
     );
 """
 
-private val CREATE_INBOX_MESSAGES_TABLE = """ 
+private val CREATE_INBOX_MESSAGES_TABLE = """
     CREATE TABLE ${INBOX_MESSAGES.tableName} (
         ${Column.ID} STRING NOT NULL,
         ${Column.DATA} TEXT NOT NULL,
@@ -281,8 +309,14 @@ private val CREATE_INBOX_MESSAGES_TABLE = """
         ${Column.IS_READ} INTEGER NOT NULL DEFAULT 0,
         ${Column.EXPIRES} INTEGER NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL,
-        ${Column.USER_ID} STRING NOT NULL
+        ${Column.USER_ID} STRING NOT NULL,
+        ${Column.SOURCE} TEXT NOT NULL DEFAULT 'V1'
     );
+"""
+
+private val ALTER_INBOX_MESSAGES_ADD_SOURCE = """
+    ALTER TABLE ${INBOX_MESSAGES.tableName}
+    ADD COLUMN ${Column.SOURCE} TEXT NOT NULL DEFAULT 'V1';
 """
 
 private val INBOX_MESSAGES_COMP_ID_USERID_INDEX = """

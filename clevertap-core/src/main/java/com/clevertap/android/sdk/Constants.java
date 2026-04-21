@@ -99,6 +99,9 @@ public interface Constants {
     String PREFS_SUPPRESSED_INAPP_KEY_CS = "suppressed_ss";
 
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
+    String INBOX_V2_JSON_RESPONSE_KEY = "inbox_notifs_v2";
+    String INBOX_V2_ISREAD_KEY = "isRead";
+    long INBOX_V2_THROTTLE_WINDOW_MS = 5L * 60L * 1000L;
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
@@ -319,6 +322,7 @@ public interface Constants {
     int FETCH_TYPE_VARIABLES = 4;
     int FETCH_TYPE_IN_APPS = 5;
     int FETCH_TYPE_IN_ACTION_IN_APPS = 6;
+    int FETCH_TYPE_INBOX_V2 = 7;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";
