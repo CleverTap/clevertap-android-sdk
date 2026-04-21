@@ -6,8 +6,12 @@ import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
+import com.clevertap.android.sdk.db.Column
+import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxMessageSource
 import com.clevertap.android.shared.test.BaseTestCase
+import android.content.ContentValues
 import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.*
@@ -203,6 +207,45 @@ class InboxMessageDAOImplTest : BaseTestCase() {
         assertEquals("cp4321", messages[0].campaignId)
     }
 
+    @Test
+    fun `upsert and read preserves V2 source`() {
+        val dao = getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxMessageSource.V2, loaded.source)
+    }
+
+    @Test
+    fun `upsert and read preserves V1 source`() {
+        val dao = getCtMsgDao("m1", "user_11", source = InboxMessageSource.V1)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxMessageSource.V1, loaded.source)
+    }
+
+    @Test
+    fun `unrecognised source value falls back to V1`() {
+        // Insert a row directly via SQL using an invalid source value so we
+        // simulate either a schema-skew or a future enum constant the current
+        // SDK doesn't know about. Read should not throw; loaded source is V1.
+        val cv = ContentValues().apply {
+            put(Column.ID, "m1")
+            put(Column.DATA, dbEncryptionHandler.wrapDbData(JSONObject().toString()))
+            put(Column.WZRKPARAMS, JSONObject().toString())
+            put(Column.CAMPAIGN, "cp1")
+            put(Column.TAGS, "")
+            put(Column.IS_READ, 0)
+            put(Column.EXPIRES, Long.MAX_VALUE)
+            put(Column.CREATED_AT, 1L)
+            put(Column.USER_ID, "user_11")
+            put(Column.SOURCE, "ALIEN")
+        }
+        dbHelper.writableDatabase.insert(Table.INBOX_MESSAGES.tableName, null, cv)
+
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxMessageSource.V1, loaded.source)
+    }
+
     private fun getCtMsgDao(
         id: String = "1",
         userId: String = "1",
@@ -212,7 +255,8 @@ class InboxMessageDAOImplTest : BaseTestCase() {
         expires: Long = (System.currentTimeMillis() * 10),
         tags: List<String> = listOf(),
         campaignId: String = "campaignID",
-        wzrkParams: JSONObject = JSONObject()
+        wzrkParams: JSONObject = JSONObject(),
+        source: InboxMessageSource = InboxMessageSource.V1
     ): CTMessageDAO {
         return CTMessageDAO().also {
             it.id = id
@@ -224,6 +268,7 @@ class InboxMessageDAOImplTest : BaseTestCase() {
             it.tags = tags.joinToString(",")
             it.campaignId = campaignId
             it.wzrkParams = wzrkParams
+            it.source = source
         }
     }
 }

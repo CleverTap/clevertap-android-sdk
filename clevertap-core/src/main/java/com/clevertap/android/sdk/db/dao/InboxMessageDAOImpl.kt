@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxMessageSource
 import org.json.JSONObject
 
 internal class InboxMessageDAOImpl(
@@ -39,6 +40,7 @@ internal class InboxMessageDAOImpl(
                 val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID)
                 val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS)
                 val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
+                val sourceColumnIndex = cursor.getColumnIndex(Column.SOURCE)
 
                 while (cursor.moveToNext()) {
                     val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
@@ -58,6 +60,7 @@ internal class InboxMessageDAOImpl(
                             cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
                         this.tags = cursor.getString(tagsColumnIndex)
                         this.campaignId = cursor.getString(campaignColumnIndex)
+                        this.source = readSource(cursor, sourceColumnIndex)
                     }
                     messageDAOArrayList.add(ctMessageDAO)
                 }
@@ -87,6 +90,7 @@ internal class InboxMessageDAOImpl(
                 put(Column.EXPIRES, messageDAO.expires)
                 put(Column.CREATED_AT, messageDAO.date)
                 put(Column.USER_ID, messageDAO.userId)
+                put(Column.SOURCE, (messageDAO.source ?: InboxMessageSource.V1).name)
             }
             
             try {
@@ -178,6 +182,16 @@ internal class InboxMessageDAOImpl(
         } catch (e: SQLiteException) {
             logger.verbose("Error updating records in $tName", e)
             false
+        }
+    }
+
+    private fun readSource(cursor: android.database.Cursor, columnIndex: Int): InboxMessageSource {
+        if (columnIndex < 0) return InboxMessageSource.V1
+        val raw = cursor.getString(columnIndex) ?: return InboxMessageSource.V1
+        return try {
+            InboxMessageSource.valueOf(raw)
+        } catch (_: IllegalArgumentException) {
+            InboxMessageSource.V1
         }
     }
 

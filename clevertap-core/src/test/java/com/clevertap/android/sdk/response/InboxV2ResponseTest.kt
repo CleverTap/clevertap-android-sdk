@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxMessageSource
 import io.mockk.Ordering
 import io.mockk.every
 import io.mockk.mockk
@@ -133,5 +134,16 @@ class InboxV2ResponseTest {
 
         assertEquals(1, captured.captured.size)
         assertEquals("m1", captured.captured.single().id)
+    }
+
+    @Test
+    fun `parsed V2 DAOs are tagged V2`() {
+        val captured = slot<List<CTMessageDAO>>()
+        every { controller.processV2Response(capture(captured)) } returns true
+
+        response.processResponse(validResponseJson(listOf("m1", "m2")))
+
+        assertEquals(2, captured.captured.size)
+        assertEquals(true, captured.captured.all { it.source == InboxMessageSource.V2 })
     }
 }

@@ -202,7 +202,8 @@ public class CTInboxController {
 
         for (int i = 0; i < inboxMessages.length(); i++) {
             try {
-                CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessages.getJSONObject(i), this.userId);
+                CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(
+                        inboxMessages.getJSONObject(i), this.userId, InboxMessageSource.V1);
 
                 if (messageDAO == null) {
                     continue;
@@ -393,6 +394,28 @@ public class CTInboxController {
             }
         });
         return true;
+    }
+
+    /**
+     * Single entry point for callers that need to branch on V1 vs V2 without
+     * reading source off the public {@link CTInboxMessage}. Looks up the DAO
+     * in the in-memory list under {@code messagesLock}.
+     *
+     * @return {@code true} only when the message exists in cache and is V2.
+     *         Unknown ids and V1 messages both return {@code false} — both
+     *         are treated as "do not perform V2-specific behavior".
+     */
+    @AnyThread
+    public boolean isV2Message(final String id) {
+        if (id == null) return false;
+        synchronized (messagesLock) {
+            for (CTMessageDAO message : messages) {
+                if (id.equals(message.getId())) {
+                    return message.getSource() == InboxMessageSource.V2;
+                }
+            }
+        }
+        return false;
     }
 
     @AnyThread
