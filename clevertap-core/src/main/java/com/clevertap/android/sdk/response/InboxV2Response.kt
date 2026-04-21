@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxMessageSource
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -77,7 +78,7 @@ internal class InboxV2Response(
         val out = ArrayList<CTMessageDAO>(messages.length())
         for (i in 0 until messages.length()) {
             val obj = messages.optJSONObject(i) ?: continue
-            val dao = CTMessageDAO.initWithJSON(obj, userId) ?: continue
+            val dao = CTMessageDAO.initWithJSON(obj, userId, InboxMessageSource.V2) ?: continue
             out.add(dao)
         }
         return out

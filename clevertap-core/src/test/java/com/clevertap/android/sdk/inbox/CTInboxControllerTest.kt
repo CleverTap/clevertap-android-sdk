@@ -481,6 +481,70 @@ class CTInboxControllerTest : BaseTestCase() {
         verify(exactly = 0) { dbAdapter.removePendingReads(any<List<String>>(), any()) }
     }
 
+    @Test
+    fun `updateMessages V1 path tags parsed DAOs as V1`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        val arr = org.json.JSONArray()
+        arr.put(JSONObject("""{"_id":"m1","date":1,"wzrk_ttl":${Long.MAX_VALUE / 2},"msg":{}}"""))
+        controller.updateMessages(arr)
+
+        verify {
+            dbAdapter.upsertMessages(match { list ->
+                list.size == 1 && list[0].source == InboxMessageSource.V1
+            })
+        }
+    }
+
+    @Test
+    fun `isV2Message returns true for V2 DAO in cache`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        assertTrue(controller.isV2Message("m1"))
+    }
+
+    @Test
+    fun `isV2Message returns false for V1 DAO in cache`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V1)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        assertFalse(controller.isV2Message("m1"))
+    }
+
+    @Test
+    fun `isV2Message returns false for unknown id`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        assertFalse(controller.isV2Message("unknown"))
+    }
+
+    @Test
+    fun `isV2Message returns false for null id`() {
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        assertFalse(controller.isV2Message(null))
+    }
+
     private fun getCtMsgDao(
         id: String = "1",
         userId: String = "1",
@@ -490,7 +554,8 @@ class CTInboxControllerTest : BaseTestCase() {
         expires: Long = (System.currentTimeMillis() * 10),
         tags: List<String> = listOf(),
         campaignId: String = "campaignID",
-        wzrkParams: JSONObject = JSONObject()
+        wzrkParams: JSONObject = JSONObject(),
+        source: InboxMessageSource = InboxMessageSource.V1
     ): CTMessageDAO {
         return CTMessageDAO().also {
             it.id = id
@@ -502,6 +567,7 @@ class CTInboxControllerTest : BaseTestCase() {
             it.tags = tags.joinToString(",")
             it.campaignId = campaignId
             it.wzrkParams = wzrkParams
+            it.source = source
         }
     }
 }
