@@ -53,7 +53,19 @@ ext.excludes = [
         'com/clevertap/android/sdk/inbox/CTInboxBaseMessageViewHolder*.*',
         'com/clevertap/android/sdk/inbox/CTSimpleMessageViewHolder*.*',
         'com/clevertap/android/sdk/inbox/CTIconMessageViewHolder*.*',
-        'com/clevertap/android/hms/CTHmsMessageService*.*'
+        'com/clevertap/android/hms/CTHmsMessageService*.*',
+        'com/clevertap/android/sdk/inapp/pipsdk/internal/view/**',
+        // fragments
+        'com/clevertap/android/sdk/inbox/CTInboxListViewFragment*.*',
+        // services & receivers
+        'com/clevertap/android/sdk/pushnotification/CTNotificationIntentService*.*',
+        'com/clevertap/android/sdk/pushnotification/CTPushNotificationReceiver*.*',
+        'com/clevertap/android/sdk/pushnotification/fcm/CTFirebaseMessagingReceiver*.*',
+        'com/clevertap/android/sdk/pushnotification/fcm/FcmMessageListenerService*.*',
+        'com/clevertap/android/pushtemplates/PTPushNotificationReceiver*.*',
+        'com/clevertap/android/pushtemplates/PushTemplateReceiver*.*',
+        // video module
+        'com/clevertap/android/sdk/video/**'
 ]
 def createVariantCoverage(variant) {
     def variantName = variant.name
