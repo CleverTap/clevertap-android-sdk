@@ -790,7 +790,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDisplayUnitClickedEventForID displayController is null`() {
-        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        every { coreState.controllerManager.displayUnitCache } returns null
         analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
 
         verify(exactly = 0) {
@@ -802,7 +802,7 @@ class AnalyticsManagerTest {
     fun `pushDisplayUnitClickedEventForID displayUnit is null`() {
         val displayController = mockk<CTDisplayUnitController>()
         every { displayController.getDisplayUnitForID(any()) } returns null
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
 
@@ -819,7 +819,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDisplayUnitViewedEventForID displayController is null`() {
-        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        every { coreState.controllerManager.displayUnitCache } returns null
         analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
 
         verify(exactly = 0) {
@@ -831,7 +831,7 @@ class AnalyticsManagerTest {
     fun `pushDisplayUnitViewedEventForID displayUnit is null`() {
         val displayController = mockk<CTDisplayUnitController>()
         every { displayController.getDisplayUnitForID(any()) } returns null
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
 
@@ -845,7 +845,7 @@ class AnalyticsManagerTest {
         val displayUnitJson = JSONObject()
         val displayUnit = CleverTapDisplayUnit.toDisplayUnit(displayUnitJson)
         every { displayController.getDisplayUnitForID(any()) } returns displayUnit
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         val eventName: String
         if (isClicked) {

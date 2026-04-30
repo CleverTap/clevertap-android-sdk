@@ -297,8 +297,8 @@ public class LoginController {
      * Resets the Display Units in the cache
      */
     private void resetDisplayUnits() {
-        if (controllerManager.getCTDisplayUnitController() != null) {
-            controllerManager.getCTDisplayUnitController().reset();
+        if (controllerManager.getDisplayUnitCache() != null) {
+            controllerManager.getDisplayUnitCache().reset();
         } else {
             config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");

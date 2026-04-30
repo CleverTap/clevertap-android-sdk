@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.displayunits;
 
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -12,8 +13,9 @@ import org.json.JSONObject;
 
 /**
  * Controller class for caching & supplying the Display Units to the client.
+ * Default implementation of {@link DisplayUnitCache}.
  */
-public class CTDisplayUnitController {
+public class CTDisplayUnitController implements DisplayUnitCache {
 
     final HashMap<String, CleverTapDisplayUnit> items = new HashMap<>();
 
@@ -22,6 +24,7 @@ public class CTDisplayUnitController {
      *
      * @return ArrayList<CleverTapDisplayUnit> - Could be null in case no Display Units are there in the cache
      */
+    @Override
     @Nullable
     public synchronized ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
         if (!items.isEmpty()) {
@@ -38,8 +41,9 @@ public class CTDisplayUnitController {
      * @param unitId - unitID of the Display Unit {@link CleverTapDisplayUnit#getUnitID()}
      * @return CleverTapDisplayUnit - Could be null in case no Display Units with the ID is found
      */
+    @Override
     @Nullable
-    public synchronized CleverTapDisplayUnit getDisplayUnitForID(String unitId) {
+    public synchronized CleverTapDisplayUnit getDisplayUnitForID(@Nullable String unitId) {
         if (!TextUtils.isEmpty(unitId)) {
             return items.get(unitId);
         } else {
@@ -51,6 +55,7 @@ public class CTDisplayUnitController {
     /**
      * clears the existing Display Units
      */
+    @Override
     public synchronized void reset() {
         items.clear();
         Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Cleared Display Units Cache");
@@ -62,8 +67,9 @@ public class CTDisplayUnitController {
      * @param messages - json-array of Display Unit items
      * @return ArrayList<CleverTapDisplayUnit> - could be null in case of null/empty/invalid json array
      */
+    @Override
     @Nullable
-    public synchronized ArrayList<CleverTapDisplayUnit> updateDisplayUnits(JSONArray messages) {
+    public synchronized ArrayList<CleverTapDisplayUnit> updateDisplayUnits(@Nullable JSONArray messages) {
 
         //flush existing display units before updating with the new ones.
         reset();

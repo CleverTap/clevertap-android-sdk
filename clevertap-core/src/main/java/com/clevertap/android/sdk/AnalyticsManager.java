@@ -205,8 +205,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
+            if (controllerManager.getDisplayUnitCache() != null) {
+                CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtraData = displayUnit.getWZRKFields();
@@ -237,8 +237,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
+            if (controllerManager.getDisplayUnitCache() != null) {
+                CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtras = displayUnit.getWZRKFields();

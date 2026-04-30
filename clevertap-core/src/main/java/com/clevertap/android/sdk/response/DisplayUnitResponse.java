@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import java.util.ArrayList;
 import org.json.JSONArray;
@@ -84,12 +85,13 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         }
 
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
-            if (controllerManager.getCTDisplayUnitController() == null) {
-                controllerManager.setCTDisplayUnitController(new CTDisplayUnitController());
+            if (controllerManager.getDisplayUnitCache() == null) {
+                controllerManager.setDisplayUnitCache(new CTDisplayUnitController());
             }
         }
-        ArrayList<CleverTapDisplayUnit> displayUnits = controllerManager.getCTDisplayUnitController()
-                .updateDisplayUnits(messages);
+        DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+        ArrayList<CleverTapDisplayUnit> displayUnits = cache != null
+                ? cache.updateDisplayUnits(messages) : null;
 
         callbackManager.notifyDisplayUnitsLoaded(displayUnits);
     }

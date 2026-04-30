@@ -1473,8 +1473,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
 
-        if (coreState.getControllerManager().getCTDisplayUnitController() != null) {
-            return coreState.getControllerManager().getCTDisplayUnitController().getAllDisplayUnits();
+        if (coreState.getControllerManager().getDisplayUnitCache() != null) {
+            return coreState.getControllerManager().getDisplayUnitCache().getAllDisplayUnits();
         } else {
             getConfigLogger()
                     .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
@@ -1792,8 +1792,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        if (coreState.getControllerManager().getCTDisplayUnitController() != null) {
-            return coreState.getControllerManager().getCTDisplayUnitController().getDisplayUnitForID(unitID);
+        if (coreState.getControllerManager().getDisplayUnitCache() != null) {
+            return coreState.getControllerManager().getDisplayUnitCache().getDisplayUnitForID(unitID);
         } else {
             getConfigLogger().verbose(getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
@@ -2493,6 +2493,30 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushDeepLink(Uri uri) {
         coreState.getAnalyticsManager().pushDeepLink(uri, false);
+    }
+
+    /**
+     * Replaces the SDK's display-unit cache with the supplied implementation.
+     * Pass {@code null} to clear the reference (subsequent server responses
+     * will lazily install a fresh default {@link
+     * com.clevertap.android.sdk.displayunits.CTDisplayUnitController}).
+     *
+     * <p>The new instance receives subsequent {@code updateDisplayUnits}
+     * calls (e.g. from server responses) and serves all lookup sites:
+     * {@link #getDisplayUnitForId(String)}, {@link #getAllDisplayUnits()},
+     * {@link #pushDisplayUnitViewedEventForID(String)}, and
+     * {@link #pushDisplayUnitClickedEventForID(String)}.
+     *
+     * <p>Implementations must be thread-safe. The display-unit listener
+     * registered via {@link #setDisplayUnitListener} fires only for
+     * server-pipeline activity — replacing the cache or mutating its
+     * contents from outside the SDK does not synthesise a listener fire.
+     *
+     * @since 7.x.0
+     */
+    public void setDisplayUnitCache(@Nullable
+            com.clevertap.android.sdk.displayunits.DisplayUnitCache cache) {
+        coreState.getControllerManager().setDisplayUnitCache(cache);
     }
 
     /**
