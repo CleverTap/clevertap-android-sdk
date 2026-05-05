@@ -2,9 +2,11 @@ package com.clevertap.android.sdk.network.fetch
 
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApi
+import com.clevertap.android.sdk.utils.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -29,7 +31,10 @@ import java.io.IOException
 internal class InboxFetchCall(
     private val ctApi: CtApi,
     private val queueHeaderBuilder: QueueHeaderBuilder,
+    private val coreMetaData: CoreMetaData,
+    private val packageName: String,
     private val logger: Logger,
+    private val clock: Clock = Clock.SYSTEM,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : EndpointCall<JSONObject> {
 
@@ -37,15 +42,19 @@ internal class InboxFetchCall(
         val body = try {
             val header = queueHeaderBuilder.buildHeader(null)
                 ?: return@withContext CallResult.NetworkFailure(IOException("header build failed"))
-            val event = JSONObject().apply {
-                put("type", "event")
-                put("evtName", Constants.WZRK_FETCH)
-                put("evtData", JSONObject().put("t", Constants.FETCH_TYPE_INBOX_V2))
-            }
+            val event = buildInboxV2Event(
+                evtName = Constants.WZRK_FETCH,
+                evtData = JSONObject().put("t", Constants.FETCH_TYPE_INBOX_V2),
+                coreMetaData = coreMetaData,
+                clock = clock,
+                packageName = packageName
+            )
             EventRequestBody(header, event).toJsonString()
         } catch (e: Exception) {
             return@withContext CallResult.NetworkFailure(e)
         }
+
+        logger.debug("InboxV2", "Send fetch (t=${Constants.FETCH_TYPE_INBOX_V2}): $body")
 
         try {
             ctApi.sendInboxFetch(body).use { response ->
@@ -53,13 +62,17 @@ internal class InboxFetchCall(
                     200 -> {
                         val raw = response.readBody()
                             ?: return@use CallResult.NetworkFailure(IOException("empty body"))
+                        logger.verbose("InboxV2", "fetch sent successfully (HTTP 200, ${raw.length} bytes)")
                         CallResult.Success(JSONObject(raw))
                     }
                     403 -> {
                         logger.info("InboxV2", "403 — account not enabled")
                         CallResult.Disabled
                     }
-                    else -> CallResult.HttpError(response.code, response.readBody())
+                    else -> {
+                        logger.info("InboxV2", "fetch failed HTTP ${response.code}")
+                        CallResult.HttpError(response.code, response.readBody())
+                    }
                 }
             }
         } catch (e: Exception) {

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.network.fetch
 
+import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
@@ -7,6 +8,7 @@ import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.http.CtHttpClient
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.utils.Clock
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,6 +16,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -78,15 +81,42 @@ class InboxDeleteCallTest {
         return CTInboxMessage(json)
     }
 
+    private val fixedClock = object : Clock {
+        override fun currentTimeMillis(): Long = 1_700_000_000_000L
+        override fun newDate(): java.util.Date = java.util.Date(currentTimeMillis())
+    }
+
+    private fun newCoreMetaData(
+        sessionId: Int = 99,
+        firstSession: Boolean = false,
+        lastSessionLength: Int = 30,
+        screenName: String? = null
+    ): CoreMetaData = mockk(relaxed = true) {
+        every { currentSessionId } returns sessionId
+        every { isFirstSession } returns firstSession
+        every { this@mockk.lastSessionLength } returns lastSessionLength
+        every { this@mockk.screenName } returns screenName
+    }
+
+    @After
+    fun resetActivityCount() {
+        CoreMetaData.setActivityCount(0)
+    }
+
     private fun newCall(
         http: CtHttpClient,
         messages: List<CTInboxMessage>,
-        header: JSONObject? = JSONObject().put("g", "guid-xyz")
+        header: JSONObject? = JSONObject().put("g", "guid-xyz"),
+        coreMetaData: CoreMetaData = newCoreMetaData(),
+        packageName: String = "com.example.app"
     ): InboxDeleteCall = InboxDeleteCall(
         ctApi = newCtApi(http),
         queueHeaderBuilder = newHeaderBuilder(header),
         messages = messages,
+        coreMetaData = coreMetaData,
+        packageName = packageName,
         logger = mockk<Logger>(relaxed = true),
+        clock = fixedClock,
         dispatcher = UnconfinedTestDispatcher()
     )
 
@@ -164,5 +194,35 @@ class InboxDeleteCallTest {
 
         assertTrue(result is CallResult.NetworkFailure)
         assertEquals(null, http.lastRequest)
+    }
+
+    @Test
+    fun `request body carries standard event metadata fields`() = runTest {
+        val http = CapturingHttpClient(responseCode = 200)
+        CoreMetaData.setActivityCount(2)
+        val coreMetaData = newCoreMetaData(
+            sessionId = 7,
+            firstSession = true,
+            lastSessionLength = 90,
+            screenName = "Inbox"
+        )
+
+        newCall(
+            http,
+            listOf(inboxMessage("m1")),
+            coreMetaData = coreMetaData,
+            packageName = "com.example.app"
+        ).execute()
+
+        val event = JSONArray(requireNotNull(http.lastRequest?.body)).getJSONObject(1)
+        assertEquals("event", event.getString("type"))
+        assertEquals("Message Deleted", event.getString("evtName"))
+        assertEquals(7, event.getInt("s"))
+        assertEquals(2, event.getInt("pg"))
+        assertEquals(1_700_000_000, event.getInt("ep"))
+        assertTrue(event.getBoolean("f"))
+        assertEquals(90, event.getInt("lsl"))
+        assertEquals("com.example.app", event.getString("pai"))
+        assertEquals("Inbox", event.getString("n"))
     }
 }

@@ -1,10 +1,12 @@
 package com.clevertap.android.sdk.network.fetch
 
 import androidx.annotation.RestrictTo
+import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApi
+import com.clevertap.android.sdk.utils.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -34,7 +36,10 @@ internal class InboxDeleteCall(
     private val ctApi: CtApi,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val messages: List<CTInboxMessage>,
+    private val coreMetaData: CoreMetaData,
+    private val packageName: String,
     private val logger: Logger,
+    private val clock: Clock = Clock.SYSTEM,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : EndpointCall<Unit> {
 
@@ -49,15 +54,23 @@ internal class InboxDeleteCall(
             return@withContext CallResult.NetworkFailure(e)
         }
 
+        logger.debug("InboxV2", "Send delete (n=${messages.size}): $body")
+
         try {
             ctApi.sendInboxDelete(body).use { response ->
                 when (response.code) {
-                    200 -> CallResult.Success(Unit)
+                    200 -> {
+                        logger.verbose("InboxV2", "delete sent successfully (n=${messages.size})")
+                        CallResult.Success(Unit)
+                    }
                     403 -> {
                         logger.info("InboxV2", "delete 403 — account not enabled")
                         CallResult.Disabled
                     }
-                    else -> CallResult.HttpError(response.code, response.readBody())
+                    else -> {
+                        logger.info("InboxV2", "delete failed HTTP ${response.code}")
+                        CallResult.HttpError(response.code, response.readBody())
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -75,11 +88,13 @@ internal class InboxDeleteCall(
             }
             arr.put(obj)
         }
-        return JSONObject().apply {
-            put("type", "event")
-            put("evtName", EVT_NAME_MESSAGE_DELETED)
-            put("evtData", JSONObject().put(EVT_DATA_KEY_MESSAGES, arr))
-        }
+        return buildInboxV2Event(
+            evtName = EVT_NAME_MESSAGE_DELETED,
+            evtData = JSONObject().put(EVT_DATA_KEY_MESSAGES, arr),
+            coreMetaData = coreMetaData,
+            clock = clock,
+            packageName = packageName
+        )
     }
 
     private companion object {

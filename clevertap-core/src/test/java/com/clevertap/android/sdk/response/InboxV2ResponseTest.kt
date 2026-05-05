@@ -68,7 +68,7 @@ class InboxV2ResponseTest {
 
         response.processResponse(validResponseJson())
 
-        verify(exactly = 0) { controllerManager.initializeInbox() }
+        verify(exactly = 0) { controllerManager.initializeInboxSync() }
         verify(exactly = 0) { controller.processV2Response(any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
     }
@@ -77,21 +77,22 @@ class InboxV2ResponseTest {
     fun `missing V2 key returns without touching controller`() {
         response.processResponse(JSONObject().put("unrelated_key", 1))
 
-        verify(exactly = 0) { controllerManager.initializeInbox() }
+        verify(exactly = 0) { controllerManager.initializeInboxSync() }
         verify(exactly = 0) { controller.processV2Response(any()) }
     }
 
     @Test
-    fun `null controller triggers initializeInbox then processes`() {
+    fun `null controller initializes synchronously and applies the same response`() {
         every { controllerManager.ctInboxController } returnsMany listOf(null, controller)
 
         response.processResponse(validResponseJson())
 
         verify(ordering = Ordering.ORDERED) {
-            controllerManager.initializeInbox()
+            controllerManager.initializeInboxSync()
             controller.processV2Response(any())
             callbackManager._notifyInboxMessagesDidUpdate()
         }
+        verify(exactly = 0) { controllerManager.initializeInbox() }
     }
 
     @Test

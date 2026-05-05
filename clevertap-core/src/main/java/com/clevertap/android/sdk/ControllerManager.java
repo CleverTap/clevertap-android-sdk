@@ -199,6 +199,16 @@ public class ControllerManager {
         });
     }
 
+    @WorkerThread
+    public void initializeInboxSync() {
+        if (config.isAnalyticsOnly()) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
+            return;
+        }
+        _initializeInbox();
+    }
+
     // always call async
     @WorkerThread
     private void _initializeInbox() {

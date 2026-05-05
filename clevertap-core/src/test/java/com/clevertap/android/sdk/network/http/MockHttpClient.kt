@@ -9,8 +9,10 @@ class MockHttpClient(
 ) : CtHttpClient {
 
     var alwaysThrowOnExecute = false
+    var lastRequest: Request? = null
 
     override fun execute(request: Request): Response {
+        lastRequest = request
         if (alwaysThrowOnExecute) {
             throw RuntimeException("MockHttpClient exception on execute")
         }

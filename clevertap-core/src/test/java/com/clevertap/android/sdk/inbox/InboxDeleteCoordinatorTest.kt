@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inbox
 
+import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
@@ -13,6 +14,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -59,14 +61,24 @@ class InboxDeleteCoordinatorTest {
     private fun message(id: String): CTInboxMessage =
         CTInboxMessage(JSONObject().put("id", id))
 
+    private fun TestScope.coordinator(
+        code: Int,
+        dbAdapter: DBAdapter
+    ): InboxDeleteCoordinator = InboxDeleteCoordinator(
+        networkScope = NetworkScope(StandardTestDispatcher(testScheduler)),
+        ctApi = ctApi(code),
+        queueHeaderBuilder = headerBuilder(),
+        dbAdapterProvider = { dbAdapter },
+        coreMetaData = mockk<CoreMetaData>(relaxed = true),
+        packageName = "com.example.app",
+        logger = mockk<Logger>(relaxed = true),
+        httpDispatcher = UnconfinedTestDispatcher(testScheduler)
+    )
+
     @Test
     fun `syncDelete with empty list is a no-op and does not clear pending rows`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true)
-        val scope = NetworkScope(StandardTestDispatcher(testScheduler))
-        val coordinator = InboxDeleteCoordinator(
-            scope, ctApi(200), headerBuilder(), { dbAdapter }, mockk<Logger>(relaxed = true),
-            UnconfinedTestDispatcher(testScheduler)
-        )
+        val coordinator = coordinator(200, dbAdapter)
 
         coordinator.syncDelete(emptyList(), "u")
         advanceUntilIdle()
@@ -77,11 +89,7 @@ class InboxDeleteCoordinatorTest {
     @Test
     fun `syncDelete on 200 batch-removes every pending row for the ids sent`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true)
-        val scope = NetworkScope(StandardTestDispatcher(testScheduler))
-        val coordinator = InboxDeleteCoordinator(
-            scope, ctApi(200), headerBuilder(), { dbAdapter }, mockk<Logger>(relaxed = true),
-            UnconfinedTestDispatcher(testScheduler)
-        )
+        val coordinator = coordinator(200, dbAdapter)
 
         coordinator.syncDelete(listOf(message("m1"), message("m2"), message("m3")), "u")
         advanceUntilIdle()
@@ -92,11 +100,7 @@ class InboxDeleteCoordinatorTest {
     @Test
     fun `syncDelete on non-2xx leaves every pending row for the next retry`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true)
-        val scope = NetworkScope(StandardTestDispatcher(testScheduler))
-        val coordinator = InboxDeleteCoordinator(
-            scope, ctApi(500), headerBuilder(), { dbAdapter }, mockk<Logger>(relaxed = true),
-            UnconfinedTestDispatcher(testScheduler)
-        )
+        val coordinator = coordinator(500, dbAdapter)
 
         coordinator.syncDelete(listOf(message("m1"), message("m2")), "u")
         advanceUntilIdle()
@@ -109,11 +113,7 @@ class InboxDeleteCoordinatorTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
             every { getPendingDeletes("u") } returns setOf("m1", "m2")
         }
-        val scope = NetworkScope(StandardTestDispatcher(testScheduler))
-        val coordinator = InboxDeleteCoordinator(
-            scope, ctApi(200), headerBuilder(), { dbAdapter }, mockk<Logger>(relaxed = true),
-            UnconfinedTestDispatcher(testScheduler)
-        )
+        val coordinator = coordinator(200, dbAdapter)
 
         coordinator.retryPending("u")
         advanceUntilIdle()
@@ -126,11 +126,7 @@ class InboxDeleteCoordinatorTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
             every { getPendingDeletes("u") } returns emptySet()
         }
-        val scope = NetworkScope(StandardTestDispatcher(testScheduler))
-        val coordinator = InboxDeleteCoordinator(
-            scope, ctApi(200), headerBuilder(), { dbAdapter }, mockk<Logger>(relaxed = true),
-            UnconfinedTestDispatcher(testScheduler)
-        )
+        val coordinator = coordinator(200, dbAdapter)
 
         coordinator.retryPending("u")
         advanceUntilIdle()

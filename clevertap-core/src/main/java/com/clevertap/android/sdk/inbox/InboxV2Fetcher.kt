@@ -49,19 +49,23 @@ internal class InboxV2Fetcher(
         }
 
         throttle.recordFetch()
+        logger.verbose("InboxV2", "starting fetch (respectThrottle=$respectThrottle)")
 
-        return when (val raw = endpoint.execute()) {
+        val result: CallResult<Unit> = when (val raw = endpoint.execute()) {
             is CallResult.Success -> {
                 inboxV2Response.processResponse(raw.data)
                 CallResult.Success(Unit)
             }
             CallResult.Disabled -> {
                 disabledForSession = true
+                logger.verbose("InboxV2", "session disabled — subsequent calls will short-circuit")
                 CallResult.Disabled
             }
             is CallResult.HttpError -> raw
             is CallResult.NetworkFailure -> raw
             CallResult.Throttled -> CallResult.Throttled
         }
+        logger.verbose("InboxV2", "fetch finished — ${result::class.simpleName}")
+        return result
     }
 }

@@ -544,6 +544,8 @@ internal object CleverTapFactory {
         val inboxFetchCall = InboxFetchCall(
             ctApi = ctApiWrapper.ctApi,
             queueHeaderBuilder = queueHeaderBuilder,
+            coreMetaData = coreMetaData,
+            packageName = context.packageName,
             logger = config.logger
         )
         val inboxFetchThrottle = FetchThrottle(
@@ -565,6 +567,8 @@ internal object CleverTapFactory {
             ctApi = ctApiWrapper.ctApi,
             queueHeaderBuilder = queueHeaderBuilder,
             dbAdapterProvider = { databaseManager.loadDBAdapter(context) },
+            coreMetaData = coreMetaData,
+            packageName = context.packageName,
             logger = config.logger
         )
         controllerManager.inboxDeleteCoordinator = inboxDeleteCoordinator
