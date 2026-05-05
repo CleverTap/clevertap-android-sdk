@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network.fetch
 
 import androidx.annotation.RestrictTo
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inbox.CTInboxMessage
@@ -15,21 +16,13 @@ import org.json.JSONObject
 import java.io.IOException
 
 /**
- * Batch V2 inbox-delete sync — N ids in one HTTP call.
+ * Batch V2 inbox-delete sync — N ids in one HTTP call to `inbox/v2/deleteMessages`.
  *
  * Maps HTTP outcomes the same way [InboxFetchCall] does:
  *  - HTTP 200 → [CallResult.Success] (Unit; no payload)
  *  - HTTP 403 → [CallResult.Disabled]
  *  - other non-2xx → [CallResult.HttpError]
  *  - any exception during build/send → [CallResult.NetworkFailure]
- *
- * THREE BACKEND-PENDING LITERALS, all captured in [Companion]:
- *  1. delete URL path — in [CtApi.sendInboxDelete], currently
- *     `"inbox/v2/getMessages"`.
- *  2. [EVT_NAME_MESSAGE_DELETED] — event name string.
- *  3. [EVT_DATA_KEY_MESSAGES] — array container key inside `evtData`.
- *
- * Each flips with a one-line edit once backend confirms.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 internal class InboxDeleteCall(
@@ -49,7 +42,7 @@ internal class InboxDeleteCall(
         val body = try {
             val header = queueHeaderBuilder.buildHeader(null)
                 ?: return@withContext CallResult.NetworkFailure(IOException("header build failed"))
-            EventRequestBody(header, buildDeleteEvent(messages)).toJsonString()
+            EventRequestBody(header, buildDeletePayload(messages)).toJsonString()
         } catch (e: Exception) {
             return@withContext CallResult.NetworkFailure(e)
         }
@@ -79,26 +72,24 @@ internal class InboxDeleteCall(
         }
     }
 
-    private fun buildDeleteEvent(messages: List<CTInboxMessage>): JSONObject {
+    private fun buildDeletePayload(messages: List<CTInboxMessage>): JSONObject {
         val arr = JSONArray()
         for (m in messages) {
-            val obj = JSONObject().put("_id", m.messageId)
+            val obj = JSONObject().put(Constants.WZRK_MID, m.messageId)
             m.wzrkParams?.let { params ->
                 params.keys().forEach { key -> obj.put(key, params.get(key)) }
             }
             arr.put(obj)
         }
-        return buildInboxV2Event(
-            evtName = EVT_NAME_MESSAGE_DELETED,
-            evtData = JSONObject().put(EVT_DATA_KEY_MESSAGES, arr),
-            coreMetaData = coreMetaData,
-            clock = clock,
-            packageName = packageName
-        )
+        val payload = JSONObject()
+            .put("type", TYPE_DELETE_MESSAGES)
+            .put(KEY_MESSAGES, arr)
+        stampEventMetadata(payload, coreMetaData, clock, packageName)
+        return payload
     }
 
     private companion object {
-        const val EVT_NAME_MESSAGE_DELETED = "Message Deleted"
-        const val EVT_DATA_KEY_MESSAGES = "messages"
+        const val TYPE_DELETE_MESSAGES = "deleteMessages"
+        const val KEY_MESSAGES = "messages"
     }
 }

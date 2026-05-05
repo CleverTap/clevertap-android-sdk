@@ -116,15 +116,11 @@ internal class CtApi(
             )
         )
 
-    // Working assumption: delete shares V2 fetch's URL shape. Point at the same
-    // relative URL for now. CONFIRM with backend before merging T3.2 — if it's
-    // actually a sibling path like "inbox/v2/deleteMessage" change this single
-    // literal. Nothing else in the pipeline cares about the path.
     fun sendInboxDelete(body: String): Response =
         httpClient.execute(
             createRequest(
                 baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
-                relativeUrl = "inbox/v2/getMessages",
+                relativeUrl = "inbox/v2/deleteMessages",
                 body = body,
                 headers = defaultHeaders
             )

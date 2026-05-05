@@ -174,15 +174,14 @@ class InboxDeleteCallTest {
 
         newCall(http, msgs).execute()
 
-        val bodyJson = JSONArray(requireNotNull(http.lastRequest?.body))
-        val messagesArray = bodyJson.getJSONObject(1)
-            .getJSONObject("evtData")
-            .getJSONArray("messages")
+        val payload = JSONArray(requireNotNull(http.lastRequest?.body)).getJSONObject(1)
+        assertEquals("deleteMessages", payload.getString("type"))
+        val messagesArray = payload.getJSONArray("messages")
         assertEquals(2, messagesArray.length())
-        assertEquals("m1", messagesArray.getJSONObject(0).getString("_id"))
+        assertEquals("m1", messagesArray.getJSONObject(0).getString("wzrk_mid"))
         assertEquals("camp-1", messagesArray.getJSONObject(0).getString("wzrk_id"))
         assertEquals("default", messagesArray.getJSONObject(0).getString("wzrk_pivot"))
-        assertEquals("m2", messagesArray.getJSONObject(1).getString("_id"))
+        assertEquals("m2", messagesArray.getJSONObject(1).getString("wzrk_mid"))
         assertEquals("camp-2", messagesArray.getJSONObject(1).getString("wzrk_id"))
     }
 
@@ -197,7 +196,7 @@ class InboxDeleteCallTest {
     }
 
     @Test
-    fun `request body carries standard event metadata fields`() = runTest {
+    fun `delete payload carries standard event metadata fields`() = runTest {
         val http = CapturingHttpClient(responseCode = 200)
         CoreMetaData.setActivityCount(2)
         val coreMetaData = newCoreMetaData(
@@ -214,15 +213,14 @@ class InboxDeleteCallTest {
             packageName = "com.example.app"
         ).execute()
 
-        val event = JSONArray(requireNotNull(http.lastRequest?.body)).getJSONObject(1)
-        assertEquals("event", event.getString("type"))
-        assertEquals("Message Deleted", event.getString("evtName"))
-        assertEquals(7, event.getInt("s"))
-        assertEquals(2, event.getInt("pg"))
-        assertEquals(1_700_000_000, event.getInt("ep"))
-        assertTrue(event.getBoolean("f"))
-        assertEquals(90, event.getInt("lsl"))
-        assertEquals("com.example.app", event.getString("pai"))
-        assertEquals("Inbox", event.getString("n"))
+        val payload = JSONArray(requireNotNull(http.lastRequest?.body)).getJSONObject(1)
+        assertEquals("deleteMessages", payload.getString("type"))
+        assertEquals(7, payload.getInt("s"))
+        assertEquals(2, payload.getInt("pg"))
+        assertEquals(1_700_000_000, payload.getInt("ep"))
+        assertTrue(payload.getBoolean("f"))
+        assertEquals(90, payload.getInt("lsl"))
+        assertEquals("com.example.app", payload.getString("pai"))
+        assertEquals("Inbox", payload.getString("n"))
     }
 }
