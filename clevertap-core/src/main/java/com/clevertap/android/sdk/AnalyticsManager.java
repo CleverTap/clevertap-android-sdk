@@ -1019,7 +1019,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             JSONObject notif = getWzrkFields(data);
             if (isV2InboxMessage(msgId)) {
-                notif.put("_id", msgId);  // backend rejects _id for V1; V2 only
+                notif.put(Constants.WZRK_MID, msgId);
             }
 
             if (customData != null) {
@@ -1051,7 +1051,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     /**
-     * V1 inbox messages must NOT carry {@code _id} in Viewed/Clicked events —
+     * V1 inbox messages must NOT carry {@code wzrk_mid} in Viewed/Clicked events —
      * the backend rejects them. Safe defaults: null id, null controller, or
      * an id the controller doesn't know about all fall through to V1 behavior.
      */

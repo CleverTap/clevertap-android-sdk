@@ -45,6 +45,7 @@ public interface Constants {
     int DEFINE_VARS_EVENT = 8;
     String variablePayloadType = "varsPayload";
     String WZRK_FETCH = "wzrk_fetch";
+    String WZRK_MID = "wzrk_mid";
     String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";
     String SC_OUTGOING_EVENT_NAME = "SCOutgoing";

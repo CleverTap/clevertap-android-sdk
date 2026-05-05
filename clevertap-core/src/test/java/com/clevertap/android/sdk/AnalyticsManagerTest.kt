@@ -1280,27 +1280,27 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `pushInboxMessageStateEvent viewed includes the message _id in evtData`() {
+    fun `pushInboxMessageStateEvent viewed includes the message wzrk_mid in evtData`() {
         verifyPushInboxMessageStateEventIncludesId(isClicked = false)
     }
 
     @Test
-    fun `pushInboxMessageStateEvent clicked includes the message _id in evtData`() {
+    fun `pushInboxMessageStateEvent clicked includes the message wzrk_mid in evtData`() {
         verifyPushInboxMessageStateEventIncludesId(isClicked = true)
     }
 
     @Test
-    fun `Viewed event for V1 message does NOT include _id`() {
+    fun `Viewed event for V1 message does NOT include wzrk_mid`() {
         verifyV1MessageOmitsId(isClicked = false)
     }
 
     @Test
-    fun `Clicked event for V1 message does NOT include _id`() {
+    fun `Clicked event for V1 message does NOT include wzrk_mid`() {
         verifyV1MessageOmitsId(isClicked = true)
     }
 
     @Test
-    fun `_id absent when inbox controller is null`() {
+    fun `wzrk_mid absent when inbox controller is null`() {
         mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             every { inboxMessage.messageId } returns "msg-xyz"
@@ -1321,7 +1321,7 @@ class AnalyticsManagerTest {
             analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
 
             val evtData = captured.captured.getJSONObject(Constants.KEY_EVT_DATA)
-            assertFalse(evtData.has("_id"))
+            assertFalse(evtData.has("wzrk_mid"))
         }
     }
 
@@ -1354,7 +1354,7 @@ class AnalyticsManagerTest {
             }
             assertEquals(expectedEventName, captured.captured.getString(Constants.KEY_EVT_NAME))
             val evtData = captured.captured.getJSONObject(Constants.KEY_EVT_DATA)
-            assertFalse(evtData.has("_id"))
+            assertFalse(evtData.has("wzrk_mid"))
         }
     }
 
@@ -1479,7 +1479,7 @@ class AnalyticsManagerTest {
             }
             assertEquals(expectedEventName, captured.captured.getString(Constants.KEY_EVT_NAME))
             val evtData = captured.captured.getJSONObject(Constants.KEY_EVT_DATA)
-            assertEquals("msg-xyz", evtData.getString("_id"))
+            assertEquals("msg-xyz", evtData.getString("wzrk_mid"))
         }
     }
 
@@ -1498,7 +1498,7 @@ class AnalyticsManagerTest {
 
             val expectedEvtData = JSONObject()
             expectedEvtData.put("test", "test")
-            expectedEvtData.put("_id", "")
+            expectedEvtData.put("wzrk_mid", "")
             expectedEvtData.put("key", "value")
 
             val expectedEvent = JSONObject()
