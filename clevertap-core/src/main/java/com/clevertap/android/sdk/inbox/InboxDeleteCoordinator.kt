@@ -16,10 +16,12 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 /**
- * Launches V2 inbox-delete calls on the shared [NetworkScope] and keeps the
- * `inbox_pending_deletes` table in sync. All-or-nothing: on 2xx, every
- * pending row clears in one transaction; on any other outcome, every row
- * stays for the next retry.
+ * Launches V2 inbox-delete calls on the shared [NetworkScope] and walks the
+ * `inbox_pending_deletes` state machine. On 2xx every targeted row transitions
+ * from `PENDING_SEND` to `AWAITING_CONFIRM`; rows are finally removed by the
+ * TTL sweep ([com.clevertap.android.sdk.db.DBAdapter.removeExpiredAwaitingConfirm])
+ * driven from V2 fetch and from this coordinator's own retry path. On any
+ * non-2xx outcome the row stays in `PENDING_SEND` for the next retry.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 internal class InboxDeleteCoordinator(
@@ -50,16 +52,14 @@ internal class InboxDeleteCoordinator(
     }
 
     /**
-     * Drains any leftover `inbox_pending_deletes` rows for [userId]. Called
-     * at inbox-init time so a delete that failed in the previous session
-     * (no network / server 5xx) eventually lands.
-     *
-     * Local messages are gone by now, so the retry payload carries only the
-     * `_id` — no `wzrk_*` attribution. Acceptable graceful degradation: the
-     * server still records the delete; attribution is best-effort.
+     * Drains `PENDING_SEND` rows for [userId]. Called at inbox-init time so a
+     * delete that failed in the previous session (no network / server 5xx)
+     * eventually lands. Sweeps any TTL-elapsed `AWAITING_CONFIRM` rows first
+     * so the sweep can't lag indefinitely on devices that rarely fetch.
      */
     fun retryPending(userId: String) {
         networkScope.coroutineScope.launch {
+            dbAdapterProvider().removeExpiredAwaitingConfirm(userId, clock.currentTimeSeconds())
             val rows = dbAdapterProvider().getPendingDeletes(userId)
             if (rows.isEmpty()) return@launch
             logger.verbose("InboxV2", "retryPending: ${rows.size} pending delete row(s) for user")
@@ -86,8 +86,8 @@ internal class InboxDeleteCoordinator(
         when (call.execute()) {
             is CallResult.Success -> {
                 val ids = messages.map { it.messageId }
-                dbAdapterProvider().removePendingDeletes(ids, userId)
-                logger.verbose("InboxV2", "syncDelete confirmed for n=${ids.size} — pending rows cleared")
+                dbAdapterProvider().markPendingDeletesAwaitingConfirm(ids, userId)
+                logger.verbose("InboxV2", "syncDelete acked by server (n=${ids.size}) — awaiting TTL")
             }
             else -> {
                 logger.verbose("InboxV2", "delete batch (n=${messages.size}) did not confirm; will retry")

@@ -279,6 +279,22 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
+    fun `processV2Response sweeps expired AWAITING_CONFIRM rows BEFORE reading the pending-delete id set`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        controller.processV2Response(emptyList())
+
+        io.mockk.verifyOrder {
+            dbAdapter.removeExpiredAwaitingConfirm(userId, any())
+            dbAdapter.getPendingDeleteIds(userId)
+        }
+    }
+
+    @Test
     fun `processV2Response upserts filtered incoming and returns true`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
         controller = CTInboxController(
@@ -444,7 +460,7 @@ class CTInboxControllerTest : BaseTestCase() {
             val message = mockk<CTInboxMessage>(relaxed = true) { every { messageId } returns "m1" }
             controller.deleteInboxMessage(message)
 
-            verify(exactly = 1) { dbAdapter.addPendingDelete("m1", userId, any()) }
+            verify(exactly = 1) { dbAdapter.addPendingDelete("m1", userId, any(), any()) }
             verify(exactly = 1) { inboxDeleteCoordinator.syncDelete(listOf(message), userId) }
         }
     }
@@ -467,10 +483,65 @@ class CTInboxControllerTest : BaseTestCase() {
             controller.deleteInboxMessage(message)
 
             verify(exactly = 1) {
-                dbAdapter.addPendingDelete("m1", userId, match {
-                    it != null && it.optString("wzrk_id") == "camp-1" && it.optString("wzrk_pivot") == "default"
-                })
+                dbAdapter.addPendingDelete(
+                    "m1",
+                    userId,
+                    match {
+                        it != null && it.optString("wzrk_id") == "camp-1" && it.optString("wzrk_pivot") == "default"
+                    },
+                    any()
+                )
             }
+        }
+    }
+
+    @Test
+    fun `deleteInboxMessage with no DAO TTL falls back to now plus 1 day on the pending row`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2, wzrkParams = JSONObject(), expires = 0L)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val before = System.currentTimeMillis() / 1000L
+            val message = mockk<CTInboxMessage>(relaxed = true) { every { messageId } returns "m1" }
+            controller.deleteInboxMessage(message)
+            val after = System.currentTimeMillis() / 1000L
+            val oneDay = 24L * 60L * 60L
+
+            verify(exactly = 1) {
+                dbAdapter.addPendingDelete(
+                    "m1",
+                    userId,
+                    any(),
+                    match { expiresAt -> expiresAt in (before + oneDay)..(after + oneDay) }
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `deleteInboxMessage forwards a positive DAO TTL onto the pending row`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2, wzrkParams = JSONObject(), expires = 5_000L)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            val message = mockk<CTInboxMessage>(relaxed = true) { every { messageId } returns "m1" }
+            controller.deleteInboxMessage(message)
+
+            verify(exactly = 1) { dbAdapter.addPendingDelete("m1", userId, any(), 5_000L) }
         }
     }
 
@@ -497,7 +568,7 @@ class CTInboxControllerTest : BaseTestCase() {
                     userId
                 )
             }
-            verify(exactly = 0) { dbAdapter.addPendingDelete(any(), any(), any()) }
+            verify(exactly = 0) { dbAdapter.addPendingDelete(any(), any(), any(), any()) }
             verify(exactly = 1) {
                 inboxDeleteCoordinator.syncDelete(match { it.size == 2 }, userId)
             }
@@ -520,7 +591,7 @@ class CTInboxControllerTest : BaseTestCase() {
             val message = mockk<CTInboxMessage>(relaxed = true) { every { messageId } returns "m1" }
             controller.deleteInboxMessage(message)
 
-            verify(exactly = 0) { dbAdapter.addPendingDelete(any(), any(), any()) }
+            verify(exactly = 0) { dbAdapter.addPendingDelete(any(), any(), any(), any()) }
             verify(exactly = 0) { inboxDeleteCoordinator.syncDelete(any(), any()) }
             verify { dbAdapter.deleteMessageForId("m1", userId) }
         }

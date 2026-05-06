@@ -28,6 +28,8 @@ import java.util.concurrent.Callable;
 @RestrictTo(Scope.LIBRARY)
 public class CTInboxController {
 
+    private static final long PENDING_DELETE_DEFAULT_TTL_SECONDS = 24L * 60L * 60L;
+
     private final DBAdapter dbAdapter;
 
     private ArrayList<CTMessageDAO> messages;
@@ -84,10 +86,12 @@ public class CTInboxController {
                 final boolean isV2 = dao != null && dao.getSource() == InboxMessageSource.V2;
 
                 if (isV2) {
+                    long now = System.currentTimeMillis() / 1000L;
                     dbAdapter.addPendingDelete(
                             message.getMessageId(),
                             userId,
-                            dao.getWzrkParams()
+                            dao.getWzrkParams(),
+                            resolvePendingDeleteExpiry(dao, now)
                     );
                 }
                 synchronized (ctLockManager.getInboxControllerLock()) {
@@ -112,6 +116,7 @@ public class CTInboxController {
             public Void call() {
                 // Partition ids into V1 and V2 BEFORE the local delete wipes
                 // the cache.
+                final long now = System.currentTimeMillis() / 1000L;
                 final Set<String> idSet = new HashSet<>(messageIDs);
                 final List<CTInboxMessage> v2Messages = new ArrayList<>();
                 final List<PendingDelete> pendingRows = new ArrayList<>();
@@ -120,7 +125,11 @@ public class CTInboxController {
                         if (!idSet.contains(d.getId())) continue;
                         if (d.getSource() != InboxMessageSource.V2) continue;
                         v2Messages.add(new CTInboxMessage(d.toJSON()));
-                        pendingRows.add(new PendingDelete(d.getId(), d.getWzrkParams()));
+                        pendingRows.add(new PendingDelete(
+                                d.getId(),
+                                d.getWzrkParams(),
+                                resolvePendingDeleteExpiry(d, now)
+                        ));
                     }
                 }
 
@@ -265,9 +274,13 @@ public class CTInboxController {
      */
     @WorkerThread
     public boolean processV2Response(List<CTMessageDAO> incoming) {
+        long nowSec = System.currentTimeMillis() / 1000L;
+        // T6.2: drop AWAITING_CONFIRM rows whose TTL has elapsed before reading
+        // the pending-delete id set, so an expired row's id stops filtering the
+        // (now stale) message from this response.
+        dbAdapter.removeExpiredAwaitingConfirm(userId, nowSec);
         Set<String> pendingDeletes = dbAdapter.getPendingDeleteIds(userId);
         Set<String> pendingReads = dbAdapter.getPendingReads(userId);
-        long nowSec = System.currentTimeMillis() / 1000L;
 
         // Server-caught-up: any incoming message with isRead=1 that was still
         // pending locally confirms the read — drop the pending row. Must run
@@ -490,5 +503,10 @@ public class CTInboxController {
                 _deleteMessageWithId(message.getId());
             }
         }
+    }
+
+    private static long resolvePendingDeleteExpiry(CTMessageDAO dao, long nowSeconds) {
+        long ttl = dao == null ? 0L : dao.getExpires();
+        return ttl > 0L ? ttl : nowSeconds + PENDING_DELETE_DEFAULT_TTL_SECONDS;
     }
 }

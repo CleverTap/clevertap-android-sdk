@@ -229,6 +229,7 @@ object Column {
     const val CREATED_AT = "created_at"
     const val IS_READ = "isRead"
     const val EXPIRES = "expires"
+    const val STATE = "state"
     const val TAGS = "tags"
     const val USER_ID = "messageUser"
     const val CAMPAIGN = "campaignId"
@@ -278,6 +279,8 @@ private val CREATE_INBOX_PENDING_DELETES_TABLE = """
         ${Column.USER_ID} STRING NOT NULL,
         ${Column.ID} STRING NOT NULL,
         ${Column.WZRKPARAMS} TEXT,
+        ${Column.STATE} TEXT NOT NULL DEFAULT 'PENDING_SEND',
+        ${Column.EXPIRES} INTEGER NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL,
         PRIMARY KEY (${Column.USER_ID}, ${Column.ID})
     );

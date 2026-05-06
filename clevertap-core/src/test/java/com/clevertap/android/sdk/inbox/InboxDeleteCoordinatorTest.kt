@@ -110,44 +110,65 @@ class InboxDeleteCoordinatorTest {
     )
 
     @Test
-    fun `syncDelete with empty list is a no-op and does not clear pending rows`() = runTest {
+    fun `syncDelete with empty list is a no-op and does not transition pending rows`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true)
         val coordinator = coordinator(200, dbAdapter)
 
         coordinator.syncDelete(emptyList(), "u")
         advanceUntilIdle()
 
+        verify(exactly = 0) { dbAdapter.markPendingDeletesAwaitingConfirm(any(), any()) }
         verify(exactly = 0) { dbAdapter.removePendingDeletes(any<List<String>>(), any()) }
     }
 
     @Test
-    fun `syncDelete on 200 batch-removes every pending row for the ids sent`() = runTest {
+    fun `syncDelete on 200 transitions every targeted row to AWAITING_CONFIRM, does not delete`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true)
         val coordinator = coordinator(200, dbAdapter)
 
         coordinator.syncDelete(listOf(message("m1"), message("m2"), message("m3")), "u")
         advanceUntilIdle()
 
-        verify(exactly = 1) { dbAdapter.removePendingDeletes(listOf("m1", "m2", "m3"), "u") }
+        verify(exactly = 1) {
+            dbAdapter.markPendingDeletesAwaitingConfirm(listOf("m1", "m2", "m3"), "u")
+        }
+        verify(exactly = 0) { dbAdapter.removePendingDeletes(any<List<String>>(), any()) }
     }
 
     @Test
-    fun `syncDelete on non-2xx leaves every pending row for the next retry`() = runTest {
+    fun `syncDelete on non-2xx leaves every pending row in PENDING_SEND for retry`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true)
         val coordinator = coordinator(500, dbAdapter)
 
         coordinator.syncDelete(listOf(message("m1"), message("m2")), "u")
         advanceUntilIdle()
 
+        verify(exactly = 0) { dbAdapter.markPendingDeletesAwaitingConfirm(any(), any()) }
         verify(exactly = 0) { dbAdapter.removePendingDeletes(any<List<String>>(), any()) }
     }
 
     @Test
-    fun `retryPending drains every pending row for the user in one call`() = runTest {
+    fun `retryPending sweeps expired rows BEFORE reading PENDING_SEND list`() = runTest {
+        val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
+            every { getPendingDeletes("u") } returns emptyList()
+        }
+        val coordinator = coordinator(200, dbAdapter)
+
+        coordinator.retryPending("u")
+        advanceUntilIdle()
+
+        io.mockk.verifyOrder {
+            dbAdapter.removeExpiredAwaitingConfirm("u", any())
+            dbAdapter.getPendingDeletes("u")
+        }
+    }
+
+    @Test
+    fun `retryPending sends only PENDING_SEND rows and transitions on 200`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
             every { getPendingDeletes("u") } returns listOf(
-                PendingDelete("m1", null),
-                PendingDelete("m2", null)
+                PendingDelete("m1", null, 1L),
+                PendingDelete("m2", null, 1L)
             )
         }
         val coordinator = coordinator(200, dbAdapter)
@@ -155,7 +176,10 @@ class InboxDeleteCoordinatorTest {
         coordinator.retryPending("u")
         advanceUntilIdle()
 
-        verify { dbAdapter.removePendingDeletes(match { it.toSet() == setOf("m1", "m2") }, "u") }
+        verify(exactly = 1) {
+            dbAdapter.markPendingDeletesAwaitingConfirm(match { it.toSet() == setOf("m1", "m2") }, "u")
+        }
+        verify(exactly = 0) { dbAdapter.removePendingDeletes(any<List<String>>(), any()) }
     }
 
     @Test
@@ -163,8 +187,8 @@ class InboxDeleteCoordinatorTest {
         val capturing = CapturingHttpClient(responseCode = 200)
         val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
             every { getPendingDeletes("u") } returns listOf(
-                PendingDelete("m1", JSONObject().put("wzrk_id", "c1").put("wzrk_pivot", "default")),
-                PendingDelete("m2", JSONObject().put("wzrk_id", "c2"))
+                PendingDelete("m1", JSONObject().put("wzrk_id", "c1").put("wzrk_pivot", "default"), 1L),
+                PendingDelete("m2", JSONObject().put("wzrk_id", "c2"), 1L)
             )
         }
         val coordinator = capturingCoordinator(capturing, dbAdapter)
@@ -183,7 +207,7 @@ class InboxDeleteCoordinatorTest {
     }
 
     @Test
-    fun `retryPending with no pending rows is a no-op`() = runTest {
+    fun `retryPending with no pending rows still sweeps`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
             every { getPendingDeletes("u") } returns emptyList()
         }
@@ -192,6 +216,7 @@ class InboxDeleteCoordinatorTest {
         coordinator.retryPending("u")
         advanceUntilIdle()
 
-        verify(exactly = 0) { dbAdapter.removePendingDeletes(any<List<String>>(), any()) }
+        verify(exactly = 1) { dbAdapter.removeExpiredAwaitingConfirm("u", any()) }
+        verify(exactly = 0) { dbAdapter.markPendingDeletesAwaitingConfirm(any(), any()) }
     }
 }

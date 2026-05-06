@@ -22,6 +22,7 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     private val userA = "user-a"
     private val userB = "user-b"
+    private val futureTtl = 1_000_000L
 
     override fun setUp() {
         super.setUp()
@@ -37,19 +38,20 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     @Test
     fun `addPendingDelete stores the id and getPendingDeleteIds returns it`() {
-        assertTrue(dao.addPendingDelete("m1", userA, null))
+        assertTrue(dao.addPendingDelete("m1", userA, null, futureTtl))
 
         assertEquals(setOf("m1"), dao.getPendingDeleteIds(userA))
     }
 
     @Test
-    fun `addPendingDelete persists wzrkParams JSON`() {
+    fun `addPendingDelete persists wzrkParams JSON and expiresAt`() {
         val params = JSONObject().put("wzrk_id", "camp-1").put("wzrk_pivot", "default")
-        assertTrue(dao.addPendingDelete("m1", userA, params))
+        assertTrue(dao.addPendingDelete("m1", userA, params, futureTtl))
 
         val rows = dao.getPendingDeletes(userA)
         assertEquals(1, rows.size)
         assertEquals("m1", rows[0].messageId)
+        assertEquals(futureTtl, rows[0].expiresAt)
         val stored = assertNotNull(rows[0].wzrkParams)
         assertEquals("camp-1", stored.getString("wzrk_id"))
         assertEquals("default", stored.getString("wzrk_pivot"))
@@ -57,7 +59,7 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     @Test
     fun `addPendingDelete tolerates null wzrkParams`() {
-        dao.addPendingDelete("m1", userA, null)
+        dao.addPendingDelete("m1", userA, null, futureTtl)
 
         val rows = dao.getPendingDeletes(userA)
         assertEquals(1, rows.size)
@@ -66,15 +68,15 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     @Test
     fun `duplicate addPendingDelete is a no-op under CONFLICT_IGNORE`() {
-        dao.addPendingDelete("m1", userA, null)
-        dao.addPendingDelete("m1", userA, JSONObject().put("wzrk_id", "different"))
+        dao.addPendingDelete("m1", userA, null, futureTtl)
+        dao.addPendingDelete("m1", userA, JSONObject().put("wzrk_id", "different"), futureTtl)
 
         assertEquals(setOf("m1"), dao.getPendingDeleteIds(userA))
     }
 
     @Test
     fun `removePendingDelete for an existing row clears it`() {
-        dao.addPendingDelete("m1", userA, null)
+        dao.addPendingDelete("m1", userA, null, futureTtl)
 
         assertTrue(dao.removePendingDelete("m1", userA))
         assertTrue(dao.getPendingDeleteIds(userA).isEmpty())
@@ -87,7 +89,7 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     @Test
     fun `pending deletes are isolated per user`() {
-        dao.addPendingDelete("m1", userA, null)
+        dao.addPendingDelete("m1", userA, null, futureTtl)
 
         assertEquals(setOf("m1"), dao.getPendingDeleteIds(userA))
         assertTrue(dao.getPendingDeleteIds(userB).isEmpty())
@@ -95,7 +97,7 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     @Test
     fun `addPendingRead and getPendingReads use the reads table`() {
-        dao.addPendingDelete("d1", userA, null)
+        dao.addPendingDelete("d1", userA, null, futureTtl)
         dao.addPendingRead("r1", userA)
 
         assertEquals(setOf("d1"), dao.getPendingDeleteIds(userA))
@@ -103,19 +105,22 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
     }
 
     @Test
-    fun `addPendingDeletes batch inserts every row atomically with wzrkParams`() {
+    fun `addPendingDeletes batch inserts every row atomically with wzrkParams and expiresAt`() {
         val rows = listOf(
-            PendingDelete("m1", JSONObject().put("wzrk_id", "c1")),
-            PendingDelete("m2", JSONObject().put("wzrk_id", "c2")),
-            PendingDelete("m3", null)
+            PendingDelete("m1", JSONObject().put("wzrk_id", "c1"), futureTtl),
+            PendingDelete("m2", JSONObject().put("wzrk_id", "c2"), futureTtl + 5L),
+            PendingDelete("m3", null, futureTtl + 10L)
         )
         assertTrue(dao.addPendingDeletes(rows, userA))
 
         val out = dao.getPendingDeletes(userA).associateBy { it.messageId }
         assertEquals(setOf("m1", "m2", "m3"), out.keys)
         assertEquals("c1", out["m1"]?.wzrkParams?.getString("wzrk_id"))
+        assertEquals(futureTtl, out["m1"]?.expiresAt)
         assertEquals("c2", out["m2"]?.wzrkParams?.getString("wzrk_id"))
+        assertEquals(futureTtl + 5L, out["m2"]?.expiresAt)
         assertNull(out["m3"]?.wzrkParams)
+        assertEquals(futureTtl + 10L, out["m3"]?.expiresAt)
     }
 
     @Test
@@ -128,15 +133,84 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
     @Test
     fun `removePendingDeletes deletes only the supplied ids for the supplied user`() {
         dao.addPendingDeletes(
-            listOf(PendingDelete("m1", null), PendingDelete("m2", null), PendingDelete("m3", null)),
+            listOf(
+                PendingDelete("m1", null, futureTtl),
+                PendingDelete("m2", null, futureTtl),
+                PendingDelete("m3", null, futureTtl)
+            ),
             userA
         )
-        dao.addPendingDelete("m2", userB, null)
+        dao.addPendingDelete("m2", userB, null, futureTtl)
 
         dao.removePendingDeletes(listOf("m1", "m2"), userA)
 
         assertEquals(setOf("m3"), dao.getPendingDeleteIds(userA))
         assertEquals(setOf("m2"), dao.getPendingDeleteIds(userB))
+    }
+
+    @Test
+    fun `new pending row defaults to PENDING_SEND so getPendingDeletes returns it`() {
+        dao.addPendingDelete("m1", userA, null, futureTtl)
+
+        assertEquals(listOf("m1"), dao.getPendingDeletes(userA).map { it.messageId })
+    }
+
+    @Test
+    fun `markPendingDeletesAwaitingConfirm flips state for matching rows only`() {
+        dao.addPendingDelete("m1", userA, null, futureTtl)
+        dao.addPendingDelete("m2", userA, null, futureTtl)
+
+        assertTrue(dao.markPendingDeletesAwaitingConfirm(listOf("m1"), userA))
+
+        // both still in id set (merger filter unchanged)
+        assertEquals(setOf("m1", "m2"), dao.getPendingDeleteIds(userA))
+        // only m2 still PENDING_SEND, so retry list excludes m1
+        assertEquals(listOf("m2"), dao.getPendingDeletes(userA).map { it.messageId })
+    }
+
+    @Test
+    fun `markPendingDeletesAwaitingConfirm scoped by userId`() {
+        dao.addPendingDelete("m1", userA, null, futureTtl)
+        dao.addPendingDelete("m1", userB, null, futureTtl)
+
+        dao.markPendingDeletesAwaitingConfirm(listOf("m1"), userA)
+
+        assertTrue(dao.getPendingDeletes(userA).isEmpty())
+        assertEquals(listOf("m1"), dao.getPendingDeletes(userB).map { it.messageId })
+    }
+
+    @Test
+    fun `markPendingDeletesAwaitingConfirm with empty list is a no-op`() {
+        dao.addPendingDelete("m1", userA, null, futureTtl)
+
+        assertTrue(dao.markPendingDeletesAwaitingConfirm(emptyList(), userA))
+        assertEquals(listOf("m1"), dao.getPendingDeletes(userA).map { it.messageId })
+    }
+
+    @Test
+    fun `removeExpiredAwaitingConfirm drops only AWAITING_CONFIRM rows whose expires is past now`() {
+        dao.addPendingDelete("send_past", userA, null, 100L)
+        dao.addPendingDelete("await_past", userA, null, 100L)
+        dao.addPendingDelete("await_future", userA, null, 9_999L)
+        dao.markPendingDeletesAwaitingConfirm(listOf("await_past", "await_future"), userA)
+
+        val removed = dao.removeExpiredAwaitingConfirm(userA, nowSeconds = 1_000L)
+
+        assertEquals(1, removed)
+        assertEquals(setOf("send_past", "await_future"), dao.getPendingDeleteIds(userA))
+    }
+
+    @Test
+    fun `removeExpiredAwaitingConfirm scoped by userId`() {
+        dao.addPendingDelete("m1", userA, null, 100L)
+        dao.addPendingDelete("m1", userB, null, 100L)
+        dao.markPendingDeletesAwaitingConfirm(listOf("m1"), userA)
+        dao.markPendingDeletesAwaitingConfirm(listOf("m1"), userB)
+
+        dao.removeExpiredAwaitingConfirm(userA, nowSeconds = 1_000L)
+
+        assertTrue(dao.getPendingDeleteIds(userA).isEmpty())
+        assertEquals(setOf("m1"), dao.getPendingDeleteIds(userB))
     }
 
     @Test

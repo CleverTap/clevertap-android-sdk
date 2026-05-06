@@ -156,9 +156,14 @@ internal class DBAdapter constructor(
 
     @WorkerThread
     @Synchronized
-    fun addPendingDelete(messageId: String?, userId: String?, wzrkParams: JSONObject?): Boolean =
+    fun addPendingDelete(
+        messageId: String?,
+        userId: String?,
+        wzrkParams: JSONObject?,
+        expiresAt: Long
+    ): Boolean =
         if (messageId != null && userId != null)
-            inboxPendingActionsDAO.addPendingDelete(messageId, userId, wzrkParams)
+            inboxPendingActionsDAO.addPendingDelete(messageId, userId, wzrkParams, expiresAt)
         else false
 
     @WorkerThread
@@ -167,6 +172,20 @@ internal class DBAdapter constructor(
         if (messageId != null && userId != null)
             inboxPendingActionsDAO.removePendingDelete(messageId, userId)
         else false
+
+    @WorkerThread
+    @Synchronized
+    fun markPendingDeletesAwaitingConfirm(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.markPendingDeletesAwaitingConfirm(messageIds, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removeExpiredAwaitingConfirm(userId: String?, nowSeconds: Long): Int =
+        if (userId != null)
+            inboxPendingActionsDAO.removeExpiredAwaitingConfirm(userId, nowSeconds)
+        else 0
 
     @WorkerThread
     @Synchronized
