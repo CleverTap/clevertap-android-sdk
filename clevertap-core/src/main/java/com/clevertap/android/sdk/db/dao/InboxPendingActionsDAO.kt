@@ -4,13 +4,19 @@ import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
+import androidx.core.database.sqlite.transaction
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.DBAdapter.Companion.NOT_ENOUGH_SPACE_LOG
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.utils.Clock
-import androidx.core.database.sqlite.transaction
+import org.json.JSONObject
+
+internal data class PendingDelete(
+    val messageId: String,
+    val wzrkParams: JSONObject?
+)
 
 /**
  * Persists "user deleted this locally" / "user read this locally" intents so a
@@ -19,15 +25,16 @@ import androidx.core.database.sqlite.transaction
  */
 internal interface InboxPendingActionsDAO {
 
-    @WorkerThread fun getPendingDeletes(userId: String): Set<String>
+    @WorkerThread fun getPendingDeleteIds(userId: String): Set<String>
+    @WorkerThread fun getPendingDeletes(userId: String): List<PendingDelete>
     @WorkerThread fun getPendingReads(userId: String): Set<String>
 
-    @WorkerThread fun addPendingDelete(messageId: String, userId: String): Boolean
+    @WorkerThread fun addPendingDelete(messageId: String, userId: String, wzrkParams: JSONObject?): Boolean
     @WorkerThread fun removePendingDelete(messageId: String, userId: String): Boolean
     @WorkerThread fun addPendingRead(messageId: String, userId: String): Boolean
     @WorkerThread fun removePendingRead(messageId: String, userId: String): Boolean
 
-    @WorkerThread fun addPendingDeletes(messageIds: List<String>, userId: String): Boolean
+    @WorkerThread fun addPendingDeletes(rows: List<PendingDelete>, userId: String): Boolean
     @WorkerThread fun removePendingDeletes(messageIds: List<String>, userId: String): Boolean
     @WorkerThread fun addPendingReads(messageIds: List<String>, userId: String): Boolean
     @WorkerThread fun removePendingReads(messageIds: List<String>, userId: String): Boolean
@@ -40,16 +47,70 @@ internal class InboxPendingActionsDAOImpl(
 ) : InboxPendingActionsDAO {
 
     @WorkerThread
-    override fun getPendingDeletes(userId: String): Set<String> =
+    override fun getPendingDeleteIds(userId: String): Set<String> =
         readIds(Table.INBOX_PENDING_DELETES.tableName, userId)
+
+    @WorkerThread
+    override fun getPendingDeletes(userId: String): List<PendingDelete> {
+        val out = ArrayList<PendingDelete>()
+        try {
+            dbHelper.readableDatabase.query(
+                Table.INBOX_PENDING_DELETES.tableName,
+                arrayOf(Column.ID, Column.WZRKPARAMS),
+                "${Column.USER_ID} = ?",
+                arrayOf(userId),
+                null, null, null
+            ).use { cursor ->
+                val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
+                val paramsIdx = cursor.getColumnIndexOrThrow(Column.WZRKPARAMS)
+                while (cursor.moveToNext()) {
+                    val raw = if (cursor.isNull(paramsIdx)) null else cursor.getString(paramsIdx)
+                    val params = raw?.let {
+                        try {
+                            JSONObject(it)
+                        } catch (e: Exception) {
+                            logger.verbose("Skipping malformed wzrkParams for pending delete row", e)
+                            null
+                        }
+                    }
+                    out.add(PendingDelete(cursor.getString(idIdx), params))
+                }
+            }
+        } catch (e: Exception) {
+            logger.verbose("Error reading from ${Table.INBOX_PENDING_DELETES.tableName}", e)
+        }
+        return out
+    }
 
     @WorkerThread
     override fun getPendingReads(userId: String): Set<String> =
         readIds(Table.INBOX_PENDING_READS.tableName, userId)
 
     @WorkerThread
-    override fun addPendingDelete(messageId: String, userId: String): Boolean =
-        insertOne(Table.INBOX_PENDING_DELETES.tableName, messageId, userId)
+    override fun addPendingDelete(
+        messageId: String,
+        userId: String,
+        wzrkParams: JSONObject?
+    ): Boolean {
+        if (!dbHelper.belowMemThreshold()) {
+            logger.verbose(NOT_ENOUGH_SPACE_LOG)
+            return false
+        }
+        val cv = ContentValues().apply {
+            put(Column.USER_ID, userId)
+            put(Column.ID, messageId)
+            put(Column.WZRKPARAMS, wzrkParams?.toString())
+            put(Column.CREATED_AT, clock.currentTimeSeconds())
+        }
+        return try {
+            dbHelper.writableDatabase.insertWithOnConflict(
+                Table.INBOX_PENDING_DELETES.tableName, null, cv, SQLiteDatabase.CONFLICT_IGNORE
+            ) >= 0
+        } catch (e: SQLiteException) {
+            logger.verbose("Error inserting into ${Table.INBOX_PENDING_DELETES.tableName}", e)
+            false
+        }
+    }
 
     @WorkerThread
     override fun removePendingDelete(messageId: String, userId: String): Boolean =
@@ -64,8 +125,34 @@ internal class InboxPendingActionsDAOImpl(
         deleteOne(Table.INBOX_PENDING_READS.tableName, messageId, userId)
 
     @WorkerThread
-    override fun addPendingDeletes(messageIds: List<String>, userId: String): Boolean =
-        insertBatch(Table.INBOX_PENDING_DELETES.tableName, messageIds, userId)
+    override fun addPendingDeletes(rows: List<PendingDelete>, userId: String): Boolean {
+        if (rows.isEmpty()) return true
+        if (!dbHelper.belowMemThreshold()) {
+            logger.verbose(NOT_ENOUGH_SPACE_LOG)
+            return false
+        }
+        val db = dbHelper.writableDatabase
+        return try {
+            db.transaction {
+                val now = clock.currentTimeSeconds()
+                rows.forEach { row ->
+                    val cv = ContentValues().apply {
+                        put(Column.USER_ID, userId)
+                        put(Column.ID, row.messageId)
+                        put(Column.WZRKPARAMS, row.wzrkParams?.toString())
+                        put(Column.CREATED_AT, now)
+                    }
+                    insertWithOnConflict(
+                        Table.INBOX_PENDING_DELETES.tableName, null, cv, SQLiteDatabase.CONFLICT_IGNORE
+                    )
+                }
+                true
+            }
+        } catch (e: SQLiteException) {
+            logger.verbose("Error batch-inserting into ${Table.INBOX_PENDING_DELETES.tableName}", e)
+            false
+        }
+    }
 
     @WorkerThread
     override fun removePendingDeletes(messageIds: List<String>, userId: String): Boolean =

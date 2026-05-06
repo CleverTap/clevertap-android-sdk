@@ -277,6 +277,7 @@ private val CREATE_INBOX_PENDING_DELETES_TABLE = """
     CREATE TABLE ${Table.INBOX_PENDING_DELETES.tableName} (
         ${Column.USER_ID} STRING NOT NULL,
         ${Column.ID} STRING NOT NULL,
+        ${Column.WZRKPARAMS} TEXT,
         ${Column.CREATED_AT} INTEGER NOT NULL,
         PRIMARY KEY (${Column.USER_ID}, ${Column.ID})
     );

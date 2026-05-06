@@ -60,11 +60,15 @@ internal class InboxDeleteCoordinator(
      */
     fun retryPending(userId: String) {
         networkScope.coroutineScope.launch {
-            val ids = dbAdapterProvider().getPendingDeletes(userId)
-            if (ids.isEmpty()) return@launch
-            logger.verbose("InboxV2", "retryPending: ${ids.size} pending delete row(s) for user")
-            val idOnly = ids.map { id -> CTInboxMessage(JSONObject().put("id", id)) }
-            runDelete(idOnly, userId)
+            val rows = dbAdapterProvider().getPendingDeletes(userId)
+            if (rows.isEmpty()) return@launch
+            logger.verbose("InboxV2", "retryPending: ${rows.size} pending delete row(s) for user")
+            val messages = rows.map { row ->
+                val json = JSONObject().put("id", row.messageId)
+                row.wzrkParams?.let { json.put("wzrkParams", it) }
+                CTInboxMessage(json)
+            }
+            runDelete(messages, userId)
         }
     }
 

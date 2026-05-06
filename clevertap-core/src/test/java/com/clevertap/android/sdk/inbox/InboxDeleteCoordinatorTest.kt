@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inbox
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.db.dao.PendingDelete
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.fetch.NetworkScope
@@ -23,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -38,8 +40,24 @@ class InboxDeleteCoordinatorTest {
         ) {}
     }
 
-    private fun ctApi(code: Int): CtApi = CtApi(
-        httpClient = StubHttpClient(code),
+    private class CapturingHttpClient(
+        var responseCode: Int = 200,
+        var responseBody: String? = ""
+    ) : CtHttpClient {
+        var lastRequest: Request? = null
+        override fun execute(request: Request): Response {
+            lastRequest = request
+            return Response(
+                request = request,
+                code = responseCode,
+                headers = emptyMap(),
+                bodyStream = responseBody?.byteInputStream()
+            ) {}
+        }
+    }
+
+    private fun ctApi(httpClient: CtHttpClient): CtApi = CtApi(
+        httpClient = httpClient,
         defaultDomain = "domain.com",
         cachedDomain = null,
         cachedSpikyDomain = null,
@@ -54,6 +72,8 @@ class InboxDeleteCoordinatorTest {
         logTag = "testCtApi"
     )
 
+    private fun ctApi(code: Int): CtApi = ctApi(StubHttpClient(code))
+
     private fun headerBuilder(): QueueHeaderBuilder = mockk<QueueHeaderBuilder>(relaxed = true).apply {
         every { buildHeader(null) } returns JSONObject().put("g", "guid-xyz")
     }
@@ -67,6 +87,20 @@ class InboxDeleteCoordinatorTest {
     ): InboxDeleteCoordinator = InboxDeleteCoordinator(
         networkScope = NetworkScope(StandardTestDispatcher(testScheduler)),
         ctApi = ctApi(code),
+        queueHeaderBuilder = headerBuilder(),
+        dbAdapterProvider = { dbAdapter },
+        coreMetaData = mockk<CoreMetaData>(relaxed = true),
+        packageName = "com.example.app",
+        logger = mockk<Logger>(relaxed = true),
+        httpDispatcher = UnconfinedTestDispatcher(testScheduler)
+    )
+
+    private fun TestScope.capturingCoordinator(
+        http: CapturingHttpClient,
+        dbAdapter: DBAdapter
+    ): InboxDeleteCoordinator = InboxDeleteCoordinator(
+        networkScope = NetworkScope(StandardTestDispatcher(testScheduler)),
+        ctApi = ctApi(http),
         queueHeaderBuilder = headerBuilder(),
         dbAdapterProvider = { dbAdapter },
         coreMetaData = mockk<CoreMetaData>(relaxed = true),
@@ -111,7 +145,10 @@ class InboxDeleteCoordinatorTest {
     @Test
     fun `retryPending drains every pending row for the user in one call`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
-            every { getPendingDeletes("u") } returns setOf("m1", "m2")
+            every { getPendingDeletes("u") } returns listOf(
+                PendingDelete("m1", null),
+                PendingDelete("m2", null)
+            )
         }
         val coordinator = coordinator(200, dbAdapter)
 
@@ -122,9 +159,33 @@ class InboxDeleteCoordinatorTest {
     }
 
     @Test
+    fun `retryPending replays original wzrkParams on each message`() = runTest {
+        val capturing = CapturingHttpClient(responseCode = 200)
+        val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
+            every { getPendingDeletes("u") } returns listOf(
+                PendingDelete("m1", JSONObject().put("wzrk_id", "c1").put("wzrk_pivot", "default")),
+                PendingDelete("m2", JSONObject().put("wzrk_id", "c2"))
+            )
+        }
+        val coordinator = capturingCoordinator(capturing, dbAdapter)
+
+        coordinator.retryPending("u")
+        advanceUntilIdle()
+
+        val payload = org.json.JSONArray(capturing.lastRequest!!.body).getJSONObject(1)
+        val msgs = payload.getJSONArray("messages")
+        assertEquals(2, msgs.length())
+        assertEquals("m1", msgs.getJSONObject(0).getString("wzrk_mid"))
+        assertEquals("c1", msgs.getJSONObject(0).getString("wzrk_id"))
+        assertEquals("default", msgs.getJSONObject(0).getString("wzrk_pivot"))
+        assertEquals("m2", msgs.getJSONObject(1).getString("wzrk_mid"))
+        assertEquals("c2", msgs.getJSONObject(1).getString("wzrk_id"))
+    }
+
+    @Test
     fun `retryPending with no pending rows is a no-op`() = runTest {
         val dbAdapter = mockk<DBAdapter>(relaxed = true).apply {
-            every { getPendingDeletes("u") } returns emptySet()
+            every { getPendingDeletes("u") } returns emptyList()
         }
         val coordinator = coordinator(200, dbAdapter)
 

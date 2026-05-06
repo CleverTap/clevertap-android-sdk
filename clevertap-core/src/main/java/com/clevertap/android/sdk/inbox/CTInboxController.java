@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.DBAdapter;
+import com.clevertap.android.sdk.db.dao.PendingDelete;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import org.json.JSONArray;
@@ -83,7 +84,11 @@ public class CTInboxController {
                 final boolean isV2 = dao != null && dao.getSource() == InboxMessageSource.V2;
 
                 if (isV2) {
-                    dbAdapter.addPendingDelete(message.getMessageId(), userId);
+                    dbAdapter.addPendingDelete(
+                            message.getMessageId(),
+                            userId,
+                            dao.getWzrkParams()
+                    );
                 }
                 synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessageWithId(message.getMessageId());
@@ -108,19 +113,19 @@ public class CTInboxController {
                 // Partition ids into V1 and V2 BEFORE the local delete wipes
                 // the cache.
                 final Set<String> idSet = new HashSet<>(messageIDs);
-                final List<String> v2Ids = new ArrayList<>();
                 final List<CTInboxMessage> v2Messages = new ArrayList<>();
+                final List<PendingDelete> pendingRows = new ArrayList<>();
                 synchronized (messagesLock) {
                     for (CTMessageDAO d : messages) {
                         if (!idSet.contains(d.getId())) continue;
                         if (d.getSource() != InboxMessageSource.V2) continue;
-                        v2Ids.add(d.getId());
                         v2Messages.add(new CTInboxMessage(d.toJSON()));
+                        pendingRows.add(new PendingDelete(d.getId(), d.getWzrkParams()));
                     }
                 }
 
-                if (!v2Ids.isEmpty()) {
-                    dbAdapter.addPendingDeletes(v2Ids, userId);
+                if (!pendingRows.isEmpty()) {
+                    dbAdapter.addPendingDeletes(pendingRows, userId);
                 }
                 synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessagesForIds(messageIDs);
@@ -260,7 +265,7 @@ public class CTInboxController {
      */
     @WorkerThread
     public boolean processV2Response(List<CTMessageDAO> incoming) {
-        Set<String> pendingDeletes = dbAdapter.getPendingDeletes(userId);
+        Set<String> pendingDeletes = dbAdapter.getPendingDeleteIds(userId);
         Set<String> pendingReads = dbAdapter.getPendingReads(userId);
         long nowSec = System.currentTimeMillis() / 1000L;
 

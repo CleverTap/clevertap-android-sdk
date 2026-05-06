@@ -141,8 +141,13 @@ internal class DBAdapter constructor(
 
     @WorkerThread
     @Synchronized
-    fun getPendingDeletes(userId: String?): Set<String> =
-        if (userId != null) inboxPendingActionsDAO.getPendingDeletes(userId) else emptySet()
+    fun getPendingDeleteIds(userId: String?): Set<String> =
+        if (userId != null) inboxPendingActionsDAO.getPendingDeleteIds(userId) else emptySet()
+
+    @WorkerThread
+    @Synchronized
+    fun getPendingDeletes(userId: String?): List<PendingDelete> =
+        if (userId != null) inboxPendingActionsDAO.getPendingDeletes(userId) else emptyList()
 
     @WorkerThread
     @Synchronized
@@ -151,9 +156,9 @@ internal class DBAdapter constructor(
 
     @WorkerThread
     @Synchronized
-    fun addPendingDelete(messageId: String?, userId: String?): Boolean =
+    fun addPendingDelete(messageId: String?, userId: String?, wzrkParams: JSONObject?): Boolean =
         if (messageId != null && userId != null)
-            inboxPendingActionsDAO.addPendingDelete(messageId, userId)
+            inboxPendingActionsDAO.addPendingDelete(messageId, userId, wzrkParams)
         else false
 
     @WorkerThread
@@ -179,9 +184,9 @@ internal class DBAdapter constructor(
 
     @WorkerThread
     @Synchronized
-    fun addPendingDeletes(messageIds: List<String>?, userId: String?): Boolean =
-        if (!messageIds.isNullOrEmpty() && userId != null)
-            inboxPendingActionsDAO.addPendingDeletes(messageIds, userId)
+    fun addPendingDeletes(rows: List<PendingDelete>?, userId: String?): Boolean =
+        if (!rows.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.addPendingDeletes(rows, userId)
         else false
 
     @WorkerThread

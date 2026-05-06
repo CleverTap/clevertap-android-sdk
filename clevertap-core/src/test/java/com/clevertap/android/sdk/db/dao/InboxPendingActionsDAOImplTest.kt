@@ -4,12 +4,14 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.shared.test.BaseTestCase
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -34,26 +36,48 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
     }
 
     @Test
-    fun `addPendingDelete stores the id and getPendingDeletes returns it`() {
-        assertTrue(dao.addPendingDelete("m1", userA))
+    fun `addPendingDelete stores the id and getPendingDeleteIds returns it`() {
+        assertTrue(dao.addPendingDelete("m1", userA, null))
 
-        assertEquals(setOf("m1"), dao.getPendingDeletes(userA))
+        assertEquals(setOf("m1"), dao.getPendingDeleteIds(userA))
+    }
+
+    @Test
+    fun `addPendingDelete persists wzrkParams JSON`() {
+        val params = JSONObject().put("wzrk_id", "camp-1").put("wzrk_pivot", "default")
+        assertTrue(dao.addPendingDelete("m1", userA, params))
+
+        val rows = dao.getPendingDeletes(userA)
+        assertEquals(1, rows.size)
+        assertEquals("m1", rows[0].messageId)
+        val stored = assertNotNull(rows[0].wzrkParams)
+        assertEquals("camp-1", stored.getString("wzrk_id"))
+        assertEquals("default", stored.getString("wzrk_pivot"))
+    }
+
+    @Test
+    fun `addPendingDelete tolerates null wzrkParams`() {
+        dao.addPendingDelete("m1", userA, null)
+
+        val rows = dao.getPendingDeletes(userA)
+        assertEquals(1, rows.size)
+        assertNull(rows[0].wzrkParams)
     }
 
     @Test
     fun `duplicate addPendingDelete is a no-op under CONFLICT_IGNORE`() {
-        dao.addPendingDelete("m1", userA)
-        dao.addPendingDelete("m1", userA)
+        dao.addPendingDelete("m1", userA, null)
+        dao.addPendingDelete("m1", userA, JSONObject().put("wzrk_id", "different"))
 
-        assertEquals(setOf("m1"), dao.getPendingDeletes(userA))
+        assertEquals(setOf("m1"), dao.getPendingDeleteIds(userA))
     }
 
     @Test
     fun `removePendingDelete for an existing row clears it`() {
-        dao.addPendingDelete("m1", userA)
+        dao.addPendingDelete("m1", userA, null)
 
         assertTrue(dao.removePendingDelete("m1", userA))
-        assertTrue(dao.getPendingDeletes(userA).isEmpty())
+        assertTrue(dao.getPendingDeleteIds(userA).isEmpty())
     }
 
     @Test
@@ -63,44 +87,56 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     @Test
     fun `pending deletes are isolated per user`() {
-        dao.addPendingDelete("m1", userA)
+        dao.addPendingDelete("m1", userA, null)
 
-        assertEquals(setOf("m1"), dao.getPendingDeletes(userA))
-        assertTrue(dao.getPendingDeletes(userB).isEmpty())
+        assertEquals(setOf("m1"), dao.getPendingDeleteIds(userA))
+        assertTrue(dao.getPendingDeleteIds(userB).isEmpty())
     }
 
     @Test
     fun `addPendingRead and getPendingReads use the reads table`() {
-        dao.addPendingDelete("d1", userA)
+        dao.addPendingDelete("d1", userA, null)
         dao.addPendingRead("r1", userA)
 
-        assertEquals(setOf("d1"), dao.getPendingDeletes(userA))
+        assertEquals(setOf("d1"), dao.getPendingDeleteIds(userA))
         assertEquals(setOf("r1"), dao.getPendingReads(userA))
     }
 
     @Test
-    fun `addPendingDeletes batch inserts every id atomically`() {
-        assertTrue(dao.addPendingDeletes(listOf("m1", "m2", "m3"), userA))
+    fun `addPendingDeletes batch inserts every row atomically with wzrkParams`() {
+        val rows = listOf(
+            PendingDelete("m1", JSONObject().put("wzrk_id", "c1")),
+            PendingDelete("m2", JSONObject().put("wzrk_id", "c2")),
+            PendingDelete("m3", null)
+        )
+        assertTrue(dao.addPendingDeletes(rows, userA))
 
-        assertEquals(setOf("m1", "m2", "m3"), dao.getPendingDeletes(userA))
+        val out = dao.getPendingDeletes(userA).associateBy { it.messageId }
+        assertEquals(setOf("m1", "m2", "m3"), out.keys)
+        assertEquals("c1", out["m1"]?.wzrkParams?.getString("wzrk_id"))
+        assertEquals("c2", out["m2"]?.wzrkParams?.getString("wzrk_id"))
+        assertNull(out["m3"]?.wzrkParams)
     }
 
     @Test
     fun `addPendingDeletes with an empty list is a no-op and returns true`() {
         assertTrue(dao.addPendingDeletes(emptyList(), userA))
 
-        assertTrue(dao.getPendingDeletes(userA).isEmpty())
+        assertTrue(dao.getPendingDeleteIds(userA).isEmpty())
     }
 
     @Test
     fun `removePendingDeletes deletes only the supplied ids for the supplied user`() {
-        dao.addPendingDeletes(listOf("m1", "m2", "m3"), userA)
-        dao.addPendingDelete("m2", userB)
+        dao.addPendingDeletes(
+            listOf(PendingDelete("m1", null), PendingDelete("m2", null), PendingDelete("m3", null)),
+            userA
+        )
+        dao.addPendingDelete("m2", userB, null)
 
         dao.removePendingDeletes(listOf("m1", "m2"), userA)
 
-        assertEquals(setOf("m3"), dao.getPendingDeletes(userA))
-        assertEquals(setOf("m2"), dao.getPendingDeletes(userB))
+        assertEquals(setOf("m3"), dao.getPendingDeleteIds(userA))
+        assertEquals(setOf("m2"), dao.getPendingDeleteIds(userB))
     }
 
     @Test
