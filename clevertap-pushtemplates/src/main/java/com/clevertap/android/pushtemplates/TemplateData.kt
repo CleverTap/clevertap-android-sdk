@@ -77,12 +77,8 @@ internal data class BasicTemplateData(
 
 internal data class FiveIconsTemplateData(
     override val templateType: TemplateType = TemplateType.FIVE_ICONS,
+    val baseContent: BaseContent,
     val imageList: ArrayList<ImageData>,
-    val deepLinkList: ArrayList<String>,
-    val backgroundColor: String? = null,
-    val title: String? = null,
-    val subtitle: String? = null,
-    val notificationBehavior: NotificationBehavior
 ) : TemplateData()
 
 internal data class ManualCarouselTemplateData(
