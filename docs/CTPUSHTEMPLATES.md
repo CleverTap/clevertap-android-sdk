@@ -147,13 +147,18 @@ pt_product_display_linear | Optional | `true`
 
 ## Five Icons Template
 
-Five icons template is a push notification with no text, just 5 icons which can help your users go directly to the functionality of their choice with a button's click.
+Five icons template is a push notification that can display a title and message above a row of up to 5 icons. It helps users go directly to the functionality of their choice with a button click.
 
-If at least 3 icons are not retrieved, the library doesn't render any notification. The bifurcation of each CTA is captured in the event Notification Clicked with in the property `wzrk_c2a`.
+`pt_title` and `pt_msg` are optional, but when provided they are rendered above the icon row.
 
-If user clicks on any notification area except the five icons, then by default it will launch an activity intent.
+If the payload does not contain enough valid icon/deeplink data, or if 3 or more icon images are not retrieved at render time, the library falls back to a basic notification using the available title and message content.
+
+The CTA associated with each icon is captured in the `Notification Clicked` event under the `wzrk_c2a` property.
+
+If the user clicks anywhere outside the icon CTAs, the default notification click action launches the activity intent.
 
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
+
 
 ## Timer Template
 
@@ -421,6 +426,8 @@ pt_json | Optional  | Above keys in JSON format
 Five Icons Template Keys | Required | Description
   ---:|:---:|:--- 
 pt_id | Required  | Value - `pt_five_icons`
+pt_title | Optional | Title rendered above icons
+pt_msg | Optional | Message rendered above icons
 pt_img1 | Required  | Icon One
 pt_img1_alt_text | Optional | Alt Text for Icon One
 pt_img2 | Required  | Icon Two
