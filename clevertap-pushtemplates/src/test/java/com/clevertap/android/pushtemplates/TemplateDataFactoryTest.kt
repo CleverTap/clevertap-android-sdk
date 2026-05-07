@@ -2412,7 +2412,8 @@ class TemplateDataFactoryTest {
 
         // Then
         assertNotNull(result.collapsedButtonData)
-        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.collapsedButtonData!!.borderRadius)
-        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.collapsedButtonData!!.borderWidth)
+        val collapsedButtonData = result.collapsedButtonData ?: error("collapsedButtonData should not be null")
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, collapsedButtonData.borderRadius)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, collapsedButtonData.borderWidth)
     }
 }
