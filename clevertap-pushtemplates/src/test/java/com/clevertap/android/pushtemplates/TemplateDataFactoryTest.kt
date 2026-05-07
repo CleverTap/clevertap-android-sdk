@@ -605,6 +605,19 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    fun `FiveIconsTemplateData_toBasicTemplateData should create correct BasicTemplateData`() {
+        // Given
+        val fiveIconsData = createSampleFiveIconsTemplateData()
+
+        // When
+        val basicData = with(TemplateDataFactory) { fiveIconsData.toBasicTemplateData() }
+
+        // Then
+        assertEquals(TemplateType.BASIC, basicData.templateType)
+        assertEquals(fiveIconsData.baseContent, basicData.baseContent)
+    }
+
+    @Test
     fun `InputBoxTemplateData_toBaseContent should create correct BaseContent`() {
         // Given
         val inputBoxData = createSampleInputBoxTemplateData()
