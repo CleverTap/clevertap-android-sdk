@@ -61,7 +61,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     enum class LogLevel(private val value: Int) {
-        OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
+        INFO(0), DEBUG(2), VERBOSE(3);
 
         fun intValue(): Int {
             return value
@@ -409,24 +409,24 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             }
 
             // Create the appropriate intent
-            var actionLaunchIntent: Intent? = null
-
-            if (sendToCTIntentService) {
-                actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
-                actionLaunchIntent.setPackage(context.packageName)
-                actionLaunchIntent.putExtra(
+            val actionLaunchIntent = if (sendToCTIntentService) {
+                Intent(CTNotificationIntentService.MAIN_ACTION).apply {
+                    setPackage(context.packageName)
+                    putExtra(
                     Constants.KEY_CT_TYPE,
                     CTNotificationIntentService.TYPE_BUTTON_CLICK
-                )
-                if (dl.isNotEmpty()) {
-                    actionLaunchIntent.putExtra("dl", dl)
+                    )
+                    if (dl.isNotEmpty()) {
+                        putExtra("dl", dl)
+                    }
                 }
             } else {
                 if (dl.isNotEmpty()) {
-                    actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
-                    Utils.setPackageNameFromResolveInfoList(context, actionLaunchIntent)
+                    Intent(Intent.ACTION_VIEW, Uri.parse(dl)).also {
+                        Utils.setPackageNameFromResolveInfoList(context, it)
+                    }
                 } else {
-                    actionLaunchIntent = context.packageManager
+                    context.packageManager
                         .getLaunchIntentForPackage(context.packageName)
                 }
             }
