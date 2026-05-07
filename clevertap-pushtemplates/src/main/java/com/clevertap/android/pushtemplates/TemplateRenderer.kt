@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION", "DiscouragedApi")
+
 package com.clevertap.android.pushtemplates
 
 import android.app.PendingIntent
@@ -11,6 +13,7 @@ import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.core.app.NotificationCompat.Builder
+import androidx.core.net.toUri
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
@@ -61,7 +64,8 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     enum class LogLevel(private val value: Int) {
-        INFO(0), DEBUG(2), VERBOSE(3);
+        @Suppress("unused")
+        OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
 
         fun intValue(): Int {
             return value
@@ -250,7 +254,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
     }
 
     override fun getCollapseKey(extras: Bundle): Any? {
-        return extras[PT_COLLAPSE_KEY] ?: extras[Constants.WZRK_COLLAPSE]
+        return extras.getString(PT_COLLAPSE_KEY) ?: extras.getString(Constants.WZRK_COLLAPSE)
     }
 
     override fun setSound(
@@ -259,11 +263,12 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
         try {
             if (extras.containsKey(Constants.WZRK_SOUND)) {
                 var soundUri: Uri? = null
-                val o = extras[Constants.WZRK_SOUND]
-                if (o is Boolean && o) {
+                val soundString = extras.getString(Constants.WZRK_SOUND)
+                val isDefaultSoundEnabled = extras.getBoolean(Constants.WZRK_SOUND, false)
+                if (isDefaultSoundEnabled) {
                     soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                } else if (o is String) {
-                    var s = o
+                } else if (soundString != null) {
+                    var s = soundString
                     if (s == "true") {
                         soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     } else if (s.isNotEmpty()) {
@@ -422,7 +427,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 }
             } else {
                 if (dl.isNotEmpty()) {
-                    Intent(Intent.ACTION_VIEW, Uri.parse(dl)).also {
+                    Intent(Intent.ACTION_VIEW, dl.toUri()).also {
                         Utils.setPackageNameFromResolveInfoList(context, it)
                     }
                 } else {
