@@ -223,12 +223,8 @@ internal object TemplateDataFactory {
         defaultAltText: String
     ): FiveIconsTemplateData {
         return FiveIconsTemplateData(
+            baseContent = createBaseContent(extras, colorMap),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
-            deepLinkList = Utils.getDeepLinkListFromExtras(extras),
-            backgroundColor = colorMap[PT_BG],
-            title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE),
-            subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE),
-            notificationBehavior = createNotificationBehaviorData(extras)
         )
     }
 
@@ -581,19 +577,6 @@ internal object TemplateDataFactory {
             actions = this.actions
         )
     }
-
-    internal fun FiveIconsTemplateData.toBaseContent(): BaseContent {
-        return BaseContent(
-            textData = BaseTextData(title = this.title, subtitle = this.subtitle),
-            colorData = BaseColorData(
-                backgroundColor = this.backgroundColor,
-            ),
-            iconData = IconData(),
-            deepLinkList = this.deepLinkList,
-            notificationBehavior = this.notificationBehavior
-        )
-    }
-
 
     internal fun InputBoxTemplateData.toBaseContent(): BaseContent {
         return BaseContent(

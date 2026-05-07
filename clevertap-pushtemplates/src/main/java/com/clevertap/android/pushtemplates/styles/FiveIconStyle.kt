@@ -5,12 +5,11 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.FiveIconsTemplateData
-import com.clevertap.android.pushtemplates.TemplateDataFactory.toBaseContent
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.*
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
-internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.toBaseContent(), renderer) {
+internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
 
     lateinit var fiveIconSmallContentView: ContentView
     lateinit var fiveIconBigContentView: ContentView
@@ -32,7 +31,7 @@ internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: 
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            FIVE_ICON_CONTENT_PENDING_INTENT, data.deepLinkList.getOrNull(0)
+            FIVE_ICON_CONTENT_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
         )
     }
 

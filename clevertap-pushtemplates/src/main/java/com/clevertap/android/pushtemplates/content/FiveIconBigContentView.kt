@@ -21,7 +21,16 @@ internal class FiveIconBigContentView constructor(
     private var imageCounter: Int = 0
 
     init {
-        setCustomBackgroundColour(data.backgroundColor, R.id.content_view_big)
+        setCustomContentViewBasicKeys(
+            data.baseContent.textData.subtitle,
+            data.baseContent.colorData.metaColor
+        )
+        setCustomContentViewTitle(data.baseContent.textData.title)
+        setCustomContentViewMessage(data.baseContent.textData.message)
+        setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
+        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
+        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+        setCustomContentViewMessageSummary(data.baseContent.textData.messageSummary)
         val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
         data.imageList.forEachIndexed { index, imageData ->
             val imageUrl = imageData.url
@@ -47,7 +56,7 @@ internal class FiveIconBigContentView constructor(
         extras.putInt(PTConstants.PT_NOTIF_ID, renderer.notificationId)
         extras.putBoolean(Constants.CLOSE_SYSTEM_DIALOGS, true)
 
-        val deepLinkList = data.deepLinkList
+        val deepLinkList = data.baseContent.deepLinkList
 
         val bundleCTA1 = extras.clone() as Bundle
         bundleCTA1.putBoolean("cta1", true)
