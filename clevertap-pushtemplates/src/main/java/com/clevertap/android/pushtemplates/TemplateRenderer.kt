@@ -131,24 +131,31 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 RatingStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
             }
 
-            is FiveIconsTemplateData -> templateData.buildIfValid {
-                val fiveIconStyle = FiveIconStyle(it, this, extras)
-                val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
-                    context,
-                    extras,
-                    notificationId,
-                    nb
-                )
+            is FiveIconsTemplateData -> {
+                val validator = ValidatorFactory.getValidator(templateData)
+                if (validator?.validate() == true) {
+                    val fiveIconStyle = FiveIconStyle(templateData, this, extras)
+                    val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
+                        context,
+                        extras,
+                        notificationId,
+                        nb
+                    )
 
-                /**
-                 * Checks whether the imageUrls are perfect to download icon's bitmap,
-                 * if not then do not render notification
-                 */
-                if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
-                    (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
-                    null
+                    /**
+                     * If most icon bitmaps fail to load, gracefully fall back to a basic
+                     * title/message notification instead of suppressing the notification.
+                     */
+                    if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
+                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
+                        PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, reverting to basic template.")
+                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                    } else {
+                        fiveIconNotificationBuilder
+                    }
                 } else {
-                    fiveIconNotificationBuilder
+                    PTLog.debug("Five Icons template validation failed, reverting to basic template.")
+                    buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                 }
             }
 
@@ -215,6 +222,16 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
     private fun <T : TemplateData> T.buildIfValid(builder: (T) -> Builder?): Builder? =
         ValidatorFactory.getValidator(this)?.takeIf { it.validate() }?.let { builder(this) }
+
+    private fun buildBasicFallback(
+        basicTemplateData: BasicTemplateData,
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        nb: Builder
+    ): Builder? = basicTemplateData.buildIfValid {
+        BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+    }
 
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {

@@ -578,6 +578,17 @@ internal object TemplateDataFactory {
         )
     }
 
+    internal fun FiveIconsTemplateData.toBasicTemplateData(): BasicTemplateData {
+        return BasicTemplateData(
+            baseContent = this.baseContent,
+            mediaData = MediaData(
+                bigImage = ImageData(altText = ""),
+                gif = GifData()
+            ),
+            actions = null
+        )
+    }
+
     internal fun InputBoxTemplateData.toBaseContent(): BaseContent {
         return BaseContent(
             textData = this.textData,
@@ -622,4 +633,3 @@ internal object TemplateDataFactory {
         }
     }
 }
-
