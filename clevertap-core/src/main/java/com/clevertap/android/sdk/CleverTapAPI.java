@@ -2359,8 +2359,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
             CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
             if (!message.isRead()) {
-                markReadInboxMessage(inboxMessage);
-                coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, inboxMessage, data);
+                // Use the freshly-fetched `message` for analytics. The viewholder's
+                // markItemAsRead mutates `inboxMessage.setRead(true)` on the UI thread
+                // before this async body runs, which would trip the T2.3 cross-device
+                // gate inside pushInboxMessageStateEvent. The fresh instance reflects
+                // the controller's DAO state and isolates analytics from the UI mirror.
+                coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, message, data);
+                markReadInboxMessage(message);
             }
             return null;
         });
