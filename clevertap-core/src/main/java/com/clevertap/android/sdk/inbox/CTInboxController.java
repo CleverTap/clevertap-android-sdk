@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.db.dao.PendingDelete;
+import com.clevertap.android.sdk.db.dao.PendingRead;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import org.json.JSONArray;
@@ -91,7 +92,7 @@ public class CTInboxController {
                             message.getMessageId(),
                             userId,
                             dao.getWzrkParams(),
-                            resolvePendingDeleteExpiry(dao, now)
+                            resolvePendingActionExpiry(dao, now)
                     );
                 }
                 synchronized (ctLockManager.getInboxControllerLock()) {
@@ -128,7 +129,7 @@ public class CTInboxController {
                         pendingRows.add(new PendingDelete(
                                 d.getId(),
                                 d.getWzrkParams(),
-                                resolvePendingDeleteExpiry(d, now)
+                                resolvePendingActionExpiry(d, now)
                         ));
                     }
                 }
@@ -275,10 +276,11 @@ public class CTInboxController {
     @WorkerThread
     public boolean processV2Response(List<CTMessageDAO> incoming) {
         long nowSec = System.currentTimeMillis() / 1000L;
-        // T6.2: drop AWAITING_CONFIRM rows whose TTL has elapsed before reading
-        // the pending-delete id set, so an expired row's id stops filtering the
-        // (now stale) message from this response.
+        // T6.2: drop AWAITING_CONFIRM pending-deletes whose TTL has elapsed.
         dbAdapter.removeExpiredAwaitingConfirm(userId, nowSec);
+        // T7.2: drop pending-reads whose TTL has elapsed (server may never echo
+        // back e.g. if the message was deleted, retargeted, or expired).
+        dbAdapter.removeExpiredPendingReads(userId, nowSec);
         Set<String> pendingDeletes = dbAdapter.getPendingDeleteIds(userId);
         Set<String> pendingReads = dbAdapter.getPendingReads(userId);
 
@@ -379,6 +381,9 @@ public class CTInboxController {
         }
 
         final boolean isV2 = messageDAO.getSource() == InboxMessageSource.V2;
+        final long pendingReadExpiresAt = isV2
+                ? resolvePendingActionExpiry(messageDAO, System.currentTimeMillis() / 1000L)
+                : 0L;
 
         synchronized (messagesLock) {
             messageDAO.setRead(1);
@@ -393,7 +398,7 @@ public class CTInboxController {
             public Void call() {
                 dbAdapter.markReadMessageForId(messageId, userId);
                 if (isV2) {
-                    dbAdapter.addPendingRead(messageId, userId);
+                    dbAdapter.addPendingRead(messageId, userId, pendingReadExpiresAt);
                 }
                 return null;
             }
@@ -405,16 +410,17 @@ public class CTInboxController {
     boolean _markReadForMessagesWithIds(final ArrayList<String> messageIDs) {
         // One pass over `messages` under a single lock
         final Set<String> idSet = new HashSet<>(messageIDs);
-        final ArrayList<String> v2Ids = new ArrayList<>();
+        final List<PendingRead> pendingReadRows = new ArrayList<>();
         boolean atleastOneMessageIsValid = false;
 
         synchronized (messagesLock) {
+            final long now = System.currentTimeMillis() / 1000L;
             for (CTMessageDAO dao : messages) {
                 if (!idSet.contains(dao.getId())) continue;
                 atleastOneMessageIsValid = true;
                 dao.setRead(1);
                 if (dao.getSource() == InboxMessageSource.V2) {
-                    v2Ids.add(dao.getId());
+                    pendingReadRows.add(new PendingRead(dao.getId(), resolvePendingActionExpiry(dao, now)));
                 }
             }
         }
@@ -431,8 +437,8 @@ public class CTInboxController {
             @WorkerThread
             public Void call() {
                 dbAdapter.markReadMessagesForIds(messageIDs, userId);
-                if (!v2Ids.isEmpty()) {
-                    dbAdapter.addPendingReads(v2Ids, userId);
+                if (!pendingReadRows.isEmpty()) {
+                    dbAdapter.addPendingReads(pendingReadRows, userId);
                 }
                 return null;
             }
@@ -505,7 +511,7 @@ public class CTInboxController {
         }
     }
 
-    private static long resolvePendingDeleteExpiry(CTMessageDAO dao, long nowSeconds) {
+    private static long resolvePendingActionExpiry(CTMessageDAO dao, long nowSeconds) {
         long ttl = dao == null ? 0L : dao.getExpires();
         return ttl > 0L ? ttl : nowSeconds + PENDING_DELETE_DEFAULT_TTL_SECONDS;
     }

@@ -290,6 +290,7 @@ private val CREATE_INBOX_PENDING_READS_TABLE = """
     CREATE TABLE ${Table.INBOX_PENDING_READS.tableName} (
         ${Column.USER_ID} STRING NOT NULL,
         ${Column.ID} STRING NOT NULL,
+        ${Column.EXPIRES} INTEGER NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL,
         PRIMARY KEY (${Column.USER_ID}, ${Column.ID})
     );

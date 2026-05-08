@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.dao.PendingDelete
+import com.clevertap.android.sdk.db.dao.PendingRead
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
@@ -295,6 +296,22 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
+    fun `processV2Response sweeps expired pending-reads BEFORE reading the pending-reads set`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        controller.processV2Response(emptyList())
+
+        io.mockk.verifyOrder {
+            dbAdapter.removeExpiredPendingReads(userId, any())
+            dbAdapter.getPendingReads(userId)
+        }
+    }
+
+    @Test
     fun `processV2Response upserts filtered incoming and returns true`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf(getCtMsgDao("m1", userId))
         controller = CTInboxController(
@@ -383,7 +400,7 @@ class CTInboxControllerTest : BaseTestCase() {
 
             controller.markReadInboxMessage(mockk(relaxed = true) { every { messageId } returns "m1" })
 
-            verify(exactly = 1) { dbAdapter.addPendingRead("m1", userId) }
+            verify(exactly = 1) { dbAdapter.addPendingRead("m1", userId, any()) }
         }
     }
 
@@ -405,8 +422,13 @@ class CTInboxControllerTest : BaseTestCase() {
             val ids = arrayListOf("m1", "m2")
             controller.markReadInboxMessagesForIDs(ids)
 
-            verify(exactly = 1) { dbAdapter.addPendingReads(ids, userId) }
-            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any()) }
+            verify(exactly = 1) {
+                dbAdapter.addPendingReads(
+                    match<List<PendingRead>> { rows -> rows.map { it.messageId }.sorted() == listOf("m1", "m2") },
+                    userId
+                )
+            }
+            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any(), any()) }
         }
     }
 
@@ -648,7 +670,7 @@ class CTInboxControllerTest : BaseTestCase() {
             controller.markReadInboxMessage(mockk(relaxed = true) { every { messageId } returns "m1" })
 
             verify { dbAdapter.markReadMessageForId("m1", userId) }
-            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any()) }
+            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any(), any()) }
         }
     }
 
@@ -671,9 +693,12 @@ class CTInboxControllerTest : BaseTestCase() {
 
             verify { dbAdapter.markReadMessagesForIds(ids, userId) }
             verify(exactly = 1) {
-                dbAdapter.addPendingReads(match { it == listOf("v2") }, userId)
+                dbAdapter.addPendingReads(
+                    match<List<PendingRead>> { rows -> rows.map { it.messageId } == listOf("v2") },
+                    userId
+                )
             }
-            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any()) }
+            verify(exactly = 0) { dbAdapter.addPendingRead(any(), any(), any()) }
         }
     }
 

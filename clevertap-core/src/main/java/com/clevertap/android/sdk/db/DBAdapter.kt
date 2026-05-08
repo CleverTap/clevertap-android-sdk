@@ -189,9 +189,9 @@ internal class DBAdapter constructor(
 
     @WorkerThread
     @Synchronized
-    fun addPendingRead(messageId: String?, userId: String?): Boolean =
+    fun addPendingRead(messageId: String?, userId: String?, expiresAt: Long): Boolean =
         if (messageId != null && userId != null)
-            inboxPendingActionsDAO.addPendingRead(messageId, userId)
+            inboxPendingActionsDAO.addPendingRead(messageId, userId, expiresAt)
         else false
 
     @WorkerThread
@@ -217,9 +217,9 @@ internal class DBAdapter constructor(
 
     @WorkerThread
     @Synchronized
-    fun addPendingReads(messageIds: List<String>?, userId: String?): Boolean =
-        if (!messageIds.isNullOrEmpty() && userId != null)
-            inboxPendingActionsDAO.addPendingReads(messageIds, userId)
+    fun addPendingReads(rows: List<PendingRead>?, userId: String?): Boolean =
+        if (!rows.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.addPendingReads(rows, userId)
         else false
 
     @WorkerThread
@@ -228,6 +228,13 @@ internal class DBAdapter constructor(
         if (!messageIds.isNullOrEmpty() && userId != null)
             inboxPendingActionsDAO.removePendingReads(messageIds, userId)
         else false
+
+    @WorkerThread
+    @Synchronized
+    fun removeExpiredPendingReads(userId: String?, nowSeconds: Long): Int =
+        if (userId != null)
+            inboxPendingActionsDAO.removeExpiredPendingReads(userId, nowSeconds)
+        else 0
 
     // =====================================================
     // USER PROFILE OPERATIONS

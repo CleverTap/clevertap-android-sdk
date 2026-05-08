@@ -98,7 +98,7 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
     @Test
     fun `addPendingRead and getPendingReads use the reads table`() {
         dao.addPendingDelete("d1", userA, null, futureTtl)
-        dao.addPendingRead("r1", userA)
+        dao.addPendingRead("r1", userA, futureTtl)
 
         assertEquals(setOf("d1"), dao.getPendingDeleteIds(userA))
         assertEquals(setOf("r1"), dao.getPendingReads(userA))
@@ -215,9 +215,48 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     @Test
     fun `batch methods for reads are symmetric to deletes`() {
-        dao.addPendingReads(listOf("r1", "r2"), userA)
+        dao.addPendingReads(
+            listOf(PendingRead("r1", futureTtl), PendingRead("r2", futureTtl)),
+            userA
+        )
         dao.removePendingReads(listOf("r1"), userA)
 
         assertEquals(setOf("r2"), dao.getPendingReads(userA))
+    }
+
+    @Test
+    fun `addPendingRead persists expiresAt in the reads table`() {
+        dao.addPendingRead("r1", userA, 1_700_000_000L)
+
+        // expiresAt is asserted via the sweep; row remains when nowSeconds is below.
+        val notRemoved = dao.removeExpiredPendingReads(userA, nowSeconds = 1_500_000_000L)
+        assertEquals(0, notRemoved)
+        assertEquals(setOf("r1"), dao.getPendingReads(userA))
+
+        val removed = dao.removeExpiredPendingReads(userA, nowSeconds = 1_900_000_000L)
+        assertEquals(1, removed)
+        assertTrue(dao.getPendingReads(userA).isEmpty())
+    }
+
+    @Test
+    fun `removeExpiredPendingReads drops only rows whose expires is past now`() {
+        dao.addPendingRead("past", userA, 100L)
+        dao.addPendingRead("future", userA, 9_999L)
+
+        val removed = dao.removeExpiredPendingReads(userA, nowSeconds = 1_000L)
+
+        assertEquals(1, removed)
+        assertEquals(setOf("future"), dao.getPendingReads(userA))
+    }
+
+    @Test
+    fun `removeExpiredPendingReads scoped by userId`() {
+        dao.addPendingRead("r1", userA, 100L)
+        dao.addPendingRead("r1", userB, 100L)
+
+        dao.removeExpiredPendingReads(userA, nowSeconds = 1_000L)
+
+        assertTrue(dao.getPendingReads(userA).isEmpty())
+        assertEquals(setOf("r1"), dao.getPendingReads(userB))
     }
 }

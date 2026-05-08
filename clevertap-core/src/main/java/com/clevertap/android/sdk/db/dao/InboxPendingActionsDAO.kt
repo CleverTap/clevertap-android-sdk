@@ -24,10 +24,16 @@ internal data class PendingDelete(
     val expiresAt: Long
 )
 
+internal data class PendingRead(
+    val messageId: String,
+    val expiresAt: Long
+)
+
 /**
  * Persists "user deleted this locally" / "user read this locally" intents so a
  * later V2 fetch can't resurrect a deleted message or overwrite a locally-read
- * message until the server confirms the action.
+ * message until the server confirms the action — or, when the server never
+ * echoes back, until the message's TTL has elapsed.
  */
 internal interface InboxPendingActionsDAO {
 
@@ -42,7 +48,7 @@ internal interface InboxPendingActionsDAO {
         expiresAt: Long
     ): Boolean
     @WorkerThread fun removePendingDelete(messageId: String, userId: String): Boolean
-    @WorkerThread fun addPendingRead(messageId: String, userId: String): Boolean
+    @WorkerThread fun addPendingRead(messageId: String, userId: String, expiresAt: Long): Boolean
     @WorkerThread fun removePendingRead(messageId: String, userId: String): Boolean
 
     @WorkerThread fun addPendingDeletes(rows: List<PendingDelete>, userId: String): Boolean
@@ -50,8 +56,9 @@ internal interface InboxPendingActionsDAO {
     @WorkerThread fun markPendingDeletesAwaitingConfirm(messageIds: List<String>, userId: String): Boolean
     @WorkerThread fun removeExpiredAwaitingConfirm(userId: String, nowSeconds: Long): Int
 
-    @WorkerThread fun addPendingReads(messageIds: List<String>, userId: String): Boolean
+    @WorkerThread fun addPendingReads(rows: List<PendingRead>, userId: String): Boolean
     @WorkerThread fun removePendingReads(messageIds: List<String>, userId: String): Boolean
+    @WorkerThread fun removeExpiredPendingReads(userId: String, nowSeconds: Long): Int
 }
 
 internal class InboxPendingActionsDAOImpl(
@@ -120,8 +127,24 @@ internal class InboxPendingActionsDAOImpl(
     }
 
     @WorkerThread
-    override fun getPendingReads(userId: String): Set<String> =
-        readIds(Table.INBOX_PENDING_READS.tableName, userId)
+    override fun getPendingReads(userId: String): Set<String> {
+        val result = LinkedHashSet<String>()
+        try {
+            dbHelper.readableDatabase.query(
+                Table.INBOX_PENDING_READS.tableName,
+                arrayOf(Column.ID),
+                "${Column.USER_ID} = ?",
+                arrayOf(userId),
+                null, null, null
+            ).use { cursor ->
+                val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
+                while (cursor.moveToNext()) result.add(cursor.getString(idIdx))
+            }
+        } catch (e: Exception) {
+            logger.verbose("Error reading from ${Table.INBOX_PENDING_READS.tableName}", e)
+        }
+        return result
+    }
 
     @WorkerThread
     override fun addPendingDelete(
@@ -156,8 +179,26 @@ internal class InboxPendingActionsDAOImpl(
         deleteOne(Table.INBOX_PENDING_DELETES.tableName, messageId, userId)
 
     @WorkerThread
-    override fun addPendingRead(messageId: String, userId: String): Boolean =
-        insertOne(Table.INBOX_PENDING_READS.tableName, messageId, userId)
+    override fun addPendingRead(messageId: String, userId: String, expiresAt: Long): Boolean {
+        if (!dbHelper.belowMemThreshold()) {
+            logger.verbose(NOT_ENOUGH_SPACE_LOG)
+            return false
+        }
+        val cv = ContentValues().apply {
+            put(Column.USER_ID, userId)
+            put(Column.ID, messageId)
+            put(Column.EXPIRES, expiresAt)
+            put(Column.CREATED_AT, clock.currentTimeSeconds())
+        }
+        return try {
+            dbHelper.writableDatabase.insertWithOnConflict(
+                Table.INBOX_PENDING_READS.tableName, null, cv, SQLiteDatabase.CONFLICT_IGNORE
+            ) >= 0
+        } catch (e: SQLiteException) {
+            logger.verbose("Error inserting into ${Table.INBOX_PENDING_READS.tableName}", e)
+            false
+        }
+    }
 
     @WorkerThread
     override fun removePendingRead(messageId: String, userId: String): Boolean =
@@ -238,51 +279,51 @@ internal class InboxPendingActionsDAOImpl(
         }
 
     @WorkerThread
-    override fun addPendingReads(messageIds: List<String>, userId: String): Boolean =
-        insertBatch(Table.INBOX_PENDING_READS.tableName, messageIds, userId)
+    override fun addPendingReads(rows: List<PendingRead>, userId: String): Boolean {
+        if (rows.isEmpty()) return true
+        if (!dbHelper.belowMemThreshold()) {
+            logger.verbose(NOT_ENOUGH_SPACE_LOG)
+            return false
+        }
+        val db = dbHelper.writableDatabase
+        return try {
+            db.transaction {
+                val now = clock.currentTimeSeconds()
+                rows.forEach { row ->
+                    val cv = ContentValues().apply {
+                        put(Column.USER_ID, userId)
+                        put(Column.ID, row.messageId)
+                        put(Column.EXPIRES, row.expiresAt)
+                        put(Column.CREATED_AT, now)
+                    }
+                    insertWithOnConflict(
+                        Table.INBOX_PENDING_READS.tableName, null, cv, SQLiteDatabase.CONFLICT_IGNORE
+                    )
+                }
+                true
+            }
+        } catch (e: SQLiteException) {
+            logger.verbose("Error batch-inserting into ${Table.INBOX_PENDING_READS.tableName}", e)
+            false
+        }
+    }
 
     @WorkerThread
     override fun removePendingReads(messageIds: List<String>, userId: String): Boolean =
         deleteBatch(Table.INBOX_PENDING_READS.tableName, messageIds, userId)
 
-    private fun readIds(table: String, userId: String): Set<String> {
-        val result = LinkedHashSet<String>()
+    @WorkerThread
+    override fun removeExpiredPendingReads(userId: String, nowSeconds: Long): Int =
         try {
-            dbHelper.readableDatabase.query(
-                table,
-                arrayOf(Column.ID),
-                "${Column.USER_ID} = ?",
-                arrayOf(userId),
-                null, null, null
-            ).use { cursor ->
-                val idIdx = cursor.getColumnIndexOrThrow(Column.ID)
-                while (cursor.moveToNext()) result.add(cursor.getString(idIdx))
-            }
-        } catch (e: Exception) {
-            logger.verbose("Error reading from $table", e)
-        }
-        return result
-    }
-
-    private fun insertOne(table: String, messageId: String, userId: String): Boolean {
-        if (!dbHelper.belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return false
-        }
-        val cv = ContentValues().apply {
-            put(Column.USER_ID, userId)
-            put(Column.ID, messageId)
-            put(Column.CREATED_AT, clock.currentTimeSeconds())
-        }
-        return try {
-            dbHelper.writableDatabase.insertWithOnConflict(
-                table, null, cv, SQLiteDatabase.CONFLICT_IGNORE
-            ) >= 0
+            dbHelper.writableDatabase.delete(
+                Table.INBOX_PENDING_READS.tableName,
+                "${Column.USER_ID} = ? AND ${Column.EXPIRES} <= ?",
+                arrayOf(userId, nowSeconds.toString())
+            )
         } catch (e: SQLiteException) {
-            logger.verbose("Error inserting into $table", e)
-            false
+            logger.verbose("Error sweeping expired pending-read rows", e)
+            0
         }
-    }
 
     private fun deleteOne(table: String, messageId: String, userId: String): Boolean =
         try {
@@ -296,32 +337,6 @@ internal class InboxPendingActionsDAOImpl(
             logger.verbose("Error deleting from $table", e)
             false
         }
-
-    private fun insertBatch(table: String, messageIds: List<String>, userId: String): Boolean {
-        if (messageIds.isEmpty()) return true
-        if (!dbHelper.belowMemThreshold()) {
-            logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return false
-        }
-        val db = dbHelper.writableDatabase
-        return try {
-            db.transaction {
-                val now = clock.currentTimeSeconds()
-                messageIds.forEach { id ->
-                    val cv = ContentValues().apply {
-                        put(Column.USER_ID, userId)
-                        put(Column.ID, id)
-                        put(Column.CREATED_AT, now)
-                    }
-                    insertWithOnConflict(table, null, cv, SQLiteDatabase.CONFLICT_IGNORE)
-                }
-                true
-            }
-        } catch (e: SQLiteException) {
-            logger.verbose("Error batch-inserting into $table", e)
-            false
-        }
-    }
 
     private fun deleteBatch(table: String, messageIds: List<String>, userId: String): Boolean {
         if (messageIds.isEmpty()) return true
