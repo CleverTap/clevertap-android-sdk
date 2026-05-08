@@ -366,6 +366,12 @@ internal object CleverTapFactory {
             ctApiWrapper
         )
         val contentFetchResponse = ContentFetchResponse(config, contentFetchManager)
+        val inboxV2Response = InboxV2Response(
+            config = config,
+            ctLockManager = ctLockManager,
+            callbackManager = callbackManager,
+            controllerManager = controllerManager
+        )
         val cleverTapResponses = listOf<CleverTapResponse>(
             inAppResponse,
             MetadataResponse(config, deviceInfo, ijRepo),
@@ -376,6 +382,7 @@ internal object CleverTapFactory {
                 callbackManager,
                 controllerManager
             ),
+            inboxV2Response,
             PushAmpResponse(
                 context,
                 config,
@@ -535,12 +542,6 @@ internal object CleverTapFactory {
 
         val networkScope = NetworkScope()
 
-        val inboxV2Response = InboxV2Response(
-            config = config,
-            ctLockManager = ctLockManager,
-            callbackManager = callbackManager,
-            controllerManager = controllerManager
-        )
         val inboxFetchCall = InboxFetchCall(
             ctApi = ctApiWrapper.ctApi,
             queueHeaderBuilder = queueHeaderBuilder,

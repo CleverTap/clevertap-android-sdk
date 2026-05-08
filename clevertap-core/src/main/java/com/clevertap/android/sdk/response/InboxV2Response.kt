@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.response
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.BaseCallbackManager
@@ -14,18 +15,24 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Mirror of V1's `InboxResponse.java` for the Inbox V2 active-fetch path.
+ * Mirror of V1's `InboxResponse.java` for the Inbox V2 path.
  *
- * Sits between the fetcher (network layer) and `CTInboxController` (store).
- * Owns exactly the same four guards V1 does:
+ * Sits between the fetcher / `/a1` decorator chain (network layer) and
+ * `CTInboxController` (store). Owns exactly the same four guards V1 does:
  *  1. analytics-only early return
  *  2. response-key presence check
  *  3. broad try/catch around parse
  *  4. controller-init-if-null (so a response that races initialization
  *     isn't silently dropped)
  *
- * Fires `inboxMessagesDidUpdate()` on a true update. V2 deliberately
- * bypasses the shared `CleverTapResponseDecorator` chain.
+ * Two entry points share the same logic:
+ *  - [processResponse] (single-arg) — called directly by the V2 fetch
+ *    pipeline (`InboxV2Fetcher`).
+ *  - the [CleverTapResponseDecorator] override — called by the `/a1`
+ *    decorator chain for live-behaviour V2 messages that arrive on `/a1`
+ *    under the same `inbox_notifs_v2` key.
+ *
+ * Fires `inboxMessagesDidUpdate()` on a true update.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 internal class InboxV2Response(
@@ -34,8 +41,14 @@ internal class InboxV2Response(
     private val callbackManager: BaseCallbackManager,
     private val controllerManager: ControllerManager,
     private val logger: Logger = config.logger
-) {
+) : CleverTapResponseDecorator() {
     private val inboxControllerLock: Any = ctLockManager.inboxControllerLock
+
+    @WorkerThread
+    override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context?) {
+        if (jsonBody == null) return
+        processResponse(jsonBody)
+    }
 
     @WorkerThread
     fun processResponse(response: JSONObject) {

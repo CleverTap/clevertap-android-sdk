@@ -147,4 +147,32 @@ class InboxV2ResponseTest {
         assertEquals(2, captured.captured.size)
         assertEquals(true, captured.captured.all { it.source == InboxMessageSource.V2 })
     }
+
+    @Test
+    fun `decorator override delegates for inbox_notifs_v2 on a1`() {
+        val captured = slot<List<CTMessageDAO>>()
+        every { controller.processV2Response(capture(captured)) } returns true
+
+        response.processResponse(validResponseJson(), "stringBody", null)
+
+        assertEquals(1, captured.captured.size)
+        assertEquals("m1", captured.captured.single().id)
+        verify { callbackManager._notifyInboxMessagesDidUpdate() }
+    }
+
+    @Test
+    fun `decorator override on a body without inbox_notifs_v2 is a no-op`() {
+        response.processResponse(JSONObject().put("unrelated", 1), "stringBody", null)
+
+        verify(exactly = 0) { controller.processV2Response(any()) }
+        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+    }
+
+    @Test
+    fun `decorator override tolerates a null jsonBody`() {
+        response.processResponse(null, "stringBody", null)
+
+        verify(exactly = 0) { controller.processV2Response(any()) }
+        verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
+    }
 }
