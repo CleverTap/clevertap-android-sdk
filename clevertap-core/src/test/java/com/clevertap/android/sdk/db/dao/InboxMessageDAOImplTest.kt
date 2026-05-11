@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Column
 import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxIndexState
 import com.clevertap.android.sdk.inbox.InboxMessageSource
 import com.clevertap.android.shared.test.BaseTestCase
 import android.content.ContentValues
@@ -221,6 +222,111 @@ class InboxMessageDAOImplTest : BaseTestCase() {
         inboxMessageDAO.upsertMessages(listOf(dao))
         val loaded = inboxMessageDAO.getMessages("user_11").single()
         assertEquals(InboxMessageSource.V1, loaded.source)
+    }
+
+    @Test
+    fun `upsert and read defaults indexState to PENDING_INDEXING`() {
+        val dao = getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxIndexState.PENDING_INDEXING, loaded.indexState)
+    }
+
+    @Test
+    fun `upsert preserves indexState on UPDATE — never downgrades INDEXED`() {
+        // Insert a row, flip it to INDEXED via the dedicated DAO call,
+        // then upsert the same id again with a DAO carrying the default
+        // (PENDING_INDEXING). The existing INDEXED state must survive.
+        val userId = "user_11"
+        val dao = getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        inboxMessageDAO.markIndexed(listOf("m1"), userId)
+        assertEquals(InboxIndexState.INDEXED, inboxMessageDAO.getMessages(userId).single().indexState)
+
+        // Re-upsert with the default indexState — must NOT downgrade.
+        val redelivery = getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        assertEquals(InboxIndexState.PENDING_INDEXING, redelivery.indexState)
+        inboxMessageDAO.upsertMessages(listOf(redelivery))
+        assertEquals(InboxIndexState.INDEXED, inboxMessageDAO.getMessages(userId).single().indexState)
+    }
+
+    @Test
+    fun `markIndexed flips supplied PENDING_INDEXING rows to INDEXED`() {
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("m1", userId, source = InboxMessageSource.V2),
+                getCtMsgDao("m2", userId, source = InboxMessageSource.V2),
+                getCtMsgDao("m3", userId, source = InboxMessageSource.V2)
+            )
+        )
+
+        val ok = inboxMessageDAO.markIndexed(listOf("m1", "m3"), userId)
+        assertTrue(ok)
+
+        val byId = inboxMessageDAO.getMessages(userId).associateBy { it.id }
+        assertEquals(InboxIndexState.INDEXED, byId.getValue("m1").indexState)
+        assertEquals(InboxIndexState.PENDING_INDEXING, byId.getValue("m2").indexState)
+        assertEquals(InboxIndexState.INDEXED, byId.getValue("m3").indexState)
+    }
+
+    @Test
+    fun `markIndexed with empty ids is a no-op and returns true`() {
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, source = InboxMessageSource.V2))
+        )
+
+        val ok = inboxMessageDAO.markIndexed(emptyList(), userId)
+        assertTrue(ok)
+        assertEquals(
+            InboxIndexState.PENDING_INDEXING,
+            inboxMessageDAO.getMessages(userId).single().indexState
+        )
+    }
+
+    @Test
+    fun `markIndexed is scoped to the supplied userId`() {
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2),
+                getCtMsgDao("m1", "user_12", source = InboxMessageSource.V2)
+            )
+        )
+
+        inboxMessageDAO.markIndexed(listOf("m1"), "user_11")
+
+        assertEquals(
+            InboxIndexState.INDEXED,
+            inboxMessageDAO.getMessages("user_11").single().indexState
+        )
+        assertEquals(
+            InboxIndexState.PENDING_INDEXING,
+            inboxMessageDAO.getMessages("user_12").single().indexState
+        )
+    }
+
+    @Test
+    fun `unrecognised indexState value falls back to PENDING_INDEXING`() {
+        // Insert a row directly with an invalid index_state value to simulate
+        // schema skew or a future enum constant the current SDK doesn't know.
+        val cv = ContentValues().apply {
+            put(Column.ID, "m1")
+            put(Column.DATA, dbEncryptionHandler.wrapDbData(JSONObject().toString()))
+            put(Column.WZRKPARAMS, JSONObject().toString())
+            put(Column.CAMPAIGN, "cp1")
+            put(Column.TAGS, "")
+            put(Column.IS_READ, 0)
+            put(Column.EXPIRES, Long.MAX_VALUE)
+            put(Column.CREATED_AT, 1L)
+            put(Column.USER_ID, "user_11")
+            put(Column.SOURCE, "V2")
+            put(Column.INDEX_STATE, "ALIEN")
+        }
+        dbHelper.writableDatabase.insert(Table.INBOX_MESSAGES.tableName, null, cv)
+
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxIndexState.PENDING_INDEXING, loaded.indexState)
     }
 
     @Test

@@ -105,6 +105,7 @@ class DatabaseHelper internal constructor(
             executeStatement(db, CREATE_INBOX_PENDING_DELETES_TABLE)
             executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
             executeStatement(db, ALTER_INBOX_MESSAGES_ADD_SOURCE)
+            executeStatement(db, ALTER_INBOX_MESSAGES_ADD_INDEX_STATE)
         }
     }
 
@@ -243,6 +244,7 @@ object Column {
     const val INAPP_ID = "inAppId"
     const val DELAY = "delay"
     const val SOURCE = "source"
+    const val INDEX_STATE = "index_state"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -315,13 +317,19 @@ private val CREATE_INBOX_MESSAGES_TABLE = """
         ${Column.EXPIRES} INTEGER NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL,
         ${Column.USER_ID} STRING NOT NULL,
-        ${Column.SOURCE} TEXT NOT NULL DEFAULT 'V1'
+        ${Column.SOURCE} TEXT NOT NULL DEFAULT 'V1',
+        ${Column.INDEX_STATE} TEXT NOT NULL DEFAULT 'PENDING_INDEXING'
     );
 """
 
 private val ALTER_INBOX_MESSAGES_ADD_SOURCE = """
     ALTER TABLE ${INBOX_MESSAGES.tableName}
     ADD COLUMN ${Column.SOURCE} TEXT NOT NULL DEFAULT 'V1';
+"""
+
+private val ALTER_INBOX_MESSAGES_ADD_INDEX_STATE = """
+    ALTER TABLE ${INBOX_MESSAGES.tableName}
+    ADD COLUMN ${Column.INDEX_STATE} TEXT NOT NULL DEFAULT 'PENDING_INDEXING';
 """
 
 private val INBOX_MESSAGES_COMP_ID_USERID_INDEX = """

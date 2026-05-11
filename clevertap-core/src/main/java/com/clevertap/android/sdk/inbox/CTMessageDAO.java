@@ -40,6 +40,15 @@ public class CTMessageDAO {
 
     private InboxMessageSource source;
 
+    /**
+     * Local-state tag for the cross-device delete sweep — never parsed from
+     * server JSON, never written to {@link #toJSON()}. Defaults to
+     * {@link InboxIndexState#PENDING_INDEXING}; the controller flips rows to
+     * {@link InboxIndexState#INDEXED} via the DAO's {@code markIndexed}
+     * once the fetch backend has confirmed them.
+     */
+    private String indexState = InboxIndexState.PENDING_INDEXING;
+
     public CTMessageDAO() {
     }
 
@@ -135,6 +144,14 @@ public class CTMessageDAO {
 
     public void setSource(InboxMessageSource source) {
         this.source = source;
+    }
+
+    public String getIndexState() {
+        return indexState;
+    }
+
+    public void setIndexState(String indexState) {
+        this.indexState = indexState;
     }
 
     public int isRead() {
