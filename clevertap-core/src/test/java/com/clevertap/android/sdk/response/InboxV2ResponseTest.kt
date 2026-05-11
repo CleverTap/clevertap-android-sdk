@@ -37,7 +37,7 @@ class InboxV2ResponseTest {
         every { config.accountId } returns "acct"
         every { controllerManager.ctInboxController } returns controller
         every { controller.userId } returns "u"
-        every { controller.processV2Response(any()) } returns true
+        every { controller.processV2Response(any(), any()) } returns true
 
         response = InboxV2Response(
             config = config,
@@ -69,7 +69,7 @@ class InboxV2ResponseTest {
         response.processResponse(validResponseJson())
 
         verify(exactly = 0) { controllerManager.initializeInboxSync() }
-        verify(exactly = 0) { controller.processV2Response(any()) }
+        verify(exactly = 0) { controller.processV2Response(any(), any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
     }
 
@@ -78,7 +78,7 @@ class InboxV2ResponseTest {
         response.processResponse(JSONObject().put("unrelated_key", 1))
 
         verify(exactly = 0) { controllerManager.initializeInboxSync() }
-        verify(exactly = 0) { controller.processV2Response(any()) }
+        verify(exactly = 0) { controller.processV2Response(any(), any()) }
     }
 
     @Test
@@ -89,7 +89,7 @@ class InboxV2ResponseTest {
 
         verify(ordering = Ordering.ORDERED) {
             controllerManager.initializeInboxSync()
-            controller.processV2Response(any())
+            controller.processV2Response(any(), any())
             callbackManager._notifyInboxMessagesDidUpdate()
         }
         verify(exactly = 0) { controllerManager.initializeInbox() }
@@ -97,11 +97,11 @@ class InboxV2ResponseTest {
 
     @Test
     fun `updated false does not fire inboxMessagesDidUpdate`() {
-        every { controller.processV2Response(any()) } returns false
+        every { controller.processV2Response(any(), any()) } returns false
 
         response.processResponse(validResponseJson())
 
-        verify { controller.processV2Response(any()) }
+        verify { controller.processV2Response(any(), any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
     }
 
@@ -111,14 +111,14 @@ class InboxV2ResponseTest {
 
         response.processResponse(broken)
 
-        verify(exactly = 0) { controller.processV2Response(any()) }
+        verify(exactly = 0) { controller.processV2Response(any(), any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
     }
 
     @Test
     fun `parseDaos skips items with missing _id`() {
         val captured = slot<List<CTMessageDAO>>()
-        every { controller.processV2Response(capture(captured)) } returns true
+        every { controller.processV2Response(capture(captured), any()) } returns true
 
         val arr = JSONArray().apply {
             put(
@@ -140,7 +140,7 @@ class InboxV2ResponseTest {
     @Test
     fun `parsed V2 DAOs are tagged V2`() {
         val captured = slot<List<CTMessageDAO>>()
-        every { controller.processV2Response(capture(captured)) } returns true
+        every { controller.processV2Response(capture(captured), any()) } returns true
 
         response.processResponse(validResponseJson(listOf("m1", "m2")))
 
@@ -148,10 +148,32 @@ class InboxV2ResponseTest {
         assertEquals(true, captured.captured.all { it.source == InboxMessageSource.V2 })
     }
 
+    // ── Delivery source routing tests (T7.3) ─────────────────────────────────
+
+    @Test
+    fun `single-arg processResponse delivers FETCH source to controller`() {
+        val sourceSlot = slot<InboxV2DeliverySource>()
+        every { controller.processV2Response(any(), capture(sourceSlot)) } returns true
+
+        response.processResponse(validResponseJson())
+
+        assertEquals(InboxV2DeliverySource.FETCH, sourceSlot.captured)
+    }
+
+    @Test
+    fun `decorator override delivers A1 source to controller`() {
+        val sourceSlot = slot<InboxV2DeliverySource>()
+        every { controller.processV2Response(any(), capture(sourceSlot)) } returns true
+
+        response.processResponse(validResponseJson(), "stringBody", null)
+
+        assertEquals(InboxV2DeliverySource.A1, sourceSlot.captured)
+    }
+
     @Test
     fun `decorator override delegates for inbox_notifs_v2 on a1`() {
         val captured = slot<List<CTMessageDAO>>()
-        every { controller.processV2Response(capture(captured)) } returns true
+        every { controller.processV2Response(capture(captured), any()) } returns true
 
         response.processResponse(validResponseJson(), "stringBody", null)
 
@@ -164,7 +186,7 @@ class InboxV2ResponseTest {
     fun `decorator override on a body without inbox_notifs_v2 is a no-op`() {
         response.processResponse(JSONObject().put("unrelated", 1), "stringBody", null)
 
-        verify(exactly = 0) { controller.processV2Response(any()) }
+        verify(exactly = 0) { controller.processV2Response(any(), any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
     }
 
@@ -172,7 +194,7 @@ class InboxV2ResponseTest {
     fun `decorator override tolerates a null jsonBody`() {
         response.processResponse(null, "stringBody", null)
 
-        verify(exactly = 0) { controller.processV2Response(any()) }
+        verify(exactly = 0) { controller.processV2Response(any(), any()) }
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
     }
 }

@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.db.dao.PendingDelete
 import com.clevertap.android.sdk.db.dao.PendingRead
+import com.clevertap.android.sdk.response.InboxV2DeliverySource
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
@@ -287,7 +288,7 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        controller.processV2Response(emptyList())
+        controller.processV2Response(emptyList(), InboxV2DeliverySource.A1)
 
         io.mockk.verifyOrder {
             dbAdapter.removeExpiredAwaitingConfirm(userId, any())
@@ -303,7 +304,7 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        controller.processV2Response(emptyList())
+        controller.processV2Response(emptyList(), InboxV2DeliverySource.A1)
 
         io.mockk.verifyOrder {
             dbAdapter.removeExpiredPendingReads(userId, any())
@@ -319,7 +320,7 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        val updated = controller.processV2Response(listOf(getCtMsgDao("m1", userId)))
+        val updated = controller.processV2Response(listOf(getCtMsgDao("m1", userId)), InboxV2DeliverySource.A1)
 
         verify { dbAdapter.upsertMessages(match { it.size == 1 && it[0].id == "m1" }) }
         assertTrue(updated)
@@ -333,7 +334,7 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        controller.processV2Response(listOf(getCtMsgDao("m1", userId)))
+        controller.processV2Response(listOf(getCtMsgDao("m1", userId)), InboxV2DeliverySource.A1)
 
         verify(exactly = 0) { callbackManager._notifyInboxMessagesDidUpdate() }
     }
@@ -346,7 +347,7 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        val updated = controller.processV2Response(emptyList())
+        val updated = controller.processV2Response(emptyList(), InboxV2DeliverySource.A1)
 
         verify(exactly = 0) { dbAdapter.upsertMessages(any()) }
         verify(exactly = 0) { dbAdapter.deleteMessagesForIDs(any(), any()) }
@@ -362,7 +363,7 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        val updated = controller.processV2Response(emptyList())
+        val updated = controller.processV2Response(emptyList(), InboxV2DeliverySource.A1)
 
         verify { dbAdapter.deleteMessagesForIDs(match { it.contains("m1") }, userId) }
         assertTrue(updated)
@@ -377,7 +378,7 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        controller.processV2Response(emptyList())
+        controller.processV2Response(emptyList(), InboxV2DeliverySource.A1)
 
         val inMemory = controller.messages
         assertEquals(1, inMemory.size)
@@ -442,7 +443,7 @@ class CTInboxControllerTest : BaseTestCase() {
         )
 
         val incomingUnread = getCtMsgDao("m1", userId, read = false)
-        controller.processV2Response(listOf(incomingUnread))
+        controller.processV2Response(listOf(incomingUnread), InboxV2DeliverySource.A1)
 
         verify { dbAdapter.upsertMessages(match { it.size == 1 && it[0].id == "m1" && it[0].isRead == 1 }) }
     }
@@ -460,7 +461,8 @@ class CTInboxControllerTest : BaseTestCase() {
             listOf(
                 getCtMsgDao("m1", userId, read = true),
                 getCtMsgDao("m2", userId, read = false)
-            )
+            ),
+            InboxV2DeliverySource.A1
         )
 
         verify { dbAdapter.removePendingReads(listOf("m1"), userId) }
@@ -711,9 +713,128 @@ class CTInboxControllerTest : BaseTestCase() {
             inboxDeleteCoordinator
         )
 
-        controller.processV2Response(listOf(getCtMsgDao("m1", userId, read = true)))
+        controller.processV2Response(listOf(getCtMsgDao("m1", userId, read = true)), InboxV2DeliverySource.A1)
 
         verify(exactly = 0) { dbAdapter.removePendingReads(any<List<String>>(), any()) }
+    }
+
+    // ── FETCH-path sweep tests (T7.3) ───────────────────────────────────────
+
+    @Test
+    fun `processV2Response(FETCH) calls markIndexed for every id in the incoming list`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        every { dbAdapter.findSweepableV2Ids(userId, any()) } returns mutableSetOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        controller.processV2Response(
+            listOf(getCtMsgDao("m1", userId), getCtMsgDao("m2", userId)),
+            InboxV2DeliverySource.FETCH
+        )
+
+        verify {
+            dbAdapter.markIndexed(
+                match { it.containsAll(listOf("m1", "m2")) && it.size == 2 },
+                userId
+            )
+        }
+    }
+
+    @Test
+    fun `processV2Response(FETCH) skips markIndexed when incoming list is empty`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        every { dbAdapter.findSweepableV2Ids(userId, any()) } returns mutableSetOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        controller.processV2Response(emptyList(), InboxV2DeliverySource.FETCH)
+
+        verify(exactly = 0) { dbAdapter.markIndexed(any(), any()) }
+    }
+
+    @Test
+    fun `processV2Response(FETCH) sweeps INDEXED V2 ids absent from incoming and returns true`() {
+        // m2 is sweepable but absent from this fetch response — must be deleted
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        every { dbAdapter.findSweepableV2Ids(userId, any()) } returns mutableSetOf("m1", "m2")
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        // Only m1 arrives; m2 is absent → should be swept
+        val updated = controller.processV2Response(
+            listOf(getCtMsgDao("m1", userId)),
+            InboxV2DeliverySource.FETCH
+        )
+
+        verify { dbAdapter.deleteMessagesForIDs(match { it == listOf("m2") }, userId) }
+        assertTrue(updated)
+    }
+
+    @Test
+    fun `processV2Response(FETCH) does not sweep ids present in incoming`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        // Both m1 and m2 are sweepable but both also appear in the fetch response
+        every { dbAdapter.findSweepableV2Ids(userId, any()) } returns mutableSetOf("m1", "m2")
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        controller.processV2Response(
+            listOf(getCtMsgDao("m1", userId), getCtMsgDao("m2", userId)),
+            InboxV2DeliverySource.FETCH
+        )
+
+        // Sweep should produce an empty set — no sweep-triggered delete call for m1 or m2
+        verify(exactly = 0) {
+            dbAdapter.deleteMessagesForIDs(
+                match { it.contains("m1") || it.contains("m2") },
+                userId
+            )
+        }
+    }
+
+    @Test
+    fun `processV2Response(FETCH) passes graceCutoff = nowSec minus INDEXING_GRACE_SECONDS to findSweepableV2Ids`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        every { dbAdapter.findSweepableV2Ids(userId, any()) } returns mutableSetOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        val beforeSec = System.currentTimeMillis() / 1000L
+        controller.processV2Response(emptyList(), InboxV2DeliverySource.FETCH)
+        val afterSec = System.currentTimeMillis() / 1000L
+
+        val expectedLow = beforeSec - CTInboxController.INDEXING_GRACE_SECONDS
+        val expectedHigh = afterSec - CTInboxController.INDEXING_GRACE_SECONDS
+        verify {
+            dbAdapter.findSweepableV2Ids(
+                userId,
+                match { cutoff -> cutoff in expectedLow..expectedHigh }
+            )
+        }
+    }
+
+    @Test
+    fun `processV2Response(A1) does not call markIndexed or findSweepableV2Ids`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        controller.processV2Response(listOf(getCtMsgDao("m1", userId)), InboxV2DeliverySource.A1)
+
+        verify(exactly = 0) { dbAdapter.markIndexed(any(), any()) }
+        verify(exactly = 0) { dbAdapter.findSweepableV2Ids(any(), any()) }
     }
 
     @Test

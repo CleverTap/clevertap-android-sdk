@@ -4,6 +4,7 @@ package com.clevertap.android.sdk.inbox;
 import androidx.annotation.AnyThread;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
@@ -12,6 +13,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.db.dao.PendingDelete;
 import com.clevertap.android.sdk.db.dao.PendingRead;
+import com.clevertap.android.sdk.response.InboxV2DeliverySource;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import org.json.JSONArray;
@@ -30,6 +32,12 @@ import java.util.concurrent.Callable;
 public class CTInboxController {
 
     private static final long PENDING_DELETE_DEFAULT_TTL_SECONDS = 24L * 60L * 60L;
+
+    // BE's documented indexing window is 1–2 h. 3× as a conservative buffer trades
+    // a small flicker risk (if BE indexing slips beyond 6 h) for faster cross-device
+    // delete reflection on the firing device. Tunable in one place.
+    @VisibleForTesting
+    static final long INDEXING_GRACE_SECONDS = 6L * 60L * 60L;
 
     private final DBAdapter dbAdapter;
 
@@ -272,10 +280,51 @@ public class CTInboxController {
      * is the caller's responsibility (mirrors the V1 {@link #updateMessages}
      * contract). The dual-filter math lives in {@link InboxV2Merger} as pure
      * functions; this method only sequences DB reads/writes around it.
+     *
+     * <p>When {@code source} is {@link InboxV2DeliverySource#FETCH} the method
+     * additionally runs the cross-device delete sweep:
+     * <ol>
+     *   <li>Promotes {@code PENDING_INDEXING} rows whose ids appear in the fetch
+     *       response to {@code INDEXED} via a targeted UPDATE (never downgrades).</li>
+     *   <li>Identifies V2 rows that are {@code INDEXED} (or stale
+     *       {@code PENDING_INDEXING} older than {@link #INDEXING_GRACE_SECONDS})
+     *       but absent from this response — these are treated as cross-device
+     *       deletes and removed from the DB before the post-read cleanup re-read.</li>
+     * </ol>
+     * When {@code source} is {@link InboxV2DeliverySource#A1} the sweep is
+     * skipped: an {@code /a1} payload is not a complete inbox snapshot, so
+     * "absent from response" cannot be used as a delete signal.</p>
      */
     @WorkerThread
-    public boolean processV2Response(List<CTMessageDAO> incoming) {
+    public boolean processV2Response(List<CTMessageDAO> incoming, InboxV2DeliverySource source) {
         long nowSec = System.currentTimeMillis() / 1000L;
+        boolean updated = false;
+
+        // ── FETCH-only: promote PENDING_INDEXING rows that appeared in this
+        // response to INDEXED, then sweep V2 rows absent from the authoritative
+        // fetch snapshot (cross-device delete signal).
+        if (source == InboxV2DeliverySource.FETCH) {
+            Set<String> incomingIds = new HashSet<>(incoming.size());
+            for (CTMessageDAO dao : incoming) {
+                incomingIds.add(dao.getId());
+            }
+            if (!incomingIds.isEmpty()) {
+                dbAdapter.markIndexed(new ArrayList<>(incomingIds), userId);
+            }
+
+            // Sweep: INDEXED V2 rows (and stale PENDING_INDEXING older than
+            // the grace cutoff) that are absent from this fetch response are
+            // treated as cross-device deletes. Deleted from DB here so the
+            // postReadCleanup re-read below won't see them.
+            long graceCutoff = nowSec - INDEXING_GRACE_SECONDS;
+            Set<String> sweepable = dbAdapter.findSweepableV2Ids(userId, graceCutoff);
+            sweepable.removeAll(incomingIds);
+            if (!sweepable.isEmpty()) {
+                dbAdapter.deleteMessagesForIDs(new ArrayList<>(sweepable), userId);
+                updated = true;
+            }
+        }
+
         // T6.2: drop AWAITING_CONFIRM pending-deletes whose TTL has elapsed.
         dbAdapter.removeExpiredAwaitingConfirm(userId, nowSec);
         // T7.2: drop pending-reads whose TTL has elapsed (server may never echo
@@ -306,7 +355,7 @@ public class CTInboxController {
         if (!toUpsert.isEmpty()) {
             dbAdapter.upsertMessages(toUpsert);
         }
-        boolean updated = !toUpsert.isEmpty();
+        updated = updated || !toUpsert.isEmpty();
 
         synchronized (messagesLock) {
             List<CTMessageDAO> full = dbAdapter.getMessages(userId);

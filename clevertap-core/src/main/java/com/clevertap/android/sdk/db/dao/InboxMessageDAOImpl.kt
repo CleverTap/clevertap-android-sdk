@@ -240,6 +240,44 @@ internal class InboxMessageDAOImpl(
         }
     }
 
+    @WorkerThread
+    override fun findSweepableV2Ids(userId: String, staleCutoffSeconds: Long): Set<String> {
+        val tName = INBOX_MESSAGES.tableName
+        val result = mutableSetOf<String>()
+        try {
+            // Select V2 rows that are either:
+            //  (a) INDEXED — fetch backend has confirmed them; absence is a delete signal.
+            //  (b) PENDING_INDEXING but older than the grace cutoff — indexing window
+            //      has demonstrably elapsed; absence is treated as a delete signal too.
+            val selection = "${Column.USER_ID} = ?" +
+                    " AND ${Column.SOURCE} = ?" +
+                    " AND (${Column.INDEX_STATE} = ?" +
+                    " OR (${Column.INDEX_STATE} = ? AND ${Column.CREATED_AT} < ?))"
+            val selectionArgs = arrayOf(
+                userId,
+                InboxMessageSource.V2.name,
+                InboxIndexState.INDEXED,
+                InboxIndexState.PENDING_INDEXING,
+                staleCutoffSeconds.toString()
+            )
+            dbHelper.readableDatabase.query(
+                tName,
+                arrayOf(Column.ID),
+                selection,
+                selectionArgs,
+                null, null, null
+            )?.use { cursor ->
+                val idIndex = cursor.getColumnIndexOrThrow(Column.ID)
+                while (cursor.moveToNext()) {
+                    cursor.getString(idIndex)?.let { result.add(it) }
+                }
+            }
+        } catch (e: Exception) {
+            logger.verbose("Error querying sweepable V2 ids from $tName", e)
+        }
+        return result
+    }
+
     private fun readSource(cursor: android.database.Cursor, columnIndex: Int): InboxMessageSource {
         if (columnIndex < 0) return InboxMessageSource.V1
         val raw = cursor.getString(columnIndex) ?: return InboxMessageSource.V1

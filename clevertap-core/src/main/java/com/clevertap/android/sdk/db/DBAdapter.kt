@@ -135,6 +135,16 @@ internal class DBAdapter constructor(
         } else false
     }
 
+    @WorkerThread
+    @Synchronized
+    fun markIndexed(messageIds: List<String>, userId: String): Boolean =
+        inboxMessageDAO.markIndexed(messageIds, userId)
+
+    @WorkerThread
+    @Synchronized
+    fun findSweepableV2Ids(userId: String, staleCutoffSeconds: Long): Set<String> =
+        inboxMessageDAO.findSweepableV2Ids(userId, staleCutoffSeconds)
+
     // =====================================================
     // INBOX PENDING ACTIONS (user-deleted / user-read locally, not yet confirmed by server)
     // =====================================================

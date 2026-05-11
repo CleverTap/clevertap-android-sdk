@@ -377,4 +377,104 @@ class InboxMessageDAOImplTest : BaseTestCase() {
             it.source = source
         }
     }
+
+    // ── findSweepableV2Ids ───────────────────────────────────────────────────
+
+    @Test
+    fun `findSweepableV2Ids returns empty when table has no V2 rows`() {
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", "user_11", source = InboxMessageSource.V1))
+        )
+        val result = inboxMessageDAO.findSweepableV2Ids("user_11", Long.MAX_VALUE)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `findSweepableV2Ids returns INDEXED V2 ids regardless of created_at`() {
+        val userId = "user_11"
+        // Insert as PENDING_INDEXING, then flip to INDEXED
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, source = InboxMessageSource.V2))
+        )
+        inboxMessageDAO.markIndexed(listOf("m1"), userId)
+
+        // cutoff far in the future — INDEXED rows are always eligible
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertEquals(setOf("m1"), result)
+    }
+
+    @Test
+    fun `findSweepableV2Ids returns stale PENDING_INDEXING V2 ids (created_at less than cutoff)`() {
+        val userId = "user_11"
+        // Use a fixed old timestamp so the row is definitely before any cutoff
+        val oldDate = 1_000L // epoch seconds
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, date = oldDate, source = InboxMessageSource.V2))
+        )
+
+        // cutoff = oldDate + 1 → row qualifies as stale
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, oldDate + 1)
+        assertEquals(setOf("m1"), result)
+    }
+
+    @Test
+    fun `findSweepableV2Ids excludes fresh PENDING_INDEXING V2 ids (created_at not less than cutoff)`() {
+        val userId = "user_11"
+        val recentDate = 9_000_000L
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, date = recentDate, source = InboxMessageSource.V2))
+        )
+
+        // cutoff = recentDate → NOT less than cutoff, so row must be excluded
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, recentDate)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `findSweepableV2Ids excludes V1 messages`() {
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m_v1", userId, source = InboxMessageSource.V1))
+        )
+        // Even if we somehow flip it to INDEXED the source filter keeps it out
+        inboxMessageDAO.markIndexed(listOf("m_v1"), userId)
+
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `findSweepableV2Ids is scoped to the supplied userId`() {
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2),
+                getCtMsgDao("m2", "user_12", source = InboxMessageSource.V2)
+            )
+        )
+        inboxMessageDAO.markIndexed(listOf("m1"), "user_11")
+        inboxMessageDAO.markIndexed(listOf("m2"), "user_12")
+
+        assertEquals(setOf("m1"), inboxMessageDAO.findSweepableV2Ids("user_11", Long.MAX_VALUE))
+        assertEquals(setOf("m2"), inboxMessageDAO.findSweepableV2Ids("user_12", Long.MAX_VALUE))
+    }
+
+    @Test
+    fun `findSweepableV2Ids returns both INDEXED and stale PENDING_INDEXING together`() {
+        val userId = "user_11"
+        val oldDate = 100L
+
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("indexed", userId, source = InboxMessageSource.V2),
+                getCtMsgDao("stale_pending", userId, date = oldDate, source = InboxMessageSource.V2),
+                getCtMsgDao("fresh_pending", userId, date = 9_000_000L, source = InboxMessageSource.V2)
+            )
+        )
+        inboxMessageDAO.markIndexed(listOf("indexed"), userId)
+        // stale_pending and fresh_pending remain PENDING_INDEXING
+
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, staleCutoffSeconds = oldDate + 1)
+        assertEquals(setOf("indexed", "stale_pending"), result)
+        assertFalse("fresh_pending" in result)
+    }
 }

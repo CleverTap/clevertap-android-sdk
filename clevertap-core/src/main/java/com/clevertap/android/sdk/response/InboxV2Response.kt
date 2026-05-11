@@ -25,12 +25,13 @@ import org.json.JSONObject
  *  4. controller-init-if-null (so a response that races initialization
  *     isn't silently dropped)
  *
- * Two entry points share the same logic:
+ * Two public entry points share the same parse/apply logic but carry a
+ * different [InboxV2DeliverySource], which controls whether the
+ * cross-device delete sweep runs inside `CTInboxController.processV2Response`:
  *  - [processResponse] (single-arg) — called directly by the V2 fetch
- *    pipeline (`InboxV2Fetcher`).
+ *    pipeline (`InboxV2Fetcher`). Source = [InboxV2DeliverySource.FETCH].
  *  - the [CleverTapResponseDecorator] override — called by the `/a1`
- *    decorator chain for live-behaviour V2 messages that arrive on `/a1`
- *    under the same `inbox_notifs_v2` key.
+ *    decorator chain for live-behaviour V2 messages. Source = [InboxV2DeliverySource.A1].
  *
  * Fires `inboxMessagesDidUpdate()` on a true update.
  */
@@ -44,20 +45,28 @@ internal class InboxV2Response(
 ) : CleverTapResponseDecorator() {
     private val inboxControllerLock: Any = ctLockManager.inboxControllerLock
 
+    // ── /a1 decorator chain entry point ──────────────────────────────────────
     @WorkerThread
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context?) {
         if (jsonBody == null) return
-        processResponse(jsonBody)
+        processResponse(jsonBody, InboxV2DeliverySource.A1)
     }
 
+    // ── Direct V2 fetch entry point ───────────────────────────────────────────
     @WorkerThread
     fun processResponse(response: JSONObject) {
+        processResponse(response, InboxV2DeliverySource.FETCH)
+    }
+
+    // ── Shared parse + apply logic ────────────────────────────────────────────
+    @WorkerThread
+    private fun processResponse(response: JSONObject, source: InboxV2DeliverySource) {
         if (config.isAnalyticsOnly) {
             logger.verbose(config.accountId, "InboxV2: analytics-only mode — skipping response")
             return
         }
 
-        logger.verbose(config.accountId, "InboxV2: Processing response")
+        logger.verbose(config.accountId, "InboxV2: Processing response (source=$source)")
 
         if (!response.has(Constants.INBOX_V2_JSON_RESPONSE_KEY)) {
             logger.verbose(config.accountId, "InboxV2: response doesn't contain the v2 key")
@@ -68,21 +77,21 @@ internal class InboxV2Response(
             val messages = response.getJSONArray(Constants.INBOX_V2_JSON_RESPONSE_KEY)
             logger.verbose(config.accountId, "InboxV2: ${messages.length()} message(s) in inbox_notifs_v2")
             logger.verbose(config.accountId, "InboxV2: processing messages from server $messages ")
-            _processInboxMessages(messages)
+            _processInboxMessages(messages, source)
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "InboxV2: Failed to parse response", t)
         }
     }
 
     @WorkerThread
-    private fun _processInboxMessages(messages: JSONArray) {
+    private fun _processInboxMessages(messages: JSONArray, source: InboxV2DeliverySource) {
         synchronized(inboxControllerLock) {
             if (controllerManager.ctInboxController == null) {
                 controllerManager.initializeInboxSync()
             }
             val controller = controllerManager.ctInboxController ?: return
             val parsed = parseDaos(messages, controller.userId)
-            val updated = controller.processV2Response(parsed)
+            val updated = controller.processV2Response(parsed, source)
             logger.verbose(config.accountId, "InboxV2: applied — updated=$updated")
             if (updated) {
                 callbackManager._notifyInboxMessagesDidUpdate()
