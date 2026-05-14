@@ -628,9 +628,7 @@ internal object CleverTapFactory {
             templatesManager = templatesManager,
             cTVariables = ctVariables,
             executors = executors,
-            networkScope = networkScope,
-            inboxV2Bridge = inboxV2Bridge,
-            inboxDeleteCoordinator = inboxDeleteCoordinator
+            inboxV2Bridge = inboxV2Bridge
         )
     }
 
