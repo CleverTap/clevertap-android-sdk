@@ -2283,7 +2283,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().debug(getAccountId(),
                     "Notification Inbox not initialized — call initializeInbox() first");
             if (callback != null) {
-                callback.onInboxFetched(false);
+                coreState.getInboxV2Bridge().submitFailure(callback);
             }
             return;
         }

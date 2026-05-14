@@ -31,4 +31,10 @@ internal class InboxV2Bridge(
             callback?.onInboxFetched(result is CallResult.Success)
         }
     }
+
+    fun submitFailure(callback: FetchInboxCallback) {
+        networkScope.coroutineScope.launch {
+            callback.onInboxFetched(false)
+        }
+    }
 }
