@@ -120,7 +120,7 @@ class InboxV2FetcherTest {
     }
 
     @Test
-    fun `recordFetch runs only when throttle is honoured and endpoint is about to be called`() = runTest {
+    fun `recordFetch called on Success`() = runTest {
         val throttle = mockk<FetchThrottle>(relaxed = true) {
             every { shouldThrottle() } returns false
         }
@@ -130,5 +130,31 @@ class InboxV2FetcherTest {
             .fetch(respectThrottle = true)
 
         verify(exactly = 1) { throttle.recordFetch() }
+    }
+
+    @Test
+    fun `recordFetch called on HttpError`() = runTest {
+        val throttle = mockk<FetchThrottle>(relaxed = true) {
+            every { shouldThrottle() } returns false
+        }
+        val endpoint = stubEndpoint(CallResult.HttpError(500, "err"))
+
+        InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
+            .fetch(respectThrottle = true)
+
+        verify(exactly = 1) { throttle.recordFetch() }
+    }
+
+    @Test
+    fun `recordFetch NOT called on NetworkFailure — retry is not blocked`() = runTest {
+        val throttle = mockk<FetchThrottle>(relaxed = true) {
+            every { shouldThrottle() } returns false
+        }
+        val endpoint = stubEndpoint(CallResult.NetworkFailure(IOException("timeout")))
+
+        InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
+            .fetch(respectThrottle = true)
+
+        verify(exactly = 0) { throttle.recordFetch() }
     }
 }
