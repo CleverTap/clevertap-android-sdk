@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inbox
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.TestClock
 import com.clevertap.android.sdk.db.dao.PendingDelete
 import com.clevertap.android.sdk.db.dao.PendingRead
 import com.clevertap.android.sdk.response.InboxV2DeliverySource
@@ -811,23 +812,21 @@ class CTInboxControllerTest : BaseTestCase() {
 
     @Test
     fun `processV2Response(FETCH) passes graceCutoff = nowSec minus INDEXING_GRACE_SECONDS to findSweepableV2Ids`() {
+        val fixedNow = 10_000L
+        val fixedClock = TestClock(fixedNow * 1000L)
         every { dbAdapter.getMessages(userId) } returns arrayListOf()
         every { dbAdapter.findSweepableV2Ids(userId, any()) } returns mutableSetOf()
         controller = CTInboxController(
             cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
-            inboxDeleteCoordinator
+            inboxDeleteCoordinator, fixedClock
         )
 
-        val beforeSec = System.currentTimeMillis() / 1000L
         controller.processV2Response(emptyList(), InboxV2DeliverySource.FETCH)
-        val afterSec = System.currentTimeMillis() / 1000L
 
-        val expectedLow = beforeSec - CTInboxController.INDEXING_GRACE_SECONDS
-        val expectedHigh = afterSec - CTInboxController.INDEXING_GRACE_SECONDS
         verify {
             dbAdapter.findSweepableV2Ids(
                 userId,
-                match { cutoff -> cutoff in expectedLow..expectedHigh }
+                fixedNow - CTInboxController.INDEXING_GRACE_SECONDS
             )
         }
     }

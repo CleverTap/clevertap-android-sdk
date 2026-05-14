@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.utils.Clock;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.db.dao.PendingDelete;
 import com.clevertap.android.sdk.db.dao.PendingRead;
@@ -57,6 +58,8 @@ public class CTInboxController {
 
     private final InboxDeleteCoordinator inboxDeleteCoordinator;
 
+    private final Clock clock;
+
     // always call async
     @WorkerThread
     public CTInboxController(CleverTapInstanceConfig config, String guid, DBAdapter adapter,
@@ -64,6 +67,17 @@ public class CTInboxController {
                              BaseCallbackManager callbackManager,
                              boolean videoSupported,
                              InboxDeleteCoordinator inboxDeleteCoordinator) {
+        this(config, guid, adapter, ctLockManager, callbackManager, videoSupported,
+                inboxDeleteCoordinator, Clock.SYSTEM);
+    }
+
+    @VisibleForTesting
+    CTInboxController(CleverTapInstanceConfig config, String guid, DBAdapter adapter,
+                      CTLockManager ctLockManager,
+                      BaseCallbackManager callbackManager,
+                      boolean videoSupported,
+                      InboxDeleteCoordinator inboxDeleteCoordinator,
+                      Clock clock) {
         this.userId = guid;
         this.dbAdapter = adapter;
         this.messages = this.dbAdapter.getMessages(this.userId);
@@ -72,6 +86,7 @@ public class CTInboxController {
         this.callbackManager = callbackManager;
         this.config = config;
         this.inboxDeleteCoordinator = inboxDeleteCoordinator;
+        this.clock = clock;
     }
 
     public int count() {
@@ -95,7 +110,7 @@ public class CTInboxController {
                 final boolean isV2 = dao != null && dao.getSource() == InboxMessageSource.V2;
 
                 if (isV2) {
-                    long now = System.currentTimeMillis() / 1000L;
+                    long now = clock.currentTimeSeconds();
                     dbAdapter.addPendingDelete(
                             message.getMessageId(),
                             userId,
@@ -125,7 +140,7 @@ public class CTInboxController {
             public Void call() {
                 // Partition ids into V1 and V2 BEFORE the local delete wipes
                 // the cache.
-                final long now = System.currentTimeMillis() / 1000L;
+                final long now = clock.currentTimeSeconds();
                 final Set<String> idSet = new HashSet<>(messageIDs);
                 final List<CTInboxMessage> v2Messages = new ArrayList<>();
                 final List<PendingDelete> pendingRows = new ArrayList<>();
@@ -297,7 +312,7 @@ public class CTInboxController {
      */
     @WorkerThread
     public boolean processV2Response(List<CTMessageDAO> incoming, InboxV2DeliverySource source) {
-        long nowSec = System.currentTimeMillis() / 1000L;
+        long nowSec = clock.currentTimeSeconds();
         boolean updated = false;
 
         // ── FETCH-only: promote PENDING_INDEXING rows that appeared in this
@@ -454,7 +469,7 @@ public class CTInboxController {
 
         final boolean isV2 = messageDAO.getSource() == InboxMessageSource.V2;
         final long pendingReadExpiresAt = isV2
-                ? resolvePendingActionExpiry(messageDAO, System.currentTimeMillis() / 1000L)
+                ? resolvePendingActionExpiry(messageDAO, clock.currentTimeSeconds())
                 : 0L;
 
         synchronized (messagesLock) {
@@ -486,7 +501,7 @@ public class CTInboxController {
         boolean atleastOneMessageIsValid = false;
 
         synchronized (messagesLock) {
-            final long now = System.currentTimeMillis() / 1000L;
+            final long now = clock.currentTimeSeconds();
             for (CTMessageDAO dao : messages) {
                 if (!idSet.contains(dao.getId())) continue;
                 atleastOneMessageIsValid = true;
@@ -566,7 +581,7 @@ public class CTInboxController {
                     continue;
                 }
                 long expires = message.getExpires();
-                boolean expired = (expires > 0 && System.currentTimeMillis() / 1000 > expires);
+                boolean expired = (expires > 0 && clock.currentTimeSeconds() > expires);
                 if (expired) {
                     Logger.v("Inbox Message: " + message.getId() + " is expired - removing");
                     toDelete.add(message);
