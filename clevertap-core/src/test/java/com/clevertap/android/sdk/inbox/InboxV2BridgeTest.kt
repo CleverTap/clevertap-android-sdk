@@ -77,4 +77,31 @@ class InboxV2BridgeTest {
 
         assertNull(received)
     }
+
+    @Test
+    fun `submitFailure invokes callback with false`() = runTest {
+        val fetcher = mockk<InboxV2Fetcher>()
+        val scope = NetworkScope(StandardTestDispatcher(testScheduler))
+        val bridge = InboxV2Bridge(fetcher, scope)
+
+        var received: Boolean? = null
+        bridge.submitFailure { received = it }
+        advanceUntilIdle()
+
+        assertEquals(false, received)
+    }
+
+    @Test
+    fun `cancelling the scope stops submitFailure`() = runTest {
+        val fetcher = mockk<InboxV2Fetcher>()
+        val scope = NetworkScope(StandardTestDispatcher(testScheduler))
+        val bridge = InboxV2Bridge(fetcher, scope)
+
+        var received: Boolean? = null
+        bridge.submitFailure { received = it }
+        scope.cancel()
+        advanceUntilIdle()
+
+        assertNull(received)
+    }
 }
