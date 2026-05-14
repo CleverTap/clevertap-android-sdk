@@ -477,4 +477,18 @@ class InboxMessageDAOImplTest : BaseTestCase() {
         assertEquals(setOf("indexed", "stale_pending"), result)
         assertFalse("fresh_pending" in result)
     }
+
+    @Test
+    fun `findSweepableV2Ids excludes V2 INDEXED messages with expires=0 (infinite TTL)`() {
+        val userId = "user_11"
+        // An INDEXED V2 row with expires=0 is a fire-and-forget message — its absence
+        // from a FETCH response is NOT a cross-device delete signal.
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("infinite", userId, expires = 0L, source = InboxMessageSource.V2))
+        )
+        inboxMessageDAO.markIndexed(listOf("infinite"), userId)
+
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertTrue(result.isEmpty())
+    }
 }

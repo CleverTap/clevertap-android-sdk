@@ -55,7 +55,7 @@ class CtApiInboxFetchTest {
     @Test
     fun `sendInboxDelete targets the same inbox v2 path pending backend confirmation`() {
         val url = ctApi.sendInboxDelete(body = "[]").request.url.toString()
-        assertContains(url, "/inbox/v2/getMessages")
+        assertContains(url, "/inbox/v2/deleteMessages")
     }
 
     @Test

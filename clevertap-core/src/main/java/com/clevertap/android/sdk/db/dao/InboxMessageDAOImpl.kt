@@ -251,6 +251,7 @@ internal class InboxMessageDAOImpl(
             //      has demonstrably elapsed; absence is treated as a delete signal too.
             val selection = "${Column.USER_ID} = ?" +
                     " AND ${Column.SOURCE} = ?" +
+                    " AND ${Column.EXPIRES} != 0" +
                     " AND (${Column.INDEX_STATE} = ?" +
                     " OR (${Column.INDEX_STATE} = ? AND ${Column.CREATED_AT} < ?))"
             val selectionArgs = arrayOf(

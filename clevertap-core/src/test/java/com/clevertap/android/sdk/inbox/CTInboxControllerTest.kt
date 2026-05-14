@@ -520,7 +520,7 @@ class CTInboxControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun `deleteInboxMessage with no DAO TTL falls back to now plus 1 day on the pending row`() {
+    fun `deleteInboxMessage stores expiresAt=0 for V2 message with infinite TTL (expires=0)`() {
         every { dbAdapter.getMessages(userId) } returns arrayListOf(
             getCtMsgDao("m1", userId, source = InboxMessageSource.V2, wzrkParams = JSONObject(), expires = 0L)
         )
@@ -532,20 +532,29 @@ class CTInboxControllerTest : BaseTestCase() {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
             every { ctLockManager.inboxControllerLock } returns Object()
 
-            val before = System.currentTimeMillis() / 1000L
             val message = mockk<CTInboxMessage>(relaxed = true) { every { messageId } returns "m1" }
             controller.deleteInboxMessage(message)
-            val after = System.currentTimeMillis() / 1000L
-            val oneDay = 24L * 60L * 60L
 
-            verify(exactly = 1) {
-                dbAdapter.addPendingDelete(
-                    "m1",
-                    userId,
-                    any(),
-                    match { expiresAt -> expiresAt in (before + oneDay)..(after + oneDay) }
-                )
-            }
+            verify(exactly = 1) { dbAdapter.addPendingDelete("m1", userId, any(), 0L) }
+        }
+    }
+
+    @Test
+    fun `markReadInboxMessage stores expiresAt=0 for V2 message with infinite TTL (expires=0)`() {
+        every { dbAdapter.getMessages(userId) } returns arrayListOf(
+            getCtMsgDao("m1", userId, source = InboxMessageSource.V2, expires = 0L)
+        )
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            every { ctLockManager.inboxControllerLock } returns Object()
+
+            controller.markReadInboxMessage(mockk(relaxed = true) { every { messageId } returns "m1" })
+
+            verify(exactly = 1) { dbAdapter.addPendingRead("m1", userId, 0L) }
         }
     }
 
@@ -835,6 +844,34 @@ class CTInboxControllerTest : BaseTestCase() {
 
         verify(exactly = 0) { dbAdapter.markIndexed(any(), any()) }
         verify(exactly = 0) { dbAdapter.findSweepableV2Ids(any(), any()) }
+    }
+
+    @Test
+    fun `processV2Response(FETCH) upserts brand-new PBS message as INDEXED not PENDING_INDEXING`() {
+        // Regression: first-ever FETCH delivery of a PBS message previously stored it
+        // as PENDING_INDEXING because markIndexed ran before the row existed. The row
+        // must land as INDEXED so the cross-device sweep (T7.3) works on the very
+        // next FETCH rather than waiting for a grace-period expiry.
+        every { dbAdapter.getMessages(userId) } returns arrayListOf()
+        every { dbAdapter.findSweepableV2Ids(userId, any()) } returns mutableSetOf()
+        controller = CTInboxController(
+            cleverTapInstanceConfig, userId, dbAdapter, ctLockManager, callbackManager, videoSupported,
+            inboxDeleteCoordinator
+        )
+
+        val pbsDao = getCtMsgDao("pbs1", userId, source = InboxMessageSource.V2)
+        // Confirm the DAO starts with the default PENDING_INDEXING (pre-fix invariant)
+        assertEquals(InboxIndexState.PENDING_INDEXING, pbsDao.indexState)
+
+        controller.processV2Response(listOf(pbsDao), InboxV2DeliverySource.FETCH)
+
+        // After processV2Response, the DAO must have been stamped INDEXED before upsert
+        verify {
+            dbAdapter.upsertMessages(match { list ->
+                list.size == 1 && list[0].id == "pbs1" &&
+                    list[0].indexState == InboxIndexState.INDEXED
+            })
+        }
     }
 
     @Test

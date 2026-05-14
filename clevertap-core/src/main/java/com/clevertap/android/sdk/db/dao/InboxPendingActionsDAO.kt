@@ -270,7 +270,7 @@ internal class InboxPendingActionsDAOImpl(
         try {
             dbHelper.writableDatabase.delete(
                 Table.INBOX_PENDING_DELETES.tableName,
-                "${Column.USER_ID} = ? AND ${Column.STATE} = ? AND ${Column.EXPIRES} <= ?",
+                "${Column.USER_ID} = ? AND ${Column.STATE} = ? AND ${Column.EXPIRES} > 0 AND ${Column.EXPIRES} <= ?",
                 arrayOf(userId, PendingDeleteState.AWAITING_CONFIRM, nowSeconds.toString())
             )
         } catch (e: SQLiteException) {
@@ -317,7 +317,7 @@ internal class InboxPendingActionsDAOImpl(
         try {
             dbHelper.writableDatabase.delete(
                 Table.INBOX_PENDING_READS.tableName,
-                "${Column.USER_ID} = ? AND ${Column.EXPIRES} <= ?",
+                "${Column.USER_ID} = ? AND ${Column.EXPIRES} > 0 AND ${Column.EXPIRES} <= ?",
                 arrayOf(userId, nowSeconds.toString())
             )
         } catch (e: SQLiteException) {

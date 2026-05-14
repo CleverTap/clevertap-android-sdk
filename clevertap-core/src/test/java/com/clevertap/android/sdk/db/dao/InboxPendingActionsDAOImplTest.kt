@@ -259,4 +259,27 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
         assertTrue(dao.getPendingReads(userA).isEmpty())
         assertEquals(setOf("r1"), dao.getPendingReads(userB))
     }
+
+    @Test
+    fun `removeExpiredAwaitingConfirm keeps infinite-TTL rows (expires=0)`() {
+        dao.addPendingDelete("infinite", userA, null, 0L)
+        dao.markPendingDeletesAwaitingConfirm(listOf("infinite"), userA)
+
+        // Pass a large nowSeconds — the row must NOT be removed because expires=0 means infinite.
+        val removed = dao.removeExpiredAwaitingConfirm(userA, nowSeconds = Long.MAX_VALUE / 2)
+
+        assertEquals(0, removed)
+        assertEquals(setOf("infinite"), dao.getPendingDeleteIds(userA))
+    }
+
+    @Test
+    fun `removeExpiredPendingReads keeps infinite-TTL rows (expires=0)`() {
+        dao.addPendingRead("infinite", userA, 0L)
+
+        // Pass a large nowSeconds — the row must NOT be removed because expires=0 means infinite.
+        val removed = dao.removeExpiredPendingReads(userA, nowSeconds = Long.MAX_VALUE / 2)
+
+        assertEquals(0, removed)
+        assertEquals(setOf("infinite"), dao.getPendingReads(userA))
+    }
 }

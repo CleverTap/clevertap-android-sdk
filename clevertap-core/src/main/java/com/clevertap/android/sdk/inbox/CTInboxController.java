@@ -309,6 +309,8 @@ public class CTInboxController {
                 incomingIds.add(dao.getId());
             }
             if (!incomingIds.isEmpty()) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "InboxV2: markIndexed " + incomingIds.size() + " msg(s)");
                 dbAdapter.markIndexed(new ArrayList<>(incomingIds), userId);
             }
 
@@ -320,16 +322,29 @@ public class CTInboxController {
             Set<String> sweepable = dbAdapter.findSweepableV2Ids(userId, graceCutoff);
             sweepable.removeAll(incomingIds);
             if (!sweepable.isEmpty()) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "InboxV2: cross-device sweep — removing " + sweepable.size() + " msg(s): " + sweepable);
                 dbAdapter.deleteMessagesForIDs(new ArrayList<>(sweepable), userId);
                 updated = true;
+            } else {
+                config.getLogger().verbose(config.getAccountId(),
+                        "InboxV2: cross-device sweep — nothing to remove");
             }
         }
 
         // T6.2: drop AWAITING_CONFIRM pending-deletes whose TTL has elapsed.
-        dbAdapter.removeExpiredAwaitingConfirm(userId, nowSec);
+        int removedDeletes = dbAdapter.removeExpiredAwaitingConfirm(userId, nowSec);
+        if (removedDeletes > 0) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "InboxV2: removed " + removedDeletes + " expired AWAITING_CONFIRM row(s)");
+        }
         // T7.2: drop pending-reads whose TTL has elapsed (server may never echo
         // back e.g. if the message was deleted, retargeted, or expired).
-        dbAdapter.removeExpiredPendingReads(userId, nowSec);
+        int removedReads = dbAdapter.removeExpiredPendingReads(userId, nowSec);
+        if (removedReads > 0) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "InboxV2: removed " + removedReads + " expired pending-read row(s)");
+        }
         Set<String> pendingDeletes = dbAdapter.getPendingDeleteIds(userId);
         Set<String> pendingReads = dbAdapter.getPendingReads(userId);
 
@@ -353,6 +368,14 @@ public class CTInboxController {
         List<CTMessageDAO> toUpsert = InboxV2Merger.INSTANCE.preWriteFilter(
                 incoming, pendingDeletes, pendingReads, videoSupported, nowSec);
         if (!toUpsert.isEmpty()) {
+            // FETCH is the authoritative source — new rows from this response are
+            // server-confirmed, so write them as INDEXED directly. ON CONFLICT
+            // preserves index_state for existing rows, so this only affects INSERTs.
+            if (source == InboxV2DeliverySource.FETCH) {
+                for (CTMessageDAO dao : toUpsert) {
+                    dao.setIndexState(InboxIndexState.INDEXED);
+                }
+            }
             dbAdapter.upsertMessages(toUpsert);
         }
         updated = updated || !toUpsert.isEmpty();
@@ -562,6 +585,7 @@ public class CTInboxController {
 
     private static long resolvePendingActionExpiry(CTMessageDAO dao, long nowSeconds) {
         long ttl = dao == null ? 0L : dao.getExpires();
+        if (ttl == 0L) return 0L; // infinite TTL — never expires
         return ttl > 0L ? ttl : nowSeconds + PENDING_DELETE_DEFAULT_TTL_SECONDS;
     }
 }
