@@ -421,14 +421,14 @@ class CleverTapAPITest : BaseTestCase() {
     }
 
     @Test
-    fun `fetchInbox with null controller invokes callback with false and skips bridge`() {
+    fun `fetchInbox with null controller delegates failure to bridge and skips submit`() {
         every { coreState.controllerManager.ctInboxController } returns null
         initializeCleverTapAPI()
 
-        var received: Boolean? = null
-        cleverTapAPI.fetchInbox(FetchInboxCallback { received = it })
+        val cb = FetchInboxCallback { }
+        cleverTapAPI.fetchInbox(cb)
 
-        assertEquals(false, received)
+        verify(exactly = 1) { coreState.inboxV2Bridge.submitFailure(cb) }
         verify(exactly = 0) { coreState.inboxV2Bridge.submit(any(), any()) }
     }
 
