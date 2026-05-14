@@ -11,7 +11,7 @@ package com.clevertap.android.sdk.network.fetch
  * subtype instead. `CancellationException` from coroutines still propagates
  * naturally — don't swallow it.
  */
-internal interface EndpointCall<T> {
+internal fun interface EndpointCall<T> {
 
     /**
      * Performs the call on whatever dispatcher the implementation chose
