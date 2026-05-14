@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inbox
 
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApi
@@ -33,7 +33,7 @@ internal class InboxDeleteCoordinator(
     private val dbAdapterProvider: () -> DBAdapter,
     private val coreMetaData: CoreMetaData,
     private val packageName: String,
-    private val logger: Logger,
+    private val logger: ILogger,
     private val clock: Clock = Clock.SYSTEM,
     private val httpDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {

@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.sdk.inbox.InboxMessageSource
 import org.json.JSONArray
@@ -41,7 +41,7 @@ internal class InboxV2Response(
     ctLockManager: CTLockManager,
     private val callbackManager: BaseCallbackManager,
     private val controllerManager: ControllerManager,
-    private val logger: Logger = config.logger
+    private val logger: ILogger = config.logger
 ) : CleverTapResponseDecorator() {
     private val inboxControllerLock: Any = ctLockManager.inboxControllerLock
 

@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.network.fetch
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApi
@@ -31,7 +31,7 @@ internal class InboxDeleteCall(
     private val messages: List<CTInboxMessage>,
     private val coreMetaData: CoreMetaData,
     private val packageName: String,
-    private val logger: Logger,
+    private val logger: ILogger,
     private val clock: Clock = Clock.SYSTEM,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : EndpointCall<Unit> {

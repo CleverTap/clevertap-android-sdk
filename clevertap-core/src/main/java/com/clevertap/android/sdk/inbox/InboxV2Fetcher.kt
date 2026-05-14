@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inbox
 
 import androidx.annotation.RestrictTo
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.network.fetch.CallResult
 import com.clevertap.android.sdk.network.fetch.EndpointCall
 import com.clevertap.android.sdk.network.fetch.FetchThrottle
@@ -28,7 +28,7 @@ internal class InboxV2Fetcher(
     private val endpoint: EndpointCall<JSONObject>,
     private val throttle: FetchThrottle,
     private val inboxV2Response: InboxV2Response,
-    private val logger: Logger
+    private val logger: ILogger
 ) {
     @Volatile
     private var disabledForSession: Boolean = false
