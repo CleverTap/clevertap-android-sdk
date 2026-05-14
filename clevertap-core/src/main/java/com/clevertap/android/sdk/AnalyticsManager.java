@@ -229,6 +229,117 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    /**
+     * Raises a Native Display element click event.
+     *
+     * Element-level analog of {@link #pushDisplayUnitClickedEventForID(String)} — for
+     * Native Display units that host multiple interactive child elements (buttons,
+     * images, etc.), this method records which child element was clicked alongside
+     * the existing wzrk_* campaign attribution.
+     *
+     * The resulting event:
+     * <ul>
+     *   <li>Carries the campaign's {@code wzrk_*} fields from the cached unit JSON
+     *       (same enrichment as {@link #pushDisplayUnitClickedEventForID(String)}).</li>
+     *   <li>Adds {@code wzrk_element_id = elementID} to {@code evtData}.</li>
+     *   <li>Merges {@code additionalProperties} into {@code evtData} after wzrk_*
+     *       enrichment. Keys starting with {@code wzrk_} are filtered out — the
+     *       prefix is reserved for server-controlled attribution fields.</li>
+     * </ul>
+     */
+    @Override
+    public void pushDisplayUnitElementClickedEventForID(
+            String unitID, String elementID,
+            HashMap<String, Object> additionalProperties) {
+        JSONObject event = new JSONObject();
+        try {
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+
+            if (controllerManager.getDisplayUnitCache() == null) {
+                return;
+            }
+            CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
+                    .getDisplayUnitForID(unitID);
+            if (displayUnit == null) {
+                return;
+            }
+            JSONObject eventExtraData = displayUnit.getWZRKFields();
+            if (eventExtraData == null) {
+                eventExtraData = new JSONObject();
+            }
+            if (elementID != null && !elementID.isEmpty()) {
+                eventExtraData.put("wzrk_element_id", elementID);
+            }
+            mergeAdditionalProperties(eventExtraData, additionalProperties);
+
+            event.put("evtData", eventExtraData);
+            try {
+                coreMetaData.setWzrkParams(filterWzrkFields(eventExtraData));
+            } catch (Throwable t) {
+                // no-op
+            }
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
+                    getFlattenedEventProperties(eventExtraData));
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT
+                            + "Failed to push Display Unit element clicked event" + t);
+        }
+    }
+
+    /**
+     * Merge caller-supplied {@code additionalProperties} into the click event's
+     * {@code evtData}, stripping any {@code wzrk_*} keys. That prefix is reserved
+     * for server-controlled attribution; we keep the namespace one-way (server →
+     * client) so client extras can never overwrite legit campaign attribution.
+     */
+    private void mergeAdditionalProperties(JSONObject eventData,
+            HashMap<String, Object> extras) {
+        if (extras == null || extras.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, Object> entry : extras.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (key == null || key.isEmpty() || value == null) {
+                continue;
+            }
+            if (key.startsWith(Constants.WZRK_PREFIX)) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT
+                                + "Dropping reserved wzrk_* key from additionalProperties: "
+                                + key);
+                continue;
+            }
+            try {
+                eventData.put(key, value);
+            } catch (JSONException ignored) {
+                // skip unserialisable entries
+            }
+        }
+    }
+
+    /**
+     * Project only the {@code wzrk_*} keys back out of the merged event data so
+     * {@link CoreMetaData#setWzrkParams(JSONObject)} retains its existing
+     * server-namespace contract (it feeds {@code wzrk_ref} batch headers; caller-
+     * supplied non-wzrk extras must not ride along on unrelated subsequent events).
+     */
+    private JSONObject filterWzrkFields(JSONObject merged) {
+        JSONObject out = new JSONObject();
+        Iterator<String> it = merged.keys();
+        while (it.hasNext()) {
+            String k = it.next();
+            if (k.startsWith(Constants.WZRK_PREFIX)) {
+                try {
+                    out.put(k, merged.get(k));
+                } catch (JSONException ignored) {
+                }
+            }
+        }
+        return out;
+    }
+
     @Override
     public void pushDisplayUnitViewedEventForID(String unitID) {
         JSONObject event = new JSONObject();

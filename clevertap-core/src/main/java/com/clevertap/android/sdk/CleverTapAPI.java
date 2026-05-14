@@ -2530,6 +2530,38 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Raises a Native Display element click event for the given unit + element.
+     *
+     * Element-level analog of {@link #pushDisplayUnitClickedEventForID(String)} — for
+     * Native Display units that host multiple interactive child elements (buttons,
+     * images, etc.), this method records which child element was clicked alongside
+     * the existing wzrk_* campaign attribution.
+     *
+     * <p>The resulting "Notification Clicked" event:
+     * <ul>
+     *   <li>Carries the campaign's {@code wzrk_*} fields from the cached unit JSON
+     *       (same enrichment as the unit-level method).</li>
+     *   <li>Adds {@code wzrk_element_id = elementID} to the event's {@code evtData}.</li>
+     *   <li>Merges {@code additionalProperties} into {@code evtData} after wzrk_*
+     *       enrichment. Keys starting with {@code wzrk_} are filtered out — that
+     *       prefix is reserved for server-controlled attribution fields.</li>
+     * </ul>
+     *
+     * @param unitID               the unitID of the Display Unit
+     *                             ({@link CleverTapDisplayUnit#getUnitID()})
+     * @param elementID            identifier of the clicked child element (from the
+     *                             Native Display config; typically a button node id)
+     * @param additionalProperties optional per-click context (action url, custom KVs, …)
+     */
+    @SuppressWarnings("unused")
+    public void pushDisplayUnitElementClickedEventForID(
+            String unitID, String elementID,
+            HashMap<String, Object> additionalProperties) {
+        coreState.getAnalyticsManager().pushDisplayUnitElementClickedEventForID(
+                unitID, elementID, additionalProperties);
+    }
+
+    /**
      * Raises the Display Unit Viewed event
      *
      * @param unitID - unitID of the Display Unit{@link CleverTapDisplayUnit#getUnitID()}
