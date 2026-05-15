@@ -1,4 +1,15 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.2.0 (May 15, 2026)
+
+#### New Features
+* **App Inbox Cross-Device Sync:** App Inbox messages now sync across a user's devices. If a user deletes or reads a message on one device, it is automatically reflected on their other devices. No code changes are required for existing integrations.
+  * **New Inbox Fetch APIs:** Two new public methods have been added to `CleverTapAPI`:
+    * `fetchInbox()` — triggers an inbox refresh from the server (fire-and-forget).
+    * `fetchInbox(FetchInboxCallback)` — same as above, but invokes the callback with a success/failure result when the fetch completes. The callback fires on the SDK's network thread, not the main thread.
+    * These APIs are intended for pull-to-refresh and programmatic refresh scenarios. App-launch and `onUserLogin` fetches continue to happen automatically.
+  * **Pull-to-Refresh in Built-in Inbox:** The built-in App Inbox (`showAppInbox()`) now includes a pull-to-refresh gesture. Manual inbox fetches — including those triggered by `fetchInbox()` — are throttled to once every 5 minutes between consecutive user-initiated calls to prevent excessive server requests.
+  * **Inbox Viewed and Clicked Event Deduplication:** Rapid duplicate `Notification Viewed` and `Notification Clicked` events for the same inbox message are now automatically suppressed to prevent analytics inflation. Additionally, a `Notification Viewed` event is not raised for messages that have already been read. For custom inbox implementations, ensure `pushInboxNotificationViewedEvent(messageId)` is called when a message becomes visible to the user, before calling `markReadInboxMessage(messageId)` — calling them in reverse order will silently drop the Viewed event.
+
 ### Version 8.1.0 (April 17, 2026)
 
 #### New Features

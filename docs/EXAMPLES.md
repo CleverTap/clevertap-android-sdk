@@ -342,6 +342,14 @@ You can choose to create your own App Inbox with the help of the following APIs 
 //Initialize App Inbox
 cleverTapDefaultInstance.initializeInbox();
 
+//Fetch latest inbox messages from the server (e.g. on pull-to-refresh).
+//Throttled to once every 5 minutes between consecutive calls.
+cleverTapDefaultInstance.fetchInbox(success -> {
+    // success is true if the fetch completed and new messages were received.
+    // Inbox listener callbacks (inboxMessagesDidUpdate) fire automatically.
+    // Note: this callback runs on the SDK's network thread — post to main if touching UI.
+});
+
 //Get Inbox Message Count
 cleverTapDefaultInstance.getInboxMessageCount();
 
