@@ -160,7 +160,7 @@ public class LoginController {
                     }
                     pushProviders.forcePushDeviceToken(true);
                     resetInbox();
-                    inboxV2Bridge.submit(false, null);
+                    schedulePostSwitchInboxFetch();
                     resetFeatureFlags();
                     resetProductConfigs();
                     recordDeviceIDErrors();
@@ -322,6 +322,28 @@ public class LoginController {
             controllerManager.setCTInboxController(null);
         }
         controllerManager.initializeInbox();
+    }
+
+    /**
+     * Enqueues a post-user-switch inbox fetch on the PostAsyncSafely executor.
+     *
+     * <p>Ordering guarantee: PostAsyncSafely is a single-thread executor.
+     * By the time this task runs, the "profilePush" task queued by
+     * {@code analyticsManager.pushProfile} will already have completed,
+     * so new-user events are in the DB. Flushing synchronously here lets
+     * the server return the new user's ARP <em>before</em>
+     * {@link InboxV2Bridge#submit} builds the inbox FETCH request header.
+     * Without this flush the first FETCH goes out with stale/missing ARP
+     * and returns no inbox messages.
+     */
+    private void schedulePostSwitchInboxFetch() {
+        CTExecutorFactory.executors(config).postAsyncSafelyTask()
+                .execute("postSwitchInboxFetch", () -> {
+                    baseEventQueueManager.flushQueueSync(
+                            context, EventGroup.REGULAR);
+                    inboxV2Bridge.submit(false, null);
+                    return null;
+                });
     }
 //Session
 

@@ -222,7 +222,7 @@ class LoginControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun `asyncProfileSwitchUser submits V2 fetch after resetInbox and before inAppFCManager changeUser`() {
+    fun `asyncProfileSwitchUser flushes REGULAR queue then submits inbox V2 fetch on user switch`() {
         val profile = mapOf("Name" to "John Doe")
         mockkStatic(CTExecutorFactory::class) {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
@@ -230,10 +230,13 @@ class LoginControllerTest : BaseTestCase() {
             loginController.asyncProfileSwitchUser(profile, "12345", "54321")
         }
 
+        // resetInbox (main callable) → flushQueueSync → submit (scheduled task).
+        // The flush runs before submit so the new user's ARP is in SharedPreferences
+        // before the inbox FETCH request header is built.
         verifyOrder {
-            pushProviders.forcePushDeviceToken(true)
+            controllerManager.setCTInboxController(null)
+            baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
             inboxV2Bridge.submit(false, null)
-            controllerManager.inAppFCManager.changeUser(any())
         }
     }
 
