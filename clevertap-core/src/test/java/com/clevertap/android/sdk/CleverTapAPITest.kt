@@ -4,6 +4,7 @@ import android.location.Location
 import android.os.Bundle
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.inbox.CTInboxController
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
 import com.clevertap.android.shared.test.BaseTestCase
@@ -441,7 +442,7 @@ class CleverTapAPITest : BaseTestCase() {
         val cb = FetchInboxCallback { /* no-op */ }
         cleverTapAPI.fetchInbox(cb)
 
-        verify(exactly = 1) { coreState.inboxV2Bridge.submit(true, cb) }
+        verify(exactly = 1) { coreState.inboxV2Bridge.submit(FetchTrigger.USER_INITIATED, cb) }
     }
 
     @Test
@@ -452,7 +453,7 @@ class CleverTapAPITest : BaseTestCase() {
 
         cleverTapAPI.fetchInbox()
 
-        verify(exactly = 1) { coreState.inboxV2Bridge.submit(true, null) }
+        verify(exactly = 1) { coreState.inboxV2Bridge.submit(FetchTrigger.USER_INITIATED, null) }
     }
 
     @Test

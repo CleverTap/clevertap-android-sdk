@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inbox
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.FetchInboxCallback
 import com.clevertap.android.sdk.network.fetch.CallResult
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.network.fetch.NetworkScope
 import kotlinx.coroutines.launch
 
@@ -25,9 +26,9 @@ internal class InboxV2Bridge(
      * A null [callback] is fine — used by app-launch and onUserLogin which
      * don't need to know the outcome.
      */
-    fun submit(respectThrottle: Boolean, callback: FetchInboxCallback?) {
+    fun submit(trigger: FetchTrigger, callback: FetchInboxCallback?) {
         networkScope.coroutineScope.launch {
-            val result = fetcher.fetch(respectThrottle)
+            val result = fetcher.fetch(trigger)
             callback?.onInboxFetched(result is CallResult.Success)
         }
     }

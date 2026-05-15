@@ -4,6 +4,7 @@ import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.network.fetch.CallResult
 import com.clevertap.android.sdk.network.fetch.EndpointCall
 import com.clevertap.android.sdk.network.fetch.FetchThrottle
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.response.InboxV2Response
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -40,14 +41,14 @@ class InboxV2FetcherTest {
     private fun noopLogger(): Logger = mockk(relaxed = true)
 
     @Test
-    fun `respectThrottle=true returns Throttled when throttle is hot`() = runTest {
+    fun `USER_INITIATED returns Throttled when throttle is hot`() = runTest {
         val endpoint = stubEndpoint()
         val throttle = mockk<FetchThrottle>(relaxed = true) {
             every { shouldThrottle() } returns true
         }
 
         val result = InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
-            .fetch(respectThrottle = true)
+            .fetch(FetchTrigger.USER_INITIATED)
 
         assertEquals(CallResult.Throttled, result)
         coVerify(exactly = 0) { endpoint.execute() }
@@ -55,17 +56,17 @@ class InboxV2FetcherTest {
     }
 
     @Test
-    fun `respectThrottle=false bypasses throttle`() = runTest {
+    fun `SYSTEM bypasses throttle and does NOT record`() = runTest {
         val throttle = mockk<FetchThrottle>(relaxed = true) {
             every { shouldThrottle() } returns true
         }
         val endpoint = stubEndpoint(CallResult.Success(JSONObject()))
 
         val result = InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
-            .fetch(respectThrottle = false)
+            .fetch(FetchTrigger.SYSTEM)
 
         assertTrue(result is CallResult.Success)
-        verify { throttle.recordFetch() }
+        verify(exactly = 0) { throttle.recordFetch() }
     }
 
     @Test
@@ -73,8 +74,8 @@ class InboxV2FetcherTest {
         val endpoint = stubEndpoint(CallResult.Disabled)
         val fetcher = InboxV2Fetcher(endpoint, nonThrottling(), noopResponse(), noopLogger())
 
-        val first = fetcher.fetch(respectThrottle = false)
-        val second = fetcher.fetch(respectThrottle = false)
+        val first = fetcher.fetch(FetchTrigger.SYSTEM)
+        val second = fetcher.fetch(FetchTrigger.SYSTEM)
 
         assertEquals(CallResult.Disabled, first)
         assertEquals(CallResult.Disabled, second)
@@ -91,7 +92,7 @@ class InboxV2FetcherTest {
         val endpoint = stubEndpoint(CallResult.Success(json))
 
         val result = InboxV2Fetcher(endpoint, nonThrottling(), response, noopLogger())
-            .fetch(respectThrottle = false)
+            .fetch(FetchTrigger.SYSTEM)
 
         assertTrue(result is CallResult.Success)
         assertSame(json, captured.captured)
@@ -102,7 +103,7 @@ class InboxV2FetcherTest {
         val endpoint = stubEndpoint(CallResult.HttpError(500, "oops"))
 
         val result = InboxV2Fetcher(endpoint, nonThrottling(), noopResponse(), noopLogger())
-            .fetch(respectThrottle = false)
+            .fetch(FetchTrigger.SYSTEM)
 
         assertEquals(CallResult.HttpError(500, "oops"), result)
     }
@@ -113,47 +114,73 @@ class InboxV2FetcherTest {
         val endpoint = stubEndpoint(CallResult.NetworkFailure(cause))
 
         val result = InboxV2Fetcher(endpoint, nonThrottling(), noopResponse(), noopLogger())
-            .fetch(respectThrottle = false)
+            .fetch(FetchTrigger.SYSTEM)
 
         assertTrue(result is CallResult.NetworkFailure)
         assertSame(cause, (result as CallResult.NetworkFailure).cause)
     }
 
     @Test
-    fun `recordFetch called on Success`() = runTest {
+    fun `USER_INITIATED records throttle on Success`() = runTest {
         val throttle = mockk<FetchThrottle>(relaxed = true) {
             every { shouldThrottle() } returns false
         }
         val endpoint = stubEndpoint(CallResult.Success(JSONObject()))
 
         InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
-            .fetch(respectThrottle = true)
+            .fetch(FetchTrigger.USER_INITIATED)
 
         verify(exactly = 1) { throttle.recordFetch() }
     }
 
     @Test
-    fun `recordFetch called on HttpError`() = runTest {
+    fun `USER_INITIATED records throttle on HttpError`() = runTest {
         val throttle = mockk<FetchThrottle>(relaxed = true) {
             every { shouldThrottle() } returns false
         }
         val endpoint = stubEndpoint(CallResult.HttpError(500, "err"))
 
         InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
-            .fetch(respectThrottle = true)
+            .fetch(FetchTrigger.USER_INITIATED)
 
         verify(exactly = 1) { throttle.recordFetch() }
     }
 
     @Test
-    fun `recordFetch NOT called on NetworkFailure — retry is not blocked`() = runTest {
+    fun `USER_INITIATED does NOT record throttle on NetworkFailure — retry is not blocked`() = runTest {
         val throttle = mockk<FetchThrottle>(relaxed = true) {
             every { shouldThrottle() } returns false
         }
         val endpoint = stubEndpoint(CallResult.NetworkFailure(IOException("timeout")))
 
         InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
-            .fetch(respectThrottle = true)
+            .fetch(FetchTrigger.USER_INITIATED)
+
+        verify(exactly = 0) { throttle.recordFetch() }
+    }
+
+    @Test
+    fun `SYSTEM does NOT record throttle on Success`() = runTest {
+        val throttle = mockk<FetchThrottle>(relaxed = true) {
+            every { shouldThrottle() } returns false
+        }
+        val endpoint = stubEndpoint(CallResult.Success(JSONObject()))
+
+        InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
+            .fetch(FetchTrigger.SYSTEM)
+
+        verify(exactly = 0) { throttle.recordFetch() }
+    }
+
+    @Test
+    fun `SYSTEM does NOT record throttle on HttpError`() = runTest {
+        val throttle = mockk<FetchThrottle>(relaxed = true) {
+            every { shouldThrottle() } returns false
+        }
+        val endpoint = stubEndpoint(CallResult.HttpError(503, "unavailable"))
+
+        InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
+            .fetch(FetchTrigger.SYSTEM)
 
         verify(exactly = 0) { throttle.recordFetch() }
     }

@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inbox
 
 import com.clevertap.android.sdk.FetchInboxCallback
 import com.clevertap.android.sdk.network.fetch.CallResult
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.network.fetch.NetworkScope
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -26,7 +27,7 @@ class InboxV2BridgeTest {
         val bridge = InboxV2Bridge(fetcher, scope)
 
         var received: Boolean? = null
-        bridge.submit(respectThrottle = true, callback = FetchInboxCallback { received = it })
+        bridge.submit(trigger = FetchTrigger.USER_INITIATED, callback = FetchInboxCallback { received = it })
         advanceUntilIdle()
 
         assertEquals(true, received)
@@ -41,7 +42,7 @@ class InboxV2BridgeTest {
         val bridge = InboxV2Bridge(fetcher, scope)
 
         var received: Boolean? = null
-        bridge.submit(respectThrottle = true, callback = FetchInboxCallback { received = it })
+        bridge.submit(trigger = FetchTrigger.USER_INITIATED, callback = FetchInboxCallback { received = it })
         advanceUntilIdle()
 
         assertEquals(false, received)
@@ -55,7 +56,7 @@ class InboxV2BridgeTest {
         val scope = NetworkScope(StandardTestDispatcher(testScheduler))
         val bridge = InboxV2Bridge(fetcher, scope)
 
-        bridge.submit(respectThrottle = false, callback = null)
+        bridge.submit(trigger = FetchTrigger.SYSTEM, callback = null)
         advanceUntilIdle()
     }
 
@@ -71,7 +72,7 @@ class InboxV2BridgeTest {
         val bridge = InboxV2Bridge(fetcher, scope)
 
         var received: Boolean? = null
-        bridge.submit(respectThrottle = false, callback = FetchInboxCallback { received = it })
+        bridge.submit(trigger = FetchTrigger.SYSTEM, callback = FetchInboxCallback { received = it })
         scope.cancel()
         advanceUntilIdle()
 

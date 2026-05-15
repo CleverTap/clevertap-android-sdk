@@ -58,6 +58,7 @@ import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.network.fetch.FetchTrigger;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
@@ -2287,7 +2288,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
             return;
         }
-        coreState.getInboxV2Bridge().submit(true, callback);
+        coreState.getInboxV2Bridge().submit(FetchTrigger.USER_INITIATED, callback);
     }
 
     /**

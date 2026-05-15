@@ -5,6 +5,7 @@ import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
 import com.clevertap.android.sdk.inbox.InboxV2Bridge
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FakeClock
@@ -154,7 +155,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             verify { coreState.sessionManager.checkTimeoutSession() }
             verify { coreState.analyticsManager.pushAppLaunchedEvent() }
             verify { coreState.analyticsManager.fetchFeatureFlags() }
-            verify(exactly = 1) { inboxV2Bridge.submit(false, null) }
+            verify(exactly = 1) { inboxV2Bridge.submit(FetchTrigger.SYSTEM, null) }
             verify { coreState.pushProviders.onTokenRefresh() }
             verify { geofenceCallbackSpy.triggerLocation() }
             verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }

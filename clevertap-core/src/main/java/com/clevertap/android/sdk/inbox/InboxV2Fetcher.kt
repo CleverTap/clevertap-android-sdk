@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.network.fetch.CallResult
 import com.clevertap.android.sdk.network.fetch.EndpointCall
 import com.clevertap.android.sdk.network.fetch.FetchThrottle
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.response.InboxV2Response
 import org.json.JSONObject
 
@@ -34,25 +35,33 @@ internal class InboxV2Fetcher(
     private var disabledForSession: Boolean = false
 
     /**
-     * @param respectThrottle true for pull-to-refresh and the public
-     *   `fetchInbox()` API; false for app-launch and `onUserLogin`.
+     * @param trigger [FetchTrigger.USER_INITIATED] for pull-to-refresh and the
+     *   public `fetchInbox()` API — throttle is checked and recorded.
+     *   [FetchTrigger.SYSTEM] for app-launch and `onUserLogin` — throttle is
+     *   bypassed entirely and never recorded.
      */
-    suspend fun fetch(respectThrottle: Boolean): CallResult<Unit> {
+    suspend fun fetch(trigger: FetchTrigger): CallResult<Unit> {
         if (disabledForSession) {
             logger.verbose("InboxV2", "disabled for session — skipping")
             return CallResult.Disabled
         }
 
-        if (respectThrottle && throttle.shouldThrottle()) {
+        if (trigger == FetchTrigger.USER_INITIATED && throttle.shouldThrottle()) {
             logger.verbose("InboxV2", "throttled")
             return CallResult.Throttled
         }
 
-        logger.verbose("InboxV2", "starting fetch (respectThrottle=$respectThrottle)")
+        logger.verbose("InboxV2", "starting fetch (trigger=$trigger)")
 
-        val result: CallResult<Unit> = when (val raw = endpoint.execute()) {
+        val raw = endpoint.execute()
+
+        if (trigger == FetchTrigger.USER_INITIATED &&
+                (raw is CallResult.Success || raw is CallResult.HttpError)) {
+            throttle.recordFetch()
+        }
+
+        val result: CallResult<Unit> = when (raw) {
             is CallResult.Success -> {
-                throttle.recordFetch()
                 inboxV2Response.processResponse(raw.data)
                 CallResult.Success(Unit)
             }
@@ -61,10 +70,7 @@ internal class InboxV2Fetcher(
                 logger.verbose("InboxV2", "session disabled — subsequent calls will short-circuit")
                 CallResult.Disabled
             }
-            is CallResult.HttpError -> {
-                throttle.recordFetch()
-                raw
-            }
+            is CallResult.HttpError -> raw
             is CallResult.NetworkFailure -> raw
             CallResult.Throttled -> CallResult.Throttled
         }

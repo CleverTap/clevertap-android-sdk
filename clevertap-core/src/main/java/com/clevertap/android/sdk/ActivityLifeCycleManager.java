@@ -12,6 +12,7 @@ import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.InboxV2Bridge;
+import com.clevertap.android.sdk.network.fetch.FetchTrigger;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
@@ -107,7 +108,7 @@ class ActivityLifeCycleManager {
 
             analyticsManager.pushAppLaunchedEvent();
             analyticsManager.fetchFeatureFlags();
-            inboxV2Bridge.submit(false, null);
+            inboxV2Bridge.submit(FetchTrigger.SYSTEM, null);
             pushProviders.onTokenRefresh();
             Task<Void> task = executors.postAsyncSafelyTask();
             task.execute("HandlingInstallReferrer", new Callable<Void>() {

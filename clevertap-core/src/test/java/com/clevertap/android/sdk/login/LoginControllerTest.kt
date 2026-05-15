@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import com.clevertap.android.sdk.events.EventGroup
 import com.clevertap.android.sdk.inbox.InboxV2Bridge
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.network.ContentFetchManager
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.CTExecutorFactory
@@ -218,7 +219,7 @@ class LoginControllerTest : BaseTestCase() {
             loginController.asyncProfileSwitchUser(profile, "12345", "54321")
         }
 
-        verify(exactly = 1) { inboxV2Bridge.submit(false, null) }
+        verify(exactly = 1) { inboxV2Bridge.submit(FetchTrigger.SYSTEM, null) }
     }
 
     @Test
@@ -236,7 +237,7 @@ class LoginControllerTest : BaseTestCase() {
         verifyOrder {
             controllerManager.setCTInboxController(null)
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
-            inboxV2Bridge.submit(false, null)
+            inboxV2Bridge.submit(FetchTrigger.SYSTEM, null)
         }
     }
 

@@ -22,6 +22,7 @@ import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.InboxV2Bridge;
+import com.clevertap.android.sdk.network.fetch.FetchTrigger;
 import com.clevertap.android.sdk.network.ContentFetchManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
@@ -341,7 +342,7 @@ public class LoginController {
                 .execute("postSwitchInboxFetch", () -> {
                     baseEventQueueManager.flushQueueSync(
                             context, EventGroup.REGULAR);
-                    inboxV2Bridge.submit(false, null);
+                    inboxV2Bridge.submit(FetchTrigger.SYSTEM, null);
                     return null;
                 });
     }
