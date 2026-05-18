@@ -238,7 +238,6 @@ public class CTInboxListViewFragment extends Fragment {
         CleverTapAPI api = CleverTapAPI.instanceWithConfig(getActivity(), config);
         if (api != null && api.isInboxFetchDisabledForSession()) {
             swipeRefreshLayout.setEnabled(false);
-            swipeRefreshLayout.setVisibility(View.GONE);
             return;
         }
 
@@ -259,7 +258,6 @@ public class CTInboxListViewFragment extends Fragment {
                     // First fetch that hit a 403 — hide the widget now that the spinner is done.
                     if (!success && refreshApi.isInboxFetchDisabledForSession()) {
                         swipeRefreshLayout.setEnabled(false);
-                        swipeRefreshLayout.setVisibility(View.GONE);
                     }
                 });
             });
