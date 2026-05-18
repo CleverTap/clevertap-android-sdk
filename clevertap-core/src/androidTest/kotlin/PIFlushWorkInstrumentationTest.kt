@@ -13,6 +13,7 @@ import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.clevertap.android.sdk.AnalyticsManagerBundler.notificationViewedJson
+import com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -81,7 +82,7 @@ class PIFlushWorkInstrumentationTest{
         }
 
         listOf(Pair(defaultInstance,bundle),Pair(ctInstance1,bundle1), Pair(ctInstance2,bundle2)).map {
-            val event = notificationViewedJson(it.second)
+            val event = notificationViewedJson(wzrkBundleToJson(it.second))
             Pair(it.first,event)
         }.forEach {
             it.first!!.coreState!!.databaseManager.queuePushNotificationViewedEventToDB(myContext, it.second)
