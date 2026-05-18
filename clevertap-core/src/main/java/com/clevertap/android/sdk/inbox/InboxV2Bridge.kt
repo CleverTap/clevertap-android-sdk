@@ -38,4 +38,7 @@ internal class InboxV2Bridge(
             callback.onInboxFetched(false)
         }
     }
+
+    val isInboxFetchDisabledForSession: Boolean
+        get() = fetcher.isDisabledForSession
 }

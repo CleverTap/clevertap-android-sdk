@@ -19,6 +19,7 @@ import org.json.JSONObject
 import org.junit.Test
 import java.io.IOException
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -80,6 +81,19 @@ class InboxV2FetcherTest {
         assertEquals(CallResult.Disabled, first)
         assertEquals(CallResult.Disabled, second)
         coVerify(exactly = 1) { endpoint.execute() }
+    }
+
+    @Test
+    fun `isDisabledForSession is false before any fetch`() {
+        val fetcher = InboxV2Fetcher(stubEndpoint(), nonThrottling(), noopResponse(), noopLogger())
+        assertFalse(fetcher.isDisabledForSession)
+    }
+
+    @Test
+    fun `isDisabledForSession is true after endpoint returns Disabled`() = runTest {
+        val fetcher = InboxV2Fetcher(stubEndpoint(CallResult.Disabled), nonThrottling(), noopResponse(), noopLogger())
+        fetcher.fetch(FetchTrigger.SYSTEM)
+        assertTrue(fetcher.isDisabledForSession)
     }
 
     @Test

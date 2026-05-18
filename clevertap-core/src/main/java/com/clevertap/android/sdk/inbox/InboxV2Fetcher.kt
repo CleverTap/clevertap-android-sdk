@@ -34,6 +34,9 @@ internal class InboxV2Fetcher(
     @Volatile
     private var disabledForSession: Boolean = false
 
+    internal val isDisabledForSession: Boolean
+        get() = disabledForSession
+
     /**
      * @param trigger [FetchTrigger.USER_INITIATED] for pull-to-refresh and the
      *   public `fetchInbox()` API — throttle is checked and recorded.

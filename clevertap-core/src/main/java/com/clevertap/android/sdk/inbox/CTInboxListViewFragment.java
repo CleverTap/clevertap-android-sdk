@@ -232,17 +232,36 @@ public class CTInboxListViewFragment extends Fragment {
             RecyclerView target = mediaRecyclerView != null ? mediaRecyclerView : recyclerView;
             return target != null && target.canScrollVertically(-1);
         });
+
+        // If the V2 fetch endpoint was already disabled this session (prior 403), hide the
+        // widget before registering the listener so no zombie callback is ever attached.
+        CleverTapAPI api = CleverTapAPI.instanceWithConfig(getActivity(), config);
+        if (api != null && api.isInboxFetchDisabledForSession()) {
+            swipeRefreshLayout.setEnabled(false);
+            swipeRefreshLayout.setVisibility(View.GONE);
+            return;
+        }
+
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            CleverTapAPI api = CleverTapAPI.instanceWithConfig(getActivity(), config);
-            if (api == null) {
+            // Re-resolve the API instance at swipe time, not at wiring time. The listener
+            // lambda can fire long after onCreateView — activity may have rotated. Capturing
+            // the outer `api` reference would risk a stale/leaked context.
+            CleverTapAPI refreshApi = CleverTapAPI.instanceWithConfig(getActivity(), config);
+            if (refreshApi == null) {
                 swipeRefreshLayout.setRefreshing(false);
                 return;
             }
-            api.fetchInbox(success -> {
+            refreshApi.fetchInbox(success -> {
                 Activity activity = getActivity();
-                if (activity != null) {
-                    activity.runOnUiThread(() -> swipeRefreshLayout.setRefreshing(false));
-                }
+                if (activity == null) return;
+                activity.runOnUiThread(() -> {
+                    swipeRefreshLayout.setRefreshing(false);
+                    // First fetch that hit a 403 — hide the widget now that the spinner is done.
+                    if (!success && refreshApi.isInboxFetchDisabledForSession()) {
+                        swipeRefreshLayout.setEnabled(false);
+                        swipeRefreshLayout.setVisibility(View.GONE);
+                    }
+                });
             });
         });
     }

@@ -1369,16 +1369,43 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `Viewed is skipped when message isRead=true`() {
+    fun `Viewed is skipped for V2 message when isRead=true`() {
         mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
-            every { inboxMessage.messageId } returns "m-read"
+            every { inboxMessage.messageId } returns "m-v2-read"
             every { inboxMessage.isRead } returns true
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+            val inboxController = mockk<CTInboxController>(relaxed = true)
+            every { coreState.controllerManager.ctInboxController } returns inboxController
+            every { inboxController.isV2Message("m-v2-read") } returns true
 
             analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
 
             verify(exactly = 0) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
+    @Test
+    fun `Viewed on V1 message fires even when isRead=true`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-v1-read"
+            every { inboxMessage.isRead } returns true
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+            val inboxController = mockk<CTInboxController>(relaxed = true)
+            every { coreState.controllerManager.ctInboxController } returns inboxController
+            every { inboxController.isV2Message("m-v1-read") } returns false
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
+
+            verify(exactly = 1) {
                 eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
             }
         }

@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.network.fetch.CallResult
 import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.network.fetch.NetworkScope
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -13,7 +14,9 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class InboxV2BridgeTest {
@@ -104,5 +107,23 @@ class InboxV2BridgeTest {
         advanceUntilIdle()
 
         assertNull(received)
+    }
+
+    @Test
+    fun `isInboxFetchDisabledForSession delegates to fetcher — false`() {
+        val fetcher = mockk<InboxV2Fetcher> {
+            every { isDisabledForSession } returns false
+        }
+        val bridge = InboxV2Bridge(fetcher, NetworkScope(StandardTestDispatcher()))
+        assertFalse(bridge.isInboxFetchDisabledForSession)
+    }
+
+    @Test
+    fun `isInboxFetchDisabledForSession delegates to fetcher — true`() {
+        val fetcher = mockk<InboxV2Fetcher> {
+            every { isDisabledForSession } returns true
+        }
+        val bridge = InboxV2Bridge(fetcher, NetworkScope(StandardTestDispatcher()))
+        assertTrue(bridge.isInboxFetchDisabledForSession)
     }
 }
