@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.displayunits;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import java.util.ArrayList;
-import org.json.JSONArray;
+import java.util.List;
 
 /**
  * In-memory storage contract for {@link CleverTapDisplayUnit}s.
@@ -42,11 +42,9 @@ public interface DisplayUnitCache {
      * display units. The default implementation replaces the cache contents;
      * hosts may choose merge semantics for their own implementations.
      *
-     * @param messages parsed server payload; may be {@code null} or empty.
-     * @return the parsed units that were applied, or {@code null} if none.
+     * @param displayUnits parsed display units; may be {@code null} or empty.
      */
-    @Nullable
-    ArrayList<CleverTapDisplayUnit> updateDisplayUnits(@Nullable JSONArray messages);
+    void updateDisplayUnits(@Nullable List<CleverTapDisplayUnit> displayUnits);
 
     /**
      * Clears all units. Called by the SDK on logout / reset flows.
