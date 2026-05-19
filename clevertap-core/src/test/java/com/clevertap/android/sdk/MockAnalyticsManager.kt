@@ -23,10 +23,6 @@ internal class MockAnalyticsManager : BaseAnalyticsManager() {
     }
 
     override fun pushDisplayUnitClickedEventForID(unitID: String) {}
-    override fun pushDisplayUnitElementClickedEventForID(
-        unitID: String, elementID: String,
-        additionalProperties: java.util.HashMap<String, Any>?
-    ) {}
     override fun pushDisplayUnitViewedEventForID(unitID: String) {}
     override fun pushError(errorMessage: String, errorCode: Int) {}
     override fun pushEvent(eventName: String, eventActions: Map<String, Any>) {}

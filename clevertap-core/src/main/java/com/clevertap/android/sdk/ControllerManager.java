@@ -3,10 +3,8 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import androidx.annotation.AnyThread;
 import androidx.annotation.WorkerThread;
-import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
-import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
@@ -29,7 +27,7 @@ public class ControllerManager {
 
     private final BaseDatabaseManager baseDatabaseManager;
 
-    private volatile DisplayUnitCache displayUnitCache;
+    private CTDisplayUnitController ctDisplayUnitController;
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
@@ -81,46 +79,13 @@ public class ControllerManager {
         baseDatabaseManager = databaseManager;
     }
 
-    /**
-     * @return the active {@link DisplayUnitCache}; {@code null} until the SDK
-     * receives its first {@code adUnit_notifs} response or a host installs a
-     * cache via {@link #setDisplayUnitCache(DisplayUnitCache)}.
-     */
-    @Nullable
-    public DisplayUnitCache getDisplayUnitCache() {
-        return displayUnitCache;
-    }
-
-    /**
-     * Replaces the display-unit cache. Pass {@code null} to clear the
-     * reference (subsequent server responses will lazily install a fresh
-     * default {@link CTDisplayUnitController}).
-     */
-    public void setDisplayUnitCache(@Nullable DisplayUnitCache cache) {
-        displayUnitCache = cache;
-    }
-
-    /**
-     * @deprecated since v7.x.0. Use {@link #getDisplayUnitCache()} instead.
-     * Returns the active cache only when it is the default
-     * {@link CTDisplayUnitController}; returns {@code null} when a host has
-     * installed a custom {@link DisplayUnitCache}.
-     */
-    @Deprecated
-    @Nullable
     public CTDisplayUnitController getCTDisplayUnitController() {
-        return displayUnitCache instanceof CTDisplayUnitController
-                ? (CTDisplayUnitController) displayUnitCache : null;
+        return ctDisplayUnitController;
     }
 
-    /**
-     * @deprecated since v7.x.0. Use
-     * {@link #setDisplayUnitCache(DisplayUnitCache)} instead.
-     */
-    @Deprecated
     public void setCTDisplayUnitController(
             final CTDisplayUnitController CTDisplayUnitController) {
-        setDisplayUnitCache(CTDisplayUnitController);
+        ctDisplayUnitController = CTDisplayUnitController;
     }
 
     /**

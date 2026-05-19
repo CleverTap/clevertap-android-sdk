@@ -30,7 +30,6 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.cryption.ICryptHandler;
-import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -1473,13 +1472,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
-        DisplayUnitCache cache = coreState.getControllerManager().getDisplayUnitCache();
-        if (cache != null) {
-            return cache.getAllDisplayUnits();
+
+        if (coreState.getControllerManager().getCTDisplayUnitController() != null) {
+            return coreState.getControllerManager().getCTDisplayUnitController().getAllDisplayUnits();
+        } else {
+            getConfigLogger()
+                    .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
+            return null;
         }
-        getConfigLogger()
-                .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
-        return null;
     }
 
     /**
@@ -1792,13 +1792,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        DisplayUnitCache cache = coreState.getControllerManager().getDisplayUnitCache();
-        if (cache != null) {
-            return cache.getDisplayUnitForID(unitID);
+        if (coreState.getControllerManager().getCTDisplayUnitController() != null) {
+            return coreState.getControllerManager().getCTDisplayUnitController().getDisplayUnitForID(unitID);
+        } else {
+            getConfigLogger().verbose(getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
+            return null;
         }
-        getConfigLogger().verbose(getAccountId(),
-                Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
-        return null;
     }
 
     /**
@@ -2496,29 +2496,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Replaces the SDK's display-unit cache with the supplied implementation.
-     * Pass {@code null} to clear the reference (subsequent server responses
-     * will lazily install a fresh default {@link
-     * com.clevertap.android.sdk.displayunits.CTDisplayUnitController}).
-     *
-     * <p>The new instance receives subsequent {@code updateDisplayUnits}
-     * calls (e.g. from server responses) and serves all lookup sites:
-     * {@link #getDisplayUnitForId(String)}, {@link #getAllDisplayUnits()},
-     * {@link #pushDisplayUnitViewedEventForID(String)}, and
-     * {@link #pushDisplayUnitClickedEventForID(String)}.
-     *
-     * <p>Implementations must be thread-safe. The display-unit listener
-     * registered via {@link #setDisplayUnitListener} fires only for
-     * server-pipeline activity — replacing the cache or mutating its
-     * contents from outside the SDK does not synthesise a listener fire.
-     *
-     * @since 7.x.0
-     */
-    public void setDisplayUnitCache(@Nullable DisplayUnitCache cache) {
-        coreState.getControllerManager().setDisplayUnitCache(cache);
-    }
-
-    /**
      * Raises the Display Unit Clicked event
      *
      * @param unitID - unitID of the Display Unit{@link CleverTapDisplayUnit#getUnitID()}
@@ -2526,38 +2503,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public void pushDisplayUnitClickedEventForID(String unitID) {
         coreState.getAnalyticsManager().pushDisplayUnitClickedEventForID(unitID);
-    }
-
-    /**
-     * Raises a Native Display element click event for the given unit + element.
-     *
-     * Element-level analog of {@link #pushDisplayUnitClickedEventForID(String)} — for
-     * Native Display units that host multiple interactive child elements (buttons,
-     * images, etc.), this method records which child element was clicked alongside
-     * the existing wzrk_* campaign attribution.
-     *
-     * <p>The resulting "Notification Clicked" event:
-     * <ul>
-     *   <li>Carries the campaign's {@code wzrk_*} fields from the cached unit JSON
-     *       (same enrichment as the unit-level method).</li>
-     *   <li>Adds {@code wzrk_element_id = elementID} to the event's {@code evtData}.</li>
-     *   <li>Merges {@code additionalProperties} into {@code evtData} after wzrk_*
-     *       enrichment. Keys starting with {@code wzrk_} are filtered out — that
-     *       prefix is reserved for server-controlled attribution fields.</li>
-     * </ul>
-     *
-     * @param unitID               the unitID of the Display Unit
-     *                             ({@link CleverTapDisplayUnit#getUnitID()})
-     * @param elementID            identifier of the clicked child element (from the
-     *                             Native Display config; typically a button node id)
-     * @param additionalProperties optional per-click context (action url, custom KVs, …)
-     */
-    @SuppressWarnings("unused")
-    public void pushDisplayUnitElementClickedEventForID(
-            String unitID, String elementID,
-            HashMap<String, Object> additionalProperties) {
-        coreState.getAnalyticsManager().pushDisplayUnitElementClickedEventForID(
-                unitID, elementID, additionalProperties);
     }
 
     /**
