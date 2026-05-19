@@ -29,7 +29,7 @@ public class ControllerManager {
 
     private final BaseDatabaseManager baseDatabaseManager;
 
-    private DisplayUnitCache displayUnitCache;
+    private volatile DisplayUnitCache displayUnitCache;
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >

@@ -1472,14 +1472,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
-
-        if (coreState.getControllerManager().getDisplayUnitCache() != null) {
-            return coreState.getControllerManager().getDisplayUnitCache().getAllDisplayUnits();
-        } else {
-            getConfigLogger()
-                    .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
-            return null;
+        com.clevertap.android.sdk.displayunits.DisplayUnitCache cache =
+                coreState.getControllerManager().getDisplayUnitCache();
+        if (cache != null) {
+            return cache.getAllDisplayUnits();
         }
+        getConfigLogger()
+                .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
+        return null;
     }
 
     /**
@@ -1792,13 +1792,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        if (coreState.getControllerManager().getDisplayUnitCache() != null) {
-            return coreState.getControllerManager().getDisplayUnitCache().getDisplayUnitForID(unitID);
-        } else {
-            getConfigLogger().verbose(getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
-            return null;
+        com.clevertap.android.sdk.displayunits.DisplayUnitCache cache =
+                coreState.getControllerManager().getDisplayUnitCache();
+        if (cache != null) {
+            return cache.getDisplayUnitForID(unitID);
         }
+        getConfigLogger().verbose(getAccountId(),
+                Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
+        return null;
     }
 
     /**
