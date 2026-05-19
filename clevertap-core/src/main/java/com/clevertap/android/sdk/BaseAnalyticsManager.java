@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import android.os.Bundle;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONObject;
 
@@ -25,9 +24,6 @@ public abstract class BaseAnalyticsManager {
     public abstract void pushDefineVarsEvent(JSONObject data);
 
     public abstract void pushDisplayUnitClickedEventForID(String unitID);
-
-    public abstract void pushDisplayUnitElementClickedEventForID(
-            String unitID, String elementID, HashMap<String, Object> additionalProperties);
 
     public abstract void pushDisplayUnitViewedEventForID(String unitID);
 
