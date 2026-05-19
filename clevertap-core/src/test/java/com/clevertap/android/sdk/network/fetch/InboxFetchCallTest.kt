@@ -109,12 +109,12 @@ class InboxFetchCallTest {
     }
 
     @Test
-    fun `HTTP 500 returns HttpError with body`() = runTest {
+    fun `HTTP 500 returns Disabled`() = runTest {
         val http = MockHttpClient(responseCode = 500, responseBody = "oh no")
 
         val result = newCall(http).execute()
 
-        assertEquals(CallResult.HttpError(500, "oh no"), result)
+        assertEquals(CallResult.Disabled, result)
     }
 
     @Test

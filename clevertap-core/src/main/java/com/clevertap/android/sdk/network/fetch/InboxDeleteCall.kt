@@ -20,8 +20,7 @@ import java.io.IOException
  *
  * Maps HTTP outcomes the same way [InboxFetchCall] does:
  *  - HTTP 200 → [CallResult.Success] (Unit; no payload)
- *  - HTTP 403 → [CallResult.Disabled]
- *  - other non-2xx → [CallResult.HttpError]
+ *  - any non-200 HTTP status → [CallResult.Disabled]
  *  - any exception during build/send → [CallResult.NetworkFailure]
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -56,13 +55,9 @@ internal class InboxDeleteCall(
                         logger.verbose("InboxV2", "delete sent successfully (n=${messages.size})")
                         CallResult.Success(Unit)
                     }
-                    403 -> {
-                        logger.info("InboxV2", "delete 403 — account not enabled")
-                        CallResult.Disabled
-                    }
                     else -> {
-                        logger.info("InboxV2", "delete failed HTTP ${response.code}")
-                        CallResult.HttpError(response.code, response.readBody())
+                        logger.info("InboxV2", "delete HTTP ${response.code} — V2 inbox disabled for session")
+                        CallResult.Disabled
                     }
                 }
             }

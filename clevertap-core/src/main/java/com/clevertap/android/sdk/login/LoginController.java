@@ -323,6 +323,8 @@ public class LoginController {
             controllerManager.setCTInboxController(null);
         }
         controllerManager.initializeInbox();
+        // New user gets an independent fetch window — clear the previous user's throttle timestamp.
+        inboxV2Bridge.resetThrottle();
     }
 
     /**

@@ -20,8 +20,7 @@ import java.io.IOException
  * invokes [CtApi.sendInboxFetch], and maps the outcome to a [CallResult]:
  *  - HTTP 200 with parseable body → [CallResult.Success] carrying the JSON
  *  - HTTP 200 with empty body     → [CallResult.NetworkFailure]
- *  - HTTP 403                     → [CallResult.Disabled]
- *  - other non-2xx                → [CallResult.HttpError]
+ *  - any non-200 HTTP status      → [CallResult.Disabled]
  *  - any exception during build/send/parse → [CallResult.NetworkFailure]
  *
  * Runs on the injected [dispatcher] (default [Dispatchers.IO]) so a caller on
@@ -65,13 +64,9 @@ internal class InboxFetchCall(
                         logger.verbose("InboxV2", "fetch sent successfully (HTTP 200, ${raw.length} bytes)")
                         CallResult.Success(JSONObject(raw))
                     }
-                    403 -> {
-                        logger.info("InboxV2", "403 — account not enabled")
-                        CallResult.Disabled
-                    }
                     else -> {
-                        logger.info("InboxV2", "fetch failed HTTP ${response.code}")
-                        CallResult.HttpError(response.code, response.readBody())
+                        logger.info("InboxV2", "HTTP ${response.code} — V2 inbox disabled for session")
+                        CallResult.Disabled
                     }
                 }
             }

@@ -41,4 +41,8 @@ internal class InboxV2Bridge(
 
     val isInboxFetchDisabledForSession: Boolean
         get() = fetcher.isDisabledForSession
+
+    fun resetThrottle() {
+        fetcher.resetThrottle()
+    }
 }

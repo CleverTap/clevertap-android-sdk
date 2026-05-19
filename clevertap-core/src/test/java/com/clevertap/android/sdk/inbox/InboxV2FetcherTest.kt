@@ -84,6 +84,23 @@ class InboxV2FetcherTest {
     }
 
     @Test
+    fun `resetThrottle allows a USER_INITIATED fetch that was previously throttled`() = runTest {
+        val throttle = mockk<FetchThrottle>(relaxed = true) {
+            every { shouldThrottle() } returnsMany listOf(true, false)
+        }
+        val endpoint = stubEndpoint(CallResult.Success(JSONObject()))
+        val fetcher = InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
+
+        val throttled = fetcher.fetch(FetchTrigger.USER_INITIATED)
+        fetcher.resetThrottle()
+        val allowed = fetcher.fetch(FetchTrigger.USER_INITIATED)
+
+        assertEquals(CallResult.Throttled, throttled)
+        assertTrue(allowed is CallResult.Success)
+        verify(exactly = 1) { throttle.reset() }
+    }
+
+    @Test
     fun `isDisabledForSession is false before any fetch`() {
         val fetcher = InboxV2Fetcher(stubEndpoint(), nonThrottling(), noopResponse(), noopLogger())
         assertFalse(fetcher.isDisabledForSession)
@@ -148,7 +165,7 @@ class InboxV2FetcherTest {
     }
 
     @Test
-    fun `USER_INITIATED records throttle on HttpError`() = runTest {
+    fun `USER_INITIATED does NOT record throttle on HttpError`() = runTest {
         val throttle = mockk<FetchThrottle>(relaxed = true) {
             every { shouldThrottle() } returns false
         }
@@ -157,7 +174,7 @@ class InboxV2FetcherTest {
         InboxV2Fetcher(endpoint, throttle, noopResponse(), noopLogger())
             .fetch(FetchTrigger.USER_INITIATED)
 
-        verify(exactly = 1) { throttle.recordFetch() }
+        verify(exactly = 0) { throttle.recordFetch() }
     }
 
     @Test
