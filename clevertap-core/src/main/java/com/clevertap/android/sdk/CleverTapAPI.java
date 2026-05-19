@@ -30,6 +30,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.cryption.ICryptHandler;
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -1472,8 +1473,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
-        com.clevertap.android.sdk.displayunits.DisplayUnitCache cache =
-                coreState.getControllerManager().getDisplayUnitCache();
+        DisplayUnitCache cache = coreState.getControllerManager().getDisplayUnitCache();
         if (cache != null) {
             return cache.getAllDisplayUnits();
         }
@@ -1792,8 +1792,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        com.clevertap.android.sdk.displayunits.DisplayUnitCache cache =
-                coreState.getControllerManager().getDisplayUnitCache();
+        DisplayUnitCache cache = coreState.getControllerManager().getDisplayUnitCache();
         if (cache != null) {
             return cache.getDisplayUnitForID(unitID);
         }
@@ -2515,8 +2514,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @since 7.x.0
      */
-    public void setDisplayUnitCache(@Nullable
-            com.clevertap.android.sdk.displayunits.DisplayUnitCache cache) {
+    public void setDisplayUnitCache(@Nullable DisplayUnitCache cache) {
         coreState.getControllerManager().setDisplayUnitCache(cache);
     }
 
