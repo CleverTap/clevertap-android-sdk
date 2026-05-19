@@ -44,7 +44,7 @@ class PIFlushWorkInstrumentationTest{
         val bundle = Bundle().apply {
             putString("wzrk_acct_id", "TEST-R78-ZZK-955Z")
             putString("nm", "Grab 'em on Myntra's Maxessorize Sale")
-            putString("nt", "Ye dil ❤️️ maange more accessories?")
+            putString("nt", "Ye dil ❤️️ maange more accessories? ")
             putString("pr", "")
             putString("wzrk_pivot", "")
             putString("wzrk_sound", "true")
