@@ -233,19 +233,18 @@ public class CTInboxListViewFragment extends Fragment {
             return target != null && target.canScrollVertically(-1);
         });
 
-        // If the V2 fetch endpoint was already disabled this session (prior 403), hide the
-        // widget before registering the listener so no zombie callback is ever attached.
-        CleverTapAPI api = CleverTapAPI.instanceWithConfig(getActivity(), config);
+        // If the V2 fetch endpoint was already disabled this session, disable the widget
+        // before registering the listener so no zombie callback is ever attached.
+        CleverTapAPI api = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
         if (api != null && api.isInboxFetchDisabledForSession()) {
             swipeRefreshLayout.setEnabled(false);
             return;
         }
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Re-resolve the API instance at swipe time, not at wiring time. The listener
-            // lambda can fire long after onCreateView — activity may have rotated. Capturing
-            // the outer `api` reference would risk a stale/leaked context.
-            CleverTapAPI refreshApi = CleverTapAPI.instanceWithConfig(getActivity(), config);
+            // Re-resolve at swipe time — do not capture the outer `api` reference, as the
+            // listener lambda can fire long after onCreateView (e.g. after rotation).
+            CleverTapAPI refreshApi = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
             if (refreshApi == null) {
                 swipeRefreshLayout.setRefreshing(false);
                 return;
