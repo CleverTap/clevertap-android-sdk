@@ -229,8 +229,8 @@ class TemplateDataFactoryTest {
         val fiveIconsData = result as FiveIconsTemplateData
         assertEquals(TemplateType.FIVE_ICONS, fiveIconsData.templateType)
         assertEquals(imageList, fiveIconsData.imageList)
-        assertEquals(deepLinkList, fiveIconsData.deepLinkList)
-        assertEquals(SAMPLE_TITLE, fiveIconsData.title)
+        assertEquals(deepLinkList, fiveIconsData.baseContent.deepLinkList)
+        assertEquals(SAMPLE_TITLE, fiveIconsData.baseContent.textData.title)
     }
 
     @Test
@@ -593,18 +593,28 @@ class TemplateDataFactoryTest {
     }
 
     @Test
-    fun `FiveIconsTemplateData_toBaseContent should create correct BaseContent`() {
+    fun `FiveIconsTemplateData should expose correct BaseContent`() {
+        // Given
+        val fiveIconsData = createSampleFiveIconsTemplateData()
+
+        // Then
+        assertEquals(SAMPLE_TITLE, fiveIconsData.baseContent.textData.title)
+        assertEquals(SAMPLE_SUBTITLE, fiveIconsData.baseContent.textData.subtitle)
+        assertEquals(SAMPLE_COLOR, fiveIconsData.baseContent.colorData.backgroundColor)
+        assertEquals(arrayListOf("dl1", "dl2"), fiveIconsData.baseContent.deepLinkList)
+    }
+
+    @Test
+    fun `FiveIconsTemplateData_toBasicTemplateData should create correct BasicTemplateData`() {
         // Given
         val fiveIconsData = createSampleFiveIconsTemplateData()
 
         // When
-        val baseContent = with(TemplateDataFactory) { fiveIconsData.toBaseContent() }
+        val basicData = with(TemplateDataFactory) { fiveIconsData.toBasicTemplateData() }
 
         // Then
-        assertEquals(fiveIconsData.title, baseContent.textData.title)
-        assertEquals(fiveIconsData.subtitle, baseContent.textData.subtitle)
-        assertEquals(fiveIconsData.backgroundColor, baseContent.colorData.backgroundColor)
-        assertEquals(fiveIconsData.deepLinkList, baseContent.deepLinkList)
+        assertEquals(TemplateType.BASIC, basicData.templateType)
+        assertEquals(fiveIconsData.baseContent, basicData.baseContent)
     }
 
     @Test
@@ -893,12 +903,17 @@ class TemplateDataFactoryTest {
 
     private fun createSampleFiveIconsTemplateData(): FiveIconsTemplateData {
         return FiveIconsTemplateData(
+            baseContent = BaseContent(
+                textData = BaseTextData(
+                    title = SAMPLE_TITLE,
+                    subtitle = SAMPLE_SUBTITLE
+                ),
+                colorData = BaseColorData(backgroundColor = SAMPLE_COLOR),
+                iconData = IconData(),
+                deepLinkList = arrayListOf("dl1", "dl2"),
+                notificationBehavior = NotificationBehavior()
+            ),
             imageList = arrayListOf(),
-            deepLinkList = arrayListOf("dl1", "dl2"),
-            backgroundColor = SAMPLE_COLOR,
-            title = SAMPLE_TITLE,
-            subtitle = SAMPLE_SUBTITLE,
-            notificationBehavior = NotificationBehavior()
         )
     }
 
@@ -961,8 +976,8 @@ class TemplateDataFactoryTest {
         // Then
         assertTrue(result is FiveIconsTemplateData)
         val fiveIconsData = result as FiveIconsTemplateData
-        assertFalse(fiveIconsData.notificationBehavior.isSticky)
-        assertNull(fiveIconsData.notificationBehavior.dismissAfter)
+        assertFalse(fiveIconsData.baseContent.notificationBehavior.isSticky)
+        assertNull(fiveIconsData.baseContent.notificationBehavior.dismissAfter)
     }
 
     @Test
@@ -2410,7 +2425,8 @@ class TemplateDataFactoryTest {
 
         // Then
         assertNotNull(result.collapsedButtonData)
-        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.collapsedButtonData!!.borderRadius)
-        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.collapsedButtonData!!.borderWidth)
+        val collapsedButtonData = result.collapsedButtonData ?: error("collapsedButtonData should not be null")
+        assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, collapsedButtonData.borderRadius)
+        assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, collapsedButtonData.borderWidth)
     }
 }

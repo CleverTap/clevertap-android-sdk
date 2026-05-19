@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION", "DiscouragedApi")
+
 package com.clevertap.android.pushtemplates
 
 import android.app.PendingIntent
@@ -11,6 +13,7 @@ import android.os.*
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.core.app.NotificationCompat.Builder
+import androidx.core.net.toUri
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
@@ -61,6 +64,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
     internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     enum class LogLevel(private val value: Int) {
+        @Suppress("unused")
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
 
         fun intValue(): Int {
@@ -131,24 +135,31 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 RatingStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
             }
 
-            is FiveIconsTemplateData -> templateData.buildIfValid {
-                val fiveIconStyle = FiveIconStyle(it, this, extras)
-                val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
-                    context,
-                    extras,
-                    notificationId,
-                    nb
-                )
+            is FiveIconsTemplateData -> {
+                val validator = ValidatorFactory.getValidator(templateData)
+                if (validator?.validate() == true) {
+                    val fiveIconStyle = FiveIconStyle(templateData, this, extras)
+                    val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
+                        context,
+                        extras,
+                        notificationId,
+                        nb
+                    )
 
-                /**
-                 * Checks whether the imageUrls are perfect to download icon's bitmap,
-                 * if not then do not render notification
-                 */
-                if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
-                    (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
-                    null
+                    /**
+                     * If most icon bitmaps fail to load, gracefully fall back to a basic
+                     * title/message notification instead of suppressing the notification.
+                     */
+                    if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
+                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
+                        PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, reverting to basic template.")
+                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                    } else {
+                        fiveIconNotificationBuilder
+                    }
                 } else {
-                    fiveIconNotificationBuilder
+                    PTLog.debug("Five Icons template validation failed, reverting to basic template.")
+                    buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                 }
             }
 
@@ -216,6 +227,16 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
     private fun <T : TemplateData> T.buildIfValid(builder: (T) -> Builder?): Builder? =
         ValidatorFactory.getValidator(this)?.takeIf { it.validate() }?.let { builder(this) }
 
+    private fun buildBasicFallback(
+        basicTemplateData: BasicTemplateData,
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        nb: Builder
+    ): Builder? = basicTemplateData.buildIfValid {
+        BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+    }
+
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {
         this.smallIcon = smallIcon
@@ -233,7 +254,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
     }
 
     override fun getCollapseKey(extras: Bundle): Any? {
-        return extras[PT_COLLAPSE_KEY] ?: extras[Constants.WZRK_COLLAPSE]
+        return extras.getString(PT_COLLAPSE_KEY) ?: extras.getString(Constants.WZRK_COLLAPSE)
     }
 
     override fun setSound(
@@ -242,11 +263,12 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
         try {
             if (extras.containsKey(Constants.WZRK_SOUND)) {
                 var soundUri: Uri? = null
-                val o = extras[Constants.WZRK_SOUND]
-                if (o is Boolean && o) {
+                val soundString = extras.getString(Constants.WZRK_SOUND)
+                val isDefaultSoundEnabled = extras.getBoolean(Constants.WZRK_SOUND, false)
+                if (isDefaultSoundEnabled) {
                     soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                } else if (o is String) {
-                    var s = o
+                } else if (soundString != null) {
+                    var s = soundString
                     if (s == "true") {
                         soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     } else if (s.isNotEmpty()) {
@@ -392,24 +414,24 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             }
 
             // Create the appropriate intent
-            var actionLaunchIntent: Intent? = null
-
-            if (sendToCTIntentService) {
-                actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
-                actionLaunchIntent.setPackage(context.packageName)
-                actionLaunchIntent.putExtra(
+            val actionLaunchIntent = if (sendToCTIntentService) {
+                Intent(CTNotificationIntentService.MAIN_ACTION).apply {
+                    setPackage(context.packageName)
+                    putExtra(
                     Constants.KEY_CT_TYPE,
                     CTNotificationIntentService.TYPE_BUTTON_CLICK
-                )
-                if (dl.isNotEmpty()) {
-                    actionLaunchIntent.putExtra("dl", dl)
+                    )
+                    if (dl.isNotEmpty()) {
+                        putExtra("dl", dl)
+                    }
                 }
             } else {
                 if (dl.isNotEmpty()) {
-                    actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
-                    Utils.setPackageNameFromResolveInfoList(context, actionLaunchIntent)
+                    Intent(Intent.ACTION_VIEW, dl.toUri()).also {
+                        Utils.setPackageNameFromResolveInfoList(context, it)
+                    }
                 } else {
-                    actionLaunchIntent = context.packageManager
+                    context.packageManager
                         .getLaunchIntentForPackage(context.packageName)
                 }
             }

@@ -461,6 +461,7 @@ class TemplateRendererTest {
         fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
 
         val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
+        val mockFiveIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
 
         // Arrange
         every {
@@ -474,6 +475,19 @@ class TemplateRendererTest {
         } returns mockFiveIconsTemplateData
         every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns false
+        every { with(TemplateDataFactory) { mockFiveIconsTemplateData.toBasicTemplateData() } } returns mockFiveIconsFallbackData
+        every { ValidatorFactory.getValidator(mockFiveIconsFallbackData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returnsMany listOf(false, true)
+
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                fiveIconsBundle,
+                123,
+                mockNotificationBuilder
+            )
+        } returns mockNotificationBuilder
 
         // Act
         val result = templateRendererLocal.renderNotification(
@@ -485,7 +499,7 @@ class TemplateRendererTest {
         )
 
         // Assert
-        assertNull(result)
+        assertEquals(mockNotificationBuilder, result)
     }
 
     @Test
@@ -1120,6 +1134,7 @@ class TemplateRendererTest {
         fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
 
         val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
+        val mockFiveIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
 
         every {
             TemplateDataFactory.createTemplateData(
@@ -1132,6 +1147,9 @@ class TemplateRendererTest {
         } returns mockFiveIconsTemplateData
         every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
+        every { with(TemplateDataFactory) { mockFiveIconsTemplateData.toBasicTemplateData() } } returns mockFiveIconsFallbackData
+        every { ValidatorFactory.getValidator(mockFiveIconsFallbackData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returnsMany listOf(true, true)
 
         val mockSmallContentView = mockk<FiveIconSmallContentView>()
         val mockBigContentView = mockk<FiveIconBigContentView>()
@@ -1149,6 +1167,15 @@ class TemplateRendererTest {
         } returns mockNotificationBuilder
         every { anyConstructed<FiveIconStyle>().fiveIconSmallContentView } returns mockSmallContentView
         every { anyConstructed<FiveIconStyle>().fiveIconBigContentView } returns mockBigContentView
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                fiveIconsBundle,
+                123,
+                mockNotificationBuilder
+            )
+        } returns mockNotificationBuilder
 
         // Act
         val result = templateRendererLocal.renderNotification(
@@ -1159,7 +1186,7 @@ class TemplateRendererTest {
             123
         )
 
-        assertNull(result)
+        assertEquals(mockNotificationBuilder, result)
     }
 
 
@@ -1170,6 +1197,7 @@ class TemplateRendererTest {
         fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
 
         val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
+        val mockFiveIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
 
         every {
             TemplateDataFactory.createTemplateData(
@@ -1182,6 +1210,9 @@ class TemplateRendererTest {
         } returns mockFiveIconsTemplateData
         every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
         every { mockContentValidator.validate() } returns true
+        every { with(TemplateDataFactory) { mockFiveIconsTemplateData.toBasicTemplateData() } } returns mockFiveIconsFallbackData
+        every { ValidatorFactory.getValidator(mockFiveIconsFallbackData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returnsMany listOf(true, true)
 
         val mockSmallContentView = mockk<FiveIconSmallContentView>()
         val mockBigContentView = mockk<FiveIconBigContentView>()
@@ -1199,75 +1230,26 @@ class TemplateRendererTest {
         } returns mockNotificationBuilder
         every { anyConstructed<FiveIconStyle>().fiveIconSmallContentView } returns mockSmallContentView
         every { anyConstructed<FiveIconStyle>().fiveIconBigContentView } returns mockBigContentView
-
-        // Act
-        val result = templateRendererLocal.renderNotification(
-            fiveIconsBundle,
-            context,
-            mockNotificationBuilder,
-            mockConfig,
-            123
-        )
-
-        assertNull(result)
-    }
-
-    @Test
-    fun test_renderNotification_five_icons_template_invalid_unloaded_icons() {
-        // Arrange
-        val fiveIconsBundle = Bundle(testBundle)
-        fiveIconsBundle.putString(PTConstants.PT_ID, "pt_five_icons")
-
-        val templateRendererLocal = TemplateRenderer(context, fiveIconsBundle, mockConfig)
-
+        mockkConstructor(BasicStyle::class)
         every {
-            TemplateDataFactory.createTemplateData(
-                TemplateType.FIVE_ICONS,
-                fiveIconsBundle,
-                false,
-                any(),
-                any()
-            )
-        } returns mockFiveIconsTemplateData
-        every { ValidatorFactory.getValidator(mockFiveIconsTemplateData) } returns mockContentValidator
-        every { mockContentValidator.validate() } returns true
-
-        val mockSmallContentView = mockk<FiveIconSmallContentView>()
-        val mockBigContentView = mockk<FiveIconBigContentView>()
-        every { mockSmallContentView.getUnloadedFiveIconsCount() } returns 3 // More than 2
-        every { mockBigContentView.getUnloadedFiveIconsCount() } returns 1
-
-        mockkConstructor(FiveIconStyle::class)
-        every {
-            anyConstructed<FiveIconStyle>().builderFromStyle(
-                any(),
-                any(),
-                any(),
-                any()
-            )
-        } returns mockNotificationBuilder
-        every { anyConstructed<FiveIconStyle>().fiveIconSmallContentView } returns mockSmallContentView
-        every { anyConstructed<FiveIconStyle>().fiveIconBigContentView } returns mockBigContentView
-
-        // Act
-        val result = templateRendererLocal.renderNotification(
-            fiveIconsBundle,
-            context,
-            mockNotificationBuilder,
-            mockConfig,
-            123
-        )
-
-        // Assert
-        verify {
-            anyConstructed<FiveIconStyle>().builderFromStyle(
+            anyConstructed<BasicStyle>().builderFromStyle(
                 any(),
                 fiveIconsBundle,
                 123,
                 mockNotificationBuilder
             )
-        }
-        assertNull(result) // Should return null when too many unloaded icons
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            fiveIconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertEquals(mockNotificationBuilder, result)
     }
 
     @Test
