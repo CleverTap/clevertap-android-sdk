@@ -1,5 +1,5 @@
 ## CleverTap Android SDK CHANGE LOG
-### Version 8.2.0 (May 18, 2026)
+### Version 8.2.0 (May 19, 2026)
 
 #### New Features
 * **App Inbox Cross-Device Sync:** App Inbox messages now sync across a user's devices. If a user deletes or reads a message on one device, it is automatically reflected on their other devices.
