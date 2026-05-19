@@ -50,6 +50,7 @@ internal class DBAdapter constructor(
     private val userProfileDAO: UserProfileDAO by lazy { UserProfileDAOImpl(dbHelper, logger, dbEncryptionHandler) }
     private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
+    private val inboxPendingActionsDAO: InboxPendingActionsDAO by lazy { InboxPendingActionsDAOImpl(dbHelper, logger, clock) }
 
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
@@ -133,6 +134,117 @@ internal class DBAdapter constructor(
             } else false
         } else false
     }
+
+    @WorkerThread
+    @Synchronized
+    fun markIndexed(messageIds: List<String>, userId: String): Boolean =
+        inboxMessageDAO.markIndexed(messageIds, userId)
+
+    @WorkerThread
+    @Synchronized
+    fun findSweepableV2Ids(userId: String, staleCutoffSeconds: Long): Set<String> =
+        inboxMessageDAO.findSweepableV2Ids(userId, staleCutoffSeconds)
+
+    // =====================================================
+    // INBOX PENDING ACTIONS (user-deleted / user-read locally, not yet confirmed by server)
+    // =====================================================
+
+    @WorkerThread
+    @Synchronized
+    fun getPendingDeleteIds(userId: String?): Set<String> =
+        if (userId != null) inboxPendingActionsDAO.getPendingDeleteIds(userId) else emptySet()
+
+    @WorkerThread
+    @Synchronized
+    fun getPendingDeletes(userId: String?): List<PendingDelete> =
+        if (userId != null) inboxPendingActionsDAO.getPendingDeletes(userId) else emptyList()
+
+    @WorkerThread
+    @Synchronized
+    fun getPendingReads(userId: String?): Set<String> =
+        if (userId != null) inboxPendingActionsDAO.getPendingReads(userId) else emptySet()
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingDelete(
+        messageId: String?,
+        userId: String?,
+        wzrkParams: JSONObject?,
+        expiresAt: Long
+    ): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.addPendingDelete(messageId, userId, wzrkParams, expiresAt)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingDelete(messageId: String?, userId: String?): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.removePendingDelete(messageId, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun markPendingDeletesAwaitingConfirm(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.markPendingDeletesAwaitingConfirm(messageIds, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removeExpiredAwaitingConfirm(userId: String?, nowSeconds: Long): Int =
+        if (userId != null)
+            inboxPendingActionsDAO.removeExpiredAwaitingConfirm(userId, nowSeconds)
+        else 0
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingRead(messageId: String?, userId: String?, expiresAt: Long): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.addPendingRead(messageId, userId, expiresAt)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingRead(messageId: String?, userId: String?): Boolean =
+        if (messageId != null && userId != null)
+            inboxPendingActionsDAO.removePendingRead(messageId, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingDeletes(rows: List<PendingDelete>?, userId: String?): Boolean =
+        if (!rows.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.addPendingDeletes(rows, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingDeletes(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.removePendingDeletes(messageIds, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun addPendingReads(rows: List<PendingRead>?, userId: String?): Boolean =
+        if (!rows.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.addPendingReads(rows, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removePendingReads(messageIds: List<String>?, userId: String?): Boolean =
+        if (!messageIds.isNullOrEmpty() && userId != null)
+            inboxPendingActionsDAO.removePendingReads(messageIds, userId)
+        else false
+
+    @WorkerThread
+    @Synchronized
+    fun removeExpiredPendingReads(userId: String?, nowSeconds: Long): Int =
+        if (userId != null)
+            inboxPendingActionsDAO.removeExpiredPendingReads(userId, nowSeconds)
+        else 0
 
     // =====================================================
     // USER PROFILE OPERATIONS

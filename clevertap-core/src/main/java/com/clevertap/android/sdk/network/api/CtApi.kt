@@ -106,6 +106,26 @@ internal class CtApi(
             )
         )
 
+    fun sendInboxFetch(body: String): Response =
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
+                relativeUrl = "inbox/v2/getMessages",
+                body = body,
+                headers = defaultHeaders
+            )
+        )
+
+    fun sendInboxDelete(body: String): Response =
+        httpClient.execute(
+            createRequest(
+                baseUrl = getActualDomain(isViewedEvent = false) ?: defaultDomain,
+                relativeUrl = "inbox/v2/deleteMessages",
+                body = body,
+                headers = defaultHeaders
+            )
+        )
+
     /**
      * Fetches content from an arbitrary URL (e.g., S3 URLs for in-app preview payloads).
      * This is a simple GET request without CleverTap-specific headers or query parameters.
@@ -262,8 +282,8 @@ internal class CtApi(
         val builder = Uri.Builder()
             .scheme("https")
             .authority(baseUrl)
-            .appendPath(relativeUrl)
-            .appendDefaultQueryParams()
+        relativeUrl.split("/").filter { it.isNotEmpty() }.forEach { builder.appendPath(it) }
+        builder.appendDefaultQueryParams()
         if (includeTs) {
             builder.appendTsQueryParam()
         }

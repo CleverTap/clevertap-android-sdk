@@ -4,6 +4,7 @@ import android.location.Location
 import android.os.Bundle
 import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.inbox.CTInboxController
+import com.clevertap.android.sdk.network.fetch.FetchTrigger
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.usereventlogs.UserEventLogTestData
 import com.clevertap.android.shared.test.BaseTestCase
@@ -418,6 +419,41 @@ class CleverTapAPITest : BaseTestCase() {
         // Assert
         verify(exactly = 2) { coreState.controllerManager.ctInboxController }
         verify { inboxController.markReadInboxMessagesForIDs(messageIDs) }
+    }
+
+    @Test
+    fun `fetchInbox with null controller delegates failure to bridge and skips submit`() {
+        every { coreState.controllerManager.ctInboxController } returns null
+        initializeCleverTapAPI()
+
+        val cb = FetchInboxCallback { }
+        cleverTapAPI.fetchInbox(cb)
+
+        verify(exactly = 1) { coreState.inboxV2Bridge.submitFailure(cb) }
+        verify(exactly = 0) { coreState.inboxV2Bridge.submit(any(), any()) }
+    }
+
+    @Test
+    fun `fetchInbox with initialized controller delegates to bridge with respectThrottle=true`() {
+        val inboxController = mockk<CTInboxController>(relaxed = true)
+        every { coreState.controllerManager.ctInboxController } returns inboxController
+        initializeCleverTapAPI()
+
+        val cb = FetchInboxCallback { /* no-op */ }
+        cleverTapAPI.fetchInbox(cb)
+
+        verify(exactly = 1) { coreState.inboxV2Bridge.submit(FetchTrigger.USER_INITIATED, cb) }
+    }
+
+    @Test
+    fun `fetchInbox no-arg overload delegates to bridge with a null callback`() {
+        val inboxController = mockk<CTInboxController>(relaxed = true)
+        every { coreState.controllerManager.ctInboxController } returns inboxController
+        initializeCleverTapAPI()
+
+        cleverTapAPI.fetchInbox()
+
+        verify(exactly = 1) { coreState.inboxV2Bridge.submit(FetchTrigger.USER_INITIATED, null) }
     }
 
     @Test

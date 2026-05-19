@@ -38,11 +38,22 @@ public class CTMessageDAO {
 
     private JSONObject wzrkParams;
 
+    private InboxMessageSource source;
+
+    /**
+     * Local-state tag for the cross-device delete sweep — never parsed from
+     * server JSON, never written to {@link #toJSON()}. Defaults to
+     * {@link InboxIndexState#PENDING_INDEXING}; the controller flips rows to
+     * {@link InboxIndexState#INDEXED} via the DAO's {@code markIndexed}
+     * once the fetch backend has confirmed them.
+     */
+    private String indexState = InboxIndexState.PENDING_INDEXING;
+
     public CTMessageDAO() {
     }
 
     private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId,
-            List<String> tags, String campaignId, JSONObject wzrkParams) {
+            List<String> tags, String campaignId, JSONObject wzrkParams, InboxMessageSource source) {
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
@@ -52,6 +63,7 @@ public class CTMessageDAO {
         this.tags = tags;
         this.campaignId = campaignId;
         this.wzrkParams = wzrkParams;
+        this.source = source;
     }
 
     boolean containsVideoOrAudio() {
@@ -126,6 +138,22 @@ public class CTMessageDAO {
         this.wzrkParams = wzrk_params;
     }
 
+    public InboxMessageSource getSource() {
+        return source;
+    }
+
+    public void setSource(InboxMessageSource source) {
+        this.source = source;
+    }
+
+    public String getIndexState() {
+        return indexState;
+    }
+
+    public void setIndexState(String indexState) {
+        this.indexState = indexState;
+    }
+
     public int isRead() {
         if (read) {
             return 1;
@@ -160,7 +188,7 @@ public class CTMessageDAO {
         }
     }
 
-    static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId) {
+    public static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId, InboxMessageSource source) {
         try {
             String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
             long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis() / 1000;
@@ -181,9 +209,10 @@ public class CTMessageDAO {
                 inboxMessage.put("wzrk_id", campaignId);//For test inbox Notification Viewed
             }
             JSONObject wzrkParams = getWzrkFields(inboxMessage);
+            boolean read = inboxMessage.optBoolean(Constants.INBOX_V2_ISREAD_KEY, false);
             return (id == null) ? null
-                    : new CTMessageDAO(id, cellObject, false, date, expires, userId, tagsList, campaignId,
-                            wzrkParams);
+                    : new CTMessageDAO(id, cellObject, read, date, expires, userId, tagsList, campaignId,
+                            wzrkParams, source);
         } catch (JSONException e) {
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - " + e.getLocalizedMessage());
             return null;

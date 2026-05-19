@@ -58,6 +58,7 @@ import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.network.fetch.FetchTrigger;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
@@ -2254,6 +2255,54 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Requests an on-demand refresh of the App Inbox from the CleverTap servers.
+     *
+     * <p>Throttled to one call per 5 minutes (absolute, across app sessions).
+     * Calls made inside that window silently return without hitting the network.
+     *
+     * <p>Safe to call from any thread. Does not block the caller.
+     */
+    @SuppressWarnings("unused")
+    public void fetchInbox() {
+        fetchInbox(null);
+    }
+
+    /**
+     * Same as {@link #fetchInbox()}, but invokes the callback when the fetch
+     * completes (or is dropped by the throttle / session-disable flag).
+     *
+     * <p><b>Thread note:</b> the callback fires on the SDK's network
+     * dispatcher thread, not the main thread. Post back to main yourself if
+     * the callback touches UI.
+     *
+     * @param callback notified with {@code true} on success, {@code false}
+     *                 otherwise. May be {@code null}.
+     */
+    @SuppressWarnings("unused")
+    public void fetchInbox(@Nullable final FetchInboxCallback callback) {
+        if (coreState.getControllerManager().getCTInboxController() == null) {
+            getConfigLogger().debug(getAccountId(),
+                    "Notification Inbox not initialized — call initializeInbox() first");
+            if (callback != null) {
+                coreState.getInboxV2Bridge().submitFailure(callback);
+            }
+            return;
+        }
+        coreState.getInboxV2Bridge().submit(FetchTrigger.USER_INITIATED, callback);
+    }
+
+    /**
+     * Returns {@code true} if the V2 inbox endpoint has been session-disabled (HTTP 403).
+     * When true, pull-to-refresh should be hidden — further fetch calls will short-circuit.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public boolean isInboxFetchDisabledForSession() {
+        return coreState.getInboxV2Bridge().isInboxFetchDisabledForSession();
+    }
+
+    /**
      * Marks the given {@link CTInboxMessage} object as read
      *
      * @param message {@link CTInboxMessage} public object of inbox message
@@ -2322,8 +2371,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
             CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
             if (!message.isRead()) {
-                markReadInboxMessage(inboxMessage);
-                coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, inboxMessage, data);
+                // Use the freshly-fetched `message` for analytics. The viewholder's
+                // markItemAsRead mutates `inboxMessage.setRead(true)` on the UI thread
+                // before this async body runs, which would trip the T2.3 cross-device
+                // gate inside pushInboxMessageStateEvent. The fresh instance reflects
+                // the controller's DAO state and isolates analytics from the UI mirror.
+                coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, message, data);
+                markReadInboxMessage(message);
             }
             return null;
         });
