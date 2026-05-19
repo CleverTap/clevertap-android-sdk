@@ -4,7 +4,11 @@ import TestCryptHandler
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.cryption.EncryptionLevel
+import com.clevertap.android.sdk.db.dao.PendingDelete
+import com.clevertap.android.sdk.db.dao.PendingRead
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxIndexState
+import com.clevertap.android.sdk.inbox.InboxMessageSource
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
@@ -311,6 +315,299 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     // =====================================================
+    // markIndexed / findSweepableV2Ids
+    // =====================================================
+
+    @Test
+    fun `markIndexed promotes PENDING_INDEXING row to INDEXED`() {
+        val userId = "user_sweep"
+        val msgId = "sweep_msg_1"
+        dbAdapter.upsertMessages(arrayListOf(
+            getV2MsgDao(msgId, userId, indexState = InboxIndexState.PENDING_INDEXING, date = 100L)
+        ))
+
+        dbAdapter.markIndexed(listOf(msgId), userId)
+
+        // INDEXED row is returned regardless of cutoff
+        val sweepable = dbAdapter.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertTrue(sweepable.contains(msgId))
+    }
+
+    @Test
+    fun `findSweepableV2Ids returns stale PENDING_INDEXING rows`() {
+        val userId = "user_stale"
+        val msgId = "stale_msg"
+        // date=100 seconds; cutoff=200 → 100 < 200 → stale
+        dbAdapter.upsertMessages(arrayListOf(
+            getV2MsgDao(msgId, userId, indexState = InboxIndexState.PENDING_INDEXING, date = 100L)
+        ))
+
+        val stale = dbAdapter.findSweepableV2Ids(userId, 200L)
+        assertTrue(stale.contains(msgId))
+    }
+
+    @Test
+    fun `findSweepableV2Ids does not return fresh PENDING_INDEXING rows`() {
+        val userId = "user_fresh"
+        val msgId = "fresh_msg"
+        // date=500 seconds; cutoff=200 → 500 > 200 → not stale
+        dbAdapter.upsertMessages(arrayListOf(
+            getV2MsgDao(msgId, userId, indexState = InboxIndexState.PENDING_INDEXING, date = 500L)
+        ))
+
+        val sweepable = dbAdapter.findSweepableV2Ids(userId, 200L)
+        assertFalse(sweepable.contains(msgId))
+    }
+
+    @Test
+    fun `findSweepableV2Ids excludes V1 messages`() {
+        val userId = "user_v1"
+        val msgId = "v1_msg"
+        dbAdapter.upsertMessages(arrayListOf(getCtMsgDao(msgId, userId)))
+
+        val sweepable = dbAdapter.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertFalse(sweepable.contains(msgId))
+    }
+
+    @Test
+    fun `findSweepableV2Ids excludes INDEXED rows with expires=0`() {
+        val userId = "user_infinite"
+        val msgId = "infinite_ttl_msg"
+        dbAdapter.upsertMessages(arrayListOf(
+            getV2MsgDao(msgId, userId, indexState = InboxIndexState.INDEXED, expires = 0L)
+        ))
+
+        val sweepable = dbAdapter.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertFalse(sweepable.contains(msgId))
+    }
+
+    // =====================================================
+    // PENDING DELETE
+    // =====================================================
+
+    @Test
+    fun `addPendingDelete and getPendingDeleteIds round-trip`() {
+        val userId = "user_pd"
+        val msgId = "pd_msg_1"
+        dbAdapter.addPendingDelete(msgId, userId, null, 0L)
+
+        val ids = dbAdapter.getPendingDeleteIds(userId)
+        assertTrue(ids.contains(msgId))
+    }
+
+    @Test
+    fun `addPendingDelete null guards return false`() {
+        assertFalse(dbAdapter.addPendingDelete(null, "user", null, 0L))
+        assertFalse(dbAdapter.addPendingDelete("msg", null, null, 0L))
+    }
+
+    @Test
+    fun `getPendingDeleteIds null userId returns empty set`() {
+        assertTrue(dbAdapter.getPendingDeleteIds(null).isEmpty())
+    }
+
+    @Test
+    fun `getPendingDeletes returns full row including wzrkParams`() {
+        val userId = "user_pd2"
+        val msgId = "pd_msg_2"
+        val params = JSONObject().put("wzrk_key", "val")
+        dbAdapter.addPendingDelete(msgId, userId, params, 999L)
+
+        val rows = dbAdapter.getPendingDeletes(userId)
+        assertEquals(1, rows.size)
+        assertEquals(msgId, rows[0].messageId)
+        assertEquals("val", rows[0].wzrkParams?.getString("wzrk_key"))
+    }
+
+    @Test
+    fun `getPendingDeletes null userId returns empty list`() {
+        assertTrue(dbAdapter.getPendingDeletes(null).isEmpty())
+    }
+
+    @Test
+    fun `removePendingDelete removes the row`() {
+        val userId = "user_rpd"
+        val msgId = "rpd_msg"
+        dbAdapter.addPendingDelete(msgId, userId, null, 0L)
+        dbAdapter.removePendingDelete(msgId, userId)
+
+        assertTrue(dbAdapter.getPendingDeleteIds(userId).isEmpty())
+    }
+
+    @Test
+    fun `removePendingDelete null guards return false`() {
+        assertFalse(dbAdapter.removePendingDelete(null, "user"))
+        assertFalse(dbAdapter.removePendingDelete("msg", null))
+    }
+
+    @Test
+    fun `markPendingDeletesAwaitingConfirm transitions state`() {
+        val userId = "user_mpdac"
+        val msgId = "mpdac_msg"
+        dbAdapter.addPendingDelete(msgId, userId, null, 999L)
+        val result = dbAdapter.markPendingDeletesAwaitingConfirm(listOf(msgId), userId)
+        assertTrue(result)
+        // Row is still visible until TTL sweeps it
+        assertTrue(dbAdapter.getPendingDeleteIds(userId).contains(msgId))
+    }
+
+    @Test
+    fun `markPendingDeletesAwaitingConfirm null or empty guards return false`() {
+        assertFalse(dbAdapter.markPendingDeletesAwaitingConfirm(null, "user"))
+        assertFalse(dbAdapter.markPendingDeletesAwaitingConfirm(emptyList(), "user"))
+        assertFalse(dbAdapter.markPendingDeletesAwaitingConfirm(listOf("msg"), null))
+    }
+
+    @Test
+    fun `removeExpiredAwaitingConfirm removes TTL-elapsed rows`() {
+        val userId = "user_reac"
+        val msgId = "reac_msg"
+        dbAdapter.addPendingDelete(msgId, userId, null, 100L)
+        dbAdapter.markPendingDeletesAwaitingConfirm(listOf(msgId), userId)
+
+        val removed = dbAdapter.removeExpiredAwaitingConfirm(userId, 200L) // 200 > 100 → expired
+        assertEquals(1, removed)
+        assertTrue(dbAdapter.getPendingDeleteIds(userId).isEmpty())
+    }
+
+    @Test
+    fun `removeExpiredAwaitingConfirm does not remove non-elapsed rows`() {
+        val userId = "user_reac2"
+        val msgId = "reac_msg2"
+        dbAdapter.addPendingDelete(msgId, userId, null, 500L)
+        dbAdapter.markPendingDeletesAwaitingConfirm(listOf(msgId), userId)
+
+        val removed = dbAdapter.removeExpiredAwaitingConfirm(userId, 200L) // 200 < 500 → not expired
+        assertEquals(0, removed)
+        assertTrue(dbAdapter.getPendingDeleteIds(userId).contains(msgId))
+    }
+
+    @Test
+    fun `removeExpiredAwaitingConfirm null userId returns 0`() {
+        assertEquals(0, dbAdapter.removeExpiredAwaitingConfirm(null, 999L))
+    }
+
+    @Test
+    fun `addPendingDeletes batch and removePendingDeletes batch`() {
+        val userId = "user_batch_pd"
+        val rows = listOf(
+            PendingDelete("batch_1", null, 0L),
+            PendingDelete("batch_2", null, 0L)
+        )
+        dbAdapter.addPendingDeletes(rows, userId)
+
+        val ids = dbAdapter.getPendingDeleteIds(userId)
+        assertTrue(ids.containsAll(listOf("batch_1", "batch_2")))
+
+        dbAdapter.removePendingDeletes(listOf("batch_1", "batch_2"), userId)
+        assertTrue(dbAdapter.getPendingDeleteIds(userId).isEmpty())
+    }
+
+    @Test
+    fun `addPendingDeletes and removePendingDeletes null or empty guards return false`() {
+        assertFalse(dbAdapter.addPendingDeletes(null, "user"))
+        assertFalse(dbAdapter.addPendingDeletes(emptyList(), "user"))
+        assertFalse(dbAdapter.addPendingDeletes(listOf(PendingDelete("m", null, 0L)), null))
+        assertFalse(dbAdapter.removePendingDeletes(null, "user"))
+        assertFalse(dbAdapter.removePendingDeletes(emptyList(), "user"))
+        assertFalse(dbAdapter.removePendingDeletes(listOf("m"), null))
+    }
+
+    // =====================================================
+    // PENDING READ
+    // =====================================================
+
+    @Test
+    fun `addPendingRead and getPendingReads round-trip`() {
+        val userId = "user_pr"
+        val msgId = "pr_msg_1"
+        dbAdapter.addPendingRead(msgId, userId, 0L)
+
+        val ids = dbAdapter.getPendingReads(userId)
+        assertTrue(ids.contains(msgId))
+    }
+
+    @Test
+    fun `addPendingRead null guards return false`() {
+        assertFalse(dbAdapter.addPendingRead(null, "user", 0L))
+        assertFalse(dbAdapter.addPendingRead("msg", null, 0L))
+    }
+
+    @Test
+    fun `getPendingReads null userId returns empty set`() {
+        assertTrue(dbAdapter.getPendingReads(null).isEmpty())
+    }
+
+    @Test
+    fun `removePendingRead removes the row`() {
+        val userId = "user_rpr"
+        val msgId = "rpr_msg"
+        dbAdapter.addPendingRead(msgId, userId, 0L)
+        dbAdapter.removePendingRead(msgId, userId)
+
+        assertTrue(dbAdapter.getPendingReads(userId).isEmpty())
+    }
+
+    @Test
+    fun `removePendingRead null guards return false`() {
+        assertFalse(dbAdapter.removePendingRead(null, "user"))
+        assertFalse(dbAdapter.removePendingRead("msg", null))
+    }
+
+    @Test
+    fun `removeExpiredPendingReads removes TTL-elapsed rows`() {
+        val userId = "user_repr"
+        val msgId = "repr_msg"
+        dbAdapter.addPendingRead(msgId, userId, 100L)
+
+        val removed = dbAdapter.removeExpiredPendingReads(userId, 200L) // 200 > 100 → expired
+        assertEquals(1, removed)
+        assertTrue(dbAdapter.getPendingReads(userId).isEmpty())
+    }
+
+    @Test
+    fun `removeExpiredPendingReads does not remove non-elapsed rows`() {
+        val userId = "user_repr2"
+        val msgId = "repr_msg2"
+        dbAdapter.addPendingRead(msgId, userId, 500L)
+
+        val removed = dbAdapter.removeExpiredPendingReads(userId, 200L) // 200 < 500 → not expired
+        assertEquals(0, removed)
+        assertTrue(dbAdapter.getPendingReads(userId).contains(msgId))
+    }
+
+    @Test
+    fun `removeExpiredPendingReads null userId returns 0`() {
+        assertEquals(0, dbAdapter.removeExpiredPendingReads(null, 999L))
+    }
+
+    @Test
+    fun `addPendingReads batch and removePendingReads batch`() {
+        val userId = "user_batch_pr"
+        val rows = listOf(
+            PendingRead("pr_batch_1", 0L),
+            PendingRead("pr_batch_2", 0L)
+        )
+        dbAdapter.addPendingReads(rows, userId)
+
+        val ids = dbAdapter.getPendingReads(userId)
+        assertTrue(ids.containsAll(listOf("pr_batch_1", "pr_batch_2")))
+
+        dbAdapter.removePendingReads(listOf("pr_batch_1", "pr_batch_2"), userId)
+        assertTrue(dbAdapter.getPendingReads(userId).isEmpty())
+    }
+
+    @Test
+    fun `addPendingReads and removePendingReads null or empty guards return false`() {
+        assertFalse(dbAdapter.addPendingReads(null, "user"))
+        assertFalse(dbAdapter.addPendingReads(emptyList(), "user"))
+        assertFalse(dbAdapter.addPendingReads(listOf(PendingRead("m", 0L)), null))
+        assertFalse(dbAdapter.removePendingReads(null, "user"))
+        assertFalse(dbAdapter.removePendingReads(emptyList(), "user"))
+        assertFalse(dbAdapter.removePendingReads(listOf("m"), null))
+    }
+
+    // =====================================================
     // HELPER METHODS
     // =====================================================
 
@@ -336,5 +633,16 @@ class DBAdapterTest : BaseTestCase() {
             it.campaignId = campaignId
             it.wzrkParams = wzrkParams
         }
+    }
+
+    private fun getV2MsgDao(
+        id: String = "1",
+        userId: String = "1",
+        indexState: String = InboxIndexState.PENDING_INDEXING,
+        date: Long = 1000L,
+        expires: Long = 9_999_999L
+    ): CTMessageDAO = getCtMsgDao(id = id, userId = userId, date = date, expires = expires).also {
+        it.source = InboxMessageSource.V2
+        it.indexState = indexState
     }
 }

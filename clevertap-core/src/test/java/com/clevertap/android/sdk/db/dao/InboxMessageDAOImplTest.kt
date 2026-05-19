@@ -6,8 +6,13 @@ import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
+import com.clevertap.android.sdk.db.Column
+import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxIndexState
+import com.clevertap.android.sdk.inbox.InboxMessageSource
 import com.clevertap.android.shared.test.BaseTestCase
+import android.content.ContentValues
 import io.mockk.mockk
 import org.json.JSONObject
 import org.junit.*
@@ -203,6 +208,150 @@ class InboxMessageDAOImplTest : BaseTestCase() {
         assertEquals("cp4321", messages[0].campaignId)
     }
 
+    @Test
+    fun `upsert and read preserves V2 source`() {
+        val dao = getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxMessageSource.V2, loaded.source)
+    }
+
+    @Test
+    fun `upsert and read preserves V1 source`() {
+        val dao = getCtMsgDao("m1", "user_11", source = InboxMessageSource.V1)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxMessageSource.V1, loaded.source)
+    }
+
+    @Test
+    fun `upsert and read defaults indexState to PENDING_INDEXING`() {
+        val dao = getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxIndexState.PENDING_INDEXING, loaded.indexState)
+    }
+
+    @Test
+    fun `upsert preserves indexState on UPDATE — never downgrades INDEXED`() {
+        // Insert a row, flip it to INDEXED via the dedicated DAO call,
+        // then upsert the same id again with a DAO carrying the default
+        // (PENDING_INDEXING). The existing INDEXED state must survive.
+        val userId = "user_11"
+        val dao = getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        inboxMessageDAO.upsertMessages(listOf(dao))
+        inboxMessageDAO.markIndexed(listOf("m1"), userId)
+        assertEquals(InboxIndexState.INDEXED, inboxMessageDAO.getMessages(userId).single().indexState)
+
+        // Re-upsert with the default indexState — must NOT downgrade.
+        val redelivery = getCtMsgDao("m1", userId, source = InboxMessageSource.V2)
+        assertEquals(InboxIndexState.PENDING_INDEXING, redelivery.indexState)
+        inboxMessageDAO.upsertMessages(listOf(redelivery))
+        assertEquals(InboxIndexState.INDEXED, inboxMessageDAO.getMessages(userId).single().indexState)
+    }
+
+    @Test
+    fun `markIndexed flips supplied PENDING_INDEXING rows to INDEXED`() {
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("m1", userId, source = InboxMessageSource.V2),
+                getCtMsgDao("m2", userId, source = InboxMessageSource.V2),
+                getCtMsgDao("m3", userId, source = InboxMessageSource.V2)
+            )
+        )
+
+        val ok = inboxMessageDAO.markIndexed(listOf("m1", "m3"), userId)
+        assertTrue(ok)
+
+        val byId = inboxMessageDAO.getMessages(userId).associateBy { it.id }
+        assertEquals(InboxIndexState.INDEXED, byId.getValue("m1").indexState)
+        assertEquals(InboxIndexState.PENDING_INDEXING, byId.getValue("m2").indexState)
+        assertEquals(InboxIndexState.INDEXED, byId.getValue("m3").indexState)
+    }
+
+    @Test
+    fun `markIndexed with empty ids is a no-op and returns true`() {
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, source = InboxMessageSource.V2))
+        )
+
+        val ok = inboxMessageDAO.markIndexed(emptyList(), userId)
+        assertTrue(ok)
+        assertEquals(
+            InboxIndexState.PENDING_INDEXING,
+            inboxMessageDAO.getMessages(userId).single().indexState
+        )
+    }
+
+    @Test
+    fun `markIndexed is scoped to the supplied userId`() {
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2),
+                getCtMsgDao("m1", "user_12", source = InboxMessageSource.V2)
+            )
+        )
+
+        inboxMessageDAO.markIndexed(listOf("m1"), "user_11")
+
+        assertEquals(
+            InboxIndexState.INDEXED,
+            inboxMessageDAO.getMessages("user_11").single().indexState
+        )
+        assertEquals(
+            InboxIndexState.PENDING_INDEXING,
+            inboxMessageDAO.getMessages("user_12").single().indexState
+        )
+    }
+
+    @Test
+    fun `unrecognised indexState value falls back to PENDING_INDEXING`() {
+        // Insert a row directly with an invalid index_state value to simulate
+        // schema skew or a future enum constant the current SDK doesn't know.
+        val cv = ContentValues().apply {
+            put(Column.ID, "m1")
+            put(Column.DATA, dbEncryptionHandler.wrapDbData(JSONObject().toString()))
+            put(Column.WZRKPARAMS, JSONObject().toString())
+            put(Column.CAMPAIGN, "cp1")
+            put(Column.TAGS, "")
+            put(Column.IS_READ, 0)
+            put(Column.EXPIRES, Long.MAX_VALUE)
+            put(Column.CREATED_AT, 1L)
+            put(Column.USER_ID, "user_11")
+            put(Column.SOURCE, "V2")
+            put(Column.INDEX_STATE, "ALIEN")
+        }
+        dbHelper.writableDatabase.insert(Table.INBOX_MESSAGES.tableName, null, cv)
+
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxIndexState.PENDING_INDEXING, loaded.indexState)
+    }
+
+    @Test
+    fun `unrecognised source value falls back to V1`() {
+        // Insert a row directly via SQL using an invalid source value so we
+        // simulate either a schema-skew or a future enum constant the current
+        // SDK doesn't know about. Read should not throw; loaded source is V1.
+        val cv = ContentValues().apply {
+            put(Column.ID, "m1")
+            put(Column.DATA, dbEncryptionHandler.wrapDbData(JSONObject().toString()))
+            put(Column.WZRKPARAMS, JSONObject().toString())
+            put(Column.CAMPAIGN, "cp1")
+            put(Column.TAGS, "")
+            put(Column.IS_READ, 0)
+            put(Column.EXPIRES, Long.MAX_VALUE)
+            put(Column.CREATED_AT, 1L)
+            put(Column.USER_ID, "user_11")
+            put(Column.SOURCE, "ALIEN")
+        }
+        dbHelper.writableDatabase.insert(Table.INBOX_MESSAGES.tableName, null, cv)
+
+        val loaded = inboxMessageDAO.getMessages("user_11").single()
+        assertEquals(InboxMessageSource.V1, loaded.source)
+    }
+
     private fun getCtMsgDao(
         id: String = "1",
         userId: String = "1",
@@ -212,7 +361,8 @@ class InboxMessageDAOImplTest : BaseTestCase() {
         expires: Long = (System.currentTimeMillis() * 10),
         tags: List<String> = listOf(),
         campaignId: String = "campaignID",
-        wzrkParams: JSONObject = JSONObject()
+        wzrkParams: JSONObject = JSONObject(),
+        source: InboxMessageSource = InboxMessageSource.V1
     ): CTMessageDAO {
         return CTMessageDAO().also {
             it.id = id
@@ -224,6 +374,121 @@ class InboxMessageDAOImplTest : BaseTestCase() {
             it.tags = tags.joinToString(",")
             it.campaignId = campaignId
             it.wzrkParams = wzrkParams
+            it.source = source
         }
+    }
+
+    // ── findSweepableV2Ids ───────────────────────────────────────────────────
+
+    @Test
+    fun `findSweepableV2Ids returns empty when table has no V2 rows`() {
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", "user_11", source = InboxMessageSource.V1))
+        )
+        val result = inboxMessageDAO.findSweepableV2Ids("user_11", Long.MAX_VALUE)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `findSweepableV2Ids returns INDEXED V2 ids regardless of created_at`() {
+        val userId = "user_11"
+        // Insert as PENDING_INDEXING, then flip to INDEXED
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, source = InboxMessageSource.V2))
+        )
+        inboxMessageDAO.markIndexed(listOf("m1"), userId)
+
+        // cutoff far in the future — INDEXED rows are always eligible
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertEquals(setOf("m1"), result)
+    }
+
+    @Test
+    fun `findSweepableV2Ids returns stale PENDING_INDEXING V2 ids (created_at less than cutoff)`() {
+        val userId = "user_11"
+        // Use a fixed old timestamp so the row is definitely before any cutoff
+        val oldDate = 1_000L // epoch seconds
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, date = oldDate, source = InboxMessageSource.V2))
+        )
+
+        // cutoff = oldDate + 1 → row qualifies as stale
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, oldDate + 1)
+        assertEquals(setOf("m1"), result)
+    }
+
+    @Test
+    fun `findSweepableV2Ids excludes fresh PENDING_INDEXING V2 ids (created_at not less than cutoff)`() {
+        val userId = "user_11"
+        val recentDate = 9_000_000L
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId, date = recentDate, source = InboxMessageSource.V2))
+        )
+
+        // cutoff = recentDate → NOT less than cutoff, so row must be excluded
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, recentDate)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `findSweepableV2Ids excludes V1 messages`() {
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m_v1", userId, source = InboxMessageSource.V1))
+        )
+        // Even if we somehow flip it to INDEXED the source filter keeps it out
+        inboxMessageDAO.markIndexed(listOf("m_v1"), userId)
+
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `findSweepableV2Ids is scoped to the supplied userId`() {
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("m1", "user_11", source = InboxMessageSource.V2),
+                getCtMsgDao("m2", "user_12", source = InboxMessageSource.V2)
+            )
+        )
+        inboxMessageDAO.markIndexed(listOf("m1"), "user_11")
+        inboxMessageDAO.markIndexed(listOf("m2"), "user_12")
+
+        assertEquals(setOf("m1"), inboxMessageDAO.findSweepableV2Ids("user_11", Long.MAX_VALUE))
+        assertEquals(setOf("m2"), inboxMessageDAO.findSweepableV2Ids("user_12", Long.MAX_VALUE))
+    }
+
+    @Test
+    fun `findSweepableV2Ids returns both INDEXED and stale PENDING_INDEXING together`() {
+        val userId = "user_11"
+        val oldDate = 100L
+
+        inboxMessageDAO.upsertMessages(
+            listOf(
+                getCtMsgDao("indexed", userId, source = InboxMessageSource.V2),
+                getCtMsgDao("stale_pending", userId, date = oldDate, source = InboxMessageSource.V2),
+                getCtMsgDao("fresh_pending", userId, date = 9_000_000L, source = InboxMessageSource.V2)
+            )
+        )
+        inboxMessageDAO.markIndexed(listOf("indexed"), userId)
+        // stale_pending and fresh_pending remain PENDING_INDEXING
+
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, staleCutoffSeconds = oldDate + 1)
+        assertEquals(setOf("indexed", "stale_pending"), result)
+        assertFalse("fresh_pending" in result)
+    }
+
+    @Test
+    fun `findSweepableV2Ids excludes V2 INDEXED messages with expires=0 (infinite TTL)`() {
+        val userId = "user_11"
+        // An INDEXED V2 row with expires=0 is a fire-and-forget message — its absence
+        // from a FETCH response is NOT a cross-device delete signal.
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("infinite", userId, expires = 0L, source = InboxMessageSource.V2))
+        )
+        inboxMessageDAO.markIndexed(listOf("infinite"), userId)
+
+        val result = inboxMessageDAO.findSweepableV2Ids(userId, Long.MAX_VALUE)
+        assertTrue(result.isEmpty())
     }
 }
