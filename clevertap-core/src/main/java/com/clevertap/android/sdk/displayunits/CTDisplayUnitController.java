@@ -7,13 +7,13 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.util.List;
 
 /**
  * Controller class for caching & supplying the Display Units to the client.
+ * Default implementation of {@link DisplayUnitCache}.
  */
-public class CTDisplayUnitController {
+public class CTDisplayUnitController implements DisplayUnitCache {
 
     final HashMap<String, CleverTapDisplayUnit> items = new HashMap<>();
 
@@ -22,6 +22,7 @@ public class CTDisplayUnitController {
      *
      * @return ArrayList<CleverTapDisplayUnit> - Could be null in case no Display Units are there in the cache
      */
+    @Override
     @Nullable
     public synchronized ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
         if (!items.isEmpty()) {
@@ -38,8 +39,9 @@ public class CTDisplayUnitController {
      * @param unitId - unitID of the Display Unit {@link CleverTapDisplayUnit#getUnitID()}
      * @return CleverTapDisplayUnit - Could be null in case no Display Units with the ID is found
      */
+    @Override
     @Nullable
-    public synchronized CleverTapDisplayUnit getDisplayUnitForID(String unitId) {
+    public synchronized CleverTapDisplayUnit getDisplayUnitForID(@Nullable String unitId) {
         if (!TextUtils.isEmpty(unitId)) {
             return items.get(unitId);
         } else {
@@ -51,47 +53,28 @@ public class CTDisplayUnitController {
     /**
      * clears the existing Display Units
      */
+    @Override
     public synchronized void reset() {
         items.clear();
         Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Cleared Display Units Cache");
     }
 
     /**
-     * Replaces the old Display Units with the new ones, post transformation of Json objects to Display Unit objects
+     * Replaces the old Display Units with the supplied list.
      *
-     * @param messages - json-array of Display Unit items
-     * @return ArrayList<CleverTapDisplayUnit> - could be null in case of null/empty/invalid json array
+     * @param displayUnits parsed display units; may be {@code null} or empty.
      */
-    @Nullable
-    public synchronized ArrayList<CleverTapDisplayUnit> updateDisplayUnits(JSONArray messages) {
-
-        //flush existing display units before updating with the new ones.
+    @Override
+    public synchronized void updateDisplayUnits(@Nullable List<CleverTapDisplayUnit> displayUnits) {
         reset();
-
-        if (messages != null && messages.length() > 0) {
-            final ArrayList<CleverTapDisplayUnit> list = new ArrayList<>();
-            try {
-                for (int i = 0; i < messages.length(); i++) {
-                    //parse each display Unit
-                    CleverTapDisplayUnit item = CleverTapDisplayUnit.toDisplayUnit((JSONObject) messages.get(i));
-                    if (TextUtils.isEmpty(item.getError())) {
-                        items.put(item.getUnitID(), item);
-                        list.add(item);
-                    } else {
-                        Logger.d(Constants.FEATURE_DISPLAY_UNIT,
-                                "Failed to convert JsonArray item at index:" + i + " to Display Unit");
-                    }
-                }
-            } catch (Exception e) {
-                Logger.d(Constants.FEATURE_DISPLAY_UNIT,
-                        "Failed while parsing Display Unit:" + e.getLocalizedMessage());
-                return null;
+        if (displayUnits == null || displayUnits.isEmpty()) {
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Empty Display Units list, cache not updated");
+            return;
+        }
+        for (CleverTapDisplayUnit unit : displayUnits) {
+            if (unit != null && !TextUtils.isEmpty(unit.getUnitID())) {
+                items.put(unit.getUnitID(), unit);
             }
-
-            return !list.isEmpty() ? list : null;
-        } else {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Null json array response can't parse Display Units ");
-            return null;
         }
     }
 }
