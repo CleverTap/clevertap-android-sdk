@@ -18,7 +18,9 @@ import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.FlattenedEventData;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
+import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.inbox.EventSuppressor;
 import com.clevertap.android.sdk.profile.ProfileCommand;
 import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
 import com.clevertap.android.sdk.profile.traversal.ProfileChange;
@@ -65,6 +67,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final Object notificationMapLock = new Object();
     private final LocalDataStore localDataStore;
     private final InAppPreviewHandler inAppPreviewHandler;
+    private final EventSuppressor inboxViewedSuppressor = new EventSuppressor(2_000L);
+    private final EventSuppressor inboxClickedSuppressor = new EventSuppressor(5_000L);
 
     private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
@@ -201,8 +205,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
+            if (controllerManager.getDisplayUnitCache() != null) {
+                CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtraData = displayUnit.getWZRKFields();
@@ -225,6 +229,117 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    /**
+     * Raises a Native Display element click event.
+     *
+     * Element-level analog of {@link #pushDisplayUnitClickedEventForID(String)} — for
+     * Native Display units that host multiple interactive child elements (buttons,
+     * images, etc.), this method records which child element was clicked alongside
+     * the existing wzrk_* campaign attribution.
+     *
+     * The resulting event:
+     * <ul>
+     *   <li>Carries the campaign's {@code wzrk_*} fields from the cached unit JSON
+     *       (same enrichment as {@link #pushDisplayUnitClickedEventForID(String)}).</li>
+     *   <li>Adds {@code wzrk_element_id = elementID} to {@code evtData}.</li>
+     *   <li>Merges {@code additionalProperties} into {@code evtData} after wzrk_*
+     *       enrichment. Keys starting with {@code wzrk_} are filtered out — the
+     *       prefix is reserved for server-controlled attribution fields.</li>
+     * </ul>
+     */
+    @Override
+    public void pushDisplayUnitElementClickedEventForID(
+            String unitID, String elementID,
+            HashMap<String, Object> additionalProperties) {
+        JSONObject event = new JSONObject();
+        try {
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+
+            if (controllerManager.getDisplayUnitCache() == null) {
+                return;
+            }
+            CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
+                    .getDisplayUnitForID(unitID);
+            if (displayUnit == null) {
+                return;
+            }
+            JSONObject eventExtraData = displayUnit.getWZRKFields();
+            if (eventExtraData == null) {
+                eventExtraData = new JSONObject();
+            }
+            if (elementID != null && !elementID.isEmpty()) {
+                eventExtraData.put("wzrk_element_id", elementID);
+            }
+            mergeAdditionalProperties(eventExtraData, additionalProperties);
+
+            event.put("evtData", eventExtraData);
+            try {
+                coreMetaData.setWzrkParams(filterWzrkFields(eventExtraData));
+            } catch (Throwable t) {
+                // no-op
+            }
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
+                    getFlattenedEventProperties(eventExtraData));
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT
+                            + "Failed to push Display Unit element clicked event" + t);
+        }
+    }
+
+    /**
+     * Merge caller-supplied {@code additionalProperties} into the click event's
+     * {@code evtData}, stripping any {@code wzrk_*} keys. That prefix is reserved
+     * for server-controlled attribution; we keep the namespace one-way (server →
+     * client) so client extras can never overwrite legit campaign attribution.
+     */
+    private void mergeAdditionalProperties(JSONObject eventData,
+            HashMap<String, Object> extras) {
+        if (extras == null || extras.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, Object> entry : extras.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (key == null || key.isEmpty() || value == null) {
+                continue;
+            }
+            if (key.startsWith(Constants.WZRK_PREFIX)) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT
+                                + "Dropping reserved wzrk_* key from additionalProperties: "
+                                + key);
+                continue;
+            }
+            try {
+                eventData.put(key, value);
+            } catch (JSONException ignored) {
+                // skip unserialisable entries
+            }
+        }
+    }
+
+    /**
+     * Project only the {@code wzrk_*} keys back out of the merged event data so
+     * {@link CoreMetaData#setWzrkParams(JSONObject)} retains its existing
+     * server-namespace contract (it feeds {@code wzrk_ref} batch headers; caller-
+     * supplied non-wzrk extras must not ride along on unrelated subsequent events).
+     */
+    private JSONObject filterWzrkFields(JSONObject merged) {
+        JSONObject out = new JSONObject();
+        Iterator<String> it = merged.keys();
+        while (it.hasNext()) {
+            String k = it.next();
+            if (k.startsWith(Constants.WZRK_PREFIX)) {
+                try {
+                    out.put(k, merged.get(k));
+                } catch (JSONException ignored) {
+                }
+            }
+        }
+        return out;
+    }
+
     @Override
     public void pushDisplayUnitViewedEventForID(String unitID) {
         JSONObject event = new JSONObject();
@@ -233,8 +348,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
+            if (controllerManager.getDisplayUnitCache() != null) {
+                CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
@@ -996,9 +1111,27 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
+        String msgId = data.getMessageId();
+
+        if (!clicked && data.isRead() && isV2InboxMessage(msgId)) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Inbox: Skipping Viewed for " + msgId + " — already read on another device (V2)");
+            return;
+        }
+
+        EventSuppressor gate = clicked ? inboxClickedSuppressor : inboxViewedSuppressor;
+        if (msgId != null && gate.shouldSuppress(msgId)) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Inbox: " + (clicked ? "Clicked" : "Viewed") + " suppressed for " + msgId);
+            return;
+        }
+
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(data);
+            if (isV2InboxMessage(msgId)) {
+                notif.put(Constants.WZRK_MID, msgId);
+            }
 
             if (customData != null) {
                 for (String x : customData.keySet()) {
@@ -1026,6 +1159,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable ignored) {
             // We won't get here
         }
+    }
+
+    /**
+     * V1 inbox messages must NOT carry {@code wzrk_mid} in Viewed/Clicked events —
+     * the backend rejects them. Safe defaults: null id, null controller, or
+     * an id the controller doesn't know about all fall through to V1 behavior.
+     */
+    private boolean isV2InboxMessage(String msgId) {
+        if (msgId == null) return false;
+        CTInboxController controller = controllerManager.getCTInboxController();
+        return controller != null && controller.isV2Message(msgId);
     }
 
     private FlattenedEventData getFlattenedEventProperties(JSONObject properties) {

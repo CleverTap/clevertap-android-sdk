@@ -21,6 +21,8 @@ import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.inbox.InboxV2Bridge;
+import com.clevertap.android.sdk.network.fetch.FetchTrigger;
 import com.clevertap.android.sdk.network.ContentFetchManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
@@ -70,6 +72,8 @@ public class LoginController {
 
     private final ContentFetchManager contentFetchManager;
 
+    private final InboxV2Bridge inboxV2Bridge;
+
     public LoginController(Context context,
             CleverTapInstanceConfig config,
             DeviceInfo deviceInfo,
@@ -84,7 +88,8 @@ public class LoginController {
             DBManager dbManager,
             CTLockManager ctLockManager,
             LoginInfoProvider loginInfoProvider,
-            ContentFetchManager contentFetchManager
+            ContentFetchManager contentFetchManager,
+            InboxV2Bridge inboxV2Bridge
     ) {
         this.config = config;
         this.context = context;
@@ -102,6 +107,7 @@ public class LoginController {
         this.ctLockManager = ctLockManager;
         this.loginInfoProvider = loginInfoProvider;
         this.contentFetchManager = contentFetchManager;
+        this.inboxV2Bridge = inboxV2Bridge;
     }
 
     public void asyncProfileSwitchUser(final Map<String, Object> profile, final String cacheGuid,
@@ -155,6 +161,7 @@ public class LoginController {
                     }
                     pushProviders.forcePushDeviceToken(true);
                     resetInbox();
+                    schedulePostSwitchInboxFetch();
                     resetFeatureFlags();
                     resetProductConfigs();
                     recordDeviceIDErrors();
@@ -290,8 +297,8 @@ public class LoginController {
      * Resets the Display Units in the cache
      */
     private void resetDisplayUnits() {
-        if (controllerManager.getCTDisplayUnitController() != null) {
-            controllerManager.getCTDisplayUnitController().reset();
+        if (controllerManager.getDisplayUnitCache() != null) {
+            controllerManager.getDisplayUnitCache().reset();
         } else {
             config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");
@@ -316,6 +323,30 @@ public class LoginController {
             controllerManager.setCTInboxController(null);
         }
         controllerManager.initializeInbox();
+        // New user gets an independent fetch window — clear the previous user's throttle timestamp.
+        inboxV2Bridge.resetThrottle();
+    }
+
+    /**
+     * Enqueues a post-user-switch inbox fetch on the PostAsyncSafely executor.
+     *
+     * <p>Ordering guarantee: PostAsyncSafely is a single-thread executor.
+     * By the time this task runs, the "profilePush" task queued by
+     * {@code analyticsManager.pushProfile} will already have completed,
+     * so new-user events are in the DB. Flushing synchronously here lets
+     * the server return the new user's ARP <em>before</em>
+     * {@link InboxV2Bridge#submit} builds the inbox FETCH request header.
+     * Without this flush the first FETCH goes out with stale/missing ARP
+     * and returns no inbox messages.
+     */
+    private void schedulePostSwitchInboxFetch() {
+        CTExecutorFactory.executors(config).postAsyncSafelyTask()
+                .execute("postSwitchInboxFetch", () -> {
+                    baseEventQueueManager.flushQueueSync(
+                            context, EventGroup.REGULAR);
+                    inboxV2Bridge.submit(FetchTrigger.SYSTEM, null);
+                    return null;
+                });
     }
 //Session
 

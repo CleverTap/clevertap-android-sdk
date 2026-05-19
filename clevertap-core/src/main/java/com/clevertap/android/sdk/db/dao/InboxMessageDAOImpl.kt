@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
-import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
@@ -11,6 +10,8 @@ import com.clevertap.android.sdk.db.DBEncryptionHandler
 import com.clevertap.android.sdk.db.DatabaseHelper
 import com.clevertap.android.sdk.db.Table.INBOX_MESSAGES
 import com.clevertap.android.sdk.inbox.CTMessageDAO
+import com.clevertap.android.sdk.inbox.InboxIndexState
+import com.clevertap.android.sdk.inbox.InboxMessageSource
 import org.json.JSONObject
 
 internal class InboxMessageDAOImpl(
@@ -39,6 +40,8 @@ internal class InboxMessageDAOImpl(
                 val userIdColumnIndex = cursor.getColumnIndexOrThrow(Column.USER_ID)
                 val tagsColumnIndex = cursor.getColumnIndexOrThrow(Column.TAGS)
                 val campaignColumnIndex = cursor.getColumnIndexOrThrow(Column.CAMPAIGN)
+                val sourceColumnIndex = cursor.getColumnIndex(Column.SOURCE)
+                val indexStateColumnIndex = cursor.getColumnIndex(Column.INDEX_STATE)
 
                 while (cursor.moveToNext()) {
                     val decryptedData = dbEncryptionHandler.unwrapDbData(cursor.getString(dataColumnIndex))
@@ -58,6 +61,8 @@ internal class InboxMessageDAOImpl(
                             cursor.getString(userIdColumnIndex) // This seems redundant if you are already filtering by userId
                         this.tags = cursor.getString(tagsColumnIndex)
                         this.campaignId = cursor.getString(campaignColumnIndex)
+                        this.source = readSource(cursor, sourceColumnIndex)
+                        this.indexState = readIndexState(cursor, indexStateColumnIndex)
                     }
                     messageDAOArrayList.add(ctMessageDAO)
                 }
@@ -75,24 +80,55 @@ internal class InboxMessageDAOImpl(
             return
         }
 
+        // SQLite UPSERT — INSERT writes index_state for fresh rows; the
+        // ON CONFLICT clause intentionally omits index_state so an existing
+        // row's state survives upsert. The cross-device delete sweep relies
+        // on this: an /a1 redelivery (or any subsequent upsert) must never
+        // downgrade an INDEXED row back to PENDING_INDEXING. The FETCH path
+        // promotes survivors via a separate markIndexed() call.
+        val sql = """
+            INSERT INTO ${INBOX_MESSAGES.tableName} (
+                ${Column.ID},
+                ${Column.DATA},
+                ${Column.WZRKPARAMS},
+                ${Column.CAMPAIGN},
+                ${Column.TAGS},
+                ${Column.IS_READ},
+                ${Column.EXPIRES},
+                ${Column.CREATED_AT},
+                ${Column.USER_ID},
+                ${Column.SOURCE},
+                ${Column.INDEX_STATE}
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(${Column.USER_ID}, ${Column.ID}) DO UPDATE SET
+                ${Column.DATA} = excluded.${Column.DATA},
+                ${Column.WZRKPARAMS} = excluded.${Column.WZRKPARAMS},
+                ${Column.CAMPAIGN} = excluded.${Column.CAMPAIGN},
+                ${Column.TAGS} = excluded.${Column.TAGS},
+                ${Column.IS_READ} = excluded.${Column.IS_READ},
+                ${Column.EXPIRES} = excluded.${Column.EXPIRES},
+                ${Column.CREATED_AT} = excluded.${Column.CREATED_AT},
+                ${Column.SOURCE} = excluded.${Column.SOURCE}
+        """.trimIndent()
+
+        val db = dbHelper.writableDatabase
         for (messageDAO in inboxMessages) {
-            val cv = ContentValues().apply {
-                put(Column.ID, messageDAO.id)
-                val encryptedData = dbEncryptionHandler.wrapDbData(messageDAO.jsonData.toString())
-                put(Column.DATA, encryptedData)
-                put(Column.WZRKPARAMS, messageDAO.wzrkParams.toString())
-                put(Column.CAMPAIGN, messageDAO.campaignId)
-                put(Column.TAGS, messageDAO.tags)
-                put(Column.IS_READ, messageDAO.isRead())
-                put(Column.EXPIRES, messageDAO.expires)
-                put(Column.CREATED_AT, messageDAO.date)
-                put(Column.USER_ID, messageDAO.userId)
-            }
-            
             try {
-                dbHelper.writableDatabase.insertWithOnConflict(
-                    INBOX_MESSAGES.tableName, null, cv, SQLiteDatabase.CONFLICT_REPLACE
+                val encryptedData = dbEncryptionHandler.wrapDbData(messageDAO.jsonData.toString())
+                val args = arrayOf<Any?>(
+                    messageDAO.id,
+                    encryptedData,
+                    messageDAO.wzrkParams.toString(),
+                    messageDAO.campaignId,
+                    messageDAO.tags,
+                    messageDAO.isRead(),
+                    messageDAO.expires,
+                    messageDAO.date,
+                    messageDAO.userId,
+                    (messageDAO.source ?: InboxMessageSource.V1).name,
+                    messageDAO.indexState ?: InboxIndexState.PENDING_INDEXING
                 )
+                db.execSQL(sql, args)
             } catch (e: SQLiteException) {
                 logger.verbose("Error adding data to table ${INBOX_MESSAGES.tableName}", e)
             }
@@ -167,7 +203,7 @@ internal class InboxMessageDAOImpl(
         val cv = ContentValues().apply {
             put(Column.IS_READ, 1)
         }
-        
+
         return try {
             dbHelper.writableDatabase.update(
                 tName, cv,
@@ -178,6 +214,87 @@ internal class InboxMessageDAOImpl(
         } catch (e: SQLiteException) {
             logger.verbose("Error updating records in $tName", e)
             false
+        }
+    }
+
+    @WorkerThread
+    override fun markIndexed(messageIds: List<String>, userId: String): Boolean {
+        if (messageIds.isEmpty()) return true
+        val tName = INBOX_MESSAGES.tableName
+        val idsTemplateGroup = getTemplateMarkersList(messageIds.size)
+        val whereArgs = messageIds.toMutableList().apply { add(userId) }
+        val cv = ContentValues().apply {
+            put(Column.INDEX_STATE, InboxIndexState.INDEXED)
+        }
+
+        return try {
+            dbHelper.writableDatabase.update(
+                tName, cv,
+                "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?",
+                whereArgs.toTypedArray()
+            )
+            true
+        } catch (e: SQLiteException) {
+            logger.verbose("Error marking inbox rows indexed in $tName", e)
+            false
+        }
+    }
+
+    @WorkerThread
+    override fun findSweepableV2Ids(userId: String, staleCutoffSeconds: Long): Set<String> {
+        val tName = INBOX_MESSAGES.tableName
+        val result = mutableSetOf<String>()
+        try {
+            // Select V2 rows that are either:
+            //  (a) INDEXED — fetch backend has confirmed them; absence is a delete signal.
+            //  (b) PENDING_INDEXING but older than the grace cutoff — indexing window
+            //      has demonstrably elapsed; absence is treated as a delete signal too.
+            val selection = "${Column.USER_ID} = ?" +
+                    " AND ${Column.SOURCE} = ?" +
+                    " AND ${Column.EXPIRES} != 0" +
+                    " AND (${Column.INDEX_STATE} = ?" +
+                    " OR (${Column.INDEX_STATE} = ? AND ${Column.CREATED_AT} < ?))"
+            val selectionArgs = arrayOf(
+                userId,
+                InboxMessageSource.V2.name,
+                InboxIndexState.INDEXED,
+                InboxIndexState.PENDING_INDEXING,
+                staleCutoffSeconds.toString()
+            )
+            dbHelper.readableDatabase.query(
+                tName,
+                arrayOf(Column.ID),
+                selection,
+                selectionArgs,
+                null, null, null
+            )?.use { cursor ->
+                val idIndex = cursor.getColumnIndexOrThrow(Column.ID)
+                while (cursor.moveToNext()) {
+                    cursor.getString(idIndex)?.let { result.add(it) }
+                }
+            }
+        } catch (e: Exception) {
+            logger.verbose("Error querying sweepable V2 ids from $tName", e)
+        }
+        return result
+    }
+
+    private fun readSource(cursor: android.database.Cursor, columnIndex: Int): InboxMessageSource {
+        if (columnIndex < 0) return InboxMessageSource.V1
+        val raw = cursor.getString(columnIndex) ?: return InboxMessageSource.V1
+        return try {
+            InboxMessageSource.valueOf(raw)
+        } catch (_: IllegalArgumentException) {
+            InboxMessageSource.V1
+        }
+    }
+
+    private fun readIndexState(cursor: android.database.Cursor, columnIndex: Int): String {
+        if (columnIndex < 0) return InboxIndexState.PENDING_INDEXING
+        val raw = cursor.getString(columnIndex) ?: return InboxIndexState.PENDING_INDEXING
+        return when (raw) {
+            InboxIndexState.PENDING_INDEXING, InboxIndexState.INDEXED -> raw
+            else -> InboxIndexState.PENDING_INDEXING
         }
     }
 

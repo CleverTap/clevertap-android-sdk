@@ -1,15 +1,19 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
+import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import java.util.ArrayList;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class DisplayUnitResponse extends CleverTapResponseDecorator {
@@ -72,7 +76,8 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
     }
 
     /**
-     * Parses the Display Units using the JSON response
+     * Parses the Display Units using the JSON response, populates the cache and
+     * notifies the callback.
      *
      * @param messages - Json array of Display Unit items
      */
@@ -84,13 +89,44 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         }
 
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
-            if (controllerManager.getCTDisplayUnitController() == null) {
-                controllerManager.setCTDisplayUnitController(new CTDisplayUnitController());
+            if (controllerManager.getDisplayUnitCache() == null) {
+                controllerManager.setDisplayUnitCache(new CTDisplayUnitController());
             }
         }
-        ArrayList<CleverTapDisplayUnit> displayUnits = controllerManager.getCTDisplayUnitController()
-                .updateDisplayUnits(messages);
+        DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+        if (cache == null) {
+            callbackManager.notifyDisplayUnitsLoaded(null);
+            return;
+        }
 
-        callbackManager.notifyDisplayUnitsLoaded(displayUnits);
+        ArrayList<CleverTapDisplayUnit> displayUnits = parseDisplayUnitsFromJson(messages);
+        cache.updateDisplayUnits(displayUnits);
+        callbackManager.notifyDisplayUnitsLoaded(displayUnits.isEmpty() ? null : displayUnits);
+    }
+
+    /**
+     * Converts a JSON array of display units into model objects, filtering out
+     * malformed entries.
+     */
+    @NonNull
+    private ArrayList<CleverTapDisplayUnit> parseDisplayUnitsFromJson(@NonNull JSONArray messages) {
+        final ArrayList<CleverTapDisplayUnit> list = new ArrayList<>();
+        for (int i = 0; i < messages.length(); i++) {
+            try {
+                CleverTapDisplayUnit unit = CleverTapDisplayUnit.toDisplayUnit(messages.getJSONObject(i));
+                if (TextUtils.isEmpty(unit.getError())) {
+                    list.add(unit);
+                } else {
+                    logger.verbose(config.getAccountId(),
+                            Constants.FEATURE_DISPLAY_UNIT + "Failed to convert JsonArray item at index:" + i
+                                    + " to Display Unit");
+                }
+            } catch (JSONException e) {
+                logger.verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Failed to parse Display Unit at index " + i
+                                + ": " + e.getLocalizedMessage());
+            }
+        }
+        return list;
     }
 }

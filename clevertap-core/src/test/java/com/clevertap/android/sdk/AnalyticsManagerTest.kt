@@ -32,10 +32,14 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -44,6 +48,7 @@ import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Future
 import kotlin.apply
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 @RunWith(RobolectricTestRunner::class)
 class AnalyticsManagerTest {
@@ -788,7 +793,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDisplayUnitClickedEventForID displayController is null`() {
-        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        every { coreState.controllerManager.displayUnitCache } returns null
         analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
 
         verify(exactly = 0) {
@@ -800,7 +805,7 @@ class AnalyticsManagerTest {
     fun `pushDisplayUnitClickedEventForID displayUnit is null`() {
         val displayController = mockk<CTDisplayUnitController>()
         every { displayController.getDisplayUnitForID(any()) } returns null
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
 
@@ -817,7 +822,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDisplayUnitViewedEventForID displayController is null`() {
-        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        every { coreState.controllerManager.displayUnitCache } returns null
         analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
 
         verify(exactly = 0) {
@@ -829,10 +834,103 @@ class AnalyticsManagerTest {
     fun `pushDisplayUnitViewedEventForID displayUnit is null`() {
         val displayController = mockk<CTDisplayUnitController>()
         every { displayController.getDisplayUnitForID(any()) } returns null
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
 
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID merges elementId and additionalProperties`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        val unitJson = JSONObject()
+            .put("wzrk_id", "1234_5678")
+            .put("wzrk_pivot", "wzrk_default")
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(unitJson)
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+
+        val extras = HashMap<String, Any>().apply {
+            put("action_type", "open_url")
+            put("action_url", "https://example.com")
+            put("k1", "v1")
+        }
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "button-1", extras)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(any(), match { event ->
+                val evtData = event.getJSONObject(Constants.KEY_EVT_DATA)
+                event.getString(Constants.KEY_EVT_NAME) == Constants.NOTIFICATION_CLICKED_EVENT_NAME
+                        // wzrk_* enrichment preserved
+                        && evtData.optString("wzrk_id") == "1234_5678"
+                        && evtData.optString("wzrk_pivot") == "wzrk_default"
+                        // element id added
+                        && evtData.optString("wzrk_element_id") == "button-1"
+                        // additionalProperties merged
+                        && evtData.optString("action_type") == "open_url"
+                        && evtData.optString("action_url") == "https://example.com"
+                        && evtData.optString("k1") == "v1"
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID strips wzrk_ keys from additionalProperties`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        val unitJson = JSONObject().put("wzrk_id", "real_id")
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(unitJson)
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+
+        val extras = HashMap<String, Any>().apply {
+            put("wzrk_id", "spoofed")                  // collision with server-controlled key
+            put("wzrk_anything", "should-be-stripped") // any wzrk_-prefixed key is dropped
+            put("ok_key", "kept")
+        }
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "btn", extras)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(any(), match { event ->
+                val evtData = event.getJSONObject(Constants.KEY_EVT_DATA)
+                // wzrk_id from cached unit wins — spoofed value never lands.
+                evtData.optString("wzrk_id") == "real_id"
+                        && !evtData.has("wzrk_anything")
+                        && evtData.optString("ok_key") == "kept"
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID setWzrkParams receives only wzrk_ keys`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        val unitJson = JSONObject().put("wzrk_id", "1234")
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(unitJson)
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+
+        val extras = HashMap<String, Any>().apply { put("action_url", "https://x") }
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "btn", extras)
+
+        // coreMetaData.setWzrkParams feeds the wzrk_ref batch header — caller-supplied
+        // non-wzrk extras must NOT ride along. coreMetaData is a real instance (see
+        // MockCoreStateKotlin), so reading wzrkParams back reflects the latest set.
+        val wzrkParams = coreState.coreMetaData.wzrkParams
+        assertNotNull(wzrkParams)
+        assertFalse(wzrkParams.has("action_url"))
+        assertEquals("1234", wzrkParams.optString("wzrk_id"))
+        assertEquals("btn", wzrkParams.optString("wzrk_element_id"))
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID displayController is null`() {
+        every { coreState.controllerManager.displayUnitCache } returns null
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "btn", HashMap())
         verify(exactly = 0) {
             eventQueueManager.queueEvent(any(), any(), any(), any())
         }
@@ -843,7 +941,7 @@ class AnalyticsManagerTest {
         val displayUnitJson = JSONObject()
         val displayUnit = CleverTapDisplayUnit.toDisplayUnit(displayUnitJson)
         every { displayController.getDisplayUnitForID(any()) } returns displayUnit
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         val eventName: String
         if (isClicked) {
@@ -1277,11 +1375,245 @@ class AnalyticsManagerTest {
         verifyPushInboxMessageStateEvent(false)
     }
 
+    @Test
+    fun `pushInboxMessageStateEvent viewed includes the message wzrk_mid in evtData`() {
+        verifyPushInboxMessageStateEventIncludesId(isClicked = false)
+    }
+
+    @Test
+    fun `pushInboxMessageStateEvent clicked includes the message wzrk_mid in evtData`() {
+        verifyPushInboxMessageStateEventIncludesId(isClicked = true)
+    }
+
+    @Test
+    fun `Viewed event for V1 message does NOT include wzrk_mid`() {
+        verifyV1MessageOmitsId(isClicked = false)
+    }
+
+    @Test
+    fun `Clicked event for V1 message does NOT include wzrk_mid`() {
+        verifyV1MessageOmitsId(isClicked = true)
+    }
+
+    @Test
+    fun `wzrk_mid absent when inbox controller is null`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "msg-xyz"
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+            every { coreState.controllerManager.ctInboxController } returns null
+
+            val captured = slot<JSONObject>()
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(
+                    context,
+                    capture(captured),
+                    Constants.RAISED_EVENT,
+                    any<FlattenedEventData.EventProperties>()
+                )
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
+
+            val evtData = captured.captured.getJSONObject(Constants.KEY_EVT_DATA)
+            assertFalse(evtData.has("wzrk_mid"))
+        }
+    }
+
+    private fun verifyV1MessageOmitsId(isClicked: Boolean) {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "msg-v1"
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+            val inboxController = mockk<CTInboxController>(relaxed = true)
+            every { coreState.controllerManager.ctInboxController } returns inboxController
+            every { inboxController.isV2Message("msg-v1") } returns false
+
+            val captured = slot<JSONObject>()
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(
+                    context,
+                    capture(captured),
+                    Constants.RAISED_EVENT,
+                    any<FlattenedEventData.EventProperties>()
+                )
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(isClicked, inboxMessage, null)
+
+            val expectedEventName = if (isClicked) {
+                Constants.NOTIFICATION_CLICKED_EVENT_NAME
+            } else {
+                Constants.NOTIFICATION_VIEWED_EVENT_NAME
+            }
+            assertEquals(expectedEventName, captured.captured.getString(Constants.KEY_EVT_NAME))
+            val evtData = captured.captured.getJSONObject(Constants.KEY_EVT_DATA)
+            assertFalse(evtData.has("wzrk_mid"))
+        }
+    }
+
+    @Test
+    fun `two rapid Viewed events for same message — only first queues`() {
+        verifyRapidRepeatSuppressed(isClicked = false)
+    }
+
+    @Test
+    fun `two rapid Clicked events for same message — only first queues`() {
+        verifyRapidRepeatSuppressed(isClicked = true)
+    }
+
+    @Test
+    fun `Viewed is skipped for V2 message when isRead=true`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-v2-read"
+            every { inboxMessage.isRead } returns true
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+            val inboxController = mockk<CTInboxController>(relaxed = true)
+            every { coreState.controllerManager.ctInboxController } returns inboxController
+            every { inboxController.isV2Message("m-v2-read") } returns true
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
+
+            verify(exactly = 0) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
+    @Test
+    fun `Viewed on V1 message fires even when isRead=true`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-v1-read"
+            every { inboxMessage.isRead } returns true
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+            val inboxController = mockk<CTInboxController>(relaxed = true)
+            every { coreState.controllerManager.ctInboxController } returns inboxController
+            every { inboxController.isV2Message("m-v1-read") } returns false
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
+    @Test
+    fun `Clicked on isRead=true message still queues`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-read"
+            every { inboxMessage.isRead } returns true
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(true, inboxMessage, null)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
+    @Test
+    fun `Viewed on isRead=false message fires normally`() {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "m-unread"
+            every { inboxMessage.isRead } returns false
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(false, inboxMessage, null)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+            }
+        }
+    }
+
+    private fun verifyRapidRepeatSuppressed(isClicked: Boolean) {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "msg-rapid"
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(
+                    any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>()
+                )
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(isClicked, inboxMessage, null)
+            analyticsManagerSUT.pushInboxMessageStateEvent(isClicked, inboxMessage, null)
+
+            verify(exactly = 1) {
+                eventQueueManager.queueEvent(
+                    any(), any(), Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>()
+                )
+            }
+        }
+    }
+
+    private fun verifyPushInboxMessageStateEventIncludesId(isClicked: Boolean) {
+        mockkStatic(CTJsonConverter::class) {
+            val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
+            every { inboxMessage.messageId } returns "msg-xyz"
+            every { CTJsonConverter.getWzrkFields(inboxMessage) } returns JSONObject()
+            val inboxController = mockk<CTInboxController>(relaxed = true)
+            every { coreState.controllerManager.ctInboxController } returns inboxController
+            every { inboxController.isV2Message("msg-xyz") } returns true
+
+            val captured = slot<JSONObject>()
+            val future = mockk<Future<*>>()
+            every {
+                eventQueueManager.queueEvent(
+                    context,
+                    capture(captured),
+                    Constants.RAISED_EVENT,
+                    any<FlattenedEventData.EventProperties>()
+                )
+            } returns future
+
+            analyticsManagerSUT.pushInboxMessageStateEvent(isClicked, inboxMessage, null)
+
+            val expectedEventName = if (isClicked) {
+                Constants.NOTIFICATION_CLICKED_EVENT_NAME
+            } else {
+                Constants.NOTIFICATION_VIEWED_EVENT_NAME
+            }
+            assertEquals(expectedEventName, captured.captured.getString(Constants.KEY_EVT_NAME))
+            val evtData = captured.captured.getJSONObject(Constants.KEY_EVT_DATA)
+            assertEquals("msg-xyz", evtData.getString("wzrk_mid"))
+        }
+    }
+
     private fun verifyPushInboxMessageStateEvent(isClicked: Boolean) {
         mockkStatic(CTJsonConverter::class) {
             val inboxMessage = mockk<CTInboxMessage>(relaxed = true)
             val wzrkFields = JSONObject().apply { put("test", "test") }
             every { CTJsonConverter.getWzrkFields(inboxMessage) } returns wzrkFields
+            val inboxController = mockk<CTInboxController>(relaxed = true)
+            every { coreState.controllerManager.ctInboxController } returns inboxController
+            every { inboxController.isV2Message(any()) } returns true
 
             val customData = Bundle().apply { putString("key", "value") }
 
@@ -1289,6 +1621,7 @@ class AnalyticsManagerTest {
 
             val expectedEvtData = JSONObject()
             expectedEvtData.put("test", "test")
+            expectedEvtData.put("wzrk_mid", "")
             expectedEvtData.put("key", "value")
 
             val expectedEvent = JSONObject()
@@ -1314,8 +1647,8 @@ class AnalyticsManagerTest {
     @Test
     fun `raiseEventForGeofences should queue event and set location`() {
         val eventName = "geofence_event"
-        val lat = 34.05
-        val lng = -118.25
+        val lat: Double = 34.05
+        val lng: Double = -118.25
         val propKey = "prop"
         val propValue = "value"
         val geofenceProperties = JSONObject().apply {
@@ -1344,8 +1677,8 @@ class AnalyticsManagerTest {
         }
 
         val location = coreState.coreMetaData.locationFromUser
-        assertEquals(lat, location.latitude)
-        assertEquals(lng, location.longitude)
+        assertEquals(lat, location.latitude, 0.0)
+        assertEquals(lng, location.longitude, 0.0)
     }
 
     @Test

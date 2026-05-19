@@ -1,4 +1,18 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.2.0 (May 19, 2026)
+
+#### New Features
+* **App Inbox Cross-Device Sync:** App Inbox messages now sync across a user's devices. If a user deletes or reads a message on one device, it is automatically reflected on their other devices.
+  * **New Inbox Fetch APIs:** The SDK already fetches inbox messages automatically on app launch and user login. Two new public methods have been added to `CleverTapAPI` to complement this with on-demand refresh support:
+    * `fetchInbox()` — triggers an inbox refresh from the server (fire-and-forget).
+    * `fetchInbox(FetchInboxCallback)` — same as above, but invokes the callback with a success/failure result when the fetch completes. The callback fires on the SDK's network thread, not the main thread.
+    * **Note:** Both methods are throttled to once every 5 minutes between consecutive calls. This throttle is shared with the built-in pull-to-refresh gesture.
+  * **Pull-to-Refresh in Built-in Inbox:** The built-in App Inbox (`showAppInbox()`) now includes a pull-to-refresh gesture. Manual inbox fetches — including those triggered by `fetchInbox()` — are throttled to once every 5 minutes between consecutive calls.
+    * **Note:** Pull-to-refresh is automatically disabled for accounts that are not enabled for App Inbox Cross-Device Sync. The message list remains fully visible and scrollable; only the swipe gesture is disabled.
+  * **Inbox Viewed and Clicked Event Deduplication:** Rapid duplicate `Notification Viewed` and `Notification Clicked` events for the same inbox message are now automatically suppressed to prevent analytics inflation. Additionally, a `Notification Viewed` event is not raised for messages that have already been read on another device.
+    * **Note:** For custom inbox implementations, ensure `pushInboxNotificationViewedEvent(messageId)` is called when a message becomes visible to the user, before calling `markReadInboxMessage(messageId)` — calling them in reverse order will silently drop the Viewed event.
+    * **Note:** The "already read" suppression applies only to accounts enabled for App Inbox Cross-Device Sync. For accounts not using this feature, `Notification Viewed` continues to be raised regardless of read state, preserving existing behaviour.
+
 ### Version 8.1.0 (April 17, 2026)
 
 #### New Features

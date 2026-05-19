@@ -11,6 +11,8 @@ import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inbox.InboxV2Bridge;
+import com.clevertap.android.sdk.network.fetch.FetchTrigger;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.task.Task;
@@ -42,6 +44,8 @@ class ActivityLifeCycleManager {
 
     private final Clock clock;
 
+    private final InboxV2Bridge inboxV2Bridge;
+
     ActivityLifeCycleManager(Context context,
                              CleverTapInstanceConfig config,
                              AnalyticsManager analyticsManager,
@@ -52,7 +56,8 @@ class ActivityLifeCycleManager {
                              InAppController inAppController,
                              BaseEventQueueManager baseEventQueueManager,
                              CTExecutors executors,
-                             Clock clock) {
+                             Clock clock,
+                             InboxV2Bridge inboxV2Bridge) {
         this.context = context;
         this.config = config;
         this.analyticsManager = analyticsManager;
@@ -64,6 +69,7 @@ class ActivityLifeCycleManager {
         this.baseEventQueueManager = baseEventQueueManager;
         this.executors = executors;
         this.clock = clock;
+        this.inboxV2Bridge = inboxV2Bridge;
     }
 
     //Lifecycle
@@ -102,6 +108,7 @@ class ActivityLifeCycleManager {
 
             analyticsManager.pushAppLaunchedEvent();
             analyticsManager.fetchFeatureFlags();
+            inboxV2Bridge.submit(FetchTrigger.SYSTEM, null);
             pushProviders.onTokenRefresh();
             Task<Void> task = executors.postAsyncSafelyTask();
             task.execute("HandlingInstallReferrer", new Callable<Void>() {

@@ -3,11 +3,14 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import androidx.annotation.AnyThread;
 import androidx.annotation.WorkerThread;
+import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
+import com.clevertap.android.sdk.inbox.InboxDeleteCoordinator;
 import com.clevertap.android.sdk.network.BatchListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -26,7 +29,7 @@ public class ControllerManager {
 
     private final BaseDatabaseManager baseDatabaseManager;
 
-    private CTDisplayUnitController ctDisplayUnitController;
+    private volatile DisplayUnitCache displayUnitCache;
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
@@ -62,6 +65,8 @@ public class ControllerManager {
 
     private  CTVariables ctVariables;
 
+    private InboxDeleteCoordinator inboxDeleteCoordinator;
+
     public ControllerManager(Context context,
             CleverTapInstanceConfig config,
             CTLockManager ctLockManager,
@@ -76,13 +81,46 @@ public class ControllerManager {
         baseDatabaseManager = databaseManager;
     }
 
-    public CTDisplayUnitController getCTDisplayUnitController() {
-        return ctDisplayUnitController;
+    /**
+     * @return the active {@link DisplayUnitCache}; {@code null} until the SDK
+     * receives its first {@code adUnit_notifs} response or a host installs a
+     * cache via {@link #setDisplayUnitCache(DisplayUnitCache)}.
+     */
+    @Nullable
+    public DisplayUnitCache getDisplayUnitCache() {
+        return displayUnitCache;
     }
 
+    /**
+     * Replaces the display-unit cache. Pass {@code null} to clear the
+     * reference (subsequent server responses will lazily install a fresh
+     * default {@link CTDisplayUnitController}).
+     */
+    public void setDisplayUnitCache(@Nullable DisplayUnitCache cache) {
+        displayUnitCache = cache;
+    }
+
+    /**
+     * @deprecated since v7.x.0. Use {@link #getDisplayUnitCache()} instead.
+     * Returns the active cache only when it is the default
+     * {@link CTDisplayUnitController}; returns {@code null} when a host has
+     * installed a custom {@link DisplayUnitCache}.
+     */
+    @Deprecated
+    @Nullable
+    public CTDisplayUnitController getCTDisplayUnitController() {
+        return displayUnitCache instanceof CTDisplayUnitController
+                ? (CTDisplayUnitController) displayUnitCache : null;
+    }
+
+    /**
+     * @deprecated since v7.x.0. Use
+     * {@link #setDisplayUnitCache(DisplayUnitCache)} instead.
+     */
+    @Deprecated
     public void setCTDisplayUnitController(
             final CTDisplayUnitController CTDisplayUnitController) {
-        ctDisplayUnitController = CTDisplayUnitController;
+        setDisplayUnitCache(CTDisplayUnitController);
     }
 
     /**
@@ -171,6 +209,14 @@ public class ControllerManager {
         this.pushProviders = pushProviders;
     }
 
+    public InboxDeleteCoordinator getInboxDeleteCoordinator() {
+        return inboxDeleteCoordinator;
+    }
+
+    public void setInboxDeleteCoordinator(final InboxDeleteCoordinator inboxDeleteCoordinator) {
+        this.inboxDeleteCoordinator = inboxDeleteCoordinator;
+    }
+
     @AnyThread
     public void initializeInbox() {
         if (config.isAnalyticsOnly()) {
@@ -186,6 +232,16 @@ public class ControllerManager {
                 return null;
             }
         });
+    }
+
+    @WorkerThread
+    public void initializeInboxSync() {
+        if (config.isAnalyticsOnly()) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
+            return;
+        }
+        _initializeInbox();
     }
 
     // always call async
@@ -204,10 +260,14 @@ public class ControllerManager {
                                 baseDatabaseManager.loadDBAdapter(context),
                                 ctLockManager,
                                 callbackManager,
-                                VideoLibChecker.haveVideoPlayerSupport
+                                VideoLibChecker.haveVideoPlayerSupport,
+                                inboxDeleteCoordinator
                         )
                 );
                 callbackManager._notifyInboxInitialized();
+                if (inboxDeleteCoordinator != null) {
+                    inboxDeleteCoordinator.retryPending(deviceInfo.getDeviceID());
+                }
             } else {
                 config.getLogger().info("CRITICAL : No device ID found!");
             }
