@@ -25,4 +25,8 @@ internal class FetchThrottle(
     fun recordFetch() {
         lastFetchMs = clock.currentTimeMillis()
     }
+
+    fun reset() {
+        lastFetchMs = 0L
+    }
 }

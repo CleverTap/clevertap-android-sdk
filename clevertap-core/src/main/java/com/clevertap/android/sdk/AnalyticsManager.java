@@ -1002,9 +1002,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
         String msgId = data.getMessageId();
 
-        if (!clicked && data.isRead()) {
+        if (!clicked && data.isRead() && isV2InboxMessage(msgId)) {
             config.getLogger().verbose(config.getAccountId(),
-                    "Inbox: Skipping Viewed for " + msgId + " — already read on another device");
+                    "Inbox: Skipping Viewed for " + msgId + " — already read on another device (V2)");
             return;
         }
 

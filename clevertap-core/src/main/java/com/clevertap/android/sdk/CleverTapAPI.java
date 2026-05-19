@@ -2292,6 +2292,17 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Returns {@code true} if the V2 inbox endpoint has been session-disabled (HTTP 403).
+     * When true, pull-to-refresh should be hidden — further fetch calls will short-circuit.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public boolean isInboxFetchDisabledForSession() {
+        return coreState.getInboxV2Bridge().isInboxFetchDisabledForSession();
+    }
+
+    /**
      * Marks the given {@link CTInboxMessage} object as read
      *
      * @param message {@link CTInboxMessage} public object of inbox message

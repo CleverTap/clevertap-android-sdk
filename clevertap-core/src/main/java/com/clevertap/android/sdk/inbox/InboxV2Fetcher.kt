@@ -34,6 +34,13 @@ internal class InboxV2Fetcher(
     @Volatile
     private var disabledForSession: Boolean = false
 
+    internal val isDisabledForSession: Boolean
+        get() = disabledForSession
+
+    internal fun resetThrottle() {
+        throttle.reset()
+    }
+
     /**
      * @param trigger [FetchTrigger.USER_INITIATED] for pull-to-refresh and the
      *   public `fetchInbox()` API — throttle is checked and recorded.
@@ -55,8 +62,7 @@ internal class InboxV2Fetcher(
 
         val raw = endpoint.execute()
 
-        if (trigger == FetchTrigger.USER_INITIATED &&
-                (raw is CallResult.Success || raw is CallResult.HttpError)) {
+        if (trigger == FetchTrigger.USER_INITIATED && raw is CallResult.Success) {
             throttle.recordFetch()
         }
 

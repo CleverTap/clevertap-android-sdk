@@ -50,6 +50,18 @@ class FetchThrottleTest {
     }
 
     @Test
+    fun `reset clears throttle so next call is immediately allowed`() {
+        val clock = TestClock(60L * 60 * 1000)
+        val t = inboxThrottle(clock)
+        t.recordFetch()
+        assertTrue(t.shouldThrottle())
+
+        t.reset()
+
+        assertFalse(t.shouldThrottle())
+    }
+
+    @Test
     fun `two features with different windows do not collide`() {
         val clock = TestClock(60L * 60 * 1000)
         val inbox = FetchThrottle(windowMs = 5L * 60_000, clock = clock)

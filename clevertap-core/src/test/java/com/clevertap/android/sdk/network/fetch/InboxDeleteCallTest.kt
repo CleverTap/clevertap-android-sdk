@@ -145,13 +145,13 @@ class InboxDeleteCallTest {
     }
 
     @Test
-    fun `HTTP 500 returns HttpError with body`() = runTest {
+    fun `HTTP 500 returns Disabled`() = runTest {
         val result = newCall(
             CapturingHttpClient(responseCode = 500, responseBody = "oh no"),
             listOf(inboxMessage("m1"))
         ).execute()
 
-        assertEquals(CallResult.HttpError(500, "oh no"), result)
+        assertEquals(CallResult.Disabled, result)
     }
 
     @Test
