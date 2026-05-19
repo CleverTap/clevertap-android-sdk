@@ -1647,8 +1647,8 @@ class AnalyticsManagerTest {
     @Test
     fun `raiseEventForGeofences should queue event and set location`() {
         val eventName = "geofence_event"
-        val lat = 34.05
-        val lng = -118.25
+        val lat: Double = 34.05
+        val lng: Double = -118.25
         val propKey = "prop"
         val propValue = "value"
         val geofenceProperties = JSONObject().apply {
@@ -1677,8 +1677,8 @@ class AnalyticsManagerTest {
         }
 
         val location = coreState.coreMetaData.locationFromUser
-        assertEquals(lat, location.latitude)
-        assertEquals(lng, location.longitude)
+        assertEquals(lat, location.latitude, 0.0)
+        assertEquals(lng, location.longitude, 0.0)
     }
 
     @Test
