@@ -237,15 +237,15 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      * images, etc.), this method records which child element was clicked alongside
      * the existing wzrk_* campaign attribution.
      *
-     * The resulting event:
-     * <ul>
-     *   <li>Carries the campaign's {@code wzrk_*} fields from the cached unit JSON
-     *       (same enrichment as {@link #pushDisplayUnitClickedEventForID(String)}).</li>
-     *   <li>Adds {@code wzrk_element_id = elementID} to {@code evtData}.</li>
-     *   <li>Merges {@code additionalProperties} into {@code evtData} after wzrk_*
-     *       enrichment. Keys starting with {@code wzrk_} are filtered out — the
-     *       prefix is reserved for server-controlled attribution fields.</li>
-     * </ul>
+     * {@code evtData} is assembled in three layers (later layers win on key collision):
+     * <ol>
+     *   <li>Caller's {@code additionalProperties}, merged verbatim.</li>
+     *   <li>{@code wzrk_element_id = elementID} from the dedicated argument.</li>
+     *   <li>Cached unit's {@code wzrk_*} fields layered on top — so server-controlled
+     *       attribution always wins over same-named caller-supplied keys (e.g. a
+     *       client cannot spoof {@code wzrk_id}). Caller-supplied {@code wzrk_*}
+     *       keys that are <em>not</em> in the cached unit pass through unchanged.</li>
+     * </ol>
      */
     @Override
     public void pushDisplayUnitElementClickedEventForID(
@@ -263,14 +263,23 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (displayUnit == null) {
                 return;
             }
-            JSONObject eventExtraData = displayUnit.getWZRKFields();
-            if (eventExtraData == null) {
-                eventExtraData = new JSONObject();
-            }
+
+            JSONObject eventExtraData = new JSONObject();
+            mergeAdditionalProperties(eventExtraData, additionalProperties);
             if (elementID != null && !elementID.isEmpty()) {
                 eventExtraData.put("wzrk_element_id", elementID);
             }
-            mergeAdditionalProperties(eventExtraData, additionalProperties);
+            JSONObject cachedWzrkFields = displayUnit.getWZRKFields();
+            if (cachedWzrkFields != null) {
+                Iterator<String> it = cachedWzrkFields.keys();
+                while (it.hasNext()) {
+                    String k = it.next();
+                    try {
+                        eventExtraData.put(k, cachedWzrkFields.get(k));
+                    } catch (JSONException ignored) {
+                    }
+                }
+            }
 
             event.put("evtData", eventExtraData);
             try {
@@ -288,10 +297,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     /**
-     * Merge caller-supplied {@code additionalProperties} into the click event's
-     * {@code evtData}, stripping any {@code wzrk_*} keys. That prefix is reserved
-     * for server-controlled attribution; we keep the namespace one-way (server →
-     * client) so client extras can never overwrite legit campaign attribution.
+     * Merge caller-supplied {@code additionalProperties} verbatim into the click
+     * event's {@code evtData}. The {@code wzrk_*} namespace is enforced by the
+     * caller of this helper — by layering the cached unit's {@code wzrk_*}
+     * fields on top after this merge, so server-controlled attribution wins
+     * over any same-named caller key.
      */
     private void mergeAdditionalProperties(JSONObject eventData,
             HashMap<String, Object> extras) {
@@ -302,13 +312,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             String key = entry.getKey();
             Object value = entry.getValue();
             if (key == null || key.isEmpty() || value == null) {
-                continue;
-            }
-            if (key.startsWith(Constants.WZRK_PREFIX)) {
-                config.getLogger().verbose(config.getAccountId(),
-                        Constants.FEATURE_DISPLAY_UNIT
-                                + "Dropping reserved wzrk_* key from additionalProperties: "
-                                + key);
                 continue;
             }
             try {

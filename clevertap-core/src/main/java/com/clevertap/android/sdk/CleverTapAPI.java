@@ -2536,15 +2536,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * images, etc.), this method records which child element was clicked alongside
      * the existing wzrk_* campaign attribution.
      *
-     * <p>The resulting "Notification Clicked" event:
-     * <ul>
-     *   <li>Carries the campaign's {@code wzrk_*} fields from the cached unit JSON
-     *       (same enrichment as the unit-level method).</li>
-     *   <li>Adds {@code wzrk_element_id = elementID} to the event's {@code evtData}.</li>
-     *   <li>Merges {@code additionalProperties} into {@code evtData} after wzrk_*
-     *       enrichment. Keys starting with {@code wzrk_} are filtered out — that
-     *       prefix is reserved for server-controlled attribution fields.</li>
-     * </ul>
+     * <p>{@code evtData} is assembled in three layers (later layers win on key collision):
+     * <ol>
+     *   <li>Caller's {@code additionalProperties}, merged verbatim.</li>
+     *   <li>{@code wzrk_element_id = elementID} from the dedicated argument.</li>
+     *   <li>Cached unit's {@code wzrk_*} fields layered on top — so server-controlled
+     *       attribution always wins over same-named caller-supplied keys (e.g. a client
+     *       cannot spoof {@code wzrk_id}). Caller-supplied {@code wzrk_*} keys that are
+     *       <em>not</em> in the cached unit pass through unchanged.</li>
+     * </ol>
      *
      * @param unitID               the unitID of the Display Unit
      *                             ({@link CleverTapDisplayUnit#getUnitID()})

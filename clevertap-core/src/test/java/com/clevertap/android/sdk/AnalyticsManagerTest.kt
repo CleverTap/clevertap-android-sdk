@@ -879,7 +879,7 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `pushDisplayUnitElementClickedEventForID strips wzrk_ keys from additionalProperties`() {
+    fun `pushDisplayUnitElementClickedEventForID cached wzrk_ wins over caller wzrk_ but novel wzrk_ keys pass through`() {
         val displayController = mockk<CTDisplayUnitController>()
         val unitJson = JSONObject().put("wzrk_id", "real_id")
         every { displayController.getDisplayUnitForID(any()) } returns
@@ -888,8 +888,8 @@ class AnalyticsManagerTest {
         mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
 
         val extras = HashMap<String, Any>().apply {
-            put("wzrk_id", "spoofed")                  // collision with server-controlled key
-            put("wzrk_anything", "should-be-stripped") // any wzrk_-prefixed key is dropped
+            put("wzrk_id", "spoofed")          // collides with cached wzrk_id — cached wins
+            put("wzrk_extra", "kept-through")  // novel wzrk_ key, not in cached unit — passes through
             put("ok_key", "kept")
         }
         analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "btn", extras)
@@ -897,9 +897,11 @@ class AnalyticsManagerTest {
         verify(exactly = 1) {
             eventQueueManager.queueEvent(any(), match { event ->
                 val evtData = event.getJSONObject(Constants.KEY_EVT_DATA)
-                // wzrk_id from cached unit wins — spoofed value never lands.
+                // Cached wzrk_id wins over the caller-supplied collision.
                 evtData.optString("wzrk_id") == "real_id"
-                        && !evtData.has("wzrk_anything")
+                        // Novel wzrk_-prefixed key from caller passes through.
+                        && evtData.optString("wzrk_extra") == "kept-through"
+                        // Non-wzrk caller key kept.
                         && evtData.optString("ok_key") == "kept"
             }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
         }
