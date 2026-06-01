@@ -2536,28 +2536,26 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * images, etc.), this method records which child element was clicked alongside
      * the existing wzrk_* campaign attribution.
      *
-     * <p>{@code evtData} is assembled in three layers (later layers win on key collision):
+     * <p>{@code evtData} is assembled in two layers (later layers win on key collision):
      * <ol>
-     *   <li>Caller's {@code additionalProperties}, merged verbatim.</li>
-     *   <li>{@code wzrk_element_id = elementID} from the dedicated argument.</li>
+     *   <li>Caller's {@code additionalProperties}, merged verbatim — should include
+     *       {@code wzrk_element_id} and other {@code wzrk_*} attribution fields injected
+     *       by the BE into the action's {@code metadata} object.</li>
      *   <li>Cached unit's {@code wzrk_*} fields layered on top — so server-controlled
-     *       attribution always wins over same-named caller-supplied keys (e.g. a client
-     *       cannot spoof {@code wzrk_id}). Caller-supplied {@code wzrk_*} keys that are
-     *       <em>not</em> in the cached unit pass through unchanged.</li>
+     *       attribution always wins over same-named caller-supplied keys.</li>
      * </ol>
      *
      * @param unitID               the unitID of the Display Unit
      *                             ({@link CleverTapDisplayUnit#getUnitID()})
-     * @param elementID            identifier of the clicked child element (from the
-     *                             Native Display config; typically a button node id)
-     * @param additionalProperties optional per-click context (action url, custom KVs, …)
+     * @param additionalProperties per-click context including {@code wzrk_element_id}
+     *                             and other {@code wzrk_*} fields from BE action metadata
      */
     @SuppressWarnings("unused")
     public void pushDisplayUnitElementClickedEventForID(
-            String unitID, String elementID,
+            String unitID,
             HashMap<String, Object> additionalProperties) {
         coreState.getAnalyticsManager().pushDisplayUnitElementClickedEventForID(
-                unitID, elementID, additionalProperties);
+                unitID, additionalProperties);
     }
 
     /**
