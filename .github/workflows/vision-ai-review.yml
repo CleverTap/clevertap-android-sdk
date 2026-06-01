@@ -57,7 +57,9 @@ jobs:
             https://review-notifier.clevertap.net/review-with-claude-code
 
   # On-demand `/vision-review-deep` PR comment.
-  # Gated so only repo members can trigger — otherwise anyone could spam reviews.
+  # Gated so only repo members can trigger, AND only on same-repo PRs.
+  # issue_comment events don't expose pull_request.head.repo, so we fetch
+  # the PR via the API and check head.repo.full_name before triggering.
   on-comment:
     if: >-
       ${{
@@ -71,8 +73,25 @@ jobs:
         )
       }}
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     steps:
+      - name: Resolve PR head repo
+        id: pr
+        env:
+          PR_URL:   ${{ github.event.issue.pull_request.url }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          head=$(curl --fail --show-error --silent --max-time 15 \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "$PR_URL" | jq -r '.head.repo.full_name')
+          echo "PR head repo: $head"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+
       - name: Trigger review
+        if: steps.pr.outputs.head == github.repository
         env:
           REPO:          ${{ github.repository }}
           PR_NUMBER:     ${{ github.event.issue.number }}
@@ -91,3 +110,8 @@ jobs:
             -H "CF-Access-Client-Secret: $CLIENT_SECRET" \
             -d "$payload" \
             https://review-notifier.clevertap.net/review-with-claude-code
+
+      - name: Skipped (fork PR)
+        if: steps.pr.outputs.head != github.repository
+        run: |
+          echo "PR head '${{ steps.pr.outputs.head }}' is not '${{ github.repository }}'; skipping fork PR."
