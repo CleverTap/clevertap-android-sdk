@@ -844,7 +844,7 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `pushDisplayUnitElementClickedEventForID merges elementId and additionalProperties`() {
+    fun `pushDisplayUnitElementClickedEventForID merges additionalProperties including wzrk_element_id`() {
         val displayController = mockk<CTDisplayUnitController>()
         val unitJson = JSONObject()
             .put("wzrk_id", "1234_5678")
@@ -855,11 +855,12 @@ class AnalyticsManagerTest {
         mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
 
         val extras = HashMap<String, Any>().apply {
+            put("wzrk_element_id", "button-1")
             put("action_type", "open_url")
             put("action_url", "https://example.com")
             put("k1", "v1")
         }
-        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "button-1", extras)
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", extras)
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(any(), match { event ->
@@ -868,7 +869,7 @@ class AnalyticsManagerTest {
                         // wzrk_* enrichment preserved
                         && evtData.optString("wzrk_id") == "1234_5678"
                         && evtData.optString("wzrk_pivot") == "wzrk_default"
-                        // element id added
+                        // element id flows via additionalProperties
                         && evtData.optString("wzrk_element_id") == "button-1"
                         // additionalProperties merged
                         && evtData.optString("action_type") == "open_url"
@@ -892,7 +893,7 @@ class AnalyticsManagerTest {
             put("wzrk_extra", "kept-through")  // novel wzrk_ key, not in cached unit — passes through
             put("ok_key", "kept")
         }
-        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "btn", extras)
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", extras)
 
         verify(exactly = 1) {
             eventQueueManager.queueEvent(any(), match { event ->
@@ -916,8 +917,11 @@ class AnalyticsManagerTest {
         every { coreState.controllerManager.displayUnitCache } returns displayController
         mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
 
-        val extras = HashMap<String, Any>().apply { put("action_url", "https://x") }
-        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "btn", extras)
+        val extras = HashMap<String, Any>().apply {
+            put("action_url", "https://x")
+            put("wzrk_element_id", "btn")
+        }
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", extras)
 
         // coreMetaData.setWzrkParams feeds the wzrk_ref batch header — caller-supplied
         // non-wzrk extras must NOT ride along. coreMetaData is a real instance (see
@@ -932,7 +936,7 @@ class AnalyticsManagerTest {
     @Test
     fun `pushDisplayUnitElementClickedEventForID displayController is null`() {
         every { coreState.controllerManager.displayUnitCache } returns null
-        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", "btn", HashMap())
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", HashMap())
         verify(exactly = 0) {
             eventQueueManager.queueEvent(any(), any(), any(), any())
         }
