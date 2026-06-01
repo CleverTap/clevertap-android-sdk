@@ -27,7 +27,7 @@ public abstract class BaseAnalyticsManager {
     public abstract void pushDisplayUnitClickedEventForID(String unitID);
 
     public abstract void pushDisplayUnitElementClickedEventForID(
-            String unitID, String elementID, HashMap<String, Object> additionalProperties);
+            String unitID, HashMap<String, Object> additionalProperties);
 
     public abstract void pushDisplayUnitViewedEventForID(String unitID);
 
