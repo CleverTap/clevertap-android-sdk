@@ -237,19 +237,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      * images, etc.), this method records which child element was clicked alongside
      * the existing wzrk_* campaign attribution.
      *
-     * {@code evtData} is assembled in three layers (later layers win on key collision):
-     * <ol>
-     *   <li>Caller's {@code additionalProperties}, merged verbatim.</li>
-     *   <li>{@code wzrk_element_id = elementID} from the dedicated argument.</li>
-     *   <li>Cached unit's {@code wzrk_*} fields layered on top — so server-controlled
-     *       attribution always wins over same-named caller-supplied keys (e.g. a
-     *       client cannot spoof {@code wzrk_id}). Caller-supplied {@code wzrk_*}
-     *       keys that are <em>not</em> in the cached unit pass through unchanged.</li>
-     * </ol>
+     * Caller's additionalProperties (which should include wzrk_element_id from the
+     * action metadata injected by the BE) are merged verbatim first; the cached
+     * unit's wzrk_* fields are then layered on top.
      */
     @Override
     public void pushDisplayUnitElementClickedEventForID(
-            String unitID, String elementID,
+            String unitID,
             HashMap<String, Object> additionalProperties) {
         JSONObject event = new JSONObject();
         try {
@@ -266,9 +260,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             JSONObject eventExtraData = new JSONObject();
             mergeAdditionalProperties(eventExtraData, additionalProperties);
-            if (elementID != null && !elementID.isEmpty()) {
-                eventExtraData.put("wzrk_element_id", elementID);
-            }
             JSONObject cachedWzrkFields = displayUnit.getWZRKFields();
             if (cachedWzrkFields != null) {
                 Iterator<String> it = cachedWzrkFields.keys();
