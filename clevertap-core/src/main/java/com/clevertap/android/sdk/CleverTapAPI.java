@@ -2512,7 +2512,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * server-pipeline activity — replacing the cache or mutating its
      * contents from outside the SDK does not synthesise a listener fire.
      *
-     * @since 7.x.0
+     * @since 8.3.0
      */
     public void setDisplayUnitCache(@Nullable DisplayUnitCache cache) {
         coreState.getControllerManager().setDisplayUnitCache(cache);

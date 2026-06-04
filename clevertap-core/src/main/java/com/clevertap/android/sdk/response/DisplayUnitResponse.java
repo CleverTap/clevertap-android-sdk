@@ -82,9 +82,10 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      * @param messages - Json array of Display Unit items
      */
     private void parseDisplayUnits(JSONArray messages) {
-        if (messages == null || messages.length() == 0) {
+        if (messages == null) {
             logger.verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is either empty or null");
+                    Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is null");
+            callbackManager.notifyDisplayUnitsLoaded(null);
             return;
         }
 

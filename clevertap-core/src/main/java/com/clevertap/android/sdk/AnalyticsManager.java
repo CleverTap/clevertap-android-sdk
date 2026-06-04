@@ -205,9 +205,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getDisplayUnitCache() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
-                        .getDisplayUnitForID(unitID);
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache != null) {
+                CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtraData = displayUnit.getWZRKFields();
                     if (eventExtraData != null) {
@@ -249,12 +249,16 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
-            if (controllerManager.getDisplayUnitCache() == null) {
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no display-unit cache installed");
                 return;
             }
-            CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
-                    .getDisplayUnitForID(unitID);
+            CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
             if (displayUnit == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no unit found for id: " + unitID);
                 return;
             }
 
@@ -342,9 +346,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getDisplayUnitCache() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getDisplayUnitCache()
-                        .getDisplayUnitForID(unitID);
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache != null) {
+                CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
                     if (eventExtras != null) {
