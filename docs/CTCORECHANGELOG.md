@@ -3,7 +3,10 @@
 
 #### New Features
 * **Native Display Element Click:** New `pushDisplayUnitElementClickedEventForID(String unitID, HashMap<String, Object> additionalProperties)` on `CleverTapAPI` records a `Notification Clicked` event for a specific element within a Display Unit. Caller-supplied `additionalProperties` (including `wzrk_element_id` from the action's `metadata`) are merged first, then enriched with cached `wzrk_*` attribution fields from the unit — giving finer-grained click analytics for Native Display experiences.
-* **Display Unit Cache API:** New public interface `DisplayUnitCache` and `setDisplayUnitCache(DisplayUnitCache)` on `CleverTapAPI` let external SDKs (e.g. the Native Display SDK) inject a custom display-unit store. `getAllDisplayUnits()` and `getDisplayUnitForID()` now route through this cache. The default implementation (`CTDisplayUnitController`) remains active when no override is installed.
+* **Display Unit Cache API:** New public interface `DisplayUnitCache` and `setDisplayUnitCache(DisplayUnitCache)` on `CleverTapAPI` let external SDKs (e.g. the Native Display SDK) inject a custom display-unit store. `getAllDisplayUnits()` and `getDisplayUnitForId(String)` now route through this cache. The default implementation (`CTDisplayUnitController`) remains active when no override is installed.
+
+#### Behavioral Notes
+* **Display Unit Callback Contract:** `onDisplayUnitsLoaded(ArrayList)` fires only when the server delivers at least one valid Display Unit. Null or empty `adUnit_notifs` responses are a no-op — the cache is not cleared and the callback is not invoked. This restores the pre-8.x legacy contract and matches iOS parity.
 
 ### Version 8.2.0 (May 20, 2026)
 
@@ -327,7 +330,7 @@ Please update to 6.1.1 and above
       correctly handle workers defined by CleverTap SDK and other third party dependencies.
     * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
       implementation provided in the
-      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
+      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals/fdaa17c46dd2)
 
 #### Bug Fixes
 
@@ -443,7 +446,7 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
       correctly handle workers defined by CleverTap SDK and other third party dependencies.
     * You must return `null` from `createWorker()` for any unknown workerClassName. Please check
       implementation provided in the
-      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals-fdaa17c46dd2)
+      blog [here](https://medium.com/androiddevelopers/customizing-workmanager-fundamentals/fdaa17c46dd2)
 
 * **Behavioral change of `createNotification` methods**:
     * The following APIs now run on the caller's thread. Make sure to call it
@@ -605,7 +608,7 @@ Please remove the integrated Rendermax SDK before you upgrade to Android SDK v5.
 
 ### Version 4.5.0 (June 3, 2022)
 * `removeValueForKey()` in `CleverTapAPI` can now remove PII data like Email, Phone and Date Of Birth.
-* Improved the `ActivityLifecycleCallback`’s `onPaused` logic so that it runs on the background thread to avoid any runtime issues. Fixes #221.
+* Improved the `ActivityLifecycleCallback`'s `onPaused` logic so that it runs on the background thread to avoid any runtime issues. Fixes #221.
 * Adds support to change credentials for the CleverTap Xiaomi Push SDK using `changeXiaomiCredentials`. Contribution PR #269.
 * Adds support to enable/disable the CleverTap Xiaomi Push SDK using `enableXiaomiPushOn` method. CleverTap Xiaomi Push SDK can now be enabled/disabled for `ALL_DEVICES`, `XIAOMI_MIUI_DEVICES` and `NO_DEVICES`.
 * Adds analytics support for upcoming CleverTap Direct Call Android SDK.
