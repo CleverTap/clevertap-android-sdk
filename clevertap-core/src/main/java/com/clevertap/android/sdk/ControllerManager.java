@@ -101,7 +101,7 @@ public class ControllerManager {
     }
 
     /**
-     * @deprecated since v7.x.0. Use {@link #getDisplayUnitCache()} instead.
+     * @deprecated since 8.3.0. Use {@link #getDisplayUnitCache()} instead.
      * Returns the active cache only when it is the default
      * {@link CTDisplayUnitController}; returns {@code null} when a host has
      * installed a custom {@link DisplayUnitCache}.
@@ -114,7 +114,7 @@ public class ControllerManager {
     }
 
     /**
-     * @deprecated since v7.x.0. Use
+     * @deprecated since 8.3.0. Use
      * {@link #setDisplayUnitCache(DisplayUnitCache)} instead.
      */
     @Deprecated

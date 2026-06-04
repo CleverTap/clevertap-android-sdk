@@ -68,7 +68,7 @@ public class CTDisplayUnitController implements DisplayUnitCache {
     public synchronized void updateDisplayUnits(@Nullable List<CleverTapDisplayUnit> displayUnits) {
         reset();
         if (displayUnits == null || displayUnits.isEmpty()) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Empty Display Units list, cache not updated");
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Empty Display Units list, cache cleared");
             return;
         }
         for (CleverTapDisplayUnit unit : displayUnits) {
