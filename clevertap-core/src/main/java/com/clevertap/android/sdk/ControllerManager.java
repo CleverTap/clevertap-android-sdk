@@ -92,11 +92,25 @@ public class ControllerManager {
     }
 
     /**
+     * Returns the existing cache, or lazily installs a default
+     * {@link CTDisplayUnitController} if none is present. The check-and-create
+     * is atomic — prevents a race between the server-response thread and host
+     * code calling {@link #setDisplayUnitCache}.
+     */
+    @Nullable
+    public synchronized DisplayUnitCache getOrCreateDisplayUnitCache() {
+        if (displayUnitCache == null) {
+            displayUnitCache = new CTDisplayUnitController();
+        }
+        return displayUnitCache;
+    }
+
+    /**
      * Replaces the display-unit cache. Pass {@code null} to clear the
      * reference (subsequent server responses will lazily install a fresh
      * default {@link CTDisplayUnitController}).
      */
-    public void setDisplayUnitCache(@Nullable DisplayUnitCache cache) {
+    public synchronized void setDisplayUnitCache(@Nullable DisplayUnitCache cache) {
         displayUnitCache = cache;
     }
 

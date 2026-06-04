@@ -8,7 +8,6 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import java.util.ArrayList;
@@ -17,8 +16,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class DisplayUnitResponse extends CleverTapResponseDecorator {
-
-    private final Object displayUnitControllerLock = new Object();
 
     private final BaseCallbackManager callbackManager;
 
@@ -76,33 +73,34 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
     }
 
     /**
-     * Parses the Display Units using the JSON response, populates the cache and
-     * notifies the callback.
+     * Parses the Display Units from the JSON response, populates the cache and
+     * notifies the callback only when at least one valid unit was received.
+     *
+     * A null or empty array is a no-op: the cache is not touched and the callback
+     * is not fired. This preserves the legacy pre-8.x contract and matches iOS
+     * parity — iOS guards on displayUnitJSON.count > 0 before doing anything.
      *
      * @param messages - Json array of Display Unit items
      */
     private void parseDisplayUnits(JSONArray messages) {
-        if (messages == null) {
+        if (messages == null || messages.length() == 0) {
             logger.verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is null");
-            callbackManager.notifyDisplayUnitsLoaded(null);
+                    Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is null or empty");
             return;
         }
 
-        synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
-            if (controllerManager.getDisplayUnitCache() == null) {
-                controllerManager.setDisplayUnitCache(new CTDisplayUnitController());
-            }
-        }
-        DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+        DisplayUnitCache cache = controllerManager.getOrCreateDisplayUnitCache();
         if (cache == null) {
-            callbackManager.notifyDisplayUnitsLoaded(null);
+            logger.verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT + "No display-unit cache available");
             return;
         }
 
         ArrayList<CleverTapDisplayUnit> displayUnits = parseDisplayUnitsFromJson(messages);
         cache.updateDisplayUnits(displayUnits);
-        callbackManager.notifyDisplayUnitsLoaded(displayUnits.isEmpty() ? null : displayUnits);
+        if (!displayUnits.isEmpty()) {
+            callbackManager.notifyDisplayUnitsLoaded(displayUnits);
+        }
     }
 
     /**
