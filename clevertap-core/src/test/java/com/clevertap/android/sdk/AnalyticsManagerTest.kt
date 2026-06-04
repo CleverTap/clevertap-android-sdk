@@ -37,6 +37,9 @@ import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -44,8 +47,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Future
 import kotlin.apply
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 
 @RunWith(RobolectricTestRunner::class)
 class AnalyticsManagerTest {
@@ -790,7 +791,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDisplayUnitClickedEventForID displayController is null`() {
-        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        every { coreState.controllerManager.displayUnitCache } returns null
         analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
 
         verify(exactly = 0) {
@@ -802,7 +803,7 @@ class AnalyticsManagerTest {
     fun `pushDisplayUnitClickedEventForID displayUnit is null`() {
         val displayController = mockk<CTDisplayUnitController>()
         every { displayController.getDisplayUnitForID(any()) } returns null
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         analyticsManagerSUT.pushDisplayUnitClickedEventForID("id")
 
@@ -819,7 +820,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushDisplayUnitViewedEventForID displayController is null`() {
-        every { coreState.controllerManager.ctDisplayUnitController } returns null
+        every { coreState.controllerManager.displayUnitCache } returns null
         analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
 
         verify(exactly = 0) {
@@ -831,10 +832,109 @@ class AnalyticsManagerTest {
     fun `pushDisplayUnitViewedEventForID displayUnit is null`() {
         val displayController = mockk<CTDisplayUnitController>()
         every { displayController.getDisplayUnitForID(any()) } returns null
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         analyticsManagerSUT.pushDisplayUnitViewedEventForID("id")
 
+        verify(exactly = 0) {
+            eventQueueManager.queueEvent(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID merges additionalProperties including wzrk_element_id`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        val unitJson = JSONObject()
+            .put("wzrk_id", "1234_5678")
+            .put("wzrk_pivot", "wzrk_default")
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(unitJson)
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+
+        val extras = HashMap<String, Any>().apply {
+            put("wzrk_element_id", "button-1")
+            put("action_type", "open_url")
+            put("action_url", "https://example.com")
+            put("k1", "v1")
+        }
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", extras)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(any(), match { event ->
+                val evtData = event.getJSONObject(Constants.KEY_EVT_DATA)
+                event.getString(Constants.KEY_EVT_NAME) == Constants.NOTIFICATION_CLICKED_EVENT_NAME
+                        // wzrk_* enrichment preserved
+                        && evtData.optString("wzrk_id") == "1234_5678"
+                        && evtData.optString("wzrk_pivot") == "wzrk_default"
+                        // element id flows via additionalProperties
+                        && evtData.optString("wzrk_element_id") == "button-1"
+                        // additionalProperties merged
+                        && evtData.optString("action_type") == "open_url"
+                        && evtData.optString("action_url") == "https://example.com"
+                        && evtData.optString("k1") == "v1"
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID cached wzrk_ wins over caller wzrk_ but novel wzrk_ keys pass through`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        val unitJson = JSONObject().put("wzrk_id", "real_id")
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(unitJson)
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+
+        val extras = HashMap<String, Any>().apply {
+            put("wzrk_id", "spoofed")          // collides with cached wzrk_id — cached wins
+            put("wzrk_extra", "kept-through")  // novel wzrk_ key, not in cached unit — passes through
+            put("ok_key", "kept")
+        }
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", extras)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(any(), match { event ->
+                val evtData = event.getJSONObject(Constants.KEY_EVT_DATA)
+                // Cached wzrk_id wins over the caller-supplied collision.
+                evtData.optString("wzrk_id") == "real_id"
+                        // Novel wzrk_-prefixed key from caller passes through.
+                        && evtData.optString("wzrk_extra") == "kept-through"
+                        // Non-wzrk caller key kept.
+                        && evtData.optString("ok_key") == "kept"
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+        }
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID setWzrkParams receives only wzrk_ keys`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        val unitJson = JSONObject().put("wzrk_id", "1234")
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(unitJson)
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+
+        val extras = HashMap<String, Any>().apply {
+            put("action_url", "https://x")
+            put("wzrk_element_id", "btn")
+        }
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", extras)
+
+        // coreMetaData.setWzrkParams feeds the wzrk_ref batch header — caller-supplied
+        // non-wzrk extras must NOT ride along. coreMetaData is a real instance (see
+        // MockCoreStateKotlin), so reading wzrkParams back reflects the latest set.
+        val wzrkParams = coreState.coreMetaData.wzrkParams
+        assertNotNull(wzrkParams)
+        assertFalse(wzrkParams.has("action_url"))
+        assertEquals("1234", wzrkParams.optString("wzrk_id"))
+        assertEquals("btn", wzrkParams.optString("wzrk_element_id"))
+    }
+
+    @Test
+    fun `pushDisplayUnitElementClickedEventForID displayController is null`() {
+        every { coreState.controllerManager.displayUnitCache } returns null
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", HashMap())
         verify(exactly = 0) {
             eventQueueManager.queueEvent(any(), any(), any(), any())
         }
@@ -845,7 +945,7 @@ class AnalyticsManagerTest {
         val displayUnitJson = JSONObject()
         val displayUnit = CleverTapDisplayUnit.toDisplayUnit(displayUnitJson)
         every { displayController.getDisplayUnitForID(any()) } returns displayUnit
-        every { coreState.controllerManager.ctDisplayUnitController } returns displayController
+        every { coreState.controllerManager.displayUnitCache } returns displayController
 
         val eventName: String
         if (isClicked) {
@@ -1551,8 +1651,8 @@ class AnalyticsManagerTest {
     @Test
     fun `raiseEventForGeofences should queue event and set location`() {
         val eventName = "geofence_event"
-        val lat = 34.05
-        val lng = -118.25
+        val lat: Double = 34.05
+        val lng: Double = -118.25
         val propKey = "prop"
         val propValue = "value"
         val geofenceProperties = JSONObject().apply {
@@ -1581,8 +1681,8 @@ class AnalyticsManagerTest {
         }
 
         val location = coreState.coreMetaData.locationFromUser
-        assertEquals(lat, location.latitude)
-        assertEquals(lng, location.longitude)
+        assertEquals(lat, location.latitude, 0.0)
+        assertEquals(lng, location.longitude, 0.0)
     }
 
     @Test

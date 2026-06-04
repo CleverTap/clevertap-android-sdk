@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.AnalyticsManager;
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -297,8 +298,9 @@ public class LoginController {
      * Resets the Display Units in the cache
      */
     private void resetDisplayUnits() {
-        if (controllerManager.getCTDisplayUnitController() != null) {
-            controllerManager.getCTDisplayUnitController().reset();
+        DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+        if (cache != null) {
+            cache.reset();
         } else {
             config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");
