@@ -1,0 +1,117 @@
+name: Vision AI Review
+
+# Secrets required (configure in repo settings):
+#   CF_REVIEW_NOTIFIER_CLIENT_ID
+#   CF_REVIEW_NOTIFIER_CLIENT_SECRET
+#
+# No GitHub App token is needed — the PR number is read directly from the
+# event payload (github.event.issue.number / github.event.pull_request.number)
+# and the actual review is generated server-side by review-notifier, which
+# handles its own GitHub auth via the Vision Bot installation.
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  # Auto-trigger on PR open / ready-for-review / non-draft push.
+  # Drafts are skipped on all three actions so we don't pay twice when a PR
+  # is opened-as-draft and later marked ready. Fork PRs are also skipped:
+  # untrusted code must not trigger our backend.
+  on-pr:
+    if: >-
+      ${{
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.draft == false &&
+        (
+          github.event.action == 'opened' ||
+          github.event.action == 'ready_for_review' ||
+          github.event.action == 'synchronize'
+        )
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger review
+        env:
+          REPO:          ${{ github.repository }}
+          PR_NUMBER:     ${{ github.event.pull_request.number }}
+          CLIENT_ID:     ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          payload=$(jq -n \
+            --argjson pullRequestId "$PR_NUMBER" \
+            --arg repo "$REPO" \
+            '{pullRequestId: $pullRequestId, repo: $repo}')
+          echo "Triggering Vision AI review for $REPO PR #$PR_NUMBER..."
+          curl --fail --show-error --silent --max-time 30 -X POST \
+            -H "Content-Type: application/json" \
+            -H "CF-Access-Client-Id: $CLIENT_ID" \
+            -H "CF-Access-Client-Secret: $CLIENT_SECRET" \
+            -d "$payload" \
+            https://review-notifier.clevertap.net/review-with-claude-code
+
+  # On-demand `/vision-review-deep` PR comment.
+  # Gated so only repo members can trigger, AND only on same-repo PRs.
+  # issue_comment events don't expose pull_request.head.repo, so we fetch
+  # the PR via the API and check head.repo.full_name before triggering.
+  on-comment:
+    if: >-
+      ${{
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request.url != '' &&
+        github.event.comment.body == '/vision-review-deep' &&
+        (
+          github.event.comment.author_association == 'OWNER' ||
+          github.event.comment.author_association == 'MEMBER' ||
+          github.event.comment.author_association == 'COLLABORATOR'
+        )
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Resolve PR head repo
+        id: pr
+        env:
+          PR_URL:   ${{ github.event.issue.pull_request.url }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          head=$(curl --fail --show-error --silent --max-time 15 \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "$PR_URL" | jq -r '.head.repo.full_name')
+          echo "PR head repo: $head"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger review
+        if: steps.pr.outputs.head == github.repository
+        env:
+          REPO:          ${{ github.repository }}
+          PR_NUMBER:     ${{ github.event.issue.number }}
+          CLIENT_ID:     ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          payload=$(jq -n \
+            --argjson pullRequestId "$PR_NUMBER" \
+            --arg repo "$REPO" \
+            '{pullRequestId: $pullRequestId, repo: $repo}')
+          echo "Triggering Vision AI review for $REPO PR #$PR_NUMBER..."
+          curl --fail --show-error --silent --max-time 30 -X POST \
+            -H "Content-Type: application/json" \
+            -H "CF-Access-Client-Id: $CLIENT_ID" \
+            -H "CF-Access-Client-Secret: $CLIENT_SECRET" \
+            -d "$payload" \
+            https://review-notifier.clevertap.net/review-with-claude-code
+
+      - name: Skipped (fork PR)
+        if: steps.pr.outputs.head != github.repository
+        run: |
+          echo "PR head '${{ steps.pr.outputs.head }}' is not '${{ github.repository }}'; skipping fork PR."
