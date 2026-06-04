@@ -23,6 +23,8 @@ import com.clevertap.android.sdk.InboxMessageButtonListener
 import com.clevertap.android.sdk.InboxMessageListener
 import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.cryption.EncryptionLevel
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
@@ -109,6 +111,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         })
 
         ctInstance = buildCtInstance(useDefaultInstance = true)
+        ctInstance?.setDisplayUnitCache(SampleDisplayUnitCache())
 
         if (BuildConfig.ENABLE_MULTI_INSTANCE) {
             ctMultiInstance = buildCustomCtInstance()
@@ -368,5 +371,41 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             Log.i(TAG, "type/template of App Inbox item: ${message?.type}")
             //dismissAppInbox()
         }
+    }
+}
+
+/**
+ * Sample custom [DisplayUnitCache] implementation.
+ *
+ * Demonstrates how the Native Display SDK (or any host) can provide its own
+ * display-unit store via [CleverTapAPI.setDisplayUnitCache]. The default
+ * [com.clevertap.android.sdk.displayunits.CTDisplayUnitController] is replaced
+ * by this instance; all lookup and attribution calls route through it.
+ */
+class SampleDisplayUnitCache : DisplayUnitCache {
+
+    private val lock = Any()
+    private val items = HashMap<String, CleverTapDisplayUnit>()
+
+    override fun getAllDisplayUnits(): ArrayList<CleverTapDisplayUnit>? {
+        synchronized(lock) {
+            return if (items.isEmpty()) null else ArrayList(items.values)
+        }
+    }
+
+    override fun getDisplayUnitForID(unitID: String?): CleverTapDisplayUnit? {
+        if (unitID.isNullOrEmpty()) return null
+        synchronized(lock) { return items[unitID] }
+    }
+
+    override fun updateDisplayUnits(displayUnits: List<CleverTapDisplayUnit>?) {
+        synchronized(lock) {
+            items.clear()
+            displayUnits?.forEach { unit -> unit.unitID?.let { id -> items[id] = unit } }
+        }
+    }
+
+    override fun reset() {
+        synchronized(lock) { items.clear() }
     }
 }
