@@ -5,9 +5,6 @@
 * **Native Display Element Click:** New `pushDisplayUnitElementClickedEventForID(String unitID, HashMap<String, Object> additionalProperties)` on `CleverTapAPI` records a `Notification Clicked` event for a specific element within a Display Unit. Caller-supplied `additionalProperties` (including `wzrk_element_id` from the action's `metadata`) are merged first, then enriched with cached `wzrk_*` attribution fields from the unit — giving finer-grained click analytics for Native Display experiences.
 * **Display Unit Cache API:** New public interface `DisplayUnitCache` and `setDisplayUnitCache(DisplayUnitCache)` on `CleverTapAPI` let external SDKs (e.g. the Native Display SDK) inject a custom display-unit store. `getAllDisplayUnits()` and `getDisplayUnitForID()` now route through this cache. The default implementation (`CTDisplayUnitController`) remains active when no override is installed.
 
-#### Behaviour Changes
-* `wzrk_*` keys supplied in `additionalProperties` are no longer filtered out. Cached unit `wzrk_*` attribution fields are layered on top of the caller-supplied map, so caller values are preserved unless the cached unit explicitly overrides them.
-
 ### Version 8.2.0 (May 20, 2026)
 
 #### New Features
