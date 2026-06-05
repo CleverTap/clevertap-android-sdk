@@ -57,16 +57,17 @@
         <!-- Add meta data for CleverTap Account Id and Account Token and Region-->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
+
+            android:value="449-RW6-794Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
+            android:value="602-c44" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="YOUR ACCT REGION"/>
-        <meta-data
+            android:value="eu1"/>
+        <!--<meta-data
             android:name="CLEVERTAP_HANDSHAKE_DOMAIN"
-            android:value="YOUR HANDSHAKE DOMAIN"/>
+            android:value="YOUR HANDSHAKE DOMAIN"/>-->
         <!-- To enable encryption in transit in network calls set this to 1, otherwise keep it as 0 -->
         <meta-data
             android:name="CLEVERTAP_ENCRYPTION_IN_TRANSIT"

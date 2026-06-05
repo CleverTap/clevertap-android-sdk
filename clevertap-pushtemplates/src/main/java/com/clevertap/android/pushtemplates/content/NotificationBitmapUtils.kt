@@ -85,15 +85,16 @@ internal object NotificationBitmapUtils {
     ) {
         if (borderColor != null) {
             val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
-            val inset = strokeWidth / 2f
-            val rect = RectF(inset, inset, width - inset, height - inset)
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = borderColor
-                style = Paint.Style.STROKE
-                this.strokeWidth = strokeWidth
-            }
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, borderPaint)
+            // Draw border as full filled rect first
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = borderColor }
+            val outerRect = RectF(0f, 0f, width.toFloat(), height.toFloat())
+            // Clamp outer radius explicitly so inner radius is derived from actual value
+            val clampedOuterRadius = cornerRadius.coerceAtMost(minOf(width / 2f, height / 2f))
+            canvas.drawRoundRect(outerRect, clampedOuterRadius, clampedOuterRadius, borderPaint)
+            // Draw background fill on top, inset by full borderWidth
+            val innerRect = RectF(strokeWidth, strokeWidth, width - strokeWidth, height - strokeWidth)
+            val innerCornerRadius = (clampedOuterRadius - strokeWidth).coerceAtLeast(0f)
+            canvas.drawRoundRect(innerRect, innerCornerRadius, innerCornerRadius, paint)
         } else {
             val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
