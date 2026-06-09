@@ -23,7 +23,7 @@ import com.clevertap.android.sdk.InboxMessageButtonListener
 import com.clevertap.android.sdk.InboxMessageListener
 import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.cryption.EncryptionLevel
-// import com.clevertap.android.sdk.displayunits.DisplayUnitCache
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
@@ -111,7 +111,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         })
 
         ctInstance = buildCtInstance(useDefaultInstance = true)
-        // ctInstance?.setDisplayUnitCache(SampleDisplayUnitCache())
+        ctInstance?.setDisplayUnitCache(SampleDisplayUnitCache())
 
         if (BuildConfig.ENABLE_MULTI_INSTANCE) {
             ctMultiInstance = buildCustomCtInstance()
@@ -382,7 +382,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
  * [com.clevertap.android.sdk.displayunits.CTDisplayUnitController] is replaced
  * by this instance; all lookup and attribution calls route through it.
  */
-/*class SampleDisplayUnitCache : DisplayUnitCache {
+class SampleDisplayUnitCache : DisplayUnitCache {
 
     private val lock = Any()
     private val items = HashMap<String, CleverTapDisplayUnit>()
@@ -408,4 +408,4 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     override fun reset() {
         synchronized(lock) { items.clear() }
     }
-}*/
+}
