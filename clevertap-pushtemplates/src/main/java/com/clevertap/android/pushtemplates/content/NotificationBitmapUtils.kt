@@ -84,7 +84,8 @@ internal object NotificationBitmapUtils {
         borderWidth: Float?
     ) {
         if (borderColor != null) {
-            val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
+            val strokeWidth = (borderWidth ?: (height * BORDER_STROKE_RATIO))
+                .coerceAtMost(minOf(width, height) / 2f)
             // Draw border as full filled rect first
             val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = borderColor }
             val outerRect = RectF(0f, 0f, width.toFloat(), height.toFloat())
