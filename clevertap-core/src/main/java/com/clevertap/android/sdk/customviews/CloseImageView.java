@@ -11,6 +11,7 @@ import android.util.TypedValue;
 import androidx.appcompat.widget.AppCompatImageView;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.R;
 
 /**
  * Represents the close button.
@@ -45,8 +46,8 @@ public final class CloseImageView extends AppCompatImageView {
         try {
 
             Context context = getContext();
-            int resourceID = context.getResources().getIdentifier("ct_close", "drawable", context.getPackageName());
-            Bitmap closeBitmap = BitmapFactory.decodeResource(context.getResources(), resourceID, null);
+            // Static R reference (instead of getIdentifier) so R8 resource shrinking cannot strip ct_close
+            Bitmap closeBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ct_close, null);
 
             if (closeBitmap != null) {
                 Bitmap scaledCloseBitmap = Bitmap.createScaledBitmap(closeBitmap,
