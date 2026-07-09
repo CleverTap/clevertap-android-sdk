@@ -82,7 +82,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         } else {
             closeImageView?.setVisibility(View.VISIBLE)
             closeImageView?.setOnClickListener {
-                didDismiss(null)
+                triggerCloseButtonAction()
                 activity?.finish()
             }
         }

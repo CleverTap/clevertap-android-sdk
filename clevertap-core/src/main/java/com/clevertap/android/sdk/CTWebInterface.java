@@ -423,8 +423,9 @@ public class CTWebInterface {
             }
 
             Bundle actionData = new Bundle();
+            // Element identity flows only through wzrk_element_id; button_id is no longer emitted.
             if (buttonId != null) {
-                actionData.putString("button_id", buttonId);
+                actionData.putString(Constants.KEY_WZRK_ELEMENT_ID, buttonId);
             }
 
             fragment.triggerAction(action, callToAction, actionData);
