@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
-import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 
@@ -118,7 +117,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        ViewCompat.announceForAccessibility(view, getString(R.string.ct_inapp_message_shown))
+        view.announceForAccessibility(getString(R.string.ct_inapp_message_shown))
         didShow(null)
     }
 
