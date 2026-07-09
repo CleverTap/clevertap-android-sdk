@@ -432,7 +432,7 @@ class InAppControllerTest {
         """.trimIndent()
         val inApp = getInAppWithAction(actionJsonString)
         val inAppController = createInAppController()
-        inAppController.inAppNotificationDidClick(inApp, inApp.buttons[0], null)
+        inAppController.inAppNotificationDidClick(inApp, inApp.buttons[0], 0, null)
 
         verify(exactly = 1) { mockInAppActionHandler.openUrl(url, null) }
     }
@@ -441,13 +441,42 @@ class InAppControllerTest {
     fun `inAppNotificationDidClick tags the clicked button with a 1-based element id`() {
         val inApp = getInAppWithAction("""{"${Constants.KEY_TYPE}": "${InAppActionType.CLOSE}"}""")
 
-        createInAppController().inAppNotificationDidClick(inApp, inApp.buttons[0], null)
+        createInAppController().inAppNotificationDidClick(inApp, inApp.buttons[0], 0, null)
 
         verify(exactly = 1) {
             mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
                 data.getString(Constants.KEY_WZRK_ELEMENT_ID) == "${Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX}1" &&
                         data.getString(Constants.KEY_WZRK_ACTION) == InAppActionType.CLOSE.toString() &&
                         data.getString(Constants.KEY_WZRK_DATA) == Constants.INAPP_WZRK_DATA_CLOSE
+            })
+        }
+    }
+
+    @Test
+    fun `inAppNotificationDidClick uses the passed index for duplicate button payloads`() {
+        // Two identical button payloads: CTInAppNotificationButton.equals is value-based, so indexOf
+        // would resolve buttons[1] back to slot 0 and mis-tag it button-1.
+        val buttonJson = """{
+            "${Constants.KEY_TEXT}": "OK",
+            "${Constants.KEY_ACTIONS}": {"${Constants.KEY_TYPE}": "${InAppActionType.CLOSE}"}
+        }"""
+        val inApp = CTInAppNotification(
+            JSONObject(
+                """{
+            "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeCover}",
+            "${Constants.NOTIFICATION_ID_TAG}": "test-campaign",
+            "${Constants.KEY_BUTTONS}": [$buttonJson, $buttonJson]
+            }""".trimIndent()
+            ), false
+        )
+        // Sanity: the two buttons really are equal, so indexOf(buttons[1]) == 0 (the bug).
+        assertEquals(inApp.buttons[0], inApp.buttons[1])
+
+        createInAppController().inAppNotificationDidClick(inApp, inApp.buttons[1], 1, null)
+
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
+                data.getString(Constants.KEY_WZRK_ELEMENT_ID) == "${Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX}2"
             })
         }
     }
