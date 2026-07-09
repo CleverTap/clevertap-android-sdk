@@ -83,6 +83,13 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     private var listenerWeakReference: WeakReference<InAppListener>? = null
     private var didClickForHardPermissionListener: DidClickForHardPermissionListener? = null
 
+    /**
+     * Per-presentation dedup guard. Ensures at most one `Notification Clicked` is raised for a single
+     * display (e.g. repeated swipe/tap-outside gestures fired while the in-app animates out). Reset in
+     * [didShow] so a reused fragment can raise its click again on a later presentation.
+     */
+    private var actionTriggered = false
+
     protected abstract fun cleanup()
     protected abstract fun generateListener()
 
@@ -177,12 +184,44 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
     }
 
+    /**
+     * Close (X) button dismissal, raised as a click: `wzrk_element_id = closeButton`,
+     * `wzrk_c2a = Dismiss Button`, `wzrk_action = close`, `wzrk_data = close`.
+     */
+    fun triggerCloseButtonAction() {
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_CLOSE)
+        }
+        triggerAction(
+            CTInAppAction.CREATOR.createCloseAction(), Constants.INAPP_CTA_DISMISS_BUTTON, extras
+        )
+    }
+
+    /**
+     * Swipe-to-dismiss, raised as a click: `wzrk_c2a = swipe-dismiss`, `wzrk_action = close`,
+     * `wzrk_data = close`. No `wzrk_element_id` (gesture, not an element).
+     */
+    fun triggerSwipeDismissAction() {
+        triggerAction(
+            CTInAppAction.CREATOR.createCloseAction(), Constants.KEY_SWIPE_TO_DISMISS, null
+        )
+    }
+
+    /**
+     * The swipe/pan dismiss gesture is enabled only when there is no close button and the campaign
+     * allows swipe-to-dismiss. When disabled, the gesture must not be attached at all.
+     */
+    protected fun isSwipeToDismissEnabled(): Boolean =
+        !inAppNotification.isShowClose && inAppNotification.swipeToDismiss
+
     fun didDismiss(data: Bundle?) {
         cleanup()
         getListener()?.inAppNotificationDidDismiss(inAppNotification, data)
     }
 
     fun didShow(data: Bundle?) {
+        // Reset the dedup guard on every presentation so a re-shown in-app can raise its click again.
+        actionTriggered = false
         getListener()?.inAppNotificationDidShow(inAppNotification, data)
     }
 
@@ -211,7 +250,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     fun handleButtonClickAtIndex(index: Int) {
         try {
             val button = inAppNotification.buttons[index]
-            val clickData = didClick(button)
+            val clickData = didClick(button, index)
 
             if (inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {
                 when (index) {
@@ -246,17 +285,32 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         return FileResourceProvider.getInstance(requireContext(), config.logger)
     }
 
-    private fun didClick(button: CTInAppNotificationButton): Bundle? {
+    private fun didClick(button: CTInAppNotificationButton, index: Int): Bundle? {
         var action = button.action
         if (action == null) {
             action = CTInAppAction.CREATOR.createCloseAction()
         }
-        return notifyActionTriggered(action, button.text, null)
+        // Whole-image tap on image-only templates is tagged image-1; otherwise it is a 1-based CTA button.
+        val isImageTap = inAppNotification.isImageOnlyInApp()
+        val elementId = if (isImageTap) {
+            Constants.INAPP_ELEMENT_ID_IMAGE
+        } else {
+            Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX + (index + 1)
+        }
+        val extras = Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, elementId) }
+        // For the image-only tap wzrk_c2a stays empty (unchanged legacy behaviour).
+        val callToAction = if (isImageTap) "" else button.text
+        return notifyActionTriggered(action, callToAction, extras)
     }
 
     private fun notifyActionTriggered(
         action: CTInAppAction, callToAction: String, additionalData: Bundle?
     ): Bundle? {
+        // Single choke point + dedup: at most one Notification Clicked per presentation.
+        if (actionTriggered) {
+            return null
+        }
+        actionTriggered = true
         return getListener()?.inAppNotificationActionTriggered(
             inAppNotification, action, callToAction, additionalData, activity
         )

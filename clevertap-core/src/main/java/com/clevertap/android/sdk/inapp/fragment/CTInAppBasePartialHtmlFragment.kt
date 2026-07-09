@@ -19,7 +19,6 @@ import android.view.animation.TranslateAnimation
 import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.inapp.CTInAppAction.CREATOR.createCloseAction
 import com.clevertap.android.sdk.inapp.CTInAppWebView
 import com.clevertap.android.sdk.inapp.InAppWebViewClient
 import kotlin.math.abs
@@ -61,7 +60,7 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
             animSet.isFillEnabled = true
             animSet.setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationEnd(animation: Animation?) {
-                    triggerAction(createCloseAction(), CTA_SWIPE_DISMISS, null)
+                    triggerSwipeDismissAction()
                 }
 
                 override fun onAnimationRepeat(animation: Animation?) {
@@ -145,7 +144,11 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
             this.webView = webView
             val webViewClient = InAppWebViewClient(this)
             webView.setWebViewClient(webViewClient)
-            webView.setOnTouchListener(this)
+            // Attach the swipe/pan gesture only when swipe-to-dismiss is enabled and there is no close
+            // button. When swipeToDismiss == false, the gesture is not attached at all.
+            if (isSwipeToDismissEnabled()) {
+                webView.setOnTouchListener(this)
+            }
             webView.setOnLongClickListener(this)
 
             if (inAppNotification.isJsEnabled) {
@@ -185,7 +188,6 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
     }
 
     companion object {
-        private const val CTA_SWIPE_DISMISS = "swipe-dismiss"
         private const val SWIPE_MIN_DISTANCE = 120
         private const val SWIPE_THRESHOLD_VELOCITY = 200
     }

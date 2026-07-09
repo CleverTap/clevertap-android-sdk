@@ -86,9 +86,12 @@ internal class CTInAppNativeFooterFragment : CTInAppBasePartialNativeFragment() 
         }
 
         @SuppressLint("ClickableViewAccessibility")
-        inAppView.setOnTouchListener { v, event ->
-            gd.onTouchEvent(event)
-            true
+        // Attach the swipe/pan gesture only when swipe-to-dismiss is enabled.
+        if (isSwipeToDismissEnabled()) {
+            inAppView.setOnTouchListener { v, event ->
+                gd.onTouchEvent(event)
+                true
+            }
         }
         inAppView.applyInsetsWithMarginAdjustment { insets, mlp ->
             mlp.leftMargin = insets.left
