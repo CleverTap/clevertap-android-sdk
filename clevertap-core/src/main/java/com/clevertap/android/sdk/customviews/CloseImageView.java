@@ -8,9 +8,11 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.View;
 import androidx.appcompat.widget.AppCompatImageView;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.R;
 
 /**
  * Represents the close button.
@@ -24,18 +26,26 @@ public final class CloseImageView extends AppCompatImageView {
     public CloseImageView(Context context) {
         super(context);
         setId(VIEW_ID);
+        initAccessibility(context);
     }
 
     @SuppressLint("ResourceType")
     public CloseImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
         setId(VIEW_ID);
+        initAccessibility(context);
     }
 
     @SuppressLint("ResourceType")
     public CloseImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         setId(VIEW_ID);
+        initAccessibility(context);
+    }
+
+    private void initAccessibility(Context context) {
+        setContentDescription(context.getString(R.string.ct_inapp_close_btn));
+        setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
 
     @SuppressLint("DrawAllocation")
