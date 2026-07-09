@@ -118,7 +118,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        ViewCompat.announceForAccessibility(view, "InApp message shown")
+        ViewCompat.announceForAccessibility(view, getString(R.string.ct_inapp_message_shown))
         didShow(null)
     }
 
