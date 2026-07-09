@@ -209,10 +209,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     public Bundle inAppNotificationDidClick(
             @NonNull final CTInAppNotification inAppNotification,
             @NonNull final CTInAppNotificationButton button,
+            final int buttonIndex,
             @Nullable final Context activityContext) {
         InAppListener listener = getListener();
         if (listener != null) {
-            return listener.inAppNotificationDidClick(inAppNotification, button, this);
+            return listener.inAppNotificationDidClick(inAppNotification, button, buttonIndex, this);
         } else {
             return null;
         }
@@ -332,10 +333,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @Nullable
-    private Bundle didClick(CTInAppNotificationButton button) {
+    private Bundle didClick(CTInAppNotificationButton button, int buttonIndex) {
         InAppListener listener = getListener();
         if (listener != null) {
-            return listener.inAppNotificationDidClick(inAppNotification, button, this);
+            return listener.inAppNotificationDidClick(inAppNotification, button, buttonIndex, this);
         } else {
             return null;
         }
@@ -414,14 +415,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                     .setTitle(inAppNotification.getTitle())
                     .setMessage(inAppNotification.getMessage())
                     .setPositiveButton(positiveButton.getText(),
-                            (dialogInterface, i) -> onAlertButtonClick(positiveButton, true))
+                            (dialogInterface, i) -> onAlertButtonClick(positiveButton, 0, true))
                     .create();
 
             if (inAppNotification.getButtons().size() == 2) {
                 CTInAppNotificationButton negativeButton = buttons.get(1);
                 alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
                         negativeButton.getText(),
-                        (dialog, which) -> onAlertButtonClick(negativeButton, false));
+                        (dialog, which) -> onAlertButtonClick(negativeButton, 1, false));
             }
 
         //By default, we will allow 2 button alerts and set a third button if it is configured
@@ -429,7 +430,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             CTInAppNotificationButton button = buttons.get(2);
             alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL,
                     button.getText(),
-                    (dialogInterface, i) -> onAlertButtonClickLegacy(button));
+                    (dialogInterface, i) -> onAlertButtonClickLegacy(button, 2));
         }
 
         alertDialog.show();
@@ -437,13 +438,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         didShow(null);
     }
 
-    private void onAlertButtonClickLegacy(final CTInAppNotificationButton button) {
-        Bundle clickData = didClick(button);
+    private void onAlertButtonClickLegacy(final CTInAppNotificationButton button, int buttonIndex) {
+        Bundle clickData = didClick(button, buttonIndex);
         didDismiss(clickData);
     }
 
-    private void onAlertButtonClick(CTInAppNotificationButton button, boolean isPositive) {
-        Bundle clickData = didClick(button);
+    private void onAlertButtonClick(CTInAppNotificationButton button, int buttonIndex, boolean isPositive) {
+        Bundle clickData = didClick(button, buttonIndex);
 
         if (inAppNotification.isLocalInApp()) {
             if(isPositive) {

@@ -409,6 +409,7 @@ internal class InAppController(
     override fun inAppNotificationDidClick(
         inAppNotification: CTInAppNotification,
         button: CTInAppNotificationButton,
+        buttonIndex: Int,
         activityContext: Context?
     ): Bundle? {
         val action = button.action
@@ -416,13 +417,14 @@ internal class InAppController(
             return null
         }
         // Tag the clicked element for CTA buttons that don't route through the fragment's
-        // handleButtonClickAtIndex (e.g. alert-template buttons). 1-based index, matching iOS.
-        val index = inAppNotification.buttons.indexOf(button)
-        val additionalData = if (index >= 0) {
+        // handleButtonClickAtIndex (e.g. alert-template buttons). The caller passes the exact clicked
+        // index (buttons are built from a JSON array and CTInAppNotificationButton.equals is value-based,
+        // so indexOf would resolve a duplicate CTA payload to the wrong slot). 1-based, matching iOS.
+        val additionalData = if (buttonIndex >= 0) {
             val elementId = if (inAppNotification.isImageOnlyInApp()) {
                 Constants.INAPP_ELEMENT_ID_IMAGE
             } else {
-                Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX + (index + 1)
+                Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX + (buttonIndex + 1)
             }
             Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, elementId) }
         } else {
