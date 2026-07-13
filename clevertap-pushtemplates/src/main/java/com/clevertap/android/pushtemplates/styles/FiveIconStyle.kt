@@ -8,6 +8,7 @@ import com.clevertap.android.pushtemplates.FiveIconsTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.*
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
+import com.clevertap.android.sdk.Constants
 
 internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
 
@@ -31,7 +32,7 @@ internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: 
     ): PendingIntent? {
         return PendingIntentFactory.getPendingIntent(
             context, notificationId, extras, true,
-            FIVE_ICON_CONTENT_PENDING_INTENT, data.baseContent.deepLinkList.getOrNull(0)
+            FIVE_ICON_CONTENT_PENDING_INTENT, extras.getString(Constants.DEEP_LINK_KEY)
         )
     }
 
