@@ -16,7 +16,12 @@ internal class FiveIconSmallContentView(
     renderer: TemplateRenderer,
     data: FiveIconsTemplateData,
     extras: Bundle
-) : ContentView(context, R.layout.five_cta_collapsed, renderer.templateMediaManager) {
+) : ContentView(context,
+    if (!data.baseContent.textData.title.isNullOrEmpty() || !data.baseContent.textData.message.isNullOrEmpty())
+        R.layout.five_cta_collapsed_with_text
+    else
+        R.layout.five_cta_collapsed,
+    renderer.templateMediaManager) {
 
     private var imageCounter: Int = 0
 
