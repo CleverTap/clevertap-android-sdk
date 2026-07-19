@@ -13,6 +13,12 @@
     <dimen name="txt_size_inapp_footer_message">12sp</dimen>
     <dimen name="txt_size_inapp_footer_button">14sp</dimen>
 
+    <dimen name="ct_inbox_cta_button_text_size">14sp</dimen>
+    <dimen name="ct_inbox_title_text_size">16sp</dimen>
+    <dimen name="ct_inbox_body_text_size">14sp</dimen>
+    <dimen name="ct_inbox_timestamp_text_size">12sp</dimen>
+    <dimen name="ct_inbox_min_tap_target">48dp</dimen>
+
     <dimen name="ct_video_bottom_bar_height">60dp</dimen>
     <dimen name="ct_video_bottom_bar_margin_top">10dp</dimen>
     <dimen name="ct_video_time_padding">10dp</dimen>

@@ -49,6 +49,7 @@
                     android:layout_marginTop="10dp"
                     android:maxLines="1"
                     android:textColor="@android:color/black"
+                    android:textSize="@dimen/ct_inbox_title_text_size"
                     android:textStyle="bold" />
 
                 <TextView
@@ -60,7 +61,8 @@
                     android:layout_marginRight="20dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="5dp"
-                    android:textColor="@android:color/darker_gray" />
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="@dimen/ct_inbox_body_text_size" />
             </LinearLayout>
         </LinearLayout>
 
@@ -112,6 +114,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal|center_vertical"
+                    android:importantForAccessibility="no"
                     android:visibility="visible" />
             </FrameLayout>
         </RelativeLayout>
@@ -131,7 +134,8 @@
                 android:layout_marginEnd="10dp"
                 android:layout_marginRight="10dp"
                 android:gravity="end"
-                android:textColor="@android:color/darker_gray" />
+                android:textColor="@android:color/darker_gray"
+                android:textSize="@dimen/ct_inbox_timestamp_text_size" />
 
             <ImageView
                 android:id="@+id/read_circle"
@@ -140,6 +144,10 @@
                 android:layout_gravity="center"
                 android:layout_marginEnd="20dp"
                 android:layout_marginRight="20dp"
+                android:contentDescription="@string/ct_inbox_unread_indicator_content_description"
+                android:importantForAccessibility="yes"
+                android:minHeight="@dimen/ct_inbox_min_tap_target"
+                android:minWidth="@dimen/ct_inbox_min_tap_target"
                 android:src="@drawable/ct_read_circle" />
         </LinearLayout>
 
@@ -154,43 +162,50 @@
     <LinearLayout
         android:id="@+id/cta_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="wrap_content"
         android:layout_below="@id/click_relative_layout"
         android:background="@android:color/white"
+        android:minHeight="@dimen/ct_inbox_min_tap_target"
         android:orientation="horizontal"
         android:weightSum="6">
 
         <Button
             android:id="@+id/cta_button_1"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="2"
             android:background="@android:color/white"
+            android:importantForAccessibility="yes"
+            android:minHeight="@dimen/ct_inbox_min_tap_target"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
-            android:textSize="14sp"
+            android:textSize="@dimen/ct_inbox_cta_button_text_size"
             android:visibility="visible" />
 
         <Button
             android:id="@+id/cta_button_2"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="2"
             android:background="@android:color/white"
+            android:importantForAccessibility="yes"
+            android:minHeight="@dimen/ct_inbox_min_tap_target"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
-            android:textSize="14sp"
+            android:textSize="@dimen/ct_inbox_cta_button_text_size"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/cta_button_3"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="2"
             android:background="@android:color/white"
+            android:importantForAccessibility="yes"
+            android:minHeight="@dimen/ct_inbox_min_tap_target"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
-            android:textSize="14sp"
+            android:textSize="@dimen/ct_inbox_cta_button_text_size"
             android:visibility="gone" />
     </LinearLayout>
 </RelativeLayout>
