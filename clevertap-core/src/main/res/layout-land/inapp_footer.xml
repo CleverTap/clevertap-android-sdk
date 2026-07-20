@@ -14,8 +14,7 @@
             android:id="@+id/footer_linear_layout_1"
             android:layout_width="match_parent"
             android:layout_height="118dp"
-            android:orientation="horizontal"
-            android:focusable="true" >
+            android:orientation="horizontal" >
 
             <FrameLayout
                 android:id="@+id/footer_media_container"
@@ -57,7 +56,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
                     android:textSize="@dimen/txt_size_inapp_footer_title"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:focusable="true" />
 
                 <TextView
                     android:id="@+id/footer_message"
@@ -65,7 +65,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:maxLines="3"
-                    android:textSize="@dimen/txt_size_inapp_footer_message" />
+                    android:textSize="@dimen/txt_size_inapp_footer_message"
+                    android:focusable="true" />
             </LinearLayout>
         </LinearLayout>
 

@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.applyInsetsWithMarginAdjustment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.video.InAppVideoPlayerHandle
 import com.clevertap.android.sdk.video.VideoLibChecker
@@ -74,7 +75,10 @@ internal class InAppStreamMediaHandler
             onBackPressedCallback.isEnabled = true
             openFullscreenDialog()
         }
-        videoFrameLayout?.setContentDescriptionIfNotBlank(media.contentDescription)
+        videoFrameLayout?.setContentDescriptionOrDefault(
+            media.contentDescription,
+            videoFrameLayout?.context?.getString(R.string.ct_inapp_media).orEmpty()
+        )
     }
 
     override fun onResume(owner: LifecycleOwner) {

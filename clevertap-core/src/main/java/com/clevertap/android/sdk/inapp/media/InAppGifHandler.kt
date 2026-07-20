@@ -4,6 +4,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.lifecycle.LifecycleOwner
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.gif.GifImageView
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
@@ -23,7 +24,10 @@ internal class InAppGifHandler(
         if (config.gifImageId == 0) return
         val gifByteArray = resourceProvider.cachedInAppGifV1(media.mediaUrl) ?: return
         gifImageView = relativeLayout?.findViewById(config.gifImageId)
-        gifImageView?.setContentDescriptionIfNotBlank(media.contentDescription)
+        gifImageView?.setContentDescriptionOrDefault(
+            media.contentDescription,
+            gifImageView?.context?.getString(R.string.ct_inapp_gif).orEmpty()
+        )
         gifImageView?.visibility = View.VISIBLE
         gifImageView?.setBytes(gifByteArray)
         gifImageView?.startAnimation()

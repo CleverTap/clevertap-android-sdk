@@ -13,8 +13,7 @@
             android:id="@+id/header_linear_layout_1"
             android:layout_width="match_parent"
             android:layout_height="118dp"
-            android:orientation="horizontal"
-            android:focusable="true">
+            android:orientation="horizontal">
 
             <FrameLayout
                 android:id="@+id/header_media_container"
@@ -55,7 +54,8 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="20dp"
                     android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:focusable="true" />
 
                 <TextView
                     android:id="@+id/header_message"
@@ -64,7 +64,8 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="4dp"
                     android:maxLines="3"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:focusable="true" />
             </LinearLayout>
         </LinearLayout>
 
