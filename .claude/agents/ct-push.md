@@ -17,6 +17,24 @@ You are an expert on the **push notifications** vertical of the CleverTap Androi
 `clevertap-core` and the plugin modules. Verify symbols with grep; ignore line numbers. Core paths
 are under `clevertap-core/src/main/java/com/clevertap/android/sdk/pushnotification/`.
 
+## Push provider types (central reference)
+A provider is described by a `PushType` (`pushnotification/PushType.java`): `type` (delivery
+string), `tokenPrefKey` (SharedPreferences key for the cached token), `ctProviderClassName`
+(the `CTPushProvider` FQN, reflection-instantiated), and `messagingSDKClassName` (existence-checked
+to decide availability). `PushNotificationUtil.getDefaultPushTypes()` returns FCM by default;
+`PushProviders.addPushService(PushType)` registers additional ones.
+
+| Provider | `PushType` | delivery `type` | token pref key | Defined in | Status |
+|---|---|---|---|---|---|
+| Firebase (Android/GMS) | `PushConstants.FCM` | `fcm` | `fcm_token` | `clevertap-core` (`pushnotification/PushConstants.java`) | **Built-in default** |
+| Huawei (HMS) | `HmsConstants.HPS` | `hps` | `hps_token` | `clevertap-hms` module | Active plugin |
+| Xiaomi (MiPush, "XPS") | — | `xps` | `xps_token` | (was core) | **Discontinued & removed** |
+| Baidu ("BPS") | — | `bps` | `bps_token` | (historical) | **Removed** |
+
+Core ships only **FCM**. Additional providers plug in as separate modules following the HMS shape
+(a `CTPushProvider` + `PushType` + a messaging service/handler + notification parser). To add one,
+mirror `clevertap-hms`.
+
 ## Plugin architecture (core)
 - `PushProviders` — central orchestrator: discovers available providers (reflection via `PushType`
   metadata), caches/registers tokens per provider, renders notifications, and runs push
@@ -70,11 +88,28 @@ are under `clevertap-core/src/main/java/com/clevertap/android/sdk/pushnotificati
   (a stale `clevertap-xps/build/` dir may remain). Baidu is likewise historical. Any new provider
   follows the same plug-in shape as HMS.
 - `clevertap-pushtemplates/` — `PushTemplateNotificationHandler` (register via
-  `CleverTapAPI.setNotificationHandler`), `TemplateRenderer`, `PTConstants`, `PTLog`, `Utils`, and
-  `handlers/`/`content/`/`validators/`/`styles/`/`media/`. Templates keyed by `pt_id`
-  (`pt_basic`, `pt_carousel`, `pt_manual_carousel`, `pt_rating`, `pt_product_display`,
-  `pt_five_icons`, `pt_timer`, `pt_zero_bezel`, `pt_input_box`), payload keys `pt_*`. See
-  `docs/CTPUSHTEMPLATES.md`.
+  `CleverTapAPI.setNotificationHandler`), `TemplateRenderer`, `TemplateType`, `TemplateData(Factory)`,
+  `PTConstants`, `PTLog`, `Utils`, and `handlers/`/`content/`/`validators/`/`styles/`/`media/`.
+  A template is selected by the `pt_id` payload key, mapped by the `TemplateType` enum
+  (`clevertap-pushtemplates/.../TemplateType.kt`); all other payload keys use the `pt_*` prefix
+  (`PTConstants`). See `docs/CTPUSHTEMPLATES.md`.
+
+  **Push template type catalog** (`TemplateType`):
+
+  | Enum | `pt_id` | Notes |
+  |---|---|---|
+  | `BASIC` | `pt_basic` | text + image; fallback when a richer template can't render |
+  | `AUTO_CAROUSEL` | `pt_carousel` | auto-rotating image carousel |
+  | `MANUAL_CAROUSEL` | `pt_manual_carousel` | user-navigable (also filmstrip variant via `pt_manual_carousel_type`) |
+  | `RATING` | `pt_rating` | 5-star, per-rating deeplinks |
+  | `FIVE_ICONS` | `pt_five_icons` | 5 icon buttons (min 3, else fallback) |
+  | `PRODUCT_DISPLAY` | `pt_product_display` | product gallery (linear/vertical) |
+  | `ZERO_BEZEL` | `pt_zero_bezel` | full-bleed image, overlay text |
+  | `TIMER` | `pt_timer` | live countdown (Android 8+; fallback below) |
+  | `INPUT_BOX` | `pt_input` | text input (CTA / remind / reply-as-event / reply-as-intent variants) |
+  | `VIDEO` | `pt_video` | video template |
+  | `VERTICAL_IMAGE` | `pt_vertical_img` | tall image layout |
+  | `CANCEL` | `pt_cancel` | control payload to cancel/dismiss a rendered notification |
 - `clevertap-geofence/` — `CTGeofenceAPI` implements the core `GeofenceCallback`
   (`handleGeoFences` + `triggerLocation`); wraps Play Services geofencing/location adapters. Core
   wires it via `CallbackManager.setGeofenceCallback`; `response/GeofenceResponse` delivers regions.

@@ -2,12 +2,15 @@
 name: ct-inapps
 description: >-
   CleverTap Android SDK in-app notifications vertical. Use for tasks about in-app types and
-  rendering (inapp/ controller, fragments, InAppNotificationActivity), client-side vs server-side
-  delivery, trigger & limit evaluation (inapp/evaluation: EvaluationManager, TriggersMatcher,
-  LimitsMatcher), frequency capping (InAppFCManager, ImpressionManager, TriggerManager), CS/SS
-  storage (inapp/store), custom code templates & functions (inapp/customtemplates), delayed/PIP
-  in-apps, and the push-permission primer flow. Reach for this for anything about how in-apps are
-  received, stored, evaluated/triggered, displayed, capped, and dismissed.
+  rendering — the CTInAppType catalog: HTML vs native, cover/interstitial/half-interstitial,
+  image-only, header/footer (partial), alert, PIP, custom-code — plus inapp/ controller, fragments,
+  InAppNotificationActivity, client-side vs server-side delivery, trigger & limit evaluation
+  (inapp/evaluation: EvaluationManager, TriggersMatcher, LimitsMatcher), frequency capping
+  (InAppFCManager, ImpressionManager, TriggerManager), CS/SS storage (inapp/store), custom-code
+  templates & functions and system app functions (inapp/customtemplates: OpenUrl, PlayStore rating,
+  push-permission), delayed/PIP in-apps, and the push-permission primer flow. Reach for this for
+  anything about how in-apps are typed, received, stored, evaluated/triggered, displayed, capped,
+  and dismissed.
 tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 
@@ -37,6 +40,56 @@ main thread**. See **ct-architecture** for threading.
 - Root-level: `InAppNotificationActivity`, `InAppNotificationListener`,
   `InAppNotificationButtonListener`, `InAppFCManager`, `CTLocalInApp`, `PushPermissionHandler`,
   `CTPreferenceCache`.
+
+## In-app type catalog (central reference)
+Types are defined by the `CTInAppType` enum (`inapp/CTInAppType.kt`); the server sends the string
+value and `CTInAppType.fromString(...)` maps it. Full-screen types are hosted by
+`InAppNotificationActivity.createContentFragment()`; **header/footer** are *partial* in-apps
+attached to the current activity (not the full-screen activity); **PIP** and **custom-code** use
+their own presentation paths.
+
+| Enum constant | Server string | Family | Rendered by |
+|---|---|---|---|
+| `CTInAppTypeCover` | `cover` | Native, full-screen | `CTInAppNativeCoverFragment` |
+| `CTInAppTypeInterstitial` | `interstitial` | Native, full-screen | `CTInAppNativeInterstitialFragment` |
+| `CTInAppTypeHalfInterstitial` | `half-interstitial` | Native, full-screen | `CTInAppNativeHalfInterstitialFragment` |
+| `CTInAppTypeCoverImageOnly` | `cover-image` | Native, image-only | `CTInAppNativeCoverImageFragment` |
+| `CTInAppTypeInterstitialImageOnly` | `interstitial-image` | Native, image-only | `CTInAppNativeInterstitialImageFragment` |
+| `CTInAppTypeHalfInterstitialImageOnly` | `half-interstitial-image` | Native, image-only | `CTInAppNativeHalfInterstitialImageFragment` |
+| `CTInAppTypeAlert` | `alert-template` | Native alert dialog | `InAppNotificationActivity` (AlertDialog) |
+| `CTInAppTypeHeader` | `header-template` | Native, **partial** | `CTInAppNativeHeaderFragment` |
+| `CTInAppTypeFooter` | `footer-template` | Native, **partial** | `CTInAppNativeFooterFragment` |
+| `CTInAppTypeHTML` | `html` | HTML (legacy/base) | HTML fragments |
+| `CTInAppTypeCoverHTML` | `coverHtml` | HTML, full-screen | `CTInAppHtmlCoverFragment` |
+| `CTInAppTypeInterstitialHTML` | `interstitialHtml` | HTML, full-screen | `CTInAppHtmlInterstitialFragment` |
+| `CTInAppTypeHalfInterstitialHTML` | `halfInterstitialHtml` | HTML, full-screen | `CTInAppHtmlHalfInterstitialFragment` |
+| `CTInAppTypeHeaderHTML` | `headerHtml` | HTML, **partial** | `CTInAppHtmlHeaderFragment` |
+| `CTInAppTypeFooterHTML` | `footerHtml` | HTML, **partial** | `CTInAppHtmlFooterFragment` |
+| `CTInAppTypeCustomCodeTemplate` | `custom-code` | Custom template/function | `TemplatesManager` presenter |
+| `CTInAppTypePIP` | `pip` | Picture-in-Picture | `pipsdk/PIPManager` |
+| `UNKNOWN` | (unmapped) | — | dropped |
+
+**Fragment class hierarchy** (`inapp/fragment/`): `CTInAppBaseFragment` → `CTInAppBaseFullFragment`
+(full-screen) / `CTInAppBasePartialFragment` (header/footer), each further split into `...Html...`
+(WebView) and `...Native...` bases. HTML vs Native is the primary axis; full vs partial is the
+second.
+
+**Action types** — `InAppActionType` (`inapp/CTInAppAction.kt`): `CLOSE` (`close`),
+`OPEN_URL` (`url`), `KEY_VALUES` (`kv`), `CUSTOM_CODE` (`custom-code`), `REQUEST_FOR_PERMISSIONS`
+(push-permission request). Actions are carried by `CTInAppAction` and dispatched from
+`InAppController`/fragments.
+
+## Custom templates, functions & system app functions
+`custom-code` in-apps are backed by the **custom templates** framework (`inapp/customtemplates/`):
+- **Templates** (`TemplateBuilder`) — visual; queued and must be dismissed before the next in-app.
+- **Functions** (`FunctionBuilder`) — non-visual app-defined actions; execute without queueing.
+- App developers register these via `CleverTapAPI.registerCustomInAppTemplates(...)` /
+  `TemplatesManager.register(TemplateProducer)`; server-defined ones are parsed by
+  `JsonTemplatesProducer`. See `docs/CustomCodeTemplates.md`.
+- **System app functions** (`inapp/customtemplates/system/`, assembled by `SystemTemplates`) are
+  built-in functions the platform ships: `OpenUrlTemplate` (open URL), `PlayStoreAppRatingTemplate`
+  (in-app Play Store rating), and `PushPermissionTemplate` (push-permission primer). See
+  `docs/SystemInAppFunctions.md`. They are presented through the same `TemplatesManager` path.
 
 ## Arrival → storage → evaluation → display
 1. **Arrival**: `response/InAppResponse` (see **ct-networking**) parses the response via
