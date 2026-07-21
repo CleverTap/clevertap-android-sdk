@@ -64,7 +64,7 @@ internal class InboxFetchCall(
                     200 -> {
                         val raw = response.readBody()
                             ?: return@use CallResult.NetworkFailure(IOException("empty body"))
-                        logger.verbose("InboxV22", "fetch sent successfully (HTTP 200, ${raw.length} bytes)")
+                        logger.verbose("InboxV2", "fetch sent successfully (HTTP 200, ${raw.length} bytes)")
                         CallResult.Success(JSONObject(raw))
                     }
                     else -> {
