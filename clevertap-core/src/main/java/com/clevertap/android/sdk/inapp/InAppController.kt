@@ -394,9 +394,8 @@ internal class InAppController(
             InAppActionType.KEY_VALUES -> {
                 val keyValues = action.keyValues
                 if (!keyValues.isNullOrEmpty()) {
-                    val kvBundle = Bundle()
-                    keyValues.forEach { (key, value) -> kvBundle.putString(key, value) }
-                    data.putBundle(Constants.KEY_WZRK_DATA, kvBundle)
+                    // Nested payload carried as a Serializable map; analytics emits it as a nested JSON object.
+                    data.putSerializable(Constants.KEY_WZRK_DATA, HashMap(keyValues))
                 }
             }
 
