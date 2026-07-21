@@ -75,10 +75,12 @@ internal class InAppStreamMediaHandler
             onBackPressedCallback.isEnabled = true
             openFullscreenDialog()
         }
-        videoFrameLayout?.setContentDescriptionOrDefault(
-            media.contentDescription,
-            videoFrameLayout?.context?.getString(R.string.ct_inapp_media).orEmpty()
-        )
+        videoFrameLayout?.let { layout ->
+            layout.setContentDescriptionOrDefault(
+                media.contentDescription,
+                layout.context.getString(R.string.ct_inapp_media)
+            )
+        }
     }
 
     override fun onResume(owner: LifecycleOwner) {
