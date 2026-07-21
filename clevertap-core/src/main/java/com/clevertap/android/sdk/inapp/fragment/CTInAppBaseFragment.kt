@@ -289,8 +289,8 @@ internal abstract class CTInAppBaseFragment : Fragment() {
             Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX + (index + 1)
         }
         val extras = Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, elementId) }
-        // For the image-only tap wzrk_c2a stays empty (unchanged legacy behaviour).
-        val callToAction = if (isImageTap) "" else button.text
+        // wzrk_c2a: for a whole-image tap use the element id ("image-1"); for a CTA button use its text.
+        val callToAction = if (isImageTap) elementId else button.text
         return notifyActionTriggered(action, callToAction, extras)
     }
 
