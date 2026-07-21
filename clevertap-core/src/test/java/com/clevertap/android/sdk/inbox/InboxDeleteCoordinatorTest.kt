@@ -86,7 +86,7 @@ class InboxDeleteCoordinatorTest {
         dbAdapter: DBAdapter
     ): InboxDeleteCoordinator = InboxDeleteCoordinator(
         networkScope = NetworkScope(StandardTestDispatcher(testScheduler)),
-        ctApi = ctApi(code),
+        ctApiProvider = { ctApi(code) },
         queueHeaderBuilder = headerBuilder(),
         dbAdapterProvider = { dbAdapter },
         coreMetaData = mockk<CoreMetaData>(relaxed = true),
@@ -100,7 +100,7 @@ class InboxDeleteCoordinatorTest {
         dbAdapter: DBAdapter
     ): InboxDeleteCoordinator = InboxDeleteCoordinator(
         networkScope = NetworkScope(StandardTestDispatcher(testScheduler)),
-        ctApi = ctApi(http),
+        ctApiProvider = { ctApi(http) },
         queueHeaderBuilder = headerBuilder(),
         dbAdapterProvider = { dbAdapter },
         coreMetaData = mockk<CoreMetaData>(relaxed = true),
@@ -204,6 +204,31 @@ class InboxDeleteCoordinatorTest {
         assertEquals("default", msgs.getJSONObject(0).getString("wzrk_pivot"))
         assertEquals("m2", msgs.getJSONObject(1).getString("wzrk_mid"))
         assertEquals("c2", msgs.getJSONObject(1).getString("wzrk_id"))
+    }
+
+    @Test
+    fun `ctApi provider is not invoked at construction and resolves when a delete runs`() = runTest {
+        // Regression test for SDK-5947: CtApi construction reads SharedPreferences,
+        // so it must stay deferred to the network dispatcher, never construction time.
+        val dbAdapter = mockk<DBAdapter>(relaxed = true)
+        var providerCalls = 0
+        val coordinator = InboxDeleteCoordinator(
+            networkScope = NetworkScope(StandardTestDispatcher(testScheduler)),
+            ctApiProvider = { providerCalls++; ctApi(200) },
+            queueHeaderBuilder = headerBuilder(),
+            dbAdapterProvider = { dbAdapter },
+            coreMetaData = mockk<CoreMetaData>(relaxed = true),
+            packageName = "com.example.app",
+            logger = mockk<Logger>(relaxed = true),
+            httpDispatcher = UnconfinedTestDispatcher(testScheduler)
+        )
+
+        assertEquals(0, providerCalls)
+
+        coordinator.syncDelete(listOf(message("m1")), "u")
+        advanceUntilIdle()
+
+        assertEquals(1, providerCalls)
     }
 
     @Test

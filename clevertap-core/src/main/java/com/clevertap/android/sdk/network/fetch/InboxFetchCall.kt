@@ -28,7 +28,10 @@ import java.io.IOException
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 internal class InboxFetchCall(
-    private val ctApi: CtApi,
+    // Supplier so CtApi is created on the network dispatcher, not at
+    // factory-construction time — `CtApiWrapper.ctApi` is @get:WorkerThread
+    // (same pattern as `InboxDeleteCoordinator.dbAdapterProvider`).
+    private val ctApiProvider: () -> CtApi,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     private val coreMetaData: CoreMetaData,
     private val packageName: String,
@@ -56,12 +59,12 @@ internal class InboxFetchCall(
         logger.debug("InboxV2", "Send fetch (t=${Constants.FETCH_TYPE_INBOX_V2}): $body")
 
         try {
-            ctApi.sendInboxFetch(body).use { response ->
+            ctApiProvider().sendInboxFetch(body).use { response ->
                 when (response.code) {
                     200 -> {
                         val raw = response.readBody()
                             ?: return@use CallResult.NetworkFailure(IOException("empty body"))
-                        logger.verbose("InboxV2", "fetch sent successfully (HTTP 200, ${raw.length} bytes)")
+                        logger.verbose("InboxV22", "fetch sent successfully (HTTP 200, ${raw.length} bytes)")
                         CallResult.Success(JSONObject(raw))
                     }
                     else -> {
