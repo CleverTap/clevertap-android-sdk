@@ -1,15 +1,13 @@
 ---
 name: ct-push
 description: >-
-  CleverTap Android SDK push-notification vertical across all modules. Use for tasks about
-  pushnotification/ in clevertap-core (PushProviders plugin model, CTPushProvider/PushType, FCM
-  integration, CoreNotificationRenderer/INotificationRenderer, receivers/services, token
-  registration, push amplification / pull notifications, dedup, TTL, channels), and the plugin
-  modules clevertap-hms (Huawei), clevertap-pushtemplates (rich templates:
-  basic/carousel/rating/timer/zero-bezel/five-icon/product-display/input-box), and
-  clevertap-geofence (GeofenceCallback integration). Reach for this for message receipt, parsing,
-  rendering, clicks, tokens, and multi-provider registration. Note Xiaomi/MiPush (clevertap-xps)
-  has been discontinued and removed — it is not an active module.
+  CleverTap Android SDK push notifications across modules. Use for pushnotification/ in core
+  (PushProviders plugin model, CTPushProvider/PushType, FCM, renderers, receivers/services, token
+  registration, push amplification, dedup/TTL/channels), provider types (FCM built-in, HMS via
+  clevertap-hms; Xiaomi/Baidu removed), rich push templates (clevertap-pushtemplates: TemplateType
+  pt_basic/carousel/rating/timer/zero-bezel/five-icons/product-display/input/video/etc.), and
+  clevertap-geofence. Covers message receipt, parsing, rendering, clicks, tokens, multi-provider
+  registration.
 tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 

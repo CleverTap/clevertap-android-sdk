@@ -1,16 +1,12 @@
 ---
 name: ct-inapps
 description: >-
-  CleverTap Android SDK in-app notifications vertical. Use for tasks about in-app types and
-  rendering — the CTInAppType catalog: HTML vs native, cover/interstitial/half-interstitial,
-  image-only, header/footer (partial), alert, PIP, custom-code — plus inapp/ controller, fragments,
-  InAppNotificationActivity, client-side vs server-side delivery, trigger & limit evaluation
-  (inapp/evaluation: EvaluationManager, TriggersMatcher, LimitsMatcher), frequency capping
-  (InAppFCManager, ImpressionManager, TriggerManager), CS/SS storage (inapp/store), custom-code
-  templates & functions and system app functions (inapp/customtemplates: OpenUrl, PlayStore rating,
-  push-permission), delayed/PIP in-apps, and the push-permission primer flow. Reach for this for
-  anything about how in-apps are typed, received, stored, evaluated/triggered, displayed, capped,
-  and dismissed.
+  CleverTap Android SDK in-app notifications (inapp/). Use for in-app types (CTInAppType: HTML vs
+  native, cover/interstitial/half-interstitial, image-only, header/footer, alert, custom-code, PIP),
+  rendering (fragments, InAppNotificationActivity), client- vs server-side delivery, trigger & limit
+  evaluation, frequency capping, CS/SS storage, custom-code templates & functions, system app
+  functions (open-url, Play Store rating, push-permission primer). Covers how in-apps are typed,
+  received, stored, evaluated, displayed, capped, and dismissed.
 tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 
