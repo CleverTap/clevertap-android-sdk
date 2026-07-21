@@ -83,13 +83,6 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     private var listenerWeakReference: WeakReference<InAppListener>? = null
     private var didClickForHardPermissionListener: DidClickForHardPermissionListener? = null
 
-    /**
-     * Per-presentation dedup guard. Ensures at most one `Notification Clicked` is raised for a single
-     * display (e.g. repeated swipe/tap-outside gestures fired while the in-app animates out). Reset in
-     * [didShow] so a reused fragment can raise its click again on a later presentation.
-     */
-    private var actionTriggered = false
-
     protected abstract fun cleanup()
     protected abstract fun generateListener()
 
@@ -220,8 +213,6 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     }
 
     fun didShow(data: Bundle?) {
-        // Reset the dedup guard on every presentation so a re-shown in-app can raise its click again.
-        actionTriggered = false
         getListener()?.inAppNotificationDidShow(inAppNotification, data)
     }
 
@@ -306,11 +297,6 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     private fun notifyActionTriggered(
         action: CTInAppAction, callToAction: String, additionalData: Bundle?
     ): Bundle? {
-        // Single choke point + dedup: at most one Notification Clicked per presentation.
-        if (actionTriggered) {
-            return null
-        }
-        actionTriggered = true
         return getListener()?.inAppNotificationActionTriggered(
             inAppNotification, action, callToAction, additionalData, activity
         )

@@ -196,7 +196,6 @@ public interface Constants {
     String INAPP_CTA_VIDEO_ERROR_DISMISS = "video-error-dismiss";
 
     // wzrk_error codes/messages for media preload failures.
-    // NOTE: 591/592 are placeholders and MUST be finalized with the backend decoder and kept identical on iOS + Android.
     int INAPP_IMAGE_LOAD_FAILED_ERROR_CODE = 591;
     int INAPP_VIDEO_LOAD_FAILED_ERROR_CODE = 592;
     String INAPP_IMAGE_LOAD_FAILED_ERROR_MSG = "InApp image failed to load";
