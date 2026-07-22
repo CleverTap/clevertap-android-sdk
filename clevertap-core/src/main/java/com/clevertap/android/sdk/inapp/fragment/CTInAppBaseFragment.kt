@@ -196,7 +196,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
      */
     fun triggerSwipeDismissAction() {
         triggerAction(
-            CTInAppAction.CREATOR.createCloseAction(), Constants.KEY_SWIPE_TO_DISMISS, null
+            CTInAppAction.CREATOR.createCloseAction(), Constants.INAPP_CTA_SWIPE_DISMISS, null
         )
     }
 
