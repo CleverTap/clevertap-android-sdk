@@ -137,7 +137,9 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
             is FiveIconsTemplateData -> {
                 val validator = ValidatorFactory.getValidator(templateData)
-                if (validator?.validate() == true) {
+                if (validator == null) {
+                    null
+                } else if (validator.validate()) {
                     val fiveIconStyle = FiveIconStyle(templateData, this, extras)
                     val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
                         context,
@@ -235,6 +237,9 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
         nb: Builder
     ): Builder? = basicTemplateData.buildIfValid {
         BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+    } ?: run {
+        PTLog.debug("Five Icons fallback to basic template also failed validation. Notification will be suppressed.")
+        null
     }
 
 
@@ -264,7 +269,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             if (extras.containsKey(Constants.WZRK_SOUND)) {
                 var soundUri: Uri? = null
                 val soundString = extras.getString(Constants.WZRK_SOUND)
-                val isDefaultSoundEnabled = extras.getBoolean(Constants.WZRK_SOUND, false)
+                val isDefaultSoundEnabled = soundString == null && extras.getBoolean(Constants.WZRK_SOUND, false)
                 if (isDefaultSoundEnabled) {
                     soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 } else if (soundString != null) {

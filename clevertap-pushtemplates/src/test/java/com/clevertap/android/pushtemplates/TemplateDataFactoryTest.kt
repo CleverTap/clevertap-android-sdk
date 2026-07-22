@@ -615,6 +615,9 @@ class TemplateDataFactoryTest {
         // Then
         assertEquals(TemplateType.BASIC, basicData.templateType)
         assertEquals(fiveIconsData.baseContent, basicData.baseContent)
+        assertNull(basicData.actions)
+        assertNull(basicData.mediaData.bigImage.url)
+        assertNull(basicData.mediaData.gif.url)
     }
 
     @Test
