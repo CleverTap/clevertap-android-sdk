@@ -60,7 +60,7 @@
             android:value="YOUR ACCT ID" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="602-c44" />
+            android:value="YOUR ACCT TOKEN" />
         <meta-data
             android:name="CLEVERTAP_REGION"
             android:value="eu1"/>
