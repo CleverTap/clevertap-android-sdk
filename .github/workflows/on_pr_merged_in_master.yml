@@ -98,3 +98,42 @@ jobs:
 
       - name: Build Release AARs
         uses: ./.github/mini_flows/build_code_release
+
+  # Notify the Bearded Robot test app (CleverTap/CT-Apps) that a new core
+  # SDK version has landed on master, so it can open a version-bump PR.
+  notify-br-app:
+    needs: [build]
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    name: Notify Bearded Robot of core release
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v4
+
+      - name: Resolve core SDK version
+        id: version
+        run: |
+          VERSION=$(grep -E '^[[:space:]]*clevertap_android_sdk[[:space:]]*=' gradle/libs.versions.toml \
+            | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not resolve clevertap_android_sdk version from gradle/libs.versions.toml"
+            exit 1
+          fi
+          echo "Resolved core SDK version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch core-sdk-released to CT-Apps
+        env:
+          GH_TOKEN: ${{ secrets.CT_APPS_DISPATCH_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::CT_APPS_DISPATCH_TOKEN is not set. Add a PAT with 'repo' scope on CleverTap/CT-Apps as a repo secret."
+            exit 1
+          fi
+          echo "📣 Notifying CT-Apps: android core $VERSION released"
+          PAYLOAD=$(printf '{"event_type":"core-sdk-released","client_payload":{"platform":"android","version":"%s"}}' "$VERSION")
+          echo "$PAYLOAD" | gh api repos/CleverTap/CT-Apps/dispatches --method POST --input -
+          echo "✅ Dispatch sent to CleverTap/CT-Apps."
