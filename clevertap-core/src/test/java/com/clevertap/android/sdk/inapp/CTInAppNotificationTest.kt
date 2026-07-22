@@ -33,53 +33,44 @@ class CTInAppNotificationTest {
     fun `dismiss-gesture flags default to true when keys are absent`() {
         val notification = CTInAppNotification(JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL), true)
 
-        assertTrue(notification.tapOutsideDismiss)
         assertTrue(notification.swipeToDismiss)
     }
 
     @Test
     fun `dismiss-gesture flags respect explicit boolean values`() {
         val json = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
-            put(Constants.KEY_TAP_OUTSIDE_DISMISS, false)
             put(Constants.KEY_SWIPE_TO_DISMISS, false)
         }
 
         val notification = CTInAppNotification(json, true)
 
-        assertFalse(notification.tapOutsideDismiss)
         assertFalse(notification.swipeToDismiss)
     }
 
     @Test
     fun `dismiss-gesture flags respect integer 0 and 1 values`() {
         val disabled = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
-            put(Constants.KEY_TAP_OUTSIDE_DISMISS, 0)
             put(Constants.KEY_SWIPE_TO_DISMISS, 0)
         }
         val enabled = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
-            put(Constants.KEY_TAP_OUTSIDE_DISMISS, 1)
             put(Constants.KEY_SWIPE_TO_DISMISS, 1)
         }
 
         val disabledNotification = CTInAppNotification(disabled, true)
         val enabledNotification = CTInAppNotification(enabled, true)
 
-        assertFalse(disabledNotification.tapOutsideDismiss)
         assertFalse(disabledNotification.swipeToDismiss)
-        assertTrue(enabledNotification.tapOutsideDismiss)
         assertTrue(enabledNotification.swipeToDismiss)
     }
 
     @Test
     fun `dismiss-gesture flags fall back to true for explicit JSON null without crashing`() {
         val json = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
-            put(Constants.KEY_TAP_OUTSIDE_DISMISS, JSONObject.NULL)
             put(Constants.KEY_SWIPE_TO_DISMISS, JSONObject.NULL)
         }
 
         val notification = CTInAppNotification(json, true)
 
-        assertTrue(notification.tapOutsideDismiss)
         assertTrue(notification.swipeToDismiss)
     }
 

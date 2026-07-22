@@ -178,6 +178,9 @@ public interface Constants {
     String KEY_WZRK_ACTION = "wzrk_action";
     String KEY_WZRK_DATA = "wzrk_data";
 
+    // key for parsing
+    String KEY_SWIPE_TO_DISMISS = "swipe-dismiss";
+
     // wzrk_element_id values
     String INAPP_ELEMENT_ID_IMAGE = "image-1";
     String INAPP_ELEMENT_ID_CLOSE = "closeButton";
@@ -185,8 +188,7 @@ public interface Constants {
 
     // wzrk_c2a values for dismiss gestures
     String INAPP_CTA_DISMISS_BUTTON = "Dismiss Button";
-    String KEY_SWIPE_TO_DISMISS = "swipe-dismiss";
-    String KEY_TAP_OUTSIDE_DISMISS = "tap-outside-dismiss";
+    String INAPP_CTA_SWIPE_DISMISS = "Swipe to Dismiss";
 
     // wzrk_data literal value for a close action
     String INAPP_WZRK_DATA_CLOSE = "close";
