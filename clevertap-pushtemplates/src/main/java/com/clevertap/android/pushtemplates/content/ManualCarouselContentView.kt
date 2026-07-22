@@ -68,15 +68,9 @@ internal class ManualCarouselContentView(
                 val rightRemoteView = tempRemoteView.clone()
                 val leftRemoteView = tempRemoteView.clone()
 
-                rightRemoteView.setContentDescription(
-                    imageViewId,
-                    context.getString(R.string.next_btn_content_description)
-                )
-                leftRemoteView.setContentDescription(
-                    imageViewId,
-                    context.getString(R.string.prev_btn_content_description)
-                )
                 centerRemoteView.setContentDescription(imageViewId, altText)
+                rightRemoteView.setContentDescription(imageViewId, altText)
+                leftRemoteView.setContentDescription(imageViewId, altText)
 
                 remoteView.addView(R.id.carousel_image_right, rightRemoteView)
                 remoteView.addView(R.id.carousel_image_left, leftRemoteView)
