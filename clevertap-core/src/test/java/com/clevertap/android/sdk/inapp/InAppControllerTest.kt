@@ -382,9 +382,10 @@ class InAppControllerTest {
 
         verify(exactly = 1) {
             mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
-                val kv = data.getBundle(Constants.KEY_WZRK_DATA)
+                @Suppress("UNCHECKED_CAST")
+                val kv = data.getSerializable(Constants.KEY_WZRK_DATA) as? Map<String, String>
                 data.getString(Constants.KEY_WZRK_ACTION) == InAppActionType.KEY_VALUES.toString() &&
-                        kv?.getString("key1") == "value1" && kv.getString("key2") == "value2"
+                        kv?.get("key1") == "value1" && kv?.get("key2") == "value2"
             })
         }
     }
