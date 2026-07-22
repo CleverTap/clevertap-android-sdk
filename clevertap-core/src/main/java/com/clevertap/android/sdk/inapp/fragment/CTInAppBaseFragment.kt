@@ -191,7 +191,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     }
 
     /**
-     * Swipe-to-dismiss, raised as a click: `wzrk_c2a = swipe-dismiss`, `wzrk_action = close`,
+     * Swipe-to-dismiss, raised as a click: `wzrk_c2a = Swipe to Dismiss`, `wzrk_action = close`,
      * `wzrk_data = close`. No `wzrk_element_id` (gesture, not an element).
      */
     fun triggerSwipeDismissAction() {
