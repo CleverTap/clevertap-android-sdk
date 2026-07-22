@@ -80,12 +80,9 @@ class CTInAppNotification : Parcelable {
         private set
 
     /**
-     * Per-campaign dismiss-gesture flags. Default to `true` when the JSON key is absent or an
+     * Per-campaign dismiss-gesture flag. Default to `true` when the JSON key is absent or an
      * explicit null (parsed null-safely via [org.json.JSONObject.optBoolean]).
      */
-    var tapOutsideDismiss: Boolean = true
-        private set
-
     var swipeToDismiss: Boolean = true
         private set
 
@@ -173,7 +170,6 @@ class CTInAppNotification : Parcelable {
             }
             // Take the server value when present (boolean or 0/1); absent key or explicit JSON null
             // falls back to true.
-            tapOutsideDismiss = parseDismissFlag(jsonObject, Constants.KEY_TAP_OUTSIDE_DISMISS)
             swipeToDismiss = parseDismissFlag(jsonObject, Constants.KEY_SWIPE_TO_DISMISS)
         } catch (e: JSONException) {
             error = "Invalid JSON: ${e.localizedMessage}"
@@ -243,7 +239,6 @@ class CTInAppNotification : Parcelable {
             parcel.readParcelable<CustomTemplateInAppData?>(CustomTemplateInAppData::class.java.getClassLoader())
         aspectRatio = parcel.readDouble()
         isRequestForPushPermission = parcel.readByte().toInt() != 0x00
-        tapOutsideDismiss = parcel.readByte().toInt() != 0x00
         swipeToDismiss = parcel.readByte().toInt() != 0x00
         pipConfigJson = _jsonDescription.optJSONObject("pip")
     }
@@ -304,7 +299,6 @@ class CTInAppNotification : Parcelable {
         dest.writeParcelable(customTemplateData, flags)
         dest.writeDouble(aspectRatio)
         dest.writeByte((if (isRequestForPushPermission) 0x01 else 0x00).toByte())
-        dest.writeByte((if (tapOutsideDismiss) 0x01 else 0x00).toByte())
         dest.writeByte((if (swipeToDismiss) 0x01 else 0x00).toByte())
     }
 
