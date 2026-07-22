@@ -63,7 +63,7 @@
             android:value="YOUR ACCT TOKEN" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="eu1"/>
+            android:value="YOUR ACCT REGION"/>
         <meta-data
             android:name="CLEVERTAP_HANDSHAKE_DOMAIN"
             android:value="YOUR HANDSHAKE DOMAIN"/>
