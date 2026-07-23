@@ -190,6 +190,9 @@ public interface Constants {
     String INAPP_CTA_DISMISS_BUTTON = "Dismiss Button";
     String INAPP_CTA_SWIPE_DISMISS = "Swipe to Dismiss";
 
+    // Fallback wzrk_c2a value so the clicked event always carries a c2a.
+    String INAPP_CTA_UNDEFINED = "Undefined";
+
     // wzrk_data literal value for a close action
     String INAPP_WZRK_DATA_CLOSE = "close";
 
