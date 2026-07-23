@@ -22,16 +22,17 @@ internal class InAppImageHandler(
         clickListener: View.OnClickListener?
     ) {
         val bitmap = resourceProvider.cachedInAppImageV1(media.mediaUrl) ?: return
-        val imageView = relativeLayout?.findViewById<ImageView>(config.imageViewId)
-        imageView?.setContentDescriptionOrDefault(
+        val layout = relativeLayout ?: return
+        val imageView = layout.findViewById<ImageView>(config.imageViewId) ?: return
+        imageView.setContentDescriptionOrDefault(
             media.contentDescription,
             imageView.context.getString(R.string.ct_inapp_img)
         )
-        imageView?.setImageBitmap(bitmap)
-        imageView?.visibility = View.VISIBLE
+        imageView.setImageBitmap(bitmap)
+        imageView.visibility = View.VISIBLE
         if (config.clickableMedia && clickListener != null) {
-            imageView?.tag = 0
-            imageView?.setOnClickListener(clickListener)
+            imageView.tag = 0
+            imageView.setOnClickListener(clickListener)
         }
     }
 }

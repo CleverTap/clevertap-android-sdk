@@ -24,10 +24,12 @@ internal class InAppGifHandler(
         if (config.gifImageId == 0) return
         val gifByteArray = resourceProvider.cachedInAppGifV1(media.mediaUrl) ?: return
         gifImageView = relativeLayout?.findViewById(config.gifImageId)
-        gifImageView?.setContentDescriptionOrDefault(
-            media.contentDescription,
-            gifImageView?.context?.getString(R.string.ct_inapp_gif).orEmpty()
-        )
+        gifImageView?.let { view ->
+            view.setContentDescriptionOrDefault(
+                media.contentDescription,
+                view.context.getString(R.string.ct_inapp_gif)
+            )
+        }
         gifImageView?.visibility = View.VISIBLE
         gifImageView?.setBytes(gifByteArray)
         gifImageView?.startAnimation()
