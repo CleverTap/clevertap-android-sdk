@@ -146,8 +146,6 @@
                 android:layout_marginRight="20dp"
                 android:contentDescription="@string/ct_inbox_unread_indicator_content_description"
                 android:importantForAccessibility="yes"
-                android:minHeight="@dimen/ct_inbox_min_tap_target"
-                android:minWidth="@dimen/ct_inbox_min_tap_target"
                 android:src="@drawable/ct_read_circle" />
         </LinearLayout>
 
