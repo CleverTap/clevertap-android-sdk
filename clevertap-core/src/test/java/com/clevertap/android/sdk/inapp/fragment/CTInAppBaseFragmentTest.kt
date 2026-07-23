@@ -325,6 +325,42 @@ class CTInAppBaseFragmentTest {
     }
 
     @Test
+    fun `triggerAction should fall back to Undefined c2a when callToAction is null and no c2a url param`() {
+        val fragment = createAndAttachFragmentSpy()
+
+        // openActionUrl passes callToAction = null and the url carries no c2a param
+        fragment.openActionUrl("https://clevertap.com")
+
+        verify(exactly = 1) {
+            mockInAppListener.inAppNotificationActionTriggered(
+                inAppNotification = any(),
+                action = any(),
+                callToAction = Constants.INAPP_CTA_UNDEFINED,
+                additionalData = any(),
+                activityContext = any()
+            )
+        }
+    }
+
+    @Test
+    fun `triggerAction should fall back to Undefined c2a when callToAction is empty`() {
+        val fragment = createAndAttachFragmentSpy()
+
+        // e.g. a CTA/tap with no text resolves to an empty callToAction
+        fragment.triggerAction(CTInAppAction.CREATOR.createCloseAction(), "", null)
+
+        verify(exactly = 1) {
+            mockInAppListener.inAppNotificationActionTriggered(
+                inAppNotification = any(),
+                action = any(),
+                callToAction = Constants.INAPP_CTA_UNDEFINED,
+                additionalData = any(),
+                activityContext = any()
+            )
+        }
+    }
+
+    @Test
     fun `triggerAction should parse c2a url param with __dl__ data when no callToAction argument`() {
         val fragment = createAndAttachFragmentSpy()
 

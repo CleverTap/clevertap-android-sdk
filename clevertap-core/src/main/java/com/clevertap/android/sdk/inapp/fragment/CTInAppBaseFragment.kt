@@ -169,9 +169,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
                 callToAction = callToActionUrlParam
             }
         }
-        // Fall back to the "Undefined" c2a when null OR empty ("" — e.g. a tap with no CTA text).
-        val resolvedC2a = callToAction?.takeIf { it.isNotEmpty() } ?: Constants.INAPP_CTA_UNDEFINED
-        val actionData = notifyActionTriggered(action, resolvedC2a, additionalData)
+        val actionData = notifyActionTriggered(action, callToAction, additionalData)
         didDismiss(actionData)
     }
 
@@ -297,10 +295,11 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     }
 
     private fun notifyActionTriggered(
-        action: CTInAppAction, callToAction: String, additionalData: Bundle?
+        action: CTInAppAction, callToAction: String?, additionalData: Bundle?
     ): Bundle? {
+        val resolvedC2a = callToAction?.takeIf { it.isNotEmpty() } ?: Constants.INAPP_CTA_UNDEFINED
         return getListener()?.inAppNotificationActionTriggered(
-            inAppNotification, action, callToAction, additionalData, activity
+            inAppNotification, action, resolvedC2a, additionalData, activity
         )
     }
 }
