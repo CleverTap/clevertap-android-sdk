@@ -220,6 +220,12 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         tertiaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0));
     }
 
+    void showThreeButtons(Button mainButton, Button secondaryButton, Button tertiaryButton) {
+        mainButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2));
+        secondaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2));
+        tertiaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2));
+    }
+
     void hideTwoButtons(Button mainButton, Button secondaryButton, Button tertiaryButton) {
         secondaryButton.setVisibility(View.GONE);
         tertiaryButton.setVisibility(View.GONE);
