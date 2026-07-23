@@ -145,6 +145,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta3.setText(content.getLinkText(cta3Object));
                         this.cta3.setTextColor(Color.parseColor(content.getLinkColor(cta3Object)));
                         this.cta3.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta3Object)));
+                        showThreeButtons(this.cta1, this.cta2, this.cta3);
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
                                     this.cta1.getText().toString(), cta1Object, parentWeak,false, APP_INBOX_CTA1_INDEX));

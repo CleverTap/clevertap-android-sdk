@@ -23,7 +23,7 @@ internal class InAppImageHandler(
     ) {
         val bitmap = resourceProvider.cachedInAppImageV1(media.mediaUrl) ?: return
         val layout = relativeLayout ?: return
-        val imageView = layout.findViewById<ImageView>(config.imageViewId)
+        val imageView = layout.findViewById<ImageView>(config.imageViewId) ?: return
         imageView.setContentDescriptionOrDefault(
             media.contentDescription,
             imageView.context.getString(R.string.ct_inapp_img)
