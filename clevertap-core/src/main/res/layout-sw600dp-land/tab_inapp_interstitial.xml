@@ -24,7 +24,7 @@
             android:textColor="@android:color/black"
             android:textSize="@dimen/txt_size_inapp_title"
             android:textStyle="bold"
-            android:focusable="true" />
+            android:screenReaderFocusable="true" />
 
         <FrameLayout
             android:id="@+id/media_container"
@@ -40,7 +40,7 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/ct_inapp_img"
                 android:scaleType="centerCrop"
-                android:focusable="true"
+                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <com.clevertap.android.sdk.gif.GifImageView
@@ -49,7 +49,7 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/ct_inapp_gif"
                 android:scaleType="centerCrop"
-                android:focusable="true"
+                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <FrameLayout
@@ -57,7 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/ct_inapp_media"
-                android:focusable="true"
+                android:screenReaderFocusable="true"
                 android:visibility="gone"/>
         </FrameLayout>
 
@@ -76,7 +76,7 @@
             android:maxLines="3"
             android:textColor="@android:color/black"
             android:textSize="@dimen/txt_size_inapp_message"
-            android:focusable="true" />
+            android:screenReaderFocusable="true" />
 
         <LinearLayout
             android:id="@+id/interstitial_linear_layout"
@@ -115,8 +115,8 @@
 
     <com.clevertap.android.sdk.customviews.CloseImageView
         android:contentDescription="@string/ct_inapp_close_btn"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="top|end"
         android:adjustViewBounds="true" />
 </FrameLayout>
