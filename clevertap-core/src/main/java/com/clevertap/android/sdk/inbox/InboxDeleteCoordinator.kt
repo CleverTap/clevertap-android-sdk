@@ -26,7 +26,9 @@ import org.json.JSONObject
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 internal class InboxDeleteCoordinator(
     private val networkScope: NetworkScope,
-    private val ctApi: CtApi,
+    // Supplier so CtApi is created on the network dispatcher, not at
+    // factory-construction time — `CtApiWrapper.ctApi` is @get:WorkerThread.
+    private val ctApiProvider: () -> CtApi,
     private val queueHeaderBuilder: QueueHeaderBuilder,
     // Supplier so the DB adapter is loaded on the network dispatcher, not at
     // factory-construction time — `DBManager.loadDBAdapter` is @WorkerThread.
@@ -74,7 +76,7 @@ internal class InboxDeleteCoordinator(
 
     private suspend fun runDelete(messages: List<CTInboxMessage>, userId: String) {
         val call = InboxDeleteCall(
-            ctApi = ctApi,
+            ctApi = ctApiProvider(),
             queueHeaderBuilder = queueHeaderBuilder,
             messages = messages,
             coreMetaData = coreMetaData,
