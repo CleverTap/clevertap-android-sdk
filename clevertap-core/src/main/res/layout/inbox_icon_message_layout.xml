@@ -29,7 +29,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:contentDescription="@string/ct_inbox_icon_content_description"
-                android:focusable="true"
+                android:screenReaderFocusable="true"
                 android:scaleType="fitCenter" />
 
             <LinearLayout
@@ -77,7 +77,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/ct_inbox_media_content_description"
-                android:focusable="true"
+                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <com.clevertap.android.sdk.customviews.SquareImageView
@@ -85,7 +85,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/ct_inbox_media_content_description"
-                android:focusable="true"
+                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <ImageView
@@ -95,7 +95,7 @@
                 android:adjustViewBounds="true"
                 android:scaleType="fitCenter"
                 android:contentDescription="@string/ct_inbox_media_content_description"
-                android:focusable="true"
+                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <FrameLayout
@@ -160,10 +160,9 @@
     <LinearLayout
         android:id="@+id/cta_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="44dp"
         android:layout_below="@id/click_relative_layout"
         android:background="@android:color/white"
-        android:minHeight="@dimen/ct_inbox_min_tap_target"
         android:orientation="horizontal"
         android:weightSum="6">
 
@@ -174,7 +173,6 @@
             android:layout_weight="2"
             android:background="@android:color/white"
             android:importantForAccessibility="yes"
-            android:minHeight="@dimen/ct_inbox_min_tap_target"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
             android:textSize="@dimen/ct_inbox_cta_button_text_size"
@@ -187,7 +185,6 @@
             android:layout_weight="2"
             android:background="@android:color/white"
             android:importantForAccessibility="yes"
-            android:minHeight="@dimen/ct_inbox_min_tap_target"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
             android:textSize="@dimen/ct_inbox_cta_button_text_size"
@@ -200,7 +197,6 @@
             android:layout_weight="2"
             android:background="@android:color/white"
             android:importantForAccessibility="yes"
-            android:minHeight="@dimen/ct_inbox_min_tap_target"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
             android:textSize="@dimen/ct_inbox_cta_button_text_size"
