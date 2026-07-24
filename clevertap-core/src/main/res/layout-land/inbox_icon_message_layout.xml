@@ -27,7 +27,7 @@
                     android:layout_height="wrap_content"
                     android:scaleType="fitCenter"
                     android:contentDescription="@string/ct_inbox_media_content_description"
-                    android:screenReaderFocusable="true"
+
                     android:visibility="gone" />
 
                 <com.clevertap.android.sdk.customviews.HorizontalSquareImageView
@@ -37,7 +37,7 @@
                     android:layout_centerInParent="true"
                     android:scaleType="centerCrop"
                     android:contentDescription="@string/ct_inbox_media_content_description"
-                    android:screenReaderFocusable="true"
+
                     android:visibility="gone" />
 
                 <ImageView
@@ -47,7 +47,7 @@
                     android:adjustViewBounds="true"
                     android:scaleType="fitCenter"
                     android:contentDescription="@string/ct_inbox_media_content_description"
-                    android:screenReaderFocusable="true"
+
                     android:visibility="gone" />
 
                 <FrameLayout
@@ -98,7 +98,7 @@
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
                         android:contentDescription="@string/ct_inbox_icon_content_description"
-                        android:screenReaderFocusable="true"
+    
                         android:scaleType="fitCenter" />
 
                     <TextView
@@ -111,7 +111,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:maxLines="2"
-                        android:screenReaderFocusable="true"
+    
                         android:textColor="@android:color/black"
                         android:textSize="@dimen/ct_inbox_title_text_size"
                         android:textStyle="bold" />
@@ -128,7 +128,7 @@
                     android:layout_marginRight="20dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="5dp"
-                    android:screenReaderFocusable="true"
+
                     android:textColor="@android:color/darker_gray"
                     android:textSize="@dimen/ct_inbox_body_text_size" />
             </RelativeLayout>
@@ -150,7 +150,6 @@
                 android:layout_marginEnd="10dp"
                 android:layout_marginRight="10dp"
                 android:gravity="end"
-                android:screenReaderFocusable="true"
                 android:textColor="@android:color/darker_gray"
                 android:textSize="@dimen/ct_inbox_timestamp_text_size" />
 

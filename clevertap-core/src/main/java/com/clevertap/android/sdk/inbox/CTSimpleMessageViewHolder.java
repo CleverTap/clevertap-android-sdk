@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import androidx.core.view.ViewCompat;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
@@ -63,6 +64,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         progressBarFrameLayout = itemView.findViewById(R.id.simple_progress_frame_layout);
         mediaLayout = itemView.findViewById(R.id.media_layout);
 
+        ViewCompat.setScreenReaderFocusable(mediaImage, true);
+        ViewCompat.setScreenReaderFocusable(squareImage, true);
+        ViewCompat.setScreenReaderFocusable(defaultImage, true);
     }
 
     @Override
