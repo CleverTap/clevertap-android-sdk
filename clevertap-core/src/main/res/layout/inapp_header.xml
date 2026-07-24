@@ -27,7 +27,6 @@
                     android:contentDescription="@string/ct_inapp_img"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:screenReaderFocusable="true"
                     android:scaleType="fitCenter" />
 
                 <com.clevertap.android.sdk.gif.GifImageView
@@ -36,7 +35,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="fitCenter"
-                    android:screenReaderFocusable="true"
                     android:visibility="gone" />
 
             </FrameLayout>
@@ -54,8 +52,7 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="20dp"
                     android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:screenReaderFocusable="true" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/header_message"
@@ -64,8 +61,7 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="4dp"
                     android:maxLines="3"
-                    android:textSize="14sp"
-                    android:screenReaderFocusable="true" />
+                    android:textSize="14sp" />
             </LinearLayout>
         </LinearLayout>
 

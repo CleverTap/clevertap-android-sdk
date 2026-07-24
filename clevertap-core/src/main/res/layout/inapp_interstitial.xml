@@ -23,8 +23,7 @@
             android:maxLines="1"
             android:textColor="@android:color/black"
             android:textSize="@dimen/txt_size_inapp_title"
-            android:textStyle="bold"
-            android:screenReaderFocusable="true" />
+            android:textStyle="bold" />
 
         <FrameLayout
             android:id="@+id/media_container"
@@ -40,7 +39,6 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/ct_inapp_img"
                 android:scaleType="centerCrop"
-                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <com.clevertap.android.sdk.gif.GifImageView
@@ -49,7 +47,6 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/ct_inapp_gif"
                 android:scaleType="centerCrop"
-                android:screenReaderFocusable="true"
                 android:visibility="gone" />
 
             <FrameLayout
@@ -57,7 +54,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/ct_inapp_media"
-                android:screenReaderFocusable="true"
                 android:visibility="gone"/>
         </FrameLayout>
 
@@ -71,8 +67,7 @@
             android:gravity="center"
             android:maxLines="3"
             android:textColor="@android:color/black"
-            android:textSize="@dimen/txt_size_inapp_message"
-            android:screenReaderFocusable="true" />
+            android:textSize="@dimen/txt_size_inapp_message" />
 
         <LinearLayout
             android:id="@+id/interstitial_linear_layout"
