@@ -57,6 +57,14 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
             }
             dots[position].setImageDrawable(
                     ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_selected_dot, null));
+            int totalPages = inboxMessage.getInboxMessageContents().size();
+            String imageDesc = getImageContentDescription(context, inboxMessage, position);
+            String announcement = context.getString(R.string.ct_carousel_page_announcement,
+                    imageDesc, position + 1, totalPages);
+            viewHolder.imageViewPager.setContentDescription(
+                    context.getString(R.string.ct_carousel_content_description,
+                            imageDesc, position + 1, totalPages));
+            viewHolder.imageViewPager.announceForAccessibility(announcement);
         }
     }
 
@@ -101,6 +109,10 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(appContext, parent,
                 inboxMessage, layoutParams, position);
         this.imageViewPager.setAdapter(carouselViewPagerAdapter);
+        int itemCount = inboxMessage.getInboxMessageContents().size();
+        String firstImageDesc = getImageContentDescription(appContext, inboxMessage, 0);
+        this.imageViewPager.setContentDescription(
+                appContext.getString(R.string.ct_carousel_content_description, firstImageDesc, 1, itemCount));
         //Adds the dots for the carousel
         int dotsCount = inboxMessage.getInboxMessageContents().size();
         if (this.sliderDots.getChildCount() > 0) {

@@ -94,11 +94,8 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
 
     void addImageAndSetClick(ImageView imageView, View view, final int position, ViewGroup container) {
         imageView.setVisibility(View.VISIBLE);
-        String contentDescription = carouselImagesData.get(position).getContentDescription();
-        if (contentDescription.isEmpty()) {
-            contentDescription = context.getString(R.string.ct_inbox_image_content_description) + (position + 1);
-        }
-        imageView.setContentDescription(contentDescription);
+        imageView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        view.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
         try {
             Glide.with(imageView.getContext())
                     .load(carouselImagesData.get(position).getUrl())
