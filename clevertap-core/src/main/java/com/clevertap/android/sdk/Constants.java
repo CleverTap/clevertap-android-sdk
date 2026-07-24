@@ -172,6 +172,37 @@ public interface Constants {
     String IMAGE_PLACEHOLDER = "ct_image";
     String KEY_CONFIG = "config";
     String KEY_C2A = "wzrk_c2a";
+
+    // Split-of-clicks: per-element identity + action descriptors (must match iOS wire contract)
+    String KEY_WZRK_ELEMENT_ID = "wzrk_element_id";
+    String KEY_WZRK_ACTION = "wzrk_action";
+    String KEY_WZRK_DATA = "wzrk_data";
+
+    // key for parsing
+    String KEY_SWIPE_TO_DISMISS = "swipe-dismiss";
+
+    // wzrk_element_id values
+    String INAPP_ELEMENT_ID_IMAGE = "image-1";
+    String INAPP_ELEMENT_ID_CLOSE = "closeButton";
+    String INAPP_ELEMENT_ID_BUTTON_PREFIX = "button-";
+
+    // wzrk_c2a values for dismiss gestures
+    String INAPP_CTA_DISMISS_BUTTON = "Dismiss Button";
+    String INAPP_CTA_SWIPE_DISMISS = "Swipe to Dismiss";
+
+    // wzrk_data literal value for a close action
+    String INAPP_WZRK_DATA_CLOSE = "close";
+
+    // Media-error synthetic-close descriptors emitted by the bundled advanced-builder HTML template
+    String INAPP_CTA_IMAGE_ERROR_DISMISS = "image-error-dismiss";
+    String INAPP_CTA_VIDEO_ERROR_DISMISS = "video-error-dismiss";
+
+    // wzrk_error codes/messages for media preload failures.
+    int INAPP_IMAGE_LOAD_FAILED_ERROR_CODE = 591;
+    int INAPP_VIDEO_LOAD_FAILED_ERROR_CODE = 592;
+    String INAPP_IMAGE_LOAD_FAILED_ERROR_MSG = "InApp image failed to load";
+    String INAPP_VIDEO_LOAD_FAILED_ERROR_MSG = "InApp video failed to load";
+
     String KEY_EFC = "efc";
     String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";
     String KEY_TLC = "tlc";

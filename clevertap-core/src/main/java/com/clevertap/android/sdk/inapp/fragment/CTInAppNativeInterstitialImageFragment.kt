@@ -121,7 +121,7 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
         )
 
         closeImageView.setOnClickListener {
-            didDismiss(null)
+            triggerCloseButtonAction()
             activity?.finish()
         }
 

@@ -79,6 +79,13 @@ class CTInAppNotification : Parcelable {
     var isRequestForPushPermission: Boolean = false
         private set
 
+    /**
+     * Per-campaign dismiss-gesture flag. Default to `true` when the JSON key is absent or an
+     * explicit null (parsed null-safely via [org.json.JSONObject.optBoolean]).
+     */
+    var swipeToDismiss: Boolean = true
+        private set
+
     internal var customTemplateData: CustomTemplateInAppData? = null
         private set
 
@@ -161,6 +168,9 @@ class CTInAppNotification : Parcelable {
             } else {
                 configureWithJson(jsonObject)
             }
+            // Take the server value when present (boolean or 0/1); absent key or explicit JSON null
+            // falls back to true.
+            swipeToDismiss = parseDismissFlag(jsonObject, Constants.KEY_SWIPE_TO_DISMISS)
         } catch (e: JSONException) {
             error = "Invalid JSON: ${e.localizedMessage}"
         }
@@ -229,6 +239,7 @@ class CTInAppNotification : Parcelable {
             parcel.readParcelable<CustomTemplateInAppData?>(CustomTemplateInAppData::class.java.getClassLoader())
         aspectRatio = parcel.readDouble()
         isRequestForPushPermission = parcel.readByte().toInt() != 0x00
+        swipeToDismiss = parcel.readByte().toInt() != 0x00
         pipConfigJson = _jsonDescription.optJSONObject("pip")
     }
 
@@ -288,7 +299,31 @@ class CTInAppNotification : Parcelable {
         dest.writeParcelable(customTemplateData, flags)
         dest.writeDouble(aspectRatio)
         dest.writeByte((if (isRequestForPushPermission) 0x01 else 0x00).toByte())
+        dest.writeByte((if (swipeToDismiss) 0x01 else 0x00).toByte())
     }
+
+    /**
+     * True for the image-only native templates whose whole image is tappable. Used to tag the
+     * whole-image tap as [Constants.INAPP_ELEMENT_ID_IMAGE] instead of a CTA button.
+     */
+    internal fun isImageOnlyInApp(): Boolean =
+        inAppType == CTInAppType.CTInAppTypeCoverImageOnly ||
+                inAppType == CTInAppType.CTInAppTypeHalfInterstitialImageOnly ||
+                inAppType == CTInAppType.CTInAppTypeInterstitialImageOnly
+
+    /**
+     * True for HTML in-apps (including the advanced-builder media template, which is delivered as the
+     * in-app's HTML content). Media-error reporting is scoped to HTML in-apps: aspect ratio only affects
+     * window sizing and isn't guaranteed to be set, so gating on the in-app type is the reliable signal
+     * and still excludes native templates (so a native CTA's wzrk_c2a is never misread).
+     */
+    internal fun isHtml(): Boolean =
+        inAppType == CTInAppType.CTInAppTypeHTML ||
+                inAppType == CTInAppType.CTInAppTypeCoverHTML ||
+                inAppType == CTInAppType.CTInAppTypeInterstitialHTML ||
+                inAppType == CTInAppType.CTInAppTypeHeaderHTML ||
+                inAppType == CTInAppType.CTInAppTypeFooterHTML ||
+                inAppType == CTInAppType.CTInAppTypeHalfInterstitialHTML
 
     internal fun getInAppMediaForOrientation(orientation: Int): CTInAppNotificationMedia? {
         var returningMedia: CTInAppNotificationMedia? = null
@@ -607,6 +642,19 @@ class CTInAppNotification : Parcelable {
 
         fun defaultTtl(): Long {
             return (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000
+        }
+
+        /**
+         * Parses a per-campaign dismiss-gesture flag. Uses the server value when present as a real
+         * boolean or as 0/1 (1 -> true, 0 -> false). A missing key, an explicit JSON null, or any
+         * other/unparseable value falls back to true.
+         */
+        private fun parseDismissFlag(json: JSONObject, key: String): Boolean {
+            return when (val value = json.opt(key)) {
+                is Boolean -> value
+                is Number -> value.toInt() != 0
+                else -> true // absent, JSONObject.NULL, or unexpected type
+            }
         }
 
         private fun getBundleFromJsonObject(notif: JSONObject): Bundle {

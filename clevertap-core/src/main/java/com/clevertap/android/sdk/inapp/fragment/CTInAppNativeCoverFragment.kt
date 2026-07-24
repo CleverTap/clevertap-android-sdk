@@ -87,7 +87,7 @@ internal class CTInAppNativeCoverFragment : CTInAppBaseFullNativeFragment() {
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
 
         closeImageView.setOnClickListener {
-            didDismiss(null)
+            triggerCloseButtonAction()
             activity?.finish()
         }
 
