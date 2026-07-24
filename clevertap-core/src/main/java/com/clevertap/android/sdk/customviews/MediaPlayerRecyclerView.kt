@@ -155,6 +155,20 @@ class MediaPlayerRecyclerView : RecyclerView {
         playingHolder = null
     }
 
+    /**
+     * Detaches the shared player surface from its current holder and forgets it.
+     *
+     * Must be called before mutating the adapter data and calling notifyDataSetChanged(),
+     * otherwise the surface view stays parented inside a holder that gets rebound to a
+     * different message. [stop] is not enough for that: it forgets [playingHolder] without
+     * clearing the holder's video container, leaving an orphaned surface behind.
+     * [removeVideoView] must run first — it needs [playingHolder] to locate the container.
+     */
+    fun prepareForListRebind() {
+        removeVideoView()
+        playingHolder = null
+    }
+
     private fun findBestVisibleMediaHolder(): CTInboxBaseMessageViewHolder? {
         var bestHolder: CTInboxBaseMessageViewHolder? = null
         val startPosition = (layoutManager as LinearLayoutManager?)?.findFirstVisibleItemPosition() ?: 0
