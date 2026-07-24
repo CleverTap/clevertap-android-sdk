@@ -40,7 +40,9 @@ import com.clevertap.android.sdk.video.VideoLibChecker;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -65,7 +67,10 @@ public class CTInboxListViewFragment extends Fragment {
     MediaPlayerRecyclerView mediaRecyclerView;
 
     RecyclerView recyclerView;
-    private  CTInboxMessageAdapter inboxMessageAdapter;
+
+    TextView noMessageView;
+
+    private CTInboxMessageAdapter inboxMessageAdapter;
 
 
     CTInboxStyleConfig styleConfig;
@@ -98,15 +103,22 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
     private void updateInboxMessages(){
+        ArrayList<CTInboxMessage> freshMessages = fetchFreshMessages();
+        if (freshMessages != null) {
+            inboxMessages = freshMessages;
+        }
+    }
+
+    @Nullable
+    ArrayList<CTInboxMessage> fetchFreshMessages() {
         Bundle bundle = getArguments();
-        if(bundle==null) return;
+        if (bundle == null) return null;
         final String filter = bundle.getString("filter", null);
         CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
-        if (cleverTapAPI != null) {
-            Logger.v( "CTInboxListViewFragment:onAttach() called with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
-            ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
-            inboxMessages = filter != null ? filterMessages(allMessages, filter) : allMessages;
-        }
+        if (cleverTapAPI == null) return null;
+        Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
+        ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
+        return filter != null ? filterMessages(allMessages, filter) : allMessages;
     }
 
     @Nullable
@@ -118,19 +130,27 @@ public class CTInboxListViewFragment extends Fragment {
         wireSwipeToRefresh(swipeRefreshLayout);
         linearLayout = allView.findViewById(R.id.list_view_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
-        TextView noMessageView = allView.findViewById(R.id.list_view_no_message_view);
+        noMessageView = allView.findViewById(R.id.list_view_no_message_view);
 
         if (inboxMessages.size() <= 0) {
-            noMessageView.setVisibility(View.VISIBLE);
-            noMessageView.setText(styleConfig.getNoMessageViewText());
-            noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
+            showNoMessageView();
             return allView;
         }
 
         noMessageView.setVisibility(View.GONE);
+        buildListView();
+        return allView;
+    }
 
+    private void showNoMessageView() {
+        noMessageView.setText(styleConfig.getNoMessageViewText());
+        noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
+        noMessageView.setVisibility(View.VISIBLE);
+    }
+
+    private void buildListView() {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        inboxMessageAdapter= new CTInboxMessageAdapter(inboxMessages, this);
+        inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
             mediaRecyclerView.setVisibility(View.VISIBLE);
@@ -153,7 +173,7 @@ public class CTInboxListViewFragment extends Fragment {
             }
 
         } else {
-            recyclerView = allView.findViewById(R.id.list_view_recycler_view);
+            recyclerView = linearLayout.findViewById(R.id.list_view_recycler_view);
             recyclerView.setVisibility(View.VISIBLE);
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -161,7 +181,6 @@ public class CTInboxListViewFragment extends Fragment {
             recyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
         }
-        return allView;
     }
 
     @Override
@@ -224,6 +243,129 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
+    /**
+     * Repaints this fragment's list from the already-committed message store.
+     * Main thread only. Called from the pull-to-refresh success path — never from
+     * background updates, so an on-screen list never changes without a user action.
+     */
+    void refreshList() {
+        if (getActivity() == null) {
+            return;
+        }
+        ArrayList<CTInboxMessage> freshMessages = fetchFreshMessages();
+        if (freshMessages == null) {
+            return;
+        }
+
+        // The view holders mark the on-screen copies read instantly, but the store's
+        // write is async — never let a refresh flip a just-read message back to unread.
+        mergeReadStateForward(inboxMessages, freshMessages);
+
+        if (isContentIdentical(inboxMessages, freshMessages)) {
+            return; // nothing changed — keep any playing video untouched
+        }
+
+        if (getView() == null || noMessageView == null) {
+            // View not created (or already destroyed) — refresh the data only.
+            replaceMessagesInPlace(freshMessages);
+            return;
+        }
+
+        if (mediaRecyclerView != null) {
+            // Detach the shared video surface while its holder is still known;
+            // rebinding with the surface attached is the SDK-2330 video regression.
+            mediaRecyclerView.prepareForListRebind();
+        }
+
+        replaceMessagesInPlace(freshMessages);
+
+        if (inboxMessages.isEmpty()) {
+            if (mediaRecyclerView != null) {
+                mediaRecyclerView.setVisibility(View.GONE);
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.GONE);
+            }
+            if (inboxMessageAdapter != null) {
+                inboxMessageAdapter.notifyDataSetChanged();
+            }
+            showNoMessageView();
+            return;
+        }
+
+        noMessageView.setVisibility(View.GONE);
+        if (inboxMessageAdapter == null) {
+            buildListView(); // tab was opened empty — the list UI is built lazily now
+            return;
+        }
+        RecyclerView activeRecyclerView = mediaRecyclerView != null ? mediaRecyclerView : recyclerView;
+        if (activeRecyclerView != null) {
+            activeRecyclerView.setVisibility(View.VISIBLE);
+        }
+        inboxMessageAdapter.notifyDataSetChanged();
+        if (mediaRecyclerView != null) {
+            // Post so findBestVisibleMediaHolder() sees the re-laid-out children.
+            mediaRecyclerView.post(mediaRecyclerView::playVideo);
+        }
+    }
+
+    /**
+     * The adapter aliases {@link #inboxMessages}; the field must never be reassigned
+     * after the adapter exists, or click positions resolve against the wrong list.
+     */
+    private void replaceMessagesInPlace(ArrayList<CTInboxMessage> freshMessages) {
+        inboxMessages.clear();
+        inboxMessages.addAll(freshMessages);
+    }
+
+    static void mergeReadStateForward(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
+        HashSet<String> readIds = new HashSet<>();
+        for (CTInboxMessage message : currentMessages) {
+            if (message.isRead()) {
+                readIds.add(message.getMessageId());
+            }
+        }
+        if (readIds.isEmpty()) {
+            return;
+        }
+        for (CTInboxMessage message : freshMessages) {
+            if (!message.isRead() && readIds.contains(message.getMessageId())) {
+                message.setRead(true);
+            }
+        }
+    }
+
+    static boolean isContentIdentical(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
+        if (currentMessages.size() != freshMessages.size()) {
+            return false;
+        }
+        for (int i = 0; i < currentMessages.size(); i++) {
+            CTInboxMessage current = currentMessages.get(i);
+            CTInboxMessage fresh = freshMessages.get(i);
+            if (!current.getMessageId().equals(fresh.getMessageId())
+                    || current.isRead() != fresh.isRead()
+                    || current.getDate() != fresh.getDate()
+                    || !contentJson(current).equals(contentJson(fresh))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The "msg" sub-object only: the top-level read-state key must stay out of this
+     * comparison because the on-screen copies' backing JSON is fetch-time stale
+     * relative to their in-place-mutated read flag.
+     */
+    private static String contentJson(CTInboxMessage message) {
+        JSONObject data = message.getData();
+        if (data == null) {
+            return "";
+        }
+        JSONObject msg = data.optJSONObject(Constants.KEY_MSG);
+        return msg != null ? msg.toString() : "";
+    }
+
     void wireSwipeToRefresh(@NonNull final SwipeRefreshLayout swipeRefreshLayout) {
         // Direct child is a LinearLayout, whose canScrollVertically(-1) is always false.
         // Delegate to whichever RecyclerView is actually on screen so mid-scroll pulls
@@ -254,10 +396,16 @@ public class CTInboxListViewFragment extends Fragment {
                 if (activity == null) return;
                 activity.runOnUiThread(() -> {
                     swipeRefreshLayout.setRefreshing(false);
-                    // First fetch that hit a 403 — hide the widget now that the spinner is done.
-                    if (!success && refreshApi.isInboxFetchDisabledForSession()) {
-                        swipeRefreshLayout.setEnabled(false);
+                    if (!success) {
+                        // First fetch that hit a 403 — hide the widget now that the spinner is done.
+                        if (refreshApi.isInboxFetchDisabledForSession()) {
+                            swipeRefreshLayout.setEnabled(false);
+                        }
+                        return; // fetch failed or throttled — the stored data is unchanged
                     }
+                    // Re-check inside the runnable: state can change between post and run.
+                    if (!isAdded()) return;
+                    refreshList();
                 });
             });
         });
