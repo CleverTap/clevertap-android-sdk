@@ -419,6 +419,11 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     void didClick(Bundle data, int position, int contentPageIndex, HashMap<String, String> keyValuePayload, int buttonIndex) {
+        // A row's click listener remembers its position from the moment the row was
+        // drawn. Touch events are queued, and after a refresh shrinks the list the
+        // rows are redrawn only on the NEXT frame — so a tap can arrive carrying a
+        // position from the old, longer list. Indexing with it would go out of
+        // bounds, so such a tap is ignored instead of acted on.
         if (position < 0 || position >= inboxMessages.size()) {
             Logger.v("didClick: stale position " + position + ", ignoring click");
             return;
