@@ -316,8 +316,14 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            // The holder may have been rebound to a different message while this
+                            // timer was pending (list refresh or recycling); the rebind schedules
+                            // its own timer, so this stale one must do nothing.
+                            if (message != inboxMessage) {
+                                return;
+                            }
                             if (readDot.getVisibility() == View.VISIBLE) {
-                                parent.didShow(null, position);
+                                parent.didShow(null, inboxMessage);
                             }
                             readDot.setVisibility(View.GONE);
                             inboxMessage.setRead(true);

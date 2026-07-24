@@ -1,7 +1,10 @@
 package com.clevertap.android.sdk.inbox
 
+import androidx.fragment.app.FragmentActivity
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
+import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.json.JSONObject
@@ -193,6 +196,42 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         verify(atLeast = 1) {
             ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
         }
+    }
+
+    @Test
+    fun test_didClick_with_out_of_range_position_is_a_silent_noop() {
+        val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
+        ctInboxListViewFragmentSpy.setListener(listener)
+        ctInboxListViewFragmentSpy.inboxMessages.add(CTInboxMessage(jsonObj))
+
+        // Positions that a stale click could deliver after a list refresh
+        ctInboxListViewFragmentSpy.didClick(null, 5, 0, null, Constants.APP_INBOX_ITEM_INDEX)
+        ctInboxListViewFragmentSpy.didClick(null, -1, 0, null, Constants.APP_INBOX_ITEM_INDEX)
+
+        verify(exactly = 0) { listener.messageDidClick(any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun test_didClick_with_empty_list_does_not_throw() {
+        val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
+        ctInboxListViewFragmentSpy.setListener(listener)
+
+        ctInboxListViewFragmentSpy.didClick(null, 0, 0, null, Constants.APP_INBOX_ITEM_INDEX)
+
+        verify(exactly = 0) { listener.messageDidClick(any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun test_didShow_forwards_the_exact_message_to_the_listener() {
+        val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
+        val activity = mockk<FragmentActivity>(relaxed = true)
+        every { ctInboxListViewFragmentSpy.activity } returns activity
+        ctInboxListViewFragmentSpy.setListener(listener)
+        val message = CTInboxMessage(jsonObj)
+
+        ctInboxListViewFragmentSpy.didShow(null, message)
+
+        verify(exactly = 1) { listener.messageDidShow(any(), message, null) }
     }
 
     @Test

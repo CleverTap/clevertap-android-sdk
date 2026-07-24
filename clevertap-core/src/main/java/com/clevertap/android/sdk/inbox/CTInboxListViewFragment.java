@@ -264,6 +264,10 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     void didClick(Bundle data, int position, int contentPageIndex, HashMap<String, String> keyValuePayload, int buttonIndex) {
+        if (position < 0 || position >= inboxMessages.size()) {
+            Logger.v("didClick: stale position " + position + ", ignoring click");
+            return;
+        }
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
             //noinspection ConstantConditions
@@ -272,12 +276,12 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     @SuppressWarnings("SameParameterValue")
-    void didShow(Bundle data, int position) {
+    void didShow(Bundle data, CTInboxMessage inboxMessage) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
-            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
+            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], messageId = [" + inboxMessage.getMessageId() + "]");
             //noinspection ConstantConditions
-            listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
+            listener.messageDidShow(getActivity().getBaseContext(), inboxMessage, data);
         }
     }
 
