@@ -19,7 +19,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
 
-import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -65,8 +64,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private WeakReference<InboxActivityListener> listenerWeakReference;
 
     private CleverTapAPI cleverTapAPI;
-
-    private CTInboxListener inboxContentUpdatedListener = null;
 
     private PushPermissionHandler pushPermissionHandler;
 
@@ -238,6 +235,20 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         super.onDestroy();
     }
 
+
+    /**
+     * Repaints every resident inbox list fragment from the already-committed message
+     * store, so tabs never show contradicting data after a refresh. Called only from
+     * the pull-to-refresh success path (explicit user action) — never from background
+     * updates, so an on-screen list never changes without a user gesture.
+     */
+    void refreshAllInboxListFragments() {
+        for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+            if (fragment instanceof CTInboxListViewFragment && fragment.isAdded()) {
+                ((CTInboxListViewFragment) fragment).refreshList();
+            }
+        }
+    }
 
     @Override
     public void messageDidClick(Context baseContext, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,

@@ -405,7 +405,14 @@ public class CTInboxListViewFragment extends Fragment {
                     }
                     // Re-check inside the runnable: state can change between post and run.
                     if (!isAdded()) return;
-                    refreshList();
+                    Activity currentActivity = getActivity();
+                    if (currentActivity instanceof CTInboxActivity && !currentActivity.isFinishing()) {
+                        // All resident tab fragments repaint from the same committed
+                        // snapshot, so no tab keeps showing a server-deleted message.
+                        ((CTInboxActivity) currentActivity).refreshAllInboxListFragments();
+                    } else {
+                        refreshList();
+                    }
                 });
             });
         });
