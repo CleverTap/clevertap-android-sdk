@@ -243,11 +243,14 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
      * updates, so an on-screen list never changes without a user gesture.
      */
     void refreshAllInboxListFragments() {
+        int refreshed = 0;
         for (Fragment fragment : getSupportFragmentManager().getFragments()) {
             if (fragment instanceof CTInboxListViewFragment && fragment.isAdded()) {
                 ((CTInboxListViewFragment) fragment).refreshList();
+                refreshed++;
             }
         }
+        Logger.v("refreshAllInboxListFragments: refreshed " + refreshed + " inbox fragment(s)");
     }
 
     @Override

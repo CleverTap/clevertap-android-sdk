@@ -23,6 +23,7 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
@@ -320,6 +321,9 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                             // timer was pending (list refresh or recycling); the rebind schedules
                             // its own timer, so this stale one must do nothing.
                             if (message != inboxMessage) {
+                                Logger.v("markItemAsRead: holder rebound (timer for [" + inboxMessage.getMessageId()
+                                        + "], now showing [" + (message != null ? message.getMessageId() : "null")
+                                        + "]) — skipping stale mark-read");
                                 return;
                             }
                             if (readDot.getVisibility() == View.VISIBLE) {

@@ -259,18 +259,26 @@ public class CTInboxListViewFragment extends Fragment {
 
         // The view holders mark the on-screen copies read instantly, but the store's
         // write is async — never let a refresh flip a just-read message back to unread.
-        mergeReadStateForward(inboxMessages, freshMessages);
+        int preservedReads = mergeReadStateForward(inboxMessages, freshMessages);
+        if (preservedReads > 0) {
+            Logger.v("refreshList: preserved read state for " + preservedReads + " just-read message(s)");
+        }
 
         if (isContentIdentical(inboxMessages, freshMessages)) {
+            Logger.v("refreshList: content identical (" + freshMessages.size()
+                    + " messages) — skipping repaint, video untouched");
             return; // nothing changed — keep any playing video untouched
         }
 
         if (getView() == null || noMessageView == null) {
             // View not created (or already destroyed) — refresh the data only.
+            Logger.v("refreshList: view not available — data-only refresh ("
+                    + freshMessages.size() + " messages)");
             replaceMessagesInPlace(freshMessages);
             return;
         }
 
+        int oldCount = inboxMessages.size();
         if (mediaRecyclerView != null) {
             // Detach the shared video surface while its holder is still known;
             // rebinding with the surface attached is the SDK-2330 video regression.
@@ -280,6 +288,7 @@ public class CTInboxListViewFragment extends Fragment {
         replaceMessagesInPlace(freshMessages);
 
         if (inboxMessages.isEmpty()) {
+            Logger.v("refreshList: list now empty — showing no-message view");
             if (mediaRecyclerView != null) {
                 mediaRecyclerView.setVisibility(View.GONE);
             }
@@ -295,9 +304,12 @@ public class CTInboxListViewFragment extends Fragment {
 
         noMessageView.setVisibility(View.GONE);
         if (inboxMessageAdapter == null) {
+            Logger.v("refreshList: first messages arrived (" + inboxMessages.size()
+                    + ") — building list UI");
             buildListView(); // tab was opened empty — the list UI is built lazily now
             return;
         }
+        Logger.v("refreshList: repainting list, " + oldCount + " -> " + inboxMessages.size() + " messages");
         RecyclerView activeRecyclerView = mediaRecyclerView != null ? mediaRecyclerView : recyclerView;
         if (activeRecyclerView != null) {
             activeRecyclerView.setVisibility(View.VISIBLE);
@@ -318,7 +330,8 @@ public class CTInboxListViewFragment extends Fragment {
         inboxMessages.addAll(freshMessages);
     }
 
-    static void mergeReadStateForward(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
+    /** @return how many fresh copies were upgraded to read. */
+    static int mergeReadStateForward(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
         HashSet<String> readIds = new HashSet<>();
         for (CTInboxMessage message : currentMessages) {
             if (message.isRead()) {
@@ -326,13 +339,16 @@ public class CTInboxListViewFragment extends Fragment {
             }
         }
         if (readIds.isEmpty()) {
-            return;
+            return 0;
         }
+        int upgraded = 0;
         for (CTInboxMessage message : freshMessages) {
             if (!message.isRead() && readIds.contains(message.getMessageId())) {
                 message.setRead(true);
+                upgraded++;
             }
         }
+        return upgraded;
     }
 
     static boolean isContentIdentical(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
@@ -397,6 +413,7 @@ public class CTInboxListViewFragment extends Fragment {
                 activity.runOnUiThread(() -> {
                     swipeRefreshLayout.setRefreshing(false);
                     if (!success) {
+                        Logger.v("pull-to-refresh: fetch failed or throttled — list unchanged");
                         // First fetch that hit a 403 — hide the widget now that the spinner is done.
                         if (refreshApi.isInboxFetchDisabledForSession()) {
                             swipeRefreshLayout.setEnabled(false);
@@ -409,8 +426,10 @@ public class CTInboxListViewFragment extends Fragment {
                     if (currentActivity instanceof CTInboxActivity && !currentActivity.isFinishing()) {
                         // All resident tab fragments repaint from the same committed
                         // snapshot, so no tab keeps showing a server-deleted message.
+                        Logger.v("pull-to-refresh success: refreshing all inbox tabs");
                         ((CTInboxActivity) currentActivity).refreshAllInboxListFragments();
                     } else {
+                        Logger.v("pull-to-refresh success: host is not CTInboxActivity — refreshing this list only");
                         refreshList();
                     }
                 });

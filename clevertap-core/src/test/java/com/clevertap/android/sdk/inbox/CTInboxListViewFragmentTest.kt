@@ -290,8 +290,9 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         val freshUnreadA = message("A", read = false)
         val freshReadB = message("B", read = true)
 
-        CTInboxListViewFragment.mergeReadStateForward(listOf(oldRead), listOf(freshUnreadA, freshReadB))
+        val upgraded = CTInboxListViewFragment.mergeReadStateForward(listOf(oldRead), listOf(freshUnreadA, freshReadB))
 
+        assertEquals(1, upgraded)
         assertTrue(freshUnreadA.isRead)
         assertTrue(freshReadB.isRead)
     }
