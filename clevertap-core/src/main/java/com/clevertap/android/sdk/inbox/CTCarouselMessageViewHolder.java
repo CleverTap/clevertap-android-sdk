@@ -83,6 +83,8 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
     private final LinearLayout sliderDots;
 
+    private CarouselPageChangeListener activePageChangeListener;
+
     private final TextView title;
 
     private final TextView message;
@@ -144,10 +146,12 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         setDots(dots, dotsCount, appContext, this.sliderDots);
         dots[0].setImageDrawable(
                 ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_selected_dot, null));
-        CTCarouselMessageViewHolder.CarouselPageChangeListener carouselPageChangeListener
-                = new CTCarouselMessageViewHolder.CarouselPageChangeListener(
+        if (activePageChangeListener != null) {
+            this.imageViewPager.removeOnPageChangeListener(activePageChangeListener);
+        }
+        activePageChangeListener = new CTCarouselMessageViewHolder.CarouselPageChangeListener(
                 parent.getActivity().getApplicationContext(), this, dots, inboxMessage);
-        this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
+        this.imageViewPager.addOnPageChangeListener(activePageChangeListener);
 
         this.clickLayout.setOnClickListener(
                 new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager,true, APP_INBOX_ITEM_INDEX));

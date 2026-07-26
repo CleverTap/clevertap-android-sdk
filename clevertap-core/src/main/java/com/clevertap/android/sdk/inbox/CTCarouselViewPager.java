@@ -31,11 +31,16 @@ public class CTCarouselViewPager extends ViewPager {
         setFocusable(true);
         setFocusableInTouchMode(true);
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+        final AccessibilityDelegateCompat originalDelegate = ViewCompat.getAccessibilityDelegate(this);
         ViewCompat.setAccessibilityDelegate(this, new AccessibilityDelegateCompat() {
             @Override
             public void onInitializeAccessibilityNodeInfo(@NonNull View host,
                     @NonNull AccessibilityNodeInfoCompat info) {
-                super.onInitializeAccessibilityNodeInfo(host, info);
+                if (originalDelegate != null) {
+                    originalDelegate.onInitializeAccessibilityNodeInfo(host, info);
+                } else {
+                    super.onInitializeAccessibilityNodeInfo(host, info);
+                }
                 info.setClassName("android.widget.ScrollView");
                 if (getAdapter() != null && getAdapter().getCount() > 1) {
                     info.setScrollable(true);
@@ -45,6 +50,16 @@ public class CTCarouselViewPager extends ViewPager {
                     if (getCurrentItem() > 0) {
                         info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_BACKWARD);
                     }
+                }
+            }
+
+            @Override
+            public void onInitializeAccessibilityEvent(@NonNull View host,
+                    @NonNull AccessibilityEvent event) {
+                if (originalDelegate != null) {
+                    originalDelegate.onInitializeAccessibilityEvent(host, event);
+                } else {
+                    super.onInitializeAccessibilityEvent(host, event);
                 }
             }
 
@@ -62,6 +77,9 @@ public class CTCarouselViewPager extends ViewPager {
                         restoreAccessibilityFocus();
                         return true;
                     }
+                }
+                if (originalDelegate != null) {
+                    return originalDelegate.performAccessibilityAction(host, action, args);
                 }
                 return super.performAccessibilityAction(host, action, args);
             }
