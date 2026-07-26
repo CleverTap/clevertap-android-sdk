@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -119,7 +118,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         tabLayout = linearLayout.findViewById(R.id.tab_layout);
         viewPager = linearLayout.findViewById(R.id.view_pager);
-        TextView noMessageView = findViewById(R.id.no_message_view);
         Bundle bundle = new Bundle();
         bundle.putParcelable("config", config);
         bundle.putParcelable("styleConfig", styleConfig);
@@ -127,28 +125,23 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         if (!styleConfig.isUsingTabs()) {
             viewPager.setVisibility(View.GONE);
             tabLayout.setVisibility(View.GONE);
-            if (cleverTapAPI != null && cleverTapAPI.getInboxMessageCount() == 0) {
-                noMessageView.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
-                noMessageView.setVisibility(View.VISIBLE);
-                noMessageView.setText(styleConfig.getNoMessageViewText());
-                noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
-            } else {
-                final FrameLayout listViewFragmentLayout = findViewById(R.id.list_view_fragment);
-                listViewFragmentLayout.setVisibility(View.VISIBLE);
-                boolean fragmentExists = false;
-                noMessageView.setVisibility(View.GONE);
-                for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-                    if (fragment.getTag() != null && !fragment.getTag().equalsIgnoreCase(getFragmentTag())) {
-                        fragmentExists = true;
-                    }
+            // The fragment owns the empty state (its "no messages" view sits inside the
+            // SwipeRefreshLayout), so it is created even when the inbox is empty —
+            // otherwise pull-to-refresh has no surface on an empty inbox.
+            final FrameLayout listViewFragmentLayout = findViewById(R.id.list_view_fragment);
+            listViewFragmentLayout.setVisibility(View.VISIBLE);
+            boolean fragmentExists = false;
+            for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+                if (fragment.getTag() != null && !fragment.getTag().equalsIgnoreCase(getFragmentTag())) {
+                    fragmentExists = true;
                 }
-                if (!fragmentExists) {
-                    CTInboxListViewFragment listView = new CTInboxListViewFragment();
-                    listView.setArguments(bundle);
-                    getSupportFragmentManager().beginTransaction()
-                            .add(R.id.list_view_fragment, listView, getFragmentTag())
-                            .commit();
-                }
+            }
+            if (!fragmentExists) {
+                CTInboxListViewFragment listView = new CTInboxListViewFragment();
+                listView.setArguments(bundle);
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.list_view_fragment, listView, getFragmentTag())
+                        .commit();
             }
         } else {
             viewPager.setVisibility(View.VISIBLE);
