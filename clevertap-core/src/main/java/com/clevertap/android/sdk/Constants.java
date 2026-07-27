@@ -186,6 +186,8 @@ public interface Constants {
     String INAPP_ELEMENT_ID_IMAGE = "image-1";
     String INAPP_ELEMENT_ID_CLOSE = "closeButton";
     String INAPP_ELEMENT_ID_BUTTON_PREFIX = "button-";
+    // PIP exposes a single CTA button; its element id is a fixed literal
+    String INAPP_ELEMENT_ID_PIP_CTA = "button-cta";
 
     // wzrk_c2a values for dismiss gestures
     String INAPP_CTA_DISMISS_BUTTON = "Dismiss Button";

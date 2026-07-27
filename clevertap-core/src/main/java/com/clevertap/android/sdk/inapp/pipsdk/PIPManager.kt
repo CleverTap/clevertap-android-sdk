@@ -116,6 +116,7 @@ internal class PIPManager(
         // Attach PIPRootContainer to the Activity's content view
         val container = PIPRootContainer(activity)
         container.onDismissRequested = { runOnMain { dismissInternal() } }
+        container.onCloseButtonClicked = { runOnMain { dismissInternal(DismissReason.UserClose) } }
         container.onShowFailed = { runOnMain { dismissInternal(DismissReason.ShowFailed, animate = false) } }
         newSession.pipRootContainer = container
         container.setupBackPressCallback(activity)
@@ -133,8 +134,11 @@ internal class PIPManager(
     }
 
     private sealed interface DismissReason {
-        /** User tapped close, or action triggered dismiss. */
+        /** User tapped the close (X) button. Surfaces as a close-button click AND a dismiss. */
         data object UserClose : DismissReason
+        /** Dismissed without a close-button tap — after a CTA action or a post-show media failure.
+         *  Surfaces as a dismiss only (the CTA already reports its own click via onAction). */
+        data object Dismiss : DismissReason
         /** All media URLs failed — PIP was never visible. */
         data object ShowFailed : DismissReason
         /** Activity destroyed (non-config) or Fragment view stopped (SAA). */
@@ -144,7 +148,7 @@ internal class PIPManager(
     }
 
     private fun dismissInternal(
-        reason: DismissReason = DismissReason.UserClose,
+        reason: DismissReason = DismissReason.Dismiss,
         animate: Boolean = true,
     ) {
         val s = session ?: return
@@ -154,7 +158,12 @@ internal class PIPManager(
         val cleanup: () -> Unit = {
             performCleanup(s)
             when (reason) {
-                DismissReason.UserClose,
+                DismissReason.UserClose -> {
+                    // Close (X) button: report the click first, then the dismiss.
+                    s.config.callbacks?.onCloseButtonClick()
+                    s.config.callbacks?.onClose()
+                }
+                DismissReason.Dismiss,
                 DismissReason.SessionCleanup -> s.config.callbacks?.onClose()
                 DismissReason.ShowFailed -> s.config.callbacks?.onShowFailed()
                 DismissReason.Replaced -> {}
@@ -254,6 +263,7 @@ internal class PIPManager(
         s.activityRef = WeakReference(activity)
         val container = PIPRootContainer(activity)
         container.onDismissRequested = { runOnMain { dismissInternal() } }
+        container.onCloseButtonClicked = { runOnMain { dismissInternal(DismissReason.UserClose) } }
         container.onShowFailed = { runOnMain { dismissInternal(DismissReason.ShowFailed, animate = false) } }
         container.setupBackPressCallback(activity)
         s.pipRootContainer = container
