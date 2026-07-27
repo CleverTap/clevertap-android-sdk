@@ -149,7 +149,7 @@ pt_product_display_linear | Optional | `true`
 
 Five icons template is a push notification that can display a title and message above a row of up to 5 icons. It helps users go directly to the functionality of their choice with a button click.
 
-`pt_title` and `pt_msg` are optional, but when provided they are rendered above the icon row.
+`pt_title` and `pt_msg` are optional. On Android 12 and above, they are rendered above the icon row using `DecoratedCustomViewStyle`. On earlier Android versions, the notification uses a custom view and the title/message position may differ from standard notification chrome.
 
 If the payload does not contain enough valid icon/deeplink data, or if 3 or more icon images are not retrieved at render time, the library falls back to a basic notification using the available title and message content.
 
@@ -158,7 +158,6 @@ The CTA associated with each icon is captured in the `Notification Clicked` even
 If the user clicks anywhere outside the icon CTAs, the default notification click action launches the activity intent.
 
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
-
 
 ## Timer Template
 
