@@ -119,6 +119,7 @@ public interface Constants {
     String INAPP_WZRK_PIVOT = "wzrk_pivot";
     String INAPP_WZRK_CGID = "wzrk_cgId";
     int INAPP_CLOSE_IV_WIDTH = 40;
+    int INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH = 48;
     String INAPP_JS_ENABLED = "isJsEnabled";
     String NOTIFICATION_ID_TAG = "wzrk_id";
     String DEEP_LINK_KEY = "wzrk_dl";

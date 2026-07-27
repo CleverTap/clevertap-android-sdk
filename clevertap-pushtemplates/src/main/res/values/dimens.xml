@@ -34,8 +34,14 @@
     <dimen name="five_cta_padding">6dp</dimen>
 
     <dimen name="manual_carousel_arrow">30dp</dimen>
+    <dimen name="manual_carousel_arrow_touch_target">48dp</dimen>
+    <!-- 48dp - manual_carousel_arrow visual width, applied on the side away from the screen edge -->
+    <dimen name="manual_carousel_arrow_padding">18dp</dimen>
 
     <dimen name="rating_star">20dp</dimen>
+    <dimen name="rating_star_touch_target">48dp</dimen>
+    <!-- (rating_star_touch_target - rating_star) / 2, kept symmetric so the star stays centered in its cell -->
+    <dimen name="rating_star_padding">14dp</dimen>
 
     <dimen name="chronometer_font_size">12sp</dimen>
 

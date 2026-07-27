@@ -29,40 +29,50 @@
             <ImageView
                 android:id="@+id/star1"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/rating_star"
+                android:layout_height="@dimen/rating_star_touch_target"
                 android:layout_weight="1"
+                android:paddingTop="@dimen/rating_star_padding"
+                android:paddingBottom="@dimen/rating_star_padding"
                 android:contentDescription="@string/rating_star_1"
                 android:src="@drawable/pt_star_outline" />
 
             <ImageView
                 android:id="@+id/star2"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/rating_star"
+                android:layout_height="@dimen/rating_star_touch_target"
                 android:layout_weight="1"
+                android:paddingTop="@dimen/rating_star_padding"
+                android:paddingBottom="@dimen/rating_star_padding"
                 android:src="@drawable/pt_star_outline"
                 android:contentDescription="@string/rating_star_2" />
 
             <ImageView
                 android:id="@+id/star3"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/rating_star"
+                android:layout_height="@dimen/rating_star_touch_target"
                 android:layout_weight="1"
+                android:paddingTop="@dimen/rating_star_padding"
+                android:paddingBottom="@dimen/rating_star_padding"
                 android:src="@drawable/pt_star_outline"
                 android:contentDescription="@string/rating_star_3" />
 
             <ImageView
                 android:id="@+id/star4"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/rating_star"
+                android:layout_height="@dimen/rating_star_touch_target"
                 android:layout_weight="1"
+                android:paddingTop="@dimen/rating_star_padding"
+                android:paddingBottom="@dimen/rating_star_padding"
                 android:src="@drawable/pt_star_outline"
                 android:contentDescription="@string/rating_star_4" />
 
             <ImageView
                 android:id="@+id/star5"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/rating_star"
+                android:layout_height="@dimen/rating_star_touch_target"
                 android:layout_weight="1"
+                android:paddingTop="@dimen/rating_star_padding"
+                android:paddingBottom="@dimen/rating_star_padding"
                 android:src="@drawable/pt_star_outline"
                 android:contentDescription="@string/rating_star_5" />
 

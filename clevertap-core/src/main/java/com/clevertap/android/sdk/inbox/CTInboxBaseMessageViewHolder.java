@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.R;
 import java.lang.ref.WeakReference;
@@ -134,9 +135,11 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             // Initial state setup
             setMuteIconState(muteIcon, context, currentVolume);
 
-            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
-            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
+            // 48dp tap target; 9dp padding keeps the visual icon at 30dp
+            int iconSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 48, displayMetrics);
+            int iconPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 9, displayMetrics);
+            muteIcon.setPadding(iconPadding, iconPadding, iconPadding, iconPadding);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconSize, iconSize);
             int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, displayMetrics);
             int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, displayMetrics);
             layoutParams.setMargins(0, iconTop, iconRight, 0);
@@ -158,8 +161,9 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     private void setMuteIconState(ImageView icon, Context context, float volume) {
         boolean isMuted = volume <= 0;
         int drawableRes = isMuted ? R.drawable.ct_volume_off : R.drawable.ct_volume_on;
-        int contentDescRes = isMuted ? R.string.ct_mute_button_content_description
-                : R.string.ct_unmute_button_content_description;
+        // When muted, the action available is "Unmute"; when audible, the action is "Mute"
+        int contentDescRes = isMuted ? R.string.ct_unmute_button_content_description
+                : R.string.ct_mute_button_content_description;
 
         icon.setContentDescription(context.getString(contentDescRes));
         icon.setImageDrawable(ResourcesCompat.getDrawable(context.getResources(), drawableRes, null));
@@ -216,6 +220,12 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         tertiaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0));
     }
 
+    void showThreeButtons(Button mainButton, Button secondaryButton, Button tertiaryButton) {
+        mainButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2));
+        secondaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2));
+        tertiaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2));
+    }
+
     void hideTwoButtons(Button mainButton, Button secondaryButton, Button tertiaryButton) {
         secondaryButton.setVisibility(View.GONE);
         tertiaryButton.setVisibility(View.GONE);
@@ -259,12 +269,21 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
+    String getImageContentDescription(Context context, CTInboxMessage inboxMessage, int position) {
+        String desc = inboxMessage.getInboxMessageContents().get(position).getMediaContentDescription();
+        if (desc == null || desc.isEmpty()) {
+            desc = context.getString(R.string.ct_inbox_image_content_description) + " " + (position + 1);
+        }
+        return desc;
+    }
+
     void setDots(ImageView[] dots, int dotsCount, Context appContext, LinearLayout sliderDots) {
         for (int k = 0; k < dotsCount; k++) {
             dots[k] = new ImageView(appContext);
             dots[k].setVisibility(View.VISIBLE);
             dots[k].setImageDrawable(
                     ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_unselected_dot, null));
+            ViewCompat.setImportantForAccessibility(dots[k], ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_NO);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(8, 6, 4, 6);
