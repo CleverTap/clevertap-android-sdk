@@ -72,6 +72,9 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.TEXT_ONLY
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_RADIUS
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_CORNER_RADIUS
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
@@ -175,7 +178,7 @@ internal object TemplateDataFactory {
     ): BasicTemplateData {
         return BasicTemplateData(
             baseContent = createBaseContent(extras, colorMap),
-            mediaData = createMediaData(extras, defaultAltText),
+            mediaData = createMediaData(extras, colorMap, defaultAltText),
             actions = Utils.getActionKeys(extras)
         )
     }
@@ -212,7 +215,7 @@ internal object TemplateDataFactory {
 
         return RatingTemplateData(
             baseContent = createBaseContent(extras, colorMap),
-            mediaData = createMediaData(extras, defaultAltText),
+            mediaData = createMediaData(extras, colorMap, defaultAltText),
             defaultDeepLink = defaultDeepLink
         )
     }
@@ -228,7 +231,8 @@ internal object TemplateDataFactory {
             backgroundColor = colorMap[PT_BG],
             title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE),
             subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE),
-            notificationBehavior = createNotificationBehaviorData(extras)
+            notificationBehavior = createNotificationBehaviorData(extras),
+            imageBorderData = createImageBorderData(extras, colorMap)
         )
     }
 
@@ -248,7 +252,8 @@ internal object TemplateDataFactory {
             displayActionColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_COLOUR],
             displayActionTextColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR],
             isLinear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
-                ?.equals("true", ignoreCase = true) ?: false
+                ?.equals("true", ignoreCase = true) ?: false,
+            imageBorderData = createImageBorderData(extras, colorMap)
         )
     }
 
@@ -257,7 +262,7 @@ internal object TemplateDataFactory {
         colorMap: Map<String, String>,
         defaultAltText: String
     ): ZeroBezelTemplateData {
-        val mediaData = createMediaData(extras, defaultAltText)
+        val mediaData = createMediaData(extras, colorMap, defaultAltText)
         return ZeroBezelTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             actions = Utils.getActionKeys(extras),
@@ -272,7 +277,7 @@ internal object TemplateDataFactory {
         colorMap: Map<String, String>,
         defaultAltText: String
     ): TimerTemplateData {
-        val mediaData = createMediaData(extras, defaultAltText)
+        val mediaData = createMediaData(extras, colorMap, defaultAltText)
         val timerEnd = Utils.getTimerEnd(extras, System.currentTimeMillis())
         val timerThreshold = Utils.getTimerThreshold(extras)
         val dismissAfter = TimerTemplateHandler.getDismissAfterMs(timerEnd, timerThreshold)
@@ -330,11 +335,11 @@ internal object TemplateDataFactory {
         colorMap: Map<String, String>,
         defaultAltText: String
     ): VerticalImageTemplateData {
-        val mediaData = createMediaData(extras, defaultAltText)
+        val mediaData = createMediaData(extras, colorMap, defaultAltText)
         return VerticalImageTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = mediaData,
-            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras, defaultAltText),
+            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras, defaultAltText, mediaData.imageBorderData),
             actions = Utils.getActionKeys(extras),
             text1 = extras.getString(PT_TEXT1),
             text2 = extras.getString(PT_TEXT2),
@@ -364,6 +369,14 @@ internal object TemplateDataFactory {
             gradientDirection = extras.getString(PT_BTN_GRAD_DIR + suffix)?.toDoubleOrNull() ?: PT_BTN_GRAD_DIR_DEFAULT,
             borderRadius = extras.getString(PT_BTN_BORDER_RADIUS + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_RADIUS_DEFAULT,
             borderWidth = extras.getString(PT_BTN_BORDER_WIDTH + suffix)?.toFloatOrNull() ?: PT_BTN_BORDER_WIDTH_DEFAULT,
+        )
+    }
+
+    private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
+        return ImageBorderData(
+            borderColor = colorMap[PT_IMG_BORDER_CLR],
+            cornerRadius = extras.getString(PT_IMG_CORNER_RADIUS)?.toFloatOrNull() ?: 0f,
+            borderWidth = extras.getString(PT_IMG_BORDER_WIDTH)?.toFloatOrNull()
         )
     }
 
@@ -402,7 +415,7 @@ internal object TemplateDataFactory {
         )
     }
 
-    private fun createMediaData(extras: Bundle, defaultAltText: String): MediaData {
+    private fun createMediaData(extras: Bundle, colorMap: Map<String, String>, defaultAltText: String): MediaData {
         val bigImage = getStringWithFallback(extras, PT_BIG_IMG, Constants.WZRK_BIG_PICTURE)
         val gif = extras.getString(PT_GIF)
 
@@ -415,7 +428,8 @@ internal object TemplateDataFactory {
                 url = gif,
                 numberOfFrames = extras.getString(PT_GIF_FRAMES)?.toIntOrNull() ?: 10
             ),
-            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
+            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE)),
+            imageBorderData = createImageBorderData(extras, colorMap)
         )
     }
 
@@ -450,11 +464,16 @@ internal object TemplateDataFactory {
                     PT_SCALE_TYPE_COLLAPSED,
                     defaultMediaData.scaleType.name
                 )
-            )
+            ),
+            imageBorderData = defaultMediaData.imageBorderData
         )
     }
 
-    private fun createCollapsedMediaDataWithoutFallback(extras: Bundle, defaultAltText: String): MediaData? {
+    private fun createCollapsedMediaDataWithoutFallback(
+        extras: Bundle,
+        defaultAltText: String,
+        imageBorderData: ImageBorderData = ImageBorderData()
+    ): MediaData? {
         val bigImageCollapsed = extras.getString(PT_BIG_IMG_COLLAPSED)?.takeIf { it.isNotBlank() }
         val gifCollapsed = extras.getString(PT_GIF_COLLAPSED)?.takeIf { it.isNotBlank() }
         if (bigImageCollapsed == null && gifCollapsed == null) return null
@@ -467,7 +486,8 @@ internal object TemplateDataFactory {
                 url = gifCollapsed,
                 numberOfFrames = extras.getString(PT_GIF_FRAMES_COLLAPSED)?.toIntOrNull() ?: 10
             ),
-            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE_COLLAPSED))
+            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE_COLLAPSED)),
+            imageBorderData = imageBorderData
         )
     }
 
@@ -485,7 +505,8 @@ internal object TemplateDataFactory {
             baseContent = createBaseContent(extras, colorMap),
             actions = Utils.getActionKeys(extras),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
-            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
+            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE)),
+            imageBorderData = createImageBorderData(extras, colorMap)
         )
     }
 
@@ -523,7 +544,8 @@ internal object TemplateDataFactory {
                     PT_SCALE_TYPE_ALT,
                     defaultMediaData.scaleType.name
                 )
-            )
+            ),
+            imageBorderData = defaultMediaData.imageBorderData
         )
     }
 

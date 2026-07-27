@@ -56,7 +56,8 @@ internal class AutoCarouselContentView(
                 imageViewId,
                 imageUrl,
                 tempRemoteView,
-                altText
+                altText,
+                data.carouselData.imageBorderData
             )
 
             if (!fallback) {

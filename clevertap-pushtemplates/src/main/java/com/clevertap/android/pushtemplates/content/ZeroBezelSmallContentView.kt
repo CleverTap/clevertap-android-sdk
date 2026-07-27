@@ -22,7 +22,8 @@ internal open class ZeroBezelSmallContentView(
             data.collapsedMediaData.bigImage.url,
             data.collapsedMediaData.scaleType,
             data.collapsedMediaData.bigImage.altText,
-            data.collapsedMediaData.gif.numberOfFrames
+            data.collapsedMediaData.gif.numberOfFrames,
+            data.collapsedMediaData.imageBorderData
         )
         if (!isMediaLoaded) {
             if (data.showCollapsedBackgroundImage) {

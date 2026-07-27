@@ -9,6 +9,7 @@ import android.text.Html
 import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
+import com.clevertap.android.pushtemplates.ImageBorderData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
@@ -133,33 +134,22 @@ internal open class ContentView(
         bigImageUrl: String?,
         scaleType: PTScaleType,
         altText: String,
-        gifFrames: Int
+        gifFrames: Int,
+        imageBorderData: ImageBorderData? = null
     ): Boolean {
         val isGifLoaded = setCustomContentViewGIF(
-            gifUrl,
-            altText,
-            scaleType,
-            gifFrames,
-            layoutId
+            gifUrl, altText, scaleType, gifFrames, layoutId, imageBorderData
         )
-
-        return if (isGifLoaded) {
-            true
-        } else {
-            setCustomContentViewBigImage(
-                imageUrl = bigImageUrl,
-                scaleType = scaleType,
-                altText = altText
-            )
-        }
+        return if (isGifLoaded) true
+        else setCustomContentViewBigImage(bigImageUrl, scaleType, altText, imageBorderData)
     }
 
     fun setCustomContentViewBigImage(
         imageUrl: String?,
         scaleType: PTScaleType,
-        altText: String
+        altText: String,
+        imageBorderData: ImageBorderData? = null
     ): Boolean {
-
         if (imageUrl.isNullOrBlank()) return false
 
         val imageViewId = when (scaleType) {
@@ -167,7 +157,7 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        val loaded = !loadImageURLIntoRemoteView(imageViewId, imageUrl, remoteView, altText)
+        val loaded = !loadImageURLIntoRemoteView(imageViewId, imageUrl, remoteView, altText, imageBorderData)
 
         if (loaded) {
             remoteView.setViewVisibility(imageViewId, View.VISIBLE)
@@ -178,7 +168,14 @@ internal open class ContentView(
         return loaded
     }
 
-    fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
+    fun setCustomContentViewGIF(
+        gifUrl: String?,
+        altText: String,
+        scaleType: PTScaleType,
+        numberOfFrames: Int,
+        layoutId: Int,
+        imageBorderData: ImageBorderData? = null
+    ): Boolean {
         val gifResult = templateMediaManager.getGifFrames(gifUrl, numberOfFrames)
 
         if (gifResult is GifResult.Error) {
@@ -188,7 +185,6 @@ internal open class ContentView(
 
         val (frames, duration) = gifResult as GifResult.Success
 
-        // Calculate timing for frame flipping
         val extractedFramesSize = frames.size
         val flipInterval = duration / extractedFramesSize
         PTLog.debug("Total duration: " + duration + "ms")
@@ -199,10 +195,17 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        // Add each frame to the ViewFlipper
+        val applyBorder = imageBorderData?.isActive == true
+        val borderColor = if (applyBorder) imageBorderData?.borderColor?.let { Utils.getColourOrNull(it) } else null
+
         for (frame in frames) {
+            val processedFrame = if (applyBorder) {
+                NotificationBitmapUtils.applyRoundedBorderToBitmap(
+                    frame, imageBorderData!!.cornerRadius, borderColor, imageBorderData.borderWidth
+                )
+            } else frame
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
-            frameRemoteViews.setImageViewBitmap(imageViewId, frame)
+            frameRemoteViews.setImageViewBitmap(imageViewId, processedFrame)
             frameRemoteViews.setViewVisibility(imageViewId, View.VISIBLE)
             remoteView.addView(R.id.view_flipper, frameRemoteViews)
         }
@@ -220,29 +223,34 @@ internal open class ContentView(
     fun loadImageURLIntoRemoteView(
         imageViewID: Int, imageUrl: String?,
         remoteViews: RemoteViews
-    ): Boolean {
-        return loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, null)
-    }
+    ): Boolean = loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, null, null)
 
     /**
      * Loads an image URL into a RemoteView.
-     * 
-     * @param imageViewID The ID of the ImageView in the RemoteView
-     * @param imageUrl The URL of the image to load (nullable)
-     * @param remoteViews The RemoteViews to load the image into
-     * @param altText Alternative text for accessibility (nullable)
-     * @return true if fallback is needed (image loading failed), false if image was loaded successfully
-     * 
+     *
      * INVARIANT: When this method returns false, the imageUrl parameter is guaranteed to be non-null,
      * non-blank, and start with "https". This invariant is enforced by getImageBitmap validation.
      */
     fun loadImageURLIntoRemoteView(
         imageViewID: Int, imageUrl: String?,
         remoteViews: RemoteViews, altText: String?
-    ): Boolean {
-        val image = templateMediaManager.getImageBitmap(imageUrl)
+    ): Boolean = loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, altText, null)
 
-        if (image != null) {
+    fun loadImageURLIntoRemoteView(
+        imageViewID: Int,
+        imageUrl: String?,
+        remoteViews: RemoteViews,
+        altText: String?,
+        imageBorderData: ImageBorderData?
+    ): Boolean {
+        val rawImage = templateMediaManager.getImageBitmap(imageUrl)
+        if (rawImage != null) {
+            val image = if (imageBorderData?.isActive == true) {
+                val borderColor = imageBorderData.borderColor?.let { Utils.getColourOrNull(it) }
+                NotificationBitmapUtils.applyRoundedBorderToBitmap(
+                    rawImage, imageBorderData.cornerRadius, borderColor, imageBorderData.borderWidth
+                )
+            } else rawImage
             remoteViews.setImageViewBitmap(imageViewID, image)
             if (!TextUtils.isEmpty(altText)) {
                 remoteViews.setContentDescription(imageViewID, altText)

@@ -42,7 +42,8 @@ internal class RatingContentView(
             data.mediaData.bigImage.url,
             data.mediaData.scaleType,
             data.mediaData.bigImage.altText,
-            data.mediaData.gif.numberOfFrames
+            data.mediaData.gif.numberOfFrames,
+            data.mediaData.imageBorderData
         )
         setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
 

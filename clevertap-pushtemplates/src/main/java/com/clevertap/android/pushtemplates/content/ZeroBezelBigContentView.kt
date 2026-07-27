@@ -30,7 +30,8 @@ internal class ZeroBezelBigContentView(
             data.mediaData.bigImage.url,
             data.mediaData.scaleType,
             data.mediaData.bigImage.altText,
-            data.mediaData.gif.numberOfFrames
+            data.mediaData.gif.numberOfFrames,
+            data.mediaData.imageBorderData
         )
         if (!isMediaLoaded) {
             PTLog.debug("Download failed for all media in ZeroBezel Expanded Notification. Not showing the image")

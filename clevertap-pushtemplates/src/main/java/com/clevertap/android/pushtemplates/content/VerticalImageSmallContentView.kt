@@ -31,7 +31,8 @@ internal class VerticalImageSmallContentView(
                 mediaData.bigImage.url,
                 mediaData.scaleType,
                 mediaData.bigImage.altText,
-                mediaData.gif.numberOfFrames
+                mediaData.gif.numberOfFrames,
+                mediaData.imageBorderData
             )
         } else {
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)

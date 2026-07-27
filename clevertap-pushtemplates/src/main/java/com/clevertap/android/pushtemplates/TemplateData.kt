@@ -31,10 +31,19 @@ internal data class BaseTextData(
     val subtitle: String? = null,
 )
 
+internal data class ImageBorderData(
+    val borderColor: String? = null,
+    val cornerRadius: Float = 0f,
+    val borderWidth: Float? = null,
+) {
+    val isActive: Boolean get() = cornerRadius > 0f || borderColor != null
+}
+
 internal data class MediaData(
     val bigImage: ImageData,
     val gif: GifData,
     val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
+    val imageBorderData: ImageBorderData = ImageBorderData(),
 )
 
 internal data class IconData(
@@ -66,6 +75,7 @@ internal data class CarouselData(
     val actions: JSONArray? = null,
     val imageList: ArrayList<ImageData>,
     val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
+    val imageBorderData: ImageBorderData = ImageBorderData(),
 )
 
 internal data class BasicTemplateData(
@@ -82,7 +92,8 @@ internal data class FiveIconsTemplateData(
     val backgroundColor: String? = null,
     val title: String? = null,
     val subtitle: String? = null,
-    val notificationBehavior: NotificationBehavior
+    val notificationBehavior: NotificationBehavior,
+    val imageBorderData: ImageBorderData = ImageBorderData(),
 ) : TemplateData()
 
 internal data class ManualCarouselTemplateData(
@@ -144,6 +155,7 @@ internal data class ProductTemplateData(
     val displayActionColor: String? = null,
     val displayActionTextColor: String? = null,
     val isLinear: Boolean = false,
+    val imageBorderData: ImageBorderData = ImageBorderData(),
 ) : TemplateData()
 
 internal data class InputBoxTemplateData(

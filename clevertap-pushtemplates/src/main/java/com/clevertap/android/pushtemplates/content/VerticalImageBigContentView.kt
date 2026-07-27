@@ -33,7 +33,8 @@ internal class VerticalImageBigContentView(
             data.mediaData.bigImage.url,
             data.mediaData.scaleType,
             data.mediaData.bigImage.altText,
-            data.mediaData.gif.numberOfFrames
+            data.mediaData.gif.numberOfFrames,
+            data.mediaData.imageBorderData
         )
 
         setAdditionalText(data.text1, R.id.vertical_img_text1, data.text1Color)

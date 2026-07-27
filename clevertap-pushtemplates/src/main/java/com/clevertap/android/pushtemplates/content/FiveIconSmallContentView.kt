@@ -41,7 +41,8 @@ internal class FiveIconSmallContentView(
                 viewId,
                 imageUrl,
                 remoteView,
-                altText
+                altText,
+                data.imageBorderData
             )
 
             if (fallback) {

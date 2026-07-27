@@ -54,7 +54,9 @@ internal class ManualCarouselContentView(
             val fallback = loadImageURLIntoRemoteView(
                 imageViewId,
                 imageUrl,
-                tempRemoteView
+                tempRemoteView,
+                null,
+                data.carouselData.imageBorderData
             )
 
             if (!fallback) {
