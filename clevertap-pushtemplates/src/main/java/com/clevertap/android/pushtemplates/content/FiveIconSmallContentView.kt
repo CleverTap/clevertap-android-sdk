@@ -37,6 +37,13 @@ internal class FiveIconSmallContentView(
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
 
         val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
+        val fallbackDescriptions = listOf(
+            R.string.pt_five_icon_1,
+            R.string.pt_five_icon_2,
+            R.string.pt_five_icon_3,
+            R.string.pt_five_icon_4,
+            R.string.pt_five_icon_5
+        )
         data.imageList.forEachIndexed { index, imageData ->
             val imageUrl = imageData.url
             val altText = imageData.altText
@@ -44,6 +51,10 @@ internal class FiveIconSmallContentView(
 
             val viewId = ctaIds[index]
             remoteView.setViewVisibility(viewId, View.VISIBLE)
+
+            val description = if (altText.isNotEmpty()) altText
+                              else context.getString(fallbackDescriptions[index])
+            remoteView.setContentDescription(viewId, description)
 
             val fallback = loadImageURLIntoRemoteView(
                 viewId,
