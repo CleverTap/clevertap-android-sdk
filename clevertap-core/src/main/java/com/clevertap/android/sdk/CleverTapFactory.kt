@@ -544,7 +544,7 @@ internal object CleverTapFactory {
         val networkScope = NetworkScope()
 
         val inboxFetchCall = InboxFetchCall(
-            ctApi = ctApiWrapper.ctApi,
+            ctApiProvider = { ctApiWrapper.ctApi },
             queueHeaderBuilder = queueHeaderBuilder,
             coreMetaData = coreMetaData,
             packageName = context.packageName,
@@ -566,7 +566,7 @@ internal object CleverTapFactory {
 
         val inboxDeleteCoordinator = InboxDeleteCoordinator(
             networkScope = networkScope,
-            ctApi = ctApiWrapper.ctApi,
+            ctApiProvider = { ctApiWrapper.ctApi },
             queueHeaderBuilder = queueHeaderBuilder,
             dbAdapterProvider = { databaseManager.loadDBAdapter(context) },
             coreMetaData = coreMetaData,

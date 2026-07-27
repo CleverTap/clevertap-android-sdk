@@ -13,6 +13,7 @@ import android.os.Bundle;
 
 import androidx.annotation.WorkerThread;
 
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.FlattenedEventData;
@@ -205,9 +206,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
-                        .getDisplayUnitForID(unitID);
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache != null) {
+                CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtraData = displayUnit.getWZRKFields();
                     if (eventExtraData != null) {
@@ -229,6 +230,115 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    /**
+     * Raises a Native Display element click event.
+     *
+     * Element-level analog of {@link #pushDisplayUnitClickedEventForID(String)} — for
+     * Native Display units that host multiple interactive child elements (buttons,
+     * images, etc.), this method records which child element was clicked alongside
+     * the existing wzrk_* campaign attribution.
+     *
+     * Caller's additionalProperties (which should include wzrk_element_id from the
+     * action metadata injected by the BE) are merged verbatim first; the cached
+     * unit's wzrk_* fields are then layered on top.
+     */
+    @Override
+    public void pushDisplayUnitElementClickedEventForID(
+            String unitID,
+            HashMap<String, Object> additionalProperties) {
+        JSONObject event = new JSONObject();
+        try {
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no display-unit cache installed");
+                return;
+            }
+            CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
+            if (displayUnit == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no unit found for id: " + unitID);
+                return;
+            }
+
+            JSONObject eventExtraData = new JSONObject();
+            mergeAdditionalProperties(eventExtraData, additionalProperties);
+            JSONObject cachedWzrkFields = displayUnit.getWZRKFields();
+            if (cachedWzrkFields != null) {
+                Iterator<String> it = cachedWzrkFields.keys();
+                while (it.hasNext()) {
+                    String k = it.next();
+                    try {
+                        eventExtraData.put(k, cachedWzrkFields.get(k));
+                    } catch (JSONException ignored) {
+                    }
+                }
+            }
+
+            event.put("evtData", eventExtraData);
+            try {
+                coreMetaData.setWzrkParams(filterWzrkFields(eventExtraData));
+            } catch (Throwable t) {
+                // no-op
+            }
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
+                    getFlattenedEventProperties(eventExtraData));
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT
+                            + "Failed to push Display Unit element clicked event" + t);
+        }
+    }
+
+    /**
+     * Merge caller-supplied {@code additionalProperties} verbatim into the click
+     * event's {@code evtData}. The {@code wzrk_*} namespace is enforced by the
+     * caller of this helper — by layering the cached unit's {@code wzrk_*}
+     * fields on top after this merge, so server-controlled attribution wins
+     * over any same-named caller key.
+     */
+    private void mergeAdditionalProperties(JSONObject eventData,
+            HashMap<String, Object> extras) {
+        if (extras == null || extras.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, Object> entry : extras.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (key == null || key.isEmpty() || value == null) {
+                continue;
+            }
+            try {
+                eventData.put(key, value);
+            } catch (JSONException ignored) {
+                // skip unserialisable entries
+            }
+        }
+    }
+
+    /**
+     * Project only the {@code wzrk_*} keys back out of the merged event data so
+     * {@link CoreMetaData#setWzrkParams(JSONObject)} retains its existing
+     * server-namespace contract (it feeds {@code wzrk_ref} batch headers; caller-
+     * supplied non-wzrk extras must not ride along on unrelated subsequent events).
+     */
+    private JSONObject filterWzrkFields(JSONObject merged) {
+        JSONObject out = new JSONObject();
+        Iterator<String> it = merged.keys();
+        while (it.hasNext()) {
+            String k = it.next();
+            if (k.startsWith(Constants.WZRK_PREFIX)) {
+                try {
+                    out.put(k, merged.get(k));
+                } catch (JSONException ignored) {
+                }
+            }
+        }
+        return out;
+    }
+
     @Override
     public void pushDisplayUnitViewedEventForID(String unitID) {
         JSONObject event = new JSONObject();
@@ -237,9 +347,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
-            if (controllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
-                        .getDisplayUnitForID(unitID);
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache != null) {
+                CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
                     if (eventExtras != null) {

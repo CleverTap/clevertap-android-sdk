@@ -80,7 +80,7 @@ class InboxFetchCallTest {
         packageName: String = "com.example.app"
     ): InboxFetchCall =
         InboxFetchCall(
-            ctApi = newCtApi(http),
+            ctApiProvider = { newCtApi(http) },
             queueHeaderBuilder = newHeaderBuilder(header),
             coreMetaData = coreMetaData,
             packageName = packageName,
@@ -151,6 +151,30 @@ class InboxFetchCallTest {
         val result = newCall(http, header = null).execute()
 
         assertTrue(result is CallResult.NetworkFailure)
+    }
+
+    @Test
+    fun `ctApi provider is not invoked at construction and resolves once on execute`() = runTest {
+        // Regression test for SDK-5947: CtApi construction reads SharedPreferences,
+        // so it must stay deferred to the call dispatcher, never construction time.
+        val http = MockHttpClient(responseCode = 200, responseBody = """{"inbox_notifs_v2":[]}""")
+        var providerCalls = 0
+        val call = InboxFetchCall(
+            ctApiProvider = { providerCalls++; newCtApi(http) },
+            queueHeaderBuilder = newHeaderBuilder(),
+            coreMetaData = newCoreMetaData(),
+            packageName = "com.example.app",
+            logger = noopLogger(),
+            clock = fixedClock,
+            dispatcher = UnconfinedTestDispatcher()
+        )
+
+        assertEquals(0, providerCalls)
+
+        val result = call.execute()
+
+        assertEquals(1, providerCalls)
+        assertTrue(result is CallResult.Success)
     }
 
     @Test

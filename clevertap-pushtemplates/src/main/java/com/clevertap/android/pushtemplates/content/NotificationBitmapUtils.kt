@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
@@ -84,16 +85,29 @@ internal object NotificationBitmapUtils {
         borderWidth: Float?
     ) {
         if (borderColor != null) {
-            val strokeWidth = borderWidth ?: (height * BORDER_STROKE_RATIO)
-            val inset = strokeWidth / 2f
-            val rect = RectF(inset, inset, width - inset, height - inset)
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
-            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = borderColor
-                style = Paint.Style.STROKE
-                this.strokeWidth = strokeWidth
+            val strokeWidth = (borderWidth ?: (height * BORDER_STROKE_RATIO))
+                .coerceAtMost(minOf(width, height) / 2f)
+            val outerRect = RectF(0f, 0f, width.toFloat(), height.toFloat())
+            val clampedOuterRadius = cornerRadius.coerceAtMost(minOf(width / 2f, height / 2f))
+            val innerRect = RectF(strokeWidth, strokeWidth, width - strokeWidth, height - strokeWidth)
+            // Scale inner radius proportionally so corners stay visually consistent
+            // regardless of how small cornerRadius or how large borderWidth is.
+            val innerCornerRadius = if (height > 0)
+                clampedOuterRadius * (innerRect.height() / height.toFloat())
+            else 0f
+
+            // Draw fill first on the transparent bitmap so any alpha in the fill paint
+            // composites against the notification background, not the border colour.
+            canvas.drawRoundRect(innerRect, innerCornerRadius, innerCornerRadius, paint)
+
+            // Draw border as a ring (outer rounded rect minus inner hole) so the border
+            // never bleeds behind the fill area.
+            val borderPath = Path().apply {
+                addRoundRect(outerRect, clampedOuterRadius, clampedOuterRadius, Path.Direction.CW)
+                addRoundRect(innerRect, innerCornerRadius, innerCornerRadius, Path.Direction.CCW)
             }
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, borderPaint)
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = borderColor }
+            canvas.drawPath(borderPath, borderPaint)
         } else {
             val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)

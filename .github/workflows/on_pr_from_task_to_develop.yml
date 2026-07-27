@@ -12,7 +12,20 @@ concurrency:
 jobs:
   # Code Quality Checks (Run in Parallel)
   lint:
-    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    if: >-
+      startsWith(github.head_ref, 'feat/') ||
+      startsWith(github.head_ref, 'feature/') ||
+      startsWith(github.head_ref, 'fix/') ||
+      startsWith(github.head_ref, 'docs/') ||
+      startsWith(github.head_ref, 'style/') ||
+      startsWith(github.head_ref, 'refactor/') ||
+      startsWith(github.head_ref, 'perf/') ||
+      startsWith(github.head_ref, 'test/') ||
+      startsWith(github.head_ref, 'build/') ||
+      startsWith(github.head_ref, 'ci/') ||
+      startsWith(github.head_ref, 'chore/') ||
+      startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,7 +41,20 @@ jobs:
         uses: ./.github/mini_flows/lint
 
   detekt:
-    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    if: >-
+      startsWith(github.head_ref, 'feat/') ||
+      startsWith(github.head_ref, 'feature/') ||
+      startsWith(github.head_ref, 'fix/') ||
+      startsWith(github.head_ref, 'docs/') ||
+      startsWith(github.head_ref, 'style/') ||
+      startsWith(github.head_ref, 'refactor/') ||
+      startsWith(github.head_ref, 'perf/') ||
+      startsWith(github.head_ref, 'test/') ||
+      startsWith(github.head_ref, 'build/') ||
+      startsWith(github.head_ref, 'ci/') ||
+      startsWith(github.head_ref, 'chore/') ||
+      startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,7 +70,20 @@ jobs:
         uses: ./.github/mini_flows/codechecks_detekt
 
   checkstyle:
-    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    if: >-
+      startsWith(github.head_ref, 'feat/') ||
+      startsWith(github.head_ref, 'feature/') ||
+      startsWith(github.head_ref, 'fix/') ||
+      startsWith(github.head_ref, 'docs/') ||
+      startsWith(github.head_ref, 'style/') ||
+      startsWith(github.head_ref, 'refactor/') ||
+      startsWith(github.head_ref, 'perf/') ||
+      startsWith(github.head_ref, 'test/') ||
+      startsWith(github.head_ref, 'build/') ||
+      startsWith(github.head_ref, 'ci/') ||
+      startsWith(github.head_ref, 'chore/') ||
+      startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -62,7 +101,20 @@ jobs:
   # Unit Tests and Coverage
   test:
     needs: [lint, detekt, checkstyle]
-    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    if: >-
+      startsWith(github.head_ref, 'feat/') ||
+      startsWith(github.head_ref, 'feature/') ||
+      startsWith(github.head_ref, 'fix/') ||
+      startsWith(github.head_ref, 'docs/') ||
+      startsWith(github.head_ref, 'style/') ||
+      startsWith(github.head_ref, 'refactor/') ||
+      startsWith(github.head_ref, 'perf/') ||
+      startsWith(github.head_ref, 'test/') ||
+      startsWith(github.head_ref, 'build/') ||
+      startsWith(github.head_ref, 'ci/') ||
+      startsWith(github.head_ref, 'chore/') ||
+      startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -86,7 +138,20 @@ jobs:
   # Build (Only after tests pass)
   build:
     needs: [test]
-    if: startsWith(github.head_ref, 'task/') || startsWith(github.head_ref, 'feat/') || startsWith(github.head_ref, 'bug/')
+    if: >-
+      startsWith(github.head_ref, 'feat/') ||
+      startsWith(github.head_ref, 'feature/') ||
+      startsWith(github.head_ref, 'fix/') ||
+      startsWith(github.head_ref, 'docs/') ||
+      startsWith(github.head_ref, 'style/') ||
+      startsWith(github.head_ref, 'refactor/') ||
+      startsWith(github.head_ref, 'perf/') ||
+      startsWith(github.head_ref, 'test/') ||
+      startsWith(github.head_ref, 'build/') ||
+      startsWith(github.head_ref, 'ci/') ||
+      startsWith(github.head_ref, 'chore/') ||
+      startsWith(github.head_ref, 'task/') ||
+      startsWith(github.head_ref, 'bug/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
