@@ -1,17 +1,16 @@
 package com.clevertap.android.sdk.inbox;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.accessibility.AccessibilityEvent;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import androidx.core.view.AccessibilityDelegateCompat;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat;
 import androidx.viewpager.widget.ViewPager;
+
 import com.clevertap.android.sdk.R;
 
 @RestrictTo(Scope.LIBRARY)
@@ -28,75 +27,69 @@ public class CTCarouselViewPager extends ViewPager {
     }
 
     private void setupAccessibility() {
-        setFocusable(true);
-        setFocusableInTouchMode(true);
+        // YES is load-bearing, not defensive. Under the default AUTO,
+        // View.includeForAccessibility() keeps a view only if it is actionable, has
+        // touch/hover listeners, exposes a node provider, or is a live region. A ViewPager is
+        // none of those - it consumes touch inside onTouchEvent() rather than through a
+        // listener - and contentDescription is NOT part of that test. So under AUTO the pager
+        // is dropped from the tree entirely and TalkBack skips the carousel even when a
+        // contentDescription has been set. This line is what fixes that.
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-        final AccessibilityDelegateCompat originalDelegate = ViewCompat.getAccessibilityDelegate(this);
-        ViewCompat.setAccessibilityDelegate(this, new AccessibilityDelegateCompat() {
-            @Override
-            public void onInitializeAccessibilityNodeInfo(@NonNull View host,
-                    @NonNull AccessibilityNodeInfoCompat info) {
-                if (originalDelegate != null) {
-                    originalDelegate.onInitializeAccessibilityNodeInfo(host, info);
-                } else {
-                    super.onInitializeAccessibilityNodeInfo(host, info);
-                }
-                info.setClassName("android.widget.ScrollView");
-                if (getAdapter() != null && getAdapter().getCount() > 1) {
-                    info.setScrollable(true);
-                    if (getCurrentItem() < getAdapter().getCount() - 1) {
-                        info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_FORWARD);
-                    }
-                    if (getCurrentItem() > 0) {
-                        info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_BACKWARD);
-                    }
-                }
-            }
 
-            @Override
-            public void onInitializeAccessibilityEvent(@NonNull View host,
-                    @NonNull AccessibilityEvent event) {
-                if (originalDelegate != null) {
-                    originalDelegate.onInitializeAccessibilityEvent(host, event);
-                } else {
-                    super.onInitializeAccessibilityEvent(host, event);
-                }
-            }
+        // Present the pager as one atomic node instead of letting the reader dive into it.
+        // This is the ViewCompat equivalent of the old setFocusable() pair - and unlike them
+        // it describes screen-reader intent rather than input focus.
+        ViewCompat.setScreenReaderFocusable(this, true);
 
-            @Override
-            public boolean performAccessibilityAction(@NonNull View host, int action, Bundle args) {
-                if (action == AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD) {
-                    if (getAdapter() != null && getCurrentItem() < getAdapter().getCount() - 1) {
-                        setCurrentItem(getCurrentItem() + 1, true);
-                        restoreAccessibilityFocus();
-                        return true;
-                    }
-                } else if (action == AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD) {
-                    if (getCurrentItem() > 0) {
-                        setCurrentItem(getCurrentItem() - 1, true);
-                        restoreAccessibilityFocus();
-                        return true;
-                    }
-                }
-                if (originalDelegate != null) {
-                    return originalDelegate.performAccessibilityAction(host, action, args);
-                }
-                return super.performAccessibilityAction(host, action, args);
-            }
-        });
+        // Stable identity only. The part that changes per page (image alt text + "page x of y")
+        // is published as stateDescription by setAccessibilityState(), which TalkBack announces
+        // on its own - no interruptive announceForAccessibility() needed.
+        setContentDescription(getContext().getString(R.string.ct_carousel_label));
+
+        // Makes the node report isClickable() so TalkBack offers "double-tap to activate" for
+        // the ACTION_CLICK installed by setAccessibilityClickAction(). This does not change
+        // touch behaviour: ViewPager overrides onTouchEvent() without delegating to
+        // View.onTouchEvent(), so performClick() is never reached from a real touch.
+        setClickable(true);
     }
 
-    private void restoreAccessibilityFocus() {
-        postDelayed(() -> {
-            clearFocus();
-            requestFocus();
-            sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
-            ViewCompat.performAccessibilityAction(
-                    CTCarouselViewPager.this,
-                    AccessibilityNodeInfoCompat.ACTION_ACCESSIBILITY_FOCUS,
-                    null
-            );
-        }, 300);
+    /**
+     * Publishes the currently visible page to screen readers as a state change.
+     * <p>
+     * Call this on bind and from {@code OnPageChangeListener.onPageSelected}. Uses
+     * stateDescription rather than contentDescription so TalkBack announces the change itself
+     * and the carousel is not announced twice.
+     *
+     * @param pageDescription description of the current page's content
+     * @param position        zero-based index of the current page
+     * @param total           total number of pages
+     */
+    void setAccessibilityState(@NonNull CharSequence pageDescription, int position, int total) {
+        ViewCompat.setStateDescription(this, getContext().getString(
+                R.string.ct_carousel_position, pageDescription, position + 1, total));
+    }
+
+    /**
+     * Installs an accessibility-only {@code ACTION_CLICK} so a screen-reader user can open the
+     * carousel message.
+     * <p>
+     * Needed because the adapter hides each page from the accessibility tree, which also hides
+     * the per-page {@code OnClickListener}; without this the carousel can be paged through but
+     * never opened. Registered as an accessibility action rather than via
+     * {@code setOnClickListener} because ViewPager consumes the touch stream in
+     * {@code onTouchEvent()} and never calls {@code performClick()}.
+     *
+     * @param listener the same listener used for the row body click
+     */
+    void setAccessibilityClickAction(@NonNull final View.OnClickListener listener) {
+        ViewCompat.replaceAccessibilityAction(
+                this,
+                AccessibilityActionCompat.ACTION_CLICK,
+                getContext().getString(R.string.ct_carousel_open_message),
+                (view, arguments) -> {
+                    listener.onClick(view);
+                    return true;
+                });
     }
 
     @Override
