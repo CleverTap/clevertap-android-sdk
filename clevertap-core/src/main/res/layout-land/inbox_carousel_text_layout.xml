@@ -39,6 +39,7 @@
                     android:layout_marginTop="10dp"
                     android:maxLines="2"
                     android:textColor="@android:color/black"
+                    android:textSize="@dimen/ct_inbox_title_text_size"
                     android:textStyle="bold" />
 
                 <TextView
@@ -51,7 +52,8 @@
                     android:layout_marginRight="20dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="5dp"
-                    android:textColor="@android:color/darker_gray" />
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="@dimen/ct_inbox_body_text_size" />
 
                 <RelativeLayout
                     android:id="@+id/timestamp_linear_layout"
@@ -81,7 +83,8 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="10dp"
                             android:layout_marginRight="10dp"
-                            android:textColor="@android:color/darker_gray" />
+                            android:textColor="@android:color/darker_gray"
+                        android:textSize="@dimen/ct_inbox_timestamp_text_size" />
 
                         <ImageView
                             android:id="@+id/read_circle"
@@ -92,6 +95,8 @@
                             android:layout_marginLeft="10dp"
                             android:layout_marginRight="20dp"
                             android:layout_marginStart="10dp"
+                            android:contentDescription="@string/ct_inbox_unread_indicator_content_description"
+                            android:importantForAccessibility="yes"
                             android:src="@drawable/ct_read_circle" />
                     </LinearLayout>
                 </RelativeLayout>
@@ -113,9 +118,10 @@
                 android:layout_height="match_parent"
                 android:layout_weight="2"
                 android:background="@android:color/white"
+                android:importantForAccessibility="yes"
                 android:padding="2dp"
                 android:textColor="@android:color/holo_blue_light"
-                android:textSize="14sp"
+                android:textSize="@dimen/ct_inbox_cta_button_text_size"
                 android:visibility="gone" />
 
             <Button
@@ -124,9 +130,10 @@
                 android:layout_height="match_parent"
                 android:layout_weight="2"
                 android:background="@android:color/white"
+                android:importantForAccessibility="yes"
                 android:padding="2dp"
                 android:textColor="@android:color/holo_blue_light"
-                android:textSize="14sp"
+                android:textSize="@dimen/ct_inbox_cta_button_text_size"
                 android:visibility="gone" />
 
             <Button
@@ -135,9 +142,10 @@
                 android:layout_height="match_parent"
                 android:layout_weight="2"
                 android:background="@android:color/white"
+                android:importantForAccessibility="yes"
                 android:padding="2dp"
                 android:textColor="@android:color/holo_blue_light"
-                android:textSize="14sp"
+                android:textSize="@dimen/ct_inbox_cta_button_text_size"
                 android:visibility="gone" />
         </LinearLayout>
     </RelativeLayout>

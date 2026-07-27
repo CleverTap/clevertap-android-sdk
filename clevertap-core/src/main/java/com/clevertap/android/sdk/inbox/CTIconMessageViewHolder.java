@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import androidx.core.view.ViewCompat;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
@@ -67,6 +68,10 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         ctaLinearLayout = itemView.findViewById(R.id.cta_linear_layout);
         progressBarFrameLayout = itemView.findViewById(R.id.icon_progress_frame_layout);
         mediaLayout = itemView.findViewById(R.id.media_layout);
+
+        ViewCompat.setScreenReaderFocusable(title, true);
+        ViewCompat.setScreenReaderFocusable(message, true);
+        ViewCompat.setScreenReaderFocusable(timestamp, true);
     }
 
     @Override
@@ -165,11 +170,18 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
         this.mediaImage.setVisibility(View.GONE);
         this.mediaImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
+        this.mediaImage.setContentDescription(null);
+        ViewCompat.setScreenReaderFocusable(this.mediaImage, false);
         this.squareImage.setVisibility(View.GONE);
         this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
+        this.squareImage.setContentDescription(null);
+        ViewCompat.setScreenReaderFocusable(this.squareImage, false);
         this.defaultImage.setVisibility(View.GONE);
         this.defaultImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         this.defaultImage.setContentDescription(null);
+        ViewCompat.setScreenReaderFocusable(this.defaultImage, false);
+        this.iconImage.setContentDescription(null);
+        ViewCompat.setScreenReaderFocusable(this.iconImage, false);
         this.mediaLayout.setVisibility(View.GONE);
         this.progressBarFrameLayout.setVisibility(View.GONE);
         try {
@@ -177,6 +189,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 case "l":
                     if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
                         this.mediaImage.setContentDescription(content.getMediaContentDescription());
+                        ViewCompat.setScreenReaderFocusable(this.mediaImage, true);
                     }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
@@ -268,6 +281,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 case "p":
                     if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
                         this.squareImage.setContentDescription(content.getMediaContentDescription());
+                        ViewCompat.setScreenReaderFocusable(this.squareImage, true);
                     }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
@@ -369,6 +383,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     if (!TextUtils.isEmpty(content.getMedia())) {
                         if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
                             this.defaultImage.setContentDescription(content.getMediaContentDescription());
+                            ViewCompat.setScreenReaderFocusable(this.defaultImage, true);
                         }
                         if (content.mediaIsImage()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);
@@ -486,6 +501,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 iconImage.setVisibility(View.VISIBLE);
                 if (!content.getIconContentDescription().isEmpty()) {
                     iconImage.setContentDescription(content.getIconContentDescription());
+                    ViewCompat.setScreenReaderFocusable(iconImage, true);
                 }
                 try {
                     Glide.with(iconImage.getContext())

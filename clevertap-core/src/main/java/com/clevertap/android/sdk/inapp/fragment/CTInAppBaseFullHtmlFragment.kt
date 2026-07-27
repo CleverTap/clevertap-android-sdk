@@ -56,7 +56,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
         closeIvLp.addRule(RelativeLayout.ABOVE, webViewId)
         closeIvLp.addRule(RelativeLayout.RIGHT_OF, webViewId)
 
-        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH) / 2
+        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH) / 2
         closeIvLp.setMargins(-sub, 0, 0, -sub)
         return closeIvLp
     }

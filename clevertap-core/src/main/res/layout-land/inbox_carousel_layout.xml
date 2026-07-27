@@ -49,7 +49,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
                     android:layout_marginRight="10dp"
-                    android:textColor="@android:color/darker_gray" />
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="@dimen/ct_inbox_timestamp_text_size" />
 
                 <ImageView
                     android:id="@+id/read_circle"
@@ -60,6 +61,8 @@
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="20dp"
                     android:layout_marginStart="10dp"
+                    android:contentDescription="@string/ct_inbox_unread_indicator_content_description"
+                    android:importantForAccessibility="yes"
                     android:src="@drawable/ct_read_circle" />
             </LinearLayout>
         </RelativeLayout>

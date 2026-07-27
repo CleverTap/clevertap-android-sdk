@@ -15,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
+import androidx.core.view.ViewCompat
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
 import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
@@ -68,6 +69,11 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
                 gifImageId = R.id.gifImage,
             )
         )
+
+        relativeLayout?.findViewById<View>(R.id.backgroundImage)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
+        relativeLayout?.findViewById<View>(R.id.gifImage)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
+        relativeLayout?.findViewById<View>(R.id.video_frame)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
+
         setTitleAndMessage()
         setButtons()
         handleCloseButton()
@@ -121,10 +127,12 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
         val textView1 = relativeLayout?.findViewById<TextView>(R.id.interstitial_title)
         textView1?.text = inAppNotification.title
         textView1?.setTextColor(inAppNotification.titleColor.toColorInt())
+        textView1?.let { ViewCompat.setScreenReaderFocusable(it, true) }
 
         val textView2 = relativeLayout?.findViewById<TextView>(R.id.interstitial_message)
         textView2?.text = inAppNotification.message
         textView2?.setTextColor(inAppNotification.messageColor.toColorInt())
+        textView2?.let { ViewCompat.setScreenReaderFocusable(it, true) }
     }
 
     private fun resizeContainer(fl: FrameLayout, closeImageView: CloseImageView) {

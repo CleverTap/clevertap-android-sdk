@@ -9,7 +9,8 @@
     <string name="ct_inbox_image_content_description">Message Image</string>
     <string name="ct_inbox_icon_content_description">Message Icon</string>
     <string name="ct_inbox_unread_indicator_content_description">Unread message</string>
-    <string name="ct_inbox_message_content_description">Open message</string>
+    <string name="ct_carousel_content_description">Image carousel, %1$s, Page %2$d of %3$d</string>
+    <string name="ct_carousel_page_announcement">%1$s, Page %2$d of %3$d</string>
     <string name="ct_notification_big_picture_alt_text">Notification Big Picture</string>
     <string name="ct_inapp_close_btn">Close</string>
     <string name="ct_inapp_message_shown">Popup shown</string>

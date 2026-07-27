@@ -269,6 +269,14 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
+    String getImageContentDescription(Context context, CTInboxMessage inboxMessage, int position) {
+        String desc = inboxMessage.getInboxMessageContents().get(position).getMediaContentDescription();
+        if (desc == null || desc.isEmpty()) {
+            desc = context.getString(R.string.ct_inbox_image_content_description) + " " + (position + 1);
+        }
+        return desc;
+    }
+
     void setDots(ImageView[] dots, int dotsCount, Context appContext, LinearLayout sliderDots) {
         for (int k = 0; k < dotsCount; k++) {
             dots[k] = new ImageView(appContext);
