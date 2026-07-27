@@ -31,7 +31,6 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:scaleType="centerCrop"
-            android:focusable="true"
             android:visibility="gone" />
 
         <FrameLayout
@@ -41,7 +40,6 @@
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:focusable="true"
             android:visibility="gone" />
 
     </RelativeLayout>

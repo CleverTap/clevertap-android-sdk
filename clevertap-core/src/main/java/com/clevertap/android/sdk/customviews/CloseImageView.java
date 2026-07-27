@@ -20,7 +20,8 @@ import com.clevertap.android.sdk.R;
 public final class CloseImageView extends AppCompatImageView {
 
     public static final int VIEW_ID = 199272;
-    private final int canvasSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH);
+    private final int iconSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH);
+    private final int touchTargetSize = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH);
 
     @SuppressLint("ResourceType")
     public CloseImageView(Context context) {
@@ -60,8 +61,9 @@ public final class CloseImageView extends AppCompatImageView {
 
             if (closeBitmap != null) {
                 Bitmap scaledCloseBitmap = Bitmap.createScaledBitmap(closeBitmap,
-                        canvasSize, canvasSize, true);
-                canvas.drawBitmap(scaledCloseBitmap, 0, 0, new Paint());
+                        iconSize, iconSize, true);
+                float offset = (touchTargetSize - iconSize) / 2f;
+                canvas.drawBitmap(scaledCloseBitmap, offset, offset, new Paint());
             } else {
                 Logger.v("Unable to find inapp notif close button image");
             }
@@ -73,7 +75,7 @@ public final class CloseImageView extends AppCompatImageView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // The image view is fixed in dip on all devices
-        setMeasuredDimension(canvasSize, canvasSize);
+        setMeasuredDimension(touchTargetSize, touchTargetSize);
     }
 
     @SuppressWarnings("SameParameterValue")

@@ -1,35 +1,102 @@
 package com.clevertap.android.sdk.inbox;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.accessibility.AccessibilityEvent;
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.core.view.AccessibilityDelegateCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.viewpager.widget.ViewPager;
+import com.clevertap.android.sdk.R;
 
-/**
- * Custom Viewpager class to handle orientation of images
- */
 @RestrictTo(Scope.LIBRARY)
 public class CTCarouselViewPager extends ViewPager {
 
-    /**
-     * Constructor
-     *
-     * @param context the context
-     */
     public CTCarouselViewPager(Context context) {
         super(context);
+        setupAccessibility();
     }
 
-    /**
-     * Constructor
-     *
-     * @param context the context
-     * @param attrs   the attribute set
-     */
     public CTCarouselViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setupAccessibility();
+    }
+
+    private void setupAccessibility() {
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+        final AccessibilityDelegateCompat originalDelegate = ViewCompat.getAccessibilityDelegate(this);
+        ViewCompat.setAccessibilityDelegate(this, new AccessibilityDelegateCompat() {
+            @Override
+            public void onInitializeAccessibilityNodeInfo(@NonNull View host,
+                    @NonNull AccessibilityNodeInfoCompat info) {
+                if (originalDelegate != null) {
+                    originalDelegate.onInitializeAccessibilityNodeInfo(host, info);
+                } else {
+                    super.onInitializeAccessibilityNodeInfo(host, info);
+                }
+                info.setClassName("android.widget.ScrollView");
+                if (getAdapter() != null && getAdapter().getCount() > 1) {
+                    info.setScrollable(true);
+                    if (getCurrentItem() < getAdapter().getCount() - 1) {
+                        info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_FORWARD);
+                    }
+                    if (getCurrentItem() > 0) {
+                        info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_BACKWARD);
+                    }
+                }
+            }
+
+            @Override
+            public void onInitializeAccessibilityEvent(@NonNull View host,
+                    @NonNull AccessibilityEvent event) {
+                if (originalDelegate != null) {
+                    originalDelegate.onInitializeAccessibilityEvent(host, event);
+                } else {
+                    super.onInitializeAccessibilityEvent(host, event);
+                }
+            }
+
+            @Override
+            public boolean performAccessibilityAction(@NonNull View host, int action, Bundle args) {
+                if (action == AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD) {
+                    if (getAdapter() != null && getCurrentItem() < getAdapter().getCount() - 1) {
+                        setCurrentItem(getCurrentItem() + 1, true);
+                        restoreAccessibilityFocus();
+                        return true;
+                    }
+                } else if (action == AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD) {
+                    if (getCurrentItem() > 0) {
+                        setCurrentItem(getCurrentItem() - 1, true);
+                        restoreAccessibilityFocus();
+                        return true;
+                    }
+                }
+                if (originalDelegate != null) {
+                    return originalDelegate.performAccessibilityAction(host, action, args);
+                }
+                return super.performAccessibilityAction(host, action, args);
+            }
+        });
+    }
+
+    private void restoreAccessibilityFocus() {
+        postDelayed(() -> {
+            clearFocus();
+            requestFocus();
+            sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
+            ViewCompat.performAccessibilityAction(
+                    CTCarouselViewPager.this,
+                    AccessibilityNodeInfoCompat.ACTION_ACCESSIBILITY_FOCUS,
+                    null
+            );
+        }, 300);
     }
 
     @Override
@@ -49,32 +116,5 @@ public class CTCarouselViewPager extends ViewPager {
         }
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
-    /**
-     * Determines the height of this view
-     *
-     * @param measureSpec A measureSpec packed into an int
-     * @param view        the base view with already measured height
-     * @return The height of the view, honoring constraints from measureSpec
-     */
-    @SuppressWarnings({"unused"})
-    private int measureHeight(int measureSpec, View view) {
-        int result = 0;
-        int specMode = MeasureSpec.getMode(measureSpec);
-        int specSize = MeasureSpec.getSize(measureSpec);
-
-        if (specMode == MeasureSpec.EXACTLY) {
-            result = specSize;
-        } else {
-            // set the height from the base view if available
-            if (view != null) {
-                result = view.getMeasuredHeight();
-            }
-            if (specMode == MeasureSpec.AT_MOST) {
-                result = Math.min(result, specSize);
-            }
-        }
-        return result;
     }
 }
