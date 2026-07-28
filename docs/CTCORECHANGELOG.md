@@ -4,7 +4,7 @@
 #### New Features
 * **Split of Clicks:** New
     Adds per-element click attribution to In-Apps `Notification Clicked` event across all in-app templates. Also adds configurable 
-    tap-outside and swipe-to-dismiss gestures for In-Apps, and tracks these dismissals as Notification Clicked events.
+    swipe-to-dismiss gesture for In-Apps, and tracks these dismissals as Notification Clicked events.
     
 #### Improvements
 * **Accessibility:**

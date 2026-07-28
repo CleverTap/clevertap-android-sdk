@@ -1,4 +1,20 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.4.0 (Jul 28, 2026)
+
+#### New Features
+* **Split of Clicks:** New
+    Adds per-element click attribution to In-Apps `Notification Clicked` event across all in-app templates. Also adds configurable 
+    swipe-to-dismiss gesture for In-Apps, and tracks these dismissals as Notification Clicked events.
+    
+#### Improvements
+* **Accessibility:**
+    Enhances accessibility across In-App notifications and App Inbox with dynamic text scaling, screen-reader announcements and 
+    content descriptions (close button, images, media controls), a larger 48dp dismiss-button tap area, and corrected carousel 
+    TalkBack navigation — helping apps meet accessibility standards.
+    
+#### Bug Fixes
+* Fixes an AbstractMethodError on minSdkVersion < 24 from unoverridden Java 8 default methods of Media3’s Player.Listener; the Media3PlayerListener base now implements the missing callbacks.
+
 ### Version 8.3.0 (June 2026)
 
 #### New Features
