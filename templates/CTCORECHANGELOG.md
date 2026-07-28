@@ -16,7 +16,8 @@
 * **App Inbox on Android 6.0 – 10:** Fixes a critical issue where App Inbox messages were never saved on the device, leaving the inbox permanently empty on Android 6.0 through Android 10 (API 23 – 29). The SDK was using a SQLite statement (`UPSERT`) that needs SQLite 3.24.0 or newer, which Android only ships from Android 11 onwards, so every inbox write failed silently on older devices. Present in `v8.2.0` and `v8.3.0`.
     * **Note:** This affects **every account using App Inbox**, not only those enabled for App Inbox Cross-Device Sync. Messages delivered the classic way and messages delivered through Cross-Device Sync are saved by the same code, so both were affected.
     * **Note:** No code change or migration is required on your side. After updating, messages reappear automatically on the next inbox fetch.
-* Fixes an AbstractMethodError on minSdkVersion < 24 from unoverridden Java 8 default methods of Media3’s Player.Listener; the Media3PlayerListener base now implements the missing callbacks.
+* **Crash while playing video on Android 6.0:** Fixes an `AbstractMethodError` crash seen when a Picture-in-Picture (PIP) In-App notification played a video on Android 6.0 (API 23). Media3's `Player.Listener` interface relies on Java 8 default methods, which Android 6.0 does not support at runtime, so any callback the SDK had not explicitly overridden crashed the app. The SDK's shared `Media3PlayerListener` now implements all of them. Only affects apps whose `minSdkVersion` is below 24.
+    * **Note:** This listener is shared by every Media3 video surface, so the fix also protects In-App video and App Inbox video playback on Android 6.0, not only PIP.
 
 ### Version 8.3.0 (June 2026)
 > ‼️ **NOTE**
