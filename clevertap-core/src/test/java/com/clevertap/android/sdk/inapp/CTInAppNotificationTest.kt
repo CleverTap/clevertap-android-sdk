@@ -30,6 +30,60 @@ class CTInAppNotificationTest {
     }
 
     @Test
+    fun `dismiss-gesture flags default to true when keys are absent`() {
+        val notification = CTInAppNotification(JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL), true)
+
+        assertTrue(notification.swipeToDismiss)
+    }
+
+    @Test
+    fun `dismiss-gesture flags respect explicit boolean values`() {
+        val json = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
+            put(Constants.KEY_SWIPE_TO_DISMISS, false)
+        }
+
+        val notification = CTInAppNotification(json, true)
+
+        assertFalse(notification.swipeToDismiss)
+    }
+
+    @Test
+    fun `dismiss-gesture flags respect integer 0 and 1 values`() {
+        val disabled = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
+            put(Constants.KEY_SWIPE_TO_DISMISS, 0)
+        }
+        val enabled = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
+            put(Constants.KEY_SWIPE_TO_DISMISS, 1)
+        }
+
+        val disabledNotification = CTInAppNotification(disabled, true)
+        val enabledNotification = CTInAppNotification(enabled, true)
+
+        assertFalse(disabledNotification.swipeToDismiss)
+        assertTrue(enabledNotification.swipeToDismiss)
+    }
+
+    @Test
+    fun `dismiss-gesture flags fall back to true for explicit JSON null without crashing`() {
+        val json = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply {
+            put(Constants.KEY_SWIPE_TO_DISMISS, JSONObject.NULL)
+        }
+
+        val notification = CTInAppNotification(json, true)
+
+        assertTrue(notification.swipeToDismiss)
+    }
+
+    @Test
+    fun `isHtml is true for html in-apps and false for native in-apps`() {
+        val html = CTInAppNotification(JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_HEADER), true)
+        val native = CTInAppNotification(JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL), true)
+
+        assertTrue(html.isHtml())
+        assertFalse(native.isHtml())
+    }
+
+    @Test
     fun `constructor for advanced builder custom-html should initialize correctly for html footer`() {
         // Arrange - Html in app
         val jsonObject = JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_FOOTER)

@@ -251,6 +251,101 @@ class InboxMessageDAOImplTest : BaseTestCase() {
     }
 
     @Test
+    fun `upsert does not depend on the userid_id_idx unique index`() {
+        // "userid_id_idx" is a rule on the table: no two rows may share the same
+        // (messageUser, _id) pair.
+        //
+        // The old code wrote messages with:
+        //     INSERT ... ON CONFLICT(messageUser, _id) DO UPDATE SET ...
+        // SQLite can only spot a "conflict" if such a uniqueness rule exists. With no
+        // rule there is nothing to compare against, so SQLite refuses to run the
+        // statement at all and every inbox write fails.
+        //
+        // The new code does UPDATE ... WHERE messageUser = ? AND _id = ?, then INSERT
+        // only if the UPDATE changed nothing. Searching needs no uniqueness rule. Without
+        // the index SQLite just checks rows one by one — slower, but it still works.
+        //
+        // Example. Table holds (_id = m1, messageUser = user_11, isRead = 0), and m1
+        // arrives again marked read:
+        //     old code, no index -> statement fails, isRead stays 0, message lost
+        //     new code, no index -> UPDATE finds the row, isRead becomes 1
+        //
+        // Every shipped version does create this index, so this cannot happen today. We
+        // test it anyway for two reasons. First, saving a message must not secretly
+        // depend on a rule defined in a different file — if a future migration ever
+        // forgot it, every inbox write would break on every device. Second, this is the
+        // only way to make the old code fail in a unit test: the real bug is that
+        // ON CONFLICT needs SQLite 3.24.0 (Android 11+), but Robolectric always supplies
+        // a modern SQLite, so the version problem cannot be reproduced here. A missing
+        // index breaks the old code on every SQLite version, so it guards the same line.
+        dbHelper.writableDatabase.execSQL("DROP INDEX IF EXISTS userid_id_idx;")
+
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(listOf(getCtMsgDao("m1", userId, read = false)))
+        inboxMessageDAO.upsertMessages(listOf(getCtMsgDao("m1", userId, read = true)))
+
+        val messages = inboxMessageDAO.getMessages(userId)
+        assertEquals(1, messages.size)
+        assertEquals(1, messages.single().isRead)
+    }
+
+    @Test
+    fun `upsert writes every message in a batch`() {
+        val userId = "user_11"
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId), getCtMsgDao("m2", userId), getCtMsgDao("m3", userId))
+        )
+        assertEquals(3, inboxMessageDAO.getMessages(userId).size)
+    }
+
+    @Test
+    fun `upsert with an empty list is a no-op`() {
+        inboxMessageDAO.upsertMessages(emptyList())
+        assertEquals(0, inboxMessageDAO.getMessages("user_11").size)
+    }
+
+    @Test
+    fun `upsert never throws even when the table is missing`() {
+        // upsertMessages must never throw. Before it used a transaction, every write went
+        // through execSQL inside a try/catch, so callers never saw an exception.
+        // CryptMigrator.migrateInboxData calls this during SDK start-up with no try/catch of
+        // its own, so a throw here would break initialisation on that path.
+        dbHelper.writableDatabase.execSQL("DROP TABLE IF EXISTS ${Table.INBOX_MESSAGES.tableName};")
+
+        // Must return normally, not throw.
+        inboxMessageDAO.upsertMessages(listOf(getCtMsgDao("m1", "user_11")))
+    }
+
+    @Test
+    fun `upsert saves the good messages in a batch even when one message is bad`() {
+        // A single failing statement does not cancel the surrounding SQLite transaction, so
+        // one unwritable message must cost only that message - not the whole batch.
+        // campaignId is NOT NULL in the schema, so a null value makes just that row fail.
+        val userId = "user_11"
+        val bad = getCtMsgDao("m2", userId).also { it.campaignId = null }
+
+        inboxMessageDAO.upsertMessages(
+            listOf(getCtMsgDao("m1", userId), bad, getCtMsgDao("m3", userId))
+        )
+
+        val savedIds = inboxMessageDAO.getMessages(userId).map { it.id }.toSet()
+        assertEquals(setOf("m1", "m3"), savedIds)
+    }
+
+    @Test
+    fun `upsert updates a row scoped to its own userId only`() {
+        // The UPDATE keys on (messageUser, _id), so the same message id under a
+        // different user must be an independent row.
+        inboxMessageDAO.upsertMessages(listOf(getCtMsgDao("m1", "user_11", read = false)))
+        inboxMessageDAO.upsertMessages(listOf(getCtMsgDao("m1", "user_22", read = true)))
+
+        assertEquals(1, inboxMessageDAO.getMessages("user_11").size)
+        assertEquals(0, inboxMessageDAO.getMessages("user_11").single().isRead)
+        assertEquals(1, inboxMessageDAO.getMessages("user_22").size)
+        assertEquals(1, inboxMessageDAO.getMessages("user_22").single().isRead)
+    }
+
+    @Test
     fun `markIndexed flips supplied PENDING_INDEXING rows to INDEXED`() {
         val userId = "user_11"
         inboxMessageDAO.upsertMessages(

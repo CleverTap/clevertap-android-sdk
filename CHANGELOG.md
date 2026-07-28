@@ -1,9 +1,18 @@
 ## CHANGE LOG.
+### July 28, 2026
+* [CleverTap Android SDK v8.4.0](docs/CTCORECHANGELOG.md).
+* [CleverTap Push Templates SDK v2.5.0](docs/CTPUSHTEMPLATESCHANGELOG.md).
 
 ### June 2026
+> ⚠️ **NOTE**
+8.3.0 does not save App Inbox messages on Android 6.0 – 10, please update to 8.4.0 and above.
+
 * [CleverTap Android SDK v8.3.0](docs/CTCORECHANGELOG.md).
 
 ### May 20, 2026
+> ⚠️ **NOTE**
+8.2.0 does not save App Inbox messages on Android 6.0 – 10, please update to 8.4.0 and above.
+
 * [CleverTap Android SDK v8.2.0](docs/CTCORECHANGELOG.md).
 
 ### April 17, 2026

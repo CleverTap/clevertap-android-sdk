@@ -8,6 +8,11 @@ package com.clevertap.android.sdk.inapp.pipsdk
 interface PIPCallbacks {
     fun onShow() {}
     fun onClose() {}
+
+    /** Called when the user taps the close (X) button specifically — as opposed to a CTA-triggered
+     *  dismiss, a media-load failure, or Activity/session teardown, all of which surface via [onClose].
+     *  Fires just before the corresponding [onClose] for the same dismissal. */
+    fun onCloseButtonClick() {}
     fun onExpand() {}
     fun onCollapse() {}
     fun onAction() {}

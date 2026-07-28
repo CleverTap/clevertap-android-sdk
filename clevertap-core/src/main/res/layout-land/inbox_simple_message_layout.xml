@@ -28,7 +28,6 @@
                     android:layout_height="wrap_content"
                     android:scaleType="fitCenter"
                     android:contentDescription="@string/ct_inbox_media_content_description"
-                    android:focusable="true"
                     android:visibility="gone" />
 
                 <com.clevertap.android.sdk.customviews.HorizontalSquareImageView
@@ -38,7 +37,7 @@
                     android:layout_centerInParent="true"
                     android:scaleType="centerCrop"
                     android:contentDescription="@string/ct_inbox_media_content_description"
-                    android:focusable="true"
+
                     android:visibility="gone" />
 
                 <ImageView
@@ -48,7 +47,7 @@
                     android:adjustViewBounds="true"
                     android:scaleType="fitCenter"
                     android:contentDescription="@string/ct_inbox_media_content_description"
-                    android:focusable="true"
+
                     android:visibility="gone" />
 
                 <FrameLayout
@@ -90,6 +89,7 @@
                     android:layout_marginTop="10dp"
                     android:maxLines="2"
                     android:textColor="@android:color/black"
+                    android:textSize="@dimen/ct_inbox_title_text_size"
                     android:textStyle="bold" />
 
 
@@ -103,7 +103,8 @@
                     android:layout_marginRight="20dp"
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="5dp"
-                    android:textColor="@android:color/darker_gray" />
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="@dimen/ct_inbox_body_text_size" />
             </RelativeLayout>
         </LinearLayout>
 
@@ -123,7 +124,8 @@
                 android:layout_marginEnd="10dp"
                 android:layout_marginRight="10dp"
                 android:gravity="end"
-                android:textColor="@android:color/darker_gray" />
+                android:textColor="@android:color/darker_gray"
+                android:textSize="@dimen/ct_inbox_timestamp_text_size" />
 
             <ImageView
                 android:id="@+id/read_circle"
@@ -132,6 +134,8 @@
                 android:layout_gravity="center"
                 android:layout_marginEnd="20dp"
                 android:layout_marginRight="20dp"
+                android:contentDescription="@string/ct_inbox_unread_indicator_content_description"
+                android:importantForAccessibility="yes"
                 android:src="@drawable/ct_read_circle" />
         </LinearLayout>
 
@@ -157,9 +161,10 @@
             android:layout_height="match_parent"
             android:layout_weight="2"
             android:background="@android:color/white"
+            android:importantForAccessibility="yes"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
-            android:textSize="14sp"
+            android:textSize="@dimen/ct_inbox_cta_button_text_size"
             android:visibility="gone" />
 
         <Button
@@ -168,9 +173,10 @@
             android:layout_height="match_parent"
             android:layout_weight="2"
             android:background="@android:color/white"
+            android:importantForAccessibility="yes"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
-            android:textSize="14sp"
+            android:textSize="@dimen/ct_inbox_cta_button_text_size"
             android:visibility="gone" />
 
         <Button
@@ -179,9 +185,10 @@
             android:layout_height="match_parent"
             android:layout_weight="2"
             android:background="@android:color/white"
+            android:importantForAccessibility="yes"
             android:padding="2dp"
             android:textColor="@android:color/holo_blue_light"
-            android:textSize="14sp"
+            android:textSize="@dimen/ct_inbox_cta_button_text_size"
             android:visibility="gone" />
     </LinearLayout>
 

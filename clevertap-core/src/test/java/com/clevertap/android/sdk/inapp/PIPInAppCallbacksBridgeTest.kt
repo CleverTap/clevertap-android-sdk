@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.TestLogger
 import io.mockk.every
 import io.mockk.mockk
@@ -54,7 +55,11 @@ class PIPInAppCallbacksBridgeTest {
         bridge.onAction()
         verify(exactly = 1) {
             mockListener.inAppNotificationActionTriggered(
-                notification, any(), "pip_cta", null, null
+                notification,
+                any(),
+                "pip_cta",
+                match { it.getString(Constants.KEY_WZRK_ELEMENT_ID) == Constants.INAPP_ELEMENT_ID_PIP_CTA },
+                null
             )
         }
     }
@@ -83,6 +88,34 @@ class PIPInAppCallbacksBridgeTest {
         verify(exactly = 0) {
             mockListener.inAppNotificationActionTriggered(any(), any(), any(), any(), any())
         }
+    }
+
+    @Test
+    fun `onCloseButtonClick raises a close clicked event with the shared close descriptors`() {
+        val notification = mockk<CTInAppNotification> {
+            every { campaignId } returns "test_campaign_123"
+        }
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, logger)
+        bridge.onCloseButtonClick()
+        verify(exactly = 1) {
+            mockListener.inAppNotificationActionTriggered(
+                notification,
+                match { it.type == InAppActionType.CLOSE },
+                Constants.INAPP_CTA_DISMISS_BUTTON,
+                match { it.getString(Constants.KEY_WZRK_ELEMENT_ID) == Constants.INAPP_ELEMENT_ID_CLOSE },
+                null
+            )
+        }
+    }
+
+    @Test
+    fun `onCloseButtonClick does not report a dismiss (that is onClose's job)`() {
+        val notification = mockk<CTInAppNotification> {
+            every { campaignId } returns "test_campaign_123"
+        }
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, logger)
+        bridge.onCloseButtonClick()
+        verify(exactly = 0) { mockListener.inAppNotificationDidDismiss(any(), any()) }
     }
 
     // ─── Callbacks that only log (do not forward to InAppListener) ────────────────
