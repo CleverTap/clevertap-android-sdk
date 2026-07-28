@@ -1,11 +1,35 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.4.0 (July 28, 2026)
+
+#### New Features
+* **Split of Clicks:**
+    Adds per-element click attribution to In-Apps `Notification Clicked` event across all in-app templates. Also adds configurable 
+    swipe-to-dismiss gesture for In-Apps, and tracks these dismissals as Notification Clicked events.
+    
+#### Improvements
+* **Accessibility:**
+    Enhances accessibility across In-App notifications and App Inbox with dynamic text scaling, screen-reader announcements and 
+    content descriptions (close button, images, media controls), a larger 48dp dismiss-button tap area, and corrected carousel 
+    TalkBack navigation — helping apps meet accessibility standards.
+    
+#### Bug Fixes
+* **App Inbox on Android 6.0 – 10:** Fixes a critical issue where App Inbox messages were never saved on the device, leaving the inbox permanently empty on Android 6.0 through Android 10 (API 23 – 29). The SDK was using a SQLite statement (`UPSERT`) that needs SQLite 3.24.0 or newer, which Android only ships from Android 11 onwards, so every inbox write failed silently on older devices. Present in `v8.2.0` and `v8.3.0`.
+    * **Note:** This affects **every account using App Inbox**, not only those enabled for App Inbox Cross-Device Sync. Messages delivered the classic way and messages delivered through Cross-Device Sync are saved by the same code, so both were affected.
+    * **Note:** No code change or migration is required on your side. After updating, messages reappear automatically on the next inbox fetch.
+* **Crash while playing video on Android 6.0:** Fixes an `AbstractMethodError` crash seen when a Picture-in-Picture (PIP) In-App notification played a video on Android 6.0 (API 23). Media3's `Player.Listener` interface relies on Java 8 default methods, which Android 6.0 does not support at runtime, so any callback the SDK had not explicitly overridden crashed the app. The SDK's shared `Media3PlayerListener` now implements all of them. Only affects apps whose `minSdkVersion` is below 24.
+    * **Note:** This listener is shared by every Media3 video surface, so the fix also protects In-App video and App Inbox video playback on Android 6.0, not only PIP.
+
 ### Version 8.3.0 (June 2026)
+> ‼️ **NOTE**
+App Inbox messages are not saved on Android 6.0 – 10 (API 23 – 29) in this version, leaving the inbox empty on those devices. This affects every account using App Inbox, not only those enabled for App Inbox Cross-Device Sync. Please update to 8.4.0 or above.
 
 #### New Features
 * **Native Display Element Click:** New `pushDisplayUnitElementClickedEventForID(String unitID, HashMap<String, Object> additionalProperties)` on `CleverTapAPI` records a `Notification Clicked` event for a specific element within a Display Unit. Caller-supplied `additionalProperties` (including `wzrk_element_id` from the action's `metadata`) are merged first, then enriched with cached `wzrk_*` attribution fields from the unit — giving finer-grained click analytics for Native Display experiences.
 * **Display Unit Cache API:** New public interface `DisplayUnitCache` and `setDisplayUnitCache(DisplayUnitCache)` on `CleverTapAPI` let external SDKs (e.g. the Native Display SDK) inject a custom display-unit store. `getAllDisplayUnits()` and `getDisplayUnitForID()` now route through this cache. The default implementation (`CTDisplayUnitController`) remains active when no override is installed.
 
 ### Version 8.2.0 (May 20, 2026)
+> ‼️ **NOTE**
+App Inbox messages are not saved on Android 6.0 – 10 (API 23 – 29) in this version, leaving the inbox empty on those devices. This affects every account using App Inbox, not only those enabled for App Inbox Cross-Device Sync. Please update to 8.4.0 or above.
 
 #### New Features
 * **App Inbox Cross-Device Sync:** App Inbox messages now sync across a user's devices. If a user deletes or reads a message on one device, it is automatically reflected on their other devices.
