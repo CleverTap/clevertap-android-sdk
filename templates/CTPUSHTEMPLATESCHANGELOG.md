@@ -1,4 +1,18 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.5.0 (July 28, 2026)
+
+#### New Features
+* **Five Icons Template:** Adds title and message text support to the `Five Icons` template, and a text-only fallback notification when the template cannot be rendered.
+* **Vertical Template:** Adds HTML formatting support for the `line1` and `line2` text fields of the `pt_vertical_image` template.
+
+#### Enhancements
+* Enhances accessibility for the `Manual Carousel` and `Rating` templates for BIS compliance.
+
+#### Bug Fixes
+* Fixes icon clipping in the collapsed view of the `Five Icons` template when a title or message is present, by using a shorter icon strip.
+* Fixes the chronometer color format and border rendering in the `Timer` template.
+* Fixes a crash (`SecurityException`) during the pre-download network check when the host app does not hold the `ACCESS_NETWORK_STATE` permission.
+
 ### Version 2.4.0 (April 13, 2026)
 
 #### New Features

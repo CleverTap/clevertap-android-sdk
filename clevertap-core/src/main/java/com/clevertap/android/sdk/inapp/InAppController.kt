@@ -13,6 +13,8 @@ import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.validation.ValidationResult
+import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
@@ -80,6 +82,7 @@ internal class InAppController(
     private val clock: Clock,
     private val networkMonitor: NetworkMonitor,
     private val pipManager: PIPManager,
+    private val validationResultStack: ValidationResultStack,
 ) : InAppListener, PIPShowFailureHandler {
 
     private enum class InAppState {
@@ -280,12 +283,25 @@ internal class InAppController(
             data.putString(Constants.DEEP_LINK_KEY, deepLink)
         }
 
+        // Media preload failures from the bundled advanced-builder template (delivered as HTML content)
+        // arrive as a synthetic close carrying a reserved wzrk_c2a. Report them as a structured wzrk_error
+        // and DO NOT raise a click or viewed event. Scoped to HTML in-apps only: aspect ratio isn't a
+        // reliable signal, and gating on the HTML type excludes native templates so a native CTA's
+        // wzrk_c2a is never misread as a media error.
+        if (inAppNotification.isHtml() && reportMediaErrorIfAny(callToAction)) {
+            return data
+        }
+
+        val type = action.type
+        // Enrich the clicked event with the action descriptors (wzrk_action/wzrk_data) at this single
+        // choke point, derived from the action being triggered.
+        addActionDescriptors(data, action, type)
+
         // send clicked event
         if (!inAppNotification.isLocalInApp) {
             analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, data)
         }
 
-        val type = action.type
         if (type == null) {
             logger.debug("Triggered in-app action without type")
             return data
@@ -330,20 +346,94 @@ internal class InAppController(
         return data
     }
 
+    /**
+     * Maps a media-error synthetic-close [callToAction] to a structured [ValidationResult] and pushes it
+     * onto the validation stack, so it rides along on the next queued event as the top-level `wzrk_error`.
+     * No event is raised here. Returns true if the callToAction was a media-error descriptor.
+     */
+    private fun reportMediaErrorIfAny(callToAction: String): Boolean {
+        val validationResult = when (callToAction) {
+            Constants.INAPP_CTA_IMAGE_ERROR_DISMISS -> ValidationResult(
+                Constants.INAPP_IMAGE_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_IMAGE_LOAD_FAILED_ERROR_MSG
+            )
+
+            Constants.INAPP_CTA_VIDEO_ERROR_DISMISS -> ValidationResult(
+                Constants.INAPP_VIDEO_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_VIDEO_LOAD_FAILED_ERROR_MSG
+            )
+
+            else -> return false
+        }
+        logger.debug("InApp media failed to load, reporting wzrk_error ${validationResult.errorCode}")
+        validationResultStack.pushValidationResult(validationResult)
+        return true
+    }
+
+    /**
+     * Adds `wzrk_action` (the action type) and `wzrk_data` (the action payload) to the clicked-event
+     * extras. `wzrk_data` for a key-values action is a nested object.
+     */
+    private fun addActionDescriptors(data: Bundle, action: CTInAppAction, type: InAppActionType?) {
+        if (type == null) {
+            return
+        }
+        data.putString(Constants.KEY_WZRK_ACTION, type.toString())
+        when (type) {
+            InAppActionType.OPEN_URL ->
+                action.actionUrl?.takeIf { it.isNotEmpty() }
+                    ?.let { data.putString(Constants.KEY_WZRK_DATA, it) }
+
+            InAppActionType.CLOSE ->
+                data.putString(Constants.KEY_WZRK_DATA, Constants.INAPP_WZRK_DATA_CLOSE)
+
+            InAppActionType.CUSTOM_CODE ->
+                action.customTemplateInAppData?.templateName?.takeIf { it.isNotEmpty() }
+                    ?.let { data.putString(Constants.KEY_WZRK_DATA, it) }
+
+            InAppActionType.KEY_VALUES -> {
+                val keyValues = action.keyValues
+                if (!keyValues.isNullOrEmpty()) {
+                    // Nested payload carried as a Serializable map; analytics emits it as a nested JSON object.
+                    data.putSerializable(Constants.KEY_WZRK_DATA, HashMap(keyValues))
+                }
+            }
+
+            else -> {
+                // no wzrk_data payload for other action types
+            }
+        }
+    }
+
     override fun inAppNotificationDidClick(
         inAppNotification: CTInAppNotification,
         button: CTInAppNotificationButton,
+        buttonIndex: Int,
         activityContext: Context?
     ): Bundle? {
         val action = button.action
         if (action == null) {
             return null
         }
+        // Tag the clicked element for CTA buttons that don't route through the fragment's
+        // handleButtonClickAtIndex (e.g. alert-template buttons). The caller passes the exact clicked
+        // index (buttons are built from a JSON array and CTInAppNotificationButton.equals is value-based,
+        // so indexOf would resolve a duplicate CTA payload to the wrong slot). 1-based, matching iOS.
+        val additionalData = if (buttonIndex >= 0) {
+            val elementId = if (inAppNotification.isImageOnlyInApp()) {
+                Constants.INAPP_ELEMENT_ID_IMAGE
+            } else {
+                Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX + (buttonIndex + 1)
+            }
+            Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, elementId) }
+        } else {
+            null
+        }
         return inAppNotificationActionTriggered(
             inAppNotification,
             action,
             button.text,
-            null,
+            additionalData,
             activityContext
         )
     }

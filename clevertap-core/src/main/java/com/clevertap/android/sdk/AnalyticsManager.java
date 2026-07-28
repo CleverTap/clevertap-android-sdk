@@ -454,7 +454,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 for (String x : customData.keySet()) {
 
                     Object value = customData.get(x);
-                    if (value != null) {
+                    if (value instanceof Map) {
+                        // Nested payloads (e.g. wzrk_data for a key-values action) are carried as a
+                        // Map and emitted as a nested JSON object.
+                        notif.put(x, new JSONObject((Map<?, ?>) value));
+                    } else if (value != null) {
                         notif.put(x, value);
                     }
                 }

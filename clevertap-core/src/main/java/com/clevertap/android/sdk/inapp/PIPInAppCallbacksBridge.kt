@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp
 
+import android.os.Bundle
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
 
@@ -22,6 +24,26 @@ internal class PIPInAppCallbacksBridge(
     override fun onClose() {
         logger.debug(LOG_TAG, "PIP onClose for campaign: ${inAppNotification.campaignId}")
         inAppListener.inAppNotificationDidDismiss(inAppNotification, null)
+    }
+
+    /**
+     * Close (X) button tap. Raises a "Notification Clicked" event with close descriptors
+     *  (`wzrk_element_id = closeButton`, `wzrk_c2a = Dismiss Button`,
+     * `wzrk_action = close`, `wzrk_data = close`), matching every other in-app type's close button.
+     * The dismiss itself is reported separately via the [onClose] that follows.
+     */
+    override fun onCloseButtonClick() {
+        logger.debug(LOG_TAG, "PIP onCloseButtonClick for campaign: ${inAppNotification.campaignId}")
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_CLOSE)
+        }
+        inAppListener.inAppNotificationActionTriggered(
+            inAppNotification,
+            CTInAppAction.createCloseAction(),
+            Constants.INAPP_CTA_DISMISS_BUTTON,
+            extras,
+            null
+        )
     }
 
     override fun onAction() {
@@ -50,8 +72,13 @@ internal class PIPInAppCallbacksBridge(
         //
         // No Activity finishes, so the app's task is never at risk of being killed
         // because it was never reduced to an empty/background state.
+        //
+        // PIP exposes a single CTA surface, so its element id is the fixed literal "button-cta"
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_PIP_CTA)
+        }
         inAppListener.inAppNotificationActionTriggered(
-            inAppNotification, action, callToAction, null, null
+            inAppNotification, action, callToAction, extras, null
         )
     }
 

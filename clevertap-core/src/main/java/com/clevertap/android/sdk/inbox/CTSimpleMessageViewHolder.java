@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import androidx.core.view.ViewCompat;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
@@ -141,6 +142,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta3.setText(content.getLinkText(cta3Object));
                         this.cta3.setTextColor(Color.parseColor(content.getLinkColor(cta3Object)));
                         this.cta3.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta3Object)));
+                        showThreeButtons(this.cta1, this.cta2, this.cta3);
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
                                     this.cta1.getText().toString(), cta1Object, parentWeak,false, APP_INBOX_CTA1_INDEX));
@@ -159,11 +161,16 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         }
         this.mediaImage.setVisibility(View.GONE);
         this.mediaImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
+        this.mediaImage.setContentDescription(null);
+        ViewCompat.setScreenReaderFocusable(this.mediaImage, false);
         this.squareImage.setVisibility(View.GONE);
         this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
+        this.squareImage.setContentDescription(null);
+        ViewCompat.setScreenReaderFocusable(this.squareImage, false);
         this.defaultImage.setVisibility(View.GONE);
         this.defaultImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         this.defaultImage.setContentDescription(null);
+        ViewCompat.setScreenReaderFocusable(this.defaultImage, false);
         this.mediaLayout.setVisibility(View.GONE);
         this.progressBarFrameLayout.setVisibility(View.GONE);
         try {
@@ -171,6 +178,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 case "l":
                     if(!TextUtils.isEmpty(content.getMediaContentDescription())) {
                         this.mediaImage.setContentDescription(content.getMediaContentDescription());
+                        ViewCompat.setScreenReaderFocusable(this.mediaImage, true);
                     }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
@@ -261,6 +269,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 case "p":
                     if(!TextUtils.isEmpty(content.getMediaContentDescription())) {
                         this.squareImage.setContentDescription(content.getMediaContentDescription());
+                        ViewCompat.setScreenReaderFocusable(this.squareImage, true);
                     }
                     if (content.mediaIsImage()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
@@ -359,6 +368,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     if (!TextUtils.isEmpty(content.getMedia())) {
                         if (!TextUtils.isEmpty(content.getMediaContentDescription())) {
                             this.defaultImage.setContentDescription(content.getMediaContentDescription());
+                            ViewCompat.setScreenReaderFocusable(this.defaultImage, true);
                         }
                         if (content.mediaIsImage()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);

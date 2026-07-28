@@ -56,7 +56,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
         closeIvLp.addRule(RelativeLayout.ABOVE, webViewId)
         closeIvLp.addRule(RelativeLayout.RIGHT_OF, webViewId)
 
-        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH) / 2
+        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH) / 2
         closeIvLp.setMargins(-sub, 0, 0, -sub)
         return closeIvLp
     }
@@ -103,7 +103,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
                 val context = inflater.context
                 val closeImageView = CloseImageView(context)
                 val closeIvLp = getLayoutParamsForCloseButton(webView.id)
-                closeImageView.setOnClickListener { didDismiss(null) }
+                closeImageView.setOnClickListener { triggerCloseButtonAction() }
                 closeImageView.contentDescription = context.getString(R.string.ct_inapp_close_btn)
                 this.closeImageView = closeImageView
                 rl.addView(closeImageView, closeIvLp)

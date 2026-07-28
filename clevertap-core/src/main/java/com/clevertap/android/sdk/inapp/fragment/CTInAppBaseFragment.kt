@@ -5,10 +5,11 @@ import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
-
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DidClickForHardPermissionListener
@@ -118,6 +119,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        ViewCompat.setAccessibilityPaneTitle(view, getString(R.string.ct_inapp_message_shown))
         didShow(null)
     }
 
@@ -177,6 +179,36 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
     }
 
+    /**
+     * Close (X) button dismissal, raised as a click: `wzrk_element_id = closeButton`,
+     * `wzrk_c2a = Dismiss Button`, `wzrk_action = close`, `wzrk_data = close`.
+     */
+    fun triggerCloseButtonAction() {
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_CLOSE)
+        }
+        triggerAction(
+            CTInAppAction.CREATOR.createCloseAction(), Constants.INAPP_CTA_DISMISS_BUTTON, extras
+        )
+    }
+
+    /**
+     * Swipe-to-dismiss, raised as a click: `wzrk_c2a = Swipe to Dismiss`, `wzrk_action = close`,
+     * `wzrk_data = close`. No `wzrk_element_id` (gesture, not an element).
+     */
+    fun triggerSwipeDismissAction() {
+        triggerAction(
+            CTInAppAction.CREATOR.createCloseAction(), Constants.INAPP_CTA_SWIPE_DISMISS, null
+        )
+    }
+
+    /**
+     * The swipe/pan dismiss gesture is enabled only when there is no close button and the campaign
+     * allows swipe-to-dismiss. When disabled, the gesture must not be attached at all.
+     */
+    protected fun isSwipeToDismissEnabled(): Boolean =
+        !inAppNotification.isShowClose && inAppNotification.swipeToDismiss
+
     fun didDismiss(data: Bundle?) {
         cleanup()
         getListener()?.inAppNotificationDidDismiss(inAppNotification, data)
@@ -211,7 +243,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     fun handleButtonClickAtIndex(index: Int) {
         try {
             val button = inAppNotification.buttons[index]
-            val clickData = didClick(button)
+            val clickData = didClick(button, index)
 
             if (inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {
                 when (index) {
@@ -246,12 +278,22 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         return FileResourceProvider.getInstance(requireContext(), config.logger)
     }
 
-    private fun didClick(button: CTInAppNotificationButton): Bundle? {
+    private fun didClick(button: CTInAppNotificationButton, index: Int): Bundle? {
         var action = button.action
         if (action == null) {
             action = CTInAppAction.CREATOR.createCloseAction()
         }
-        return notifyActionTriggered(action, button.text, null)
+        // Whole-image tap on image-only templates is tagged image-1; otherwise it is a 1-based CTA button.
+        val isImageTap = inAppNotification.isImageOnlyInApp()
+        val elementId = if (isImageTap) {
+            Constants.INAPP_ELEMENT_ID_IMAGE
+        } else {
+            Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX + (index + 1)
+        }
+        val extras = Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, elementId) }
+        // wzrk_c2a: for a whole-image tap use the element id ("image-1"); for a CTA button use its text.
+        val callToAction = if (isImageTap) elementId else button.text
+        return notifyActionTriggered(action, callToAction, extras)
     }
 
     private fun notifyActionTriggered(
