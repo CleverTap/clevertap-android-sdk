@@ -1,5 +1,5 @@
 ## CleverTap Android SDK CHANGE LOG
-### Version 8.4.0 (Jul 28, 2026)
+### Version 8.4.0 (July 28, 2026)
 
 #### New Features
 * **Split of Clicks:** New
