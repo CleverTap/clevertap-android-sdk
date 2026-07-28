@@ -2,7 +2,7 @@
 ### Version 8.4.0 (July 28, 2026)
 
 #### New Features
-* **Split of Clicks:** New
+* **Split of Clicks:**
     Adds per-element click attribution to In-Apps `Notification Clicked` event across all in-app templates. Also adds configurable 
     swipe-to-dismiss gesture for In-Apps, and tracks these dismissals as Notification Clicked events.
     
