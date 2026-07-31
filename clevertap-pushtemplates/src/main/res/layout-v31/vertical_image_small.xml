@@ -7,7 +7,7 @@
     android:background="@android:color/transparent"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingStart="4dp"
+    android:paddingStart="@dimen/padding_horizontal"
     android:paddingTop="@dimen/padding_micro"
     android:paddingBottom="@dimen/padding_micro">
 

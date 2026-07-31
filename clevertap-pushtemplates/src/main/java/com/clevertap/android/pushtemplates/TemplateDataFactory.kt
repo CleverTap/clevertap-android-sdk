@@ -339,7 +339,7 @@ internal object TemplateDataFactory {
         return VerticalImageTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = mediaData,
-            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras, defaultAltText, mediaData.imageBorderData),
+            collapsedMediaData = createCollapsedMediaDataWithoutFallback(extras, defaultAltText),
             actions = Utils.getActionKeys(extras),
             text1 = extras.getString(PT_TEXT1),
             text2 = extras.getString(PT_TEXT2),
