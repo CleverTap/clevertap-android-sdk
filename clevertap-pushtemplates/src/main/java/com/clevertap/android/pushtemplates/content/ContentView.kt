@@ -152,7 +152,9 @@ internal open class ContentView(
     ): Boolean {
         if (imageUrl.isNullOrBlank()) return false
 
-        val imageViewId = when (scaleType) {
+        // When border/radius is active, force fit_center so rounded corners are fully visible
+        val effectiveScaleType = if (imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else scaleType
+        val imageViewId = when (effectiveScaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
@@ -190,7 +192,9 @@ internal open class ContentView(
         PTLog.debug("Total duration: " + duration + "ms")
         PTLog.debug("Flip interval: " + flipInterval + "ms")
 
-        val imageViewId = when (scaleType) {
+        // When border/radius is active, force fit_center so rounded corners are fully visible
+        val effectiveScaleType = if (imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else scaleType
+        val imageViewId = when (effectiveScaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
@@ -202,7 +206,7 @@ internal open class ContentView(
             val processedFrame = if (applyBorder) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(
                     frame, imageBorderData!!.cornerRadius, borderColor, imageBorderData.borderWidth
-                )
+                ).also { frame.recycle() }
             } else frame
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
             frameRemoteViews.setImageViewBitmap(imageViewId, processedFrame)

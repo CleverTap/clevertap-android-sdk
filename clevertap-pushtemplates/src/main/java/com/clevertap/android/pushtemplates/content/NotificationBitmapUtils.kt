@@ -1,10 +1,10 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.graphics.Bitmap
+import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
@@ -103,19 +103,6 @@ internal object NotificationBitmapUtils {
 
     private const val BORDER_STROKE_RATIO = 0.10f
 
-    /**
-     * Applies rounded corners and an optional border stroke to an existing image bitmap.
-     * Use this for main notification images (as opposed to the solid/gradient background
-     * utilities above which create new bitmaps from scratch).
-     *
-     * If neither [cornerRadius] > 0 nor [borderColor] is set, the source bitmap is returned
-     * unchanged to avoid unnecessary processing.
-     *
-     * @param source       The original downloaded image bitmap.
-     * @param cornerRadius Corner radius in pixels applied to the image clip.
-     * @param borderColor  ARGB color for the border stroke; null means no border.
-     * @param borderWidth  Stroke width in pixels; null defaults to 10 % of the smaller dimension.
-     */
     fun applyRoundedBorderToBitmap(
         source: Bitmap,
         cornerRadius: Float,
@@ -125,37 +112,37 @@ internal object NotificationBitmapUtils {
         val width = source.width
         val height = source.height
         if (width <= 0 || height <= 0) return source
+        if (cornerRadius <= 0f && borderColor == null) return source
+
+        val strokeWidth = if (borderColor != null) {
+            (borderWidth ?: (minOf(width, height) * BORDER_STROKE_RATIO))
+                .coerceAtMost(minOf(width, height) * MAX_BORDER_RATIO)
+        } else 0f
+
+        val half = strokeWidth / 2f
+        val drawRect = RectF(half, half, width - half, height - half)
+        val adjustedRadius = (cornerRadius - half).coerceAtLeast(0f)
 
         val output = createBitmap(width, height)
         val canvas = Canvas(output)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-        if (cornerRadius > 0f) {
-            val path = Path()
-            path.addRoundRect(
-                RectF(0f, 0f, width.toFloat(), height.toFloat()),
-                cornerRadius, cornerRadius,
-                Path.Direction.CW
-            )
-            canvas.clipPath(path)
+        // BitmapShader gives anti-aliased rounded corners without clipPath's jagged edges
+        val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
         }
+        canvas.drawRoundRect(drawRect, adjustedRadius, adjustedRadius, imagePaint)
 
-        canvas.drawBitmap(source, 0f, 0f, paint)
-
-        if (borderColor != null) {
-            val strokeWidth = borderWidth ?: (minOf(width, height) * BORDER_STROKE_RATIO)
-            val inset = strokeWidth / 2f
+        if (borderColor != null && strokeWidth > 0f) {
             val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = borderColor
                 style = Paint.Style.STROKE
                 this.strokeWidth = strokeWidth
+                color = borderColor
             }
-            canvas.drawRoundRect(
-                RectF(inset, inset, width - inset, height - inset),
-                cornerRadius, cornerRadius, borderPaint
-            )
+            canvas.drawRoundRect(drawRect, adjustedRadius, adjustedRadius, borderPaint)
         }
 
         return output
     }
+
+    private const val MAX_BORDER_RATIO = 0.25f
 }

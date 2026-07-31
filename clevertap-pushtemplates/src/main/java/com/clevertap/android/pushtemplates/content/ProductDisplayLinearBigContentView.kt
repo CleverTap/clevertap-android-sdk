@@ -114,7 +114,8 @@ internal open class ProductDisplayLinearBigContentView(
         smallImageLayoutIds.add(R.id.small_image2)
         smallImageLayoutIds.add(R.id.small_image3)
         val tempImageList = ArrayList<String>()
-        val imageViewId = when (scaleType) {
+        val effectiveScaleType = if (data.imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else scaleType
+        val imageViewId = when (effectiveScaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
