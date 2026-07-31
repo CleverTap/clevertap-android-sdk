@@ -231,14 +231,16 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             }
             String dl = "";
 
-            if (deepLinkList != null && deepLinkList.size() == imageList.size()) {
-                dl = deepLinkList.get(newPosition);
-            } else if (deepLinkList != null && deepLinkList.size() == 1) {
-                dl = deepLinkList.get(0);
-            } else if (deepLinkList != null && deepLinkList.size() > newPosition) {
-                dl = deepLinkList.get(newPosition);
-            } else if (deepLinkList != null && deepLinkList.size() < newPosition) {
-                dl = deepLinkList.get(0);
+            if (deepLinkList != null && !deepLinkList.isEmpty()) {
+                if (deepLinkList.size() == imageList.size()) {
+                    dl = deepLinkList.get(newPosition);
+                } else if (deepLinkList.size() == 1) {
+                    dl = deepLinkList.get(0);
+                } else if (newPosition < deepLinkList.size()) {
+                    dl = deepLinkList.get(newPosition);
+                } else {
+                    dl = deepLinkList.get(0);
+                }
             }
 
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, newPosition);
