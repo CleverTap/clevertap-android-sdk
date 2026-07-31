@@ -130,13 +130,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             // otherwise pull-to-refresh has no surface on an empty inbox.
             final FrameLayout listViewFragmentLayout = findViewById(R.id.list_view_fragment);
             listViewFragmentLayout.setVisibility(View.VISIBLE);
-            boolean fragmentExists = false;
-            for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-                if (fragment.getTag() != null && !fragment.getTag().equalsIgnoreCase(getFragmentTag())) {
-                    fragmentExists = true;
-                }
-            }
-            if (!fragmentExists) {
+            // On recreation (rotation, process restore) the FragmentManager restores the
+            // previously added fragment before this code runs — adding again would stack
+            // a duplicate list (and a duplicate video player) into the same container.
+            if (getSupportFragmentManager().findFragmentByTag(getFragmentTag()) == null) {
                 CTInboxListViewFragment listView = new CTInboxListViewFragment();
                 listView.setArguments(bundle);
                 getSupportFragmentManager().beginTransaction()

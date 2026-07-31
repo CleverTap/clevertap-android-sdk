@@ -87,6 +87,40 @@ class CTInboxActivityTest : BaseTestCase() {
     }
 
     @Test
+    fun `activity recreation does not duplicate the list fragment`() {
+        mockkStatic(CleverTapAPI::class)
+        try {
+            every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
+            every { cleverTapAPI.inboxMessageCount } returns 1
+            every { cleverTapAPI.allInboxMessages } returns arrayListOf()
+            // Theme must survive recreation: applicationInfo.theme is what the recreated
+            // instance resolves (per-instance setTheme would be lost on recreate()).
+            application.applicationInfo.theme = androidx.appcompat.R.style.Theme_AppCompat
+
+            val intent = Intent(appCtx, CTInboxActivity::class.java).apply {
+                putExtra("styleConfig", CTInboxStyleConfig())
+                putExtra("configBundle", Bundle().apply { putParcelable("config", cleverTapInstanceConfig) })
+            }
+            val controller = Robolectric.buildActivity(CTInboxActivity::class.java, intent).setup()
+            controller.get().supportFragmentManager.executePendingTransactions()
+            assertEquals(1, inboxFragmentCount(controller.get()))
+
+            // Rotation / process-restore path: FragmentManager restores the tagged
+            // fragment, then onCreate runs again and must NOT add a second one.
+            controller.recreate()
+
+            val recreated = controller.get()
+            recreated.supportFragmentManager.executePendingTransactions()
+            assertEquals(1, inboxFragmentCount(recreated))
+        } finally {
+            unmockkStatic(CleverTapAPI::class)
+        }
+    }
+
+    private fun inboxFragmentCount(activity: CTInboxActivity): Int =
+        activity.supportFragmentManager.fragments.count { it is CTInboxListViewFragment }
+
+    @Test
     fun `no-tabs non-empty inbox still creates the list fragment`() {
         mockkStatic(CleverTapAPI::class)
         try {
