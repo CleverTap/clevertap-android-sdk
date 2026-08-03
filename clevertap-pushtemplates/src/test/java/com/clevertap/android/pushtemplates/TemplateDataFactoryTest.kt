@@ -2413,4 +2413,238 @@ class TemplateDataFactoryTest {
         assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, result.collapsedButtonData!!.borderRadius)
         assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, result.collapsedButtonData!!.borderWidth)
     }
+
+    // createImageBorderData tests
+
+    /** Adds the image border keys to the default colour map, which setUp() otherwise leaves out. */
+    private fun stubBorderColor(color: String?) {
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_TITLE_COLOR to SAMPLE_COLOR,
+            PT_MSG_COLOR to SAMPLE_COLOR,
+            PT_BG to SAMPLE_COLOR,
+            PT_IMG_BORDER_CLR to color
+        )
+    }
+
+    @Test
+    fun `createImageBorderData should parse corner radius border width and colour`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "12"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "6"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertTrue(border.isActive)
+        assertEquals(android.graphics.Color.RED, border.borderColor)
+        assertEquals(12f, border.cornerRadiusPercent)
+        assertEquals(6f, border.borderWidthPercent)
+    }
+
+    @Test
+    fun `createImageBorderData should be inactive when no border keys are present`() {
+        // Given - a payload from before this feature existed
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns null
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then - existing campaigns must render exactly as they did before
+        val border = result.mediaData.imageBorderData
+        assertFalse(border.isActive)
+        assertNull(border.borderColor)
+        assertEquals(0f, border.cornerRadiusPercent)
+        assertNull(border.borderWidthPercent)
+    }
+
+    @Test
+    fun `createImageBorderData should stay inactive when the colour cannot be parsed`() {
+        // Given - an unparseable colour with no corner radius. The raw string is present, so a
+        // check on the string alone would wrongly mark the border active and force fit_center.
+        setupBasicMockBundle()
+        stubBorderColor("not-a-colour")
+        every { Utils.getColourOrNull("not-a-colour") } returns null
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns null
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertNull(border.borderColor)
+        assertFalse(border.isActive)
+    }
+
+    @Test
+    fun `createImageBorderData should default corner radius to zero for a non numeric value`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "abc"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "xyz"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then - garbage in the payload must not crash the render
+        val border = result.mediaData.imageBorderData
+        assertEquals(0f, border.cornerRadiusPercent)
+        assertNull(border.borderWidthPercent)
+        assertFalse(border.isActive)
+    }
+
+    @Test
+    fun `createImageBorderData should be active with only a corner radius`() {
+        // Given - rounded corners without a border is a valid configuration
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "20"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertTrue(border.isActive)
+        assertEquals(20f, border.cornerRadiusPercent)
+        assertNull(border.borderColor)
+    }
+
+    @Test
+    fun `createImageBorderData should use the dark mode colour when the device is in dark mode`() {
+        // Given - createColorMap resolves the _dark suffix, so the factory only sees the winner
+        setupBasicMockBundle()
+        stubBorderColor("#00FF00")
+        every { Utils.getColourOrNull("#00FF00") } returns android.graphics.Color.GREEN
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "8"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = true,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        assertEquals(android.graphics.Color.GREEN, result.mediaData.imageBorderData.borderColor)
+    }
+
+    @Test
+    fun `createImageBorderData should reach carousel five icon and product templates`() {
+        // Given - the same keys must be picked up by templates that build their own media data
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "15"
+
+        // When
+        val carousel = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.AUTO_CAROUSEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as AutoCarouselTemplateData
+        val fiveIcons = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.FIVE_ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as FiveIconsTemplateData
+        val product = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.PRODUCT_DISPLAY,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as ProductTemplateData
+
+        // Then
+        assertEquals(15f, carousel.carouselData.imageBorderData.cornerRadiusPercent)
+        assertEquals(15f, fiveIcons.imageBorderData.cornerRadiusPercent)
+        assertEquals(15f, product.imageBorderData.cornerRadiusPercent)
+    }
+
+    @Test
+    fun `collapsed media data should inherit the border config from the expanded media`() {
+        // Given - collapsed views deliberately share the expanded border config rather than
+        // expecting a second set of keys in the payload
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "18"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns SAMPLE_IMAGE_URL
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ZERO_BEZEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as ZeroBezelTemplateData
+
+        // Then
+        assertEquals(18f, result.mediaData.imageBorderData.cornerRadiusPercent)
+        assertEquals(18f, result.collapsedMediaData.imageBorderData.cornerRadiusPercent)
+        assertEquals(
+            android.graphics.Color.RED,
+            result.collapsedMediaData.imageBorderData.borderColor
+        )
+    }
+
+    @Test
+    fun `effectiveScaleType should force FIT_CENTER only while the border is active`() {
+        // Given
+        val active = ImageBorderData(cornerRadiusPercent = 10f)
+        val inactive = ImageBorderData()
+
+        // Then - a baked-in radius would be cropped away by a CENTER_CROP image view
+        assertEquals(PTScaleType.FIT_CENTER, active.effectiveScaleType(PTScaleType.CENTER_CROP))
+        assertEquals(PTScaleType.FIT_CENTER, active.effectiveScaleType(PTScaleType.FIT_CENTER))
+        assertEquals(PTScaleType.CENTER_CROP, inactive.effectiveScaleType(PTScaleType.CENTER_CROP))
+        assertEquals(PTScaleType.FIT_CENTER, inactive.effectiveScaleType(PTScaleType.FIT_CENTER))
+        // A null config behaves like an inactive one
+        assertEquals(PTScaleType.CENTER_CROP, null.effectiveScaleType(PTScaleType.CENTER_CROP))
+    }
 }
