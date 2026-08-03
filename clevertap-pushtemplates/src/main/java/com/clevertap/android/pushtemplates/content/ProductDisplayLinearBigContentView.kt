@@ -9,6 +9,7 @@ import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
+import com.clevertap.android.pushtemplates.effectiveScaleType
 import com.clevertap.android.pushtemplates.ProductTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -114,8 +115,7 @@ internal open class ProductDisplayLinearBigContentView(
         smallImageLayoutIds.add(R.id.small_image2)
         smallImageLayoutIds.add(R.id.small_image3)
         val tempImageList = ArrayList<String>()
-        val effectiveScaleType = if (data.imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else scaleType
-        val imageViewId = when (effectiveScaleType) {
+        val imageViewId = when (data.imageBorderData.effectiveScaleType(scaleType)) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }

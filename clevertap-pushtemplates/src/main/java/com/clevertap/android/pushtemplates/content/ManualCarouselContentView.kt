@@ -9,6 +9,7 @@ import com.clevertap.android.pushtemplates.ManualCarouselTemplateData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
+import com.clevertap.android.pushtemplates.effectiveScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
@@ -30,7 +31,8 @@ internal class ManualCarouselContentView(
         val baseContent = data.carouselData.baseContent
         setupBaseContent(baseContent, renderer)
 
-        val scaleType = if (data.carouselData.imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else data.carouselData.scaleType
+        val scaleType =
+            data.carouselData.imageBorderData.effectiveScaleType(data.carouselData.scaleType)
         val deepLinkList = baseContent.deepLinkList
 
         remoteView.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)

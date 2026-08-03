@@ -15,6 +15,7 @@ import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.pushtemplates.effectiveScaleType
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 import com.clevertap.android.pushtemplates.media.GifResult
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
@@ -152,9 +153,7 @@ internal open class ContentView(
     ): Boolean {
         if (imageUrl.isNullOrBlank()) return false
 
-        // When border/radius is active, force fit_center so rounded corners are fully visible
-        val effectiveScaleType = if (imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else scaleType
-        val imageViewId = when (effectiveScaleType) {
+        val imageViewId = when (imageBorderData.effectiveScaleType(scaleType)) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
@@ -192,9 +191,7 @@ internal open class ContentView(
         PTLog.debug("Total duration: " + duration + "ms")
         PTLog.debug("Flip interval: " + flipInterval + "ms")
 
-        // When border/radius is active, force fit_center so rounded corners are fully visible
-        val effectiveScaleType = if (imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else scaleType
-        val imageViewId = when (effectiveScaleType) {
+        val imageViewId = when (imageBorderData.effectiveScaleType(scaleType)) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }

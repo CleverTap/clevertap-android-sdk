@@ -46,6 +46,21 @@ internal data class ImageBorderData(
     val isActive: Boolean get() = cornerRadius > 0f || borderColor != null
 }
 
+/**
+ * Rounded corners and borders are baked into the bitmap, so a CENTER_CROP image view would crop
+ * them away. Returns FIT_CENTER whenever a border is active, otherwise the requested scale type.
+ */
+internal fun ImageBorderData?.effectiveScaleType(requested: PTScaleType): PTScaleType {
+    if (this == null || !isActive) return requested
+    if (requested != PTScaleType.FIT_CENTER) {
+        PTLog.debug(
+            "Image border is active, overriding scale type $requested with FIT_CENTER so the " +
+                    "rounded corners and border stay visible"
+        )
+    }
+    return PTScaleType.FIT_CENTER
+}
+
 internal data class MediaData(
     val bigImage: ImageData,
     val gif: GifData,

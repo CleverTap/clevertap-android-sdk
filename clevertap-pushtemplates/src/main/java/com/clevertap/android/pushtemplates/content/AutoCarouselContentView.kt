@@ -6,6 +6,7 @@ import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.AutoCarouselTemplateData
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
+import com.clevertap.android.pushtemplates.effectiveScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
@@ -40,8 +41,9 @@ internal class AutoCarouselContentView(
     }
 
     private fun setViewFlipper() {
-        val effectiveScaleType = if (data.carouselData.imageBorderData?.isActive == true) PTScaleType.FIT_CENTER else data.carouselData.scaleType
-        val imageViewId = when (effectiveScaleType) {
+        val imageViewId = when (
+            data.carouselData.imageBorderData.effectiveScaleType(data.carouselData.scaleType)
+        ) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
