@@ -18,7 +18,6 @@ import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
 import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.CTInAppWebView
 import com.clevertap.android.sdk.inapp.InAppWebViewClient
 import kotlin.math.abs
@@ -168,23 +167,8 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
     private fun reDrawInApp() {
         val webView = this.webView ?: return
         webView.updateDimension()
-
-        var mHeight = webView.dim.y
-        var mWidth = webView.dim.x
-
-        val d = resources.displayMetrics.density
-        mHeight = (mHeight / d).toInt()
-        mWidth = (mWidth / d).toInt()
-
-        var html = inAppNotification.html ?: return
-
-        val style =
-            "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"
-        html = html.replaceFirst("<head>".toRegex(), "<head>$style")
-        Logger.v("Density appears to be $d")
-
-        webView.setInitialScale((d * 100).toInt())
-        webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null)
+        val html = inAppNotification.html ?: return
+        webView.loadInAppHtml(html)
     }
 
     companion object {

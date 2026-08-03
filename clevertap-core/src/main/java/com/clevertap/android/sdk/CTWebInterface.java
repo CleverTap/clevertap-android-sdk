@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.webkit.JavascriptInterface;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.inapp.CTInAppAction;
-import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment;
+import com.clevertap.android.sdk.inapp.InAppWebInteraction;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class CTWebInterface {
 
     private WeakReference<CleverTapAPI> cleverTapWr = new WeakReference<>(null);
 
-    private WeakReference<CTInAppBaseFragment> fragmentWr = new WeakReference<>(null);
+    private WeakReference<InAppWebInteraction> hostWr = new WeakReference<>(null);
 
     public CTWebInterface(CleverTapAPI instance) {
         this.cleverTapWr = new WeakReference<>(instance);
@@ -34,9 +34,9 @@ public class CTWebInterface {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public CTWebInterface(CleverTapAPI instance, CTInAppBaseFragment inAppBaseFragment) {
+    public CTWebInterface(CleverTapAPI instance, InAppWebInteraction host) {
         this.cleverTapWr = new WeakReference<>(instance);
-        this.fragmentWr = new WeakReference<>(inAppBaseFragment);
+        this.hostWr = new WeakReference<>(host);
     }
 
     /**
@@ -65,9 +65,9 @@ public class CTWebInterface {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            CTInAppBaseFragment fragment = fragmentWr.get();
-            if (fragment != null) {
-                fragment.didDismiss(null);
+            InAppWebInteraction host = hostWr.get();
+            if (host != null) {
+                host.didDismiss(null);
             }
         }
     }
@@ -404,9 +404,9 @@ public class CTWebInterface {
             return;
         }
 
-        CTInAppBaseFragment fragment = fragmentWr.get();
-        if (fragment == null) {
-            Logger.d("CTWebInterface Fragment is null");
+        InAppWebInteraction host = hostWr.get();
+        if (host == null) {
+            Logger.d("CTWebInterface host is null");
             return;
         }
 
@@ -428,7 +428,7 @@ public class CTWebInterface {
                 actionData.putString(Constants.KEY_WZRK_ELEMENT_ID, buttonId);
             }
 
-            fragment.triggerAction(action, callToAction, actionData);
+            host.triggerAction(action, callToAction, actionData);
         } catch (JSONException je) {
             Logger.d("CTWebInterface invalid action JSON: " + actionJson);
         }
