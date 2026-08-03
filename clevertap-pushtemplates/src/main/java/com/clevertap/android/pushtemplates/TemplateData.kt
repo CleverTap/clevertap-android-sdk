@@ -31,8 +31,15 @@ internal data class BaseTextData(
     val subtitle: String? = null,
 )
 
+/**
+ * Border/corner configuration for the main notification image.
+ *
+ * [borderColor] is already parsed into an Android colour int by [TemplateDataFactory], so an
+ * unparseable colour from the payload lands here as null and [isActive] stays honest about
+ * whether there is anything to draw.
+ */
 internal data class ImageBorderData(
-    val borderColor: String? = null,
+    val borderColor: Int? = null,
     val cornerRadius: Float = 0f,
     val borderWidth: Float? = null,
 ) {

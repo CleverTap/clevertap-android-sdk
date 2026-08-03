@@ -114,14 +114,20 @@ internal object NotificationBitmapUtils {
         if (width <= 0 || height <= 0) return source
         if (cornerRadius <= 0f && borderColor == null) return source
 
+        val minDimension = minOf(width, height)
+
+        // coerceIn (not coerceAtMost) so a negative payload value can't disable the border or
+        // push drawRect outside the bitmap bounds
         val strokeWidth = if (borderColor != null) {
-            (borderWidth ?: (minOf(width, height) * BORDER_STROKE_RATIO))
-                .coerceAtMost(minOf(width, height) * MAX_BORDER_RATIO)
+            (borderWidth ?: (minDimension * BORDER_STROKE_RATIO))
+                .coerceIn(0f, minDimension * MAX_BORDER_RATIO)
         } else 0f
 
         val half = strokeWidth / 2f
         val drawRect = RectF(half, half, width - half, height - half)
-        val adjustedRadius = (cornerRadius - half).coerceAtLeast(0f)
+        // Cap at half the shortest side; beyond that the shape is already fully pill-shaped
+        val safeRadius = cornerRadius.coerceIn(0f, minDimension / 2f)
+        val adjustedRadius = (safeRadius - half).coerceAtLeast(0f)
 
         val output = createBitmap(width, height)
         val canvas = Canvas(output)

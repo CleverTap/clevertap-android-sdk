@@ -374,7 +374,8 @@ internal object TemplateDataFactory {
 
     private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
         return ImageBorderData(
-            borderColor = colorMap[PT_IMG_BORDER_CLR],
+            // Parse here rather than at draw time so an invalid colour never marks the border active
+            borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) },
             cornerRadius = extras.getString(PT_IMG_CORNER_RADIUS)?.toFloatOrNull() ?: 0f,
             borderWidth = extras.getString(PT_IMG_BORDER_WIDTH)?.toFloatOrNull()
         )

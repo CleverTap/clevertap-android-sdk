@@ -199,13 +199,14 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        val applyBorder = imageBorderData?.isActive == true
-        val borderColor = if (applyBorder) imageBorderData?.borderColor?.let { Utils.getColourOrNull(it) } else null
+        val border = imageBorderData?.takeIf { it.isActive }
 
         for (frame in frames) {
-            val processedFrame = if (applyBorder) {
+            // GIF frames are decoded fresh on every call, so recycling the pre-border frame is
+            // safe here. Static images come from TemplateMediaManager's cache and must not be.
+            val processedFrame = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    frame, imageBorderData!!.cornerRadius, borderColor, imageBorderData.borderWidth
+                    frame, border.cornerRadius, border.borderColor, border.borderWidth
                 ).also { frame.recycle() }
             } else frame
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
@@ -249,10 +250,11 @@ internal open class ContentView(
     ): Boolean {
         val rawImage = templateMediaManager.getImageBitmap(imageUrl)
         if (rawImage != null) {
-            val image = if (imageBorderData?.isActive == true) {
-                val borderColor = imageBorderData.borderColor?.let { Utils.getColourOrNull(it) }
+            // rawImage is owned by TemplateMediaManager's cache, so it is never recycled here
+            val border = imageBorderData?.takeIf { it.isActive }
+            val image = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    rawImage, imageBorderData.cornerRadius, borderColor, imageBorderData.borderWidth
+                    rawImage, border.cornerRadius, border.borderColor, border.borderWidth
                 )
             } else rawImage
             remoteViews.setImageViewBitmap(imageViewID, image)
