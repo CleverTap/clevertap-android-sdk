@@ -9,6 +9,7 @@ import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.fragment.app.FragmentActivity
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -141,6 +142,10 @@ internal class InAppController(
     private var inAppState = InAppState.RESUMED
 
     private val inAppExcludedActivityNames = getExcludedActivitiesSet(manifestInfo)
+
+    // Opt-in (default off) for rendering custom-html header/footer in-apps via a WindowManager
+    // overlay when the host Activity is not a FragmentActivity. Enabled by the gaming wrapper SDKs.
+    private val fragmentlessInAppBannersEnabled = manifestInfo.isFragmentlessInAppBannersEnabled
 
     /**
      * Schedule multiple delayed in-apps for display after their respective delays
@@ -1046,11 +1051,25 @@ internal class InAppController(
             }
 
             CTInAppTypeFooterHTML -> {
-                inAppFragment = CTInAppHtmlFooterFragment()
+                if (activity is FragmentActivity) {
+                    inAppFragment = CTInAppHtmlFooterFragment()
+                } else if (activity != null && fragmentlessInAppBannersEnabled) {
+                    // Non-FragmentActivity host (e.g. game engines) with the opt-in enabled:
+                    // fall back to the WindowManager overlay.
+                    showHtmlBannerOverlay(inAppNotification, activity)
+                    return
+                }
             }
 
             CTInAppTypeHeaderHTML -> {
-                inAppFragment = CTInAppHtmlHeaderFragment()
+                if (activity is FragmentActivity) {
+                    inAppFragment = CTInAppHtmlHeaderFragment()
+                } else if (activity != null && fragmentlessInAppBannersEnabled) {
+                    // Non-FragmentActivity host (e.g. game engines) with the opt-in enabled:
+                    // fall back to the WindowManager overlay.
+                    showHtmlBannerOverlay(inAppNotification, activity)
+                    return
+                }
             }
 
             CTInAppTypeFooter -> {
@@ -1113,6 +1132,14 @@ internal class InAppController(
         if (!showFragmentSuccess) {
             currentlyDisplayingInApp = null
         }
+    }
+
+    private fun showHtmlBannerOverlay(inAppNotification: CTInAppNotification, activity: Activity) {
+        logger.debug("Displaying In-App as overlay: ${inAppNotification.jsonDescription}")
+        val bridge = CTHtmlBannerCallbacksBridge(inAppNotification, config, this)
+        val overlay = CTInAppHtmlBannerOverlay(inAppNotification, config, bridge, activity)
+        bridge.overlay = overlay
+        overlay.show()
     }
 
     private fun presentTemplate(inAppNotification: CTInAppNotification) {

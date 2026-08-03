@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk
 
-import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
+import com.clevertap.android.sdk.inapp.InAppWebInteraction
 import com.clevertap.android.sdk.inapp.InAppActionType.CLOSE
 import com.clevertap.android.sdk.inapp.InAppActionType.CUSTOM_CODE
 import com.clevertap.android.shared.test.BaseTestCase
@@ -403,9 +403,9 @@ class CTWebInterfaceTest : BaseTestCase() {
     }
 
     @Test
-    fun `triggerAction should call InAppBaseFragment when provided correct parameters`() {
-        val fragmentMock = mockk<CTInAppBaseFragment>(relaxed = true)
-        val webInterface = CTWebInterface(mockk<CleverTapAPI>(relaxed = true), fragmentMock)
+    fun `triggerAction should call host when provided correct parameters`() {
+        val hostMock = mockk<InAppWebInteraction>(relaxed = true)
+        val webInterface = CTWebInterface(mockk<CleverTapAPI>(relaxed = true), hostMock)
 
         val closeActionJson = """{
             "type":"$CLOSE",
@@ -417,8 +417,8 @@ class CTWebInterfaceTest : BaseTestCase() {
         }"""
 
         webInterface.triggerInAppAction(closeActionJson, "close", null)
-        verify { fragmentMock.triggerAction(match { it.type == CLOSE }, "close", any()) }
-        clearMocks(fragmentMock)
+        verify { hostMock.triggerAction(match { it.type == CLOSE }, "close", any()) }
+        clearMocks(hostMock)
 
         val customTemplateAction = """{
             "type": "$CUSTOM_CODE",
@@ -432,29 +432,29 @@ class CTWebInterfaceTest : BaseTestCase() {
             "templateDescription": "Description"
         }"""
         webInterface.triggerInAppAction(customTemplateAction, "function-a", "buttonId")
-        verify { fragmentMock.triggerAction(match { it.type == CUSTOM_CODE }, "function-a", any()) }
+        verify { hostMock.triggerAction(match { it.type == CUSTOM_CODE }, "function-a", any()) }
     }
 
     @Test
-    fun `triggerAction should not call InAppBaseFragment when provided invalid params`() {
-        val fragmentMock = mockk<CTInAppBaseFragment>(relaxed = true)
-        val webInterface = CTWebInterface(mockk<CleverTapAPI>(relaxed = true), fragmentMock)
+    fun `triggerAction should not call host when provided invalid params`() {
+        val hostMock = mockk<InAppWebInteraction>(relaxed = true)
+        val webInterface = CTWebInterface(mockk<CleverTapAPI>(relaxed = true), hostMock)
 
         webInterface.triggerInAppAction("close", "action", null)
-        verify { fragmentMock wasNot called }
+        verify { hostMock wasNot called }
 
         webInterface.triggerInAppAction(null, null, null)
-        verify { fragmentMock wasNot called }
+        verify { hostMock wasNot called }
     }
 
     @Test
-    fun `triggerAction should do nothing when CleverTapAPI or InAppBaseFragment is null`() {
+    fun `triggerAction should do nothing when CleverTapAPI or host is null`() {
         CTWebInterface(null, null).triggerInAppAction(null, null, null)
         CTWebInterface(mockk(), null).triggerInAppAction(null, null, null)
 
-        val fragmentMock = mockk<CTInAppBaseFragment>(relaxed = true)
-        CTWebInterface(null, fragmentMock).triggerInAppAction(null, null, null)
-        verify { fragmentMock wasNot called }
+        val hostMock = mockk<InAppWebInteraction>(relaxed = true)
+        CTWebInterface(null, hostMock).triggerInAppAction(null, null, null)
+        verify { hostMock wasNot called }
     }
 
 }
