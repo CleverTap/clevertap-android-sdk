@@ -1,4 +1,14 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.5.0 (Unreleased)
+
+#### New Features
+* **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border color (`pt_img_border_clr`), and border width (`pt_img_border_width`) for the notification image. The radius and width are percentages of the image's shortest side, so a single value renders consistently across images of any resolution across the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Product Catalog`, `Five Icons`, `Timer`, `Zero Bezel`, and `Image with CTA` templates. Also applies to GIFs. `pt_img_border_clr` honours the dark mode suffix (`pt_img_border_clr_dark`).
+
+#### Bug Fixes
+* Fixes a crash in the `Manual Carousel` template when navigating between images in a campaign that has no deep links configured.
+* Fixes image list detection so that keys such as `pt_img_border_clr` are no longer treated as carousel images. Only `pt_img<number>` keys are read as images.
+* Fixes the `Image with CTA` template layout so the image is no longer flush against the notification edge.
+
 ### Version 2.4.0 (April 13, 2026)
 
 #### New Features
