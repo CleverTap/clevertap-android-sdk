@@ -203,7 +203,7 @@ internal open class ContentView(
             // safe here. Static images come from TemplateMediaManager's cache and must not be.
             val processedFrame = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    frame, border.cornerRadius, border.borderColor, border.borderWidth
+                    frame, border.cornerRadiusPercent, border.borderColor, border.borderWidthPercent
                 ).also { frame.recycle() }
             } else frame
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
@@ -251,7 +251,7 @@ internal open class ContentView(
             val border = imageBorderData?.takeIf { it.isActive }
             val image = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    rawImage, border.cornerRadius, border.borderColor, border.borderWidth
+                    rawImage, border.cornerRadiusPercent, border.borderColor, border.borderWidthPercent
                 )
             } else rawImage
             remoteViews.setImageViewBitmap(imageViewID, image)

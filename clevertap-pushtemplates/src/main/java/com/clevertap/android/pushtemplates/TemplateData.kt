@@ -37,13 +37,16 @@ internal data class BaseTextData(
  * [borderColor] is already parsed into an Android colour int by [TemplateDataFactory], so an
  * unparseable colour from the payload lands here as null and [isActive] stays honest about
  * whether there is anything to draw.
+ *
+ * The two size values are percentages of the image's shortest side, not absolute pixels, because
+ * campaign images vary in resolution. See NotificationBitmapUtils.applyRoundedBorderToBitmap.
  */
 internal data class ImageBorderData(
     val borderColor: Int? = null,
-    val cornerRadius: Float = 0f,
-    val borderWidth: Float? = null,
+    val cornerRadiusPercent: Float = 0f,
+    val borderWidthPercent: Float? = null,
 ) {
-    val isActive: Boolean get() = cornerRadius > 0f || borderColor != null
+    val isActive: Boolean get() = cornerRadiusPercent > 0f || borderColor != null
 }
 
 /**

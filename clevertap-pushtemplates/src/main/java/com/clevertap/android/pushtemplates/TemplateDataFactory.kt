@@ -376,8 +376,9 @@ internal object TemplateDataFactory {
         return ImageBorderData(
             // Parse here rather than at draw time so an invalid colour never marks the border active
             borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) },
-            cornerRadius = extras.getString(PT_IMG_CORNER_RADIUS)?.toFloatOrNull() ?: 0f,
-            borderWidth = extras.getString(PT_IMG_BORDER_WIDTH)?.toFloatOrNull()
+            // Both values are percentages of the image's shortest side, clamped when drawn
+            cornerRadiusPercent = extras.getString(PT_IMG_CORNER_RADIUS)?.toFloatOrNull() ?: 0f,
+            borderWidthPercent = extras.getString(PT_IMG_BORDER_WIDTH)?.toFloatOrNull()
         )
     }
 
