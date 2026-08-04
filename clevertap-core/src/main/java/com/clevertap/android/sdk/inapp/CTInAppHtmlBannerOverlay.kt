@@ -2,7 +2,9 @@ package com.clevertap.android.sdk.inapp
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Application
 import android.graphics.PixelFormat
+import android.os.Bundle
 import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
@@ -79,6 +81,8 @@ internal class CTInAppHtmlBannerOverlay(
     private var overlayRoot: View? = null
     private var webView: CTInAppWebView? = null
     private var animatingDismiss = false
+    private var removed = false
+    private var application: Application? = null
 
     /** The host activity, or null if collected. Used as the action activity-context. */
     val activity: Activity? get() = activityWeakRef.get()
@@ -157,21 +161,20 @@ internal class CTInAppHtmlBannerOverlay(
             wm = activity.windowManager
             wm?.addView(root, wmlp)
 
+            // Tear down the overlay if the host Activity is destroyed, so the window is not leaked
+            // and the in-app display queue is not left wedged (a Fragment gets this for free).
+            application = activity.application
+            application?.registerActivityLifecycleCallbacks(lifecycleCallbacks)
+
             webView.updateDimension()
             webView.loadInAppHtml(html)
             host.onBannerShown()
         } catch (t: Throwable) {
             config.logger.debug(config.accountId, "CTInAppHtmlBannerOverlay: failed to show", t)
-            // addView may have already attached the overlay before a later statement threw; detach
-            // it best-effort so the window is not leaked.
-            try {
-                wm?.removeViewImmediate(overlayRoot)
-            } catch (e: Exception) {
-                // no-op; the view may not have been added yet
-            }
-            overlayRoot = null
-            cleanupWebView()
-            host.onBannerRemoved()
+            // addView may have already attached the overlay before a later statement threw;
+            // finishDismiss detaches it best-effort and reports the dismiss (guarded, so a later
+            // teardown will not double-report).
+            finishDismiss()
         }
     }
 
@@ -212,6 +215,15 @@ internal class CTInAppHtmlBannerOverlay(
     }
 
     private fun finishDismiss() {
+        // One-shot: guards against a double removal (e.g. a re-entrant dismiss racing the fade's
+        // withEndAction, a build() failure, or an activity-destroy teardown after a user dismiss)
+        // reporting the dismiss twice.
+        if (removed) {
+            return
+        }
+        removed = true
+        application?.unregisterActivityLifecycleCallbacks(lifecycleCallbacks)
+        application = null
         try {
             wm?.removeViewImmediate(overlayRoot)
         } catch (e: Exception) {
@@ -221,6 +233,23 @@ internal class CTInAppHtmlBannerOverlay(
             cleanupWebView()
             host.onBannerRemoved()
         }
+    }
+
+    private val lifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
+        override fun onActivityDestroyed(destroyed: Activity) {
+            if (destroyed === activityWeakRef.get()) {
+                // Host Activity is gone: remove the window (best-effort) and report the dismiss so
+                // the controller clears currentlyDisplayingInApp and can show the next in-app.
+                finishDismiss()
+            }
+        }
+
+        override fun onActivityCreated(a: Activity, b: Bundle?) {}
+        override fun onActivityStarted(a: Activity) {}
+        override fun onActivityResumed(a: Activity) {}
+        override fun onActivityPaused(a: Activity) {}
+        override fun onActivityStopped(a: Activity) {}
+        override fun onActivitySaveInstanceState(a: Activity, b: Bundle) {}
     }
 
     private fun cleanupWebView() {

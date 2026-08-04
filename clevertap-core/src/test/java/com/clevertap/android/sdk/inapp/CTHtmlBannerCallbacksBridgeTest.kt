@@ -77,6 +77,12 @@ class CTHtmlBannerCallbacksBridgeTest {
     }
 
     @Test
+    fun `hideInApp dismisses the overlay for external hide`() {
+        bridge.hideInApp()
+        verify(exactly = 1) { overlay.dismiss() }
+    }
+
+    @Test
     fun `dismiss data resolved by the action is reported only once the overlay is removed`() {
         val resolved = Bundle().apply { putString("resolved", "yes") }
         every {

@@ -17,12 +17,18 @@ internal class CTHtmlBannerCallbacksBridge(
     private val notification: CTInAppNotification,
     private val config: CleverTapInstanceConfig,
     private val inAppListener: InAppListener
-) : CTInAppHtmlBannerOverlay.Callbacks {
+) : CTInAppHtmlBannerOverlay.Callbacks, InAppDisplayListener {
 
     /** Set by the caller immediately after constructing the overlay. */
     var overlay: CTInAppHtmlBannerOverlay? = null
 
     private var pendingDismissData: Bundle? = null
+
+    // ----- InAppDisplayListener (external hide, e.g. discardInApps/suspend) -----
+
+    override fun hideInApp() {
+        didDismiss(null)
+    }
 
     // ----- CTInAppHtmlBannerOverlay.Callbacks (banner lifecycle) -----
 
