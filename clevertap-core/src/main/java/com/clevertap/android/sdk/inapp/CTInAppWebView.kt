@@ -72,7 +72,9 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
 
         val style =
             "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"
-        val inAppHtml = html.replaceFirst("<head>".toRegex(), "<head>$style")
+        // Literal (non-regex) replacement: avoids compiling a Regex per render and avoids treating
+        // any $/\ in the replacement as regex back-references.
+        val inAppHtml = html.replaceFirst("<head>", "<head>$style")
         Logger.v("Density appears to be $d")
 
         setInitialScale((d * 100).toInt())
