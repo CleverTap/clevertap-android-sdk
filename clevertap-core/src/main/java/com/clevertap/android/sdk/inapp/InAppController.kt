@@ -1135,6 +1135,16 @@ internal class InAppController(
     }
 
     private fun showHtmlBannerOverlay(inAppNotification: CTInAppNotification, activity: Activity) {
+        // Defensive guard: the overlay renders an HTML WebView, so it only supports the custom-html
+        // header/footer types. Today the when-dispatch only routes those two types here, but this
+        // keeps the invariant explicit and safe if the dispatch is ever refactored.
+        if (!CTInAppHtmlBannerOverlay.canDisplay(inAppNotification.inAppType)) {
+            logger.debug(
+                "Overlay banner not supported for type ${inAppNotification.inAppType}; skipping"
+            )
+            currentlyDisplayingInApp = null
+            return
+        }
         logger.debug("Displaying In-App as overlay: ${inAppNotification.jsonDescription}")
         val bridge = CTHtmlBannerCallbacksBridge(inAppNotification, config, this)
         val overlay = CTInAppHtmlBannerOverlay(inAppNotification, config, bridge, activity)
