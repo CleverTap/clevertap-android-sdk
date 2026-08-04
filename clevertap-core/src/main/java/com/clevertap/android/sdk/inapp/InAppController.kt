@@ -1149,6 +1149,8 @@ internal class InAppController(
         val bridge = CTHtmlBannerCallbacksBridge(inAppNotification, config, this)
         val overlay = CTInAppHtmlBannerOverlay(inAppNotification, config, bridge, activity)
         bridge.overlay = overlay
+        // Allow the overlay to be hidden externally (discardInApps/suspend), like the fragment path.
+        registerInAppDisplayListener(bridge)
         overlay.show()
     }
 
