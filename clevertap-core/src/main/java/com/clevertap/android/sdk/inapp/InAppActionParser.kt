@@ -67,10 +67,8 @@ internal object InAppActionParser {
                 resolvedAction = CTInAppAction.createOpenUrlAction(parts[1])
             }
         }
-        if (resolvedCallToAction == null) {
-            // Use the url param value only if no other value is passed
-            resolvedCallToAction = callToActionUrlParam
-        }
+        // Use the url param value only if no other value is passed
+        resolvedCallToAction = resolvedCallToAction ?: callToActionUrlParam
 
         return ParsedAction(resolvedAction, resolvedCallToAction, urlActionData)
     }
