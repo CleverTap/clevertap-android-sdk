@@ -633,11 +633,11 @@ To handle scaling in a Push template, you must add the key `pt_scale_type` key a
 Templates that render an image support rounded corners and a border on that image. Add any of the
 following keys to the payload:
 
-| Key | Description |
-|:---|:---|
-| `pt_img_corner_radius` | Corner radius as a **percentage of the image's shortest side**, `0`-`50`. Defaults to `0` (square corners); `50` produces a fully rounded pill |
-| `pt_img_border_clr` | Border color in HEX, for example `#FF5722`. When omitted, no border is drawn |
-| `pt_img_border_width` | Border width as a **percentage of the image's shortest side**, `0`-`25`. Defaults to `10`. Only used when `pt_img_border_clr` is set |
+Key | Description
+:---|:---
+`pt_img_corner_radius` | Corner radius as a **percentage of the image's shortest side**, `0`-`50`. Defaults to `0` (square corners); `50` produces a fully rounded pill
+`pt_img_border_clr` | Border color in HEX, for example `#FF5722`. When omitted, no border is drawn
+`pt_img_border_width` | Border width as a **percentage of the image's shortest side**, `0`-`25`. Defaults to `10`. Only used when `pt_img_border_clr` is set
 
 ### Why percentages and not pixels
 
