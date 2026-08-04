@@ -131,7 +131,7 @@ internal object NotificationBitmapUtils {
         val safeRadius = resolveCornerRadiusPx(minDimension, cornerRadiusPercent)
 
         val half = strokeWidth / 2f
-        val drawRect = RectF(half, half, width - half, height - half)
+        val strokeRect = RectF(half, half, width - half, height - half)
         val adjustedRadius = (safeRadius - half).coerceAtLeast(0f)
 
         PTLog.debug(
@@ -142,19 +142,24 @@ internal object NotificationBitmapUtils {
         val output = createBitmap(width, height)
         val canvas = Canvas(output)
 
-        // BitmapShader gives anti-aliased rounded corners without clipPath's jagged edges
+        // Draw the full image into the full bitmap area — BitmapShader maps canvas coords 1:1 to
+        // source coords, so using an inset rect would silently drop edge pixels from the source.
         val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
         }
-        canvas.drawRoundRect(drawRect, adjustedRadius, adjustedRadius, imagePaint)
+        canvas.drawRoundRect(
+            RectF(0f, 0f, width.toFloat(), height.toFloat()),
+            safeRadius, safeRadius, imagePaint
+        )
 
+        // Draw the border stroke on top, inset by half the stroke width so it stays within the bitmap.
         if (borderColor != null && strokeWidth > 0f) {
             val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
                 this.strokeWidth = strokeWidth
                 color = borderColor
             }
-            canvas.drawRoundRect(drawRect, adjustedRadius, adjustedRadius, borderPaint)
+            canvas.drawRoundRect(strokeRect, adjustedRadius, adjustedRadius, borderPaint)
         }
 
         return output

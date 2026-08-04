@@ -656,9 +656,9 @@ values because the SDK draws those on a fixed-size canvas.
 * Because the corners are baked into the bitmap, a `center_crop` image view would crop them away.
   Whenever either key is active the SDK renders the image with `fit_center` and ignores
   `pt_scale_type`.
-* Values outside the supported range are clamped, and invalid values are ignored: an unparseable
-  color, a non-numeric radius, or a negative width all fall back to the default as though the key
-  were absent.
+* Values outside the supported range are clamped to the nearest valid value (for example a negative
+  radius becomes `0`). Truly invalid values — an unparseable color, a non-numeric radius or width,
+  NaN, or Infinity — are ignored as though the key were absent.
 * The keys apply to GIFs as well as static images.
 
 ## Android 12 Trampoline restrictions
