@@ -538,6 +538,15 @@ internal class InAppController(
         logger.verbose(defaultLogTag, "InAppState is SUSPENDED")
     }
 
+    /**
+     * Dismisses the currently visible PIP in-app, if any. Safe to call from any thread.
+     * No-op when no PIP is showing — other in-app types are never affected.
+     */
+    fun dismissPipInApp() {
+        logger.verbose(defaultLogTag, "dismissPipInApp() called by app")
+        pipManager.dismiss()
+    }
+
     @WorkerThread
     fun addInAppNotificationsToQueue(inappNotifs: List<JSONObject>) {
         try {

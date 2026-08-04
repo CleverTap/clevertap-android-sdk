@@ -3148,6 +3148,29 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    /**
+     * Dismisses the currently visible Picture-in-Picture (PIP) InApp Notification, if any.
+     * <p>
+     * This is a no-op when no PIP is visible. Other InApp Notification types are never
+     * affected. Safe to call from any thread.
+     * <p>
+     * Note: dismissing releases the in-app display slot, so the next queued InApp (if any)
+     * may show immediately. To keep the screen free of all in-apps, pair this with
+     * {@link #suspendInAppNotifications()} on screen entry and
+     * {@link #resumeInAppNotifications()} on exit.
+     *
+     * @noinspection unused
+     */
+    public void dismissPipInApp() {
+        if (!coreState.getConfig().isAnalyticsOnly()) {
+            getConfigLogger().debug(getAccountId(), "Dismissing PIP InApp Notification if visible...");
+            coreState.getInAppController().dismissPipInApp();
+        } else {
+            getConfigLogger().debug(getAccountId(),
+                    "CleverTap instance is set for Analytics only! Cannot dismiss PIP InApp Notification.");
+        }
+    }
+
     /** @noinspection unused*/
     @RestrictTo(Scope.LIBRARY_GROUP)
     public int getCustomSdkVersion(String customSdkName) {

@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
+import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -1002,7 +1003,9 @@ class InAppControllerTest {
     }
 
 
-    private fun createInAppController(): InAppController {
+    private fun createInAppController(
+        pipManager: PIPManager = mockk(relaxed = true)
+    ): InAppController {
         return InAppController(
             context = mockk(relaxed = true),
             config = mockConfig,
@@ -1022,9 +1025,19 @@ class InAppControllerTest {
             inAppInActionManager = mockInAppInActionManager,
             networkMonitor = mockNetworkMonitor,
             clock = fakeClock,
-            pipManager = mockk(relaxed = true),
+            pipManager = pipManager,
             validationResultStack = mockValidationResultStack,
         )
+    }
+
+    @Test
+    fun `dismissPipInApp delegates to pipManager dismiss`() {
+        val mockPipManager = mockk<PIPManager>(relaxed = true)
+        val inAppController = createInAppController(pipManager = mockPipManager)
+
+        inAppController.dismissPipInApp()
+
+        verify(exactly = 1) { mockPipManager.dismiss() }
     }
 
     // Deep Link Attribution Tests
