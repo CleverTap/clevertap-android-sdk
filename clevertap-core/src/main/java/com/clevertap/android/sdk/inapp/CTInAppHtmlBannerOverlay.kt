@@ -7,23 +7,19 @@ import android.graphics.PixelFormat
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.GestureDetector
-import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.AnimationSet
-import android.view.animation.TranslateAnimation
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
 import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.task.MainLooperHandler
 import java.lang.ref.WeakReference
-import kotlin.math.abs
 
 /**
  * Renders *custom-html* "header" and "footer" [CTInAppNotification]s in a [WindowManager] overlay,
@@ -64,9 +60,6 @@ internal class CTInAppHtmlBannerOverlay(
     }
 
     companion object {
-        private const val SWIPE_MIN_DISTANCE = 120
-        private const val SWIPE_THRESHOLD_VELOCITY = 200
-
         fun canDisplay(type: CTInAppType?): Boolean {
             return type == CTInAppType.CTInAppTypeFooterHTML || type == CTInAppType.CTInAppTypeHeaderHTML
         }
@@ -75,7 +68,14 @@ internal class CTInAppHtmlBannerOverlay(
     private val activityWeakRef = WeakReference(activity)
     private val isJsEnabled = notification.isJsEnabled
     private val mainHandler = MainLooperHandler()
-    private val gd = GestureDetector(activity, GestureListener())
+    private val gestureListener = PartialHtmlInAppGestureListener(
+        scaledPixels = ::getScaledPixels,
+        // Mark dismissing so the follow-up dismiss() from the close action removes immediately
+        // instead of re-animating.
+        onSwipeStart = { animatingDismiss = true },
+        onSwipeDismiss = { host.onBannerSwipeDismissed() }
+    )
+    private val gd = GestureDetector(activity, gestureListener)
 
     private var wm: WindowManager? = null
     private var overlayRoot: View? = null
@@ -121,6 +121,7 @@ internal class CTInAppHtmlBannerOverlay(
                 notification.aspectRatio
             )
             this.webView = webView
+            gestureListener.webView = webView
             webView.setWebViewClient(InAppWebViewClient(host))
             // Attach the swipe/pan gesture only when swipe-to-dismiss is enabled and there is no
             // close button, matching CTInAppBasePartialHtmlFragment.
@@ -160,6 +161,11 @@ internal class CTInAppHtmlBannerOverlay(
             wmlp.token = activity.window.decorView.windowToken // tie to this activity
             wm = activity.windowManager
             wm?.addView(root, wmlp)
+
+            // Announce the banner to accessibility services (parity with CTInAppBaseFragment).
+            ViewCompat.setAccessibilityPaneTitle(
+                root, activity.getString(R.string.ct_inapp_message_shown)
+            )
 
             // Tear down the overlay if the host Activity is destroyed, so the window is not leaked
             // and the in-app display queue is not left wedged (a Fragment gets this for free).
@@ -278,55 +284,6 @@ internal class CTInAppHtmlBannerOverlay(
             Gravity.BOTTOM
         } else {
             Gravity.TOP
-        }
-    }
-
-    private inner class GestureListener : SimpleOnGestureListener() {
-        override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            velocityX: Float,
-            velocityY: Float
-        ): Boolean {
-            if (e1 != null) {
-                if (e1.x - e2.x > SWIPE_MIN_DISTANCE && abs(velocityX.toDouble()) > SWIPE_THRESHOLD_VELOCITY) {
-                    // Right to left
-                    return remove(false)
-                } else if (e2.x - e1.x > SWIPE_MIN_DISTANCE && abs(velocityX.toDouble()) > SWIPE_THRESHOLD_VELOCITY) {
-                    // Left to right
-                    return remove(true)
-                }
-            }
-            return false
-        }
-
-        private fun remove(ltr: Boolean): Boolean {
-            val webView = webView ?: return false
-            // Mark dismissing so the follow-up dismiss() from the close action removes immediately
-            // instead of re-animating.
-            animatingDismiss = true
-            val animSet = AnimationSet(true)
-            val anim = if (ltr) {
-                TranslateAnimation(0f, getScaledPixels(50).toFloat(), 0f, 0f)
-            } else {
-                TranslateAnimation(0f, -getScaledPixels(50).toFloat(), 0f, 0f)
-            }
-            animSet.addAnimation(anim)
-            animSet.addAnimation(AlphaAnimation(1f, 0f))
-            animSet.duration = 300
-            animSet.fillAfter = true
-            animSet.isFillEnabled = true
-            animSet.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationEnd(animation: Animation?) {
-                    host.onBannerSwipeDismissed()
-                }
-
-                override fun onAnimationRepeat(animation: Animation?) {}
-
-                override fun onAnimationStart(animation: Animation?) {}
-            })
-            webView.startAnimation(animSet)
-            return true
         }
     }
 }
