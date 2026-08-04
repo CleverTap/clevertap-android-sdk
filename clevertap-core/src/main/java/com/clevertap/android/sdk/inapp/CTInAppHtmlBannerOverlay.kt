@@ -162,6 +162,14 @@ internal class CTInAppHtmlBannerOverlay(
             host.onBannerShown()
         } catch (t: Throwable) {
             config.logger.debug(config.accountId, "CTInAppHtmlBannerOverlay: failed to show", t)
+            // addView may have already attached the overlay before a later statement threw; detach
+            // it best-effort so the window is not leaked.
+            try {
+                wm?.removeViewImmediate(overlayRoot)
+            } catch (e: Exception) {
+                // no-op; the view may not have been added yet
+            }
+            overlayRoot = null
             cleanupWebView()
             host.onBannerRemoved()
         }

@@ -32,9 +32,11 @@ import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.sdk.utils.configMock
+import androidx.fragment.app.FragmentActivity
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
@@ -77,7 +79,8 @@ class InAppControllerTest {
     fun setUp() {
         mockkStatic(CoreMetaData::class)
         every { CoreMetaData.isAppForeground() } returns true
-        every { CoreMetaData.getCurrentActivity() } returns mockk(relaxed = true)
+        // Default to a FragmentActivity — the normal host for header/footer in-apps.
+        every { CoreMetaData.getCurrentActivity() } returns mockk<FragmentActivity>(relaxed = true)
 
         mockkStatic(InAppNotificationActivity::class)
         every {
@@ -116,6 +119,7 @@ class InAppControllerTest {
 
         mockManifestInfo = mockk()
         every { mockManifestInfo.excludedActivities } returns EXCLUDED_ACTIVITY_NAME
+        every { mockManifestInfo.isFragmentlessInAppBannersEnabled } returns false
 
         mockAnalyticsManager = mockk()
         every {
@@ -539,6 +543,54 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `HTML header in-app uses the fragment path on a FragmentActivity`() {
+        every { CoreMetaData.getCurrentActivity() } returns mockk<FragmentActivity>(relaxed = true)
+        val inAppController = createInAppController()
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]").toList()
+        )
+
+        verify(exactly = 1) {
+            CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `HTML header in-app is dropped on a non-FragmentActivity when fragmentless banners are disabled`() {
+        // Plain Activity host (not a FragmentActivity); flag defaults to false.
+        every { CoreMetaData.getCurrentActivity() } returns mockk<Activity>(relaxed = true)
+        val inAppController = createInAppController()
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]").toList()
+        )
+
+        verify(exactly = 0) {
+            CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any())
+        }
+        assertNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
+    fun `HTML header in-app shows the overlay on a non-FragmentActivity when fragmentless banners are enabled`() {
+        every { CoreMetaData.getCurrentActivity() } returns mockk<Activity>(relaxed = true)
+        every { mockManifestInfo.isFragmentlessInAppBannersEnabled } returns true
+        mockkConstructor(CTInAppHtmlBannerOverlay::class)
+        every { anyConstructed<CTInAppHtmlBannerOverlay>().show() } just runs
+
+        val inAppController = createInAppController()
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]").toList()
+        )
+
+        verify(exactly = 1) { anyConstructed<CTInAppHtmlBannerOverlay>().show() }
+        verify(exactly = 0) {
+            CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `suspendInApps should pause inapps until resumeInApps is called`() {
         val inAppController = createInAppController()
         inAppController.suspendInApps()
@@ -816,7 +868,7 @@ class InAppControllerTest {
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
         fakeInAppQueue.enqueueAll(inApps.toList())
 
-        val mockActivity = mockk<Activity>()
+        val mockActivity = mockk<FragmentActivity>()
         every { mockActivity.localClassName } returns EXCLUDED_ACTIVITY_NAME
         every { CoreMetaData.getCurrentActivity() } returns mockActivity
 
