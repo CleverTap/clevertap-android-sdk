@@ -13,17 +13,20 @@ import kotlin.math.abs
  * fragment-hosted [com.clevertap.android.sdk.inapp.fragment.CTInAppBasePartialHtmlFragment] and the
  * non-fragment [CTInAppHtmlBannerOverlay].
  *
- * On a horizontal fling it slides + fades the [webView] out, then invokes [onSwipeDismiss].
+ * On a horizontal fling it slides + fades the current WebView out, then invokes [onSwipeDismiss].
  * [onSwipeStart] runs when the dismiss animation begins — the overlay uses it to coordinate its own
  * removal animation. [scaledPixels] converts dp to px in the host's context.
+ *
+ * The target is read through [webViewProvider] rather than held as state, so it always reflects the
+ * host's live field (and becomes null once the host cleans up) — no stale reference to a destroyed
+ * WebView.
  */
 internal class PartialHtmlInAppGestureListener(
+    private val webViewProvider: () -> CTInAppWebView?,
     private val scaledPixels: (Int) -> Int,
     private val onSwipeStart: () -> Unit = {},
     private val onSwipeDismiss: () -> Unit
 ) : SimpleOnGestureListener() {
-
-    var webView: CTInAppWebView? = null
 
     override fun onFling(
         e1: MotionEvent?,
@@ -44,7 +47,7 @@ internal class PartialHtmlInAppGestureListener(
     }
 
     private fun remove(ltr: Boolean): Boolean {
-        val webView = webView ?: return false
+        val webView = webViewProvider() ?: return false
         onSwipeStart()
         val animSet = AnimationSet(true)
         val anim = if (ltr) {
