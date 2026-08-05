@@ -11,6 +11,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder
 import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
@@ -152,6 +153,27 @@ class MediaPlayerRecyclerView : RecyclerView {
             player.stop();
         }*/
         handle.pause()
+        playingHolder = null
+    }
+
+    /**
+     * Detaches the shared player surface from its current holder and forgets it.
+     *
+     * Must be called before mutating the adapter data and calling notifyDataSetChanged(),
+     * otherwise the surface view stays parented inside a holder that gets rebound to a
+     * different message. [stop] is not enough for that: it forgets [playingHolder] without
+     * clearing the holder's video container, leaving an orphaned surface behind.
+     * [removeVideoView] must run first — it needs [playingHolder] to locate the container.
+     */
+    fun prepareForListRebind() {
+        Logger.v(
+            if (playingHolder != null) {
+                "prepareForListRebind: detaching video surface from playing holder"
+            } else {
+                "prepareForListRebind: no active video — nothing to detach"
+            }
+        )
+        removeVideoView()
         playingHolder = null
     }
 

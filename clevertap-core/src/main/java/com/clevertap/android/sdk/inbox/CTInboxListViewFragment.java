@@ -40,7 +40,9 @@ import com.clevertap.android.sdk.video.VideoLibChecker;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -48,10 +50,10 @@ public class CTInboxListViewFragment extends Fragment {
 
     interface InboxListener {
 
-        void messageDidClick(Context baseContext, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
+        void messageDidClick(int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
                 HashMap<String, String> keyValue, int buttonIndex);
 
-        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+        void messageDidShow(CTInboxMessage inboxMessage, Bundle data);
     }
 
     CleverTapInstanceConfig config;
@@ -65,7 +67,10 @@ public class CTInboxListViewFragment extends Fragment {
     MediaPlayerRecyclerView mediaRecyclerView;
 
     RecyclerView recyclerView;
-    private  CTInboxMessageAdapter inboxMessageAdapter;
+
+    TextView noMessageView;
+
+    private CTInboxMessageAdapter inboxMessageAdapter;
 
 
     CTInboxStyleConfig styleConfig;
@@ -98,15 +103,22 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
     private void updateInboxMessages(){
+        ArrayList<CTInboxMessage> freshMessages = fetchFreshMessages();
+        if (freshMessages != null) {
+            inboxMessages = freshMessages;
+        }
+    }
+
+    @Nullable
+    ArrayList<CTInboxMessage> fetchFreshMessages() {
         Bundle bundle = getArguments();
-        if(bundle==null) return;
+        if (bundle == null) return null;
         final String filter = bundle.getString("filter", null);
         CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
-        if (cleverTapAPI != null) {
-            Logger.v( "CTInboxListViewFragment:onAttach() called with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
-            ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
-            inboxMessages = filter != null ? filterMessages(allMessages, filter) : allMessages;
-        }
+        if (cleverTapAPI == null) return null;
+        Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
+        ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
+        return filter != null ? filterMessages(allMessages, filter) : allMessages;
     }
 
     @Nullable
@@ -118,19 +130,27 @@ public class CTInboxListViewFragment extends Fragment {
         wireSwipeToRefresh(swipeRefreshLayout);
         linearLayout = allView.findViewById(R.id.list_view_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
-        TextView noMessageView = allView.findViewById(R.id.list_view_no_message_view);
+        noMessageView = allView.findViewById(R.id.list_view_no_message_view);
 
         if (inboxMessages.size() <= 0) {
-            noMessageView.setVisibility(View.VISIBLE);
-            noMessageView.setText(styleConfig.getNoMessageViewText());
-            noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
+            showNoMessageView();
             return allView;
         }
 
         noMessageView.setVisibility(View.GONE);
+        buildListView();
+        return allView;
+    }
 
+    private void showNoMessageView() {
+        noMessageView.setText(styleConfig.getNoMessageViewText());
+        noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
+        noMessageView.setVisibility(View.VISIBLE);
+    }
+
+    private void buildListView() {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        inboxMessageAdapter= new CTInboxMessageAdapter(inboxMessages, this);
+        inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
             mediaRecyclerView.setVisibility(View.VISIBLE);
@@ -153,7 +173,7 @@ public class CTInboxListViewFragment extends Fragment {
             }
 
         } else {
-            recyclerView = allView.findViewById(R.id.list_view_recycler_view);
+            recyclerView = linearLayout.findViewById(R.id.list_view_recycler_view);
             recyclerView.setVisibility(View.VISIBLE);
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -161,7 +181,6 @@ public class CTInboxListViewFragment extends Fragment {
             recyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
         }
-        return allView;
     }
 
     @Override
@@ -224,6 +243,145 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
+    /**
+     * Repaints this fragment's list from the already-committed message store.
+     * Main thread only. Called from the pull-to-refresh success path — never from
+     * background updates, so an on-screen list never changes without a user action.
+     */
+    void refreshList() {
+        if (getActivity() == null) {
+            return;
+        }
+        ArrayList<CTInboxMessage> freshMessages = fetchFreshMessages();
+        if (freshMessages == null) {
+            return;
+        }
+
+        // The view holders mark the on-screen copies read instantly, but the store's
+        // write is async — never let a refresh flip a just-read message back to unread.
+        int preservedReads = mergeReadStateForward(inboxMessages, freshMessages);
+        if (preservedReads > 0) {
+            Logger.v("refreshList: preserved read state for " + preservedReads + " just-read message(s)");
+        }
+
+        if (isContentIdentical(inboxMessages, freshMessages)) {
+            Logger.v("refreshList: content identical (" + freshMessages.size()
+                    + " messages) — skipping repaint, video untouched");
+            return; // nothing changed — keep any playing video untouched
+        }
+
+        if (getView() == null || noMessageView == null) {
+            // View not created (or already destroyed) — refresh the data only.
+            Logger.v("refreshList: view not available — data-only refresh ("
+                    + freshMessages.size() + " messages)");
+            replaceMessagesInPlace(freshMessages);
+            return;
+        }
+
+        int oldCount = inboxMessages.size();
+        if (mediaRecyclerView != null) {
+            // Detach the shared video surface while its holder is still known;
+            // rebinding with the surface attached is the SDK-2330 video regression.
+            mediaRecyclerView.prepareForListRebind();
+        }
+
+        replaceMessagesInPlace(freshMessages);
+
+        if (inboxMessages.isEmpty()) {
+            Logger.v("refreshList: list now empty — showing no-message view");
+            if (mediaRecyclerView != null) {
+                mediaRecyclerView.setVisibility(View.GONE);
+            }
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.GONE);
+            }
+            if (inboxMessageAdapter != null) {
+                inboxMessageAdapter.notifyDataSetChanged();
+            }
+            showNoMessageView();
+            return;
+        }
+
+        noMessageView.setVisibility(View.GONE);
+        if (inboxMessageAdapter == null) {
+            Logger.v("refreshList: first messages arrived (" + inboxMessages.size()
+                    + ") — building list UI");
+            buildListView(); // tab was opened empty — the list UI is built lazily now
+            return;
+        }
+        Logger.v("refreshList: repainting list, " + oldCount + " -> " + inboxMessages.size() + " messages");
+        RecyclerView activeRecyclerView = mediaRecyclerView != null ? mediaRecyclerView : recyclerView;
+        if (activeRecyclerView != null) {
+            activeRecyclerView.setVisibility(View.VISIBLE);
+        }
+        inboxMessageAdapter.notifyDataSetChanged();
+        if (mediaRecyclerView != null) {
+            // Post so findBestVisibleMediaHolder() sees the re-laid-out children.
+            mediaRecyclerView.post(mediaRecyclerView::playVideo);
+        }
+    }
+
+    /**
+     * The adapter aliases {@link #inboxMessages}; the field must never be reassigned
+     * after the adapter exists, or click positions resolve against the wrong list.
+     */
+    private void replaceMessagesInPlace(ArrayList<CTInboxMessage> freshMessages) {
+        inboxMessages.clear();
+        inboxMessages.addAll(freshMessages);
+    }
+
+    /** @return how many fresh copies were upgraded to read. */
+    static int mergeReadStateForward(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
+        HashSet<String> readIds = new HashSet<>();
+        for (CTInboxMessage message : currentMessages) {
+            if (message.isRead()) {
+                readIds.add(message.getMessageId());
+            }
+        }
+        if (readIds.isEmpty()) {
+            return 0;
+        }
+        int upgraded = 0;
+        for (CTInboxMessage message : freshMessages) {
+            if (!message.isRead() && readIds.contains(message.getMessageId())) {
+                message.setRead(true);
+                upgraded++;
+            }
+        }
+        return upgraded;
+    }
+
+    static boolean isContentIdentical(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
+        if (currentMessages.size() != freshMessages.size()) {
+            return false;
+        }
+        for (int i = 0; i < currentMessages.size(); i++) {
+            CTInboxMessage current = currentMessages.get(i);
+            CTInboxMessage fresh = freshMessages.get(i);
+            if (!current.getMessageId().equals(fresh.getMessageId())
+                    || current.isRead() != fresh.isRead()
+                    || current.getDate() != fresh.getDate()
+                    || !contentJson(current).equals(contentJson(fresh))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The "msg" sub-object only: the top-level read-state key must stay out of this
+     * comparison because the on-screen copies' backing JSON is fetch-time stale
+     * relative to their in-place-mutated read flag.
+     */
+    private static String contentJson(CTInboxMessage message) {
+        JSONObject data = message.getData();
+        if (data == null) {
+            return "";
+        }
+        JSONObject msg = data.optJSONObject(Constants.KEY_MSG);
+        return msg != null ? msg.toString() : "";
+    }
+
     void wireSwipeToRefresh(@NonNull final SwipeRefreshLayout swipeRefreshLayout) {
         // Direct child is a LinearLayout, whose canScrollVertically(-1) is always false.
         // Delegate to whichever RecyclerView is actually on screen so mid-scroll pulls
@@ -254,9 +412,25 @@ public class CTInboxListViewFragment extends Fragment {
                 if (activity == null) return;
                 activity.runOnUiThread(() -> {
                     swipeRefreshLayout.setRefreshing(false);
-                    // First fetch that hit a 403 — hide the widget now that the spinner is done.
-                    if (!success && refreshApi.isInboxFetchDisabledForSession()) {
-                        swipeRefreshLayout.setEnabled(false);
+                    if (!success) {
+                        Logger.v("pull-to-refresh: fetch failed or throttled — list unchanged");
+                        // First fetch that hit a 403 — hide the widget now that the spinner is done.
+                        if (refreshApi.isInboxFetchDisabledForSession()) {
+                            swipeRefreshLayout.setEnabled(false);
+                        }
+                        return; // fetch failed or throttled — the stored data is unchanged
+                    }
+                    // Re-check inside the runnable: state can change between post and run.
+                    if (!isAdded()) return;
+                    Activity currentActivity = getActivity();
+                    if (currentActivity instanceof CTInboxActivity && !currentActivity.isFinishing()) {
+                        // All resident tab fragments repaint from the same committed
+                        // snapshot, so no tab keeps showing a server-deleted message.
+                        Logger.v("pull-to-refresh success: refreshing all inbox tabs");
+                        ((CTInboxActivity) currentActivity).refreshAllInboxListFragments();
+                    } else {
+                        Logger.v("pull-to-refresh success: host is not CTInboxActivity — refreshing this list only");
+                        refreshList();
                     }
                 });
             });
@@ -264,20 +438,27 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     void didClick(Bundle data, int position, int contentPageIndex, HashMap<String, String> keyValuePayload, int buttonIndex) {
+        // A row's click listener remembers its position from the moment the row was
+        // drawn. Touch events are queued, and after a refresh shrinks the list the
+        // rows are redrawn only on the NEXT frame — so a tap can arrive carrying a
+        // position from the old, longer list. Indexing with it would go out of
+        // bounds, so such a tap is ignored instead of acted on.
+        if (position < 0 || position >= inboxMessages.size()) {
+            Logger.v("didClick: stale position " + position + ", ignoring click");
+            return;
+        }
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
-            //noinspection ConstantConditions
-            listener.messageDidClick(getActivity().getBaseContext(), contentPageIndex, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
+            listener.messageDidClick(contentPageIndex, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
         }
     }
 
     @SuppressWarnings("SameParameterValue")
-    void didShow(Bundle data, int position) {
+    void didShow(Bundle data, CTInboxMessage inboxMessage) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
-            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
-            //noinspection ConstantConditions
-            listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
+            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], messageId = [" + inboxMessage.getMessageId() + "]");
+            listener.messageDidShow(inboxMessage, data);
         }
     }
 
