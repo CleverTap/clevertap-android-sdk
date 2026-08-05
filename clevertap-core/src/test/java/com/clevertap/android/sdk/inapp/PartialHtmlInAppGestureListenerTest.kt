@@ -1,8 +1,12 @@
 package com.clevertap.android.sdk.inapp
 
 import android.view.MotionEvent
+import android.view.animation.Animation
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -74,5 +78,35 @@ class PartialHtmlInAppGestureListenerTest {
 
         assertFalse(consumed)
         assertEquals(0, swipeStartCount)
+    }
+
+    @Test
+    fun `swipe dismiss fires at animation end, strictly after swipe start`() {
+        val order = mutableListOf<String>()
+        val gestureListener = PartialHtmlInAppGestureListener(
+            webViewProvider = { webView },
+            scaledPixels = { it },
+            onSwipeStart = { order += "start" },
+            onSwipeDismiss = { order += "dismiss" }
+        )
+        val animSlot = slot<Animation>()
+        every { webView.startAnimation(capture(animSlot)) } just runs
+
+        val consumed = gestureListener.onFling(event(200f), event(0f), -201f, 0f)
+
+        // onSwipeStart ran synchronously; onSwipeDismiss has NOT fired yet.
+        assertTrue(consumed)
+        assertEquals(listOf("start"), order)
+
+        // Drive the captured animation to completion -> onSwipeDismiss fires, strictly after start.
+        animationListenerOf(animSlot.captured).onAnimationEnd(animSlot.captured)
+        assertEquals(listOf("start", "dismiss"), order)
+    }
+
+    /** Reads the [Animation.AnimationListener] the gesture attached to its [AnimationSet]. */
+    private fun animationListenerOf(animation: Animation): Animation.AnimationListener {
+        val field = Animation::class.java.getDeclaredField("mListener")
+        field.isAccessible = true
+        return field.get(animation) as Animation.AnimationListener
     }
 }

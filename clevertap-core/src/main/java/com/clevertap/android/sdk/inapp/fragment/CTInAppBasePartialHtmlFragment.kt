@@ -22,7 +22,6 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
     OnLongClickListener {
 
     private lateinit var gd: GestureDetector
-    private lateinit var gestureListener: PartialHtmlInAppGestureListener
 
     private var webView: CTInAppWebView? = null
 
@@ -33,7 +32,7 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        gestureListener = PartialHtmlInAppGestureListener(
+        val gestureListener = PartialHtmlInAppGestureListener(
             webViewProvider = { webView },
             scaledPixels = ::getScaledPixels,
             onSwipeDismiss = ::triggerSwipeDismissAction
