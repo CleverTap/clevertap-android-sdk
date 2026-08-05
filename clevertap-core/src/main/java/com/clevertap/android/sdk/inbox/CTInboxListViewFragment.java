@@ -50,10 +50,10 @@ public class CTInboxListViewFragment extends Fragment {
 
     interface InboxListener {
 
-        void messageDidClick(Context baseContext, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
+        void messageDidClick(int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
                 HashMap<String, String> keyValue, int buttonIndex);
 
-        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+        void messageDidShow(CTInboxMessage inboxMessage, Bundle data);
     }
 
     CleverTapInstanceConfig config;
@@ -449,8 +449,7 @@ public class CTInboxListViewFragment extends Fragment {
         }
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
-            //noinspection ConstantConditions
-            listener.messageDidClick(getActivity().getBaseContext(), contentPageIndex, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
+            listener.messageDidClick(contentPageIndex, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
         }
     }
 
@@ -459,8 +458,7 @@ public class CTInboxListViewFragment extends Fragment {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
             Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], messageId = [" + inboxMessage.getMessageId() + "]");
-            //noinspection ConstantConditions
-            listener.messageDidShow(getActivity().getBaseContext(), inboxMessage, data);
+            listener.messageDidShow(inboxMessage, data);
         }
     }
 

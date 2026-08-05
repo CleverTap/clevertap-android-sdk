@@ -226,7 +226,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         ctInboxListViewFragmentSpy.didClick(null, 5, 0, null, Constants.APP_INBOX_ITEM_INDEX)
         ctInboxListViewFragmentSpy.didClick(null, -1, 0, null, Constants.APP_INBOX_ITEM_INDEX)
 
-        verify(exactly = 0) { listener.messageDidClick(any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { listener.messageDidClick(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -236,20 +236,18 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
 
         ctInboxListViewFragmentSpy.didClick(null, 0, 0, null, Constants.APP_INBOX_ITEM_INDEX)
 
-        verify(exactly = 0) { listener.messageDidClick(any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { listener.messageDidClick(any(), any(), any(), any(), any()) }
     }
 
     @Test
     fun test_didShow_forwards_the_exact_message_to_the_listener() {
         val listener = mockk<CTInboxListViewFragment.InboxListener>(relaxed = true)
-        val activity = mockk<FragmentActivity>(relaxed = true)
-        every { ctInboxListViewFragmentSpy.activity } returns activity
         ctInboxListViewFragmentSpy.setListener(listener)
         val message = CTInboxMessage(jsonObj)
 
         ctInboxListViewFragmentSpy.didShow(null, message)
 
-        verify(exactly = 1) { listener.messageDidShow(any(), message, null) }
+        verify(exactly = 1) { listener.messageDidShow(message, null) }
     }
 
     // ---------------------------------------------------------------------

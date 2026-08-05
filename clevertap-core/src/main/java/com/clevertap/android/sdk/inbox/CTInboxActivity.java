@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inbox;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -244,13 +243,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     @Override
-    public void messageDidClick(Context baseContext, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
+    public void messageDidClick(int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
                                 HashMap<String, String> keyValue, int buttonIndex) {
         didClick(data, contentPageIndex, inboxMessage, keyValue, buttonIndex);
     }
 
     @Override
-    public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
+    public void messageDidShow(CTInboxMessage inboxMessage, Bundle data) {
         Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
         didShow(data, inboxMessage);
     }
