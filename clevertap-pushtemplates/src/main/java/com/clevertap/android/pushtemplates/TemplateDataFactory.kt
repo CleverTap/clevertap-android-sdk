@@ -19,6 +19,7 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_DIR
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_COUNT
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_DL
@@ -239,10 +240,21 @@ internal object TemplateDataFactory {
         val defaultDeepLink = extras.getString(PT_DEFAULT_DL)
             ?: extras.getString(Constants.DEEP_LINK_KEY)
 
+        val iconCount = (extras.getString(PT_RATING_ICON_COUNT)?.toIntOrNull() ?: 5)
+            .coerceIn(2, 5)
+        val icons = (1..5).map { i ->
+            RatingIconData(
+                url = extras.getString("pt_icon_$i"),
+                selectedUrl = extras.getString("pt_icon_${i}_sel")
+            )
+        }
+
         return RatingTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = createMediaData(extras, defaultAltText, createImageBorderData(extras, colorMap)),
-            defaultDeepLink = defaultDeepLink
+            defaultDeepLink = defaultDeepLink,
+            iconCount = iconCount,
+            icons = icons
         )
     }
 
