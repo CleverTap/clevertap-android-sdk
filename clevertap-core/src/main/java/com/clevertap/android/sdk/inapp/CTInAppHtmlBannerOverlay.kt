@@ -69,6 +69,7 @@ internal class CTInAppHtmlBannerOverlay(
     private val isJsEnabled = notification.isJsEnabled
     private val mainHandler = MainLooperHandler()
     private val gestureListener = PartialHtmlInAppGestureListener(
+        webViewProvider = { webView },
         scaledPixels = ::getScaledPixels,
         // Mark dismissing so the follow-up dismiss() from the close action removes immediately
         // instead of re-animating.
@@ -121,7 +122,6 @@ internal class CTInAppHtmlBannerOverlay(
                 notification.aspectRatio
             )
             this.webView = webView
-            gestureListener.webView = webView
             webView.setWebViewClient(InAppWebViewClient(host))
             // Attach the swipe/pan gesture only when swipe-to-dismiss is enabled and there is no
             // close button, matching CTInAppBasePartialHtmlFragment.

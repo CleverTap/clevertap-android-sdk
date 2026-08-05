@@ -34,6 +34,7 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
     override fun onAttach(context: Context) {
         super.onAttach(context)
         gestureListener = PartialHtmlInAppGestureListener(
+            webViewProvider = { webView },
             scaledPixels = ::getScaledPixels,
             onSwipeDismiss = ::triggerSwipeDismissAction
         )
@@ -94,7 +95,6 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
                 inAppNotification.aspectRatio
             )
             this.webView = webView
-            gestureListener.webView = webView
             val webViewClient = InAppWebViewClient(this)
             webView.setWebViewClient(webViewClient)
             // Attach the swipe/pan gesture only when swipe-to-dismiss is enabled and there is no close
