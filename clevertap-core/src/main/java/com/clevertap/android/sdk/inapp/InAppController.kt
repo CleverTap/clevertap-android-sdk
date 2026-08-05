@@ -54,6 +54,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
@@ -869,8 +870,9 @@ internal class InAppController(
         }
     }
 
-    override fun onPIPShowFailed(inAppNotification: CTInAppNotification) {
+    override fun onPIPShowFailed(inAppNotification: CTInAppNotification, mediaType: PIPMediaType) {
         logger.verbose(defaultLogTag, "PIP failed to show: ${inAppNotification.campaignId}")
+        reportPipMediaError(mediaType)
         // Same threading pattern as inAppNotificationDidDismiss: clear the lock and advance
         // the queue atomically on the async in-app thread. This avoids a race where
         // currentlyDisplayingInApp is cleared on main but _showNotificationIfAvailable
@@ -880,6 +882,33 @@ internal class InAppController(
             inAppDidDismiss(inAppNotification)
             _showNotificationIfAvailable()
         }
+    }
+
+    /**
+     * Reports a PIP all-media-failed as a structured [ValidationResult] on the validation stack,
+     * riding out as top-level `wzrk_error` on the next queued event — mirroring how the bundled
+     * advanced-builder HTML template reports its media failures. No click or viewed event is
+     * raised: the PIP never showed. One distinct code per PIP media type.
+     */
+    private fun reportPipMediaError(mediaType: PIPMediaType) {
+        val validationResult = when (mediaType) {
+            PIPMediaType.IMAGE -> ValidationResult(
+                Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_MSG
+            )
+
+            PIPMediaType.VIDEO -> ValidationResult(
+                Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_MSG
+            )
+
+            PIPMediaType.GIF -> ValidationResult(
+                Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_MSG
+            )
+        }
+        logger.debug("PIP media failed to load, reporting wzrk_error ${validationResult.errorCode}")
+        validationResultStack.pushValidationResult(validationResult)
     }
 
     private fun incrementLocalInAppCountInPersistentStore(

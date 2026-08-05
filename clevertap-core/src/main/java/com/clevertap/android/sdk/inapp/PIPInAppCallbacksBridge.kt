@@ -4,6 +4,7 @@ import android.os.Bundle
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 
 internal class PIPInAppCallbacksBridge(
     private val inAppNotification: CTInAppNotification,
@@ -106,8 +107,8 @@ internal class PIPInAppCallbacksBridge(
         logger.debug(LOG_TAG, "PIP onMediaError for campaign: ${inAppNotification.campaignId}, url: $url, error: $error")
     }
 
-    override fun onShowFailed() {
-        logger.debug(LOG_TAG, "PIP onShowFailed for campaign: ${inAppNotification.campaignId}")
-        showFailureHandler.onPIPShowFailed(inAppNotification)
+    override fun onShowFailed(mediaType: PIPMediaType) {
+        logger.debug(LOG_TAG, "PIP onShowFailed for campaign: ${inAppNotification.campaignId}, mediaType: $mediaType")
+        showFailureHandler.onPIPShowFailed(inAppNotification, mediaType)
     }
 }

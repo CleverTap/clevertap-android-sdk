@@ -26,6 +26,7 @@ import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -1038,6 +1039,57 @@ class InAppControllerTest {
         inAppController.dismissPipInApp()
 
         verify(exactly = 1) { mockPipManager.dismiss() }
+    }
+
+    @Test
+    fun `onPIPShowFailed with VIDEO pushes the PIP video error onto the validation stack`() {
+        val inAppController = createInAppController()
+        val notification = mockk<CTInAppNotification>(relaxed = true) {
+            every { campaignId } returns "pip_campaign"
+        }
+
+        inAppController.onPIPShowFailed(notification, PIPMediaType.VIDEO)
+
+        verify(exactly = 1) {
+            mockValidationResultStack.pushValidationResult(match<ValidationResult> {
+                it.errorCode == Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_CODE &&
+                        it.errorDesc == Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_MSG
+            })
+        }
+    }
+
+    @Test
+    fun `onPIPShowFailed with IMAGE pushes the PIP image error onto the validation stack`() {
+        val inAppController = createInAppController()
+        val notification = mockk<CTInAppNotification>(relaxed = true) {
+            every { campaignId } returns "pip_campaign"
+        }
+
+        inAppController.onPIPShowFailed(notification, PIPMediaType.IMAGE)
+
+        verify(exactly = 1) {
+            mockValidationResultStack.pushValidationResult(match<ValidationResult> {
+                it.errorCode == Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_CODE &&
+                        it.errorDesc == Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_MSG
+            })
+        }
+    }
+
+    @Test
+    fun `onPIPShowFailed with GIF pushes the PIP GIF error onto the validation stack`() {
+        val inAppController = createInAppController()
+        val notification = mockk<CTInAppNotification>(relaxed = true) {
+            every { campaignId } returns "pip_campaign"
+        }
+
+        inAppController.onPIPShowFailed(notification, PIPMediaType.GIF)
+
+        verify(exactly = 1) {
+            mockValidationResultStack.pushValidationResult(match<ValidationResult> {
+                it.errorCode == Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_CODE &&
+                        it.errorDesc == Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_MSG
+            })
+        }
     }
 
     // Deep Link Attribution Tests

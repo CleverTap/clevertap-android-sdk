@@ -165,7 +165,7 @@ internal class PIPManager(
                 }
                 DismissReason.Dismiss,
                 DismissReason.SessionCleanup -> s.config.callbacks?.onClose()
-                DismissReason.ShowFailed -> s.config.callbacks?.onShowFailed()
+                DismissReason.ShowFailed -> s.config.callbacks?.onShowFailed(s.config.mediaType)
                 DismissReason.Replaced -> {}
             }
         }
