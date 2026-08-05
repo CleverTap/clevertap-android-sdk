@@ -203,6 +203,14 @@ public class PTConstants {
 
     public static final String KEY_REQUEST_CODES = "requestCodes";
 
+    public static final String PT_RATING_SUBMIT = "pt_rating_submit";
+
+    public static final String PT_RATING_ICON_COUNT = "pt_rating_icon_count";
+
+    public static final String PT_RATING_AUTO_SUBMIT = "pt_rating_auto_submit";
+
+    public static final String PT_RATING_CONFIRM_TEXT = "pt_rating_confirm_text";
+
     // Vertical Image Template Keys
     public static final String PT_TEXT1 = "pt_text1";
     public static final String PT_TEXT2 = "pt_text2";

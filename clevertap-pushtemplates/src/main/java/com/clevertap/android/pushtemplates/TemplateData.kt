@@ -133,11 +133,18 @@ internal data class AutoCarouselTemplateData(
     val flipInterval: Int = PTConstants.PT_FLIP_INTERVAL_TIME,
 ) : TemplateData()
 
+internal data class RatingIconData(
+    val url: String?,       // colored version — shown grey when unselected, colored when clicked
+    val selectedUrl: String? // optional custom selected state; falls back to url if null
+)
+
 internal data class RatingTemplateData(
     override val templateType: TemplateType = TemplateType.RATING,
     val baseContent: BaseContent,
     val mediaData: MediaData,
     val defaultDeepLink: String? = null,
+    val iconCount: Int = 5,
+    val icons: List<RatingIconData> = emptyList()
 ) : TemplateData()
 
 internal data class TimerTemplateData(

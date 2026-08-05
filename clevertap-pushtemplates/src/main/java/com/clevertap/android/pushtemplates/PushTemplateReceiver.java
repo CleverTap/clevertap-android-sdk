@@ -18,6 +18,10 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION;
@@ -374,6 +378,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         try {
             int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
 
+            if (extras.getBoolean(PTConstants.PT_RATING_SUBMIT, false)) {
+                Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                        Utils.convertRatingBundleObjectToHashMap(extras));
+                handleRatingDeepLink(context, extras, notificationId,
+                        extras.getString(Constants.DEEP_LINK_KEY, ""), this.config);
+                return;
+            }
+
             if (extras.getBoolean(PTConstants.DEFAULT_DL, false)) {
                 this.config = extras.getParcelable("config");
                 notificationManager.cancel(notificationId);
@@ -459,50 +471,113 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             contentViewRating = notification.bigContentView;
             contentViewSmall = notification.contentView;
 
-            if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                clicked1 = false;
+            int clickedStar = extras.getInt(PTConstants.KEY_CLICKED_STAR, 0);
+            boolean hasCustomIcons = extras.getString("pt_icon_1") != null;
+
+            if (hasCustomIcons) {
+                int iconCount = 5;
+                try {
+                    String countStr = extras.getString(PTConstants.PT_RATING_ICON_COUNT);
+                    if (countStr != null) iconCount = Math.max(2, Math.min(5, Integer.parseInt(countStr)));
+                } catch (NumberFormatException ignored) {}
+
+                // If all icon URLs are identical → star-like cumulative fill (1..clickedStar colored)
+                // If URLs differ → emoji single-select (only clicked icon colored)
+                String firstUrl = extras.getString("pt_icon_1");
+                boolean cumulativeFill = true;
+                for (int i = 2; i <= iconCount; i++) {
+                    String u = extras.getString("pt_icon_" + i);
+                    if (u == null || !u.equals(firstUrl)) { cumulativeFill = false; break; }
+                }
+
+                TemplateMediaManager iconTmm = new TemplateMediaManager(
+                        new TemplateRepository(context, config), new GifDecoderImpl());
+                int[] iconViewIds = {R.id.star1, R.id.star2, R.id.star3, R.id.star4, R.id.star5};
+
+                if (cumulativeFill) {
+                    // Same image for all icons: fill 1..clickedStar colored, rest grey
+                    Bitmap colored = firstUrl != null ? iconTmm.getImageBitmap(firstUrl) : null;
+                    Bitmap grey = colored != null ? toGreyscale(colored) : null;
+                    for (int i = 1; i <= iconCount; i++) {
+                        if (colored == null) break;
+                        contentViewRating.setImageViewBitmap(
+                                iconViewIds[i - 1], i <= clickedStar ? colored : grey);
+                    }
+                } else {
+                    // Different images per icon: single-select (only clicked one colored)
+                    for (int i = 1; i <= iconCount; i++) {
+                        boolean isClicked = (i == clickedStar);
+                        String baseUrl = extras.getString("pt_icon_" + i);
+                        String url = isClicked
+                                ? (extras.getString("pt_icon_" + i + "_sel") != null
+                                        ? extras.getString("pt_icon_" + i + "_sel") : baseUrl)
+                                : baseUrl;
+                        if (url != null) {
+                            Bitmap bmp = iconTmm.getImageBitmap(url);
+                            if (bmp != null) {
+                                contentViewRating.setImageViewBitmap(
+                                        iconViewIds[i - 1], isClicked ? bmp : toGreyscale(bmp));
+                            }
+                        }
+                    }
+                }
             } else {
-                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_outline);
-            }
-            if (2 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                clicked2 = false;
-            } else {
-                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_outline);
-            }
-            if (3 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                clicked3 = false;
-            } else {
-                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_outline);
-            }
-            if (4 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
-                clicked4 = false;
-            } else {
-                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_outline);
-            }
-            if (5 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
-                contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_filled);
-                clicked5 = false;
-            } else {
-                contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
+                if (1 == clickedStar) {
+                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                    clicked1 = false;
+                } else {
+                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_outline);
+                }
+                if (2 == clickedStar) {
+                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                    clicked2 = false;
+                } else {
+                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_outline);
+                }
+                if (3 == clickedStar) {
+                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                    clicked3 = false;
+                } else {
+                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_outline);
+                }
+                if (4 == clickedStar) {
+                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
+                    clicked4 = false;
+                } else {
+                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_outline);
+                }
+                if (5 == clickedStar) {
+                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
+                    contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_filled);
+                    clicked5 = false;
+                } else {
+                    contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
+                }
             }
             cancelRatingClickIntents(context,intent);
             extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
-            contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation,
-                    LaunchPendingIntentFactory.getActivityIntent(extras, context));
+
+            boolean autoSubmit = "true".equalsIgnoreCase(extras.getString(PTConstants.PT_RATING_AUTO_SUBMIT));
+
+            if (!autoSubmit) {
+                Intent submitIntent = new Intent(context, PushTemplateReceiver.class);
+                submitIntent.putExtras(extras);
+                submitIntent.putExtra(PTConstants.PT_RATING_SUBMIT, true);
+                int submitFlags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+                PendingIntent submitPendingIntent = PendingIntent.getBroadcast(
+                        context, notificationId, submitIntent, submitFlags);
+                contentViewRating.setViewVisibility(R.id.rating_confirm_frame, View.VISIBLE);
+                contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation, submitPendingIntent);
+            }
 
             setSmallIcon(context);
 
@@ -525,9 +600,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 notificationManager.notify(notificationId, notification);
             }
 
-            Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                    Utils.convertRatingBundleObjectToHashMap(extras));
-            if (VERSION.SDK_INT < VERSION_CODES.S) {
+            if (autoSubmit) {
+                Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                        Utils.convertRatingBundleObjectToHashMap(extras));
                 handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked, this.config);
             }
         } catch (Throwable t) {
@@ -821,6 +896,17 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         if (message != null && !message.isEmpty()) {
             Utils.showToast(context, message, config);
         }
+    }
+
+    private Bitmap toGreyscale(Bitmap src) {
+        Bitmap result = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(result);
+        Paint paint = new Paint();
+        ColorMatrix cm = new ColorMatrix();
+        cm.setSaturation(0f);
+        paint.setColorFilter(new ColorMatrixColorFilter(cm));
+        canvas.drawBitmap(src, 0f, 0f, paint);
+        return result;
     }
 
 }
