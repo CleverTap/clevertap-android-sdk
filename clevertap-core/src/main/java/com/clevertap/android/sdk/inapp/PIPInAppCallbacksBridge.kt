@@ -52,6 +52,8 @@ internal class PIPInAppCallbacksBridge(
      * Raises a "Notification Clicked" event with the API-dismiss descriptors
      * (`wzrk_element_id = dismissApi`, `wzrk_c2a = Dismiss PiP API`,
      * `wzrk_action = close`, `wzrk_data = close`).
+     * The event records the API call itself and fires even when the PIP was still
+     * loading (never visible) — it may therefore precede or lack a Viewed event.
      * The dismiss itself is reported separately via the [onClose] that follows.
      */
     override fun onApiDismiss() {

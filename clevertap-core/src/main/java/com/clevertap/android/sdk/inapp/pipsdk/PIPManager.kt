@@ -173,6 +173,9 @@ internal class PIPManager(
                 }
                 DismissReason.ApiDismiss -> {
                     // App-initiated dismiss: report the API-dismiss click first, then the dismiss.
+                    // Fires even if the PIP had not yet become visible (media still loading):
+                    // the event records "the app invoked the dismiss API on a live session",
+                    // not an impression interaction.
                     s.config.callbacks?.onApiDismiss()
                     s.config.callbacks?.onClose()
                 }
