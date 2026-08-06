@@ -418,49 +418,33 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 return;
             }
 
-            if (deepLinkList.isEmpty()) {
-                PTLog.verbose("Rating: deepLinkList is empty, cannot handle star tap");
-                return;
-            }
-            String pt_dl_clicked = deepLinkList.get(0);
+            // Empty deep link is valid — rating can collect a score without navigating anywhere.
+            // Star rendering, event firing, and confirm button must still work without pt_dl_* keys.
+            String pt_dl_clicked = deepLinkList.isEmpty() ? "" : deepLinkList.get(0);
 
             if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 1);
-                if (deepLinkList.size() > 0) {
-                    pt_dl_clicked = deepLinkList.get(0);
-                }
+                if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
             }
             if (2 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 2);
-                if (deepLinkList.size() > 1) {
-                    pt_dl_clicked = deepLinkList.get(1);
-                } else {
-                    pt_dl_clicked = deepLinkList.get(0);
-                }
+                if (deepLinkList.size() > 1) pt_dl_clicked = deepLinkList.get(1);
+                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
             }
             if (3 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 3);
-                if (deepLinkList.size() > 2) {
-                    pt_dl_clicked = deepLinkList.get(2);
-                } else {
-                    pt_dl_clicked = deepLinkList.get(0);
-                }
+                if (deepLinkList.size() > 2) pt_dl_clicked = deepLinkList.get(2);
+                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
             }
             if (4 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 4);
-                if (deepLinkList.size() > 3) {
-                    pt_dl_clicked = deepLinkList.get(3);
-                } else {
-                    pt_dl_clicked = deepLinkList.get(0);
-                }
+                if (deepLinkList.size() > 3) pt_dl_clicked = deepLinkList.get(3);
+                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
             }
             if (5 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 5);
-                if (deepLinkList.size() > 4) {
-                    pt_dl_clicked = deepLinkList.get(4);
-                } else {
-                    pt_dl_clicked = deepLinkList.get(0);
-                }
+                if (deepLinkList.size() > 4) pt_dl_clicked = deepLinkList.get(4);
+                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
             }
 
             Notification notification = Utils.getNotificationById(context, notificationId);
@@ -501,13 +485,18 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 if (cumulativeFill) {
                     // Same image for all icons: fill 1..clickedStar colored, rest grey
                     Bitmap colored = firstUrl != null ? iconTmm.getImageBitmap(firstUrl) : null;
+                    // Only recycle grey — it is a derived copy. colored comes from the media
+                    // manager cache and must not be recycled here.
                     Bitmap grey = colored != null ? Utils.toGreyscale(colored) : null;
-                    if (colored != null) bitmapsToRecycle.add(colored);
                     if (grey != null) bitmapsToRecycle.add(grey);
                     for (int i = 1; i <= iconCount; i++) {
                         if (colored == null) break;
-                        contentViewRating.setImageViewBitmap(
-                                iconViewIds[i - 1], i <= clickedStar ? colored : grey);
+                        Bitmap icon = i <= clickedStar ? colored : grey;
+                        if (icon != null) {
+                            contentViewRating.setImageViewBitmap(iconViewIds[i - 1], icon);
+                        } else {
+                            contentViewRating.setImageViewResource(iconViewIds[i - 1], R.drawable.pt_star_outline);
+                        }
                     }
                 } else {
                     // Different images per icon: single-select (only clicked one colored)
@@ -520,14 +509,18 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                 : baseUrl;
                         if (url != null) {
                             Bitmap bmp = iconTmm.getImageBitmap(url);
+                            // bmp comes from the cache — do not recycle it. Only recycle grey.
                             if (bmp != null) {
-                                bitmapsToRecycle.add(bmp);
                                 if (isClicked) {
                                     contentViewRating.setImageViewBitmap(iconViewIds[i - 1], bmp);
                                 } else {
                                     Bitmap grey = Utils.toGreyscale(bmp);
-                                    contentViewRating.setImageViewBitmap(iconViewIds[i - 1], grey);
-                                    bitmapsToRecycle.add(grey);
+                                    if (grey != null) {
+                                        contentViewRating.setImageViewBitmap(iconViewIds[i - 1], grey);
+                                        bitmapsToRecycle.add(grey);
+                                    } else {
+                                        contentViewRating.setImageViewResource(iconViewIds[i - 1], R.drawable.pt_star_outline);
+                                    }
                                 }
                             }
                         }
@@ -578,9 +571,17 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             cancelRatingClickIntents(context,intent);
             extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
 
-            // Default is auto-submit; deferred submit is opt-in via pt_rating_auto_submit=false
-            String autoSubmitVal = extras.getString(PTConstants.PT_RATING_AUTO_SUBMIT);
-            boolean autoSubmit = autoSubmitVal == null || !"false".equalsIgnoreCase(autoSubmitVal);
+            // Default is auto-submit; deferred submit is opt-in via pt_rating_auto_submit=false.
+            // Handle both String ("false") and boolean (false) representations in the bundle.
+            boolean autoSubmit = true;
+            if (extras.containsKey(PTConstants.PT_RATING_AUTO_SUBMIT)) {
+                String autoSubmitStr = extras.getString(PTConstants.PT_RATING_AUTO_SUBMIT);
+                if (autoSubmitStr != null) {
+                    autoSubmit = !"false".equalsIgnoreCase(autoSubmitStr);
+                } else {
+                    autoSubmit = extras.getBoolean(PTConstants.PT_RATING_AUTO_SUBMIT, true);
+                }
+            }
 
             if (!autoSubmit) {
                 Intent submitIntent = new Intent(context, PushTemplateReceiver.class);

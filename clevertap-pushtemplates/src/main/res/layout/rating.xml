@@ -85,7 +85,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="fitXY"
-                    android:contentDescription="@string/confirm_btn_content_description" />
+                    android:importantForAccessibility="no"
+                    android:contentDescription="" />
 
                 <TextView
                     android:id="@+id/tVRatingConfirmation"

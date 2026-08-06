@@ -58,10 +58,9 @@ internal class RatingContentView(
             } else if (hasCustomIcons) {
                 val colored = data.icons[i].url?.let { templateMediaManager.getImageBitmap(it) }
                 if (colored != null) {
-                    // Do NOT recycle grey here — RemoteViews parcels on notify() which happens
-                    // outside this constructor; recycling before that causes blank icons.
                     val grey = Utils.toGreyscale(colored)
-                    remoteView.setImageViewBitmap(viewId, grey)
+                    if (grey != null) remoteView.setImageViewBitmap(viewId, grey)
+                    else remoteView.setImageViewResource(viewId, R.drawable.pt_star_outline)
                 }
                 else remoteView.setImageViewResource(viewId, R.drawable.pt_star_outline)
             } else {
