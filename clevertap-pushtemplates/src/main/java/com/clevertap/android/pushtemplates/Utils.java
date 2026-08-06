@@ -603,7 +603,9 @@ public class Utils {
         }
     }
 
+    @Nullable
     public static Bitmap toGreyscale(Bitmap src) {
+        if (src == null || src.isRecycled()) return null;
         Bitmap result = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(result);
         Paint paint = new Paint();
