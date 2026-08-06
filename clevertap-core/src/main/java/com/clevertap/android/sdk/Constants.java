@@ -193,7 +193,9 @@ public interface Constants {
     String INAPP_CTA_DISMISS_BUTTON = "Dismiss Button";
     String INAPP_CTA_SWIPE_DISMISS = "Swipe to Dismiss";
 
-    // Programmatic PIP dismiss (dismissPipInApp() or discardInAppNotifications(true))
+    // Programmatic PIP dismiss via the public dismissPipInApp() API.
+    // Discard-hide is silent for now — product will define common discard
+    // descriptors for all in-app types later.
     String INAPP_ELEMENT_ID_DISMISS_API = "dismissApi";
     String INAPP_CTA_DISMISS_PIP_API = "Dismiss PiP API";
 

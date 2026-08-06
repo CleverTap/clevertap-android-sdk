@@ -1032,13 +1032,14 @@ class InAppControllerTest {
     }
 
     @Test
-    fun `dismissPipInApp delegates to pipManager dismiss`() {
+    fun `dismissPipInApp delegates to pipManager dismissFromApi`() {
         val mockPipManager = mockk<PIPManager>(relaxed = true)
         val inAppController = createInAppController(pipManager = mockPipManager)
 
         inAppController.dismissPipInApp()
 
-        verify(exactly = 1) { mockPipManager.dismiss() }
+        verify(exactly = 1) { mockPipManager.dismissFromApi() }
+        verify(exactly = 0) { mockPipManager.dismiss() }
     }
 
     @Test

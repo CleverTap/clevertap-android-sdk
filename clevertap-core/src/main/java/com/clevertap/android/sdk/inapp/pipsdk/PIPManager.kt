@@ -63,8 +63,12 @@ internal class PIPManager(
     }
 
     /** Dismisses PIP with the configured exit animation. No-op if not visible.
-     *  App-initiated: raises the API-dismiss click before the dismiss callback. */
-    fun dismiss() = runOnMain { dismissInternal(DismissReason.ApiDismiss) }
+     *  Silent teardown — no click event. Used by the discard-hide path. */
+    fun dismiss() = runOnMain { dismissInternal() }
+
+    /** Dismisses PIP on behalf of the public dismiss API (CleverTapAPI.dismissPipInApp()).
+     *  Raises the API-dismiss click before the dismiss callback, unlike [dismiss]. */
+    fun dismissFromApi() = runOnMain { dismissInternal(DismissReason.ApiDismiss) }
 
     /**
      * Returns true if PIP is currently visible (compact or expanded).
@@ -140,8 +144,9 @@ internal class PIPManager(
         /** Dismissed without a close-button tap — after a CTA action or a post-show media failure.
          *  Surfaces as a dismiss only (the CTA already reports its own click via onAction). */
         data object Dismiss : DismissReason
-        /** App-initiated dismiss — the public dismiss API or discardInAppNotifications(true).
-         *  Surfaces as an API-dismiss click AND a dismiss. */
+        /** App-initiated dismiss via the public dismiss API (dismissPipInApp()).
+         *  Surfaces as an API-dismiss click AND a dismiss. Discard-hide stays on [Dismiss]
+         *  until product defines common discard descriptors for all in-app types. */
         data object ApiDismiss : DismissReason
         /** All media URLs failed — PIP was never visible. */
         data object ShowFailed : DismissReason

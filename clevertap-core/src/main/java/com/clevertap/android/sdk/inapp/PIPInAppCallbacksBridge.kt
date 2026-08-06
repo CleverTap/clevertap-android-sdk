@@ -48,7 +48,7 @@ internal class PIPInAppCallbacksBridge(
     }
 
     /**
-     * Programmatic dismiss (dismissPipInApp() or discardInAppNotifications(true)).
+     * Programmatic dismiss via the public dismissPipInApp() API.
      * Raises a "Notification Clicked" event with the API-dismiss descriptors
      * (`wzrk_element_id = dismissApi`, `wzrk_c2a = Dismiss PiP API`,
      * `wzrk_action = close`, `wzrk_data = close`) for NOC diagnostics —

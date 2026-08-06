@@ -14,8 +14,8 @@ interface PIPCallbacks {
      *  Fires just before the corresponding [onClose] for the same dismissal. */
     fun onCloseButtonClick() {}
 
-    /** Called when the app dismissed PIP programmatically (public dismiss API or discard) —
-     *  as opposed to a user X-tap or a CTA-triggered dismiss. Fires just before the
+    /** Called when the app dismissed PIP via the public dismiss API — as opposed to a user
+     *  X-tap, a CTA-triggered dismiss, or a discard-hide teardown. Fires just before the
      *  corresponding [onClose] for the same dismissal. */
     fun onApiDismiss() {}
     fun onExpand() {}
