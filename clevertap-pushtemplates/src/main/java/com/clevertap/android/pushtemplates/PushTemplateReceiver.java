@@ -469,13 +469,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     if (countStr != null) iconCount = Math.max(2, Math.min(5, Integer.parseInt(countStr)));
                 } catch (NumberFormatException ignored) {}
 
-                // If all icon URLs are identical → star-like cumulative fill (1..clickedStar colored)
-                // If URLs differ → emoji single-select (only clicked icon colored)
+                // If all icon URLs are identical (or missing) → star-like cumulative fill (1..clickedStar colored)
+                // If URLs explicitly differ → emoji single-select (only clicked icon colored)
+                // A null URL at position i means the sender is reusing firstUrl for that slot.
                 String firstUrl = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + "1");
                 boolean cumulativeFill = true;
                 for (int i = 2; i <= iconCount; i++) {
                     String u = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + i);
-                    if (u == null || !u.equals(firstUrl)) { cumulativeFill = false; break; }
+                    if (u != null && !u.equals(firstUrl)) { cumulativeFill = false; break; }
                 }
 
                 TemplateMediaManager iconTmm = new TemplateMediaManager(
