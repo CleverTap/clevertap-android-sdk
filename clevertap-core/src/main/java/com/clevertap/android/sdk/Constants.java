@@ -206,6 +206,15 @@ public interface Constants {
     String INAPP_IMAGE_LOAD_FAILED_ERROR_MSG = "InApp image failed to load";
     String INAPP_VIDEO_LOAD_FAILED_ERROR_MSG = "InApp video failed to load";
 
+    // wzrk_error codes/messages for PIP media failures (all URLs failed, PIP never showed).
+    // One code per PIP media type, keyed by the campaign's primary media type.
+    int INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_CODE = 593;
+    int INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_CODE = 594;
+    int INAPP_PIP_GIF_LOAD_FAILED_ERROR_CODE = 595;
+    String INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_MSG = "InApp PIP image failed to load";
+    String INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_MSG = "InApp PIP video failed to load";
+    String INAPP_PIP_GIF_LOAD_FAILED_ERROR_MSG = "InApp PIP GIF failed to load";
+
     String KEY_EFC = "efc";
     String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";
     String KEY_TLC = "tlc";

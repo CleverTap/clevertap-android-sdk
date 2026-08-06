@@ -21,6 +21,8 @@ interface PIPCallbacks {
     fun onMediaError(url: String, error: String) {}
 
     /** Called when PIP failed to show because all media URLs failed to load.
-     *  PIP was never visible — no [onShow] or [onClose] will fire for this session. */
-    fun onShowFailed() {}
+     *  PIP was never visible — no [onShow] or [onClose] will fire for this session.
+     *  @param mediaType the session's primary media type — the campaign's intent, even when
+     *  a fallback of a different kind also failed. */
+    fun onShowFailed(mediaType: PIPMediaType) {}
 }
