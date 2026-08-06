@@ -542,10 +542,11 @@ internal class InAppController(
     /**
      * Dismisses the currently visible PIP in-app, if any. Safe to call from any thread.
      * No-op when no PIP is showing — other in-app types are never affected.
+     * Raises the API-dismiss "Notification Clicked" (wzrk_element_id=dismissApi)
      */
     fun dismissPipInApp() {
         logger.verbose(defaultLogTag, "dismissPipInApp() called by app")
-        pipManager.dismiss()
+        pipManager.dismissFromApi()
     }
 
     @WorkerThread
