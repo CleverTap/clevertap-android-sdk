@@ -145,8 +145,7 @@ internal class PIPManager(
          *  Surfaces as a dismiss only (the CTA already reports its own click via onAction). */
         data object Dismiss : DismissReason
         /** App-initiated dismiss via the public dismiss API (dismissPipInApp()).
-         *  Surfaces as an API-dismiss click AND a dismiss. Discard-hide stays on [Dismiss]
-         *  until product defines common discard descriptors for all in-app types. */
+         *  Surfaces as an API-dismiss click AND a dismiss. */
         data object ApiDismiss : DismissReason
         /** All media URLs failed — PIP was never visible. */
         data object ShowFailed : DismissReason

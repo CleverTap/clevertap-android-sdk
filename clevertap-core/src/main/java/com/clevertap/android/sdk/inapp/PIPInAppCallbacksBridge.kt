@@ -51,8 +51,7 @@ internal class PIPInAppCallbacksBridge(
      * Programmatic dismiss via the public dismissPipInApp() API.
      * Raises a "Notification Clicked" event with the API-dismiss descriptors
      * (`wzrk_element_id = dismissApi`, `wzrk_c2a = Dismiss PiP API`,
-     * `wzrk_action = close`, `wzrk_data = close`) for NOC diagnostics —
-     * the dashboard does not count it in campaign analytics.
+     * `wzrk_action = close`, `wzrk_data = close`).
      * The dismiss itself is reported separately via the [onClose] that follows.
      */
     override fun onApiDismiss() {
