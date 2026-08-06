@@ -62,8 +62,9 @@ internal class PIPManager(
         runOnMain { showInternal(activity, config, lifecycleOwner) }
     }
 
-    /** Dismisses PIP with the configured exit animation. No-op if not visible. */
-    fun dismiss() = runOnMain { dismissInternal() }
+    /** Dismisses PIP with the configured exit animation. No-op if not visible.
+     *  App-initiated: raises the API-dismiss click before the dismiss callback. */
+    fun dismiss() = runOnMain { dismissInternal(DismissReason.ApiDismiss) }
 
     /**
      * Returns true if PIP is currently visible (compact or expanded).
@@ -139,6 +140,9 @@ internal class PIPManager(
         /** Dismissed without a close-button tap — after a CTA action or a post-show media failure.
          *  Surfaces as a dismiss only (the CTA already reports its own click via onAction). */
         data object Dismiss : DismissReason
+        /** App-initiated dismiss — the public dismiss API or discardInAppNotifications(true).
+         *  Surfaces as an API-dismiss click AND a dismiss. */
+        data object ApiDismiss : DismissReason
         /** All media URLs failed — PIP was never visible. */
         data object ShowFailed : DismissReason
         /** Activity destroyed (non-config) or Fragment view stopped (SAA). */
@@ -161,6 +165,11 @@ internal class PIPManager(
                 DismissReason.UserClose -> {
                     // Close (X) button: report the click first, then the dismiss.
                     s.config.callbacks?.onCloseButtonClick()
+                    s.config.callbacks?.onClose()
+                }
+                DismissReason.ApiDismiss -> {
+                    // App-initiated dismiss: report the API-dismiss click first, then the dismiss.
+                    s.config.callbacks?.onApiDismiss()
                     s.config.callbacks?.onClose()
                 }
                 DismissReason.Dismiss,

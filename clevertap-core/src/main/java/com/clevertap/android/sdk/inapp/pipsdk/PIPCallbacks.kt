@@ -13,6 +13,11 @@ interface PIPCallbacks {
      *  dismiss, a media-load failure, or Activity/session teardown, all of which surface via [onClose].
      *  Fires just before the corresponding [onClose] for the same dismissal. */
     fun onCloseButtonClick() {}
+
+    /** Called when the app dismissed PIP programmatically (public dismiss API or discard) —
+     *  as opposed to a user X-tap or a CTA-triggered dismiss. Fires just before the
+     *  corresponding [onClose] for the same dismissal. */
+    fun onApiDismiss() {}
     fun onExpand() {}
     fun onCollapse() {}
     fun onAction() {}

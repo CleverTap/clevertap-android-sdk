@@ -120,6 +120,34 @@ class PIPInAppCallbacksBridgeTest {
     }
 
     @Test
+    fun `onApiDismiss raises a close clicked event with the API-dismiss descriptors`() {
+        val notification = mockk<CTInAppNotification> {
+            every { campaignId } returns "test_campaign_123"
+        }
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, logger)
+        bridge.onApiDismiss()
+        verify(exactly = 1) {
+            mockListener.inAppNotificationActionTriggered(
+                notification,
+                match { it.type == InAppActionType.CLOSE },
+                Constants.INAPP_CTA_DISMISS_PIP_API,
+                match { it.getString(Constants.KEY_WZRK_ELEMENT_ID) == Constants.INAPP_ELEMENT_ID_DISMISS_API },
+                null
+            )
+        }
+    }
+
+    @Test
+    fun `onApiDismiss does not report a dismiss (that is onClose's job)`() {
+        val notification = mockk<CTInAppNotification> {
+            every { campaignId } returns "test_campaign_123"
+        }
+        val bridge = PIPInAppCallbacksBridge(notification, mockListener, mockShowFailureHandler, logger)
+        bridge.onApiDismiss()
+        verify(exactly = 0) { mockListener.inAppNotificationDidDismiss(any(), any()) }
+    }
+
+    @Test
     fun `onShowFailed forwards the notification and media type to the failure handler`() {
         val notification = mockk<CTInAppNotification> {
             every { campaignId } returns "test_campaign_123"
