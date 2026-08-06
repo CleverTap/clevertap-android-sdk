@@ -56,4 +56,10 @@ internal class PIPSession(
      *  Used to auto-resume only when WE paused it, not when the user paused manually. */
     var pausedByBackground: Boolean = false
         internal set
+
+    /** True once onShow() has fired for this session (entry animation completed).
+     *  Gates the API-dismiss click: a click must never be raised for a session that
+     *  never raised a Viewed event. Survives rotation — the session outlives the view. */
+    var hasShown: Boolean = false
+        internal set
 }

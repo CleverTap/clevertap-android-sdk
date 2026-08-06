@@ -336,6 +336,10 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
                 val anchor = anchors[s.currentPosition] ?: return
                 cv.visibility = View.VISIBLE
                 PIPAnimator.animateIn(cv, anchor, effectiveAnimConfig(s), width, height) {
+                    // The single place onShow() fires. hasShown must be set here and ONLY
+                    // here — tying it to the Viewed event, not to view visibility (the
+                    // rotation-reattach path shows the view without raising Viewed).
+                    s.hasShown = true
                     s.config.callbacks?.onShow()
                 }
             }

@@ -173,7 +173,9 @@ internal class PIPManager(
                 }
                 DismissReason.ApiDismiss -> {
                     // App-initiated dismiss: report the API-dismiss click first, then the dismiss.
-                    s.config.callbacks?.onApiDismiss()
+                    // Skip the click if PIP never became visible — a click without a preceding
+                    // Notification Viewed would be a phantom impression.
+                    if (s.hasShown) s.config.callbacks?.onApiDismiss()
                     s.config.callbacks?.onClose()
                 }
                 DismissReason.Dismiss,
