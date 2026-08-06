@@ -218,8 +218,8 @@ internal object TemplateDataFactory {
             .coerceIn(2, 5)
         val icons = (1..5).map { i ->
             RatingIconData(
-                url = extras.getString("pt_icon_$i"),
-                selectedUrl = extras.getString("pt_icon_${i}_sel")
+                url = extras.getString("${PTConstants.PT_ICON_KEY_PREFIX}$i"),
+                selectedUrl = extras.getString("${PTConstants.PT_ICON_KEY_PREFIX}${i}_sel")
             )
         }
 

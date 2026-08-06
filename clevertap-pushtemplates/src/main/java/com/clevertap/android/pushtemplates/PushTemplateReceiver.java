@@ -18,10 +18,6 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
-import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION;
@@ -422,6 +418,10 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 return;
             }
 
+            if (deepLinkList.isEmpty()) {
+                PTLog.verbose("Rating: deepLinkList is empty, cannot handle star tap");
+                return;
+            }
             String pt_dl_clicked = deepLinkList.get(0);
 
             if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
@@ -472,7 +472,11 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             contentViewSmall = notification.contentView;
 
             int clickedStar = extras.getInt(PTConstants.KEY_CLICKED_STAR, 0);
-            boolean hasCustomIcons = extras.getString("pt_icon_1") != null;
+            boolean hasCustomIcons = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + "1") != null;
+
+            // Bitmaps must be recycled AFTER notify() — RemoteViews parcels them during notify().
+            // Recycling before notify() causes IllegalStateException or blank icons.
+            java.util.List<Bitmap> bitmapsToRecycle = new java.util.ArrayList<>();
 
             if (hasCustomIcons) {
                 int iconCount = 5;
@@ -483,10 +487,10 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 // If all icon URLs are identical → star-like cumulative fill (1..clickedStar colored)
                 // If URLs differ → emoji single-select (only clicked icon colored)
-                String firstUrl = extras.getString("pt_icon_1");
+                String firstUrl = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + "1");
                 boolean cumulativeFill = true;
                 for (int i = 2; i <= iconCount; i++) {
-                    String u = extras.getString("pt_icon_" + i);
+                    String u = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + i);
                     if (u == null || !u.equals(firstUrl)) { cumulativeFill = false; break; }
                 }
 
@@ -497,7 +501,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 if (cumulativeFill) {
                     // Same image for all icons: fill 1..clickedStar colored, rest grey
                     Bitmap colored = firstUrl != null ? iconTmm.getImageBitmap(firstUrl) : null;
-                    Bitmap grey = colored != null ? toGreyscale(colored) : null;
+                    Bitmap grey = colored != null ? Utils.toGreyscale(colored) : null;
+                    if (colored != null) bitmapsToRecycle.add(colored);
+                    if (grey != null) bitmapsToRecycle.add(grey);
                     for (int i = 1; i <= iconCount; i++) {
                         if (colored == null) break;
                         contentViewRating.setImageViewBitmap(
@@ -507,16 +513,22 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     // Different images per icon: single-select (only clicked one colored)
                     for (int i = 1; i <= iconCount; i++) {
                         boolean isClicked = (i == clickedStar);
-                        String baseUrl = extras.getString("pt_icon_" + i);
+                        String baseUrl = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + i);
+                        String selKey = PTConstants.PT_ICON_KEY_PREFIX + i + "_sel";
                         String url = isClicked
-                                ? (extras.getString("pt_icon_" + i + "_sel") != null
-                                        ? extras.getString("pt_icon_" + i + "_sel") : baseUrl)
+                                ? (extras.getString(selKey) != null ? extras.getString(selKey) : baseUrl)
                                 : baseUrl;
                         if (url != null) {
                             Bitmap bmp = iconTmm.getImageBitmap(url);
                             if (bmp != null) {
-                                contentViewRating.setImageViewBitmap(
-                                        iconViewIds[i - 1], isClicked ? bmp : toGreyscale(bmp));
+                                bitmapsToRecycle.add(bmp);
+                                if (isClicked) {
+                                    contentViewRating.setImageViewBitmap(iconViewIds[i - 1], bmp);
+                                } else {
+                                    Bitmap grey = Utils.toGreyscale(bmp);
+                                    contentViewRating.setImageViewBitmap(iconViewIds[i - 1], grey);
+                                    bitmapsToRecycle.add(grey);
+                                }
                             }
                         }
                     }
@@ -566,11 +578,20 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             cancelRatingClickIntents(context,intent);
             extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
 
-            boolean autoSubmit = "true".equalsIgnoreCase(extras.getString(PTConstants.PT_RATING_AUTO_SUBMIT));
+            // Default is auto-submit; deferred submit is opt-in via pt_rating_auto_submit=false
+            String autoSubmitVal = extras.getString(PTConstants.PT_RATING_AUTO_SUBMIT);
+            boolean autoSubmit = autoSubmitVal == null || !"false".equalsIgnoreCase(autoSubmitVal);
 
             if (!autoSubmit) {
                 Intent submitIntent = new Intent(context, PushTemplateReceiver.class);
                 submitIntent.putExtras(extras);
+                // Strip large extras that are not needed for submit processing to stay within
+                // Binder's ~1 MB transaction limit.
+                submitIntent.removeExtra(Constants.WZRK_ACTIONS);
+                for (int i = 1; i <= 5; i++) {
+                    submitIntent.removeExtra(PTConstants.PT_ICON_KEY_PREFIX + i);
+                    submitIntent.removeExtra(PTConstants.PT_ICON_KEY_PREFIX + i + "_sel");
+                }
                 submitIntent.putExtra(PTConstants.PT_RATING_SUBMIT, true);
                 int submitFlags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
                 PendingIntent submitPendingIntent = PendingIntent.getBroadcast(
@@ -598,6 +619,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 notification = notificationBuilder.build();
 
                 notificationManager.notify(notificationId, notification);
+                for (Bitmap b : bitmapsToRecycle) { if (!b.isRecycled()) b.recycle(); }
             }
 
             if (autoSubmit) {
@@ -620,6 +642,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
         flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
         int[] requestCodes = intent.getIntArrayExtra(PTConstants.KEY_REQUEST_CODES);
+        if (requestCodes == null) return;
 
         for (int requestCode : requestCodes)
             PendingIntent.getBroadcast(context,
@@ -651,6 +674,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         launchIntent.putExtras(extras);
         launchIntent.putExtra(Constants.DEEP_LINK_KEY, pt_dl_clicked);
         launchIntent.removeExtra(Constants.WZRK_ACTIONS);
+        launchIntent.removeExtra(PTConstants.PT_RATING_SUBMIT);
         launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
         launchIntent.setFlags(
                 Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -898,15 +922,5 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         }
     }
 
-    private Bitmap toGreyscale(Bitmap src) {
-        Bitmap result = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(result);
-        Paint paint = new Paint();
-        ColorMatrix cm = new ColorMatrix();
-        cm.setSaturation(0f);
-        paint.setColorFilter(new ColorMatrixColorFilter(cm));
-        canvas.drawBitmap(src, 0f, 0f, paint);
-        return result;
-    }
-
 }
+

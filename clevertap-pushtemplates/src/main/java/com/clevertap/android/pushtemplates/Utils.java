@@ -19,6 +19,9 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
@@ -598,6 +601,17 @@ public class Utils {
             PTLog.debug("Can not parse colour value: " + clr + " Switching to default colour: " + default_clr);
             return Color.parseColor(default_clr);
         }
+    }
+
+    public static Bitmap toGreyscale(Bitmap src) {
+        Bitmap result = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(result);
+        Paint paint = new Paint();
+        ColorMatrix cm = new ColorMatrix();
+        cm.setSaturation(0f);
+        paint.setColorFilter(new ColorMatrixColorFilter(cm));
+        canvas.drawBitmap(src, 0f, 0f, paint);
+        return result;
     }
 
     /**

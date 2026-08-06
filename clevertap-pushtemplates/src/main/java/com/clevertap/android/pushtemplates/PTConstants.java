@@ -211,6 +211,10 @@ public class PTConstants {
 
     public static final String PT_RATING_CONFIRM_TEXT = "pt_rating_confirm_text";
 
+    public static final String PT_RATING_BTN_MARGIN_H = "pt_rating_btn_margin_h";
+
+    public static final String PT_ICON_KEY_PREFIX = "pt_icon_";
+
     // Vertical Image Template Keys
     public static final String PT_TEXT1 = "pt_text1";
     public static final String PT_TEXT2 = "pt_text2";

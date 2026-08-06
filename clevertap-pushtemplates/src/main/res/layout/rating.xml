@@ -13,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:paddingBottom="4dp"
         android:layout_below="@id/rel_lyt">
 
         <include layout="@layout/image_media_dynamic_linear"
@@ -67,33 +68,40 @@
                 android:contentDescription="@string/rating_star_5" />
 
         </LinearLayout>
-        <FrameLayout
+        <LinearLayout
             android:id="@+id/rating_confirm_frame"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/customButtonBackground"
             android:visibility="gone">
 
-            <ImageView
-                android:id="@+id/rating_confirm_bg"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY"
-                android:contentDescription="@string/confirm_btn_content_description" />
-
-            <TextView
-                android:id="@+id/tVRatingConfirmation"
+            <FrameLayout
+                android:id="@+id/rating_confirm_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:background="@android:color/transparent"
-                android:text="@string/confirm_btn"
-                android:contentDescription="@string/confirm_btn_content_description"
-                android:gravity="center"
-                android:textAppearance="@style/PushTitle" />
+                android:background="@color/customButtonBackground">
 
-        </FrameLayout>
+                <ImageView
+                    android:id="@+id/rating_confirm_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitXY"
+                    android:contentDescription="@string/confirm_btn_content_description" />
+
+                <TextView
+                    android:id="@+id/tVRatingConfirmation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:background="@android:color/transparent"
+                    android:text="@string/confirm_btn"
+                    android:contentDescription="@string/confirm_btn_content_description"
+                    android:gravity="center"
+                    android:textAppearance="@style/PushTitle" />
+
+            </FrameLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 </RelativeLayout>
