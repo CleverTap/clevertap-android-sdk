@@ -1,4 +1,25 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.4.1 (August 7, 2026)
+
+#### New Features
+* **Spin-the-Wheel and Scratch Card Templates:** Adds Spin-the-Wheel and Scratch Card gamified
+  template support to Advanced InApp Builder in-app notifications.
+* **Dismiss PIP In-App API:** New `dismissPipInApp()` method on `CleverTapAPI` dismisses the
+  currently visible Picture-in-Picture (PIP) In-App notification. Safe to call from any thread;
+  a no-op when no PIP is visible, and other in-app types are never affected.
+    * **Note:** Dismissing frees the in-app display slot, so the next queued in-app (if any) may
+      show immediately. To keep a screen free of all in-apps, pair this with
+      `suspendInAppNotifications()` on screen entry and `resumeInAppNotifications()` on exit.
+* **HTML Header/Footer In-Apps Without FragmentActivity:** Custom-HTML header and footer in-app
+  notifications can now render when the host Activity is not a `FragmentActivity` — for example
+  Unity or Unreal game engines. Opt-in via the `CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS` manifest
+  flag; default off, so existing integrations are unaffected.
+
+#### Bug Fixes
+* **App Inbox Pull-to-Refresh:** Fixes an issue where the built-in App Inbox did not repaint the
+  message list after a pull-to-refresh — newly fetched messages only appeared after closing and
+  reopening the inbox.
+
 ### Version 8.4.0 (July 28, 2026)
 
 #### New Features
