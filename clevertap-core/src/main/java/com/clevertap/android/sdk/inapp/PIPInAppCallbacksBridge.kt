@@ -4,6 +4,7 @@ import android.os.Bundle
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 
 internal class PIPInAppCallbacksBridge(
     private val inAppNotification: CTInAppNotification,
@@ -41,6 +42,29 @@ internal class PIPInAppCallbacksBridge(
             inAppNotification,
             CTInAppAction.createCloseAction(),
             Constants.INAPP_CTA_DISMISS_BUTTON,
+            extras,
+            null
+        )
+    }
+
+    /**
+     * Programmatic dismiss via the public dismissPipInApp() API.
+     * Raises a "Notification Clicked" event with the API-dismiss descriptors
+     * (`wzrk_element_id = dismissApi`, `wzrk_c2a = Dismiss PiP API`,
+     * `wzrk_action = close`, `wzrk_data = close`).
+     * The event records the API call itself and fires even when the PIP was still
+     * loading (never visible) — it may therefore precede or lack a Viewed event.
+     * The dismiss itself is reported separately via the [onClose] that follows.
+     */
+    override fun onApiDismiss() {
+        logger.debug(LOG_TAG, "PIP onApiDismiss for campaign: ${inAppNotification.campaignId}")
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_DISMISS_API)
+        }
+        inAppListener.inAppNotificationActionTriggered(
+            inAppNotification,
+            CTInAppAction.createCloseAction(),
+            Constants.INAPP_CTA_DISMISS_PIP_API,
             extras,
             null
         )
@@ -106,8 +130,8 @@ internal class PIPInAppCallbacksBridge(
         logger.debug(LOG_TAG, "PIP onMediaError for campaign: ${inAppNotification.campaignId}, url: $url, error: $error")
     }
 
-    override fun onShowFailed() {
-        logger.debug(LOG_TAG, "PIP onShowFailed for campaign: ${inAppNotification.campaignId}")
-        showFailureHandler.onPIPShowFailed(inAppNotification)
+    override fun onShowFailed(mediaType: PIPMediaType) {
+        logger.debug(LOG_TAG, "PIP onShowFailed for campaign: ${inAppNotification.campaignId}, mediaType: $mediaType")
+        showFailureHandler.onPIPShowFailed(inAppNotification, mediaType)
     }
 }

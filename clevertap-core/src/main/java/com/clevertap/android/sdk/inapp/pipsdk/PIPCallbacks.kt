@@ -13,6 +13,11 @@ interface PIPCallbacks {
      *  dismiss, a media-load failure, or Activity/session teardown, all of which surface via [onClose].
      *  Fires just before the corresponding [onClose] for the same dismissal. */
     fun onCloseButtonClick() {}
+
+    /** Called when the app dismissed PIP via the public dismiss API — as opposed to a user
+     *  X-tap, a CTA-triggered dismiss, or a discard-hide teardown. Fires just before the
+     *  corresponding [onClose] for the same dismissal. */
+    fun onApiDismiss() {}
     fun onExpand() {}
     fun onCollapse() {}
     fun onAction() {}
@@ -21,6 +26,8 @@ interface PIPCallbacks {
     fun onMediaError(url: String, error: String) {}
 
     /** Called when PIP failed to show because all media URLs failed to load.
-     *  PIP was never visible — no [onShow] or [onClose] will fire for this session. */
-    fun onShowFailed() {}
+     *  PIP was never visible — no [onShow] or [onClose] will fire for this session.
+     *  @param mediaType the session's primary media type — the campaign's intent, even when
+     *  a fallback of a different kind also failed. */
+    fun onShowFailed(mediaType: PIPMediaType) {}
 }

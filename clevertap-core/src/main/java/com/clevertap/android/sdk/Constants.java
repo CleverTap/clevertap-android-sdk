@@ -193,6 +193,10 @@ public interface Constants {
     String INAPP_CTA_DISMISS_BUTTON = "Dismiss Button";
     String INAPP_CTA_SWIPE_DISMISS = "Swipe to Dismiss";
 
+    // Programmatic PIP dismiss via the public dismissPipInApp() API.
+    String INAPP_ELEMENT_ID_DISMISS_API = "dismissApi";
+    String INAPP_CTA_DISMISS_PIP_API = "Dismiss PiP API";
+
     // wzrk_data literal value for a close action
     String INAPP_WZRK_DATA_CLOSE = "close";
 
@@ -205,6 +209,15 @@ public interface Constants {
     int INAPP_VIDEO_LOAD_FAILED_ERROR_CODE = 592;
     String INAPP_IMAGE_LOAD_FAILED_ERROR_MSG = "InApp image failed to load";
     String INAPP_VIDEO_LOAD_FAILED_ERROR_MSG = "InApp video failed to load";
+
+    // wzrk_error codes/messages for PIP media failures (all URLs failed, PIP never showed).
+    // One code per PIP media type, keyed by the campaign's primary media type.
+    int INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_CODE = 593;
+    int INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_CODE = 594;
+    int INAPP_PIP_GIF_LOAD_FAILED_ERROR_CODE = 595;
+    String INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_MSG = "InApp PIP image failed to load";
+    String INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_MSG = "InApp PIP video failed to load";
+    String INAPP_PIP_GIF_LOAD_FAILED_ERROR_MSG = "InApp PIP GIF failed to load";
 
     String KEY_EFC = "efc";
     String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";

@@ -9,6 +9,7 @@ import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.fragment.app.FragmentActivity
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
@@ -53,6 +54,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
@@ -141,6 +143,10 @@ internal class InAppController(
     private var inAppState = InAppState.RESUMED
 
     private val inAppExcludedActivityNames = getExcludedActivitiesSet(manifestInfo)
+
+    // Opt-in (default off) for rendering custom-html header/footer in-apps via a WindowManager
+    // overlay when the host Activity is not a FragmentActivity. Enabled by the gaming wrapper SDKs.
+    private val fragmentlessInAppBannersEnabled = manifestInfo.isFragmentlessInAppBannersEnabled
 
     /**
      * Schedule multiple delayed in-apps for display after their respective delays
@@ -533,6 +539,16 @@ internal class InAppController(
         logger.verbose(defaultLogTag, "InAppState is SUSPENDED")
     }
 
+    /**
+     * Dismisses the currently visible PIP in-app, if any. Safe to call from any thread.
+     * No-op when no PIP is showing — other in-app types are never affected.
+     * Raises the API-dismiss "Notification Clicked" (wzrk_element_id=dismissApi)
+     */
+    fun dismissPipInApp() {
+        logger.verbose(defaultLogTag, "dismissPipInApp() called by app")
+        pipManager.dismissFromApi()
+    }
+
     @WorkerThread
     fun addInAppNotificationsToQueue(inappNotifs: List<JSONObject>) {
         try {
@@ -855,8 +871,9 @@ internal class InAppController(
         }
     }
 
-    override fun onPIPShowFailed(inAppNotification: CTInAppNotification) {
+    override fun onPIPShowFailed(inAppNotification: CTInAppNotification, mediaType: PIPMediaType) {
         logger.verbose(defaultLogTag, "PIP failed to show: ${inAppNotification.campaignId}")
+        reportPipMediaError(mediaType)
         // Same threading pattern as inAppNotificationDidDismiss: clear the lock and advance
         // the queue atomically on the async in-app thread. This avoids a race where
         // currentlyDisplayingInApp is cleared on main but _showNotificationIfAvailable
@@ -866,6 +883,33 @@ internal class InAppController(
             inAppDidDismiss(inAppNotification)
             _showNotificationIfAvailable()
         }
+    }
+
+    /**
+     * Reports a PIP all-media-failed as a structured [ValidationResult] on the validation stack,
+     * riding out as top-level `wzrk_error` on the next queued event — mirroring how the bundled
+     * advanced-builder HTML template reports its media failures. No click or viewed event is
+     * raised: the PIP never showed. One distinct code per PIP media type.
+     */
+    private fun reportPipMediaError(mediaType: PIPMediaType) {
+        val validationResult = when (mediaType) {
+            PIPMediaType.IMAGE -> ValidationResult(
+                Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_MSG
+            )
+
+            PIPMediaType.VIDEO -> ValidationResult(
+                Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_MSG
+            )
+
+            PIPMediaType.GIF -> ValidationResult(
+                Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_CODE,
+                Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_MSG
+            )
+        }
+        logger.debug("PIP media failed to load, reporting wzrk_error ${validationResult.errorCode}")
+        validationResultStack.pushValidationResult(validationResult)
     }
 
     private fun incrementLocalInAppCountInPersistentStore(
@@ -1046,11 +1090,25 @@ internal class InAppController(
             }
 
             CTInAppTypeFooterHTML -> {
-                inAppFragment = CTInAppHtmlFooterFragment()
+                if (activity is FragmentActivity) {
+                    inAppFragment = CTInAppHtmlFooterFragment()
+                } else if (activity != null && fragmentlessInAppBannersEnabled) {
+                    // Non-FragmentActivity host (e.g. game engines) with the opt-in enabled:
+                    // fall back to the WindowManager overlay.
+                    showHtmlBannerOverlay(inAppNotification, activity)
+                    return
+                }
             }
 
             CTInAppTypeHeaderHTML -> {
-                inAppFragment = CTInAppHtmlHeaderFragment()
+                if (activity is FragmentActivity) {
+                    inAppFragment = CTInAppHtmlHeaderFragment()
+                } else if (activity != null && fragmentlessInAppBannersEnabled) {
+                    // Non-FragmentActivity host (e.g. game engines) with the opt-in enabled:
+                    // fall back to the WindowManager overlay.
+                    showHtmlBannerOverlay(inAppNotification, activity)
+                    return
+                }
             }
 
             CTInAppTypeFooter -> {
@@ -1113,6 +1171,26 @@ internal class InAppController(
         if (!showFragmentSuccess) {
             currentlyDisplayingInApp = null
         }
+    }
+
+    private fun showHtmlBannerOverlay(inAppNotification: CTInAppNotification, activity: Activity) {
+        // Defensive guard: the overlay renders an HTML WebView, so it only supports the custom-html
+        // header/footer types. Today the when-dispatch only routes those two types here, but this
+        // keeps the invariant explicit and safe if the dispatch is ever refactored.
+        if (!CTInAppHtmlBannerOverlay.canDisplay(inAppNotification.inAppType)) {
+            logger.debug(
+                "Overlay banner not supported for type ${inAppNotification.inAppType}; skipping"
+            )
+            currentlyDisplayingInApp = null
+            return
+        }
+        logger.debug("Displaying In-App as overlay: ${inAppNotification.jsonDescription}")
+        val bridge = CTHtmlBannerCallbacksBridge(inAppNotification, config, this)
+        val overlay = CTInAppHtmlBannerOverlay(inAppNotification, config, bridge, activity)
+        bridge.overlay = overlay
+        // Allow the overlay to be hidden externally (discardInApps/suspend), like the fragment path.
+        registerInAppDisplayListener(bridge)
+        overlay.show()
     }
 
     private fun presentTemplate(inAppNotification: CTInAppNotification) {

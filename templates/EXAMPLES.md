@@ -514,6 +514,33 @@ To support in-app notifications, register the following activity in your Android
         android:value="YourSplashActivity1, YourSplashActivity2" />
    ```
 
+#### Dismissing a Picture-in-Picture (PIP) In-App Notification
+
+Use `dismissPipInApp()` to programmatically dismiss the currently visible PIP in-app notification —
+for example when the user navigates to a screen where the floating window would cover important
+content, such as a checkout or video-call screen.
+
+Java
+
+```java
+CleverTapAPI clevertap = CleverTapAPI.getDefaultInstance(getApplicationContext());
+clevertap.dismissPipInApp();
+```
+
+Kotlin
+
+```kotlin
+val clevertap = CleverTapAPI.getDefaultInstance(applicationContext)
+clevertap?.dismissPipInApp()
+```
+
+The call is safe from any thread, is a no-op when no PIP is visible, and never affects other
+in-app notification types.
+
+**Note:** Dismissing frees the in-app display slot, so the next queued in-app (if any) may show
+immediately. To keep a screen free of all in-apps, pair this with `suspendInAppNotifications()`
+on screen entry and `resumeInAppNotifications()` on exit.
+
 #### Push primer Android 13 notification runtime permission.
 
 Using Half-Interstitial in-app
