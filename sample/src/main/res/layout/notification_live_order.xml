@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Custom notification layout for the CleverTap Live Update "order tracking" demo.
+  Rendered via RemoteViews from CustomNotificationFactory. Resembles an iOS
+  Live Activity order tracker: store header, ETA, status, and a 4-step progress bar.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_live_order"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Header row: icon + store/order details + ETA -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/iv_order_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_order_icon"
+            android:padding="7dp"
+            android:src="@drawable/ic_order_food"
+            android:contentDescription="@null" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_store"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:text="Pizza place" />
+
+            <TextView
+                android:id="@+id/tv_items"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#B0B0B5"
+                android:textSize="12sp"
+                android:text="2 Pizza" />
+
+            <TextView
+                android:id="@+id/tv_order_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#B0B0B5"
+                android:textSize="12sp"
+                android:text="Order #123456" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_eta_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#8E8E93"
+                android:textSize="11sp"
+                android:text="ETA" />
+
+            <TextView
+                android:id="@+id/tv_eta_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:text="50 min" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Status line -->
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:text="Order confirmed" />
+
+    <!-- Progress dots + connectors -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/dot_0"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/live_order_dot_active" />
+
+        <View
+            android:id="@+id/line_0"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_weight="1"
+            android:background="#48484A" />
+
+        <View
+            android:id="@+id/dot_1"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/live_order_dot_inactive" />
+
+        <View
+            android:id="@+id/line_1"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_weight="1"
+            android:background="#48484A" />
+
+        <View
+            android:id="@+id/dot_2"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/live_order_dot_inactive" />
+
+        <View
+            android:id="@+id/line_2"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_weight="1"
+            android:background="#48484A" />
+
+        <View
+            android:id="@+id/dot_3"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/live_order_dot_inactive" />
+    </LinearLayout>
+
+    <!-- Step labels -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_step_0"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="start"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:text="Placed" />
+
+        <TextView
+            android:id="@+id/tv_step_1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#8E8E93"
+            android:textSize="11sp"
+            android:text="Preparing" />
+
+        <TextView
+            android:id="@+id/tv_step_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#8E8E93"
+            android:textSize="11sp"
+            android:text="En Route" />
+
+        <TextView
+            android:id="@+id/tv_step_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:textColor="#8E8E93"
+            android:textSize="11sp"
+            android:text="Delivered" />
+    </LinearLayout>
+</LinearLayout>
