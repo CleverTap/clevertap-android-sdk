@@ -8,16 +8,20 @@ import android.os.Bundle
  * Factory interface that gives the client complete control over creating
  * push notifications for CleverTap pushes.
  *
- * When registered, the SDK will invoke [onCreateNotification] instead
- * of using its built-in renderers. The client is responsible for:
+ * When registered, the SDK will invoke [onCreateNotification] for CleverTap Live Activity
+ * (live update) pushes instead of using its built-in renderers. The client is responsible for:
  * - Creating the notification channel
  * - Building the [Notification]
- * - Choosing the notification ID
  *
  * The SDK still handles:
  * - Push deduplication
  * - Silent push detection
  * - Displaying the notification via [android.app.NotificationManager]
+ * - **The notification ID** — derived deterministically from the backend-assigned
+ *   `cleverTapActivityId` so successive updates for the same activity land on the same
+ *   notification (in-place update). The [NotificationResult.notificationId] you return is used
+ *   only as a fallback when the push carries no activity id.
+ * - The "Live Activity" lifecycle events (Started / Updated / Ended / Dismissed)
  * - Push notification analytics (viewed events)
  * - TTL and push ID storage
  *

@@ -2,20 +2,25 @@ package com.clevertap.demo
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory
-import java.util.Random
 
 /**
- * Custom notification factory that demonstrates how to take full control
- * of push notification creation. The client is responsible for creating
- * the notification channel, building the notification, and choosing the ID.
+ * Custom notification factory demonstrating how to render CleverTap Live Activity
+ * (live update) pushes with full control over the notification content.
+ *
+ * The client builds the notification channel and the notification itself. The SDK owns:
+ * - the notification ID (derived from the backend `cleverTapActivityId`, so every update lands
+ *   on the same notification and updates in place),
+ * - dismissal tracking (delete intent), and
+ * - the "Live Activity" lifecycle events (Started / Updated / Ended / Dismissed).
+ *
+ * Because the SDK derives the ID, returning `notificationId = 0` here is fine — it is only used
+ * as a fallback when the push carries no activity id.
  */
 class CustomNotificationFactory : ICleverTapNotificationFactory {
 
@@ -39,10 +44,6 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
         val title = extras.getString("nt") ?: context.applicationInfo.loadLabel(context.packageManager).toString()
         val message = extras.getString("nm") ?: return null
 
-        val deleteIntent = createDeleteIntent(context, extras)
-
-        val notificationId = extras.getString("wzrk_ck")?.hashCode() ?: (Math.random() * 100).toInt()
-
         val nb = NotificationCompat.Builder(context, channelId)
             .setContentTitle(title)
             .setContentText(message)
@@ -54,23 +55,10 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
             )
             .setColor(Color.parseColor("#9C27B0"))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setVibrate(longArrayOf(0, 200, 100, 200))
-            .setLights(Color.parseColor("#9C27B0"), 1000, 1000)
+            .setOnlyAlertOnce(true) // updates should not re-alert on every push
             .setAutoCancel(true)
-            .setDeleteIntent(deleteIntent)
 
-        return ICleverTapNotificationFactory.NotificationResult(nb.build(), notificationId)
-    }
-
-    private fun createDeleteIntent(context: Context, extras: Bundle): PendingIntent {
-        val dismissIntent = Intent(context, NotificationDismissedReceiver::class.java)
-        dismissIntent.putExtras(extras)
-
-        var flags = PendingIntent.FLAG_UPDATE_CURRENT
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags = flags or PendingIntent.FLAG_IMMUTABLE
-        }
-
-        return PendingIntent.getBroadcast(context, Random().nextInt(), dismissIntent, flags)
+        // notificationId is a fallback only; the SDK derives the real id from cleverTapActivityId.
+        return ICleverTapNotificationFactory.NotificationResult(nb.build(), 0)
     }
 }

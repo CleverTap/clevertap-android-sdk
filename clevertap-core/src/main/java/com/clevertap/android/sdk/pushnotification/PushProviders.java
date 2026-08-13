@@ -7,8 +7,10 @@ import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -186,13 +188,18 @@ public class PushProviders implements CTPushProviderListener {
                     }
                 }
 
-                // todo - Update key based on implementation from BE
-                boolean isForCustomFactory = extras.getString("isForFactory", "").equalsIgnoreCase("true");
+                // Live Activity (live update) pushes are rendered by a client-supplied factory.
+                // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
+                boolean isLiveActivity = extras.getString(Constants.WZRK_LIVE_ACTIVITY, "")
+                        .equalsIgnoreCase("true");
 
-                if (isForCustomFactory) {
+                if (isLiveActivity) {
                     ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
                     if (customFactory != null) {
-                        triggerNotificationFromFactory(context, extras, customFactory);
+                        triggerLiveActivityNotification(context, extras, customFactory);
+                    } else {
+                        config.getLogger().debug(config.getAccountId(),
+                                "Live Activity push received but no ICleverTapNotificationFactory is set; ignoring.");
                     }
                     return;
                 }
@@ -1029,8 +1036,24 @@ public class PushProviders implements CTPushProviderListener {
         postNotificationRendered(context, extras);
     }
 
-    private void triggerNotificationFromFactory(Context context, Bundle extras,
-                                                ICleverTapNotificationFactory customFactory) {
+    /**
+     * Renders a Live Activity (live update) push via the client-supplied factory.
+     *
+     * <p>Unlike a regular custom-factory render, the SDK owns lifecycle here to stay on par with
+     * the iOS Live Activity contract:</p>
+     * <ul>
+     *   <li>The notification id is derived deterministically from the backend-assigned
+     *       {@link Constants#WZRK_LIVE_ACTIVITY_ID} so successive pushes for the same activity
+     *       update the same notification in place (instead of the client picking the id).</li>
+     *   <li>A "Live Activity" lifecycle event is raised: {@code Started} on first render,
+     *       {@code Updated} on subsequent renders, {@code Ended} when the push carries
+     *       {@link Constants#WZRK_LIVE_ACTIVITY_EVENT_END}.</li>
+     *   <li>A delete intent is attached (when the factory did not set one) so swipe-dismissal
+     *       raises the {@code Dismissed} lifecycle event.</li>
+     * </ul>
+     */
+    private void triggerLiveActivityNotification(Context context, Bundle extras,
+                                                 ICleverTapNotificationFactory customFactory) {
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
@@ -1055,14 +1078,70 @@ public class PushProviders implements CTPushProviderListener {
             return;
         }
 
-        int notificationId = result.getNotificationId();
         Notification notification = result.getNotification();
+
+        String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
+        // SDK owns the id so updates land on the same notification. Fall back to the
+        // factory-supplied id only when the backend did not send an activity id.
+        int notificationId = !TextUtils.isEmpty(activityId)
+                ? (activityId.hashCode() & 0x7fffffff)
+                : result.getNotificationId();
+
+        String event = extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT,
+                Constants.WZRK_LIVE_ACTIVITY_EVENT_UPDATE);
+        boolean isEnd = Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equalsIgnoreCase(event);
+
+        // Attach a delete intent for dismissal tracking, without clobbering one the client set.
+        if (notification.deleteIntent == null) {
+            notification.deleteIntent = liveActivityDismissIntent(context, extras, notificationId);
+        }
 
         notificationManager.notify(notificationId, notification);
         config.getLogger().debug(config.getAccountId(),
-                "Rendered notification from callback: " + notification);
+                "Rendered Live Activity notification (id=" + notificationId + ", event=" + event + ")");
+
+        // Raise the lifecycle event on par with iOS (Started / Updated / Ended).
+        String state;
+        if (isEnd) {
+            state = Constants.LIVE_ACTIVITY_STATE_ENDED;
+        } else {
+            state = isFirstLiveActivityRender(context, activityId)
+                    ? Constants.LIVE_ACTIVITY_STATE_STARTED
+                    : Constants.LIVE_ACTIVITY_STATE_UPDATED;
+        }
+        analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
 
         postNotificationRendered(context, extras);
+    }
+
+    /**
+     * Returns {@code true} the first time an activity id is rendered and records it so later
+     * pushes for the same activity are reported as {@code Updated}. Persisted (not in-memory)
+     * because each FCM push may run in a fresh process. Reuses the push-id dedup store.
+     */
+    private boolean isFirstLiveActivityRender(Context context, String activityId) {
+        if (TextUtils.isEmpty(activityId)) {
+            return true;
+        }
+        String key = Constants.WZRK_LIVE_ACTIVITY + "_" + activityId;
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        if (dbAdapter.doesPushNotificationIdExist(key)) {
+            return false;
+        }
+        dbAdapter.storePushNotificationId(key,
+                clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS);
+        return true;
+    }
+
+    private PendingIntent liveActivityDismissIntent(Context context, Bundle extras, int notificationId) {
+        Intent dismissIntent = new Intent(context, CTLiveActivityDismissReceiver.class);
+        dismissIntent.putExtras(extras);
+        dismissIntent.putExtra(Constants.KEY_CT_TYPE, CTLiveActivityDismissReceiver.TYPE_DISMISS);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (VERSION.SDK_INT >= VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        return PendingIntent.getBroadcast(context, notificationId, dismissIntent, flags);
     }
 
     private void postNotificationRendered(Context context, Bundle extras) {

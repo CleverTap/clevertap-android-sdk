@@ -275,6 +275,30 @@ public interface Constants {
     String WZRK_SUBTITLE = "wzrk_st";
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_DISMISS = "wzrk_dismiss";
+
+    // --- Live Activities / Live Updates ---
+    // Mirrors the iOS Live Activity contract (CLTAP_LIVE_ACTIVITY_* / kCTLA*).
+    // On Android there is no ActivityKit token concept — live updates are ordinary
+    // FCM data pushes routed to an ICleverTapNotificationFactory. These keys mark such
+    // pushes and carry the backend-assigned identity used for in-place updates + attribution.
+    // todo - confirm final key names with BE contract.
+    /** Marker present on a Live Activity (live update) push. Value is "true". */
+    String WZRK_LIVE_ACTIVITY = "wzrk_la";
+    /** Backend-assigned stable activity id; SDK derives the notification id from this. */
+    String WZRK_LIVE_ACTIVITY_ID = "cleverTapActivityId";
+    /** Lifecycle event carried by the push: {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} or {@link #WZRK_LIVE_ACTIVITY_EVENT_END}. */
+    String WZRK_LIVE_ACTIVITY_EVENT = "wzrk_la_event";
+    String WZRK_LIVE_ACTIVITY_EVENT_UPDATE = "update";
+    String WZRK_LIVE_ACTIVITY_EVENT_END = "end";
+    /** Single event name raised for every Live Activity lifecycle transition (mirrors iOS kCTLAEventName). */
+    String LIVE_ACTIVITY_EVENT_NAME = "Live Activity";
+    /** evtData field holding the lifecycle state. */
+    String LIVE_ACTIVITY_STATE_KEY = "state";
+    String LIVE_ACTIVITY_STATE_STARTED = "Started";
+    String LIVE_ACTIVITY_STATE_UPDATED = "Updated";
+    String LIVE_ACTIVITY_STATE_ENDED = "Ended";
+    String LIVE_ACTIVITY_STATE_DISMISSED = "Dismissed";
+
     String WZRK_STICKY = "wzrk_sticky";
     String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";
     String WZRK_SOUND = "wzrk_sound";

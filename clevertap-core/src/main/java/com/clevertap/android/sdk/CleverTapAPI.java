@@ -902,6 +902,48 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Raises the "Live Activity" lifecycle event with state {@code Dismissed}. Invoked by
+     * {@link com.clevertap.android.sdk.pushnotification.CTLiveActivityDismissReceiver} when a
+     * live-update notification is swiped away.
+     */
+    @RestrictTo(Scope.LIBRARY)
+    public static void handleLiveActivityDismissed(Context context, Bundle notification) {
+        if (notification == null) {
+            return;
+        }
+
+        String _accountId = null;
+        try {
+            _accountId = notification.getString(Constants.WZRK_ACCT_ID_KEY);
+        } catch (Throwable t) {
+            // no-op
+        }
+
+        if (instances == null) {
+            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
+            if (instance != null) {
+                instance.coreState.getAnalyticsManager()
+                        .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
+            }
+            return;
+        }
+
+        for (String accountId : instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            boolean shouldProcess = false;
+            if (instance != null) {
+                shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
+                        || instance.getAccountId().equals(_accountId);
+            }
+            if (shouldProcess) {
+                instance.coreState.getAnalyticsManager()
+                        .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
+                break;
+            }
+        }
+    }
+
+    /**
      * Returns an instance of the CleverTap SDK using CleverTapInstanceConfig.
      *
      * @param context The Android context
@@ -2730,6 +2772,32 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationClickedEvent(final Bundle extras) {
         coreState.getAnalyticsManager().pushNotificationClickedEvent(extras);
+    }
+
+    /**
+     * Records a Live Activity push impression. Behaves like a push "Notification Viewed" event —
+     * the supplied {@code wzrk} map becomes the event data. Mirrors iOS
+     * {@code recordLiveActivityImpression}.
+     *
+     * <p>Note: for CleverTap Live Activity pushes rendered by an
+     * {@link com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory}, the SDK
+     * already raises the impression automatically. Use this only to raise impressions the SDK
+     * cannot observe (e.g. a custom surface).</p>
+     *
+     * @param wzrk The {@code wzrk} campaign map from the activity payload.
+     */
+    public void recordLiveActivityImpression(final Map<String, Object> wzrk) {
+        coreState.getAnalyticsManager().recordLiveActivityImpression(wzrk);
+    }
+
+    /**
+     * Records a Live Activity click. Behaves like a push "Notification Clicked" event — the
+     * supplied {@code wzrk} map becomes the event data. Mirrors iOS {@code recordLiveActivityClicked}.
+     *
+     * @param wzrk The {@code wzrk} campaign map from the activity payload.
+     */
+    public void recordLiveActivityClicked(final Map<String, Object> wzrk) {
+        coreState.getAnalyticsManager().recordLiveActivityClicked(wzrk);
     }
 
     /**
