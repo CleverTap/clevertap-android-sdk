@@ -58,14 +58,19 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
 
         createChannel(context)
 
-        val remoteViews = buildOrderTrackerView(context, extras)
+        // Android has no "always expanded" live-activity mode: the collapsed view is height
+        // limited, so we give it a compact single-line + progress-bar layout, and put the full
+        // 4-step tracker in the expanded (big) view.
+        val collapsedView = buildCollapsedView(context, extras)
+        val expandedView = buildOrderTrackerView(context, extras)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(COLOR_ACTIVE)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(remoteViews)
-            .setCustomBigContentView(remoteViews)
+            .setCustomContentView(collapsedView)
+            .setCustomBigContentView(expandedView)
+            .setCustomHeadsUpContentView(collapsedView)
             .setOngoing(!isEnded(extras)) // ongoing while the order is live; dismissible once ended
             .setOnlyAlertOnce(true) // updates should not re-alert on every push
             .setAutoCancel(isEnded(extras))
@@ -87,6 +92,16 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
         // An `end` push forces the final Delivered step regardless of the supplied index.
         val step = if (isEnded(extras)) STEP_DOTS.lastIndex else currentStep(extras)
         applyProgress(rv, step)
+        return rv
+    }
+
+    private fun buildCollapsedView(context: Context, extras: Bundle): RemoteViews {
+        val rv = RemoteViews(context.packageName, R.layout.notification_live_order_collapsed)
+        rv.setTextViewText(R.id.tv_store, extras.getString(KEY_STORE) ?: "Pizza place")
+        rv.setTextViewText(R.id.tv_status, extras.getString(KEY_STATUS) ?: "Order confirmed")
+        rv.setTextViewText(R.id.tv_eta_value, extras.getString(KEY_ETA) ?: "--")
+        val step = if (isEnded(extras)) STEP_DOTS.lastIndex else currentStep(extras)
+        rv.setProgressBar(R.id.progress_bar, STEP_DOTS.lastIndex, step, false)
         return rv
     }
 
