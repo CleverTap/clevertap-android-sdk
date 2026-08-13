@@ -102,46 +102,46 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <View
+        <ImageView
             android:id="@+id/dot_0"
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:background="@drawable/live_order_dot_active" />
 
-        <View
+        <ImageView
             android:id="@+id/line_0"
             android:layout_width="0dp"
             android:layout_height="2dp"
             android:layout_weight="1"
             android:background="#48484A" />
 
-        <View
+        <ImageView
             android:id="@+id/dot_1"
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:background="@drawable/live_order_dot_inactive" />
 
-        <View
+        <ImageView
             android:id="@+id/line_1"
             android:layout_width="0dp"
             android:layout_height="2dp"
             android:layout_weight="1"
             android:background="#48484A" />
 
-        <View
+        <ImageView
             android:id="@+id/dot_2"
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:background="@drawable/live_order_dot_inactive" />
 
-        <View
+        <ImageView
             android:id="@+id/line_2"
             android:layout_width="0dp"
             android:layout_height="2dp"
             android:layout_weight="1"
             android:background="#48484A" />
 
-        <View
+        <ImageView
             android:id="@+id/dot_3"
             android:layout_width="14dp"
             android:layout_height="14dp"
