@@ -1,18 +1,18 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
-import android.graphics.Bitmap
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.view.View
-import com.clevertap.android.pushtemplates.ButtonStyle
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.R.drawable
 import com.clevertap.android.pushtemplates.R.id
 import com.clevertap.android.pushtemplates.RatingTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.*
 
 internal class RatingContentView(
@@ -48,29 +48,16 @@ internal class RatingContentView(
         setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
 
         //Set rating stars
-        val iconViewIds = listOf(R.id.star1, R.id.star2, R.id.star3, R.id.star4, R.id.star5)
-        val hasCustomIcons = data.icons.any { it.url != null }
-
-        for (i in 0 until 5) {
-            val viewId = iconViewIds[i]
-            if (i >= data.iconCount) {
-                remoteView.setViewVisibility(viewId, View.GONE)
-            } else if (hasCustomIcons) {
-                val colored = data.icons[i].url?.let { templateMediaManager.getImageBitmap(it) }
-                if (colored != null) {
-                    val grey = Utils.toGreyscale(colored)
-                    if (grey != null) remoteView.setImageViewBitmap(viewId, grey)
-                    else remoteView.setImageViewResource(viewId, R.drawable.pt_star_outline)
-                }
-                else remoteView.setImageViewResource(viewId, R.drawable.pt_star_outline)
-            } else {
-                remoteView.setImageViewResource(viewId, R.drawable.pt_star_outline)
-            }
-        }
+        remoteView.setImageViewResource(R.id.star1, R.drawable.pt_star_outline)
+        remoteView.setImageViewResource(R.id.star2, R.drawable.pt_star_outline)
+        remoteView.setImageViewResource(R.id.star3, R.drawable.pt_star_outline)
+        remoteView.setImageViewResource(R.id.star4, R.drawable.pt_star_outline)
+        remoteView.setImageViewResource(R.id.star5, R.drawable.pt_star_outline)
 
         // Request Codes for all stars are passed as an extra to cancel all pending intents when any of the star is clicked
-        val rng = Random()
-        extras.putIntArray(PTConstants.KEY_REQUEST_CODES, IntArray(5) { rng.nextInt() })
+        extras.putIntArray(PTConstants.KEY_REQUEST_CODES, IntArray(5) {
+            Random().nextInt()
+        })
 
         remoteView.setOnClickPendingIntent(
             R.id.star1, PendingIntentFactory.getPendingIntent(
@@ -103,28 +90,18 @@ internal class RatingContentView(
             )
         )
 
-        remoteView.setViewVisibility(R.id.rating_confirm_frame, View.GONE)
-
-        // Apply confirm button text
-        val btnText = extras.getString(PTConstants.PT_RATING_CONFIRM_TEXT)
-            ?.takeIf { it.isNotEmpty() } ?: context.getString(R.string.confirm_btn)
-        remoteView.setTextViewText(R.id.tVRatingConfirmation, btnText)
-
-        // Apply confirm button text color
-        setCustomTextColour(extras.getString(PTConstants.PT_BTN_TEXT_CLR), R.id.tVRatingConfirmation)
-
-        // Apply confirm button background bitmap (color/gradient/border/radius)
-        applyConfirmButtonBackground(extras)
-
-        // Apply horizontal margin to center the button (opt-in via pt_rating_btn_margin_h)
-        val marginH = extras.getString(PTConstants.PT_RATING_BTN_MARGIN_H)?.toIntOrNull()
-        if (marginH != null && marginH > 0) {
-            val px = (marginH * context.resources.displayMetrics.density).toInt()
-            remoteView.setViewPadding(R.id.rating_confirm_frame, px, 0, px, 0)
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            remoteView.setViewVisibility(R.id.tVRatingConfirmation, View.VISIBLE)
+            extras.putInt(PTConstants.PT_NOTIF_ID, renderer.notificationId)
+            remoteView.setOnClickPendingIntent(
+                R.id.tVRatingConfirmation,
+                LaunchPendingIntentFactory.getActivityIntent(extras, context)
+            )
+        } else {
+            remoteView.setViewVisibility(R.id.tVRatingConfirmation, View.GONE)
         }
-
         val extrasFrom = extras.getString(Constants.EXTRAS_FROM, "")
-        if (extrasFrom == "PTReceiver" && !hasCustomIcons) {
+        if (extrasFrom == "PTReceiver") {
             if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 remoteView.setImageViewResource(id.star1, drawable.pt_star_filled)
             } else {
@@ -160,43 +137,6 @@ internal class RatingContentView(
             } else {
                 remoteView.setImageViewResource(id.star5, drawable.pt_star_outline)
             }
-        }
-    }
-
-    private fun applyConfirmButtonBackground(extras: Bundle) {
-        val borderColor = extras.getString(PTConstants.PT_BTN_BORDER_CLR)?.let { Utils.getColourOrNull(it) }
-        val borderRadius = extras.getString(PTConstants.PT_BTN_BORDER_RADIUS)?.toFloatOrNull()
-            ?: PTConstants.PT_BTN_BORDER_RADIUS_DEFAULT
-        val borderWidth = extras.getString(PTConstants.PT_BTN_BORDER_WIDTH)?.toFloatOrNull()
-        val style = ButtonStyle.fromString(extras.getString(PTConstants.PT_BTN_STYLE))
-
-        val bitmap: Bitmap? = when (style) {
-            ButtonStyle.GRADIENT_LINEAR -> {
-                val c1 = extras.getString(PTConstants.PT_BTN_GRAD_CLR1)?.let { Utils.getColourOrNull(it) }
-                val c2 = extras.getString(PTConstants.PT_BTN_GRAD_CLR2)?.let { Utils.getColourOrNull(it) }
-                val dir = extras.getString(PTConstants.PT_BTN_GRAD_DIR)?.toDoubleOrNull()
-                    ?: PTConstants.PT_BTN_GRAD_DIR_DEFAULT
-                if (c1 != null && c2 != null)
-                    NotificationBitmapUtils.createLinearGradientBitmap(c1, c2, dir, 200, 50, borderRadius, borderColor, borderWidth)
-                else null
-            }
-            ButtonStyle.GRADIENT_RADIAL -> {
-                val c1 = extras.getString(PTConstants.PT_BTN_GRAD_CLR1)?.let { Utils.getColourOrNull(it) }
-                val c2 = extras.getString(PTConstants.PT_BTN_GRAD_CLR2)?.let { Utils.getColourOrNull(it) }
-                if (c1 != null && c2 != null)
-                    NotificationBitmapUtils.createRadialBitmap(c1, c2, 200, 50, borderRadius, borderColor, borderWidth)
-                else null
-            }
-            ButtonStyle.SOLID -> {
-                val bgColor = extras.getString(PTConstants.PT_BTN_CLR)?.let { Utils.getColourOrNull(it) }
-                if (bgColor != null)
-                    NotificationBitmapUtils.createSolidBitmap(bgColor, borderColor, 200, 50, borderRadius, borderWidth)
-                else null
-            }
-        }
-        if (bitmap != null) {
-            remoteView.setImageViewBitmap(R.id.rating_confirm_bg, bitmap)
-            remoteView.setInt(R.id.rating_confirm_btn, "setBackgroundColor", android.graphics.Color.TRANSPARENT)
         }
     }
 }
