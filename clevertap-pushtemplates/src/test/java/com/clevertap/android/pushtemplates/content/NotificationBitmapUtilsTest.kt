@@ -273,78 +273,116 @@ class NotificationBitmapUtilsTest {
 
     // resolveCornerRadiusPx / resolveBorderWidthPx tests
     //
-    // These cover the percentage-to-pixel conversion directly. Canvas drawing is a no-op under
-    // Robolectric's legacy graphics mode, so asserting on the output bitmap cannot distinguish a
-    // percentage from a raw pixel count - only these assertions can.
+    // These cover the unit conversions directly. Canvas drawing is a no-op under Robolectric's legacy
+    // graphics mode, so asserting on the output bitmap cannot distinguish one radius from another -
+    // only these assertions can.
 
     @Test
-    fun `resolveCornerRadiusPx should scale with the shortest side`() {
-        // Given - the same payload value of 10 against differently sized images
+    fun `resolveCornerRadiusPx should convert dp into the bitmap's pixel space`() {
+        // Given - a 16dp radius on media laid out at 360dp wide
 
-        // Then - 10% of the shortest side in each case, so the result stays proportional
-        assertEquals(18f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 10f))
-        assertEquals(30f, NotificationBitmapUtils.resolveCornerRadiusPx(300, 10f))
-        assertEquals(80f, NotificationBitmapUtils.resolveCornerRadiusPx(800, 10f))
+        // Then - a 360px bitmap is 1px per dp, a 720px bitmap is 2px per dp, and so on, so the same
+        // dp value produces the same visible curve on each
+        assertEquals(16f, NotificationBitmapUtils.resolveCornerRadiusPx(360, 360, 16, 360f))
+        assertEquals(32f, NotificationBitmapUtils.resolveCornerRadiusPx(720, 720, 16, 360f))
+        assertEquals(48f, NotificationBitmapUtils.resolveCornerRadiusPx(1080, 1080, 16, 360f))
     }
 
     @Test
-    fun `resolveCornerRadiusPx should treat the value as a percentage and not as pixels`() {
-        // Given - a payload value that is deliberately larger than the shortest side
+    fun `resolveCornerRadiusPx should treat the value as dp and not as raw pixels`() {
+        // Given - a 1200x800 campaign image shown at 360dp
 
-        // Then - as pixels this would be 40px; as a percentage of 180 it is 72px
-        assertEquals(72f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 40f))
+        // Then - as raw pixels this would be 24px; converted from dp it is 80px
+        assertEquals(80f, NotificationBitmapUtils.resolveCornerRadiusPx(1200, 800, 24, 360f))
+    }
+
+    @Test
+    fun `resolveCornerRadiusPx should scale with the on-screen media width`() {
+        // Given - the same bitmap on a narrow and a wide device
+
+        // Then - fewer bitmap pixels per dp on the wider layout, so a smaller pixel radius
+        assertEquals(40f, NotificationBitmapUtils.resolveCornerRadiusPx(720, 720, 16, 288f))
+        assertEquals(24f, NotificationBitmapUtils.resolveCornerRadiusPx(720, 720, 16, 480f))
     }
 
     @Test
     fun `resolveCornerRadiusPx should cap at half the shortest side`() {
-        // Given - 50% is a full pill; anything beyond has no additional visible effect
+        // Given - a large radius on a small image, where a round rect degenerates into a pill
 
-        // Then
-        assertEquals(90f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 50f))
-        assertEquals(90f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 80f))
-        assertEquals(90f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 5000f))
+        // Then - capped at half of 180, not the 96px the dp conversion alone would give
+        assertEquals(90f, NotificationBitmapUtils.resolveCornerRadiusPx(360, 180, 32, 120f))
     }
 
     @Test
-    fun `resolveCornerRadiusPx should clamp a negative percentage to zero`() {
-        // Then
-        assertEquals(0f, NotificationBitmapUtils.resolveCornerRadiusPx(180, -10f))
-        assertEquals(0f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 0f))
+    fun `resolveCornerRadiusPx should clamp above the supported maximum`() {
+        // Given - a payload value beyond the documented 0-32 range
+
+        // Then - clamped to 32dp, which at 1px per dp is 32px
+        assertEquals(32f, NotificationBitmapUtils.resolveCornerRadiusPx(360, 360, 99, 360f))
     }
 
     @Test
-    fun `resolveBorderWidthPx should default to ten percent of the shortest side`() {
-        // Given - the payload omits pt_img_border_width
-
+    fun `resolveCornerRadiusPx should clamp a negative radius to zero`() {
         // Then
-        assertEquals(18f, NotificationBitmapUtils.resolveBorderWidthPx(180, null))
-        assertEquals(80f, NotificationBitmapUtils.resolveBorderWidthPx(800, null))
+        assertEquals(0f, NotificationBitmapUtils.resolveCornerRadiusPx(360, 360, -10, 360f))
+        assertEquals(0f, NotificationBitmapUtils.resolveCornerRadiusPx(360, 360, 0, 360f))
     }
 
     @Test
-    fun `resolveBorderWidthPx should scale an explicit percentage with the shortest side`() {
+    fun `resolveBorderWidthPx should default to one dp when the payload omits the key`() {
+        // Given - a 720px bitmap shown at 360dp is 2px per dp
+
         // Then
-        assertEquals(9f, NotificationBitmapUtils.resolveBorderWidthPx(180, 5f))
-        assertEquals(40f, NotificationBitmapUtils.resolveBorderWidthPx(800, 5f))
+        assertEquals(2f, NotificationBitmapUtils.resolveBorderWidthPx(720, 720, null, 360f))
     }
 
     @Test
-    fun `resolveBorderWidthPx should cap at twenty five percent of the shortest side`() {
-        // Given - a border thicker than a quarter of the image would swallow the image
+    fun `resolveBorderWidthPx should convert dp into the bitmap's pixel space`() {
+        // Given - the same 4dp border on differently sized bitmaps at the same on-screen width
 
-        // Then
-        assertEquals(45f, NotificationBitmapUtils.resolveBorderWidthPx(180, 25f))
-        assertEquals(45f, NotificationBitmapUtils.resolveBorderWidthPx(180, 90f))
-        assertEquals(45f, NotificationBitmapUtils.resolveBorderWidthPx(180, 5000f))
+        // Then - proportionally more pixels on the larger bitmap, so the same visible thickness
+        assertEquals(4f, NotificationBitmapUtils.resolveBorderWidthPx(360, 360, 4, 360f))
+        assertEquals(8f, NotificationBitmapUtils.resolveBorderWidthPx(720, 720, 4, 360f))
     }
 
     @Test
-    fun `resolveBorderWidthPx should clamp a negative percentage to zero`() {
-        // Given - an unclamped negative value would both drop the border and push the draw rect
-        // outside the bitmap bounds
+    fun `resolveBorderWidthPx should not vary with aspect ratio`() {
+        // Given - a 3:2 and a 1:1 image, both laid out at 360dp wide, both asking for 4dp
+        val wide = NotificationBitmapUtils.resolveBorderWidthPx(1200, 800, 4, 360f)
+        val square = NotificationBitmapUtils.resolveBorderWidthPx(1200, 1200, 4, 360f)
 
+        // Then - identical pixel strokes, because the conversion keys off the width in both cases.
+        // A percentage of the shortest side would have produced different on-screen thicknesses.
+        assertEquals(wide, square)
+    }
+
+    @Test
+    fun `resolveBorderWidthPx should clamp above the supported maximum`() {
+        // Given - a payload value beyond the documented 0-16 range
+
+        // Then - clamped to 16dp, which at 1px per dp is 16px
+        assertEquals(16f, NotificationBitmapUtils.resolveBorderWidthPx(360, 360, 99, 360f))
+    }
+
+    @Test
+    fun `resolveBorderWidthPx should clamp a negative width to zero`() {
         // Then
-        assertEquals(0f, NotificationBitmapUtils.resolveBorderWidthPx(180, -5f))
+        assertEquals(0f, NotificationBitmapUtils.resolveBorderWidthPx(360, 360, -4, 360f))
+        assertEquals(0f, NotificationBitmapUtils.resolveBorderWidthPx(360, 360, 0, 360f))
+    }
+
+    @Test
+    fun `resolveBorderWidthPx should cap at a quarter of the shortest side`() {
+        // Given - 16dp on a small image, where the border would otherwise swallow the picture
+
+        // Then - capped at 25% of 80, not the 160px the dp conversion alone would give
+        assertEquals(20f, NotificationBitmapUtils.resolveBorderWidthPx(160, 80, 16, 16f))
+    }
+
+    @Test
+    fun `resolveBorderWidthPx should return zero for an unusable media width`() {
+        // Then
+        assertEquals(0f, NotificationBitmapUtils.resolveBorderWidthPx(360, 360, 4, 0f))
     }
 
     // applyRoundedBorderToBitmap tests
@@ -360,9 +398,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = 0f,
+            cornerRadiusDp = 0,
             borderColor = null,
-            borderWidthPercent = null
+            borderWidthDp = null,
+            mediaWidthDp = 360f
         )
 
         // Then - nothing to draw, so the cached source is reused instead of allocating a copy
@@ -377,9 +416,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = 10f,
+            cornerRadiusDp = 16,
             borderColor = null,
-            borderWidthPercent = null
+            borderWidthDp = null,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
 
         // Then
@@ -396,9 +436,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = 0f,
+            cornerRadiusDp = 0,
             borderColor = borderColor,
-            borderWidthPercent = null
+            borderWidthDp = null,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
 
         // Then
@@ -417,15 +458,17 @@ class NotificationBitmapUtilsTest {
         // When
         val smallResult = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = small,
-            cornerRadiusPercent = 10f,
+            cornerRadiusDp = 16,
             borderColor = borderColor,
-            borderWidthPercent = 10f
+            borderWidthDp = 1,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
         val largeResult = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = large,
-            cornerRadiusPercent = 10f,
+            cornerRadiusDp = 16,
             borderColor = borderColor,
-            borderWidthPercent = 10f
+            borderWidthDp = 1,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
 
         // Then - each output keeps its own dimensions; the radius is derived from them, so one
@@ -444,9 +487,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = 500f,
+            cornerRadiusDp = 500,
             borderColor = borderColor,
-            borderWidthPercent = null
+            borderWidthDp = null,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
 
         // Then
@@ -463,9 +507,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = 10f,
+            cornerRadiusDp = 16,
             borderColor = borderColor,
-            borderWidthPercent = 900f
+            borderWidthDp = 90,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
 
         // Then
@@ -483,9 +528,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = 10f,
+            cornerRadiusDp = 16,
             borderColor = borderColor,
-            borderWidthPercent = -5f
+            borderWidthDp = -5,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
 
         // Then
@@ -503,9 +549,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = -10f,
+            cornerRadiusDp = -10,
             borderColor = null,
-            borderWidthPercent = null
+            borderWidthDp = null,
+            mediaWidthDp = 360f
         )
 
         // Then
@@ -520,9 +567,10 @@ class NotificationBitmapUtilsTest {
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source = source,
-            cornerRadiusPercent = 50f,
+            cornerRadiusDp = 32,
             borderColor = borderColor,
-            borderWidthPercent = 25f
+            borderWidthDp = 16,
+            mediaWidthDp = 360f
         ).also { bitmapsToRecycle.add(it) }
 
         // Then

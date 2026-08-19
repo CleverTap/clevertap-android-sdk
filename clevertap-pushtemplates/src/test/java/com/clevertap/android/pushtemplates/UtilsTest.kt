@@ -856,12 +856,12 @@ class UtilsTest {
     @Test
     fun `getImageDataListFromExtras should return list of ImageData objects`() {
         // Given
-        // Only pt_img<digit> keys are carousel images. Bare "pt_img" and the pt_img_* border
-        // configuration keys must be ignored even though they all share the "pt_img" prefix.
+        // Only pt_img<digit> keys are carousel images. Bare "pt_img" and anything else sharing the
+        // "pt_img" prefix must be ignored, as must the pt_media_* border configuration keys.
         val keys = setOf(
             "pt_img1", "pt_img2", "other_key", "pt_img", "pt_img_alt_text", "pt_img1_alt_text",
-            PTConstants.PT_IMG_BORDER_CLR, PTConstants.PT_IMG_CORNER_RADIUS,
-            PTConstants.PT_IMG_BORDER_WIDTH
+            PTConstants.PT_MEDIA_BORDER_CLR, PTConstants.PT_MEDIA_RADIUS,
+            PTConstants.PT_MEDIA_BORDER_WIDTH
         )
         val defaultAltText = "Default Image "
         every { mockBundle.keySet() } returns keys

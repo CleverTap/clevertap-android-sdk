@@ -238,10 +238,19 @@ public class PTConstants {
     public static final float PT_BTN_BORDER_RADIUS_DEFAULT = 4f;
     public static final float PT_BTN_BORDER_WIDTH_DEFAULT = 1f;
 
-    // Image border configuration (applies to the main notification image across templates)
-    public static final String PT_IMG_BORDER_CLR = "pt_img_border_clr";
-    public static final String PT_IMG_CORNER_RADIUS = "pt_img_corner_radius";
-    public static final String PT_IMG_BORDER_WIDTH = "pt_img_border_width";
+    /*
+     * Expanded media (image or GIF) border configuration, shared by every template that renders one.
+     *
+     * Both size values are in dp, matching pt_btn_border_*, pt_chrono_border_* and
+     * pt_rating_cta_radius. They are converted into the bitmap's pixel space at draw time.
+     */
+    public static final String PT_MEDIA_BORDER_CLR = "pt_media_border_clr";
+    public static final String PT_MEDIA_RADIUS = "pt_media_radius";
+    public static final String PT_MEDIA_BORDER_WIDTH = "pt_media_border_width";
+
+    public static final int PT_MEDIA_RADIUS_MAX = 32;
+    public static final int PT_MEDIA_BORDER_WIDTH_MAX = 16;
+    public static final int PT_MEDIA_BORDER_WIDTH_DEFAULT = 1;
 
     // Vertical Image Template - Collapsed button configuration
     public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
@@ -274,6 +283,6 @@ public class PTConstants {
             PT_BTN_TEXT_CLR_COLLAPSED,
             PT_BTN_GRAD_CLR1_COLLAPSED,
             PT_BTN_GRAD_CLR2_COLLAPSED,
-            PT_IMG_BORDER_CLR);
+            PT_MEDIA_BORDER_CLR);
 
 }

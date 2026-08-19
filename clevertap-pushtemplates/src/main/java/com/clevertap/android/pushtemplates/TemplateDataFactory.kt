@@ -73,9 +73,11 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.TEXT_ONLY
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_RADIUS
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_WIDTH
-import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_BORDER_CLR
-import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_BORDER_WIDTH
-import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_CORNER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.PT_MEDIA_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_MEDIA_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.PT_MEDIA_BORDER_WIDTH_MAX
+import com.clevertap.android.pushtemplates.PTConstants.PT_MEDIA_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.PT_MEDIA_RADIUS_MAX
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
@@ -385,12 +387,17 @@ internal object TemplateDataFactory {
     }
 
     private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
+        val rawRadius = extras.getString(PT_MEDIA_RADIUS)?.toIntOrNull()
+        if (rawRadius != null && (rawRadius < 0 || rawRadius > PT_MEDIA_RADIUS_MAX)) {
+            PTLog.debug("$PT_MEDIA_RADIUS is $rawRadius, clamping to 0-$PT_MEDIA_RADIUS_MAX")
+        }
         return ImageBorderData(
             // Parse here rather than at draw time so an invalid colour never marks the border active
-            borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) },
-            // Both values are percentages of the image's shortest side, clamped when drawn
-            cornerRadiusPercent = extras.getString(PT_IMG_CORNER_RADIUS)?.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f,
-            borderWidthPercent = extras.getString(PT_IMG_BORDER_WIDTH)?.toFloatOrNull()?.takeIf { it.isFinite() }
+            borderColor = colorMap[PT_MEDIA_BORDER_CLR]?.let { Utils.getColourOrNull(it) },
+            // Both in dp, converted against the on-screen media width when the bitmap is drawn
+            cornerRadiusDp = rawRadius?.coerceIn(0, PT_MEDIA_RADIUS_MAX) ?: 0,
+            borderWidthDp = extras.getString(PT_MEDIA_BORDER_WIDTH)?.toIntOrNull()
+                ?.coerceIn(0, PT_MEDIA_BORDER_WIDTH_MAX)
         )
     }
 

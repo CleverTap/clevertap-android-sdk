@@ -2,11 +2,12 @@
 ### Version 2.5.0 (Unreleased)
 
 #### New Features
-* **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border color (`pt_img_border_clr`), and border width (`pt_img_border_width`) for the notification image. The radius and width are percentages of the image's shortest side, so a single value renders consistently across images of any resolution across the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Product Catalog`, `Five Icons`, `Timer`, `Zero Bezel`, and `Image with CTA` templates. Also applies to GIFs. `pt_img_border_clr` honours the dark mode suffix (`pt_img_border_clr_dark`).
+* **Custom Rating Template:** Adds a new `pt_custom_rating` template alongside the existing `pt_rating` one. It supports a configurable `2`-`5` rating positions (`pt_rating_count`), per-position custom icons with their own selected artwork (`pt_rating_icon{n}` / `pt_rating_icon{n}_sel`), optional tint colors (`pt_rating_icon_clr`, `pt_rating_icon_sel_clr`), and a submit button (`pt_rating_cta_label`, `pt_rating_cta_dl`, plus fill, border, text color and corner radius) so the rating is only reported once the user confirms. `pt_dl1`-`pt_dl5` act as per-position overrides of the submit destination. The classic `pt_rating` template is unchanged — its keys, rendering and events are untouched, and older SDKs receiving `pt_custom_rating` render a standard notification.
+* **Media Border and Rounded Corners:** Adds configurable corner radius (`pt_media_radius`, in dp), border color (`pt_media_border_clr`), and border width (`pt_media_border_width`, in dp) for the expanded notification image across the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Custom Rating`, `Product Catalog`, `Five Icons`, `Timer`, `Zero Bezel`, and `Image with CTA` templates. Both values are converted into the bitmap's pixel space against the on-screen media width, so one value renders the same result on images of any resolution or aspect ratio, and matches the units of `pt_btn_border_*` and `pt_chrono_border_*`. Also applies to GIFs. `pt_media_border_clr` honours the dark mode suffix (`pt_media_border_clr_dark`).
 
 #### Bug Fixes
 * Fixes a crash in the `Manual Carousel` template when navigating between images in a campaign that has no deep links configured.
-* Fixes image list detection so that keys such as `pt_img_border_clr` are no longer treated as carousel images. Only `pt_img<number>` keys are read as images.
+* Fixes image list detection so that keys such as `pt_media_border_clr` are no longer treated as carousel images. Only `pt_img<number>` keys are read as images.
 * Fixes the `Image with CTA` template layout so the image is no longer flush against the notification edge.
 
 ### Version 2.4.0 (April 13, 2026)

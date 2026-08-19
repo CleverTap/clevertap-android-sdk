@@ -9,6 +9,7 @@ import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import androidx.core.graphics.createBitmap
+import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import kotlin.math.cos
 import kotlin.math.sin
@@ -107,36 +108,40 @@ internal object NotificationBitmapUtils {
     /**
      * Draws [source] into a new bitmap with rounded corners and an optional border.
      *
-     * [cornerRadiusPercent] and [borderWidthPercent] are percentages of the image's shortest side,
-     * not absolute pixels. Notification images are supplied by the campaign, so their pixel
-     * dimensions vary; a percentage keeps the same payload value looking identical whether the
-     * image is 240x180 or 1200x800. This mirrors how in-app notifications size themselves from the
-     * `xp`/`yp` payload keys.
+     * [cornerRadiusDp] is a dp value describing the curve the user should see on screen, so it has to
+     * be converted into the source bitmap's pixel space: the radius is baked into the bitmap, and a
+     * 1200px-wide image shown at 360dp needs a proportionally larger pixel radius than a 360px one to
+     * look the same. [mediaWidthDp] is the on-screen width the media is laid out at, which the caller
+     * derives from the device's display metrics.
+     *
+     * [borderWidthDp] is converted the same way, so a border stays the same visible thickness whatever
+     * the image's resolution or aspect ratio.
      */
     fun applyRoundedBorderToBitmap(
         source: Bitmap,
-        cornerRadiusPercent: Float,
+        cornerRadiusDp: Int,
         borderColor: Int?,
-        borderWidthPercent: Float?
+        borderWidthDp: Int?,
+        mediaWidthDp: Float
     ): Bitmap {
         val width = source.width
         val height = source.height
         if (width <= 0 || height <= 0) return source
-        if (cornerRadiusPercent <= 0f && borderColor == null) return source
-
-        val minDimension = minOf(width, height)
+        if (cornerRadiusDp <= 0 && borderColor == null) return source
 
         val strokeWidth =
-            if (borderColor != null) resolveBorderWidthPx(minDimension, borderWidthPercent) else 0f
-        val safeRadius = resolveCornerRadiusPx(minDimension, cornerRadiusPercent)
+            if (borderColor != null) resolveBorderWidthPx(width, height, borderWidthDp, mediaWidthDp)
+            else 0f
+        val safeRadius = resolveCornerRadiusPx(width, height, cornerRadiusDp, mediaWidthDp)
 
         val half = strokeWidth / 2f
         val strokeRect = RectF(half, half, width - half, height - half)
         val adjustedRadius = (safeRadius - half).coerceAtLeast(0f)
 
         PTLog.debug(
-            "Image border on ${width}x$height bitmap: corner radius $cornerRadiusPercent% -> " +
-                    "${safeRadius}px, border width ${borderWidthPercent ?: DEFAULT_BORDER_WIDTH_PERCENT}% -> ${strokeWidth}px"
+            "Media border on ${width}x$height bitmap shown at ${mediaWidthDp}dp: corner radius " +
+                    "${cornerRadiusDp}dp -> ${safeRadius}px, border width " +
+                    "${borderWidthDp ?: PTConstants.PT_MEDIA_BORDER_WIDTH_DEFAULT}dp -> ${strokeWidth}px"
         )
 
         val output = createBitmap(width, height)
@@ -165,35 +170,56 @@ internal object NotificationBitmapUtils {
         return output
     }
 
+    /**
+     * Hard ceiling on the border as a share of the image's shortest side. A dp value is free to be
+     * larger than a small image can carry, and a stroke past this point stops reading as a border and
+     * starts eating the picture.
+     */
     private const val MAX_BORDER_RATIO = 0.25f
 
-    // Percentage equivalents of the ratios above, used by applyRoundedBorderToBitmap
-    internal const val DEFAULT_BORDER_WIDTH_PERCENT = BORDER_STROKE_RATIO * 100f
-    internal const val MAX_BORDER_WIDTH_PERCENT = MAX_BORDER_RATIO * 100f
-
-    // 50% of the shortest side is a full pill; anything beyond that has no visible effect
-    internal const val MAX_CORNER_RADIUS_PERCENT = 50f
-
     /**
-     * Resolves [cornerRadiusPercent] against the image's shortest side.
+     * Converts [cornerRadiusDp] into a pixel radius in the source bitmap's coordinate space.
      *
      * Kept separate from the drawing code so the conversion can be asserted directly; Canvas
      * operations are no-ops under Robolectric's legacy graphics mode, so a test that only inspects
-     * the output bitmap cannot tell a percentage from a raw pixel count.
+     * the output bitmap cannot tell one radius from another.
+     *
+     * The result is capped at half the shortest side. Beyond that the round rect degenerates — the
+     * corners meet and further radius has no visible effect — so clamping keeps a large dp value on
+     * a small image looking like the pill it asked for instead of drawing outside the shape.
      */
-    internal fun resolveCornerRadiusPx(minDimension: Int, cornerRadiusPercent: Float): Float =
-        minDimension * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / 100f
+    internal fun resolveCornerRadiusPx(
+        bitmapWidth: Int,
+        bitmapHeight: Int,
+        cornerRadiusDp: Int,
+        mediaWidthDp: Float
+    ): Float {
+        val dp = cornerRadiusDp.coerceIn(0, PTConstants.PT_MEDIA_RADIUS_MAX)
+        if (dp == 0 || mediaWidthDp <= 0f || bitmapWidth <= 0) return 0f
+        // Bitmap pixels per on-screen dp.
+        val pixelsPerDp = bitmapWidth / mediaWidthDp
+        val radius = dp * pixelsPerDp
+        return radius.coerceAtMost(minOf(bitmapWidth, bitmapHeight) / 2f)
+    }
 
     /**
-     * Resolves [borderWidthPercent] against the image's shortest side, falling back to
-     * [DEFAULT_BORDER_WIDTH_PERCENT] when the payload omits it.
+     * Converts [borderWidthDp] into a pixel stroke in the source bitmap's coordinate space, using the
+     * same dp-to-pixel ratio as [resolveCornerRadiusPx] so the border and the corner curve agree.
      *
-     * Clamped at both ends: a negative payload value must not produce a negative stroke, which
-     * would both drop the border and push the draw rect outside the bitmap bounds.
+     * Falls back to [PTConstants.PT_MEDIA_BORDER_WIDTH_DEFAULT] when the payload omits the key.
+     * Clamped at both ends: a negative payload value must not produce a negative stroke, which would
+     * both drop the border and push the draw rect outside the bitmap bounds.
      */
-    internal fun resolveBorderWidthPx(minDimension: Int, borderWidthPercent: Float?): Float {
-        val percent = (borderWidthPercent ?: DEFAULT_BORDER_WIDTH_PERCENT)
-            .coerceIn(0f, MAX_BORDER_WIDTH_PERCENT)
-        return minDimension * percent / 100f
+    internal fun resolveBorderWidthPx(
+        bitmapWidth: Int,
+        bitmapHeight: Int,
+        borderWidthDp: Int?,
+        mediaWidthDp: Float
+    ): Float {
+        val dp = (borderWidthDp ?: PTConstants.PT_MEDIA_BORDER_WIDTH_DEFAULT)
+            .coerceIn(0, PTConstants.PT_MEDIA_BORDER_WIDTH_MAX)
+        if (dp == 0 || mediaWidthDp <= 0f || bitmapWidth <= 0) return 0f
+        val pixelsPerDp = bitmapWidth / mediaWidthDp
+        return (dp * pixelsPerDp).coerceAtMost(minOf(bitmapWidth, bitmapHeight) * MAX_BORDER_RATIO)
     }
 }

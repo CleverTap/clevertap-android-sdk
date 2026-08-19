@@ -32,21 +32,23 @@ internal data class BaseTextData(
 )
 
 /**
- * Border/corner configuration for the main notification image.
+ * Border/corner configuration for the expanded media (image or GIF).
  *
  * [borderColor] is already parsed into an Android colour int by [TemplateDataFactory], so an
  * unparseable colour from the payload lands here as null and [isActive] stays honest about
  * whether there is anything to draw.
  *
- * The two size values are percentages of the image's shortest side, not absolute pixels, because
- * campaign images vary in resolution. See NotificationBitmapUtils.applyRoundedBorderToBitmap.
+ * [cornerRadiusDp] and [borderWidthDp] are both in dp, matching every other border and radius key in
+ * the payload. They are converted to bitmap pixels at draw time, because the border is baked into
+ * the bitmap and campaign images vary in resolution.
+ * See NotificationBitmapUtils.applyRoundedBorderToBitmap.
  */
 internal data class ImageBorderData(
     val borderColor: Int? = null,
-    val cornerRadiusPercent: Float = 0f,
-    val borderWidthPercent: Float? = null,
+    val cornerRadiusDp: Int = 0,
+    val borderWidthDp: Int? = null,
 ) {
-    val isActive: Boolean get() = cornerRadiusPercent > 0f || borderColor != null
+    val isActive: Boolean get() = cornerRadiusDp > 0 || borderColor != null
 }
 
 /**

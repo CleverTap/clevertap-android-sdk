@@ -2422,7 +2422,7 @@ class TemplateDataFactoryTest {
             PT_TITLE_COLOR to SAMPLE_COLOR,
             PT_MSG_COLOR to SAMPLE_COLOR,
             PT_BG to SAMPLE_COLOR,
-            PT_IMG_BORDER_CLR to color
+            PT_MEDIA_BORDER_CLR to color
         )
     }
 
@@ -2432,8 +2432,8 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "12"
-        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "6"
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns "12"
+        every { mockBundle.getString(PT_MEDIA_BORDER_WIDTH) } returns "6"
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -2448,16 +2448,16 @@ class TemplateDataFactoryTest {
         val border = result.mediaData.imageBorderData
         assertTrue(border.isActive)
         assertEquals(android.graphics.Color.RED, border.borderColor)
-        assertEquals(12f, border.cornerRadiusPercent)
-        assertEquals(6f, border.borderWidthPercent)
+        assertEquals(12, border.cornerRadiusDp)
+        assertEquals(6, border.borderWidthDp)
     }
 
     @Test
     fun `createImageBorderData should be inactive when no border keys are present`() {
         // Given - a payload from before this feature existed
         setupBasicMockBundle()
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns null
-        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns null
+        every { mockBundle.getString(PT_MEDIA_BORDER_WIDTH) } returns null
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -2472,8 +2472,8 @@ class TemplateDataFactoryTest {
         val border = result.mediaData.imageBorderData
         assertFalse(border.isActive)
         assertNull(border.borderColor)
-        assertEquals(0f, border.cornerRadiusPercent)
-        assertNull(border.borderWidthPercent)
+        assertEquals(0, border.cornerRadiusDp)
+        assertNull(border.borderWidthDp)
     }
 
     @Test
@@ -2483,8 +2483,8 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         stubBorderColor("not-a-colour")
         every { Utils.getColourOrNull("not-a-colour") } returns null
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns null
-        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns null
+        every { mockBundle.getString(PT_MEDIA_BORDER_WIDTH) } returns null
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -2505,8 +2505,8 @@ class TemplateDataFactoryTest {
     fun `createImageBorderData should default corner radius to zero for a non numeric value`() {
         // Given
         setupBasicMockBundle()
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "abc"
-        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "xyz"
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns "abc"
+        every { mockBundle.getString(PT_MEDIA_BORDER_WIDTH) } returns "xyz"
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -2519,8 +2519,8 @@ class TemplateDataFactoryTest {
 
         // Then - garbage in the payload must not crash the render
         val border = result.mediaData.imageBorderData
-        assertEquals(0f, border.cornerRadiusPercent)
-        assertNull(border.borderWidthPercent)
+        assertEquals(0, border.cornerRadiusDp)
+        assertNull(border.borderWidthDp)
         assertFalse(border.isActive)
     }
 
@@ -2528,8 +2528,8 @@ class TemplateDataFactoryTest {
     fun `createImageBorderData should be active with only a corner radius`() {
         // Given - rounded corners without a border is a valid configuration
         setupBasicMockBundle()
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "20"
-        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns "20"
+        every { mockBundle.getString(PT_MEDIA_BORDER_WIDTH) } returns null
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -2543,7 +2543,7 @@ class TemplateDataFactoryTest {
         // Then
         val border = result.mediaData.imageBorderData
         assertTrue(border.isActive)
-        assertEquals(20f, border.cornerRadiusPercent)
+        assertEquals(20, border.cornerRadiusDp)
         assertNull(border.borderColor)
     }
 
@@ -2553,7 +2553,7 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         stubBorderColor("#00FF00")
         every { Utils.getColourOrNull("#00FF00") } returns android.graphics.Color.GREEN
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "8"
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns "8"
 
         // When
         val result = TemplateDataFactory.createTemplateData(
@@ -2574,7 +2574,7 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "15"
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns "15"
 
         // When
         val carousel = TemplateDataFactory.createTemplateData(
@@ -2600,9 +2600,9 @@ class TemplateDataFactoryTest {
         ) as ProductTemplateData
 
         // Then
-        assertEquals(15f, carousel.carouselData.imageBorderData.cornerRadiusPercent)
-        assertEquals(15f, fiveIcons.imageBorderData.cornerRadiusPercent)
-        assertEquals(15f, product.imageBorderData.cornerRadiusPercent)
+        assertEquals(15, carousel.carouselData.imageBorderData.cornerRadiusDp)
+        assertEquals(15, fiveIcons.imageBorderData.cornerRadiusDp)
+        assertEquals(15, product.imageBorderData.cornerRadiusDp)
     }
 
     @Test
@@ -2612,7 +2612,7 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
-        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "18"
+        every { mockBundle.getString(PT_MEDIA_RADIUS) } returns "18"
         every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns SAMPLE_IMAGE_URL
 
         // When
@@ -2625,8 +2625,8 @@ class TemplateDataFactoryTest {
         ) as ZeroBezelTemplateData
 
         // Then
-        assertEquals(18f, result.mediaData.imageBorderData.cornerRadiusPercent)
-        assertEquals(18f, result.collapsedMediaData.imageBorderData.cornerRadiusPercent)
+        assertEquals(18, result.mediaData.imageBorderData.cornerRadiusDp)
+        assertEquals(18, result.collapsedMediaData.imageBorderData.cornerRadiusDp)
         assertEquals(
             android.graphics.Color.RED,
             result.collapsedMediaData.imageBorderData.borderColor
@@ -2636,7 +2636,7 @@ class TemplateDataFactoryTest {
     @Test
     fun `effectiveScaleType should force FIT_CENTER only while the border is active`() {
         // Given
-        val active = ImageBorderData(cornerRadiusPercent = 10f)
+        val active = ImageBorderData(cornerRadiusDp = 16)
         val inactive = ImageBorderData()
 
         // Then - a baked-in radius would be cropped away by a CENTER_CROP image view

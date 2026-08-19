@@ -28,6 +28,23 @@ internal open class ContentView(
 
     internal var remoteView: RemoteViews = RemoteViews(context.packageName, layoutId)
 
+    /**
+     * On-screen width the expanded media is laid out at, in dp. Used to convert pt_media_radius from
+     * dp into the bitmap's pixel space.
+     *
+     * The notification shade gives its content the screen width minus the shade's own horizontal
+     * chrome, and the media fills that. An approximation is fine here — it only shifts a corner
+     * curve by a pixel or two — but it has to scale with the device, which a fixed value would not.
+     */
+    private val mediaWidthDp: Float
+        get() {
+            val metrics = context.resources.displayMetrics
+            if (metrics.density <= 0f) return FALLBACK_MEDIA_WIDTH_DP
+            val screenWidthDp = metrics.widthPixels / metrics.density
+            return (screenWidthDp - NOTIFICATION_HORIZONTAL_CHROME_DP)
+                .coerceAtLeast(FALLBACK_MEDIA_WIDTH_DP)
+        }
+
     fun setCustomContentViewBasicKeys(subtitle : String?, metaColor: String?) {
         remoteView.setTextViewText(R.id.app_name, Utils.getApplicationName(context))
         remoteView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context, System.currentTimeMillis()))
@@ -203,7 +220,8 @@ internal open class ContentView(
             // safe here. Static images come from TemplateMediaManager's cache and must not be.
             val processedFrame = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    frame, border.cornerRadiusPercent, border.borderColor, border.borderWidthPercent
+                    frame, border.cornerRadiusDp, border.borderColor, border.borderWidthDp,
+                    mediaWidthDp
                 ).also { frame.recycle() }
             } else frame
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
@@ -251,7 +269,8 @@ internal open class ContentView(
             val border = imageBorderData?.takeIf { it.isActive }
             val image = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    rawImage, border.cornerRadiusPercent, border.borderColor, border.borderWidthPercent
+                    rawImage, border.cornerRadiusDp, border.borderColor, border.borderWidthDp,
+                    mediaWidthDp
                 )
             } else rawImage
             remoteViews.setImageViewBitmap(imageViewID, image)
@@ -275,5 +294,14 @@ internal open class ContentView(
                 remoteView.setTextViewText(R.id.msg, Html.fromHtml(pt_msg_summary))
             }
         }
+    }
+
+    private companion object {
+
+        /** Combined left and right chrome the notification shade puts around its content. */
+        const val NOTIFICATION_HORIZONTAL_CHROME_DP = 32f
+
+        /** Roughly a small phone's content width; only used when display metrics are unusable. */
+        const val FALLBACK_MEDIA_WIDTH_DP = 320f
     }
 }
