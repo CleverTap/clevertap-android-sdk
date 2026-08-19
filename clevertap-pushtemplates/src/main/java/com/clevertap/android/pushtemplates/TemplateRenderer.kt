@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
+import com.clevertap.android.pushtemplates.content.CustomRatingRowRenderer
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toTerminalBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
@@ -27,6 +28,7 @@ import com.clevertap.android.pushtemplates.styles.FiveIconStyle
 import com.clevertap.android.pushtemplates.styles.InputBoxStyle
 import com.clevertap.android.pushtemplates.styles.ManualCarouselStyle
 import com.clevertap.android.pushtemplates.styles.ProductDisplayStyle
+import com.clevertap.android.pushtemplates.styles.CustomRatingStyle
 import com.clevertap.android.pushtemplates.styles.RatingStyle
 import com.clevertap.android.pushtemplates.styles.TimerStyle
 import com.clevertap.android.pushtemplates.styles.VerticalImageStyle
@@ -129,6 +131,17 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
             is RatingTemplateData -> templateData.buildIfValid {
                 RatingStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is CustomRatingTemplateData -> if (CustomRatingRowRenderer.isRenderable(templateData)) {
+                templateData.buildIfValid {
+                    CustomRatingStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+                }
+            } else {
+                // R-22: never show a broken or empty rating row — fall back to a basic notification.
+                templateData.toBasicTemplateData().buildIfValid {
+                    BasicStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
+                }
             }
 
             is FiveIconsTemplateData -> templateData.buildIfValid {

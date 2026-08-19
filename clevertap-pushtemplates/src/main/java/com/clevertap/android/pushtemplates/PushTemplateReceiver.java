@@ -29,6 +29,7 @@ import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
 import androidx.core.app.RemoteInput;
+import com.clevertap.android.pushtemplates.content.CustomRatingRowRenderer;
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.pushtemplates.media.GifDecoderImpl;
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager;
@@ -151,6 +152,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                     switch (templateType) {
                                         case RATING:
                                             handleRatingNotification(context, extras, intent);
+                                            break;
+                                        case CUSTOM_RATING:
+                                            handleCustomRatingNotification(context, extras);
                                             break;
                                         case FIVE_ICONS:
                                             handleFiveCTANotification(context, extras);
@@ -370,17 +374,183 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     }
 
+    /**
+     * Handles both taps on the pt_custom_rating template: selecting a position and submitting.
+     *
+     * Kept entirely separate from {@link #handleRatingNotification} — the Classic pt_rating template
+     * is frozen, so no code path is shared between the two.
+     */
+    private void handleCustomRatingNotification(Context context, Bundle extras) {
+        try {
+            int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
+            int selectedPosition = extras.getInt(PTConstants.PT_RATING_SELECTED_POSITION, 0);
+
+            if (extras.getBoolean(PTConstants.PT_RATING_SUBMIT, false)) {
+                submitCustomRating(context, extras, notificationId, selectedPosition);
+                return;
+            }
+
+            // Body tap: the standard content intent already handled it, nothing to re-render.
+            if (extras.getBoolean(PTConstants.DEFAULT_DL, false)) {
+                return;
+            }
+
+            if (selectedPosition < 1) {
+                PTLog.verbose("Custom rating tap carried no position, ignoring");
+                return;
+            }
+
+            Notification notification = Utils.getNotificationById(context, notificationId);
+            if (notification == null) {
+                PTLog.verbose("Custom rating notification is null, returning");
+                return;
+            }
+            RemoteViews bigContentView = notification.bigContentView;
+            if (bigContentView == null) {
+                PTLog.verbose("Custom rating notification has no expanded view, returning");
+                return;
+            }
+
+            TemplateMediaManager mediaManager = new TemplateMediaManager(
+                    new TemplateRepository(context, config), new GifDecoderImpl());
+
+            // Bitmaps are parcelled during notify(), so recycle only after the notification is posted.
+            java.util.List<Bitmap> ownedBitmaps = CustomRatingRowRenderer.renderRowFromExtras(
+                    context, extras, bigContentView, mediaManager, selectedPosition);
+            if (ownedBitmaps == null) {
+                PTLog.verbose("Custom rating payload is no longer renderable, leaving the notification as is");
+                return;
+            }
+
+            // Re-attach the taps so the user can move their selection, and hand the submit button the
+            // position it should now submit.
+            for (int position = 1; position <= PTConstants.PT_RATING_COUNT_MAX; position++) {
+                bigContentView.setOnClickPendingIntent(customRatingPositionViewId(position),
+                        PendingIntentFactory.getCustomRatingPositionIntent(
+                                context, notificationId, extras, position, this.config));
+            }
+            bigContentView.setOnClickPendingIntent(R.id.custom_rating_cta_label,
+                    PendingIntentFactory.getCustomRatingSubmitIntent(
+                            context, notificationId, extras, selectedPosition, this.config));
+
+            setSmallIcon(context);
+
+            Builder notificationBuilder = new Builder(context, notification);
+            Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
+            PendingIntent dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
+
+            if (notificationManager != null) {
+                notificationBuilder.setSmallIcon(smallIcon)
+                        .setCustomContentView(notification.contentView)
+                        .setCustomBigContentView(bigContentView)
+                        .setContentTitle(pt_title)
+                        .setDeleteIntent(dIntent)
+                        // Selecting a position must not re-alert the user (FR-AND-03).
+                        .setOnlyAlertOnce(true)
+                        .setAutoCancel(true);
+
+                notificationManager.notify(notificationId, notificationBuilder.build());
+            }
+
+            for (Bitmap bitmap : ownedBitmaps) {
+                if (!bitmap.isRecycled()) {
+                    bitmap.recycle();
+                }
+            }
+        } catch (Throwable t) {
+            PTLog.verbose("Error rendering custom rating notification ", t);
+        }
+    }
+
+    /**
+     * Raises Rating Submitted once, resolves the destination and opens it.
+     *
+     * The destination is the tapped position's pt_dl{n} override when set, otherwise the submit
+     * button's own pt_rating_cta_dl. Submitting with nothing selected is a no-op (R-28).
+     */
+    private void submitCustomRating(Context context, Bundle extras, int notificationId, int selectedPosition) {
+        if (selectedPosition < 1) {
+            PTLog.verbose("Custom rating submitted with no selection, ignoring");
+            return;
+        }
+        if (this.config == null) {
+            this.config = extras.getParcelable("config");
+        }
+
+        ArrayList<String> overrides = Utils.getDeepLinkListFromExtras(extras);
+        String destination = null;
+        if (overrides != null && overrides.size() >= selectedPosition) {
+            destination = overrides.get(selectedPosition - 1);
+        }
+        if (destination == null || destination.isEmpty()) {
+            destination = extras.getString(PTConstants.PT_RATING_CTA_DL, "");
+        }
+
+        extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + selectedPosition);
+        extras.putString(Constants.DEEP_LINK_KEY, destination);
+
+        Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                Utils.convertRatingBundleObjectToHashMap(extras));
+
+        // Launched from here rather than from a broadcast-to-activity hop, which Android 12+ bans.
+        launchCustomRatingDestination(context, extras, notificationId, destination);
+    }
+
+    /**
+     * Dismisses the notification and opens the resolved destination for the custom rating template.
+     *
+     * A deliberate duplicate of {@link #handleRatingDeepLink} rather than a shared helper: the Classic
+     * template's launch path is frozen, and this one differs from it — no pt_rating_toast, and the
+     * internal selection markers are stripped before the app sees the intent.
+     */
+    @SuppressLint("MissingPermission")
+    private void launchCustomRatingDestination(final Context context, final Bundle extras,
+            final int notificationId, final String destination) {
+        notificationManager.cancel(notificationId);
+        context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+
+        Intent launchIntent;
+        if (destination != null && !destination.isEmpty()) {
+            launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(destination));
+            com.clevertap.android.sdk.Utils.setPackageNameFromResolveInfoList(context, launchIntent);
+        } else {
+            launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            if (launchIntent == null) {
+                PTLog.verbose("No launch intent available for the custom rating destination");
+                return;
+            }
+        }
+
+        launchIntent.putExtras(extras);
+        launchIntent.putExtra(Constants.DEEP_LINK_KEY, destination);
+        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
+        // Internal selection markers must not leak into the activity the app receives.
+        launchIntent.removeExtra(PTConstants.PT_RATING_SUBMIT);
+        launchIntent.removeExtra(PTConstants.PT_RATING_SELECTED_POSITION);
+        launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+        launchIntent.setFlags(
+                Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(launchIntent);
+    }
+
+    private int customRatingPositionViewId(int position) {
+        switch (position) {
+            case 1:
+                return R.id.custom_rating_pos1;
+            case 2:
+                return R.id.custom_rating_pos2;
+            case 3:
+                return R.id.custom_rating_pos3;
+            case 4:
+                return R.id.custom_rating_pos4;
+            default:
+                return R.id.custom_rating_pos5;
+        }
+    }
+
     private void handleRatingNotification(Context context, Bundle extras, Intent intent) {
         try {
             int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
-
-            if (extras.getBoolean(PTConstants.PT_RATING_SUBMIT, false)) {
-                Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                        Utils.convertRatingBundleObjectToHashMap(extras));
-                handleRatingDeepLink(context, extras, notificationId,
-                        extras.getString(Constants.DEEP_LINK_KEY, ""), this.config);
-                return;
-            }
 
             if (extras.getBoolean(PTConstants.DEFAULT_DL, false)) {
                 this.config = extras.getParcelable("config");
@@ -418,33 +588,45 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 return;
             }
 
-            // Empty deep link is valid — rating can collect a score without navigating anywhere.
-            // Star rendering, event firing, and confirm button must still work without pt_dl_* keys.
-            String pt_dl_clicked = deepLinkList.isEmpty() ? "" : deepLinkList.get(0);
+            String pt_dl_clicked = deepLinkList.get(0);
 
             if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 1);
-                if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
+                if (deepLinkList.size() > 0) {
+                    pt_dl_clicked = deepLinkList.get(0);
+                }
             }
             if (2 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 2);
-                if (deepLinkList.size() > 1) pt_dl_clicked = deepLinkList.get(1);
-                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
+                if (deepLinkList.size() > 1) {
+                    pt_dl_clicked = deepLinkList.get(1);
+                } else {
+                    pt_dl_clicked = deepLinkList.get(0);
+                }
             }
             if (3 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 3);
-                if (deepLinkList.size() > 2) pt_dl_clicked = deepLinkList.get(2);
-                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
+                if (deepLinkList.size() > 2) {
+                    pt_dl_clicked = deepLinkList.get(2);
+                } else {
+                    pt_dl_clicked = deepLinkList.get(0);
+                }
             }
             if (4 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 4);
-                if (deepLinkList.size() > 3) pt_dl_clicked = deepLinkList.get(3);
-                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
+                if (deepLinkList.size() > 3) {
+                    pt_dl_clicked = deepLinkList.get(3);
+                } else {
+                    pt_dl_clicked = deepLinkList.get(0);
+                }
             }
             if (5 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 5);
-                if (deepLinkList.size() > 4) pt_dl_clicked = deepLinkList.get(4);
-                else if (!deepLinkList.isEmpty()) pt_dl_clicked = deepLinkList.get(0);
+                if (deepLinkList.size() > 4) {
+                    pt_dl_clicked = deepLinkList.get(4);
+                } else {
+                    pt_dl_clicked = deepLinkList.get(0);
+                }
             }
 
             Notification notification = Utils.getNotificationById(context, notificationId);
@@ -455,152 +637,50 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             contentViewRating = notification.bigContentView;
             contentViewSmall = notification.contentView;
 
-            int clickedStar = extras.getInt(PTConstants.KEY_CLICKED_STAR, 0);
-            boolean hasCustomIcons = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + "1") != null;
-
-            // Bitmaps must be recycled AFTER notify() — RemoteViews parcels them during notify().
-            // Recycling before notify() causes IllegalStateException or blank icons.
-            java.util.List<Bitmap> bitmapsToRecycle = new java.util.ArrayList<>();
-
-            if (hasCustomIcons) {
-                int iconCount = 5;
-                try {
-                    String countStr = extras.getString(PTConstants.PT_RATING_ICON_COUNT);
-                    if (countStr != null) iconCount = Math.max(2, Math.min(5, Integer.parseInt(countStr)));
-                } catch (NumberFormatException ignored) {}
-
-                // If all icon URLs are identical (or missing) → star-like cumulative fill (1..clickedStar colored)
-                // If URLs explicitly differ → emoji single-select (only clicked icon colored)
-                // A null URL at position i means the sender is reusing firstUrl for that slot.
-                String firstUrl = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + "1");
-                boolean cumulativeFill = true;
-                for (int i = 2; i <= iconCount; i++) {
-                    String u = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + i);
-                    if (u != null && !u.equals(firstUrl)) { cumulativeFill = false; break; }
-                }
-
-                TemplateMediaManager iconTmm = new TemplateMediaManager(
-                        new TemplateRepository(context, config), new GifDecoderImpl());
-                int[] iconViewIds = {R.id.star1, R.id.star2, R.id.star3, R.id.star4, R.id.star5};
-
-                if (cumulativeFill) {
-                    // Same image for all icons: fill 1..clickedStar colored, rest grey
-                    Bitmap colored = firstUrl != null ? iconTmm.getImageBitmap(firstUrl) : null;
-                    // Only recycle grey — it is a derived copy. colored comes from the media
-                    // manager cache and must not be recycled here.
-                    Bitmap grey = colored != null ? Utils.toGreyscale(colored) : null;
-                    if (grey != null) bitmapsToRecycle.add(grey);
-                    for (int i = 1; i <= iconCount; i++) {
-                        if (colored == null) break;
-                        Bitmap icon = i <= clickedStar ? colored : grey;
-                        if (icon != null) {
-                            contentViewRating.setImageViewBitmap(iconViewIds[i - 1], icon);
-                        } else {
-                            contentViewRating.setImageViewResource(iconViewIds[i - 1], R.drawable.pt_star_outline);
-                        }
-                    }
-                } else {
-                    // Different images per icon: single-select (only clicked one colored)
-                    for (int i = 1; i <= iconCount; i++) {
-                        boolean isClicked = (i == clickedStar);
-                        String baseUrl = extras.getString(PTConstants.PT_ICON_KEY_PREFIX + i);
-                        String selKey = PTConstants.PT_ICON_KEY_PREFIX + i + "_sel";
-                        String url = isClicked
-                                ? (extras.getString(selKey) != null ? extras.getString(selKey) : baseUrl)
-                                : baseUrl;
-                        if (url != null) {
-                            Bitmap bmp = iconTmm.getImageBitmap(url);
-                            // bmp comes from the cache — do not recycle it. Only recycle grey.
-                            if (bmp != null) {
-                                if (isClicked) {
-                                    contentViewRating.setImageViewBitmap(iconViewIds[i - 1], bmp);
-                                } else {
-                                    Bitmap grey = Utils.toGreyscale(bmp);
-                                    if (grey != null) {
-                                        contentViewRating.setImageViewBitmap(iconViewIds[i - 1], grey);
-                                        bitmapsToRecycle.add(grey);
-                                    } else {
-                                        contentViewRating.setImageViewResource(iconViewIds[i - 1], R.drawable.pt_star_outline);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                clicked1 = false;
             } else {
-                if (1 == clickedStar) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    clicked1 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_outline);
-                }
-                if (2 == clickedStar) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    clicked2 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_outline);
-                }
-                if (3 == clickedStar) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                    clicked3 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_outline);
-                }
-                if (4 == clickedStar) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
-                    clicked4 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_outline);
-                }
-                if (5 == clickedStar) {
-                    contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
-                    contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_filled);
-                    clicked5 = false;
-                } else {
-                    contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
-                }
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_outline);
+            }
+            if (2 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                clicked2 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_outline);
+            }
+            if (3 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                clicked3 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_outline);
+            }
+            if (4 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
+                clicked4 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_outline);
+            }
+            if (5 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
+                contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
+                contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_filled);
+                clicked5 = false;
+            } else {
+                contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_outline);
             }
             cancelRatingClickIntents(context,intent);
             extras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
-
-            // Default is auto-submit; deferred submit is opt-in via pt_rating_auto_submit=false.
-            // Handle both String ("false") and boolean (false) representations in the bundle.
-            boolean autoSubmit = true;
-            if (extras.containsKey(PTConstants.PT_RATING_AUTO_SUBMIT)) {
-                String autoSubmitStr = extras.getString(PTConstants.PT_RATING_AUTO_SUBMIT);
-                if (autoSubmitStr != null) {
-                    autoSubmit = !"false".equalsIgnoreCase(autoSubmitStr);
-                } else {
-                    autoSubmit = extras.getBoolean(PTConstants.PT_RATING_AUTO_SUBMIT, true);
-                }
-            }
-
-            if (!autoSubmit) {
-                Intent submitIntent = new Intent(context, PushTemplateReceiver.class);
-                submitIntent.putExtras(extras);
-                // Strip large extras that are not needed for submit processing to stay within
-                // Binder's ~1 MB transaction limit.
-                submitIntent.removeExtra(Constants.WZRK_ACTIONS);
-                for (int i = 1; i <= 5; i++) {
-                    submitIntent.removeExtra(PTConstants.PT_ICON_KEY_PREFIX + i);
-                    submitIntent.removeExtra(PTConstants.PT_ICON_KEY_PREFIX + i + "_sel");
-                }
-                submitIntent.putExtra(PTConstants.PT_RATING_SUBMIT, true);
-                int submitFlags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
-                PendingIntent submitPendingIntent = PendingIntent.getBroadcast(
-                        context, notificationId, submitIntent, submitFlags);
-                contentViewRating.setViewVisibility(R.id.rating_confirm_frame, View.VISIBLE);
-                contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation, submitPendingIntent);
-            }
+            contentViewRating.setOnClickPendingIntent(R.id.tVRatingConfirmation,
+                    LaunchPendingIntentFactory.getActivityIntent(extras, context));
 
             setSmallIcon(context);
 
@@ -621,12 +701,11 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 notification = notificationBuilder.build();
 
                 notificationManager.notify(notificationId, notification);
-                for (Bitmap b : bitmapsToRecycle) { if (!b.isRecycled()) b.recycle(); }
             }
 
-            if (autoSubmit) {
-                Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                        Utils.convertRatingBundleObjectToHashMap(extras));
+            Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                    Utils.convertRatingBundleObjectToHashMap(extras));
+            if (VERSION.SDK_INT < VERSION_CODES.S) {
                 handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked, this.config);
             }
         } catch (Throwable t) {
@@ -676,7 +755,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         launchIntent.putExtras(extras);
         launchIntent.putExtra(Constants.DEEP_LINK_KEY, pt_dl_clicked);
         launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-        launchIntent.removeExtra(PTConstants.PT_RATING_SUBMIT);
         launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
         launchIntent.setFlags(
                 Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -925,4 +1003,3 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     }
 
 }
-

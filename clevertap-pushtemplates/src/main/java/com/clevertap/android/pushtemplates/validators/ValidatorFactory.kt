@@ -10,6 +10,10 @@ const val PT_DEEPLINK_LIST = "PT_DEEPLINK_LIST"
 const val PT_THREE_IMAGE_LIST = "PT_IMAGE_LIST"
 const val PT_PRODUCT_THREE_IMAGE_LIST = "PT_PRODUCT_THREE_IMAGE_LIST"
 const val PT_RATING_DEFAULT_DL = "PT_RATING_DEFAULT_DL"
+const val PT_RATING_STYLE = "PT_RATING_STYLE"
+const val PT_RATING_COUNT = "PT_RATING_COUNT"
+const val PT_RATING_CTA_LABEL = "PT_RATING_CTA_LABEL"
+const val PT_RATING_CTA_DL = "PT_RATING_CTA_DL"
 const val PT_FIVE_DEEPLINK_LIST = "PT_FIVE_DEEPLINK_LIST"
 const val PT_FIVE_IMAGE_LIST = "PT_FIVE_IMAGE_LIST"
 const val PT_THREE_DEEPLINK_LIST = "PT_THREE_DEEPLINK_LIST"
@@ -226,6 +230,38 @@ internal class ValidatorFactory {
                         .build()
                 }
 
+                is CustomRatingTemplateData -> {
+                    builder
+                        .addBasicTextValidation(templateData.baseContent.textData)
+                        .addStringValidation(
+                            templateData.ratingStyle?.toString(),
+                            PT_RATING_STYLE,
+                            "pt_rating_style is missing; expected \"icon\" or \"text\""
+                        )
+                        .addIntValidation(
+                            templateData.ratingCount,
+                            PTConstants.PT_RATING_COUNT_MIN,
+                            PT_RATING_COUNT,
+                            "pt_rating_count is missing or below ${PTConstants.PT_RATING_COUNT_MIN}"
+                        )
+                        .addStringValidation(
+                            templateData.ctaData.label,
+                            PT_RATING_CTA_LABEL,
+                            "pt_rating_cta_label is missing or empty"
+                        )
+                        .addStringValidation(
+                            templateData.ctaData.deepLink,
+                            PT_RATING_CTA_DL,
+                            "pt_rating_cta_dl is missing or empty"
+                        )
+                        .addStringValidation(
+                            templateData.defaultDeepLink,
+                            PT_RATING_DEFAULT_DL,
+                            "Default deeplink is missing or empty"
+                        )
+                        .build()
+                }
+
                 is FiveIconsTemplateData -> {
                     builder
                         .addDeepLinkValidation(templateData.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
@@ -335,6 +371,7 @@ internal class ValidatorFactory {
                     ContentValidator(keys)
                 )
                 TemplateType.RATING -> RatingTemplateValidator(ContentValidator(keys))
+                TemplateType.CUSTOM_RATING -> CustomRatingTemplateValidator(ContentValidator(keys))
                 TemplateType.FIVE_ICONS -> FiveIconsTemplateValidator(keys)
                 TemplateType.PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(
                     ContentValidator(keys)

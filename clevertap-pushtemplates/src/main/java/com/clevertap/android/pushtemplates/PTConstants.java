@@ -203,17 +203,57 @@ public class PTConstants {
 
     public static final String KEY_REQUEST_CODES = "requestCodes";
 
-    public static final String PT_RATING_SUBMIT = "pt_rating_submit";
+    /*
+     * Custom Rating template (pt_custom_rating) keys.
+     *
+     * Separate from the Classic Rating template (pt_rating), whose keys and behaviour are frozen.
+     * Key names follow the payload contract in the Rating PRD (section 10.2).
+     */
 
-    public static final String PT_RATING_ICON_COUNT = "pt_rating_icon_count";
+    // Required: "icon" or "text". Anything else renders the Basic template (R-22).
+    public static final String PT_RATING_STYLE = "pt_rating_style";
 
-    public static final String PT_RATING_AUTO_SUBMIT = "pt_rating_auto_submit";
+    // Required: number of rating positions, 2-5. Must match the populated positions.
+    public static final String PT_RATING_COUNT = "pt_rating_count";
 
-    public static final String PT_RATING_CONFIRM_TEXT = "pt_rating_confirm_text";
+    // Per position, 1..count. Icon style uses pt_rating_icon{n} for the unselected state and
+    // pt_rating_icon{n}_sel for the selected state. Text style uses pt_rating_label{n}.
+    public static final String PT_RATING_ICON_PREFIX = "pt_rating_icon";
+    public static final String PT_RATING_ICON_SELECTED_SUFFIX = "_sel";
+    public static final String PT_RATING_LABEL_PREFIX = "pt_rating_label";
 
-    public static final String PT_RATING_BTN_MARGIN_H = "pt_rating_btn_margin_h";
+    // Tint applied to monochrome icon assets and text chips, unselected and selected.
+    public static final String PT_RATING_ICON_CLR = "pt_rating_icon_clr";
+    public static final String PT_RATING_ICON_SEL_CLR = "pt_rating_icon_sel_clr";
 
-    public static final String PT_ICON_KEY_PREFIX = "pt_icon_";
+    // Submit button.
+    public static final String PT_RATING_CTA_LABEL = "pt_rating_cta_label";
+    public static final String PT_RATING_CTA_DL = "pt_rating_cta_dl";
+    public static final String PT_RATING_CTA_BG_CLR = "pt_rating_cta_bg_clr";
+    public static final String PT_RATING_CTA_BORDER_CLR = "pt_rating_cta_border_clr";
+    public static final String PT_RATING_CTA_TXT_CLR = "pt_rating_cta_txt_clr";
+    public static final String PT_RATING_CTA_RADIUS = "pt_rating_cta_radius";
+
+    // Optional confirmation message. When present, submitting swaps the notification to a
+    // confirmation state instead of dismissing it.
+    public static final String PT_RATING_CONFIRM_MSG = "pt_rating_confirm_msg";
+
+    public static final int PT_RATING_COUNT_MIN = 2;
+    public static final int PT_RATING_COUNT_MAX = 5;
+    public static final int PT_RATING_CTA_RADIUS_DEFAULT = 8;
+    public static final int PT_RATING_RADIUS_MAX = 32;
+    public static final int PT_RATING_CTA_LABEL_MAX_LEN = 25;
+
+    /*
+     * Internal intent extras for the custom rating selection/submit flow. These are never part of
+     * the campaign payload.
+     */
+
+    // Marks a broadcast as the submit tap rather than a position tap.
+    public static final String PT_RATING_SUBMIT = "ptRatingSubmit";
+
+    // Selected position (1..count) carried between the position tap and the submit tap.
+    public static final String PT_RATING_SELECTED_POSITION = "ptRatingSelectedPosition";
 
     // Vertical Image Template Keys
     public static final String PT_TEXT1 = "pt_text1";
@@ -283,6 +323,11 @@ public class PTConstants {
             PT_BTN_TEXT_CLR_COLLAPSED,
             PT_BTN_GRAD_CLR1_COLLAPSED,
             PT_BTN_GRAD_CLR2_COLLAPSED,
-            PT_MEDIA_BORDER_CLR);
+            PT_MEDIA_BORDER_CLR,
+            PT_RATING_ICON_CLR,
+            PT_RATING_ICON_SEL_CLR,
+            PT_RATING_CTA_BG_CLR,
+            PT_RATING_CTA_BORDER_CLR,
+            PT_RATING_CTA_TXT_CLR);
 
 }

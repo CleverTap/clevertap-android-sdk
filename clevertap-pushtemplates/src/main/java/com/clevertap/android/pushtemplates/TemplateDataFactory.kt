@@ -18,7 +18,24 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_DIR
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
-import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_COUNT
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CONFIRM_MSG
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_COUNT
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_COUNT_MAX
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_COUNT_MIN
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_BG_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_DL
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_LABEL
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_RADIUS_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_TXT_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_PREFIX
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_SELECTED_SUFFIX
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_SEL_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_LABEL_PREFIX
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_RADIUS_MAX
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_DL
@@ -134,6 +151,12 @@ internal object TemplateDataFactory {
                 defaultAltText
             )
 
+            TemplateType.CUSTOM_RATING -> createCustomRatingTemplateData(
+                extras,
+                darkModeAdaptiveColors,
+                defaultAltText
+            )
+
             TemplateType.FIVE_ICONS -> createFiveIconsTemplateData(
                 extras,
                 darkModeAdaptiveColors,
@@ -216,21 +239,78 @@ internal object TemplateDataFactory {
         val defaultDeepLink = extras.getString(PT_DEFAULT_DL)
             ?: extras.getString(Constants.DEEP_LINK_KEY)
 
-        val iconCount = (extras.getString(PT_RATING_ICON_COUNT)?.toIntOrNull() ?: 5)
-            .coerceIn(2, 5)
-        val icons = (1..5).map { i ->
-            RatingIconData(
-                url = extras.getString("${PTConstants.PT_ICON_KEY_PREFIX}$i"),
-                selectedUrl = extras.getString("${PTConstants.PT_ICON_KEY_PREFIX}${i}_sel")
-            )
-        }
-
         return RatingTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = createMediaData(extras, colorMap, defaultAltText),
-            defaultDeepLink = defaultDeepLink,
-            iconCount = iconCount,
-            icons = icons
+            defaultDeepLink = defaultDeepLink
+        )
+    }
+
+    private fun createCustomRatingTemplateData(
+        extras: Bundle,
+        colorMap: Map<String, String>,
+        defaultAltText: String
+    ): CustomRatingTemplateData {
+        val ratingStyle = RatingStyleType.fromString(extras.getString(PT_RATING_STYLE))
+        if (ratingStyle == null) {
+            PTLog.debug("$PT_RATING_STYLE is missing or not one of icon/text, rating row cannot be rendered")
+        }
+
+        // An out-of-range count is clamped rather than rejected; a non-numeric one leaves the count
+        // at 0 so validation reports the missing key instead of silently rendering five positions.
+        val rawCount = extras.getString(PT_RATING_COUNT)?.toIntOrNull()
+        if (rawCount == null) {
+            PTLog.debug("$PT_RATING_COUNT is missing or not an integer, rating row cannot be rendered")
+        } else if (rawCount < PT_RATING_COUNT_MIN || rawCount > PT_RATING_COUNT_MAX) {
+            PTLog.debug(
+                "$PT_RATING_COUNT is $rawCount, clamping to the supported range " +
+                        "$PT_RATING_COUNT_MIN-$PT_RATING_COUNT_MAX"
+            )
+        }
+        val ratingCount = rawCount?.coerceIn(PT_RATING_COUNT_MIN, PT_RATING_COUNT_MAX) ?: 0
+
+        // pt_dl1..pt_dl5 are per-position overrides of the submit destination in this template.
+        val deepLinkOverrides = Utils.getDeepLinkListFromExtras(extras)
+
+        val positions = (1..ratingCount).map { position ->
+            RatingPositionData(
+                iconUrl = extras.getString("$PT_RATING_ICON_PREFIX$position")?.takeIf { it.isNotBlank() },
+                selectedIconUrl = extras
+                    .getString("$PT_RATING_ICON_PREFIX$position$PT_RATING_ICON_SELECTED_SUFFIX")
+                    ?.takeIf { it.isNotBlank() },
+                label = extras.getString("$PT_RATING_LABEL_PREFIX$position")?.takeIf { it.isNotBlank() },
+                deepLink = deepLinkOverrides?.getOrNull(position - 1)?.takeIf { it.isNotBlank() }
+            )
+        }
+
+        return CustomRatingTemplateData(
+            baseContent = createBaseContent(extras, colorMap),
+            mediaData = createMediaData(extras, colorMap, defaultAltText),
+            defaultDeepLink = extras.getString(PT_DEFAULT_DL)
+                ?: extras.getString(Constants.DEEP_LINK_KEY),
+            ratingStyle = ratingStyle,
+            ratingCount = ratingCount,
+            positions = positions,
+            iconColor = colorMap[PT_RATING_ICON_CLR],
+            selectedIconColor = colorMap[PT_RATING_ICON_SEL_CLR],
+            ctaData = createRatingCtaData(extras, colorMap),
+            confirmationMessage = extras.getString(PT_RATING_CONFIRM_MSG)?.takeIf { it.isNotBlank() }
+        )
+    }
+
+    private fun createRatingCtaData(extras: Bundle, colorMap: Map<String, String>): RatingCtaData {
+        val rawRadius = extras.getString(PT_RATING_CTA_RADIUS)?.toIntOrNull()
+        if (rawRadius != null && (rawRadius < 0 || rawRadius > PT_RATING_RADIUS_MAX)) {
+            PTLog.debug("$PT_RATING_CTA_RADIUS is $rawRadius, clamping to 0-$PT_RATING_RADIUS_MAX")
+        }
+        return RatingCtaData(
+            label = extras.getString(PT_RATING_CTA_LABEL)?.takeIf { it.isNotBlank() },
+            deepLink = extras.getString(PT_RATING_CTA_DL)?.takeIf { it.isNotBlank() },
+            backgroundColor = colorMap[PT_RATING_CTA_BG_CLR],
+            borderColor = colorMap[PT_RATING_CTA_BORDER_CLR],
+            textColor = colorMap[PT_RATING_CTA_TXT_CLR],
+            cornerRadiusDp = rawRadius?.coerceIn(0, PT_RATING_RADIUS_MAX)
+                ?: PT_RATING_CTA_RADIUS_DEFAULT
         )
     }
 
@@ -614,6 +694,18 @@ internal object TemplateDataFactory {
             baseContent = this.baseContent,
             mediaData = this.mediaData,
             actions = this.actions
+        )
+    }
+
+    /**
+     * Degrades a custom rating payload to a Basic notification, used whenever the rating row cannot
+     * be rendered (R-22). Title, message and the default deep link survive; the rating row, submit
+     * button and per-position overrides are dropped.
+     */
+    internal fun CustomRatingTemplateData.toBasicTemplateData(): BasicTemplateData {
+        return BasicTemplateData(
+            baseContent = this.baseContent,
+            mediaData = this.mediaData
         )
     }
 

@@ -124,6 +124,21 @@ Rating template lets your users give you feedback, this feedback is captured in 
 
 ![Rating](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/rating.gif)
 
+## Custom Rating Template
+
+The Custom Rating template (`pt_custom_rating`) is a separate template that builds on the classic
+Rating template with campaign-configurable options:
+
+* **2 to 5 rating positions** instead of a fixed five, via `pt_rating_count`.
+* **Your own icons** per position, each with its own selected and unselected artwork.
+* **A submit button**, so tapping a position only highlights it. Nothing is reported and no deep link
+  opens until the user confirms, which lets them change their mind first.
+* **Per-position deep links** that override the submit destination, so a low rating can open a
+  feedback form while a high one opens the store listing.
+
+The classic `pt_rating` template is unchanged. Existing Rating campaigns keep rendering and behaving
+exactly as before, and the two templates share no keys beyond the standard content ones.
+
 ## Product Catalog Template
 
 Product catalog template lets you show case different images of a product (or a product catalog) before the user can decide to click on the "BUY NOW" option which can take them directly to the product via deep links. This template has two variants.
@@ -389,6 +404,71 @@ pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
 pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
+
+### Custom Rating Template
+
+Custom Rating Template Keys | Required | Description
+ ---:|:---:|:---
+pt_id | Required | Value - `pt_custom_rating`
+pt_title | Required | Title
+pt_msg | Required | Message
+pt_rating_style | Required | How the positions are drawn — `icon` or `text`. **Only `icon` is rendered by this SDK version**; `text` degrades to a standard notification
+pt_rating_count | Required | Number of rating positions, `2`-`5`. Values outside the range are clamped
+pt_rating_icon`n` | Required (icon style) | Unselected artwork for position `n` (`1`-`pt_rating_count`). PNG or WebP with transparency, 1:1, recommended 240x240 px
+pt_rating_icon`n`_sel | Optional | Selected artwork for position `n`. Falls back to `pt_rating_icon`n`` when omitted
+pt_rating_label`n` | Required (text style) | Label for position `n`, up to 15 characters. Reserved for a future release
+pt_rating_icon_clr | Optional | Tint applied to unselected positions in HEX. Only affects monochrome artwork
+pt_rating_icon_sel_clr | Optional | Tint applied to the selected position in HEX. Only affects monochrome artwork
+pt_rating_cta_label | Required | Submit button text, up to 25 characters
+pt_rating_cta_dl | Required | Default destination opened on submit
+pt_rating_cta_bg_clr | Optional | Submit button fill color in HEX
+pt_rating_cta_border_clr | Optional | Submit button border color in HEX
+pt_rating_cta_txt_clr | Optional | Submit button text color in HEX
+pt_rating_cta_radius | Optional | Submit button corner radius in dp, `0`-`32`. Defaults to `8`
+pt_rating_confirm_msg | Optional | Confirmation message shown after submit, up to 60 characters. Reserved for a future release
+pt_default_dl | Required | Destination opened when the notification body is tapped. Never raises `Rating Submitted`
+pt_dl1 | Optional | Overrides the submit destination when position 1 is the selected one
+pt_dl2 | Optional | Overrides the submit destination when position 2 is the selected one
+pt_dl3 | Optional | Overrides the submit destination when position 3 is the selected one
+pt_dl4 | Optional | Overrides the submit destination when position 4 is the selected one
+pt_dl5 | Optional | Overrides the submit destination when position 5 is the selected one
+pt_big_img | Optional | Image
+pt_big_img_alt_text | Optional | Alt Text for Image
+pt_gif | Optional | GIF
+pt_gif_frames | Optional | Number of frames to extract from the GIF
+pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
+pt_msg_summary | Optional | Message line when Notification is expanded
+pt_subtitle | Optional | Subtitle
+pt_bg | Optional | Background Color in HEX
+pt_ico | Optional | Large Icon
+pt_title_clr | Optional | Title Color in HEX
+pt_msg_clr | Optional | Message Color in HEX
+pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
+pt_json | Optional | Above keys in JSON format
+
+#### How a rating is reported
+
+Tapping a position only re-renders the notification with that position highlighted — it raises no
+event and opens nothing. Tapping **Submit** raises `Rating Submitted` exactly once, with the selected
+position in `wzrk_c2a`, and then opens `pt_dl{n}` for that position if set, otherwise
+`pt_rating_cta_dl`. Submitting without a selection does nothing.
+
+Color keys honour the dark mode suffix, so `pt_rating_cta_bg_clr_dark` is used when the device is in
+dark mode. See [Dark Mode](#dark-mode).
+
+#### Fallback behaviour
+
+The template degrades to a standard notification rather than rendering a broken layout when
+`pt_rating_style` is missing or unsupported, when `pt_rating_count` is missing, when fewer than two
+positions have usable artwork, or when the submit button is missing its label or destination. A single
+position whose artwork fails to download is substituted with the built-in star instead.
+
+Older Push Templates SDK versions that do not know `pt_custom_rating` render a standard notification.
 
 ### Product Catalog Template
 

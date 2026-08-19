@@ -44,5 +44,12 @@
     <dimen name="rating_big_img">96dp</dimen>
     <dimen name="custom_btn_padding">4dp</dimen>
 
+    <!-- pt_custom_rating: 48dp keeps each position at the minimum accessible touch target
+         (FR-AND-02) while the icon itself renders at rating_star size. -->
+    <dimen name="custom_rating_touch_target">48dp</dimen>
+    <!-- (custom_rating_touch_target - rating_star) / 2, so the icon stays centred in its cell. -->
+    <dimen name="custom_rating_icon_padding">14dp</dimen>
+    <dimen name="custom_rating_cta_margin">12dp</dimen>
+
 
 </resources>

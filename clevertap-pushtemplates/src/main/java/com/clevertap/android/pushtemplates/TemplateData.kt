@@ -135,19 +135,93 @@ internal data class AutoCarouselTemplateData(
     val flipInterval: Int = PTConstants.PT_FLIP_INTERVAL_TIME,
 ) : TemplateData()
 
-internal data class RatingIconData(
-    val url: String?,       // colored version — shown grey when unselected, colored when clicked
-    val selectedUrl: String? // optional custom selected state; falls back to url if null
-)
-
 internal data class RatingTemplateData(
     override val templateType: TemplateType = TemplateType.RATING,
     val baseContent: BaseContent,
     val mediaData: MediaData,
     val defaultDeepLink: String? = null,
-    val iconCount: Int = 5,
-    val icons: List<RatingIconData> = emptyList()
 ) : TemplateData()
+
+/**
+ * How the rating positions are drawn. Sourced from the required pt_rating_style key; a missing or
+ * unrecognised value yields null so the renderer can fall back to Basic per R-22.
+ */
+internal enum class RatingStyleType(private val value: String) {
+    ICON("icon"), TEXT("text");
+
+    override fun toString(): String = value
+
+    companion object {
+
+        fun fromString(value: String?): RatingStyleType? = when (value?.lowercase()) {
+            "icon" -> ICON
+            "text" -> TEXT
+            else -> null
+        }
+    }
+}
+
+/**
+ * One rating position. Only the fields belonging to the configured [RatingStyleType] are populated:
+ * icon style fills [iconUrl] / [selectedIconUrl], text style fills [label].
+ *
+ * [deepLink] is the optional pt_dl{n} override. When set, submitting with this position selected
+ * opens it instead of the submit button's own destination.
+ */
+internal data class RatingPositionData(
+    val iconUrl: String? = null,
+    val selectedIconUrl: String? = null,
+    val label: String? = null,
+    val deepLink: String? = null,
+) {
+    /** A position the renderer can actually draw, given the template's style. */
+    fun isRenderable(style: RatingStyleType): Boolean = when (style) {
+        RatingStyleType.ICON -> !iconUrl.isNullOrBlank()
+        RatingStyleType.TEXT -> !label.isNullOrBlank()
+    }
+}
+
+/**
+ * Submit button configuration. [label] and [deepLink] are required by the payload contract; the
+ * renderer treats either being absent as an invalid payload.
+ */
+internal data class RatingCtaData(
+    val label: String? = null,
+    val deepLink: String? = null,
+    val backgroundColor: String? = null,
+    val borderColor: String? = null,
+    val textColor: String? = null,
+    val cornerRadiusDp: Int = PTConstants.PT_RATING_CTA_RADIUS_DEFAULT,
+)
+
+/**
+ * The pt_custom_rating template — configurable 2-5 positions, icon or text style, and a submit
+ * button that defers the rating event until the user confirms.
+ *
+ * Deliberately a separate type from [RatingTemplateData]: the Classic pt_rating template is frozen
+ * and must not share a rendering or intent path with this one.
+ */
+internal data class CustomRatingTemplateData(
+    override val templateType: TemplateType = TemplateType.CUSTOM_RATING,
+    val baseContent: BaseContent,
+    val mediaData: MediaData,
+    val defaultDeepLink: String? = null,
+    val ratingStyle: RatingStyleType? = null,
+    val ratingCount: Int = 0,
+    val positions: List<RatingPositionData> = emptyList(),
+    val iconColor: String? = null,
+    val selectedIconColor: String? = null,
+    val ctaData: RatingCtaData = RatingCtaData(),
+    val confirmationMessage: String? = null,
+) : TemplateData() {
+
+    /**
+     * Positions the renderer can draw. A position whose asset failed to resolve is substituted with
+     * the built-in star pair rather than dropped, so this only counts positions with usable config.
+     */
+    val renderablePositionCount: Int
+        get() = ratingStyle?.let { style -> positions.count { it.isRenderable(style) } } ?: 0
+}
 
 internal data class TimerTemplateData(
     override val templateType: TemplateType = TemplateType.TIMER,
