@@ -439,7 +439,7 @@ internal object CleverTapFactory {
             ),
             FetchVariablesResponse(config, controllerManager, callbackManager),
             DisplayUnitResponse(config, callbackManager, controllerManager),
-            AdUnitResponse(config, storeRegistry, controllerManager, ndTriggersManager),
+            AdUnitResponse(config, storeRegistry, controllerManager, ndTriggersManager, ndEvaluationManager, callbackManager),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
             GeofenceResponse(config, callbackManager),
