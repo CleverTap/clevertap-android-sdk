@@ -53,6 +53,7 @@ internal class QueueHeaderBuilder(
             addReferrerInfo(header)
             addWzrkParams(header)
             addInAppFC(header)
+            addNdFC(header)
             return header
         } catch (e: JSONException) {
             logger.verbose(config.accountId, "CommsManager: Failed to attach header", e)
@@ -191,5 +192,19 @@ internal class QueueHeaderBuilder(
             header.put("imp", it.shownTodayCount)
             header.put("tlc", it.getInAppsCount(context))
         } ?: logger.verbose(config.accountId, "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header")
+    }
+
+    /**
+     * Native Display (ND) frequency-cap counters (SDK-6055). Mirrors [addInAppFC] but in ND's own
+     * keyspace: `ndmp` = SDK's ND render count today, `ndtlc` = [[ti, today, lifetime], ...].
+     * The `adUnit_eval` / `adUnit_suppressed` meta are attached separately by the ND evaluator's
+     * NetworkHeadersListener (they are populated by local evaluation, not by the counter store).
+     */
+    private fun addNdFC(header: JSONObject) {
+        controllerManager.ndFCManager?.let {
+            Logger.v("Attaching NdFC to Header")
+            header.put(Constants.ND_MAX_PER_DAY_KEY, it.shownTodayCount)
+            header.put(Constants.ND_TARGET_SHOWN_LIST, it.getNdCounts(context))
+        } ?: logger.verbose(config.accountId, "controllerManager.getNdFCManager() is NULL, not Attaching NdFC to Header")
     }
 }
