@@ -28,6 +28,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
 import com.clevertap.android.sdk.inapp.delay.DelayedInAppStorageStrategy
 import com.clevertap.android.sdk.inapp.delay.InAppSchedulerFactory
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
@@ -254,6 +255,15 @@ internal object CleverTapFactory {
             templatesManager = templatesManager
         )
 
+        // Native Display (ND) evaluator (SDK-6055) — reuses matchers over ND's own stores.
+        val ndLimitsMatcher = LimitsMatcher(ndImpressionManager, ndTriggersManager)
+        val ndEvaluationManager = NdEvaluationManager(
+            triggersMatcher = triggersMatcher,
+            ndTriggersManager = ndTriggersManager,
+            ndLimitsMatcher = ndLimitsMatcher,
+            storeRegistry = storeRegistry
+        )
+
         val taskInitStores = executors.ioTask<Unit>()
         taskInitStores.execute("initStores") {
             if (deviceInfo.getDeviceID() != null) {
@@ -285,6 +295,7 @@ internal object CleverTapFactory {
                         accountId = config.accountId
                     )
                     storeRegistry.ndStore = ndStore
+                    ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
                     callbackManager.addChangeUserCallback(ndStore)
                 }
                 if (storeRegistry.ndImpressionStore == null) {
@@ -522,6 +533,7 @@ internal object CleverTapFactory {
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
+        networkManager.addNetworkHeadersListener(ndEvaluationManager)
 
         val pipManager = PIPManager { FileResourceProvider.initInstance(context, config.logger, networkMonitor) }
 
@@ -537,6 +549,7 @@ internal object CleverTapFactory {
             deviceInfo,
             StoreRegistryInAppQueue(storeRegistry, config.accountId),
             evaluationManager,
+            ndEvaluationManager,
             templatesManager,
             inAppActionHandler,
             inAppNotificationInflater,
