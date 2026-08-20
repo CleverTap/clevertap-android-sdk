@@ -340,21 +340,31 @@ Still to lock:
 
 ---
 
-## 11. Phased implementation plan (SDK)
+## 11. Phased implementation plan (SDK) — tickets & PRs
 
-1. **Foundations**: constants + `StoreProvider` ND types + `NdStore`, `NdFCManager`, and a second
-   `ImpressionManager`/`TriggerManager` instance on ND namespaces. Daily-reset + serializers.
-2. **Response ingest**: `AdUnitResponse` for `adUnit_notifs_ss` (cache), `adUnit_notifs_applaunched`,
-   `adUnit_notifs`, `adUnit_stale`, `ndmc`/`ndmp`. Wire into `CleverTapFactory` chain.
-3. **Header out**: `ndtlc`/`ndmp` in `QueueHeaderBuilder`; `adUnit_eval`/`adUnit_suppressed` via an ND
-   `NetworkHeadersListener` (attach/remove exactly-sent).
-4. **Evaluator**: extract channel-agnostic eval core; add `NdEvaluationManager`; hook into the event
-   stream next to `initInAppEvaluation`. (Blocked on Q1.)
-5. **Cap gate + impressions**: `canShow`-equivalent at delivery; `recordImpression` on the viewed
-   event; global daily/session enforcement.
-6. **CG acks**: consume App-Launched stubs → `adUnit_suppressed`.
-7. **Refresh + flags**: `wzrk_fetch t=ND_META` trigger; version/flag gating; ignore-unknown-keys checks.
-8. **Tests + docs**: unit tests mirroring the in-app fcap tests; finalize this doc → Confluence.
+Implemented as a stack of PRs (base `develop`), one per phase, each `SDK-<ticket>-nd-phaseN`.
+
+| Phase | Ticket | PR | Status | Scope |
+|---|---|---|---|---|
+| 1 Foundations | SDK-6057 | #1057 | ✅ done | constants + `StoreProvider` ND types + `NdStore` + `NdFCManager` + ND `ImpressionManager`/`TriggerManager` (daily-reset, serializers). |
+| 2 Response ingest | SDK-6058 | #1058 | ✅ done | `AdUnitResponse`: `adUnit_notifs_ss` → `NdStore`, `adUnit_stale` GC, `ndmc`/`ndmp` → `updateLimits`. |
+| 3 Header (counters) | SDK-6059 | #1060 | ✅ done | `QueueHeaderBuilder.addNdFC` → `ndtlc`/`ndmp`. |
+| 4 Evaluator | SDK-6060 | #1061 | ✅ done | `NdEvaluationManager` (evaluate → `adUnit_eval`); `NetworkHeadersListener` for `adUnit_eval`/`adUnit_suppressed` (moved here from Phase 3 — the evaluator owns the lists). |
+| 5 Cap gate + impressions | SDK-6061 | #1062 | ✅ done | `NdFcapGate` at delivery (fcap-marked units only); `didShow` on the viewed event. |
+| 6 CG acks | SDK-6062 | #1063 | ✅ done | `recordCgSuppressed`; `AdUnitResponse.processAppLaunched` (stubs → ack, content → gated delivery). |
+| 7 Refresh + gating | SDK-6063 | #1064 | ✅ done | `fetchNativeDisplayMeta()` (`wzrk_fetch t=ND_META`); gating-safety confirmed. |
+| 8 Tests + docs | SDK-6064 | #1065 | ✅ done | `NdStoreTest`, `NdEvaluationManagerTest`; this status table. |
+
+Notes on adjustments made during implementation:
+- `adUnit_eval`/`adUnit_suppressed` header attach landed in **Phase 4** (not 3) because the evaluator
+  owns the in-memory lists + attach/remove-exactly-sent lifecycle (mirrors in-app `EvaluationManager`).
+- The delivery gate (Phase 5) is applied **only to fcap-marked units** to avoid regressing existing
+  ungated display units; full global-cap activation depends on the feature/version gate.
+- The `adUnit_notifs_applaunched` content path landed with **Phase 6** (alongside CG acks), once the
+  cap gate existed, so ND content is never delivered ungated.
+
+Still to lock with BE before release: the `FETCH_TYPE_ND_META` value (placeholder `100`), the
+mid-session refresh cadence, ND impression-map size, and viewed-event re-view/dedupe semantics.
 
 ---
 
