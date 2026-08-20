@@ -137,6 +137,27 @@ internal class NdEvaluationManager(
         }
     }
 
+    /**
+     * Records a CG-suppressed App-Launched ND stub as an `adUnit_suppressed` ack. The server ships
+     * stubs (`suppressed:true` + `wzrk_cgId`) inline in `adUnit_notifs_applaunched`; the SDK acks at
+     * its would-have-been-surfaced moment (App-Launched path only — regular events need no ack) so the
+     * CG event fires at render time rather than server-delivery time. Bare shape mirrors in-app's
+     * `inapps_suppressed`.
+     */
+    fun recordCgSuppressed(stub: JSONObject) {
+        val wzrkId = stub.optString(Constants.NOTIFICATION_ID_TAG)
+        if (wzrkId.isEmpty()) return
+        suppressedNdCampaigns.add(
+            mapOf(
+                Constants.NOTIFICATION_ID_TAG to wzrkId,
+                Constants.INAPP_WZRK_PIVOT to stub.optString(Constants.INAPP_WZRK_PIVOT, "wzrk_default"),
+                Constants.INAPP_WZRK_CGID to stub.optInt(Constants.INAPP_WZRK_CGID)
+            )
+        )
+        saveSuppressedNdIds()
+        Logger.v(TAG, "Recorded ND CG-suppression ack for $wzrkId")
+    }
+
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
         if (endpointId != ENDPOINT_A1) return null
         val header = JSONObject()
