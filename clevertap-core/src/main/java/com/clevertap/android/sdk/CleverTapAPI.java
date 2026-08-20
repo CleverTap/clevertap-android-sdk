@@ -3790,6 +3790,24 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().sendFetchEvent(event);
     }
 
+    /**
+     * Requests a fresh Native Display (ND) advanced-rule metadata bundle mid-session (SDK-6055).
+     * Sends a {@code wzrk_fetch} event with {@code t = FETCH_TYPE_ND_META}; the server responds with
+     * {@code adUnit_notifs_ss} (see {@link com.clevertap.android.sdk.response.AdUnitResponse}). Old
+     * SDKs/servers ignore the unknown fetch type, so this is forward/backward compatible.
+     *
+     * Note: the placeholder fetch-type value must be locked with BE before release, and the exact
+     * refresh cadence (when the SDK fires this) is still to be finalised.
+     */
+    public void fetchNativeDisplayMeta() {
+        if (coreState.getConfig().isAnalyticsOnly()) {
+            return;
+        }
+        Logger.v(Constants.FEATURE_DISPLAY_UNIT + "Fetching Native Display metadata...");
+        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_ND_META);
+        coreState.getAnalyticsManager().sendFetchEvent(event);
+    }
+
     @NonNull
     JSONObject getFetchRequestAsJson(int fetchType) {
         JSONObject event = new JSONObject();
