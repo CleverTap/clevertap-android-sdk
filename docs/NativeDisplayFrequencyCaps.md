@@ -169,6 +169,11 @@ From the design TAN §7, the SDK's responsibilities (what the SDK must enforce l
 Precedence (same as in-app): `isNdFcapEnabled==false` overrides all; then `efc==1` short-circuits;
 `excludeGlobalFCaps==true` bypasses only the ND global-daily cap.
 
+*Where each is enforced:* `frequencyLimits`/`occurrenceLimits` are enforced at **eval time** (the
+`adUnit_eval` vote) and are **not** re-checked at delivery; the counter caps (`efc`/`tlc`/`tdc`/`mdc`
++ global) are re-checked at delivery in `canShow`. See §7.2 for why ND skips the delivery-time
+whenLimits re-check that in-app does.
+
 The elegant simplification: **the SDK does not need to classify campaigns.** Only advanced-rule,
 non-journey campaigns ever appear in `adUnit_notifs_ss` (the server's eligibility filter, design §6.7).
 So "evaluate everything in the metadata bundle and vote the eligible ones into `adUnit_eval`" is
@@ -252,22 +257,52 @@ flowchart TD
 
 ### 7.2 The ND cap gate (mirrors in-app canShow, minus CS)
 
+At delivery the gate (`NdFcapGate` → `NdFCManager.canShow`) enforces the **counter caps only**. The
+advanced `whenLimits` (`frequencyLimits`/`occurrenceLimits`) were already applied at eval time (the
+`adUnit_eval` vote), so `canShow` is called with `frequencyLimitsMaxedOut = false` — see the note below.
+
 ```mermaid
 flowchart TD
-    A[unit about to be surfaced / viewed] --> M{isNdFcapEnabled?}
+    EV[event: whenTriggers + whenLimits applied at eval time -> adUnit_eval vote] -.server delivers content.-> A
+    A[unit about to be surfaced] --> M{isNdFcapEnabled / fcap-managed?}
     M -- no --> ALLOW[allow - deliver as today]
-    M -- yes --> B{advanced whenLimits maxed?}
-    B -- yes --> DENY[suppress]
-    B -- no --> C{efc == 1?}
+    M -- yes --> C{efc == 1?}
     C -- yes --> ALLOW
     C -- no --> D{session cap<br/>mdc + global ndmc}
-    D -- maxed --> DENY
+    D -- maxed --> DENY[suppress]
     D -- ok --> E{lifetime cap tlc}
     E -- maxed --> DENY
     E -- ok --> F{daily cap<br/>tdc + global ndmp/ndstc}
     F -- maxed --> DENY
     F -- ok --> ALLOW
 ```
+
+**Divergence from in-app: no delivery-time whenLimits re-check (intentional).**
+In-app evaluates `whenLimits` **twice** — once at eval, then again right before render via
+`InAppFCManager.canShow`'s `matchWhenLimitsBeforeDisplay` step. That second check exists because in-app
+*eval and render are decoupled by an on-device queue*: a selected in-app can sit in
+`inAppQueue`/`pendingNotifications` for a long, unpredictable time (app backgrounded, another in-app
+showing, blacklisted/suspended activity, media still downloading), during which impressions can accrue
+— so it re-verifies the frequency limits at the last moment.
+
+ND deliberately does **not** re-run `whenLimits` at delivery (`NdFcapGate` passes
+`frequencyLimitsMaxedOut = false`). The counter caps (`efc`/`tlc`/`tdc`/`mdc` + global) *are* still
+re-checked. This is the right shape for ND, not a gap, because:
+
+1. **No on-device deferred display queue.** ND content is handed to the host as the response is
+   processed — there's no `pendingNotifications`-style deferral, so the long eval→render gap that
+   in-app's re-check guards essentially doesn't exist.
+2. **The SDK can't gate the actual show anyway.** The host renders ND (and reports `viewed`) whenever
+   it chooses; the SDK's gate runs at *delivery*, not at render, so a delivery-time re-check would not
+   cover the host's render timing regardless.
+3. **The server is the authority for ND advanced caps.** LC gates content on the `adUnit_eval` vote and
+   trusts it (contract §6.4/§6.9); the vote *is* the enforcement point for `whenLimits`, and the
+   delivery counter-cap check is the belt-and-suspenders layer on top.
+
+The only window this leaves is a single flush round-trip between the vote and the content arriving; the
+counter caps (`tdc`/session/global-daily) cover the common same-day/same-session over-delivery within
+it. If strict in-app parity is ever required, the gate can look up the campaign's rules from `NdStore`
+by `ti` and call `ndLimitsMatcher.matchWhenLimits` before `canShow`.
 
 ### 7.3 App-Launched vs regular-event dispatch (server-side, for SDK context)
 - **App-Launched:** union of app-launched + no-trigger ND targets, sorted priority DESC then ti ASC.
