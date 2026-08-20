@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.NdFCManager;
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import java.util.ArrayList;
@@ -96,11 +97,62 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             return;
         }
 
-        ArrayList<CleverTapDisplayUnit> displayUnits = parseDisplayUnitsFromJson(messages);
+        ArrayList<CleverTapDisplayUnit> displayUnits = applyNdFrequencyCaps(parseDisplayUnitsFromJson(messages));
         cache.updateDisplayUnits(displayUnits);
         if (!displayUnits.isEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(displayUnits);
         }
+    }
+
+    /**
+     * Native Display frequency caps (SDK-6055): drops units whose counter caps are maxed out before
+     * they are handed to the host (the ND analog of in-app's canShow gate). Only units that carry an
+     * fcap marker ({@code efc}/{@code tlc}/{@code tdc}/{@code mdc}/{@code excludeGlobalFCaps}) are
+     * gated; unmarked units pass through unchanged so existing (non-fcap) display units are never
+     * affected. Advanced {@code frequencyLimits}/{@code occurrenceLimits} were already applied during
+     * evaluation (the server only ships content for {@code adUnit_eval}-voted campaigns), so the
+     * delivery-time re-check here covers the counter caps only.
+     */
+    @NonNull
+    private ArrayList<CleverTapDisplayUnit> applyNdFrequencyCaps(@NonNull ArrayList<CleverTapDisplayUnit> units) {
+        final NdFCManager ndFCManager = controllerManager.getNdFCManager();
+        if (ndFCManager == null) {
+            return units;
+        }
+        final ArrayList<CleverTapDisplayUnit> allowed = new ArrayList<>(units.size());
+        for (CleverTapDisplayUnit unit : units) {
+            final JSONObject json = unit.getJsonObject();
+            if (json == null || !isFcapManaged(json)) {
+                allowed.add(unit); // not fcap-managed -> deliver as before
+                continue;
+            }
+            final boolean excludeFromCaps =
+                    json.optInt(Constants.KEY_EFC, -1) == 1
+                            || json.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
+            final boolean canShow = ndFCManager.canShow(
+                    unit.getUnitID(),
+                    excludeFromCaps,
+                    json.optInt(Constants.KEY_TLC, -1),  // -1 = uncapped
+                    json.optInt(Constants.KEY_TDC, -1),  // -1 = uncapped
+                    json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, -1),
+                    false /* advanced whenLimits already applied at evaluation time */);
+            if (canShow) {
+                allowed.add(unit);
+            } else {
+                logger.verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "ND unit " + unit.getUnitID()
+                                + " suppressed by frequency caps");
+            }
+        }
+        return allowed;
+    }
+
+    private static boolean isFcapManaged(@NonNull JSONObject json) {
+        return json.has(Constants.KEY_EFC)
+                || json.has(Constants.KEY_TLC)
+                || json.has(Constants.KEY_TDC)
+                || json.has(Constants.INAPP_MAX_DISPLAY_COUNT)
+                || json.has(Constants.KEY_EXCLUDE_GLOBAL_CAPS);
     }
 
     /**
