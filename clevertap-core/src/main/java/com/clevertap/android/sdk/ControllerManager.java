@@ -27,6 +27,8 @@ public class ControllerManager {
 
     private InAppFCManager inAppFCManager;
 
+    private NdFCManager ndFCManager;
+
     private final BaseDatabaseManager baseDatabaseManager;
 
     private volatile DisplayUnitCache displayUnitCache;
@@ -213,6 +215,14 @@ public class ControllerManager {
 
     public void setInAppFCManager(final InAppFCManager inAppFCManager) {
         this.inAppFCManager = inAppFCManager;
+    }
+
+    public NdFCManager getNdFCManager() {
+        return ndFCManager;
+    }
+
+    public void setNdFCManager(final NdFCManager ndFCManager) {
+        this.ndFCManager = ndFCManager;
     }
 
     public PushProviders getPushProviders() {

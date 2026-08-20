@@ -9,9 +9,13 @@ import com.clevertap.android.sdk.store.preference.ICTPreference
  * Responsible for storing impressions count for a given campaign ID.
  * It stores impressions in the shared preferences named "WizRocket_counts_per_inapp:<<account_id>>:<<device_id>>"
  * with keys in the format "__impression_<<campaign_id>>".
+ *
+ * The same implementation backs both in-app and Native Display; [storeType] selects which namespace
+ * to reconstruct on user change (in-app counts_per_inapp vs ND nd_counts_per_target).
  */
 class ImpressionStore(
     private val ctPreference: ICTPreference,
+    private val storeType: Int = STORE_TYPE_IMPRESSION,
 ) : ChangeUserCallback {
 
     companion object {
@@ -78,7 +82,7 @@ class ImpressionStore(
 
     override fun onChangeUser(deviceId: String, accountId: String) {
         val newPrefName =
-            StoreProvider.getInstance().constructStorePreferenceName(STORE_TYPE_IMPRESSION, deviceId, accountId)
+            StoreProvider.getInstance().constructStorePreferenceName(storeType, deviceId, accountId)
         ctPreference.changePreferenceName(newPrefName)
     }
 }

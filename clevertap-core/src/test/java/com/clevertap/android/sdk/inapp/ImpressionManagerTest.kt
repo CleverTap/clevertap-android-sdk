@@ -43,7 +43,7 @@ class ImpressionManagerTest : BaseTestCase() {
         )
 
         impressionManager = ImpressionManager(
-            storeRegistry = storeRegistry, clock = clock, locale = Locale.getDefault()
+            impressionStoreProvider = { storeRegistry.impressionStore }, clock = clock, locale = Locale.getDefault()
         )
 
         every { deviceInfo.deviceID } returns "device_id"

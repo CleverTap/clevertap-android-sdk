@@ -99,6 +99,25 @@ public interface Constants {
     String PREFS_EVALUATED_INAPP_KEY_SS = "evaluated_ss";
     String PREFS_SUPPRESSED_INAPP_KEY_CS = "suppressed_ss";
 
+    // ---- Native Display (ND) frequency caps (SDK-6055) ----
+    // ND == Display Units channel. SS + legacy only (no CS mode). Mirrors the in-app keys above.
+    // Response keys (LC -> SDK). Campaign content still arrives under DISPLAY_UNIT_JSON_RESPONSE_KEY ("adUnit_notifs").
+    String DISPLAY_UNIT_NOTIFS_SS_KEY = "adUnit_notifs_ss";                 // advanced-rule metadata bundle (rules only)
+    String DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY = "adUnit_notifs_applaunched"; // app-launch content + CG-suppressed stubs
+    String DISPLAY_UNIT_NOTIFS_STALE_KEY = "adUnit_stale";                  // dead-target GC ids
+    // Request meta keys (SDK -> LC)
+    String ND_SS_EVAL_META = "adUnit_eval";                                 // eligible advanced ND campaign votes
+    String ND_SUPPRESSED_META = "adUnit_suppressed";                        // CG-suppression acks (app-launch path only)
+    String ND_TARGET_SHOWN_LIST = "ndtlc";                                  // [[ti, todayCount, lifetimeCount], ...]
+    // Wire keys with directional overload (mirror in-app imc/imp)
+    String ND_MAX_PER_SESSION_KEY = "ndmc";                                 // resp: session ceiling; also storage key
+    String ND_MAX_PER_DAY_KEY = "ndmp";                                     // req: SDK daily count; resp: daily ceiling
+    // ND store prefs namespace + keys
+    String ND_KEY = "adUnit";                                               // ND metadata store prefs namespace
+    String PREFS_ND_KEY_SS = DISPLAY_UNIT_NOTIFS_SS_KEY;                    // metadata bundle pref key
+    String PREFS_EVALUATED_ND_KEY_SS = "evaluated_nd_ss";                   // pending adUnit_eval report
+    String PREFS_SUPPRESSED_ND_KEY = "suppressed_nd";                       // pending adUnit_suppressed report
+
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String INBOX_V2_JSON_RESPONSE_KEY = "inbox_notifs_v2";
     String INBOX_V2_ISREAD_KEY = "isRead";
@@ -157,6 +176,12 @@ public interface Constants {
     String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
 
     String KEY_TRIGGERS_PER_INAPP = "triggers_per_inapp";
+
+    // ---- Native Display (ND) frequency-cap storage keys (SDK-6055), mirror the in-app keys above ----
+    String KEY_ND_MAX_PER_DAY = "ndstmcd";                 // stored ND daily ceiling (mirror of istmcd_inapp)
+    String KEY_ND_COUNTS_SHOWN_TODAY = "ndstc";            // stored ND global shown-today (mirror of istc_inapp)
+    String KEY_ND_COUNTS_PER_TARGET = "nd_counts_per_target";   // per-target today/lifetime + impressions file
+    String KEY_ND_TRIGGERS_PER_TARGET = "nd_triggers_per_target"; // onEvery/onExactly trigger counts
     String INAPP_ID_IN_PAYLOAD = "ti";
     int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
@@ -371,6 +396,8 @@ public interface Constants {
     int FETCH_TYPE_IN_APPS = 5;
     int FETCH_TYPE_IN_ACTION_IN_APPS = 6;
     int FETCH_TYPE_INBOX_V2 = 7;
+    // Native Display SS metadata refresh (SDK-6055). Placeholder value 100 — LOCK with BE before release.
+    int FETCH_TYPE_ND_META = 100;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";

@@ -3237,6 +3237,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                             coreState.getExecutors(), clevertapClock));
         }
 
+        /*
+          Reinitialising NdFCManager (Native Display frequency caps) with device id, if it's null
+          during first initialisation from CleverTapFactory.getCoreState()
+         */
+        if (coreState.getControllerManager().getNdFCManager() == null) {
+            getConfigLogger().verbose(accountId + ":async_deviceID",
+                    "Initializing NdFC after Device ID Created = " + deviceId);
+            coreState.getControllerManager()
+                    .setNdFCManager(new NdFCManager(context, coreState.getConfig(), deviceId,
+                            coreState.getNdImpressionManager(),
+                            coreState.getExecutors(), clevertapClock));
+        }
+
         //todo : replace with variables
         /*
           Reinitialising product config & Feature Flag controllers with device id, if it's null
