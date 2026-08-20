@@ -53,18 +53,24 @@ class NdStoreTest {
     }
 
     @Test
-    fun `evaluated nd ids round trip`() {
-        every { ctPreference.readString(Constants.PREFS_EVALUATED_ND_KEY_SS, any()) } returns
-                JSONArray().put(70001L).put(70002L).toString()
+    fun `evaluated nd ids write then read`() {
+        every { ctPreference.writeString(any(), any()) } just Runs
+        val ids = JSONArray().put(70001L).put(70002L)
+        ndStore.storeEvaluatedServerSideNdIds(ids)
+        verify { ctPreference.writeString(Constants.PREFS_EVALUATED_ND_KEY_SS, ids.toString()) }
 
+        every { ctPreference.readString(Constants.PREFS_EVALUATED_ND_KEY_SS, any()) } returns ids.toString()
         assertEquals(2, ndStore.readEvaluatedServerSideNdIds().length())
     }
 
     @Test
-    fun `suppressed nd ids round trip`() {
-        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_ND_KEY, any()) } returns
-                JSONArray().put(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "70004_20260810")).toString()
+    fun `suppressed nd ids write then read`() {
+        every { ctPreference.writeString(any(), any()) } just Runs
+        val entries = JSONArray().put(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "70004_20260810"))
+        ndStore.storeSuppressedNdIds(entries)
+        verify { ctPreference.writeString(Constants.PREFS_SUPPRESSED_ND_KEY, entries.toString()) }
 
+        every { ctPreference.readString(Constants.PREFS_SUPPRESSED_ND_KEY, any()) } returns entries.toString()
         assertEquals(1, ndStore.readSuppressedNdIds().length())
     }
 
@@ -75,8 +81,8 @@ class NdStoreTest {
     }
 
     @Test
-    fun `onChangeUser changes preference name`() {
+    fun `onChangeUser repoints to the ND namespace for the new user`() {
         ndStore.onChangeUser("device_id", "account_id")
-        verify { ctPreference.changePreferenceName(any()) }
+        verify { ctPreference.changePreferenceName("${Constants.ND_KEY}:device_id:account_id") }
     }
 }

@@ -41,7 +41,7 @@ final class NdFcapGate {
         final ArrayList<CleverTapDisplayUnit> allowed = new ArrayList<>(units.size());
         for (CleverTapDisplayUnit unit : units) {
             final JSONObject json = unit.getJsonObject();
-            if (json == null || !isFcapManaged(json)) {
+            if (json == null || !NdFCManager.isFcapManaged(json)) {
                 allowed.add(unit); // not fcap-managed -> deliver as before
                 continue;
             }
@@ -64,13 +64,5 @@ final class NdFcapGate {
             }
         }
         return allowed;
-    }
-
-    private static boolean isFcapManaged(@NonNull JSONObject json) {
-        return json.has(Constants.KEY_EFC)
-                || json.has(Constants.KEY_TLC)
-                || json.has(Constants.KEY_TDC)
-                || json.has(Constants.INAPP_MAX_DISPLAY_COUNT)
-                || json.has(Constants.KEY_EXCLUDE_GLOBAL_CAPS);
     }
 }

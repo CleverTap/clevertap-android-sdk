@@ -574,15 +574,20 @@ internal class InAppController(
         val appFieldsWithEventProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithEventProperties.putAll(eventProperties)
 
-        // Native Display (ND) local evaluation — votes eligible advanced campaigns into adUnit_eval.
-        ndEvaluationManager.evaluateOnEvent(eventName, appFieldsWithEventProperties, userLocation)
-
         // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnEvent(
             eventName,
             appFieldsWithEventProperties,
             userLocation
         )
+
+        // Native Display (ND) local evaluation — runs AFTER in-app and guarded so a fault in ND (a new,
+        // independently authored server payload) can't abort in-app delivery or queue-flush scheduling.
+        try {
+            ndEvaluationManager.evaluateOnEvent(eventName, appFieldsWithEventProperties, userLocation)
+        } catch (t: Throwable) {
+            logger.debug(defaultLogTag, "ND evaluation failed", t)
+        }
 
         // Handle immediate CS in-apps
         if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
@@ -610,15 +615,19 @@ internal class InAppController(
             JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithChargedEventProperties.putAll(chargeDetails)
 
-        // Native Display (ND) local evaluation.
-        ndEvaluationManager.evaluateOnChargedEvent(appFieldsWithChargedEventProperties, items, userLocation)
-
         // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnChargedEvent(
             appFieldsWithChargedEventProperties,
             items,
             userLocation
         )
+
+        // Native Display (ND) local evaluation — after in-app, guarded (see onQueueEvent).
+        try {
+            ndEvaluationManager.evaluateOnChargedEvent(appFieldsWithChargedEventProperties, items, userLocation)
+        } catch (t: Throwable) {
+            logger.debug(defaultLogTag, "ND evaluation failed", t)
+        }
 
         // Handle immediate CS in-apps
         if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
@@ -643,15 +652,19 @@ internal class InAppController(
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
 
-        // Native Display (ND) local evaluation.
-        ndEvaluationManager.evaluateOnUserAttributeChange(userAttributeChangedProperties, location, appFields)
-
         // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnUserAttributeChange(
             userAttributeChangedProperties,
             location,
             appFields
         )
+
+        // Native Display (ND) local evaluation — after in-app, guarded (see onQueueEvent).
+        try {
+            ndEvaluationManager.evaluateOnUserAttributeChange(userAttributeChangedProperties, location, appFields)
+        } catch (t: Throwable) {
+            logger.debug(defaultLogTag, "ND evaluation failed", t)
+        }
 
         // Handle immediate CS in-apps
         if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {

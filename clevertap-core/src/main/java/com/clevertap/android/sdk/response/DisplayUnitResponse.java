@@ -57,35 +57,46 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             return;
         }
 
-        if (!response.has(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY)) {
+        final JSONArray notifs = response.optJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY);
+        final JSONArray appLaunched = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY);
+        final boolean hasNotifs = notifs != null && notifs.length() > 0;
+        final boolean hasAppLaunched = appLaunched != null && appLaunched.length() > 0;
+        if (!hasNotifs && !hasAppLaunched) {
             logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "JSON object doesn't contain the Display Units key");
             return;
         }
         try {
-            logger
-                    .verbose(config.getAccountId(),
-                            Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
-            parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY));
+            logger.verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
+            parseDisplayUnits(notifs, appLaunched);
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
         }
     }
 
     /**
-     * Parses the Display Units from the JSON response, populates the cache and
-     * notifies the callback only when at least one valid unit was received.
+     * Parses Display Units from both {@code adUnit_notifs} and (non-CG-suppressed)
+     * {@code adUnit_notifs_applaunched}, merges them, applies the ND frequency-cap gate, and writes
+     * the cache once. Both keys are handled in a single pass because
+     * {@link com.clevertap.android.sdk.displayunits.CTDisplayUnitController#updateDisplayUnits}
+     * replaces (not merges) the cache — two separate writes for one response would wipe each other.
+     * CG stubs ({@code suppressed:true}) are skipped here; they are acked by {@link AdUnitResponse}.
      *
-     * A null or empty array is a no-op: the cache is not touched and the callback
-     * is not fired. This preserves the legacy pre-8.x contract and matches iOS
-     * parity — iOS guards on displayUnitJSON.count > 0 before doing anything.
-     *
-     * @param messages - Json array of Display Unit items
+     * A response with no valid units is a no-op (cache untouched, callback not fired), preserving the
+     * legacy pre-8.x contract / iOS parity.
      */
-    private void parseDisplayUnits(JSONArray messages) {
-        if (messages == null || messages.length() == 0) {
+    private void parseDisplayUnits(JSONArray notifs, JSONArray appLaunched) {
+        final ArrayList<CleverTapDisplayUnit> parsed = new ArrayList<>();
+        if (notifs != null) {
+            parsed.addAll(parseDisplayUnitsFromJson(notifs, false));
+        }
+        if (appLaunched != null) {
+            parsed.addAll(parseDisplayUnitsFromJson(appLaunched, true));
+        }
+        if (parsed.isEmpty()) {
             logger.verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is null or empty");
+                    Constants.FEATURE_DISPLAY_UNIT + "No valid Display Units to process");
             return;
         }
 
@@ -97,7 +108,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         }
 
         ArrayList<CleverTapDisplayUnit> displayUnits = NdFcapGate.filter(
-                parseDisplayUnitsFromJson(messages), controllerManager.getNdFCManager(), logger, config.getAccountId());
+                parsed, controllerManager.getNdFCManager(), logger, config.getAccountId());
         cache.updateDisplayUnits(displayUnits);
         if (!displayUnits.isEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(displayUnits);
@@ -105,15 +116,20 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
     }
 
     /**
-     * Converts a JSON array of display units into model objects, filtering out
-     * malformed entries.
+     * Converts a JSON array of display units into model objects, filtering out malformed entries.
+     * When {@code skipSuppressed} is true, CG-suppressed stubs ({@code suppressed:true}, no content)
+     * are skipped — those are acked by {@link AdUnitResponse}, not rendered.
      */
     @NonNull
-    private ArrayList<CleverTapDisplayUnit> parseDisplayUnitsFromJson(@NonNull JSONArray messages) {
+    private ArrayList<CleverTapDisplayUnit> parseDisplayUnitsFromJson(@NonNull JSONArray messages, boolean skipSuppressed) {
         final ArrayList<CleverTapDisplayUnit> list = new ArrayList<>();
         for (int i = 0; i < messages.length(); i++) {
             try {
-                CleverTapDisplayUnit unit = CleverTapDisplayUnit.toDisplayUnit(messages.getJSONObject(i));
+                JSONObject json = messages.getJSONObject(i);
+                if (skipSuppressed && json.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
+                    continue;
+                }
+                CleverTapDisplayUnit unit = CleverTapDisplayUnit.toDisplayUnit(json);
                 if (TextUtils.isEmpty(unit.getError())) {
                     list.add(unit);
                 } else {

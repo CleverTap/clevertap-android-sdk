@@ -106,6 +106,9 @@ internal class NdStore(
     }
 
     override fun onChangeUser(deviceId: String, accountId: String) {
+        // Invalidate the in-memory cache before repointing, else the next read returns the previous
+        // user's metadata bundle until a fresh adUnit_notifs_ss arrives.
+        metaCache = null
         val newPrefName =
             StoreProvider.getInstance().constructStorePreferenceName(STORE_TYPE_ND, deviceId, accountId)
         ctPreference.changePreferenceName(newPrefName)
