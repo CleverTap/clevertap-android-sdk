@@ -65,6 +65,7 @@ import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.response.ConsoleResponse
 import com.clevertap.android.sdk.response.ContentFetchResponse
+import com.clevertap.android.sdk.response.AdUnitResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
 import com.clevertap.android.sdk.response.FetchVariablesResponse
@@ -427,6 +428,7 @@ internal object CleverTapFactory {
             ),
             FetchVariablesResponse(config, controllerManager, callbackManager),
             DisplayUnitResponse(config, callbackManager, controllerManager),
+            AdUnitResponse(config, storeRegistry, controllerManager, ndTriggersManager),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
             GeofenceResponse(config, callbackManager),
