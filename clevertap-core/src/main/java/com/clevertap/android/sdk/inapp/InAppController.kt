@@ -47,6 +47,7 @@ import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
 import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
@@ -76,6 +77,7 @@ internal class InAppController(
     private val deviceInfo: DeviceInfo,
     private val inAppQueue: InAppQueue,
     private val evaluationManager: EvaluationManager,
+    private val ndEvaluationManager: NdEvaluationManager,
     private val templatesManager: TemplatesManager,
     private val inAppActionHandler: InAppActionHandler,
     private val inAppNotificationInflater: InAppNotificationInflater,
@@ -572,6 +574,9 @@ internal class InAppController(
         val appFieldsWithEventProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithEventProperties.putAll(eventProperties)
 
+        // Native Display (ND) local evaluation — votes eligible advanced campaigns into adUnit_eval.
+        ndEvaluationManager.evaluateOnEvent(eventName, appFieldsWithEventProperties, userLocation)
+
         // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnEvent(
             eventName,
@@ -605,6 +610,9 @@ internal class InAppController(
             JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
         appFieldsWithChargedEventProperties.putAll(chargeDetails)
 
+        // Native Display (ND) local evaluation.
+        ndEvaluationManager.evaluateOnChargedEvent(appFieldsWithChargedEventProperties, items, userLocation)
+
         // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnChargedEvent(
             appFieldsWithChargedEventProperties,
@@ -634,6 +642,9 @@ internal class InAppController(
         location: Location?
     ) {
         val appFields = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
+
+        // Native Display (ND) local evaluation.
+        ndEvaluationManager.evaluateOnUserAttributeChange(userAttributeChangedProperties, location, appFields)
 
         // Returns (immediateCS, delayedCS, inActionSS)
         val evaluatedInApps = evaluationManager.evaluateOnUserAttributeChange(
