@@ -8,6 +8,8 @@ package com.clevertap.android.sdk.inapp.store.preference
  * @property impressionStore An instance of [ImpressionStore] for tracking impressions of In-App messages.
  * @property legacyInAppStore An instance of [LegacyInAppStore] for storing legacy In-App messages.
  * @property inAppAssetsStore An instance of [InAppAssetsStore] for handling In-App assets storage.
+ * @property ndStore An instance of [NdStore] for Native Display SS metadata + eval/suppressed lists.
+ * @property ndImpressionStore An instance of [ImpressionStore] pointed at the Native Display namespace.
  *
  * @constructor Creates a StoreRegistry with optional instances of different stores.
  */
@@ -16,5 +18,7 @@ internal data class StoreRegistry(
     var impressionStore: ImpressionStore? = null,
     val legacyInAppStore: LegacyInAppStore,
     val inAppAssetsStore: InAppAssetsStore,
-    val filesStore: FileStore
+    val filesStore: FileStore,
+    var ndStore: NdStore? = null,
+    var ndImpressionStore: ImpressionStore? = null
 )

@@ -229,8 +229,13 @@ internal object CleverTapFactory {
 
         val triggersMatcher = TriggersMatcher(localDataStore)
         val triggersManager = TriggerManager(context, config.accountId, deviceInfo)
-        val impressionManager = ImpressionManager(storeRegistry)
+        val impressionManager = ImpressionManager({ storeRegistry.impressionStore })
         val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
+
+        // Native Display (ND) frequency caps (SDK-6055) — separate per-channel instances.
+        val ndTriggersManager =
+            TriggerManager(context, config.accountId, deviceInfo, Constants.KEY_ND_TRIGGERS_PER_TARGET)
+        val ndImpressionManager = ImpressionManager({ storeRegistry.ndImpressionStore })
 
         val inAppActionHandler = InAppActionHandler(
             context,
@@ -271,6 +276,25 @@ internal object CleverTapFactory {
                     storeRegistry.impressionStore = impStore
                     callbackManager.addChangeUserCallback(impStore)
                 }
+                // Native Display (ND) frequency caps (SDK-6055) — separate per-channel stores.
+                if (storeRegistry.ndStore == null) {
+                    val ndStore = storeProvider.provideNdStore(
+                        context = context,
+                        deviceId = deviceInfo.getDeviceID(),
+                        accountId = config.accountId
+                    )
+                    storeRegistry.ndStore = ndStore
+                    callbackManager.addChangeUserCallback(ndStore)
+                }
+                if (storeRegistry.ndImpressionStore == null) {
+                    val ndImpStore = storeProvider.provideNdImpressionStore(
+                        context = context,
+                        deviceId = deviceInfo.getDeviceID(),
+                        accountId = config.accountId
+                    )
+                    storeRegistry.ndImpressionStore = ndImpStore
+                    callbackManager.addChangeUserCallback(ndImpStore)
+                }
             }
         }
 
@@ -290,6 +314,17 @@ internal object CleverTapFactory {
                     deviceId,
                     storeRegistry,
                     impressionManager,
+                    executors,
+                    SYSTEM
+                )
+            }
+            // Native Display (ND) frequency caps (SDK-6055)
+            if (deviceId != null && controllerManager.ndFCManager == null) {
+                controllerManager.ndFCManager = NdFCManager(
+                    context,
+                    config,
+                    deviceId,
+                    ndImpressionManager,
                     executors,
                     SYSTEM
                 )
@@ -614,6 +649,8 @@ internal object CleverTapFactory {
             controllerManager = controllerManager,
             inAppController = inAppController,
             evaluationManager = evaluationManager,
+            ndImpressionManager = ndImpressionManager,
+            ndTriggerManager = ndTriggersManager,
             impressionManager = impressionManager,
             loginController = loginController,
             sessionManager = sessionManager,

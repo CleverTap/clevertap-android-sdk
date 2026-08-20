@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
-import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.utils.Clock
 import java.util.Calendar
 import java.util.Date
@@ -10,12 +10,16 @@ import java.util.concurrent.TimeUnit
 /**
  * Provides functionality for tracking and managing impressions for various campaigns.
  *
- * @property storeRegistry A storage manager responsible for storing and retrieving impression data.
+ * The same implementation backs both in-app and Native Display; [impressionStoreProvider] resolves
+ * which persistent [ImpressionStore] to use (in-app vs ND). It is a provider (not a direct instance)
+ * because the underlying store is created lazily once the device id is available.
+ *
+ * @property impressionStoreProvider Resolves the [ImpressionStore] to persist/read timestamps.
  * @property clock           An optional Clock implementation for handling time-related operations.
  * @property locale          An optional Locale specifying the locale to use for date and time calculations.
  */
 internal class ImpressionManager @JvmOverloads constructor(
-    private val storeRegistry: StoreRegistry,
+    private val impressionStoreProvider: () -> ImpressionStore?,
     private val clock: Clock = Clock.SYSTEM,
     private val locale: Locale = Locale.getDefault(),
 ) {
@@ -39,7 +43,7 @@ internal class ImpressionManager @JvmOverloads constructor(
         val records = sessionImpressions.getOrPut(campaignId) { mutableListOf() }
         records.add(now)
 
-        storeRegistry.impressionStore?.write(campaignId, now)
+        impressionStoreProvider()?.write(campaignId, now)
     }
 
     /**
@@ -176,7 +180,7 @@ internal class ImpressionManager @JvmOverloads constructor(
      * @return The total number of impressions recorded for the campaign.
      */
     private fun getImpressionCount(campaignId: String): Int {
-        return storeRegistry.impressionStore?.read(campaignId)?.size ?: 0
+        return impressionStoreProvider()?.read(campaignId)?.size ?: 0
     }
 
     /**
@@ -207,7 +211,7 @@ internal class ImpressionManager @JvmOverloads constructor(
     }
 
     fun getImpressions(campaignId: String): List<Long> {
-        return storeRegistry.impressionStore?.read(campaignId) ?: emptyList()
+        return impressionStoreProvider()?.read(campaignId) ?: emptyList()
     }
 
     /**

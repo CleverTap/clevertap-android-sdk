@@ -18,12 +18,14 @@ internal class MockCoreStateKotlin(cleverTapInstanceConfig: CleverTapInstanceCon
     mockk(relaxed = true),
     CTLockManager(),
     CallbackManager(cleverTapInstanceConfig, mockk(relaxed = true)),
-    mockk(relaxed = true),
-    mockk(relaxed = true),
-    mockk(relaxed = true),
-    mockk(relaxed = true),
-    mockk(relaxed = true),
-    mockk(relaxed = true),
+    mockk(relaxed = true), // controllerManager
+    mockk(relaxed = true), // inAppController
+    mockk(relaxed = true), // evaluationManager
+    mockk(relaxed = true), // impressionManager
+    mockk(relaxed = true), // ndImpressionManager
+    mockk(relaxed = true), // ndTriggerManager
+    mockk(relaxed = true), // loginController
+    mockk(relaxed = true), // sessionManager
     ValidationResultStack(),
     mockk(relaxed = true),
     mockk(relaxed = true),
