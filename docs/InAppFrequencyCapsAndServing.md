@@ -107,6 +107,10 @@ There are **two distinct one-at-a-time chokepoints**; both are deliberate.
    Consequence: **DB persistence and in-app evaluation for a given event are atomic and ordered** —
    evaluation always sees the event already committed, and no two events interleave. The network
    flush (`flushDBQueue`) runs on this same executor, so queueing, evaluation, and flushing never race.
+   Nuance: this ordering is per task on the executor; it does **not** mean nothing runs during a flush's
+   network round-trip. `onAttachHeaders` builds the header and `onSentHeaders` runs after the response,
+   and a *separate* event task can be evaluated in between — which is exactly why the eval-header
+   lifecycle (§3.2) removes only the ids that were actually sent rather than clearing the whole list.
 
 2. **The in-app display queue (one in-app on screen at a time).** Selected in-apps go through a
    single FIFO (`StoreRegistryInAppQueue`, persisted), and `currentlyDisplayingInApp` +
