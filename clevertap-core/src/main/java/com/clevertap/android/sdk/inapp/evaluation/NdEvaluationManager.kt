@@ -27,7 +27,8 @@ import org.json.JSONObject
  *
  * The class is the ND [NetworkHeadersListener]: it owns the in-memory `adUnit_eval` /
  * `adUnit_suppressed` lists (persisted via [StoreRegistry.ndStore]) and the attach → send →
- * remove-exactly-sent lifecycle. `adUnit_suppressed` (App-Launched CG acks) is populated in Phase 6.
+ * remove-exactly-sent lifecycle. `adUnit_suppressed` carries App-Launched CG-suppression acks
+ * (see [recordCgSuppressed]).
  *
  * Reuses [TriggersMatcher] and [LimitsMatcher]; only the stores differ from in-app.
  */
@@ -45,7 +46,7 @@ internal class NdEvaluationManager(
     @VisibleForTesting
     internal var evaluatedNdCampaignIds: MutableList<Long> = ArrayList()
 
-    // App-Launched CG-suppression acks (bare {wzrk_id, wzrk_pivot, wzrk_cgId}); filled in Phase 6.
+    // App-Launched CG-suppression acks (bare {wzrk_id, wzrk_pivot, wzrk_cgId}), via recordCgSuppressed.
     @VisibleForTesting
     internal var suppressedNdCampaigns: MutableList<Map<String, Any?>> = ArrayList()
 
@@ -107,11 +108,11 @@ internal class NdEvaluationManager(
 
                 if (ndLimitsMatcher.matchWhenLimits(getWhenLimits(inApp), campaignId)) {
                     val ti = campaignId.toLongOrNull() ?: continue
-                    if (!evaluatedNdCampaignIds.contains(ti)) {
-                        evaluatedNdCampaignIds.add(ti)
-                        updated = true
-                        Logger.v(TAG, "ND campaign $ti eligible -> adUnit_eval")
-                    }
+                    // Append without a contains() guard: a re-vote while a prior send is in flight must
+                    // not be dropped (onSentHeaders removes only what was sent). Server dedups (§6.2).
+                    evaluatedNdCampaignIds.add(ti)
+                    updated = true
+                    Logger.v(TAG, "ND campaign $ti eligible -> adUnit_eval")
                 }
             }
         }
@@ -146,7 +147,12 @@ internal class NdEvaluationManager(
      */
     fun recordCgSuppressed(stub: JSONObject) {
         val wzrkId = stub.optString(Constants.NOTIFICATION_ID_TAG)
-        if (wzrkId.isEmpty()) return
+        if (wzrkId.isEmpty()) {
+            // Per contract §5.4 the CG stub always ships wzrk_id (unlike in-app payloads which carry
+            // only ti). Log if one ever doesn't, rather than dropping the ack silently.
+            Logger.v(TAG, "Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
+            return
+        }
         suppressedNdCampaigns.add(
             mapOf(
                 Constants.NOTIFICATION_ID_TAG to wzrkId,
@@ -207,7 +213,11 @@ internal class NdEvaluationManager(
     @WorkerThread
     fun loadEvaluatedAndSuppressedNdIds() {
         storeRegistry.ndStore?.let { store ->
-            evaluatedNdCampaignIds = store.readEvaluatedServerSideNdIds().toList<Long>().toMutableList()
+            // Read via optLong, NOT toList<Long>(): org.json parses int-range numbers as Integer and
+            // `element is Long` filters them all out, so `ti`s (epoch-second ids) would be dropped.
+            val stored = store.readEvaluatedServerSideNdIds()
+            evaluatedNdCampaignIds =
+                (0 until stored.length()).map { stored.optLong(it) }.filter { it != 0L }.toMutableList()
             suppressedNdCampaigns = JsonUtil.listFromJsonSafe(store.readSuppressedNdIds())
         }
     }

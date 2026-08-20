@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Clock;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -45,6 +46,20 @@ public class NdFCManager {
     static final int UNCAPPED = -1;
 
     private static final String ND_DATE_KEY = "nd_ict_date";
+
+    /**
+     * Whether an ND unit/target carries any frequency-cap configuration. Only such units are gated at
+     * delivery and counted at impression time; unmarked (legacy) units bypass ND capping entirely so
+     * existing display units are never affected and never consume the ND global budget.
+     */
+    public static boolean isFcapManaged(JSONObject json) {
+        return json != null
+                && (json.has(Constants.KEY_EFC)
+                || json.has(Constants.KEY_TLC)
+                || json.has(Constants.KEY_TDC)
+                || json.has(Constants.INAPP_MAX_DISPLAY_COUNT)
+                || json.has(Constants.KEY_EXCLUDE_GLOBAL_CAPS));
+    }
 
     private final SimpleDateFormat ddMMyyyy = new SimpleDateFormat("ddMMyyyy", Locale.US);
 

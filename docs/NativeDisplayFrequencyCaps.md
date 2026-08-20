@@ -122,18 +122,28 @@ Follow the exact in-app pattern (`StoreProvider.constructStorePreferenceName(typ
 accountId)` → `StorageHelper` file `WizRocket_<namespace>`), with **new namespaces** so ND never
 collides with in-app:
 
-| State | Proposed prefs file | Key | Value | Mirror of |
+Two different prefs-file mechanisms are in play (same split as in-app), so the counters and the
+impressions do **not** share a file:
+- `InAppFCManager`/`NdFCManager` use `StorageHelper.getPreferences`, which **prepends** the
+  `WizRocket_` tag → file `WizRocket_<namespace>`.
+- `ImpressionStore`/`TriggerManager`/`NdStore` go through `CTPreference`, which calls
+  `getSharedPreferences(name)` with **no** prefix → file `<namespace>` (no `WizRocket_`).
+
+| State | Prefs file (Android xml name) | Key | Value | Mirror of |
 |---|---|---|---|---|
-| Per-target counters (today+lifetime) | `WizRocket_nd_counts_per_target:<deviceId>:<accountId>` | `<ti>` | `"today,lifetime"` | `counts_per_inapp` (`InAppFCManager`) |
-| Impression timestamps (whenLimits windows) | **same** `nd_counts_per_target:…` file | `__impressions_<ti>` | unix-seconds CSV | `ImpressionStore` |
-| Trigger counts (onEvery/onExactly) | `WizRocket_nd_triggers_per_target:<deviceId>:<accountId>` | `__triggers_<ti>` | int | `TriggerManager` |
-| Global ND counters + ceilings | base `WizRocket` | `ndstc:<…>` (shown-today), `ndmp:<…>` (day ceiling), `ndmc:<…>` (session ceiling), `nd_ict_date:<…>` | ints / date | `istc_inapp`/`istmcd_inapp`/`imc`/`ict_date` |
-| Advanced metadata bundle | `WizRocket_adUnit:<deviceId>:<accountId>` | `adUnit_notifs_ss` | JSON array (plaintext — SS only, no CS encryption) | `inapp_notifs_ss` in `InAppStore` |
-| Eval / suppressed pending report | `WizRocket_adUnit:…` | `adUnit_eval`, `adUnit_suppressed` | JSON arrays | `evaluated_ss` / `suppressed_ss` |
+| Per-target counters (today+lifetime) | `WizRocket_nd_counts_per_target:<deviceId>:<accountId>` (StorageHelper) | `<ti>` | `"today,lifetime"` | `counts_per_inapp` (`InAppFCManager`) |
+| Impression timestamps (whenLimits windows) | `nd_counts_per_target:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix; a *different* file from the counters**) | `__impressions_<ti>` | unix-seconds CSV | `ImpressionStore` |
+| Trigger counts (onEvery/onExactly) | `nd_triggers_per_target:<deviceId>:<accountId>` (CTPreference) | `__triggers_<ti>` | int | `TriggerManager` |
+| Global ND counters + ceilings | base `WizRocket` | `ndstc:<…>` (shown-today), `ndstmcd:<…>` (day ceiling, `KEY_ND_MAX_PER_DAY`), `ndmc:<…>` (session ceiling), `nd_ict_date:<…>` | ints / date | `istc_inapp`/`istmcd_inapp`/`imc`/`ict_date` |
+| Advanced metadata bundle | `adUnit:<deviceId>:<accountId>` (CTPreference) | `adUnit_notifs_ss` | JSON array (plaintext — SS only, no CS encryption) | `inapp_notifs_ss` in `InAppStore` |
+| Eval / suppressed pending report | `adUnit:…` (CTPreference) | `evaluated_nd_ss`, `suppressed_nd` | JSON arrays | `evaluated_ss` / `suppressed_ss` |
 
 Notes:
 - **No encrypted CS store** and **no delivery-mode/purge machinery** — ND has no CS mode.
-- Impressions share the counters file (via the `__impressions_` prefix) exactly like in-app.
+- The `__impressions_`-prefix skip in `NdFCManager.getNdCounts`/`init` is a harmless defensive guard;
+  because impressions live in a *different* file (see above), those keys never actually appear in the
+  counters file. (The earlier "impressions share the counters file" claim — and the same claim in the
+  in-app doc — was incorrect.)
 - New `STORE_TYPE_ND_*` constants in `StoreProvider` (mirrors `STORE_TYPE_IMPRESSION`, etc.).
 - New constants: `KEY_ND_COUNTS_PER_TARGET`, `KEY_ND_TRIGGERS_PER_TARGET`, `ND_MAX_PER_SESSION`
   (`ndsm`/`ndmc`), `ND_MAX_PER_DAY` (`ndmp`), `ND_COUNTS_SHOWN_TODAY` (`ndstc`), plus the wire keys.
@@ -354,6 +364,7 @@ Implemented as a stack of PRs (base `develop`), one per phase, each `SDK-<ticket
 | 6 CG acks | SDK-6062 | #1063 | ✅ done | `recordCgSuppressed`; `AdUnitResponse.processAppLaunched` (stubs → ack, content → gated delivery). |
 | 7 Refresh + gating | SDK-6063 | #1064 | ✅ done | `fetchNativeDisplayMeta()` (`wzrk_fetch t=ND_META`); gating-safety confirmed. |
 | 8 Tests + docs | SDK-6064 | #1065 | ✅ done | `NdStoreTest`, `NdEvaluationManagerTest`; this status table. |
+| 9 Review feedback | SDK-6065 | #1066 | ✅ done | Vision-review FIX set: async-path ND store init, `changeUser`, `optLong` reload (ND + in-app), no-dedup vote, guarded ND eval after in-app, single merged ND content write + AdUnitResponse-before-DisplayUnitResponse, fcap-managed-only impression recording, `@RestrictTo` on `fetchNativeDisplayMeta`, doc/store-file corrections, tests (`NdFCManagerTest`, `NdFcapGateTest`, `AdUnitResponseTest`, reload/no-dedup, `addNdFC`). |
 
 Notes on adjustments made during implementation:
 - `adUnit_eval`/`adUnit_suppressed` header attach landed in **Phase 4** (not 3) because the evaluator

@@ -171,6 +171,11 @@ public class LoginController {
                     notifyChangeUserCallback();
 
                     controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
+                    // Native Display (ND) frequency caps (SDK-6055): repoint ND counters to the new
+                    // user too. Null-guarded — ndFCManager can still be null on the async device-id path.
+                    if (controllerManager.getNdFCManager() != null) {
+                        controllerManager.getNdFCManager().changeUser(deviceInfo.getDeviceID());
+                    }
                 } catch (Throwable t) {
                     config.getLogger().verbose(config.getAccountId(), "Reset Profile error", t);
                 }

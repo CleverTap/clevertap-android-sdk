@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.login.LoginController
@@ -46,6 +47,7 @@ internal open class CoreState(
     // Native Display (ND) frequency caps (SDK-6055) — separate per-channel instances.
     val ndImpressionManager: ImpressionManager,
     val ndTriggerManager: TriggerManager,
+    val ndEvaluationManager: NdEvaluationManager,
     val loginController: LoginController,
     val sessionManager: SessionManager,
     val validationResultStack: ValidationResultStack,

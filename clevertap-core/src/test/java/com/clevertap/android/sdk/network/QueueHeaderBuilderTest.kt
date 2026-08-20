@@ -147,11 +147,18 @@ class QueueHeaderBuilderTest {
                 put("lifetimeCount", 22)
             })
         }
+        val ndCountsJson = JSONArray().apply {
+            put(JSONArray().apply { put("70001"); put(1); put(4) })
+        }
         // Mock controllerManager
         every { controllerManager.pushProviders } returns null
         every { controllerManager.inAppFCManager } returns mockk {
             every { shownTodayCount } returns 5
             every { getInAppsCount(any()) } returns inappsJson
+        }
+        every { controllerManager.ndFCManager } returns mockk {
+            every { shownTodayCount } returns 2
+            every { getNdCounts(any()) } returns ndCountsJson
         }
 
         // Mock context
@@ -198,5 +205,8 @@ class QueueHeaderBuilderTest {
         assertEquals("wzrk_value", wzrk.optString("wzrk_key"))
         assertEquals(5, header.optInt("imp"))
         assertEquals(inappsJson.toString(), header.optJSONArray("tlc")?.toString())
+        // Native Display counters (SDK-6055): ndmp = ND render count today, ndtlc = per-target counts.
+        assertEquals(2, header.optInt("ndmp"))
+        assertEquals(ndCountsJson.toString(), header.optJSONArray("ndtlc")?.toString())
     }
 }

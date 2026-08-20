@@ -438,8 +438,10 @@ internal object CleverTapFactory {
                 controllerManager
             ),
             FetchVariablesResponse(config, controllerManager, callbackManager),
+            // ND meta/acks must run before DisplayUnitResponse so ceilings + stale-purge land before
+            // the delivery cap gate; DisplayUnitResponse then delivers all ND content in one write.
+            AdUnitResponse(config, storeRegistry, controllerManager, ndTriggersManager, ndEvaluationManager),
             DisplayUnitResponse(config, callbackManager, controllerManager),
-            AdUnitResponse(config, storeRegistry, controllerManager, ndTriggersManager, ndEvaluationManager, callbackManager),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
             GeofenceResponse(config, callbackManager),
@@ -666,6 +668,7 @@ internal object CleverTapFactory {
             evaluationManager = evaluationManager,
             ndImpressionManager = ndImpressionManager,
             ndTriggerManager = ndTriggersManager,
+            ndEvaluationManager = ndEvaluationManager,
             impressionManager = impressionManager,
             loginController = loginController,
             sessionManager = sessionManager,

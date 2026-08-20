@@ -353,9 +353,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 if (displayUnit != null) {
                     // Native Display frequency caps (SDK-6055): the viewed event is the ND impression
                     // hook (the host renders the unit; the SDK is not in the render path). Record it so
-                    // ndtlc/ndmp/session counters stay accurate.
+                    // ndtlc/ndmp/session counters stay accurate — but ONLY for fcap-managed units, so an
+                    // unmarked/legacy unit's view can't consume the ND global budget and starve gated ones.
                     NdFCManager ndFCManager = controllerManager.getNdFCManager();
-                    if (ndFCManager != null) {
+                    if (ndFCManager != null && NdFCManager.isFcapManaged(displayUnit.getJsonObject())) {
                         ndFCManager.didShow(context, unitID);
                     }
 

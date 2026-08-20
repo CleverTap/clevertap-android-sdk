@@ -64,6 +64,32 @@ class NdEvaluationManagerTest {
     }
 
     @Test
+    fun `evaluate appends a concurrent re-vote without dedup`() {
+        val inApp = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+        every { ndStore.readServerSideNdMetaData() } returns listOf(inApp)
+        every { triggersMatcher.matchEvent(any(), any()) } returns true
+        every { ndLimitsMatcher.matchWhenLimits(any(), any()) } returns true
+
+        // Same campaign eligible on two events (e.g. a re-vote while a prior send is in flight).
+        manager.evaluateOnEvent("e1", emptyMap(), null)
+        manager.evaluateOnEvent("e2", emptyMap(), null)
+
+        // Must NOT be de-duped — onSentHeaders removes only what was sent (see §6.2).
+        assertEquals(listOf(70001L, 70001L), manager.evaluatedNdCampaignIds)
+    }
+
+    @Test
+    fun `loadEvaluatedAndSuppressedNdIds restores persisted int-range ids`() {
+        // ti's are epoch-second ids that org.json parses as Integer; the load must not drop them.
+        every { ndStore.readEvaluatedServerSideNdIds() } returns JSONArray("[70001,70002]")
+        every { ndStore.readSuppressedNdIds() } returns JSONArray()
+
+        manager.loadEvaluatedAndSuppressedNdIds()
+
+        assertEquals(listOf(70001L, 70002L), manager.evaluatedNdCampaignIds)
+    }
+
+    @Test
     fun `evaluate does not vote when trigger does not match`() {
         val inApp = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
         every { ndStore.readServerSideNdMetaData() } returns listOf(inApp)
