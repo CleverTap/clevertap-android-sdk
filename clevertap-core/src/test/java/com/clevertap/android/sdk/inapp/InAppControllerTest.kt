@@ -1019,7 +1019,6 @@ class InAppControllerTest {
             deviceInfo = mockk(relaxed = true),
             inAppQueue = fakeInAppQueue,
             evaluationManager = mockEvaluationManager,
-            ndEvaluationManager = mockk(relaxed = true),
             templatesManager = mockTemplatesManager,
             inAppActionHandler = mockInAppActionHandler,
             inAppNotificationInflater = mockInAppInflater,

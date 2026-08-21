@@ -27,6 +27,7 @@ import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.customtemplates.system.SystemTemplates
 import com.clevertap.android.sdk.inapp.delay.DelayedInAppStorageStrategy
 import com.clevertap.android.sdk.inapp.delay.InAppSchedulerFactory
+import com.clevertap.android.sdk.displayunits.NativeDisplayController
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitsMatcher
@@ -66,7 +67,6 @@ import com.clevertap.android.sdk.response.CleverTapResponse
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.response.ConsoleResponse
 import com.clevertap.android.sdk.response.ContentFetchResponse
-import com.clevertap.android.sdk.response.AdUnitResponse
 import com.clevertap.android.sdk.response.DisplayUnitResponse
 import com.clevertap.android.sdk.response.FeatureFlagResponse
 import com.clevertap.android.sdk.response.FetchVariablesResponse
@@ -438,10 +438,10 @@ internal object CleverTapFactory {
                 controllerManager
             ),
             FetchVariablesResponse(config, controllerManager, callbackManager),
-            // ND meta/acks must run before DisplayUnitResponse so ceilings + stale-purge land before
-            // the delivery cap gate; DisplayUnitResponse then delivers all ND content in one write.
-            AdUnitResponse(config, storeRegistry, controllerManager, ndTriggersManager, ndEvaluationManager),
-            DisplayUnitResponse(config, callbackManager, controllerManager),
+            // Single owner of the Display Units / ND channel: fcap meta first, then gated content.
+            DisplayUnitResponse(
+                config, callbackManager, controllerManager, storeRegistry, ndTriggersManager, ndEvaluationManager
+            ),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
             GeofenceResponse(config, callbackManager),
@@ -551,7 +551,6 @@ internal object CleverTapFactory {
             deviceInfo,
             StoreRegistryInAppQueue(storeRegistry, config.accountId),
             evaluationManager,
-            ndEvaluationManager,
             templatesManager,
             inAppActionHandler,
             inAppNotificationInflater,
@@ -563,6 +562,11 @@ internal object CleverTapFactory {
             validationResultStack,
         )
         controllerManager.inAppController = inAppController
+
+        // Native Display (ND) gets its own controller for event-stream evaluation, decoupled from the
+        // in-app controller (SDK-6055 Phase 10). EventQueueManager fans the queued event out to both.
+        controllerManager.nativeDisplayController =
+            NativeDisplayController(config, deviceInfo, ndEvaluationManager)
 
         val batchListener = CompositeBatchListener()
         val appLaunchListener = AppLaunchListener()

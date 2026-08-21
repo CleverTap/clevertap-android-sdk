@@ -47,7 +47,6 @@ import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
 import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
-import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
@@ -77,7 +76,6 @@ internal class InAppController(
     private val deviceInfo: DeviceInfo,
     private val inAppQueue: InAppQueue,
     private val evaluationManager: EvaluationManager,
-    private val ndEvaluationManager: NdEvaluationManager,
     private val templatesManager: TemplatesManager,
     private val inAppActionHandler: InAppActionHandler,
     private val inAppNotificationInflater: InAppNotificationInflater,
@@ -581,14 +579,6 @@ internal class InAppController(
             userLocation
         )
 
-        // Native Display (ND) local evaluation — runs AFTER in-app and guarded so a fault in ND (a new,
-        // independently authored server payload) can't abort in-app delivery or queue-flush scheduling.
-        try {
-            ndEvaluationManager.evaluateOnEvent(eventName, appFieldsWithEventProperties, userLocation)
-        } catch (t: Throwable) {
-            logger.debug(defaultLogTag, "ND evaluation failed", t)
-        }
-
         // Handle immediate CS in-apps
         if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
             addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
@@ -622,13 +612,6 @@ internal class InAppController(
             userLocation
         )
 
-        // Native Display (ND) local evaluation — after in-app, guarded (see onQueueEvent).
-        try {
-            ndEvaluationManager.evaluateOnChargedEvent(appFieldsWithChargedEventProperties, items, userLocation)
-        } catch (t: Throwable) {
-            logger.debug(defaultLogTag, "ND evaluation failed", t)
-        }
-
         // Handle immediate CS in-apps
         if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {
             addInAppNotificationsToQueue(evaluatedInApps.immediateClientSideInApps)
@@ -658,13 +641,6 @@ internal class InAppController(
             location,
             appFields
         )
-
-        // Native Display (ND) local evaluation — after in-app, guarded (see onQueueEvent).
-        try {
-            ndEvaluationManager.evaluateOnUserAttributeChange(userAttributeChangedProperties, location, appFields)
-        } catch (t: Throwable) {
-            logger.debug(defaultLogTag, "ND evaluation failed", t)
-        }
 
         // Handle immediate CS in-apps
         if (evaluatedInApps.immediateClientSideInApps.isNotEmpty()) {

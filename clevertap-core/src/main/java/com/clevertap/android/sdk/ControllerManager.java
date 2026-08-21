@@ -63,6 +63,8 @@ public class ControllerManager {
 
     private InAppController inAppController;
 
+    private com.clevertap.android.sdk.displayunits.NativeDisplayController nativeDisplayController;
+
     private PushProviders pushProviders;
 
     private  CTVariables ctVariables;
@@ -207,6 +209,15 @@ public class ControllerManager {
 
     public void setInAppController(final InAppController inAppController) {
         this.inAppController = inAppController;
+    }
+
+    public com.clevertap.android.sdk.displayunits.NativeDisplayController getNativeDisplayController() {
+        return nativeDisplayController;
+    }
+
+    public void setNativeDisplayController(
+            final com.clevertap.android.sdk.displayunits.NativeDisplayController nativeDisplayController) {
+        this.nativeDisplayController = nativeDisplayController;
     }
 
     public InAppFCManager getInAppFCManager() {
