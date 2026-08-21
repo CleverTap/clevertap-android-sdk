@@ -13,11 +13,9 @@ import com.clevertap.android.sdk.inapp.data.EvaluatedInAppsResult
 import com.clevertap.android.sdk.inapp.data.InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
-import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
 import com.clevertap.android.sdk.network.NetworkHeadersListener
-import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
@@ -496,24 +494,11 @@ internal class EvaluationManager(
     }
 
     @VisibleForTesting
-    internal fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
-        val whenTriggers = triggerJson.optJSONArray(Constants.INAPP_WHEN_TRIGGERS).orEmptyArray()
-        return (0 until whenTriggers.length()).mapNotNull {
-            val jsonObject = whenTriggers[it] as? JSONObject
-            jsonObject?.let { nonNullJsonObject -> TriggerAdapter(nonNullJsonObject) }
-        }
-    }
+    internal fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> =
+        EvalRules.whenTriggers(triggerJson)
 
-    internal fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
-        val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
-        val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
-
-        return (frequencyLimits.toList<JSONObject>() + occurrenceLimits.toList()).mapNotNull {
-            if (it.isNotNullAndEmpty()) {
-                LimitAdapter(it)
-            } else null
-        }
-    }
+    internal fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> =
+        EvalRules.whenLimits(limitJSON)
 
     /**
      * Sorts list of InApp objects with priority(100 highest - 1 lowest) and if equal priority
@@ -583,39 +568,13 @@ internal class EvaluationManager(
     }
 
     private fun removeSentEvaluatedServerSideCampaignIds(header: JSONObject) {
-        var updated = false
-        val inAppsEval = header.optJSONArray(Constants.INAPP_SS_EVAL_META)
-        inAppsEval?.let {
-            for (i in 0 until it.length()) {
-                val campaignId = it.optLong(i)
-
-                if (campaignId != 0L) {
-                    updated = true
-                    evaluatedServerSideCampaignIds.remove(campaignId)
-                }
-            }
-        }
-        if (updated) {
+        if (HeaderVoteLists.removeSentEvalIds(header, Constants.INAPP_SS_EVAL_META, evaluatedServerSideCampaignIds)) {
             saveEvaluatedServerSideInAppIds()
         }
     }
 
     private fun removeSentSuppressedClientSideInApps(header: JSONObject) {
-        var updated = false
-        val inAppsEval = header.optJSONArray(Constants.INAPP_SUPPRESSED_META)
-        inAppsEval?.let {
-            val iterator = suppressedClientSideInApps.iterator()
-            while (iterator.hasNext()) {
-                val suppressedInApp = iterator.next()
-                val inAppId = suppressedInApp[Constants.NOTIFICATION_ID_TAG] as? String
-                if (inAppId != null && inAppsEval.toString().contains(inAppId)) {
-                    updated = true
-                    iterator.remove()
-                }
-            }
-        }
-
-        if (updated) {
+        if (HeaderVoteLists.removeSentSuppressed(header, Constants.INAPP_SUPPRESSED_META, suppressedClientSideInApps)) {
             saveSuppressedClientSideInAppIds()
         }
     }
@@ -631,24 +590,13 @@ internal class EvaluationManager(
      * @return A JSONObject containing additional headers, or null if no headers need to be attached.
      */
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
-        // Initialize a JSONObject to hold additional headers.
-        val header = JSONObject()
-        // Check if the network request is targeting a specific endpoint (e.g., ENDPOINT_A1).
-        if (endpointId == ENDPOINT_A1) {
-            // Attach evaluated server-side in-app campaign IDs if available.
-            if (evaluatedServerSideCampaignIds.isNotEmpty()) {
-                header.put(Constants.INAPP_SS_EVAL_META, JsonUtil.listToJsonArray(evaluatedServerSideCampaignIds))
-            }
-            // Attach suppressed client-side in-app notifications if available.
-            if (suppressedClientSideInApps.isNotEmpty()) {
-                header.put(Constants.INAPP_SUPPRESSED_META, JsonUtil.listToJsonArray(suppressedClientSideInApps))
-            }
-        }
-        // Return the header JSONObject if it is not empty; otherwise, return null.
-        if (header.isNotNullAndEmpty())
-            return header
-
-        return null
+        if (endpointId != ENDPOINT_A1) return null
+        return HeaderVoteLists.attach(
+            Constants.INAPP_SS_EVAL_META,
+            Constants.INAPP_SUPPRESSED_META,
+            evaluatedServerSideCampaignIds,
+            suppressedClientSideInApps
+        )
     }
 
     /**
@@ -674,11 +622,7 @@ internal class EvaluationManager(
     @WorkerThread
     fun loadSuppressedCSAndEvaluatedSSInAppsIds() {
         storeRegistry.inAppStore?.let { store ->
-            // Read via optLong, NOT toList<Long>(): org.json parses int-range numbers as Integer and
-            // `element is Long` filters them all out, so campaign ids would be silently dropped.
-            val stored = store.readEvaluatedServerSideInAppIds()
-            evaluatedServerSideCampaignIds =
-                (0 until stored.length()).map { stored.optLong(it) }.filter { it != 0L }.toMutableList()
+            evaluatedServerSideCampaignIds = HeaderVoteLists.readEvalIds(store.readEvaluatedServerSideInAppIds())
             suppressedClientSideInApps = JsonUtil.listFromJsonSafe(store.readSuppressedClientSideInAppIds())
         }
     }

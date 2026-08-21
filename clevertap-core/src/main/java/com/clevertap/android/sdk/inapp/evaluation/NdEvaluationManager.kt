@@ -7,12 +7,9 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
-import com.clevertap.android.sdk.isNotNullAndEmpty
 import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.network.EndpointId.ENDPOINT_A1
 import com.clevertap.android.sdk.network.NetworkHeadersListener
-import com.clevertap.android.sdk.orEmptyArray
-import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONObject
 
@@ -98,7 +95,7 @@ internal class NdEvaluationManager(
         var updated = false
         for (event in events) {
             for (inApp in metadata) {
-                if (!triggersMatcher.matchEvent(getWhenTriggers(inApp), event)) {
+                if (!triggersMatcher.matchEvent(EvalRules.whenTriggers(inApp), event)) {
                     continue
                 }
                 val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
@@ -106,7 +103,7 @@ internal class NdEvaluationManager(
 
                 ndTriggersManager.increment(campaignId)
 
-                if (ndLimitsMatcher.matchWhenLimits(getWhenLimits(inApp), campaignId)) {
+                if (ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(inApp), campaignId)) {
                     val ti = campaignId.toLongOrNull() ?: continue
                     // Append without a contains() guard: a re-vote while a prior send is in flight must
                     // not be dropped (onSentHeaders removes only what was sent). Server dedups (§6.2).
@@ -118,23 +115,6 @@ internal class NdEvaluationManager(
         }
         if (updated) {
             saveEvaluatedNdIds()
-        }
-    }
-
-    @VisibleForTesting
-    internal fun getWhenTriggers(triggerJson: JSONObject): List<TriggerAdapter> {
-        val whenTriggers = triggerJson.optJSONArray(Constants.INAPP_WHEN_TRIGGERS).orEmptyArray()
-        return (0 until whenTriggers.length()).mapNotNull {
-            (whenTriggers[it] as? JSONObject)?.let { obj -> TriggerAdapter(obj) }
-        }
-    }
-
-    @VisibleForTesting
-    internal fun getWhenLimits(limitJSON: JSONObject): List<LimitAdapter> {
-        val frequencyLimits = limitJSON.optJSONArray(Constants.INAPP_FC_LIMITS).orEmptyArray()
-        val occurrenceLimits = limitJSON.optJSONArray(Constants.INAPP_OCCURRENCE_LIMITS).orEmptyArray()
-        return (frequencyLimits.toList<JSONObject>() + occurrenceLimits.toList()).mapNotNull {
-            if (it.isNotNullAndEmpty()) LimitAdapter(it) else null
         }
     }
 
@@ -166,58 +146,28 @@ internal class NdEvaluationManager(
 
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
         if (endpointId != ENDPOINT_A1) return null
-        val header = JSONObject()
-        if (evaluatedNdCampaignIds.isNotEmpty()) {
-            header.put(Constants.ND_SS_EVAL_META, JsonUtil.listToJsonArray(evaluatedNdCampaignIds))
-        }
-        if (suppressedNdCampaigns.isNotEmpty()) {
-            header.put(Constants.ND_SUPPRESSED_META, JsonUtil.listToJsonArray(suppressedNdCampaigns))
-        }
-        return if (header.isNotNullAndEmpty()) header else null
+        return HeaderVoteLists.attach(
+            Constants.ND_SS_EVAL_META,
+            Constants.ND_SUPPRESSED_META,
+            evaluatedNdCampaignIds,
+            suppressedNdCampaigns
+        )
     }
 
     override fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId) {
         if (endpointId != ENDPOINT_A1) return
-        removeSentEvaluatedNdIds(allHeaders)
-        removeSentSuppressedNd(allHeaders)
-    }
-
-    private fun removeSentEvaluatedNdIds(header: JSONObject) {
-        var updated = false
-        header.optJSONArray(Constants.ND_SS_EVAL_META)?.let {
-            for (i in 0 until it.length()) {
-                val ti = it.optLong(i)
-                if (ti != 0L) {
-                    updated = evaluatedNdCampaignIds.remove(ti) || updated
-                }
-            }
+        if (HeaderVoteLists.removeSentEvalIds(allHeaders, Constants.ND_SS_EVAL_META, evaluatedNdCampaignIds)) {
+            saveEvaluatedNdIds()
         }
-        if (updated) saveEvaluatedNdIds()
-    }
-
-    private fun removeSentSuppressedNd(header: JSONObject) {
-        var updated = false
-        val sent = header.optJSONArray(Constants.ND_SUPPRESSED_META) ?: return
-        val sentString = sent.toString()
-        val iterator = suppressedNdCampaigns.iterator()
-        while (iterator.hasNext()) {
-            val id = iterator.next()[Constants.NOTIFICATION_ID_TAG] as? String
-            if (id != null && sentString.contains(id)) {
-                iterator.remove()
-                updated = true
-            }
+        if (HeaderVoteLists.removeSentSuppressed(allHeaders, Constants.ND_SUPPRESSED_META, suppressedNdCampaigns)) {
+            saveSuppressedNdIds()
         }
-        if (updated) saveSuppressedNdIds()
     }
 
     @WorkerThread
     fun loadEvaluatedAndSuppressedNdIds() {
         storeRegistry.ndStore?.let { store ->
-            // Read via optLong, NOT toList<Long>(): org.json parses int-range numbers as Integer and
-            // `element is Long` filters them all out, so `ti`s (epoch-second ids) would be dropped.
-            val stored = store.readEvaluatedServerSideNdIds()
-            evaluatedNdCampaignIds =
-                (0 until stored.length()).map { stored.optLong(it) }.filter { it != 0L }.toMutableList()
+            evaluatedNdCampaignIds = HeaderVoteLists.readEvalIds(store.readEvaluatedServerSideNdIds())
             suppressedNdCampaigns = JsonUtil.listFromJsonSafe(store.readSuppressedNdIds())
         }
     }
