@@ -17,14 +17,16 @@ internal class ClevertapResponseHandler(
         if (isUserSwitching) {
             responses
                 .filterNot { decorator ->
-                    decorator is InboxResponse || decorator is DisplayUnitResponse || decorator is FetchVariablesResponse
+                    decorator is InboxResponse || decorator is FetchVariablesResponse
                 }
                 .forEach { decorator ->
                     decorator.isFullResponse = isFullResponse
-                    if (decorator is InAppResponse) {
-                        decorator.processResponse(bodyJson, bodyString, context, true)
-                    } else {
-                        decorator.processResponse(bodyJson, bodyString, context)
+                    // DisplayUnitResponse and InAppResponse handle the user-switch flag internally
+                    // (ND ingests meta but skips content) rather than being filtered out wholesale.
+                    when (decorator) {
+                        is InAppResponse -> decorator.processResponse(bodyJson, bodyString, context, true)
+                        is DisplayUnitResponse -> decorator.processResponse(bodyJson, bodyString, context, true)
+                        else -> decorator.processResponse(bodyJson, bodyString, context)
                     }
                 }
         } else {
