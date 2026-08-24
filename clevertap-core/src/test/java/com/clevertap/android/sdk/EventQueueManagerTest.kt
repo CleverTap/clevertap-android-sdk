@@ -232,6 +232,10 @@ class EventQueueManagerTest : BaseTestCase() {
             } returns false
 
             every { corestate.controllerManager.inAppController } returns mockInAppController
+            // Native Display evaluates the same event through its own controller (SDK-6055 Phase 10).
+            val mockNativeDisplayController =
+                mockk<com.clevertap.android.sdk.displayunits.NativeDisplayController>(relaxed = true)
+            every { corestate.controllerManager.nativeDisplayController } returns mockNativeDisplayController
 
             every { eventQueueManager.pushInitialEventsAsync() } just runs
             every { corestate.sessionManager.lazyCreateSession(application) } just runs
@@ -239,6 +243,7 @@ class EventQueueManagerTest : BaseTestCase() {
             eventQueueManager.queueEvent(application, json, Constants.PROFILE_EVENT, mockProfileChanges())
 
             verify { mockInAppController.onQueueProfileEvent(any(), any()) }
+            verify { mockNativeDisplayController.onQueueProfileEvent(any(), any()) }
             verify { corestate.sessionManager.lazyCreateSession(application) }
             verify { eventQueueManager.pushInitialEventsAsync() }
             verify { eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT, any()) }
