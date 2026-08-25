@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Text-chip background for the pt_custom_rating template.
+
+  Left white on purpose: from Android 12 the renderer tints this drawable to the campaign's colour
+  through setColorStateList, which multiplies against what is drawn here. Below Android 12 the chip
+  is drawn as a bitmap instead and this drawable is never shown.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/white" />
+    <corners android:radius="@dimen/custom_rating_chip_radius" />
+</shape>

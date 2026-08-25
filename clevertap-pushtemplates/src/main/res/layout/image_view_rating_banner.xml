@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Banner-height media for the pt_custom_rating template. See image_media_rating_banner.xml. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/big_image"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/custom_rating_media_height"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/big_image_fitCenter"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/custom_rating_media_height"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+</LinearLayout>

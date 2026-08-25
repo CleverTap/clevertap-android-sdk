@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates
 import android.os.Build
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants.*
+import com.clevertap.android.pushtemplates.content.CustomRatingRowRenderer
 import com.clevertap.android.sdk.Constants
 import io.mockk.*
 import org.json.JSONArray
@@ -130,11 +131,15 @@ class CustomRatingTemplateDataTest {
     }
 
     @Test
-    fun `count below the supported minimum is clamped`() {
+    fun `count below the supported minimum is rejected rather than padded out`() {
+        // A single position is not a rating, and inventing a second one renders something the
+        // campaign never configured. The template degrades to Basic instead (R-22).
         every { mockBundle.getString(PT_RATING_STYLE) } returns "icon"
         every { mockBundle.getString(PT_RATING_COUNT) } returns "1"
 
-        assertEquals(PT_RATING_COUNT_MIN, parse()!!.ratingCount)
+        val data = parse()!!
+        assertEquals(0, data.ratingCount)
+        assertTrue(data.positions.isEmpty())
     }
 
     @Test
@@ -261,6 +266,83 @@ class CustomRatingTemplateDataTest {
         assertTrue(classic is RatingTemplateData)
         assertEquals(TemplateType.RATING, (classic as RatingTemplateData).templateType)
         assertEquals(DEFAULT_DL, classic.defaultDeepLink)
+    }
+
+    @Test
+    fun `label colours are parsed from the colour map`() {
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_RATING_LABEL_CLR to "#111111",
+            PT_RATING_LABEL_SEL_CLR to "#222222",
+            PT_RATING_ICON_CLR to "#333333",
+            PT_RATING_ICON_SEL_CLR to "#444444"
+        )
+        givenIconStyle(count = 3)
+
+        val data = parse()!!
+
+        assertEquals("#111111", data.labelColor)
+        assertEquals("#222222", data.selectedLabelColor)
+        assertEquals("#333333", data.iconColor)
+        assertEquals("#444444", data.selectedIconColor)
+    }
+
+    @Test
+    fun `a text row missing one label is reported as incomplete so it can fall back to stars`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "text"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
+        every { mockBundle.getString("${PT_RATING_LABEL_PREFIX}1") } returns "Bad"
+        every { mockBundle.getString("${PT_RATING_LABEL_PREFIX}2") } returns "Okay"
+
+        val data = parse()!!
+
+        assertEquals(2, data.renderablePositionCount)
+        assertTrue(data.hasIncompleteTextRow)
+    }
+
+    @Test
+    fun `a complete text row is not flagged as incomplete`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "text"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "2"
+        every { mockBundle.getString("${PT_RATING_LABEL_PREFIX}1") } returns "No"
+        every { mockBundle.getString("${PT_RATING_LABEL_PREFIX}2") } returns "Yes"
+
+        assertFalse(parse()!!.hasIncompleteTextRow)
+    }
+
+    @Test
+    fun `an icon row with a missing asset is not treated as an incomplete text row`() {
+        givenIconStyle(count = 3)
+        every { mockBundle.getString("${PT_RATING_ICON_PREFIX}2") } returns null
+
+        assertFalse(parse()!!.hasIncompleteTextRow)
+    }
+
+    @Test
+    fun `a fully configured text row is renderable rather than degraded to the basic template`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "text"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
+        for (position in 1..3) {
+            every { mockBundle.getString("$PT_RATING_LABEL_PREFIX$position") } returns "L$position"
+        }
+
+        assertTrue(CustomRatingRowRenderer.isRenderable(parse()!!))
+    }
+
+    @Test
+    fun `a text row with fewer than two labels degrades to the basic template`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "text"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
+        every { mockBundle.getString("${PT_RATING_LABEL_PREFIX}1") } returns "Only one"
+
+        assertFalse(CustomRatingRowRenderer.isRenderable(parse()!!))
+    }
+
+    @Test
+    fun `a rating without a submit destination degrades to the basic template`() {
+        givenIconStyle(count = 3)
+        every { mockBundle.getString(PT_RATING_CTA_DL) } returns null
+
+        assertFalse(CustomRatingRowRenderer.isRenderable(parse()!!))
     }
 
     @Test

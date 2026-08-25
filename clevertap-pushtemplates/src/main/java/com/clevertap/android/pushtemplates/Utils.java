@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -41,6 +42,7 @@ import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 
@@ -101,6 +103,25 @@ public class Utils {
     static int getAppIconAsIntId(final Context context) {
         ApplicationInfo ai = context.getApplicationInfo();
         return ai.icon;
+    }
+
+    /**
+     * Resolves the small icon a re-rendered notification should carry: the drawable named by the
+     * CLEVERTAP_NOTIFICATION_ICON manifest entry, falling back to the app icon.
+     */
+    static int getSmallIconResId(final Context context) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            ApplicationInfo ai = pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            String iconName = _getManifestStringValueForKey(ai.metaData, ManifestInfo.LABEL_NOTIFICATION_ICON);
+            if (iconName == null) {
+                return getAppIconAsIntId(context);
+            }
+            int resId = context.getResources().getIdentifier(iconName, "drawable", context.getPackageName());
+            return resId != 0 ? resId : getAppIconAsIntId(context);
+        } catch (Throwable t) {
+            return getAppIconAsIntId(context);
+        }
     }
 
     static ArrayList<ImageData> getImageDataListFromExtras(Bundle extras, String defaultAltText) {
@@ -358,6 +379,22 @@ public class Utils {
                     map.put(s, b.get(s));
                 }
             }
+        }
+        return map;
+    }
+
+    /**
+     * Properties for the Rating Submitted event raised by the pt_custom_rating template (FR-EVT-01):
+     * the campaign attribution the Classic template already sends, plus the typed rating properties
+     * journeys and segments need.
+     */
+    static HashMap<String, Object> getCustomRatingEventProperties(Bundle extras, int selectedPosition,
+            int ratingCount, String ratingStyle) {
+        final HashMap<String, Object> map = convertRatingBundleObjectToHashMap(extras);
+        map.put(PTConstants.PT_RATING_EVENT_VALUE, selectedPosition);
+        map.put(PTConstants.PT_RATING_EVENT_SCALE, ratingCount);
+        if (ratingStyle != null) {
+            map.put(PTConstants.PT_RATING_EVENT_STYLE, ratingStyle);
         }
         return map;
     }

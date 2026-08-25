@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.util.DisplayMetrics
 import android.text.Html
 import android.text.TextUtils
 import android.view.View
