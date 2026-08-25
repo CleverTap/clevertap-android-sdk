@@ -36,15 +36,15 @@ class NdFCManagerTest : BaseTestCase() {
     @Test
     fun `canShow allows an uncapped target`() {
         val fc = create()
-        fc.updateLimits(appCtx, 10, 10) // don't let global defaults (1) interfere
+        fc.updateLimits(10, 10) // don't let global defaults (1) interfere
         assertTrue(fc.canShow("70001", false, -1, -1, -1, false))
     }
 
     @Test
     fun `excludeFromCaps bypasses counter caps`() {
         val fc = create()
-        fc.updateLimits(appCtx, 10, 10)
-        fc.didShow(appCtx, "70001") // today/lifetime = 1
+        fc.updateLimits(10, 10)
+        fc.didShow("70001") // today/lifetime = 1
         // per-target daily cap of 1 would deny, but excludeFromCaps short-circuits
         assertFalse(fc.canShow("70001", false, -1, 1, -1, false))
         assertTrue(fc.canShow("70001", true, -1, 1, -1, false))
@@ -53,8 +53,8 @@ class NdFCManagerTest : BaseTestCase() {
     @Test
     fun `per-target daily cap denies once reached`() {
         val fc = create()
-        fc.updateLimits(appCtx, 10, 10)
-        fc.didShow(appCtx, "70001") // today = 1
+        fc.updateLimits(10, 10)
+        fc.didShow("70001") // today = 1
         assertFalse(fc.canShow("70001", false, -1, 1, -1, false)) // 1 >= 1
         assertTrue(fc.canShow("70001", false, -1, 2, -1, false))  // 1 < 2
     }
@@ -62,12 +62,12 @@ class NdFCManagerTest : BaseTestCase() {
     @Test
     fun `didShow increments ndtlc counters and shown-today`() {
         val fc = create()
-        fc.updateLimits(appCtx, 10, 10)
-        fc.didShow(appCtx, "70001")
-        fc.didShow(appCtx, "70001")
+        fc.updateLimits(10, 10)
+        fc.didShow("70001")
+        fc.didShow("70001")
 
         assertEquals(2, fc.shownTodayCount)
-        val counts = fc.getNdCounts(appCtx)!!
+        val counts = fc.getNdCounts()!!
         assertEquals(1, counts.length())
         val entry = counts.getJSONArray(0)
         assertEquals("70001", entry.getString(0))
@@ -76,13 +76,14 @@ class NdFCManagerTest : BaseTestCase() {
     }
 
     private fun create(deviceId: String = "deviceId"): NdFCManager {
+        val countsStore = StoreProvider.getInstance()
+            .provideNdCountsStore(appCtx, deviceId, cleverTapInstanceConfig.accountId)
         return NdFCManager(
-            appCtx,
-            cleverTapInstanceConfig,
-            deviceId,
-            impressionManager,
-            MockCTExecutors(),
-            clock
+            config = cleverTapInstanceConfig,
+            countsStore = countsStore,
+            impressionManager = impressionManager,
+            executors = MockCTExecutors(),
+            clock = clock,
         )
     }
 }

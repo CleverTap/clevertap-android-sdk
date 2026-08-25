@@ -92,22 +92,20 @@ internal class DisplayUnitResponse(
         try {
             val ndFCManager = controllerManager.ndFCManager
 
-            // Account-level ceilings. Per contract §5.1 `ndmc` is emitted on every V2 response; `ndmp`
-            // only when the account has a daily cap (absent => uncapped daily, hence Int.MAX_VALUE).
+            // Account-level ceilings. `has(ndmc)` is load-bearing: `ndmc` is emitted on every V2
+            // response (contract §5.1), so its presence is what tells us this is a cap-aware response
+            // worth writing ceilings for. `ndmp` absent => uncapped daily, which optInt's Int.MAX_VALUE
+            // default already expresses (no separate has() needed).
             if (response.has(Constants.ND_MAX_PER_SESSION_KEY) && ndFCManager != null) {
                 val perSession = response.optInt(Constants.ND_MAX_PER_SESSION_KEY, 1)
-                val perDay = if (response.has(Constants.ND_MAX_PER_DAY_KEY)) {
-                    response.optInt(Constants.ND_MAX_PER_DAY_KEY, Int.MAX_VALUE)
-                } else {
-                    Int.MAX_VALUE
-                }
-                ndFCManager.updateLimits(context, perDay, perSession)
+                val perDay = response.optInt(Constants.ND_MAX_PER_DAY_KEY, Int.MAX_VALUE)
+                ndFCManager.updateLimits(perDay, perSession)
             }
 
             // Dead-target GC.
             response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_STALE_KEY)?.let { staleIds ->
                 clearStaleNdCache(stores, staleIds)
-                ndFCManager?.processResponse(context, staleIds)
+                ndFCManager?.processResponse(staleIds)
             }
 
             // Advanced-rule metadata bundle (rules only) for local evaluation. Full replace, including

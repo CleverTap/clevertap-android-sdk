@@ -158,7 +158,7 @@ class QueueHeaderBuilderTest {
         }
         every { controllerManager.ndFCManager } returns mockk {
             every { shownTodayCount } returns 2
-            every { getNdCounts(any()) } returns ndCountsJson
+            every { getNdCounts() } returns ndCountsJson
         }
 
         // Mock context

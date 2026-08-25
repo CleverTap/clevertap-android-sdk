@@ -86,7 +86,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
     @Test
     fun `applies ndmc and ndmp ceilings`() {
         response.processResponse(JSONObject("""{"ndmc":1,"ndmp":10}"""), "", context)
-        verify { ndFCManager.updateLimits(context, 10, 1) }
+        verify { ndFCManager.updateLimits(10, 1) }
     }
 
     @Test
@@ -95,7 +95,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
         verify { ndImpressionStore.clear("70001") }
         verify { ndImpressionStore.clear("70002") }
         verify { ndTriggerManager.removeTriggers("70001") }
-        verify { ndFCManager.processResponse(context, any()) }
+        verify { ndFCManager.processResponse(any()) }
     }
 
     @Test
@@ -117,7 +117,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
     fun `no-op for analytics-only`() {
         every { config.isAnalyticsOnly } returns true
         response.processResponse(JSONObject("""{"ndmc":1,"ndmp":10}"""), "", context)
-        verify(exactly = 0) { ndFCManager.updateLimits(any(), any(), any()) }
+        verify(exactly = 0) { ndFCManager.updateLimits(any(), any()) }
     }
 
     // ---- content delivery + user switch ----
@@ -139,7 +139,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
 
         response.processResponse(json, "", context, true)
 
-        verify { ndFCManager.updateLimits(context, 10, 1) }               // meta ingested
+        verify { ndFCManager.updateLimits(10, 1) }               // meta ingested
         verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) } // content skipped
     }
 }
