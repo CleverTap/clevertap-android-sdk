@@ -51,7 +51,6 @@ import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore;
-import com.clevertap.android.sdk.inapp.store.preference.NdStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -3222,20 +3221,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 // can cause ANR if called from main thread
                 coreState.getCallbackManager().addChangeUserCallback(impStore);
             }
-            // Native Display (ND) frequency caps (SDK-6055): mirror the ND stores here too, else on
-            // the async device-id path they stay null for the process and ND capping silently no-ops.
-            if (storeRegistry.getNdStore() == null) {
-                NdStore ndStore = storeProvider.provideNdStore(context, deviceId, accountId);
-                storeRegistry.setNdStore(ndStore);
-                coreState.getNdEvaluationManager().loadEvaluatedAndSuppressedNdIds();
-                coreState.getCallbackManager().addChangeUserCallback(ndStore);
-            }
-            if (storeRegistry.getNdImpressionStore() == null) {
-                ImpressionStore ndImpStore = storeProvider.provideNdImpressionStore(context, deviceId,
-                        accountId);
-                storeRegistry.setNdImpressionStore(ndImpStore);
-                coreState.getCallbackManager().addChangeUserCallback(ndImpStore);
-            }
+            // Native Display (ND) stores are created lazily by storeRegistry.ndStoreProvider; prime the
+            // evaluator's in-memory eval/suppressed lists now that the device id is available.
+            coreState.getNdEvaluationManager().loadEvaluatedAndSuppressedNdIds();
             return null;
         });
 

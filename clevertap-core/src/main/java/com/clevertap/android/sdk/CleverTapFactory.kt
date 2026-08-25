@@ -41,6 +41,7 @@ import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Comp
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
+import com.clevertap.android.sdk.inapp.store.preference.NdStoreProvider
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginController
 import com.clevertap.android.sdk.login.LoginInfoProvider
@@ -200,6 +201,9 @@ internal object CleverTapFactory {
         }
 
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, networkMonitor)
+        // Native Display stores self-create lazily once the device id resolves (SDK-6055) — set before
+        // onInitDeviceInfo so any deviceIDCreated callback sees the provider.
+        storeRegistry.ndStoreProvider = NdStoreProvider(context, deviceInfo, config.accountId)
         deviceInfo.onInitDeviceInfo(cleverTapID)
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }.build()
@@ -294,26 +298,10 @@ internal object CleverTapFactory {
                     storeRegistry.impressionStore = impStore
                     callbackManager.addChangeUserCallback(impStore)
                 }
-                // Native Display (ND) frequency caps (SDK-6055) — separate per-channel stores.
-                if (storeRegistry.ndStore == null) {
-                    val ndStore = storeProvider.provideNdStore(
-                        context = context,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.ndStore = ndStore
-                    ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
-                    callbackManager.addChangeUserCallback(ndStore)
-                }
-                if (storeRegistry.ndImpressionStore == null) {
-                    val ndImpStore = storeProvider.provideNdImpressionStore(
-                        context = context,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.ndImpressionStore = ndImpStore
-                    callbackManager.addChangeUserCallback(ndImpStore)
-                }
+                // Native Display (ND) stores are created lazily by storeRegistry.ndStoreProvider; here
+                // we just prime the evaluator's in-memory eval/suppressed lists from the (now available)
+                // ND store.
+                ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
             }
         }
 
