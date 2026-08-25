@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
+import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore
 import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.store.preference.CTPreference
 
@@ -21,6 +22,7 @@ const val STORE_TYPE_FILES = 5
 // Native Display (ND) frequency caps (SDK-6055)
 const val STORE_TYPE_ND = 6
 const val STORE_TYPE_ND_IMPRESSION = 7
+const val STORE_TYPE_ND_COUNTS = 8
 
 /**
  * The `StoreProvider` class is responsible for providing different types of stores
@@ -143,6 +145,19 @@ internal class StoreProvider {
     }
 
     /**
+     * Provides the [NdCountsStore] DAO — per-target today/lifetime counts plus the ND global
+     * shown-today counter, ceilings and daily-reset date, in its own namespace.
+     */
+    fun provideNdCountsStore(
+        context: Context,
+        deviceId: String,
+        accountId: String
+    ): NdCountsStore {
+        val prefName = constructStorePreferenceName(STORE_TYPE_ND_COUNTS, deviceId, accountId)
+        return NdCountsStore(getCTPreference(context, prefName))
+    }
+
+    /**
      * Provides an instance of [LegacyInAppStore] using the given parameters.
      *
      * @param context The Android application context.
@@ -179,7 +194,8 @@ internal class StoreProvider {
             STORE_TYPE_INAPP -> "${Constants.INAPP_KEY}:$deviceId:$accountId"
             STORE_TYPE_IMPRESSION -> "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId:$accountId"
             STORE_TYPE_ND -> "${Constants.ND_KEY}:$deviceId:$accountId"
-            STORE_TYPE_ND_IMPRESSION -> "${Constants.KEY_ND_COUNTS_PER_TARGET}:$deviceId:$accountId"
+            STORE_TYPE_ND_IMPRESSION -> "${Constants.KEY_ND_IMPRESSIONS_PER_TARGET}:$deviceId:$accountId"
+            STORE_TYPE_ND_COUNTS -> "${Constants.KEY_ND_COUNTS_PER_TARGET}:$deviceId:$accountId"
             STORE_TYPE_LEGACY_INAPP -> Constants.CLEVERTAP_STORAGE_TAG
             else -> Constants.CLEVERTAP_STORAGE_TAG
         }

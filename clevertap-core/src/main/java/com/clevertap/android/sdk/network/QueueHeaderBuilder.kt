@@ -204,7 +204,7 @@ internal class QueueHeaderBuilder(
         controllerManager.ndFCManager?.let {
             Logger.v("Attaching NdFC to Header")
             header.put(Constants.ND_MAX_PER_DAY_KEY, it.shownTodayCount)
-            header.put(Constants.ND_TARGET_SHOWN_LIST, it.getNdCounts(context))
+            header.put(Constants.ND_TARGET_SHOWN_LIST, it.getNdCounts())
         } ?: logger.verbose(config.accountId, "controllerManager.getNdFCManager() is NULL, not Attaching NdFC to Header")
     }
 }

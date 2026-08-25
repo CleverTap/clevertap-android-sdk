@@ -357,7 +357,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     // unmarked/legacy unit's view can't consume the ND global budget and starve gated ones.
                     NdFCManager ndFCManager = controllerManager.getNdFCManager();
                     if (ndFCManager != null && NdFCManager.isFcapManaged(displayUnit.getJsonObject())) {
-                        ndFCManager.didShow(context, unitID);
+                        ndFCManager.didShow(unitID);
                     }
 
                     JSONObject eventExtras = displayUnit.getWZRKFields();

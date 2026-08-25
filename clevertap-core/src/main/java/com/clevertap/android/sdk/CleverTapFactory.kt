@@ -340,9 +340,8 @@ internal object CleverTapFactory {
             // Native Display (ND) frequency caps (SDK-6055)
             if (deviceId != null && controllerManager.ndFCManager == null) {
                 controllerManager.ndFCManager = NdFCManager(
-                    context = context,
                     config = config,
-                    deviceId = deviceId,
+                    countsStore = storeProvider.provideNdCountsStore(context, deviceId, config.accountId),
                     impressionManager = ndImpressionManager,
                     executors = executors,
                     clock = SYSTEM,

@@ -180,7 +180,9 @@ public interface Constants {
     // ---- Native Display (ND) frequency-cap storage keys (SDK-6055), mirror the in-app keys above ----
     String KEY_ND_MAX_PER_DAY = "ndstmcd";                 // stored ND daily ceiling (mirror of istmcd_inapp)
     String KEY_ND_COUNTS_SHOWN_TODAY = "ndstc";            // stored ND global shown-today (mirror of istc_inapp)
-    String KEY_ND_COUNTS_PER_TARGET = "nd_counts_per_target";   // per-target today/lifetime + impressions file
+    String KEY_ND_LAST_RESET_DATE = "nd_ict_date";         // ddMMyyyy of the last daily reset (mirror of ict_date)
+    String KEY_ND_COUNTS_PER_TARGET = "nd_counts_per_target";   // NdCountsStore namespace (per-target counts + globals)
+    String KEY_ND_IMPRESSIONS_PER_TARGET = "nd_impressions";    // ND ImpressionStore namespace (whenLimits timestamps)
     String KEY_ND_TRIGGERS_PER_TARGET = "nd_triggers_per_target"; // onEvery/onExactly trigger counts
     String INAPP_ID_IN_PAYLOAD = "ti";
     int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
