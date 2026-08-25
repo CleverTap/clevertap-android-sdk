@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
+import com.clevertap.android.sdk.displayunits.NativeDisplayController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
@@ -63,7 +64,7 @@ public class ControllerManager {
 
     private InAppController inAppController;
 
-    private com.clevertap.android.sdk.displayunits.NativeDisplayController nativeDisplayController;
+    private NativeDisplayController nativeDisplayController;
 
     private PushProviders pushProviders;
 
@@ -211,12 +212,12 @@ public class ControllerManager {
         this.inAppController = inAppController;
     }
 
-    public com.clevertap.android.sdk.displayunits.NativeDisplayController getNativeDisplayController() {
+    public NativeDisplayController getNativeDisplayController() {
         return nativeDisplayController;
     }
 
     public void setNativeDisplayController(
-            final com.clevertap.android.sdk.displayunits.NativeDisplayController nativeDisplayController) {
+            final NativeDisplayController nativeDisplayController) {
         this.nativeDisplayController = nativeDisplayController;
     }
 

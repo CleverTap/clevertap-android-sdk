@@ -230,19 +230,26 @@ internal object CleverTapFactory {
         )
 
         val triggersMatcher = TriggersMatcher(localDataStore)
-        val triggersManager = TriggerManager(context, config.accountId, deviceInfo)
-        val impressionManager = ImpressionManager({ storeRegistry.impressionStore })
-        val limitsMatcher = LimitsMatcher(impressionManager, triggersManager)
+        val triggersManager = TriggerManager(context = context, accountId = config.accountId, deviceInfo = deviceInfo)
+        val impressionManager = ImpressionManager(impressionStoreProvider = { storeRegistry.impressionStore })
+        val limitsMatcher = LimitsMatcher(manager = impressionManager, triggerManager = triggersManager)
 
         // Native Display (ND) frequency caps (SDK-6055) — separate per-channel instances.
-        val ndTriggersManager =
-            TriggerManager(context, config.accountId, deviceInfo, Constants.KEY_ND_TRIGGERS_PER_TARGET)
-        val ndImpressionManager = ImpressionManager({ storeRegistry.ndImpressionStore })
+        val ndTriggersManager = TriggerManager(
+            context = context,
+            accountId = config.accountId,
+            deviceInfo = deviceInfo,
+            namespace = Constants.KEY_ND_TRIGGERS_PER_TARGET,
+        )
+        val ndImpressionManager = ImpressionManager(impressionStoreProvider = { storeRegistry.ndImpressionStore })
 
         val inAppActionHandler = InAppActionHandler(
-            context,
-            config,
-            PushPermissionHandler(config, callbackManager.pushPermissionResponseListenerList)
+            context = context,
+            ctConfig = config,
+            pushPermissionHandler = PushPermissionHandler(
+                config = config,
+                ctListeners = callbackManager.pushPermissionResponseListenerList,
+            ),
         )
         val systemTemplates = SystemTemplates.getSystemTemplates(inAppActionHandler)
         val templatesManager = TemplatesManager.createInstance(config, systemTemplates)
@@ -256,7 +263,7 @@ internal object CleverTapFactory {
         )
 
         // Native Display (ND) evaluator (SDK-6055) — reuses matchers over ND's own stores.
-        val ndLimitsMatcher = LimitsMatcher(ndImpressionManager, ndTriggersManager)
+        val ndLimitsMatcher = LimitsMatcher(manager = ndImpressionManager, triggerManager = ndTriggersManager)
         val ndEvaluationManager = NdEvaluationManager(
             triggersMatcher = triggersMatcher,
             ndTriggersManager = ndTriggersManager,
@@ -333,12 +340,12 @@ internal object CleverTapFactory {
             // Native Display (ND) frequency caps (SDK-6055)
             if (deviceId != null && controllerManager.ndFCManager == null) {
                 controllerManager.ndFCManager = NdFCManager(
-                    context,
-                    config,
-                    deviceId,
-                    ndImpressionManager,
-                    executors,
-                    SYSTEM
+                    context = context,
+                    config = config,
+                    deviceId = deviceId,
+                    impressionManager = ndImpressionManager,
+                    executors = executors,
+                    clock = SYSTEM,
                 )
             }
         }
@@ -440,7 +447,12 @@ internal object CleverTapFactory {
             FetchVariablesResponse(config, controllerManager, callbackManager),
             // Single owner of the Display Units / ND channel: fcap meta first, then gated content.
             DisplayUnitResponse(
-                config, callbackManager, controllerManager, storeRegistry, ndTriggersManager, ndEvaluationManager
+                config = config,
+                callbackManager = callbackManager,
+                controllerManager = controllerManager,
+                storeRegistry = storeRegistry,
+                ndTriggerManager = ndTriggersManager,
+                ndEvaluationManager = ndEvaluationManager,
             ),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),
@@ -474,22 +486,22 @@ internal object CleverTapFactory {
         )
 
         val baseEventQueueManager = EventQueueManager(
-            databaseManager,
-            context,
-            config,
-            eventMediator,
-            sessionManager,
-            callbackManager,
-            mainLooperHandler,
-            deviceInfo,
-            validationResultStack,
-            networkManager,
-            coreMetaData,
-            ctLockManager,
-            localDataStore,
-            controllerManager,
-            loginInfoProvider,
-            networkMonitor
+            baseDatabaseManager = databaseManager,
+            context = context,
+            config = config,
+            eventMediator = eventMediator,
+            sessionManager = sessionManager,
+            callbackManager = callbackManager,
+            mainLooperHandler = mainLooperHandler,
+            deviceInfo = deviceInfo,
+            validationResultStack = validationResultStack,
+            networkManager = networkManager,
+            cleverTapMetaData = coreMetaData,
+            ctLockManager = ctLockManager,
+            localDataStore = localDataStore,
+            controllerManager = controllerManager,
+            loginInfoProvider = loginInfoProvider,
+            networkMonitor = networkMonitor,
         )
 
         val inAppResponseForSendTestInApp = InAppResponse(
@@ -528,10 +540,10 @@ internal object CleverTapFactory {
         )
 
         val inAppNotificationInflater = InAppNotificationInflater(
-            storeRegistry,
-            templatesManager,
-            executors,
-            { FileResourceProvider.initInstance(context, config.logger, networkMonitor) }
+            storeRegistry = storeRegistry,
+            templatesManager = templatesManager,
+            executors = executors,
+            fileResourceProvider = { FileResourceProvider.initInstance(context, config.logger, networkMonitor) },
         )
 
         networkManager.addNetworkHeadersListener(evaluationManager)
@@ -540,33 +552,36 @@ internal object CleverTapFactory {
         val pipManager = PIPManager { FileResourceProvider.initInstance(context, config.logger, networkMonitor) }
 
         val inAppController = InAppController(
-            context,
-            config,
-            executors,
-            controllerManager,
-            callbackManager,
-            analyticsManager,
-            coreMetaData,
-            ManifestInfo.getInstance(context),
-            deviceInfo,
-            StoreRegistryInAppQueue(storeRegistry, config.accountId),
-            evaluationManager,
-            templatesManager,
-            inAppActionHandler,
-            inAppNotificationInflater,
-            inAppDelayManager,
-            inAppInActionManager,
-            SYSTEM,
-            networkMonitor,
-            pipManager,
-            validationResultStack,
+            context = context,
+            config = config,
+            executors = executors,
+            controllerManager = controllerManager,
+            callbackManager = callbackManager,
+            analyticsManager = analyticsManager,
+            coreMetaData = coreMetaData,
+            manifestInfo = ManifestInfo.getInstance(context),
+            deviceInfo = deviceInfo,
+            inAppQueue = StoreRegistryInAppQueue(storeRegistry = storeRegistry, logTag = config.accountId),
+            evaluationManager = evaluationManager,
+            templatesManager = templatesManager,
+            inAppActionHandler = inAppActionHandler,
+            inAppNotificationInflater = inAppNotificationInflater,
+            inAppDelayManager = inAppDelayManager,
+            inAppInActionManager = inAppInActionManager,
+            clock = SYSTEM,
+            networkMonitor = networkMonitor,
+            pipManager = pipManager,
+            validationResultStack = validationResultStack,
         )
         controllerManager.inAppController = inAppController
 
         // Native Display (ND) gets its own controller for event-stream evaluation, decoupled from the
         // in-app controller (SDK-6055 Phase 10). EventQueueManager fans the queued event out to both.
-        controllerManager.nativeDisplayController =
-            NativeDisplayController(config, deviceInfo, ndEvaluationManager)
+        controllerManager.nativeDisplayController = NativeDisplayController(
+            config = config,
+            deviceInfo = deviceInfo,
+            ndEvaluationManager = ndEvaluationManager,
+        )
 
         val batchListener = CompositeBatchListener()
         val appLaunchListener = AppLaunchListener()
