@@ -211,6 +211,8 @@ internal data class CustomRatingTemplateData(
     val positions: List<RatingPositionData> = emptyList(),
     val iconColor: String? = null,
     val selectedIconColor: String? = null,
+    val labelColor: String? = null,
+    val selectedLabelColor: String? = null,
     val ctaData: RatingCtaData = RatingCtaData(),
     val confirmationMessage: String? = null,
 ) : TemplateData() {
@@ -221,6 +223,13 @@ internal data class CustomRatingTemplateData(
      */
     val renderablePositionCount: Int
         get() = ratingStyle?.let { style -> positions.count { it.isRenderable(style) } } ?: 0
+
+    /**
+     * True when the text style is configured but at least one position has no label. The row then
+     * falls back to the built-in stars rather than drawing a gap where a chip should be (R-23).
+     */
+    val hasIncompleteTextRow: Boolean
+        get() = ratingStyle == RatingStyleType.TEXT && renderablePositionCount < ratingCount
 }
 
 internal data class TimerTemplateData(

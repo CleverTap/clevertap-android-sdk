@@ -15,8 +15,6 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -37,7 +35,6 @@ import com.clevertap.android.pushtemplates.media.TemplateRepository;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -385,8 +382,12 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
             int selectedPosition = extras.getInt(PTConstants.PT_RATING_SELECTED_POSITION, 0);
 
+            // Submit taps carrying a selection go to PTRatingSubmitActivity, not here — a receiver
+            // may not open a screen after a notification tap on Android 12+. Only the "nothing
+            // selected yet" submit tap reaches this receiver, and it exists purely to swallow the
+            // tap so it does not fall through to the body-tap intent behind it (R-28).
             if (extras.getBoolean(PTConstants.PT_RATING_SUBMIT, false)) {
-                submitCustomRating(context, extras, notificationId, selectedPosition);
+                PTLog.verbose("Custom rating submitted with no selection, ignoring");
                 return;
             }
 
@@ -425,11 +426,11 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             // Re-attach the taps so the user can move their selection, and hand the submit button the
             // position it should now submit.
             for (int position = 1; position <= PTConstants.PT_RATING_COUNT_MAX; position++) {
-                bigContentView.setOnClickPendingIntent(customRatingPositionViewId(position),
+                bigContentView.setOnClickPendingIntent(CustomRatingRowRenderer.cellViewId(position),
                         PendingIntentFactory.getCustomRatingPositionIntent(
                                 context, notificationId, extras, position, this.config));
             }
-            bigContentView.setOnClickPendingIntent(R.id.custom_rating_cta_label,
+            bigContentView.setOnClickPendingIntent(R.id.custom_rating_cta,
                     PendingIntentFactory.getCustomRatingSubmitIntent(
                             context, notificationId, extras, selectedPosition, this.config));
 
@@ -459,92 +460,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             }
         } catch (Throwable t) {
             PTLog.verbose("Error rendering custom rating notification ", t);
-        }
-    }
-
-    /**
-     * Raises Rating Submitted once, resolves the destination and opens it.
-     *
-     * The destination is the tapped position's pt_dl{n} override when set, otherwise the submit
-     * button's own pt_rating_cta_dl. Submitting with nothing selected is a no-op (R-28).
-     */
-    private void submitCustomRating(Context context, Bundle extras, int notificationId, int selectedPosition) {
-        if (selectedPosition < 1) {
-            PTLog.verbose("Custom rating submitted with no selection, ignoring");
-            return;
-        }
-        if (this.config == null) {
-            this.config = extras.getParcelable("config");
-        }
-
-        ArrayList<String> overrides = Utils.getDeepLinkListFromExtras(extras);
-        String destination = null;
-        if (overrides != null && overrides.size() >= selectedPosition) {
-            destination = overrides.get(selectedPosition - 1);
-        }
-        if (destination == null || destination.isEmpty()) {
-            destination = extras.getString(PTConstants.PT_RATING_CTA_DL, "");
-        }
-
-        extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + selectedPosition);
-        extras.putString(Constants.DEEP_LINK_KEY, destination);
-
-        Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                Utils.convertRatingBundleObjectToHashMap(extras));
-
-        // Launched from here rather than from a broadcast-to-activity hop, which Android 12+ bans.
-        launchCustomRatingDestination(context, extras, notificationId, destination);
-    }
-
-    /**
-     * Dismisses the notification and opens the resolved destination for the custom rating template.
-     *
-     * A deliberate duplicate of {@link #handleRatingDeepLink} rather than a shared helper: the Classic
-     * template's launch path is frozen, and this one differs from it — no pt_rating_toast, and the
-     * internal selection markers are stripped before the app sees the intent.
-     */
-    @SuppressLint("MissingPermission")
-    private void launchCustomRatingDestination(final Context context, final Bundle extras,
-            final int notificationId, final String destination) {
-        notificationManager.cancel(notificationId);
-        context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
-
-        Intent launchIntent;
-        if (destination != null && !destination.isEmpty()) {
-            launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(destination));
-            com.clevertap.android.sdk.Utils.setPackageNameFromResolveInfoList(context, launchIntent);
-        } else {
-            launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-            if (launchIntent == null) {
-                PTLog.verbose("No launch intent available for the custom rating destination");
-                return;
-            }
-        }
-
-        launchIntent.putExtras(extras);
-        launchIntent.putExtra(Constants.DEEP_LINK_KEY, destination);
-        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-        // Internal selection markers must not leak into the activity the app receives.
-        launchIntent.removeExtra(PTConstants.PT_RATING_SUBMIT);
-        launchIntent.removeExtra(PTConstants.PT_RATING_SELECTED_POSITION);
-        launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
-        launchIntent.setFlags(
-                Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(launchIntent);
-    }
-
-    private int customRatingPositionViewId(int position) {
-        switch (position) {
-            case 1:
-                return R.id.custom_rating_pos1;
-            case 2:
-                return R.id.custom_rating_pos2;
-            case 3:
-                return R.id.custom_rating_pos3;
-            case 4:
-                return R.id.custom_rating_pos4;
-            default:
-                return R.id.custom_rating_pos5;
         }
     }
 
@@ -949,23 +864,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
 
     private void setSmallIcon(Context context) {
-        Bundle metaData;
-        try {
-            PackageManager pm = context.getPackageManager();
-            ApplicationInfo ai = pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            metaData = ai.metaData;
-            String x = Utils._getManifestStringValueForKey(metaData, ManifestInfo.LABEL_NOTIFICATION_ICON);
-            if (x == null) {
-                throw new IllegalArgumentException();
-            }
-            smallIcon = context.getResources().getIdentifier(x, "drawable", context.getPackageName());
-            if (smallIcon == 0) {
-                throw new IllegalArgumentException();
-            }
-        } catch (Throwable t) {
-            smallIcon = Utils.getAppIconAsIntId(context);
-        }
-
+        smallIcon = Utils.getSmallIconResId(context);
     }
 
     private void setKeysFromDashboard(Bundle extras) {

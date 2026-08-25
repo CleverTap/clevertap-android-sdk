@@ -135,6 +135,10 @@ Rating template with campaign-configurable options:
   opens until the user confirms, which lets them change their mind first.
 * **Per-position deep links** that override the submit destination, so a low rating can open a
   feedback form while a high one opens the store listing.
+* **Icons or text**, via `pt_rating_style`. Text positions render as chips and take emoji as readily
+  as words, which is what fits best once there are four or five of them.
+* **A confirmation message** that replaces the row after submitting, instead of the notification
+  disappearing.
 
 The classic `pt_rating` template is unchanged. Existing Rating campaigns keep rendering and behaving
 exactly as before, and the two templates share no keys beyond the standard content ones.
@@ -296,7 +300,7 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_ico | Optional | Large Icon
@@ -327,7 +331,7 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_bg | Optional | Background Color in HEX
@@ -360,7 +364,7 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_bg | Optional | Background Color in HEX
@@ -385,7 +389,7 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_msg_summary | Optional | Message line when Notification is expanded
@@ -412,20 +416,22 @@ Custom Rating Template Keys | Required | Description
 pt_id | Required | Value - `pt_custom_rating`
 pt_title | Required | Title
 pt_msg | Required | Message
-pt_rating_style | Required | How the positions are drawn — `icon` or `text`. **Only `icon` is rendered by this SDK version**; `text` degrades to a standard notification
-pt_rating_count | Required | Number of rating positions, `2`-`5`. Values outside the range are clamped
+pt_rating_style | Required | How the positions are drawn — `icon` or `text`
+pt_rating_count | Required | Number of rating positions, `2`-`5`. A larger value is clamped to `5`; a smaller one degrades the template to a standard notification
 pt_rating_icon`n` | Required (icon style) | Unselected artwork for position `n` (`1`-`pt_rating_count`). PNG or WebP with transparency, 1:1, recommended 240x240 px
 pt_rating_icon`n`_sel | Optional | Selected artwork for position `n`. Falls back to `pt_rating_icon`n`` when omitted
-pt_rating_label`n` | Required (text style) | Label for position `n`, up to 15 characters. Reserved for a future release
-pt_rating_icon_clr | Optional | Tint applied to unselected positions in HEX. Only affects monochrome artwork
-pt_rating_icon_sel_clr | Optional | Tint applied to the selected position in HEX. Only affects monochrome artwork
+pt_rating_label`n` | Required (text style) | Label for position `n`. Emoji count as one character. What fits depends on how many positions there are — roughly 15 characters at 2 positions, 10 at 3, 7 at 4 and 5 at 5; anything longer is ellipsised on the device
+pt_rating_icon_clr | Optional | Icon style: tint applied to unselected positions in HEX, which only affects monochrome artwork. Text style: the unselected chip's fill
+pt_rating_icon_sel_clr | Optional | The same for the selected position — icon tint, or the selected chip's fill
+pt_rating_label_clr | Optional | Text style only: unselected label color in HEX. Defaults to the notification's message color
+pt_rating_label_sel_clr | Optional | Text style only: selected label color in HEX. Defaults to the notification's title color
 pt_rating_cta_label | Required | Submit button text, up to 25 characters
 pt_rating_cta_dl | Required | Default destination opened on submit
 pt_rating_cta_bg_clr | Optional | Submit button fill color in HEX
 pt_rating_cta_border_clr | Optional | Submit button border color in HEX
 pt_rating_cta_txt_clr | Optional | Submit button text color in HEX
 pt_rating_cta_radius | Optional | Submit button corner radius in dp, `0`-`32`. Defaults to `8`
-pt_rating_confirm_msg | Optional | Confirmation message shown after submit, up to 60 characters. Reserved for a future release
+pt_rating_confirm_msg | Optional | Confirmation message, up to 60 characters. When set, submitting replaces the rating row and the submit button with this message and leaves the notification in the tray instead of dismissing it
 pt_default_dl | Required | Destination opened when the notification body is tapped. Never raises `Rating Submitted`
 pt_dl1 | Optional | Overrides the submit destination when position 1 is the selected one
 pt_dl2 | Optional | Overrides the submit destination when position 2 is the selected one
@@ -437,7 +443,7 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_msg_summary | Optional | Message line when Notification is expanded
@@ -454,9 +460,21 @@ pt_json | Optional | Above keys in JSON format
 #### How a rating is reported
 
 Tapping a position only re-renders the notification with that position highlighted — it raises no
-event and opens nothing. Tapping **Submit** raises `Rating Submitted` exactly once, with the selected
-position in `wzrk_c2a`, and then opens `pt_dl{n}` for that position if set, otherwise
-`pt_rating_cta_dl`. Submitting without a selection does nothing.
+event and opens nothing. Tapping **Submit** raises `Rating Submitted` exactly once and then opens
+`pt_dl{n}` for that position if set, otherwise `pt_rating_cta_dl`. Submitting without a selection
+does nothing, and a repeat tap after submitting raises nothing further.
+
+The event carries the campaign attribution every template sends, plus:
+
+Property | Type | Value
+ ---:|:---:|:---
+wzrk_c2a | String | `rating_{n}` for the selected position, as on the classic template
+rating_value | Int | The selected position, `1`-`pt_rating_count`
+rating_scale | Int | `pt_rating_count`, so a value can be read against the scale it came from
+rating_style | String | `icon` or `text`
+
+`rating_value` is always the position itself, with no sentiment mapping — at a scale of 2 it is 1 or
+2, and turning that into "positive" or "negative" is a segmentation choice.
 
 Color keys honour the dark mode suffix, so `pt_rating_cta_bg_clr_dark` is used when the device is in
 dark mode. See [Dark Mode](#dark-mode).
@@ -465,8 +483,21 @@ dark mode. See [Dark Mode](#dark-mode).
 
 The template degrades to a standard notification rather than rendering a broken layout when
 `pt_rating_style` is missing or unsupported, when `pt_rating_count` is missing, when fewer than two
-positions have usable artwork, or when the submit button is missing its label or destination. A single
-position whose artwork fails to download is substituted with the built-in star instead.
+positions have usable artwork or labels, or when the submit button is missing its label or
+destination. A single position whose artwork fails to download is substituted with the built-in star
+instead, and a text row missing any one of its labels falls back to the built-in stars for the whole
+row.
+
+#### Layout budget
+
+An expanded notification is documented as having as little as 252dp of height, and the content block,
+the rating row and the submit button already claim most of it. The expanded image or GIF is therefore
+rendered as a **banner** on this template rather than at its own aspect ratio, so the submit button is
+never pushed below the fold. Design the artwork for a wide, short crop.
+
+Width is just as tight: the row shares roughly 296dp on a common phone, so the text style is at its
+best with emoji or single short words. Labels that do not fit are ellipsised rather than wrapped —
+a notification layout cannot flow items onto a second line.
 
 Older Push Templates SDK versions that do not know `pt_custom_rating` render a standard notification.
 
@@ -485,7 +516,7 @@ pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required  | Image Three
 pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_bt1 | Required  | Big text for first image
@@ -558,7 +589,7 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_big_img_alt | Optional | Image to show when timer expires
@@ -599,7 +630,7 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_media_radius | Optional | Corner radius for the big image in dp, `0`-`32`. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible. On this template the media is rendered as a banner — see [Layout budget](#layout-budget)
 pt_media_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_media_border_width | Optional | Border width for the big image in dp, `0`-`16`. Defaults to `1`. Only used when `pt_media_border_clr` is set
 pt_big_img_collapsed | Optional | Image for the collapsed view

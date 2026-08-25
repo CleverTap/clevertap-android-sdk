@@ -47,9 +47,13 @@
     <!-- pt_custom_rating: 48dp keeps each position at the minimum accessible touch target
          (FR-AND-02) while the icon itself renders at rating_star size. -->
     <dimen name="custom_rating_touch_target">48dp</dimen>
-    <!-- (custom_rating_touch_target - rating_star) / 2, so the icon stays centred in its cell. -->
-    <dimen name="custom_rating_icon_padding">14dp</dimen>
     <dimen name="custom_rating_cta_margin">12dp</dimen>
+    <!-- Text chips sit inside the same 48dp cell as the icons, with room to breathe around them. -->
+    <dimen name="custom_rating_chip_height">32dp</dimen>
+    <dimen name="custom_rating_chip_margin">2dp</dimen>
+    <dimen name="custom_rating_chip_radius">16dp</dimen>
+    <!-- Banner cap for the expanded media, so the rating row and the submit button stay on screen. -->
+    <dimen name="custom_rating_media_height">96dp</dimen>
 
 
 </resources>

@@ -72,6 +72,9 @@ class TemplateRendererTest {
     private lateinit var mockRatingTemplateData: RatingTemplateData
 
     @MockK(relaxed = true)
+    private lateinit var mockCustomRatingTemplateData: CustomRatingTemplateData
+
+    @MockK(relaxed = true)
     private lateinit var mockFiveIconsTemplateData: FiveIconsTemplateData
 
     @MockK(relaxed = true)
@@ -2250,5 +2253,102 @@ class TemplateRendererTest {
 
         verify { CancelTemplateHandler.renderCancelNotification(context, mockCancelTemplateData) }
         assertNull(result)
+    }
+
+    /** Arranges a pt_custom_rating payload whose parsed data is [mockCustomRatingTemplateData]. */
+    private fun givenCustomRatingPayload(): Pair<Bundle, TemplateRenderer> {
+        val bundle = Bundle(testBundle)
+        bundle.putString(PTConstants.PT_ID, "pt_custom_rating")
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.CUSTOM_RATING, bundle, false, any(), any()
+            )
+        } returns mockCustomRatingTemplateData
+        every { mockCustomRatingTemplateData.toBasicTemplateData() } returns mockBasicTemplateData
+        every { ValidatorFactory.getValidator(any()) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+        return bundle to TemplateRenderer(context, bundle, mockConfig)
+    }
+
+    private fun givenRenderableRating(count: Int = 3) {
+        every { mockCustomRatingTemplateData.ratingStyle } returns RatingStyleType.ICON
+        every { mockCustomRatingTemplateData.ratingCount } returns count
+        every { mockCustomRatingTemplateData.renderablePositionCount } returns count
+        every { mockCustomRatingTemplateData.ctaData } returns
+                RatingCtaData(label = "Submit", deepLink = "ctdemo://feedback")
+    }
+
+    @Test
+    fun test_renderNotification_custom_rating_template_valid() {
+        val (bundle, renderer) = givenCustomRatingPayload()
+        givenRenderableRating()
+
+        mockkConstructor(CustomRatingStyle::class)
+        every {
+            anyConstructed<CustomRatingStyle>().builderFromStyle(any(), any(), any(), any())
+        } returns mockNotificationBuilder
+
+        val result = renderer.renderNotification(bundle, context, mockNotificationBuilder, mockConfig, 123)
+
+        verify {
+            anyConstructed<CustomRatingStyle>().builderFromStyle(any(), bundle, 123, mockNotificationBuilder)
+        }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    fun test_renderNotification_custom_rating_too_few_positions_falls_back_to_basic() {
+        // R-22: fewer than two usable positions must render a plain notification, never a broken row.
+        val (bundle, renderer) = givenCustomRatingPayload()
+        givenRenderableRating()
+        every { mockCustomRatingTemplateData.renderablePositionCount } returns 1
+
+        mockkConstructor(BasicStyle::class)
+        mockkConstructor(CustomRatingStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(any(), any(), any(), any())
+        } returns mockNotificationBuilder
+
+        val result = renderer.renderNotification(bundle, context, mockNotificationBuilder, mockConfig, 123)
+
+        verify { anyConstructed<BasicStyle>().builderFromStyle(any(), bundle, 123, mockNotificationBuilder) }
+        verify(exactly = 0) {
+            anyConstructed<CustomRatingStyle>().builderFromStyle(any(), any(), any(), any())
+        }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    fun test_renderNotification_custom_rating_unknown_style_falls_back_to_basic() {
+        val (bundle, renderer) = givenCustomRatingPayload()
+        givenRenderableRating()
+        every { mockCustomRatingTemplateData.ratingStyle } returns null
+
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(any(), any(), any(), any())
+        } returns mockNotificationBuilder
+
+        val result = renderer.renderNotification(bundle, context, mockNotificationBuilder, mockConfig, 123)
+
+        verify { anyConstructed<BasicStyle>().builderFromStyle(any(), bundle, 123, mockNotificationBuilder) }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    fun test_renderNotification_custom_rating_missing_submit_destination_falls_back_to_basic() {
+        val (bundle, renderer) = givenCustomRatingPayload()
+        givenRenderableRating()
+        every { mockCustomRatingTemplateData.ctaData } returns RatingCtaData(label = "Submit")
+
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(any(), any(), any(), any())
+        } returns mockNotificationBuilder
+
+        val result = renderer.renderNotification(bundle, context, mockNotificationBuilder, mockConfig, 123)
+
+        verify { anyConstructed<BasicStyle>().builderFromStyle(any(), bundle, 123, mockNotificationBuilder) }
+        assertEquals(mockNotificationBuilder, result)
     }
 }

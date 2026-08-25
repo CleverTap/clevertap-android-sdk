@@ -11,5 +11,20 @@
             android:name="com.clevertap.android.pushtemplates.PushTemplateReceiver"
             android:enabled="true"
             android:exported="false" />
+
+        <!--
+          Invisible trampoline for the pt_custom_rating submit tap. Android 12 forbids a broadcast
+          receiver from opening a screen after a notification tap, so the submit button points here
+          instead; the activity records the rating and opens the campaign's destination itself.
+          It never draws, and finishes immediately, so it stays out of the task and of Recents.
+        -->
+        <activity
+            android:name="com.clevertap.android.pushtemplates.PTRatingSubmitActivity"
+            android:enabled="true"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
     </application>
 </manifest>

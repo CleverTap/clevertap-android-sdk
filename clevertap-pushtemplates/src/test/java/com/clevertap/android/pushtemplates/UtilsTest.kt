@@ -3957,4 +3957,24 @@ class UtilsTest {
         // Then
         assertTrue(result.isEmpty())
     }
+
+    @Test
+    fun `getSmallIconResId falls back to the app icon when no notification icon is declared`() {
+        // The test manifest declares no CLEVERTAP_NOTIFICATION_ICON, which is the common case for a
+        // re-render: the notification must still carry a small icon or the system drops it.
+        val context = org.robolectric.RuntimeEnvironment.getApplication()
+
+        val resId = Utils.getSmallIconResId(context)
+
+        assertEquals(context.applicationInfo.icon, resId)
+    }
+
+    @Test
+    fun `getSmallIconResId never throws on a context whose package manager misbehaves`() {
+        val broken = mockk<Context>(relaxed = true)
+        every { broken.packageManager } throws RuntimeException("no package manager")
+        every { broken.applicationInfo } returns ApplicationInfo().apply { icon = 4321 }
+
+        assertEquals(4321, Utils.getSmallIconResId(broken))
+    }
 }

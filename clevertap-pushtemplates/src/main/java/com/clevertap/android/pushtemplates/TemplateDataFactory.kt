@@ -33,7 +33,9 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_PREFIX
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_SELECTED_SUFFIX
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_ICON_SEL_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_LABEL_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_LABEL_PREFIX
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_LABEL_SEL_CLR
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_RADIUS_MAX
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_BTN_BORDER_CLR
@@ -256,18 +258,29 @@ internal object TemplateDataFactory {
             PTLog.debug("$PT_RATING_STYLE is missing or not one of icon/text, rating row cannot be rendered")
         }
 
-        // An out-of-range count is clamped rather than rejected; a non-numeric one leaves the count
-        // at 0 so validation reports the missing key instead of silently rendering five positions.
+        // A count above the maximum is clamped down — the extra positions simply have nowhere to go.
+        // A count below the minimum, missing, or non-numeric leaves the count at 0 so validation
+        // reports it and the template degrades to Basic (R-22), rather than the SDK inventing a
+        // second position the campaign never configured.
         val rawCount = extras.getString(PT_RATING_COUNT)?.toIntOrNull()
-        if (rawCount == null) {
-            PTLog.debug("$PT_RATING_COUNT is missing or not an integer, rating row cannot be rendered")
-        } else if (rawCount < PT_RATING_COUNT_MIN || rawCount > PT_RATING_COUNT_MAX) {
-            PTLog.debug(
-                "$PT_RATING_COUNT is $rawCount, clamping to the supported range " +
-                        "$PT_RATING_COUNT_MIN-$PT_RATING_COUNT_MAX"
-            )
+        val ratingCount = when {
+            rawCount == null -> {
+                PTLog.debug("$PT_RATING_COUNT is missing or not an integer, rating row cannot be rendered")
+                0
+            }
+
+            rawCount < PT_RATING_COUNT_MIN -> {
+                PTLog.debug("$PT_RATING_COUNT is $rawCount, below the minimum of $PT_RATING_COUNT_MIN")
+                0
+            }
+
+            rawCount > PT_RATING_COUNT_MAX -> {
+                PTLog.debug("$PT_RATING_COUNT is $rawCount, clamping to the maximum of $PT_RATING_COUNT_MAX")
+                PT_RATING_COUNT_MAX
+            }
+
+            else -> rawCount
         }
-        val ratingCount = rawCount?.coerceIn(PT_RATING_COUNT_MIN, PT_RATING_COUNT_MAX) ?: 0
 
         // pt_dl1..pt_dl5 are per-position overrides of the submit destination in this template.
         val deepLinkOverrides = Utils.getDeepLinkListFromExtras(extras)
@@ -293,6 +306,8 @@ internal object TemplateDataFactory {
             positions = positions,
             iconColor = colorMap[PT_RATING_ICON_CLR],
             selectedIconColor = colorMap[PT_RATING_ICON_SEL_CLR],
+            labelColor = colorMap[PT_RATING_LABEL_CLR],
+            selectedLabelColor = colorMap[PT_RATING_LABEL_SEL_CLR],
             ctaData = createRatingCtaData(extras, colorMap),
             confirmationMessage = extras.getString(PT_RATING_CONFIRM_MSG)?.takeIf { it.isNotBlank() }
         )

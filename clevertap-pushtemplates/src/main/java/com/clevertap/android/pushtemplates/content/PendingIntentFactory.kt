@@ -290,12 +290,16 @@ internal object PendingIntentFactory {
     }
 
     /**
-     * Broadcast fired when the pt_custom_rating submit button is tapped. The handler raises the event
-     * and launches the destination from there, so the activity is started outside the receiver's
-     * broadcast dispatch (FR-AND-04).
+     * Intent fired when the pt_custom_rating submit button is tapped.
      *
-     * [selectedPosition] is 0 before the user has picked anything, which the handler treats as a
-     * no-op.
+     * With a position selected this is an *activity* PendingIntent pointing at
+     * [PTRatingSubmitActivity]: submitting has to raise the event and then open the campaign's
+     * destination, and since Android 12 a broadcast receiver may not open a screen after a
+     * notification tap (FR-AND-04, R-34).
+     *
+     * With nothing selected there is nothing to open, so the tap goes to the receiver instead, which
+     * swallows it. That keeps the no-selection case a true no-op (R-28) rather than briefly opening
+     * a trampoline that closes the notification drawer for no reason.
      */
     @JvmStatic
     fun getCustomRatingSubmitIntent(
@@ -305,7 +309,9 @@ internal object PendingIntentFactory {
         selectedPosition: Int,
         config: CleverTapInstanceConfig?
     ): PendingIntent {
-        val intent = Intent(context, PushTemplateReceiver::class.java).apply {
+        val hasSelection = selectedPosition >= 1
+        val target = if (hasSelection) PTRatingSubmitActivity::class.java else PushTemplateReceiver::class.java
+        val intent = Intent(context, target).apply {
             putExtras(extras)
             putExtra(PTConstants.PT_RATING_SUBMIT, true)
             putExtra(PTConstants.PT_RATING_SELECTED_POSITION, selectedPosition)
@@ -315,12 +321,14 @@ internal object PendingIntentFactory {
             // against the Binder transaction limit once icon urls are already in the bundle.
             removeExtra(Constants.WZRK_ACTIONS)
         }
-        return PendingIntent.getBroadcast(
-            context,
-            customRatingRequestCode(notificationId, SUBMIT_REQUEST_CODE_SLOT),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val requestCode = customRatingRequestCode(notificationId, SUBMIT_REQUEST_CODE_SLOT)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        return if (hasSelection) {
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION
+            PendingIntent.getActivity(context, requestCode, intent, flags)
+        } else {
+            PendingIntent.getBroadcast(context, requestCode, intent, flags)
+        }
     }
 
     private const val SUBMIT_REQUEST_CODE_SLOT = 0

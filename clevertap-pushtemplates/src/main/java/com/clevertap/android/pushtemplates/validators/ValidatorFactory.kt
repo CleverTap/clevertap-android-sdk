@@ -240,7 +240,9 @@ internal class ValidatorFactory {
                         )
                         .addIntValidation(
                             templateData.ratingCount,
-                            PTConstants.PT_RATING_COUNT_MIN,
+                            // IntSizeChecker treats its bound as exclusive, so the minimum scale
+                            // itself has to pass: 2 positions is the documented smallest rating.
+                            PTConstants.PT_RATING_COUNT_MIN - 1,
                             PT_RATING_COUNT,
                             "pt_rating_count is missing or below ${PTConstants.PT_RATING_COUNT_MIN}"
                         )

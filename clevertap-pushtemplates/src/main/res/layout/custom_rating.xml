@@ -5,9 +5,14 @@
   Deliberately separate from layout/rating.xml: the Classic Rating template is frozen, so the two
   templates share no view ids and no rendering code.
 
-  The row holds five position slots; the renderer hides the ones beyond pt_rating_count. The submit
-  button is a FrameLayout so a generated bitmap can supply the fill, border and corner radius, which
-  a RemoteViews cannot set on a drawable directly.
+  The row holds five position cells; the renderer hides the ones beyond pt_rating_count. Each cell
+  carries both styles - an icon and a text chip - and the renderer shows whichever pt_rating_style
+  asks for. The chip's background is an ImageView behind the label on Android 11 and below, where a
+  RemoteViews cannot colour a rounded drawable; from Android 12 the label's own drawable is tinted
+  instead and the ImageView stays hidden.
+
+  The media above the row is capped to a banner height: an expanded notification has roughly 252dp
+  to spend, and a hero image plus the row plus the submit button does not fit in it.
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_view_big"
@@ -27,61 +32,222 @@
         android:layout_below="@id/rel_lyt">
 
         <include
-            layout="@layout/image_media_dynamic_linear"
+            layout="@layout/image_media_rating_banner"
             android:id="@+id/big_media_configurable" />
 
         <LinearLayout
             android:id="@+id/custom_rating_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:baselineAligned="false"
             android:gravity="center_horizontal"
             android:paddingVertical="8dp"
             android:orientation="horizontal">
 
+        <FrameLayout
+            android:id="@+id/custom_rating_cell1"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/custom_rating_touch_target"
+            android:layout_weight="1">
+
             <ImageView
                 android:id="@+id/custom_rating_pos1"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/custom_rating_touch_target"
-                android:layout_weight="1"
-                android:paddingVertical="@dimen/custom_rating_icon_padding"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/rating_star"
+                android:layout_gravity="center"
                 android:contentDescription="@string/custom_rating_position_1"
                 android:src="@drawable/pt_star_outline" />
 
             <ImageView
+                android:id="@+id/custom_rating_chip1"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/custom_rating_chip_height"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:scaleType="fitXY"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/custom_rating_label1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:paddingHorizontal="@dimen/custom_rating_chip_margin"
+                android:background="@drawable/pt_rating_chip"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textSize="@dimen/msg_font_size"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/custom_rating_cell2"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/custom_rating_touch_target"
+            android:layout_weight="1">
+
+            <ImageView
                 android:id="@+id/custom_rating_pos2"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/custom_rating_touch_target"
-                android:layout_weight="1"
-                android:paddingVertical="@dimen/custom_rating_icon_padding"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/rating_star"
+                android:layout_gravity="center"
                 android:contentDescription="@string/custom_rating_position_2"
                 android:src="@drawable/pt_star_outline" />
 
             <ImageView
+                android:id="@+id/custom_rating_chip2"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/custom_rating_chip_height"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:scaleType="fitXY"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/custom_rating_label2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:paddingHorizontal="@dimen/custom_rating_chip_margin"
+                android:background="@drawable/pt_rating_chip"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textSize="@dimen/msg_font_size"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/custom_rating_cell3"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/custom_rating_touch_target"
+            android:layout_weight="1">
+
+            <ImageView
                 android:id="@+id/custom_rating_pos3"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/custom_rating_touch_target"
-                android:layout_weight="1"
-                android:paddingVertical="@dimen/custom_rating_icon_padding"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/rating_star"
+                android:layout_gravity="center"
                 android:contentDescription="@string/custom_rating_position_3"
                 android:src="@drawable/pt_star_outline" />
 
             <ImageView
+                android:id="@+id/custom_rating_chip3"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/custom_rating_chip_height"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:scaleType="fitXY"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/custom_rating_label3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:paddingHorizontal="@dimen/custom_rating_chip_margin"
+                android:background="@drawable/pt_rating_chip"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textSize="@dimen/msg_font_size"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/custom_rating_cell4"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/custom_rating_touch_target"
+            android:layout_weight="1">
+
+            <ImageView
                 android:id="@+id/custom_rating_pos4"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/custom_rating_touch_target"
-                android:layout_weight="1"
-                android:paddingVertical="@dimen/custom_rating_icon_padding"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/rating_star"
+                android:layout_gravity="center"
                 android:contentDescription="@string/custom_rating_position_4"
                 android:src="@drawable/pt_star_outline" />
 
             <ImageView
+                android:id="@+id/custom_rating_chip4"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/custom_rating_chip_height"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:scaleType="fitXY"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/custom_rating_label4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:paddingHorizontal="@dimen/custom_rating_chip_margin"
+                android:background="@drawable/pt_rating_chip"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textSize="@dimen/msg_font_size"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/custom_rating_cell5"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/custom_rating_touch_target"
+            android:layout_weight="1">
+
+            <ImageView
                 android:id="@+id/custom_rating_pos5"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/custom_rating_touch_target"
-                android:layout_weight="1"
-                android:paddingVertical="@dimen/custom_rating_icon_padding"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/rating_star"
+                android:layout_gravity="center"
                 android:contentDescription="@string/custom_rating_position_5"
                 android:src="@drawable/pt_star_outline" />
+
+            <ImageView
+                android:id="@+id/custom_rating_chip5"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/custom_rating_chip_height"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:scaleType="fitXY"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/custom_rating_label5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/custom_rating_chip_margin"
+                android:paddingHorizontal="@dimen/custom_rating_chip_margin"
+                android:background="@drawable/pt_rating_chip"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textSize="@dimen/msg_font_size"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         </LinearLayout>
 

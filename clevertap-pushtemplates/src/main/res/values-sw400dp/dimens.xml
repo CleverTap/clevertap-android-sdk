@@ -27,4 +27,5 @@
     <dimen name="product_display_button_height">24dp</dimen>
     <dimen name="rating_big_img">120dp</dimen>
 
+    <dimen name="custom_rating_media_height">120dp</dimen>
 </resources>

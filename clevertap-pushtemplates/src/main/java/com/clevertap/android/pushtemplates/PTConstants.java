@@ -222,9 +222,15 @@ public class PTConstants {
     public static final String PT_RATING_ICON_SELECTED_SUFFIX = "_sel";
     public static final String PT_RATING_LABEL_PREFIX = "pt_rating_label";
 
-    // Tint applied to monochrome icon assets and text chips, unselected and selected.
+    // Tint applied to monochrome icon assets, and to the text chip background, unselected and
+    // selected. A chip needs four colours in all; the label's own two live in the keys below.
     public static final String PT_RATING_ICON_CLR = "pt_rating_icon_clr";
     public static final String PT_RATING_ICON_SEL_CLR = "pt_rating_icon_sel_clr";
+
+    // Text style only: the label colour inside the chip, unselected and selected. Absent, the label
+    // inherits the notification's message and title colours respectively.
+    public static final String PT_RATING_LABEL_CLR = "pt_rating_label_clr";
+    public static final String PT_RATING_LABEL_SEL_CLR = "pt_rating_label_sel_clr";
 
     // Submit button.
     public static final String PT_RATING_CTA_LABEL = "pt_rating_cta_label";
@@ -245,6 +251,15 @@ public class PTConstants {
     public static final int PT_RATING_CTA_LABEL_MAX_LEN = 25;
 
     /*
+     * Rating Submitted event properties (FR-EVT-01). wzrk_c2a carries the tapped position for
+     * continuity with the Classic template; these three are new and typed.
+     */
+    public static final String PT_RATING_EVENT_NAME = "Rating Submitted";
+    public static final String PT_RATING_EVENT_VALUE = "rating_value";
+    public static final String PT_RATING_EVENT_SCALE = "rating_scale";
+    public static final String PT_RATING_EVENT_STYLE = "rating_style";
+
+    /*
      * Internal intent extras for the custom rating selection/submit flow. These are never part of
      * the campaign payload.
      */
@@ -254,6 +269,10 @@ public class PTConstants {
 
     // Selected position (1..count) carried between the position tap and the submit tap.
     public static final String PT_RATING_SELECTED_POSITION = "ptRatingSelectedPosition";
+
+    // Set on the notification once the rating has been submitted, so a stale PendingIntent that
+    // survives the dismissal cannot raise the event a second time (R-29).
+    public static final String PT_RATING_SUBMITTED = "ptRatingSubmitted";
 
     // Vertical Image Template Keys
     public static final String PT_TEXT1 = "pt_text1";
@@ -326,6 +345,8 @@ public class PTConstants {
             PT_MEDIA_BORDER_CLR,
             PT_RATING_ICON_CLR,
             PT_RATING_ICON_SEL_CLR,
+            PT_RATING_LABEL_CLR,
+            PT_RATING_LABEL_SEL_CLR,
             PT_RATING_CTA_BG_CLR,
             PT_RATING_CTA_BORDER_CLR,
             PT_RATING_CTA_TXT_CLR);

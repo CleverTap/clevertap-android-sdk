@@ -42,8 +42,9 @@ internal class CustomRatingContentView(
         setCustomTextColour(baseContent.colorData.messageColor, R.id.msg)
         setCustomContentViewMessageSummary(baseContent.textData.messageSummary)
         setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+        // Banner-height media: the row and the submit button have to stay above the fold.
         setCustomContentViewMedia(
-            R.layout.image_view_dynamic_linear,
+            R.layout.image_view_rating_banner,
             data.mediaData.gif.url,
             data.mediaData.bigImage.url,
             data.mediaData.scaleType,
@@ -63,7 +64,7 @@ internal class CustomRatingContentView(
 
         for (position in 1..data.ratingCount) {
             remoteView.setOnClickPendingIntent(
-                positionViewId(position),
+                CustomRatingRowRenderer.cellViewId(position),
                 PendingIntentFactory.getCustomRatingPositionIntent(
                     context, renderer.notificationId, extras, position, renderer.config
                 )
@@ -74,19 +75,11 @@ internal class CustomRatingContentView(
         // falling through to the body-tap intent behind it. The handler returns early on
         // NO_SELECTION (FR-AND-04).
         remoteView.setOnClickPendingIntent(
-            R.id.custom_rating_cta_label,
+            R.id.custom_rating_cta,
             PendingIntentFactory.getCustomRatingSubmitIntent(
                 context, renderer.notificationId, extras, NO_SELECTION, renderer.config
             )
         )
-    }
-
-    private fun positionViewId(position: Int): Int = when (position) {
-        1 -> R.id.custom_rating_pos1
-        2 -> R.id.custom_rating_pos2
-        3 -> R.id.custom_rating_pos3
-        4 -> R.id.custom_rating_pos4
-        else -> R.id.custom_rating_pos5
     }
 
     companion object {

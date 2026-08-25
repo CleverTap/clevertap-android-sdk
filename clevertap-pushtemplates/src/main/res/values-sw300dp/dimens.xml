@@ -21,4 +21,5 @@
     <dimen name="rating_big_img">108dp</dimen>
 
 
+    <dimen name="custom_rating_media_height">108dp</dimen>
 </resources>

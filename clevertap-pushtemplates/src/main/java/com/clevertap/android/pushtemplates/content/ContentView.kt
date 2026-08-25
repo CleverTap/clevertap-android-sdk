@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.util.DisplayMetrics
 import android.text.Html
 import android.text.TextUtils
 import android.view.View
@@ -37,13 +38,7 @@ internal open class ContentView(
      * curve by a pixel or two — but it has to scale with the device, which a fixed value would not.
      */
     private val mediaWidthDp: Float
-        get() {
-            val metrics = context.resources.displayMetrics
-            if (metrics.density <= 0f) return FALLBACK_MEDIA_WIDTH_DP
-            val screenWidthDp = metrics.widthPixels / metrics.density
-            return (screenWidthDp - NOTIFICATION_HORIZONTAL_CHROME_DP)
-                .coerceAtLeast(FALLBACK_MEDIA_WIDTH_DP)
-        }
+        get() = mediaWidthDp(context.resources.displayMetrics)
 
     fun setCustomContentViewBasicKeys(subtitle : String?, metaColor: String?) {
         remoteView.setTextViewText(R.id.app_name, Utils.getApplicationName(context))
@@ -296,12 +291,32 @@ internal open class ContentView(
         }
     }
 
-    private companion object {
+    internal companion object {
 
-        /** Combined left and right chrome the notification shade puts around its content. */
-        const val NOTIFICATION_HORIZONTAL_CHROME_DP = 32f
+        /**
+         * The dp width the expanded media is laid out at on a device with these [metrics].
+         *
+         * Extracted so the arithmetic can be asserted directly — it is off-by-a-constant bugs here
+         * that make every radius and border render slightly wrong on every template.
+         */
+        fun mediaWidthDp(metrics: DisplayMetrics): Float {
+            if (metrics.density <= 0f) return FALLBACK_MEDIA_WIDTH_DP
+            val screenWidthDp = metrics.widthPixels / metrics.density
+            return (screenWidthDp - NOTIFICATION_HORIZONTAL_CHROME_DP)
+                .coerceAtLeast(MIN_MEDIA_WIDTH_DP)
+        }
 
-        /** Roughly a small phone's content width; only used when display metrics are unusable. */
-        const val FALLBACK_MEDIA_WIDTH_DP = 320f
+        /**
+         * Combined left and right chrome the notification shade puts around its content: 16dp of
+         * tray padding and 16dp of content margin on each side, per AOSP's own
+         * notification_content_margin_start/_end.
+         */
+        const val NOTIFICATION_HORIZONTAL_CHROME_DP = 64f
+
+        /** A small phone's content width (320dp screen); only used when display metrics are unusable. */
+        const val FALLBACK_MEDIA_WIDTH_DP = 256f
+
+        /** Floor for an implausible screen width, so the dp-to-pixel conversion stays sane. */
+        const val MIN_MEDIA_WIDTH_DP = 160f
     }
 }
