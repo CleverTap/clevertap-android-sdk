@@ -270,10 +270,6 @@ public class PTConstants {
     // Selected position (1..count) carried between the position tap and the submit tap.
     public static final String PT_RATING_SELECTED_POSITION = "ptRatingSelectedPosition";
 
-    // Set on the notification once the rating has been submitted, so a stale PendingIntent that
-    // survives the dismissal cannot raise the event a second time (R-29).
-    public static final String PT_RATING_SUBMITTED = "ptRatingSubmitted";
-
     // Vertical Image Template Keys
     public static final String PT_TEXT1 = "pt_text1";
     public static final String PT_TEXT2 = "pt_text2";
