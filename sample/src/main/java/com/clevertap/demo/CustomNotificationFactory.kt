@@ -31,7 +31,9 @@ import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory
 class CustomNotificationFactory : ICleverTapNotificationFactory {
 
     companion object {
+        // Fallback channel id, used only when the push carries no wzrk_cid.
         private const val CHANNEL_ID = "live_updates_channel"
+        private const val KEY_CHANNEL = "wzrk_cid" // channel id supplied by the CleverTap payload
 
         // Demo payload keys (client-defined; a real integration would align these with the BE).
         private const val KEY_STORE = "la_store"
@@ -56,7 +58,11 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
         extras: Bundle
     ): ICleverTapNotificationFactory.NotificationResult? {
 
-        createChannel(context)
+        // Option 3: use the channel id supplied in the payload (wzrk_cid); fall back to our own.
+        // We still create it here so the sample is robust standalone; the SDK will also create
+        // it at default importance if it is ever missing (safety net).
+        val channelId = extras.getString(KEY_CHANNEL)?.takeIf { it.isNotBlank() } ?: CHANNEL_ID
+        createChannel(context, channelId)
 
         // Android has no "always expanded" live-activity mode: the collapsed view is height
         // limited, so we give it a compact single-line + progress-bar layout, and put the full
@@ -64,7 +70,7 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
         val collapsedView = buildCollapsedView(context, extras)
         val expandedView = buildOrderTrackerView(context, extras)
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(COLOR_ACTIVE)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -131,10 +137,10 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
     private fun isEnded(extras: Bundle): Boolean =
         "end".equals(extras.getString("wzrk_la_event"), ignoreCase = true)
 
-    private fun createChannel(context: Context) {
+    private fun createChannel(context: Context, channelId: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                CHANNEL_ID,
+                channelId,
                 "Live Updates",
                 NotificationManager.IMPORTANCE_HIGH
             )
