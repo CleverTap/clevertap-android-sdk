@@ -168,6 +168,8 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         try {
+            // May be overridden below for Live Update Mode B so successive updates land in place.
+            int liveActivityNotificationId = notificationId;
             boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equalsIgnoreCase("true");
             if (isSilent) {
                 analyticsManager.pushNotificationViewedEvent(extras);
@@ -197,12 +199,19 @@ public class PushProviders implements CTPushProviderListener {
                 if (isLiveActivity) {
                     ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
                     if (customFactory != null) {
+                        // Mode A — client factory renders the Notification.
                         triggerLiveActivityNotification(context, extras, customFactory);
-                    } else {
-                        config.getLogger().debug(config.getAccountId(),
-                                "Live Activity push received but no ICleverTapNotificationFactory is set; ignoring.");
+                        return;
                     }
-                    return;
+                    // Mode B — no factory: render via the current renderer (Core, or Push Template
+                    // when la_pn.pt_id was surfaced at the gate), but with the SDK-owned in-place id
+                    // so successive updates for the same activity replace the same notification.
+                    // Lifecycle events are raised in postNotificationRendered for both modes.
+                    String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
+                    if (!TextUtils.isEmpty(activityId)) {
+                        liveActivityNotificationId = activityId.hashCode() & 0x7fffffff;
+                    }
+                    // fall through to normal rendering
                 }
 
                 String notifMessage = iNotificationRenderer.getMessage(extras);
@@ -226,7 +235,7 @@ public class PushProviders implements CTPushProviderListener {
                     context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
             notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
                     : notifTitle;//common
-            triggerNotification(context, extras, notificationId);
+            triggerNotification(context, extras, liveActivityNotificationId);
         } catch (Throwable t) {
             // Occurs if the notification image was null
             // Let's return, as we couldn't get a handle on the app's icon
@@ -1090,7 +1099,6 @@ public class PushProviders implements CTPushProviderListener {
 
         String event = extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT,
                 Constants.WZRK_LIVE_ACTIVITY_EVENT_UPDATE);
-        boolean isEnd = Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equalsIgnoreCase(event);
 
         // Attach a delete intent for dismissal tracking, without clobbering one the client set.
         if (notification.deleteIntent == null) {
@@ -1104,17 +1112,8 @@ public class PushProviders implements CTPushProviderListener {
         config.getLogger().debug(config.getAccountId(),
                 "Rendered Live Activity notification (id=" + notificationId + ", event=" + event + ")");
 
-        // Raise the lifecycle event on par with iOS (Started / Updated / Ended).
-        String state;
-        if (isEnd) {
-            state = Constants.LIVE_ACTIVITY_STATE_ENDED;
-        } else {
-            state = isFirstLiveActivityRender(context, activityId)
-                    ? Constants.LIVE_ACTIVITY_STATE_STARTED
-                    : Constants.LIVE_ACTIVITY_STATE_UPDATED;
-        }
-        analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
-
+        // Lifecycle events (Started/Updated/Ended) are raised centrally in postNotificationRendered
+        // so both the factory (Mode A) and SDK-rendered (Mode B) paths report them exactly once.
         postNotificationRendered(context, extras);
     }
 
@@ -1182,6 +1181,20 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void postNotificationRendered(Context context, Bundle extras) {
+        // Raise the "Live Activity" lifecycle event for any live-update render (factory Mode A or
+        // SDK-rendered Mode B) — exactly once, and independent of the wzrk_rnv (viewed) gate below.
+        if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equalsIgnoreCase("true")) {
+            String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
+            boolean isEnd = Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equalsIgnoreCase(
+                    extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT));
+            String state = isEnd
+                    ? Constants.LIVE_ACTIVITY_STATE_ENDED
+                    : (isFirstLiveActivityRender(context, activityId)
+                            ? Constants.LIVE_ACTIVITY_STATE_STARTED
+                            : Constants.LIVE_ACTIVITY_STATE_UPDATED);
+            analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
+        }
+
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);

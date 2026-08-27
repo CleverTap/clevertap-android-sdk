@@ -10,6 +10,8 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
+import java.util.Iterator;
+import org.json.JSONObject;
 
 public class PushNotificationHandler implements ActionButtonClickHandler {
 
@@ -20,6 +22,30 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
 
     public static NotificationHandler getPushNotificationHandler() {
         return SingletonNotificationHandler.INSTANCE;
+    }
+
+    /**
+     * Merges the nested {@code la_pn} JSON payload of a Live Update push into the top-level bundle
+     * so downstream routing (Push Template selection via {@code pt_id}) and rendering read it like a
+     * normal push. Nested values (incl. JSON arrays like {@code pt_progress_segments}) are stored as
+     * strings. Only invoked for Mode B (no client factory).
+     */
+    private static void surfaceLiveActivityPayload(Bundle message) {
+        String laPn = message.getString(Constants.WZRK_LIVE_ACTIVITY_PN);
+        if (laPn == null || laPn.isEmpty()) {
+            return;
+        }
+        try {
+            JSONObject json = new JSONObject(laPn);
+            Iterator<String> keys = json.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                Object value = json.get(key);
+                message.putString(key, value instanceof String ? (String) value : value.toString());
+            }
+        } catch (Throwable t) {
+            Logger.d(LOG_TAG, "Failed to surface la_pn payload", t);
+        }
     }
 
     public static boolean isForPushTemplates(Bundle extras) {
@@ -62,6 +88,13 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             if (cleverTapAPI != null) {
                 cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
+                // Live Update Mode B: when no client factory is registered, surface the nested
+                // la_pn payload (incl. pt_id) to the top level so the normal PT/core routing below
+                // renders it. Factory (Mode A) takes precedence and is handled in _createNotification.
+                if ("true".equalsIgnoreCase(message.getString(Constants.WZRK_LIVE_ACTIVITY, ""))
+                        && CleverTapAPI.getNotificationFactory() == null) {
+                    surfaceLiveActivityPayload(message);
+                }
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template
                     CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType);
