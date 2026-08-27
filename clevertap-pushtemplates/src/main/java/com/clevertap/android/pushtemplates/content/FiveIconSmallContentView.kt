@@ -17,24 +17,27 @@ internal class FiveIconSmallContentView(
     data: FiveIconsTemplateData,
     extras: Bundle
 ) : ContentView(context,
-    if (!data.baseContent.textData.title.isNullOrEmpty() || !data.baseContent.textData.message.isNullOrEmpty())
-        R.layout.five_cta_collapsed_with_text
-    else
-        R.layout.five_cta_collapsed,
+    if (hasText(data)) R.layout.five_cta_collapsed_with_text else R.layout.five_cta_collapsed,
     renderer.templateMediaManager) {
 
     private var imageCounter: Int = 0
 
     init {
-        setCustomContentViewBasicKeys(
-            data.baseContent.textData.subtitle,
-            data.baseContent.colorData.metaColor
-        )
-        setCustomContentViewTitle(data.baseContent.textData.title)
-        setCustomContentViewMessage(data.baseContent.textData.message)
+        /**
+         * five_cta_collapsed is icon-only and carries none of the text view ids, so the text
+         * keys are only applied when the text variant of the layout is in use.
+         */
+        if (hasText(data)) {
+            setCustomContentViewBasicKeys(
+                data.baseContent.textData.subtitle,
+                data.baseContent.colorData.metaColor
+            )
+            setCustomContentViewTitle(data.iconTextData.title)
+            setCustomContentViewMessage(data.iconTextData.message)
+            setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
+            setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+        }
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
-        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
-        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
 
         val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
         val fallbackDescriptions = listOf(
@@ -142,4 +145,15 @@ internal class FiveIconSmallContentView(
         return imageCounter
     }
 
+    companion object {
+
+        /**
+         * Only pt_title/pt_msg drive the layout choice. nt/nm are populated on every campaign,
+         * so consulting them here would make the icon-only layout unreachable.
+         */
+        internal fun hasText(data: FiveIconsTemplateData): Boolean {
+            return !data.iconTextData.title.isNullOrEmpty() ||
+                    !data.iconTextData.message.isNullOrEmpty()
+        }
+    }
 }

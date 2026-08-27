@@ -225,6 +225,10 @@ internal object TemplateDataFactory {
         return FiveIconsTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
+            iconTextData = BaseTextData(
+                title = extras.getString(PT_TITLE),
+                message = extras.getString(PT_MSG)
+            )
         )
     }
 

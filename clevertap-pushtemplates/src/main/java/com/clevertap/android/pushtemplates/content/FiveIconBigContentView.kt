@@ -21,16 +21,24 @@ internal class FiveIconBigContentView constructor(
     private var imageCounter: Int = 0
 
     init {
-        setCustomContentViewBasicKeys(
-            data.baseContent.textData.subtitle,
-            data.baseContent.colorData.metaColor
-        )
-        setCustomContentViewTitle(data.baseContent.textData.title)
-        setCustomContentViewMessage(data.baseContent.textData.message)
+        /**
+         * five_cta_expanded always includes the text row, so it is hidden outright when the
+         * campaign set no pt_title/pt_msg - otherwise the icons sit below an empty strip.
+         */
+        if (FiveIconSmallContentView.hasText(data)) {
+            setCustomContentViewBasicKeys(
+                data.baseContent.textData.subtitle,
+                data.baseContent.colorData.metaColor
+            )
+            setCustomContentViewTitle(data.iconTextData.title)
+            setCustomContentViewMessage(data.iconTextData.message)
+            setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
+            setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+            setCustomContentViewMessageSummary(data.baseContent.textData.messageSummary)
+        } else {
+            remoteView.setViewVisibility(R.id.rel_lyt, View.GONE)
+        }
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
-        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
-        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
-        setCustomContentViewMessageSummary(data.baseContent.textData.messageSummary)
         val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
         val fallbackDescriptions = listOf(
             R.string.pt_five_icon_1,
