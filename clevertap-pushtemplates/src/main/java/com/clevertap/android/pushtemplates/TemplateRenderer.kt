@@ -30,6 +30,7 @@ import com.clevertap.android.pushtemplates.styles.FiveIconStyle
 import com.clevertap.android.pushtemplates.styles.InputBoxStyle
 import com.clevertap.android.pushtemplates.styles.ManualCarouselStyle
 import com.clevertap.android.pushtemplates.styles.ProductDisplayStyle
+import com.clevertap.android.pushtemplates.styles.ProgressStyle
 import com.clevertap.android.pushtemplates.styles.RatingStyle
 import com.clevertap.android.pushtemplates.styles.TimerStyle
 import com.clevertap.android.pushtemplates.styles.VerticalImageStyle
@@ -108,6 +109,13 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             return null
         }
         val templateType = TemplateType.fromString(id)
+
+        if (templateType == TemplateType.PROGRESS) {
+            // Native, promotable Live Update (Android 16 ProgressStyle). Bypasses the
+            // TemplateData/Style (custom RemoteViews) pipeline — promotion forbids RemoteViews.
+            return ProgressStyle(this).builderFromStyle(context, extras, notificationId, nb)
+        }
+
         val altTextDefault = context.getString(R.string.pt_big_image_alt)
 
         val templateData = TemplateDataFactory.createTemplateData(
