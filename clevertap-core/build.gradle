@@ -36,6 +36,15 @@ android {
 }
 
 dependencies {
+    // Live Updates (Android 16 ProgressStyle + promotion) require androidx.core 1.17.0.
+    // core is compileOnly here, so a plain bump lets AGP consistent-resolution pin the
+    // transitive runtime version lower. These constraints align core + core-ktx to 1.17.0
+    // across compile+runtime (and publish a >=1.17.0 constraint to consumers) without force.
+    constraints {
+        implementation(libs.androidx.core.core)
+        implementation(libs.androidx.core.ktx)
+    }
+
     compileOnly(libs.firebase.messaging)
 
     // For Media
