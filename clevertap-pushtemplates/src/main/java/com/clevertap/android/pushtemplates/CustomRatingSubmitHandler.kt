@@ -79,8 +79,8 @@ internal object CustomRatingSubmitHandler {
     }
 
     /**
-     * The tapped position's pt_dl{n} override when it has one, otherwise the submit button's own
-     * pt_rating_cta_dl.
+     * The tapped position's pt_dl{n} override when it has one, then the submit button's own
+     * pt_rating_cta_dl, then pt_default_dl.
      */
     private fun resolveDestination(
         extras: Bundle,
@@ -90,7 +90,10 @@ internal object CustomRatingSubmitHandler {
         val override = data?.positions?.getOrNull(selectedPosition - 1)?.deepLink
             ?: Utils.getDeepLinkListFromExtras(extras)?.getOrNull(selectedPosition - 1)
         return override?.takeIf { it.isNotBlank() }
-            ?: extras.getString(PTConstants.PT_RATING_CTA_DL).orEmpty()
+            ?: extras.getString(PTConstants.PT_RATING_CTA_DL)?.takeIf { it.isNotBlank() }
+            // A payload with no submit button carries no pt_rating_cta_dl either, so the campaign's
+            // own default destination is the last stop before the launcher activity.
+            ?: extras.getString(PTConstants.PT_DEFAULT_DL).orEmpty()
     }
 
     /**

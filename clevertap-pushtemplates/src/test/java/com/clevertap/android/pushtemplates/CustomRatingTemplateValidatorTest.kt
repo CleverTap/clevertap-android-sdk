@@ -62,10 +62,11 @@ class CustomRatingTemplateValidatorTest {
     }
 
     @Test
-    fun `the submit button needs both a label and a destination`() {
-        assertFalse(validate(PTConstants.PT_RATING_CTA_LABEL to null))
-        assertFalse(validate(PTConstants.PT_RATING_CTA_DL to null))
-        assertFalse(validate(PTConstants.PT_RATING_CTA_LABEL to " "))
+    fun `the submit button is optional, so a payload without one still validates`() {
+        // FR-DSH-09: no submit button means the position tap submits instead.
+        assertTrue(validate(PTConstants.PT_RATING_CTA_LABEL to null))
+        assertTrue(validate(PTConstants.PT_RATING_CTA_DL to null))
+        assertTrue(validate(PTConstants.PT_RATING_CTA_LABEL to " "))
     }
 
     @Test

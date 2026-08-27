@@ -301,14 +301,21 @@ internal object PendingIntentFactory {
      * With nothing selected there is nothing to open, so the tap goes to the receiver instead, which
      * swallows it. That keeps the no-selection case a true no-op (R-28) rather than briefly opening
      * a trampoline that closes the notification drawer for no reason.
+     *
+     * [requestCodeSlot] must be unique per PendingIntent on the same notification. The submit button
+     * is one intent and uses the default slot; a payload with no submit button attaches one of these
+     * to every position instead, and each has to pass its own position or they all collide on
+     * FLAG_UPDATE_CURRENT and end up submitting the same rating.
      */
     @JvmStatic
+    @JvmOverloads
     fun getCustomRatingSubmitIntent(
         context: Context,
         notificationId: Int,
         extras: Bundle,
         selectedPosition: Int,
-        config: CleverTapInstanceConfig?
+        config: CleverTapInstanceConfig?,
+        requestCodeSlot: Int = SUBMIT_REQUEST_CODE_SLOT
     ): PendingIntent {
         val hasSelection = selectedPosition >= 1
         val target = if (hasSelection) PTRatingSubmitActivity::class.java else PushTemplateReceiver::class.java
@@ -322,7 +329,7 @@ internal object PendingIntentFactory {
             // against the Binder transaction limit once icon urls are already in the bundle.
             removeExtra(Constants.WZRK_ACTIONS)
         }
-        val requestCode = customRatingRequestCode(notificationId, SUBMIT_REQUEST_CODE_SLOT)
+        val requestCode = customRatingRequestCode(notificationId, requestCodeSlot)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         return if (hasSelection) {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION

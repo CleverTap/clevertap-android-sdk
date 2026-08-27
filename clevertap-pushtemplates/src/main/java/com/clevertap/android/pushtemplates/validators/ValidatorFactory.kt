@@ -253,16 +253,6 @@ internal class ValidatorFactory {
                             "pt_rating_count is missing or below ${PTConstants.PT_RATING_COUNT_MIN}"
                         )
                         .addStringValidation(
-                            templateData.ctaData.label,
-                            PT_RATING_CTA_LABEL,
-                            "pt_rating_cta_label is missing or empty"
-                        )
-                        .addStringValidation(
-                            templateData.ctaData.deepLink,
-                            PT_RATING_CTA_DL,
-                            "pt_rating_cta_dl is missing or empty"
-                        )
-                        .addStringValidation(
                             templateData.defaultDeepLink,
                             PT_RATING_DEFAULT_DL,
                             "Default deeplink is missing or empty"

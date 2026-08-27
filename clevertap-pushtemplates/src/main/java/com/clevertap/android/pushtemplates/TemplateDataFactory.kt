@@ -20,6 +20,10 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CONFIRM_MSG
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_COUNT
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_COUNT_MAX
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_COUNT_MIN
@@ -349,7 +353,12 @@ internal object TemplateDataFactory {
             borderColor = colorMap[PT_RATING_CTA_BORDER_CLR],
             textColor = colorMap[PT_RATING_CTA_TXT_CLR],
             cornerRadiusDp = rawRadius?.coerceIn(0, PT_RATING_RADIUS_MAX)
-                ?: PT_RATING_CTA_RADIUS_DEFAULT
+                ?: PT_RATING_CTA_RADIUS_DEFAULT,
+            style = ButtonStyle.fromString(extras.getString(PT_RATING_CTA_STYLE)),
+            gradientColor1 = colorMap[PT_RATING_CTA_GRAD_CLR1],
+            gradientColor2 = colorMap[PT_RATING_CTA_GRAD_CLR2],
+            gradientDirection = extras.getString(PT_RATING_CTA_GRAD_DIR)?.toDoubleOrNull()
+                ?: PTConstants.PT_BTN_GRAD_DIR_DEFAULT
         )
     }
 

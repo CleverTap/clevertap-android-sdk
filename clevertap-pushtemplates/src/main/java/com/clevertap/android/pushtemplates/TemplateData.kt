@@ -196,6 +196,11 @@ internal data class RatingCtaData(
     val borderColor: String? = null,
     val textColor: String? = null,
     val cornerRadiusDp: Int = PTConstants.PT_RATING_CTA_RADIUS_DEFAULT,
+    /** solid, gradient_linear or gradient_radial — the same three the action buttons offer. */
+    val style: ButtonStyle = ButtonStyle.SOLID,
+    val gradientColor1: String? = null,
+    val gradientColor2: String? = null,
+    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
 )
 
 /**
@@ -234,6 +239,33 @@ internal data class CustomRatingTemplateData(
      */
     val hasIncompleteTextRow: Boolean
         get() = ratingStyle == RatingStyleType.TEXT && renderablePositionCount < ratingCount
+
+    /**
+     * True when the payload configures a submit button, which is optional (FR-DSH-09). Both keys are
+     * needed for one: a button with no destination has nowhere to go, and one with no label is
+     * invisible. Without it the row submits on the position tap itself.
+     */
+    val hasSubmitButton: Boolean
+        get() = !ctaData.label.isNullOrBlank() && !ctaData.deepLink.isNullOrBlank()
+
+    /**
+     * True when every drawn position carries the same artwork, i.e. the row is one scale rather than
+     * a set of distinct choices.
+     *
+     * This is what decides whether a tap fills the positions before it. Five identical stars read as
+     * a scale, so filling 1..n is what a user expects; three distinct faces are alternatives, and
+     * filling sad+neutral+happy together would be meaningless. Text chips are always alternatives.
+     *
+     * A row with no artwork at all counts as uniform: every position falls back to the same built-in
+     * star pair (R-21), which is a scale too.
+     */
+    val usesUniformScale: Boolean
+        get() {
+            if (ratingStyle != RatingStyleType.ICON) return false
+            val drawn = positions.take(ratingCount)
+            if (drawn.size < ratingCount) return false
+            return drawn.distinctBy { it.iconUrl to it.selectedIconUrl }.size == 1
+        }
 }
 
 internal data class TimerTemplateData(

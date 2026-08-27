@@ -2657,19 +2657,20 @@ class TemplateRendererTest {
     }
 
     @Test
-    fun test_renderNotification_custom_rating_missing_submit_destination_falls_back_to_basic() {
+    fun test_renderNotification_custom_rating_without_submit_button_still_renders_the_rating() {
+        // The submit button is optional (FR-DSH-09); the row submits on the position tap instead.
         val (bundle, renderer) = givenCustomRatingPayload()
         givenRenderableRating()
-        every { mockCustomRatingTemplateData.ctaData } returns RatingCtaData(label = "Submit")
+        every { mockCustomRatingTemplateData.ctaData } returns RatingCtaData()
 
-        mockkConstructor(BasicStyle::class)
+        mockkConstructor(CustomRatingStyle::class)
         every {
-            anyConstructed<BasicStyle>().builderFromStyle(any(), any(), any(), any())
+            anyConstructed<CustomRatingStyle>().builderFromStyle(any(), any(), any(), any())
         } returns mockNotificationBuilder
 
         val result = renderer.renderNotification(bundle, context, mockNotificationBuilder, mockConfig, 123)
 
-        verify { anyConstructed<BasicStyle>().builderFromStyle(any(), bundle, 123, mockNotificationBuilder) }
+        verify { anyConstructed<CustomRatingStyle>().builderFromStyle(any(), bundle, 123, mockNotificationBuilder) }
         assertEquals(mockNotificationBuilder, result)
     }
 }

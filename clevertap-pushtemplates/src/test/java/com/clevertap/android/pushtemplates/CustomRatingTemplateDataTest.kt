@@ -318,12 +318,23 @@ class CustomRatingTemplateDataTest {
     }
 
     @Test
-    fun `a fully configured text row is renderable rather than degraded to the basic template`() {
+    fun `a text row degrades to the basic template, because only the icon style ships`() {
+        // The payload still parses — the text renderer is kept compiled and tested — but the style
+        // is not offered, so the notification renders as basic (R-22).
         every { mockBundle.getString(PT_RATING_STYLE) } returns "text"
         every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
         for (position in 1..3) {
             every { mockBundle.getString("$PT_RATING_LABEL_PREFIX$position") } returns "L$position"
         }
+
+        val data = parse()!!
+        assertEquals(RatingStyleType.TEXT, data.ratingStyle)
+        assertFalse(CustomRatingRowRenderer.isRenderable(data))
+    }
+
+    @Test
+    fun `an icon row is still renderable`() {
+        givenIconStyle(count = 3)
 
         assertTrue(CustomRatingRowRenderer.isRenderable(parse()!!))
     }
@@ -338,11 +349,23 @@ class CustomRatingTemplateDataTest {
     }
 
     @Test
-    fun `a rating without a submit destination degrades to the basic template`() {
+    fun `a rating without a submit button still renders, and submits on the position tap`() {
+        // The submit button is optional (FR-DSH-09).
+        givenIconStyle(count = 3)
+        every { mockBundle.getString(PT_RATING_CTA_DL) } returns null
+        every { mockBundle.getString(PT_RATING_CTA_LABEL) } returns null
+
+        val data = parse()!!
+        assertTrue(CustomRatingRowRenderer.isRenderable(data))
+        assertFalse(data.hasSubmitButton)
+    }
+
+    @Test
+    fun `a submit button needs both a label and a destination to count as one`() {
         givenIconStyle(count = 3)
         every { mockBundle.getString(PT_RATING_CTA_DL) } returns null
 
-        assertFalse(CustomRatingRowRenderer.isRenderable(parse()!!))
+        assertFalse(parse()!!.hasSubmitButton)
     }
 
     @Test

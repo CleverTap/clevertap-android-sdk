@@ -4,7 +4,10 @@ import com.clevertap.android.pushtemplates.checkers.Checker
 
 /**
  * Validates the keys the pt_custom_rating payload contract marks as required beyond the standard
- * content keys: the rating style and count, and the submit button's label and destination.
+ * content keys: the rating style and count.
+ *
+ * The submit button is optional (FR-DSH-09) and so is not checked here — a payload without one
+ * submits on the position tap instead.
  *
  * Per-position assets are not checked here — a single failed asset is substituted with the built-in
  * star pair at render time (R-21), and the renderer decides separately whether enough positions
@@ -20,8 +23,6 @@ class CustomRatingTemplateValidator(private var validator: Validator) : Template
         return listOf(
             keys[PT_RATING_STYLE]!!,
             keys[PT_RATING_COUNT]!!,
-            keys[PT_RATING_CTA_LABEL]!!,
-            keys[PT_RATING_CTA_DL]!!,
             keys[PT_RATING_DEFAULT_DL]!!,
         )
     }

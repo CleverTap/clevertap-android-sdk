@@ -19,6 +19,8 @@ import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -240,6 +242,273 @@ class CustomRatingRowRendererTest {
 
         assertEquals(View.GONE, root.visibility(R.id.custom_rating_row))
         assertEquals(View.GONE, root.visibility(R.id.custom_rating_cta))
+    }
+
+    /** Same artwork at every position — a five-star scale rather than five distinct choices. */
+    private fun uniformIconPayload(count: Int) = buildMap {
+        put(PTConstants.PT_RATING_STYLE, "icon")
+        put(PTConstants.PT_RATING_COUNT, count.toString())
+        for (position in 1..count) {
+            put("${PTConstants.PT_RATING_ICON_PREFIX}$position", "https://cdn.example.com/star.png")
+        }
+    }
+
+    @Test
+    fun `a uniform scale fills every position up to the one that was tapped`() {
+        val root = render(uniformIconPayload(count = 5), selectedPosition = 4)
+
+        fun drawable(index: Int) =
+            root.findViewById<ImageView>(iconIds[index]).drawable?.constantState
+
+        // 1..4 all show the selected star, 5 stays unselected.
+        for (index in 0..3) assertEquals(drawable(0), drawable(index))
+        assertNotEquals(drawable(0), drawable(4))
+    }
+
+    @Test
+    fun `distinct artwork per position highlights only the position that was tapped`() {
+        // iconPayload gives every position its own URL, so the row is a set of alternatives.
+        val root = render(iconPayload(count = 5), selectedPosition = 4)
+
+        fun drawable(index: Int) =
+            root.findViewById<ImageView>(iconIds[index]).drawable?.constantState
+
+        assertNotEquals(drawable(3), drawable(0))
+        assertEquals(drawable(0), drawable(1))
+        assertEquals(drawable(0), drawable(4))
+    }
+
+    @Test
+    fun `a uniform scale with nothing selected leaves every position unselected`() {
+        val root = render(uniformIconPayload(count = 5), selectedPosition = 0)
+
+        fun drawable(index: Int) =
+            root.findViewById<ImageView>(iconIds[index]).drawable?.constantState
+
+        for (index in 1..4) assertEquals(drawable(0), drawable(index))
+    }
+
+    @Test
+    fun `text chips never fill cumulatively`() {
+        val root = render(
+            textPayload("Bad", "Ok", "Good") + mapOf(
+                PTConstants.PT_RATING_LABEL_CLR to "#111111",
+                PTConstants.PT_RATING_LABEL_SEL_CLR to "#EEEEEE"
+            ),
+            selectedPosition = 3
+        )
+
+        fun color(index: Int) = root.findViewById<TextView>(labelIds[index]).currentTextColor
+        // Only position 3 takes the selected colour; 1 and 2 stay unselected.
+        assertEquals(android.graphics.Color.parseColor("#EEEEEE"), color(2))
+        assertEquals(android.graphics.Color.parseColor("#111111"), color(0))
+        assertEquals(android.graphics.Color.parseColor("#111111"), color(1))
+    }
+
+    @Test
+    fun `the submit button is described by the label the campaign configured`() {
+        // The layout ships a static "Confirm Button" description, which a screen reader would
+        // announce instead of the visible text.
+        val root = render(
+            iconPayload(count = 3, PTConstants.PT_RATING_CTA_LABEL to "Send feedback")
+        )
+
+        assertEquals(
+            "Send feedback",
+            root.findViewById<TextView>(R.id.custom_rating_cta_label).contentDescription
+        )
+    }
+
+    @Test
+    fun `a payload with no submit button hides it, leaving the row on its own`() {
+        // FR-DSH-09: image + row, or row alone, are valid shapes; the tap submits directly.
+        val root = render(iconPayload(count = 3) + mapOf(PTConstants.PT_RATING_CTA_LABEL to ""))
+
+        assertEquals(View.GONE, root.visibility(R.id.custom_rating_cta))
+        for (index in 0..2) assertEquals(View.VISIBLE, root.visibility(cellIds[index]))
+    }
+
+    @Test
+    fun `half a submit button counts as none`() {
+        // A label with no destination has nowhere to go, so it is not a button.
+        val root = render(iconPayload(count = 3) + mapOf(PTConstants.PT_RATING_CTA_DL to ""))
+
+        assertEquals(View.GONE, root.visibility(R.id.custom_rating_cta))
+    }
+
+    @Test
+    fun `both submit keys present renders the button`() {
+        val root = render(
+            iconPayload(count = 3) + mapOf(
+                PTConstants.PT_RATING_CTA_LABEL to "Send feedback",
+                PTConstants.PT_RATING_CTA_DL to "ctdemo://feedback"
+            )
+        )
+
+        assertEquals(View.VISIBLE, root.visibility(R.id.custom_rating_cta))
+    }
+
+    private fun ctaBitmap(vararg extra: Pair<String, String>): android.graphics.Bitmap? {
+        val remoteViews = RemoteViews(context.packageName, R.layout.custom_rating)
+        CustomRatingRowRenderer.renderRow(
+            remoteViews, data(iconPayload(count = 3, *extra)), mediaManager, 1
+        )
+        val root = remoteViews.apply(context, FrameLayout(context)) as ViewGroup
+        val drawable = root.findViewById<ImageView>(R.id.custom_rating_cta_bg).drawable
+        return (drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
+    }
+
+    @Test
+    fun `a linear gradient submit button is drawn as a bitmap`() {
+        assertNotNull(
+            ctaBitmap(
+                PTConstants.PT_RATING_CTA_STYLE to "gradient_linear",
+                PTConstants.PT_RATING_CTA_GRAD_CLR1 to "#43A047",
+                PTConstants.PT_RATING_CTA_GRAD_CLR2 to "#1B5E20",
+                PTConstants.PT_RATING_CTA_GRAD_DIR to "45"
+            )
+        )
+    }
+
+    @Test
+    fun `a radial gradient submit button is drawn as a bitmap`() {
+        assertNotNull(
+            ctaBitmap(
+                PTConstants.PT_RATING_CTA_STYLE to "gradient_radial",
+                PTConstants.PT_RATING_CTA_GRAD_CLR1 to "#43A047",
+                PTConstants.PT_RATING_CTA_GRAD_CLR2 to "#1B5E20"
+            )
+        )
+    }
+
+    @Test
+    fun `a gradient missing its second colour falls back to the solid fill`() {
+        // Same rule the action buttons follow: one colour is not a gradient.
+        assertNotNull(
+            ctaBitmap(
+                PTConstants.PT_RATING_CTA_STYLE to "gradient_linear",
+                PTConstants.PT_RATING_CTA_GRAD_CLR1 to "#43A047",
+                PTConstants.PT_RATING_CTA_BG_CLR to "#1E88E5"
+            )
+        )
+    }
+
+    @Test
+    fun `a gradient with no colours and no fill leaves the layout background`() {
+        assertNull(ctaBitmap(PTConstants.PT_RATING_CTA_STYLE to "gradient_linear"))
+    }
+
+    @Test
+    fun `an unknown submit style falls back to solid`() {
+        assertNotNull(
+            ctaBitmap(
+                PTConstants.PT_RATING_CTA_STYLE to "sparkles",
+                PTConstants.PT_RATING_CTA_BG_CLR to "#1E88E5"
+            )
+        )
+    }
+
+    /** A media manager where only the named urls resolve; everything else fails to download. */
+    private fun mediaManagerLoading(vararg urls: String): TemplateMediaManager {
+        val bitmap = android.graphics.Bitmap.createBitmap(8, 8, android.graphics.Bitmap.Config.ARGB_8888)
+        return mockk<TemplateMediaManager>(relaxed = true).also { manager ->
+            every { manager.getImageBitmap(any()) } answers {
+                if (firstArg<String?>() in urls) bitmap else null
+            }
+        }
+    }
+
+    private fun renderWith(manager: TemplateMediaManager, count: Int, selected: Int): ViewGroup {
+        val remoteViews = RemoteViews(context.packageName, R.layout.custom_rating)
+        CustomRatingRowRenderer.renderRow(remoteViews, data(iconPayload(count)), manager, selected)
+        return remoteViews.apply(context, FrameLayout(context)) as ViewGroup
+    }
+
+    @Test
+    fun `one failed icon turns the whole row into built-in stars`() {
+        // Four downloaded icons plus one substituted star reads as broken, so the row falls back
+        // together and every position keeps matching the others.
+        val manager = mediaManagerLoading(
+            "https://cdn.example.com/i1.png", "https://cdn.example.com/i2.png",
+            "https://cdn.example.com/i4.png", "https://cdn.example.com/i5.png"
+        )
+        val root = renderWith(manager, count = 5, selected = 0)
+
+        fun state(index: Int) = root.findViewById<ImageView>(iconIds[index]).drawable?.constantState
+        for (index in 1..4) assertEquals(state(0), state(index))
+    }
+
+    @Test
+    fun `a row whose icons all load keeps the campaign artwork`() {
+        val manager = mediaManagerLoading(*(1..3).map { "https://cdn.example.com/i$it.png" }.toTypedArray())
+        val root = renderWith(manager, count = 3, selected = 0)
+
+        // A BitmapDrawable is the downloaded artwork; the built-in star is a resource drawable.
+        for (index in 0..2) {
+            assertTrue(
+                root.findViewById<ImageView>(iconIds[index]).drawable
+                        is android.graphics.drawable.BitmapDrawable
+            )
+        }
+    }
+
+    @Test
+    fun `a failed selected variant falls back to the position's own artwork, not to a star`() {
+        // i2_sel is absent from the manager, so selecting position 2 must keep showing i2.
+        val manager = mediaManagerLoading(*(1..3).map { "https://cdn.example.com/i$it.png" }.toTypedArray())
+        val root = renderWith(manager, count = 3, selected = 2)
+
+        assertTrue(
+            root.findViewById<ImageView>(iconIds[1]).drawable
+                    is android.graphics.drawable.BitmapDrawable
+        )
+    }
+
+    @Test
+    fun `the submit button is dimmed until a position is selected`() {
+        // R-28 already makes the no-selection tap a no-op; this is the part the user can see.
+        val payload = iconPayload(count = 3, PTConstants.PT_RATING_CTA_TXT_CLR to "#FFFFFF")
+
+        val unselected = render(payload, selectedPosition = 0)
+            .findViewById<TextView>(R.id.custom_rating_cta_label).currentTextColor
+        val selected = render(payload, selectedPosition = 2)
+            .findViewById<TextView>(R.id.custom_rating_cta_label).currentTextColor
+
+        assertEquals(0xFF, android.graphics.Color.alpha(selected))
+        assertTrue(android.graphics.Color.alpha(unselected) < android.graphics.Color.alpha(selected))
+        // Only the opacity changes — the colour the campaign configured is still the one shown.
+        assertEquals(android.graphics.Color.red(selected), android.graphics.Color.red(unselected))
+    }
+
+    @Test
+    fun `the submit button is drawn at full strength once a position is selected`() {
+        val payload = iconPayload(count = 3, PTConstants.PT_RATING_CTA_TXT_CLR to "#FFFFFF")
+        val root = render(payload, selectedPosition = 1)
+
+        assertEquals(
+            android.graphics.Color.WHITE,
+            root.findViewById<TextView>(R.id.custom_rating_cta_label).currentTextColor
+        )
+        assertEquals(View.VISIBLE, root.visibility(R.id.custom_rating_cta))
+    }
+
+    @Test
+    fun `a submit button with no configured colours still dims`() {
+        // The unstyled button keeps the layout's own grey, so the container background is the only
+        // thing left to change — without this the payloads that configure nothing look identical
+        // before and after a tap.
+        val payload = iconPayload(count = 3)
+
+        fun background(selectedPosition: Int) =
+            (render(payload, selectedPosition).findViewById<View>(R.id.custom_rating_cta)
+                .background as android.graphics.drawable.ColorDrawable).color
+
+        assertEquals(
+            context.getColor(R.color.customButtonBackgroundDisabled), background(0)
+        )
+        assertEquals(
+            context.getColor(R.color.customButtonBackground), background(2)
+        )
     }
 
     @Test

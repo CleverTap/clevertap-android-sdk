@@ -274,6 +274,14 @@ public class PTConstants {
      * Rating Submitted event properties (FR-EVT-01). wzrk_c2a carries the tapped position for
      * continuity with the Classic template; these three are new and typed.
      */
+    public static final String PT_RATING_CTA_STYLE = "pt_rating_cta_style";
+
+    public static final String PT_RATING_CTA_GRAD_CLR1 = "pt_rating_cta_grad_clr1";
+
+    public static final String PT_RATING_CTA_GRAD_CLR2 = "pt_rating_cta_grad_clr2";
+
+    public static final String PT_RATING_CTA_GRAD_DIR = "pt_rating_cta_grad_dir";
+
     public static final String PT_RATING_EVENT_NAME = "Rating Submitted";
     public static final String PT_RATING_EVENT_VALUE = "rating_value";
     public static final String PT_RATING_EVENT_SCALE = "rating_scale";
@@ -356,7 +364,9 @@ public class PTConstants {
             PT_RATING_LABEL_SEL_CLR,
             PT_RATING_CTA_BG_CLR,
             PT_RATING_CTA_BORDER_CLR,
-            PT_RATING_CTA_TXT_CLR);
+            PT_RATING_CTA_TXT_CLR,
+            PT_RATING_CTA_GRAD_CLR1,
+            PT_RATING_CTA_GRAD_CLR2);
 
 
 }

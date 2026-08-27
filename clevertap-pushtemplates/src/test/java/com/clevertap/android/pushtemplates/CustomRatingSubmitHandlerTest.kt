@@ -263,9 +263,26 @@ class CustomRatingSubmitHandlerTest {
     }
 
     @Test
+    fun `a payload with no submit button falls through to the body-tap destination`() {
+        // No submit button means no pt_rating_cta_dl either, so pt_default_dl is the last stop.
+        val payload = extras(freshNotificationId(), selectedPosition = 1).apply {
+            remove(PTConstants.PT_RATING_CTA_DL)
+            remove(PTConstants.PT_RATING_CTA_LABEL)
+        }
+
+        CustomRatingSubmitHandler.submit(context, payload)
+
+        assertEquals("ctdemo://home", startedDeepLink())
+        verify(exactly = 1) {
+            Utils.raiseCleverTapEvent(any(), any(), PTConstants.PT_RATING_EVENT_NAME, any())
+        }
+    }
+
+    @Test
     fun `a campaign with no destination at all falls back to the launcher activity`() {
         val payload = extras(freshNotificationId(), selectedPosition = 1).apply {
             remove(PTConstants.PT_RATING_CTA_DL)
+            remove(PTConstants.PT_DEFAULT_DL)
         }
 
         CustomRatingSubmitHandler.submit(context, payload)

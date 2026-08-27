@@ -12,6 +12,7 @@
     <color name="messageColor">#191919</color>
     <color name="metaColor">#212121</color>
     <color name="customButtonBackground">#E0E0E0</color>
+    <color name="customButtonBackgroundDisabled">#F0F0F0</color>
     <color name="verticalImgBtnBgColor">#191919</color>
     <color name="verticalImgBtnTextColor">#A0A0A0</color>
 </resources>
