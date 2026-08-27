@@ -6,6 +6,7 @@ import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobScheduler;
@@ -1096,6 +1097,9 @@ public class PushProviders implements CTPushProviderListener {
             notification.deleteIntent = liveActivityDismissIntent(context, extras, notificationId);
         }
 
+        // Guarantee the notification's channel exists so Android O+ does not silently drop it.
+        ensureLiveActivityChannel(context, notification, notificationManager);
+
         notificationManager.notify(notificationId, notification);
         config.getLogger().debug(config.getAccountId(),
                 "Rendered Live Activity notification (id=" + notificationId + ", event=" + event + ")");
@@ -1131,6 +1135,39 @@ public class PushProviders implements CTPushProviderListener {
         dbAdapter.storePushNotificationId(key,
                 clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS);
         return true;
+    }
+
+    /**
+     * Guards against Android O+ silently dropping a Live Activity notification posted to a channel
+     * that does not exist.
+     *
+     * <p>Primary (payload-driven): the factory should use the payload channel id
+     * {@link Constants#WZRK_CHANNEL_ID} ({@code wzrk_cid}) as the notification's channel.</p>
+     *
+     * <p>Fallback: if the channel the built notification references does not exist, the SDK creates
+     * it at {@link NotificationManager#IMPORTANCE_DEFAULT} and shows the notification in it — so a
+     * client that forgot to create the channel never hits a silent drop. A channel cannot be
+     * re-attached to an already-built notification, so an empty channel id is only logged.</p>
+     */
+    private void ensureLiveActivityChannel(Context context, Notification notification,
+                                           NotificationManager notificationManager) {
+        if (VERSION.SDK_INT < VERSION_CODES.O) {
+            return; // channels are not required before Android O
+        }
+        String channelId = notification.getChannelId();
+        if (channelId == null || channelId.trim().isEmpty()) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Live Activity notification has no channel id; on Android O+ it will not be shown. "
+                            + "Set the channel id (recommended: the payload's wzrk_cid) in your factory.");
+            return;
+        }
+        if (notificationManager.getNotificationChannel(channelId) == null) {
+            NotificationChannel channel = new NotificationChannel(channelId,
+                    Constants.LIVE_ACTIVITY_DEFAULT_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+            notificationManager.createNotificationChannel(channel);
+            config.getLogger().debug(config.getAccountId(),
+                    "Created missing channel '" + channelId + "' at default importance for Live Activity.");
+        }
     }
 
     private PendingIntent liveActivityDismissIntent(Context context, Bundle extras, int notificationId) {

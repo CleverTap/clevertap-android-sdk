@@ -10,13 +10,15 @@ import android.os.Bundle
  *
  * When registered, the SDK will invoke [onCreateNotification] for CleverTap Live Activity
  * (live update) pushes instead of using its built-in renderers. The client is responsible for:
- * - Creating the notification channel
  * - Building the [Notification]
+ * - Setting its channel id (recommended: the payload's `wzrk_cid`)
  *
  * The SDK still handles:
  * - Push deduplication
  * - Silent push detection
  * - Displaying the notification via [android.app.NotificationManager]
+ * - Creating the notification's channel at default importance if it does not already exist,
+ *   so the notification is never silently dropped on Android O+
  * - **The notification ID** — derived deterministically from the backend-assigned
  *   `cleverTapActivityId` so successive updates for the same activity land on the same
  *   notification (in-place update). The [NotificationResult.notificationId] you return is used

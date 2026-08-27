@@ -298,6 +298,8 @@ public interface Constants {
     String LIVE_ACTIVITY_STATE_UPDATED = "Updated";
     String LIVE_ACTIVITY_STATE_ENDED = "Ended";
     String LIVE_ACTIVITY_STATE_DISMISSED = "Dismissed";
+    /** User-visible name for the channel the SDK auto-creates when a live-update notification's channel is missing. */
+    String LIVE_ACTIVITY_DEFAULT_CHANNEL_NAME = "Live Updates";
 
     String WZRK_STICKY = "wzrk_sticky";
     String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";
