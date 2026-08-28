@@ -472,7 +472,6 @@ pt_rating_cta_bg_clr | Optional | Submit button fill color in HEX
 pt_rating_cta_border_clr | Optional | Submit button border color in HEX
 pt_rating_cta_txt_clr | Optional | Submit button text color in HEX
 pt_rating_cta_radius | Optional | Submit button corner radius in dp, `0`-`32`. Defaults to `8`
-pt_rating_confirm_msg | Optional | Confirmation message, up to 60 characters. When set, submitting replaces the rating row and the submit button with this message and leaves the notification in the tray instead of dismissing it
 pt_default_dl | Required | Destination opened when the notification body is tapped. Never raises `Rating Submitted`
 pt_dl1 | Optional | Overrides the submit destination when position 1 is the selected one
 pt_dl2 | Optional | Overrides the submit destination when position 2 is the selected one

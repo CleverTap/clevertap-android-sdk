@@ -60,7 +60,6 @@ class ClassicRatingRegressionTest {
         putString(PTConstants.PT_RATING_CTA_BORDER_CLR, "#003399")
         putString(PTConstants.PT_RATING_CTA_TXT_CLR, "#FFFFFF")
         putString(PTConstants.PT_RATING_CTA_RADIUS, "16")
-        putString(PTConstants.PT_RATING_CONFIRM_MSG, "Thanks for rating us!")
         putString(PTConstants.PT_RATING_ICON_CLR, "#CCCCCC")
         putString(PTConstants.PT_RATING_ICON_SEL_CLR, "#FFB300")
         putString(PTConstants.PT_RATING_LABEL_CLR, "#333333")

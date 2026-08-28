@@ -19,7 +19,6 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_GRAD_DIR
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_STYLE
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_TITLE_COLOUR
 import com.clevertap.android.pushtemplates.PTConstants.PT_DEFAULT_DL
-import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CONFIRM_MSG
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_GRAD_CLR1
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_GRAD_CLR2
 import com.clevertap.android.pushtemplates.PTConstants.PT_RATING_CTA_GRAD_DIR
@@ -336,8 +335,7 @@ internal object TemplateDataFactory {
             selectedIconColor = colorMap[PT_RATING_ICON_SEL_CLR],
             labelColor = colorMap[PT_RATING_LABEL_CLR],
             selectedLabelColor = colorMap[PT_RATING_LABEL_SEL_CLR],
-            ctaData = createRatingCtaData(extras, colorMap),
-            confirmationMessage = extras.getString(PT_RATING_CONFIRM_MSG)?.takeIf { it.isNotBlank() }
+            ctaData = createRatingCtaData(extras, colorMap)
         )
     }
 

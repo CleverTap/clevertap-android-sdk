@@ -5,9 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import androidx.core.app.NotificationCompat
-import com.clevertap.android.pushtemplates.content.CustomRatingRowRenderer
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 
@@ -68,12 +65,9 @@ internal object CustomRatingSubmitHandler {
             )
         )
 
-        val confirmationMessage = data?.confirmationMessage
-        if (confirmationMessage != null) {
-            renderConfirmation(context, notificationId, confirmationMessage)
-        } else {
-            notificationManager(context)?.cancel(notificationId)
-        }
+        // Submitting always clears the notification. A thank-you drawn in the tray would sit behind
+        // the destination the moment it opens, so the user would never actually see it.
+        notificationManager(context)?.cancel(notificationId)
 
         launchDestination(context, extras, destination)
     }
@@ -94,35 +88,6 @@ internal object CustomRatingSubmitHandler {
             // A payload with no submit button carries no pt_rating_cta_dl either, so the campaign's
             // own default destination is the last stop before the launcher activity.
             ?: extras.getString(PTConstants.PT_DEFAULT_DL).orEmpty()
-    }
-
-    /**
-     * Replaces the rating row and the submit button with pt_rating_confirm_msg, leaving the
-     * notification in the tray (FR-AND-04). Falls back to dismissing if the notification is already
-     * gone or carries no expanded view.
-     */
-    private fun renderConfirmation(context: Context, notificationId: Int, confirmationMessage: String) {
-        val manager = notificationManager(context) ?: return
-        val notification = Utils.getNotificationById(context, notificationId)
-        val bigContentView = notification?.bigContentView
-        if (notification == null || bigContentView == null) {
-            PTLog.verbose("Custom rating notification is no longer showing, skipping the confirmation state")
-            manager.cancel(notificationId)
-            return
-        }
-
-        CustomRatingRowRenderer.hideInteractiveViews(bigContentView)
-        bigContentView.setTextViewText(R.id.msg, confirmationMessage)
-        bigContentView.setViewVisibility(R.id.msg, View.VISIBLE)
-
-        val builder = NotificationCompat.Builder(context, notification)
-            .setSmallIcon(Utils.getSmallIconResId(context))
-            .setCustomContentView(notification.contentView)
-            .setCustomBigContentView(bigContentView)
-            // The confirmation replaces a notification the user is already looking at.
-            .setOnlyAlertOnce(true)
-            .setAutoCancel(true)
-        manager.notify(notificationId, builder.build())
     }
 
     /**

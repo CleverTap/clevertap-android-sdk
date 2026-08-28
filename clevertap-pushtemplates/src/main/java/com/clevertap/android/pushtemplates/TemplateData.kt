@@ -223,7 +223,6 @@ internal data class CustomRatingTemplateData(
     val labelColor: String? = null,
     val selectedLabelColor: String? = null,
     val ctaData: RatingCtaData = RatingCtaData(),
-    val confirmationMessage: String? = null,
 ) : TemplateData() {
 
     /**

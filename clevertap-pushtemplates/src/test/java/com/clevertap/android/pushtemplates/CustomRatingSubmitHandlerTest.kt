@@ -202,53 +202,42 @@ class CustomRatingSubmitHandlerTest {
     }
 
     @Test
-    fun `a confirmation message keeps the notification and drops the interactive views`() {
+    fun `submitting always clears the notification`() {
         val id = freshNotificationId()
         postRatingNotification(id)
 
-        CustomRatingSubmitHandler.submit(
-            context,
-            extras(id, selectedPosition = 5)
-                .apply { putString(PTConstants.PT_RATING_CONFIRM_MSG, "Thanks for rating us!") }
-        )
+        CustomRatingSubmitHandler.submit(context, extras(id, selectedPosition = 5))
 
-        val confirmation = activeNotification(id)
-        assertNotNull("the confirmation state stays in the tray", confirmation)
-
-        val root = confirmation!!.bigContentView.apply(context, FrameLayout(context)) as ViewGroup
-        assertEquals(View.GONE, root.findViewById<View>(R.id.custom_rating_row).visibility)
-        assertEquals(View.GONE, root.findViewById<View>(R.id.custom_rating_cta).visibility)
-        assertEquals(
-            "Thanks for rating us!",
-            root.findViewById<android.widget.TextView>(R.id.msg).text.toString()
-        )
+        assertNull("nothing is left in the tray after a submit", activeNotification(id))
+        assertEquals("ctdemo://feedback", startedDeepLink())
     }
 
+    /**
+     * A thank-you drawn into the tray would sit behind the destination the moment it opens, so the
+     * user would never see it. The key is out of the payload contract; a campaign still carrying it
+     * must not change what happens.
+     */
     @Test
-    fun `the destination is still opened when a confirmation message is configured`() {
+    fun `a leftover confirmation key does not keep the notification alive`() {
         val id = freshNotificationId()
         postRatingNotification(id)
 
         CustomRatingSubmitHandler.submit(
             context,
             extras(id, selectedPosition = 1)
-                .apply { putString(PTConstants.PT_RATING_CONFIRM_MSG, "Thanks!") }
+                .apply { putString("pt_rating_confirm_msg", "Thanks for rating us!") }
         )
 
+        assertNull(activeNotification(id))
         assertEquals("ctdemo://feedback", startedDeepLink())
     }
 
     @Test
-    fun `a confirmation message on a notification the user already cleared just dismisses`() {
-        val id = freshNotificationId()
-
+    fun `submitting on a notification the user already cleared still opens the destination`() {
         CustomRatingSubmitHandler.submit(
-            context,
-            extras(id, selectedPosition = 1)
-                .apply { putString(PTConstants.PT_RATING_CONFIRM_MSG, "Thanks!") }
+            context, extras(freshNotificationId(), selectedPosition = 1)
         )
 
-        assertNull(activeNotification(id))
         assertEquals("ctdemo://feedback", startedDeepLink())
     }
 

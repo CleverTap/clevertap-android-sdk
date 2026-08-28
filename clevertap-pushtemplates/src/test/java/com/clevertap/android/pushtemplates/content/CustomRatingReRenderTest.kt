@@ -48,6 +48,13 @@ class CustomRatingReRenderTest {
      * keeps these tests about the re-render cost rather than about the test environment.
      */
     @Before
+    fun emptyTheIconCache() {
+        // ScaledIconCache lives for the process, so one test's icons would otherwise be found by
+        // the next one and change what it renders.
+        ScaledIconCache.clear()
+    }
+
+    @Before
     fun nameTheApplication() {
         context.applicationInfo.nonLocalizedLabel = "Rating Test App"
     }

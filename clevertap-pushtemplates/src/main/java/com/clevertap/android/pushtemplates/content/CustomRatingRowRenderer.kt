@@ -166,7 +166,8 @@ internal object CustomRatingRowRenderer {
         }
 
         // Resolved as a set, before anything is drawn.
-        val rowArtwork = if (drawAsText) null else resolveRowArtwork(data, mediaManager)
+        val rowArtwork =
+            if (drawAsText) null else resolveRowArtwork(data, mediaManager, iconMaxSidePx)
 
         for (index in CELL_VIEW_IDS.indices) {
             val position = index + 1
@@ -216,19 +217,20 @@ internal object CustomRatingRowRenderer {
      * whole row therefore falls back together, exactly as a text row does when a label is missing
      * (R-23), so the positions always look like each other.
      *
-     * Looked up once and reused: [TemplateMediaManager] does not cache a URL that failed, so asking
-     * a second time would download a second time.
+     * Resolved through [ScaledIconCache], so a re-render after a tap costs no network at all. The
+     * bitmaps handed back are already at the size they are drawn and are owned by the cache.
      */
     private fun resolveRowArtwork(
         data: CustomRatingTemplateData,
-        mediaManager: TemplateMediaManager
+        mediaManager: TemplateMediaManager,
+        iconMaxSidePx: Int
     ): List<Bitmap>? {
         val bitmaps = ArrayList<Bitmap>(data.ratingCount)
         var anyFailed = false
         for (position in 1..data.ratingCount) {
             val url = data.positions.getOrNull(position - 1)?.iconUrl
             // Keep going after the first failure so every bad key gets named, not just the first.
-            val bitmap = url?.let { mediaManager.getImageBitmap(it) }
+            val bitmap = iconBitmap(url, iconMaxSidePx, mediaManager)
             if (bitmap == null) {
                 PTLog.debug("${PTConstants.PT_RATING_ICON_PREFIX}$position could not be loaded")
                 anyFailed = true
@@ -275,45 +277,49 @@ internal object CustomRatingRowRenderer {
             // a star: the row is otherwise intact, and swapping one position to a star mid-tap would
             // be a worse surprise than simply not changing the picture.
             val selectedUrl = data.positions.getOrNull(position - 1)?.selectedIconUrl
-            val selected = selectedUrl?.let { mediaManager.getImageBitmap(it) }
+            val selected = iconBitmap(selectedUrl, iconMaxSidePx, mediaManager)
             if (selectedUrl != null && selected == null) {
                 PTLog.debug(
                     "${PTConstants.PT_RATING_ICON_PREFIX}$position${PTConstants.PT_RATING_ICON_SELECTED_SUFFIX} " +
                             "could not be loaded, showing the unselected artwork instead"
                 )
             }
-            remoteViews.setImageViewBitmap(
-                viewId, scaled(selected ?: artwork, iconMaxSidePx, ownedBitmaps)
-            )
+            remoteViews.setImageViewBitmap(viewId, selected ?: artwork)
             applyTint(remoteViews, viewId, data, true)
             return
         }
 
-        // Scale first so the greyscale copy is made at the size actually drawn, not at whatever
-        // the campaign uploaded. Both are derived copies, so both are ours to recycle.
-        val sized = scaled(artwork, iconMaxSidePx, ownedBitmaps)
-        val grey = Utils.toGreyscale(sized)
+        // artwork is already at the drawn size and owned by the cache, so only the greyscale copy
+        // made here belongs to this render.
+        val grey = Utils.toGreyscale(artwork)
         if (grey != null) {
             remoteViews.setImageViewBitmap(viewId, grey)
             ownedBitmaps.add(grey)
         } else {
-            remoteViews.setImageViewBitmap(viewId, sized)
+            remoteViews.setImageViewBitmap(viewId, artwork)
         }
         applyTint(remoteViews, viewId, data, false)
     }
 
     /**
-     * [bitmap] no larger than [maxSidePx], recording the scaled copy as owned so it is recycled once
-     * the notification is posted.
+     * This position's artwork at the size it is drawn, from [ScaledIconCache] when it is already
+     * there and from the network only when it is not.
      *
-     * The cache's own bitmap is never recycled here, so identity is what decides ownership: a scaled
-     * copy is a different object, an unchanged one is the cache's and must be left alone.
+     * The result belongs to the cache and must not be recycled by the caller: doing so would force
+     * the next tap to download it again, which is the cost this cache exists to remove.
      */
-    private fun scaled(bitmap: Bitmap, maxSidePx: Int, ownedBitmaps: MutableList<Bitmap>): Bitmap {
-        if (maxSidePx <= 0) return bitmap
-        val result = NotificationBitmapUtils.scaleDownTo(bitmap, maxSidePx)
-        if (result !== bitmap) ownedBitmaps.add(result)
-        return result
+    private fun iconBitmap(
+        url: String?,
+        maxSidePx: Int,
+        mediaManager: TemplateMediaManager
+    ): Bitmap? {
+        if (url.isNullOrBlank()) return null
+        ScaledIconCache.get(url, maxSidePx)?.let { return it }
+
+        val downloaded = mediaManager.getImageBitmap(url) ?: return null
+        val sized = NotificationBitmapUtils.scaleDownTo(downloaded, maxSidePx)
+        ScaledIconCache.put(url, maxSidePx, sized)
+        return sized
     }
 
     /**
@@ -547,10 +553,4 @@ internal object CustomRatingRowRenderer {
     fun cellViewId(position: Int): Int =
         CELL_VIEW_IDS[(position - 1).coerceIn(0, CELL_VIEW_IDS.lastIndex)]
 
-    /** Hides the interactive parts of the row, leaving only the content block (confirmation state). */
-    @JvmStatic
-    fun hideInteractiveViews(remoteViews: RemoteViews) {
-        remoteViews.setViewVisibility(R.id.custom_rating_row, View.GONE)
-        remoteViews.setViewVisibility(R.id.custom_rating_cta, View.GONE)
-    }
 }

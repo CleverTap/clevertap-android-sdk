@@ -219,14 +219,6 @@ class CustomRatingTemplateDataTest {
     }
 
     @Test
-    fun `confirmation message is parsed when present`() {
-        givenIconStyle(count = 3)
-        every { mockBundle.getString(PT_RATING_CONFIRM_MSG) } returns "Thanks for rating us!"
-
-        assertEquals("Thanks for rating us!", parse()!!.confirmationMessage)
-    }
-
-    @Test
     fun `renderablePositionCount counts only positions with a usable icon`() {
         givenIconStyle(count = 3)
         every { mockBundle.getString("${PT_RATING_ICON_PREFIX}3") } returns null

@@ -37,6 +37,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 class CustomRatingRowRendererTest {
 
+    @org.junit.Before
+    fun emptyTheIconCache() {
+        // ScaledIconCache lives for the process, so one test's icons would otherwise be found by
+        // the next one and change what it renders.
+        ScaledIconCache.clear()
+    }
+
     private val context: Context get() = RuntimeEnvironment.getApplication()
 
     /** No artwork ever resolves, so icon positions fall back to the built-in star (R-21). */
@@ -230,18 +237,6 @@ class CustomRatingRowRendererTest {
         assertEquals(drawableState(none, 1)?.javaClass, drawableState(second, 1)?.javaClass)
         assertNotEquals(drawableState(second, 0), drawableState(second, 1))
         assertEquals(drawableState(second, 0), drawableState(second, 2))
-    }
-
-    @Test
-    fun `the confirmation state hides the row and the submit button`() {
-        val remoteViews = RemoteViews(context.packageName, R.layout.custom_rating)
-        CustomRatingRowRenderer.renderRow(remoteViews, data(iconPayload(count = 3)), mediaManager, 2)
-        CustomRatingRowRenderer.hideInteractiveViews(remoteViews)
-
-        val root = remoteViews.apply(context, FrameLayout(context)) as ViewGroup
-
-        assertEquals(View.GONE, root.visibility(R.id.custom_rating_row))
-        assertEquals(View.GONE, root.visibility(R.id.custom_rating_cta))
     }
 
     /** Same artwork at every position — a five-star scale rather than five distinct choices. */

@@ -262,7 +262,6 @@ public class PTConstants {
 
     // Optional confirmation message. When present, submitting swaps the notification to a
     // confirmation state instead of dismissing it.
-    public static final String PT_RATING_CONFIRM_MSG = "pt_rating_confirm_msg";
 
     public static final int PT_RATING_COUNT_MIN = 2;
     public static final int PT_RATING_COUNT_MAX = 5;
