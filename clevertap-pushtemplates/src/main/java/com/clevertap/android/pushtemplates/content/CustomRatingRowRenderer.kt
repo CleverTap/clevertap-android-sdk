@@ -1,13 +1,11 @@
 package com.clevertap.android.pushtemplates.content
 
-import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.core.graphics.ColorUtils
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
@@ -17,8 +15,6 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.RatingStyleType
-import com.clevertap.android.pushtemplates.TemplateDataFactory
-import com.clevertap.android.pushtemplates.TemplateType
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
 
@@ -109,31 +105,6 @@ internal object CustomRatingRowRenderer {
     private val LABEL_BUDGET_BY_COUNT = mapOf(2 to 15, 3 to 10, 4 to 7, 5 to 5)
 
     /**
-     * Re-parses the payload out of [extras] and renders the row for [selectedPosition]. Used by the
-     * receiver, which only has the notification's extras to work from.
-     *
-     * @return null when the payload no longer describes a renderable custom rating template.
-     */
-    @JvmStatic
-    fun renderRowFromExtras(
-        context: Context,
-        extras: Bundle,
-        remoteViews: RemoteViews,
-        mediaManager: TemplateMediaManager,
-        selectedPosition: Int
-    ): List<Bitmap>? {
-        val data = TemplateDataFactory.createTemplateData(
-            TemplateType.CUSTOM_RATING,
-            extras,
-            Utils.isDarkMode(context),
-            context.getString(R.string.pt_big_image_alt)
-        ) { Utils.getNotificationIds(context) } as? CustomRatingTemplateData ?: return null
-
-        if (!isRenderable(data)) return null
-        return renderRow(remoteViews, data, mediaManager, selectedPosition)
-    }
-
-    /**
      * A payload the row renderer can draw: a known style, and at least [PTConstants.PT_RATING_COUNT_MIN]
      * positions carrying usable config. Anything less falls back to the Basic template (R-22).
      */
@@ -179,7 +150,8 @@ internal object CustomRatingRowRenderer {
         remoteViews: RemoteViews,
         data: CustomRatingTemplateData,
         mediaManager: TemplateMediaManager,
-        selectedPosition: Int
+        selectedPosition: Int,
+        iconMaxSidePx: Int = 0
     ): List<Bitmap> {
         val ownedBitmaps = mutableListOf<Bitmap>()
 
@@ -215,7 +187,7 @@ internal object CustomRatingRowRenderer {
                 showIconCell(remoteViews, index)
                 renderIcon(
                     remoteViews, ICON_VIEW_IDS[index], data, position, isSelected,
-                    rowArtwork?.get(index), mediaManager, ownedBitmaps
+                    rowArtwork?.get(index), mediaManager, ownedBitmaps, iconMaxSidePx
                 )
             }
         }
@@ -286,7 +258,8 @@ internal object CustomRatingRowRenderer {
         isSelected: Boolean,
         artwork: Bitmap?,
         mediaManager: TemplateMediaManager,
-        ownedBitmaps: MutableList<Bitmap>
+        ownedBitmaps: MutableList<Bitmap>,
+        iconMaxSidePx: Int
     ) {
         if (artwork == null) {
             remoteViews.setImageViewResource(
@@ -309,20 +282,38 @@ internal object CustomRatingRowRenderer {
                             "could not be loaded, showing the unselected artwork instead"
                 )
             }
-            remoteViews.setImageViewBitmap(viewId, selected ?: artwork)
+            remoteViews.setImageViewBitmap(
+                viewId, scaled(selected ?: artwork, iconMaxSidePx, ownedBitmaps)
+            )
             applyTint(remoteViews, viewId, data, true)
             return
         }
 
-        // Greyscale is a derived copy, so this one is ours to recycle.
-        val grey = Utils.toGreyscale(artwork)
+        // Scale first so the greyscale copy is made at the size actually drawn, not at whatever
+        // the campaign uploaded. Both are derived copies, so both are ours to recycle.
+        val sized = scaled(artwork, iconMaxSidePx, ownedBitmaps)
+        val grey = Utils.toGreyscale(sized)
         if (grey != null) {
             remoteViews.setImageViewBitmap(viewId, grey)
             ownedBitmaps.add(grey)
         } else {
-            remoteViews.setImageViewBitmap(viewId, artwork)
+            remoteViews.setImageViewBitmap(viewId, sized)
         }
         applyTint(remoteViews, viewId, data, false)
+    }
+
+    /**
+     * [bitmap] no larger than [maxSidePx], recording the scaled copy as owned so it is recycled once
+     * the notification is posted.
+     *
+     * The cache's own bitmap is never recycled here, so identity is what decides ownership: a scaled
+     * copy is a different object, an unchanged one is the cache's and must be left alone.
+     */
+    private fun scaled(bitmap: Bitmap, maxSidePx: Int, ownedBitmaps: MutableList<Bitmap>): Bitmap {
+        if (maxSidePx <= 0) return bitmap
+        val result = NotificationBitmapUtils.scaleDownTo(bitmap, maxSidePx)
+        if (result !== bitmap) ownedBitmaps.add(result)
+        return result
     }
 
     /**

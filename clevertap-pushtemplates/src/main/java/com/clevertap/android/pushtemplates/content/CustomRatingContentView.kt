@@ -7,7 +7,11 @@ import com.clevertap.android.pushtemplates.CustomRatingTemplateData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
+import com.clevertap.android.pushtemplates.TemplateDataFactory
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.TemplateType
+import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 
 /**
  * Expanded view for the pt_custom_rating template.
@@ -24,6 +28,15 @@ internal class CustomRatingContentView(
     renderer: TemplateRenderer,
     data: CustomRatingTemplateData,
     extras: Bundle,
+    /**
+     * 1-based position to draw as selected, or [NO_SELECTION] for the first render.
+     *
+     * A re-render after a position tap builds a *new* view through this same constructor rather than
+     * writing over the one already posted. RemoteViews only ever appends actions — a bitmap set twice
+     * on the same view id is two actions and two cache entries, never a replacement — so mutating the
+     * posted view grows it by a full icon set on every tap until the platform strips it.
+     */
+    selectedPosition: Int = NO_SELECTION,
 ) : ContentView(context, R.layout.custom_rating, renderer.templateMediaManager) {
 
     /**
@@ -65,12 +78,16 @@ internal class CustomRatingContentView(
         )
         setCustomContentViewLargeIcon(baseContent.iconData.largeIcon)
 
-        // NO_SELECTION: the row opens with every position unselected.
+        // Cap each position's artwork at the cell it is drawn in. A campaign asset arrives at
+        // whatever resolution it was uploaded at, and a bitmap costs width x height x 4 bytes in the
+        // notification whatever size it is displayed at — so an uncapped icon is the one thing on
+        // this template that can push the layout past the system's bitmap budget on its own.
         ownedBitmaps = CustomRatingRowRenderer.renderRow(
             remoteViews = remoteView,
             data = data,
             mediaManager = templateMediaManager,
-            selectedPosition = NO_SELECTION
+            selectedPosition = selectedPosition,
+            iconMaxSidePx = context.resources.getDimensionPixelSize(R.dimen.custom_rating_touch_target)
         )
 
         for (position in 1..data.ratingCount) {
@@ -96,7 +113,7 @@ internal class CustomRatingContentView(
             remoteView.setOnClickPendingIntent(
                 R.id.custom_rating_cta,
                 PendingIntentFactory.getCustomRatingSubmitIntent(
-                    context, renderer.notificationId, extras, NO_SELECTION, renderer.config
+                    context, renderer.notificationId, extras, selectedPosition, renderer.config
                 )
             )
         }
@@ -105,5 +122,49 @@ internal class CustomRatingContentView(
     companion object {
 
         const val NO_SELECTION = 0
+
+        /**
+         * Builds a complete expanded view for [selectedPosition] from the payload alone.
+         *
+         * Used by PushTemplateReceiver when a position is tapped. It deliberately does *not* reuse
+         * the RemoteViews off the posted notification: that object comes back from
+         * `getActiveNotifications()` carrying every action from every previous render, and each
+         * re-render would append another five icon bitmaps to it. Building fresh keeps the cost of a
+         * re-render identical to the first render, however many times the user changes their mind.
+         *
+         * @return the view and the bitmaps the caller must recycle after `notify()`, or null when the
+         *         payload no longer describes a renderable custom rating template.
+         */
+        @JvmStatic
+        fun buildForSelection(
+            context: Context,
+            extras: Bundle,
+            notificationId: Int,
+            smallIcon: Int,
+            config: CleverTapInstanceConfig?,
+            selectedPosition: Int
+        ): CustomRatingRenderResult? {
+            val renderer = TemplateRenderer(context, extras, config)
+            renderer.notificationId = notificationId
+            renderer.smallIcon = smallIcon
+
+            val data = TemplateDataFactory.createTemplateData(
+                TemplateType.CUSTOM_RATING,
+                extras,
+                Utils.isDarkMode(context),
+                context.getString(R.string.pt_big_image_alt)
+            ) { Utils.getNotificationIds(context) } as? CustomRatingTemplateData ?: return null
+
+            if (!CustomRatingRowRenderer.isRenderable(data)) return null
+
+            val view = CustomRatingContentView(context, renderer, data, extras, selectedPosition)
+            return CustomRatingRenderResult(view.remoteView, view.ownedBitmaps)
+        }
     }
 }
+
+/** A freshly built expanded view plus the derived bitmaps its caller owns. */
+internal class CustomRatingRenderResult(
+    @JvmField val remoteViews: android.widget.RemoteViews,
+    @JvmField val ownedBitmaps: List<Bitmap>
+)

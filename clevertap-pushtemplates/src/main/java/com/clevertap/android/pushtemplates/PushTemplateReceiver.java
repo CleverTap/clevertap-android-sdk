@@ -27,7 +27,8 @@ import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
 import androidx.core.app.RemoteInput;
-import com.clevertap.android.pushtemplates.content.CustomRatingRowRenderer;
+import com.clevertap.android.pushtemplates.content.CustomRatingContentView;
+import com.clevertap.android.pushtemplates.content.CustomRatingRenderResult;
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.pushtemplates.media.GifDecoderImpl;
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager;
@@ -412,35 +413,26 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 PTLog.verbose("Custom rating notification is null, returning");
                 return;
             }
-            RemoteViews bigContentView = notification.bigContentView;
-            if (bigContentView == null) {
+            if (notification.bigContentView == null) {
                 PTLog.verbose("Custom rating notification has no expanded view, returning");
                 return;
             }
 
-            TemplateMediaManager mediaManager = new TemplateMediaManager(
-                    new TemplateRepository(context, config), new GifDecoderImpl());
+            setSmallIcon(context);
 
-            // Bitmaps are parcelled during notify(), so recycle only after the notification is posted.
-            java.util.List<Bitmap> ownedBitmaps = CustomRatingRowRenderer.renderRowFromExtras(
-                    context, extras, bigContentView, mediaManager, selectedPosition);
-            if (ownedBitmaps == null) {
+            // Build a NEW expanded view rather than writing over the posted one. RemoteViews only
+            // appends actions, so re-rendering into the view returned by getActiveNotifications()
+            // adds another five icon bitmaps on every tap until the platform strips the whole custom
+            // layout and the rating row silently disappears.
+            CustomRatingRenderResult rendered = CustomRatingContentView.buildForSelection(
+                    context, extras, notificationId, smallIcon, this.config, selectedPosition);
+            if (rendered == null) {
                 PTLog.verbose("Custom rating payload is no longer renderable, leaving the notification as is");
                 return;
             }
-
-            // Re-attach the taps so the user can move their selection, and hand the submit button the
-            // position it should now submit.
-            for (int position = 1; position <= PTConstants.PT_RATING_COUNT_MAX; position++) {
-                bigContentView.setOnClickPendingIntent(CustomRatingRowRenderer.cellViewId(position),
-                        PendingIntentFactory.getCustomRatingPositionIntent(
-                                context, notificationId, extras, position, this.config));
-            }
-            bigContentView.setOnClickPendingIntent(R.id.custom_rating_cta,
-                    PendingIntentFactory.getCustomRatingSubmitIntent(
-                            context, notificationId, extras, selectedPosition, this.config));
-
-            setSmallIcon(context);
+            RemoteViews bigContentView = rendered.remoteViews;
+            // Bitmaps are parcelled during notify(), so recycle only after the notification is posted.
+            java.util.List<Bitmap> ownedBitmaps = rendered.ownedBitmaps;
 
             Builder notificationBuilder = new Builder(context, notification);
             Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
