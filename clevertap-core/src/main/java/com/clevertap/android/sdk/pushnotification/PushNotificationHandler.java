@@ -25,21 +25,21 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     }
 
     /**
-     * Merges the nested {@code la_pn} JSON payload of a Live Update push into the top-level bundle
+     * Merges the nested {@code la_pt_data} JSON payload of a Live Update push into the top-level bundle
      * so downstream routing (Push Template selection via {@code pt_id}) and rendering read it like a
      * normal push. Nested values (incl. JSON arrays like {@code pt_progress_segments}) are stored as
      * strings.
      *
      * <p><b>Root wins for identity/transport/analytics keys.</b> A key already present at the top
-     * level is never overwritten by {@code la_pn} — so the wrapper keys that drive dedup
+     * level is never overwritten by {@code la_pt_data} — so the wrapper keys that drive dedup
      * ({@code wzrk_pid}), the in-place notification id ({@code cleverTapActivityId}), attribution
      * ({@code wzrk_id}/{@code wzrk_campaignId}/…) and analytics cannot be corrupted even if the
-     * backend accidentally duplicates them inside {@code la_pn}. {@code la_pn} supplies the render
+     * backend accidentally duplicates them inside {@code la_pt_data}. {@code la_pt_data} supplies the render
      * keys (which live only inside it: {@code pt_id}, {@code nt}, {@code nm}, {@code pt_progress_*},
      * {@code wzrk_cid}, {@code pr}, …).</p>
      */
     private static void surfaceLiveActivityPayload(Bundle message) {
-        String laPn = message.getString(Constants.WZRK_LIVE_ACTIVITY_PN);
+        String laPn = message.getString(Constants.WZRK_LIVE_ACTIVITY_PT_DATA);
         if (laPn == null || laPn.isEmpty()) {
             return;
         }
@@ -49,14 +49,14 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             while (keys.hasNext()) {
                 String key = keys.next();
                 if (message.containsKey(key)) {
-                    // Root-level value is authoritative; do not let la_pn overwrite it.
+                    // Root-level value is authoritative; do not let la_pt_data overwrite it.
                     continue;
                 }
                 Object value = json.get(key);
                 message.putString(key, value instanceof String ? (String) value : value.toString());
             }
         } catch (Throwable t) {
-            Logger.d(LOG_TAG, "Failed to surface la_pn payload", t);
+            Logger.d(LOG_TAG, "Failed to surface la_pt_data payload", t);
         }
     }
 
@@ -100,8 +100,8 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             if (cleverTapAPI != null) {
                 cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
-                // Live Update Mode B: surface the nested la_pn payload (incl. pt_id) to the top
-                // level so the normal PT/core routing below renders it. Presence of la_pn is an
+                // Live Update Mode B: surface the nested la_pt_data payload (incl. pt_id) to the top
+                // level so the normal PT/core routing below renders it. Presence of la_pt_data is an
                 // explicit BE instruction to use the SDK renderer and takes precedence over a client
                 // factory (the Mode A vs Mode B decision is finalised in _createNotification).
                 if ("true".equalsIgnoreCase(message.getString(Constants.WZRK_LIVE_ACTIVITY, ""))) {

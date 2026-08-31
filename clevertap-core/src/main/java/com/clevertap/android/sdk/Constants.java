@@ -286,8 +286,9 @@ public interface Constants {
     String WZRK_LIVE_ACTIVITY = "wzrk_la";
     /** Backend-assigned stable activity id; SDK derives the notification id from this. */
     String WZRK_LIVE_ACTIVITY_ID = "cleverTapActivityId";
-    /** Nested CleverTap push payload (Mode B) the SDK renders itself, e.g. {@code {"pt_id":"pt_progress", ...}}. */
-    String WZRK_LIVE_ACTIVITY_PN = "la_pn";
+    /** Nested CleverTap push payload (Mode B) the SDK renders itself, e.g. {@code {"pt_id":"pt_progress", ...}}.
+     *  Not {@code wzrk_}-prefixed on purpose so the render blob never leaks into analytics evtData. */
+    String WZRK_LIVE_ACTIVITY_PT_DATA = "la_pt_data";
     /** Lifecycle event carried by the push: {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} or {@link #WZRK_LIVE_ACTIVITY_EVENT_END}. */
     String WZRK_LIVE_ACTIVITY_EVENT = "wzrk_la_event";
     String WZRK_LIVE_ACTIVITY_EVENT_UPDATE = "update";

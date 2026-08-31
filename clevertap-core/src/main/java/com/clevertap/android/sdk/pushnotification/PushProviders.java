@@ -197,11 +197,11 @@ public class PushProviders implements CTPushProviderListener {
                         .equalsIgnoreCase("true");
 
                 if (isLiveActivity) {
-                    // Precedence: la_pn (an explicit "SDK render this" payload, e.g. pt_progress)
-                    // wins over a client factory. Only when there is NO la_pn does the factory
+                    // Precedence: la_pt_data (an explicit "SDK render this" payload, e.g. pt_progress)
+                    // wins over a client factory. Only when there is NO la_pt_data does the factory
                     // (Mode A) render. Otherwise the SDK renders (Mode B) via the current renderer
-                    // (Core, or Push Template when la_pn.pt_id was surfaced at the gate).
-                    boolean hasLaPn = !TextUtils.isEmpty(extras.getString(Constants.WZRK_LIVE_ACTIVITY_PN));
+                    // (Core, or Push Template when la_pt_data.pt_id was surfaced at the gate).
+                    boolean hasLaPn = !TextUtils.isEmpty(extras.getString(Constants.WZRK_LIVE_ACTIVITY_PT_DATA));
                     ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
 
                     if (!hasLaPn && customFactory != null) {
