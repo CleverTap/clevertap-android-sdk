@@ -28,7 +28,15 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
      * Merges the nested {@code la_pn} JSON payload of a Live Update push into the top-level bundle
      * so downstream routing (Push Template selection via {@code pt_id}) and rendering read it like a
      * normal push. Nested values (incl. JSON arrays like {@code pt_progress_segments}) are stored as
-     * strings. Only invoked for Mode B (no client factory).
+     * strings.
+     *
+     * <p><b>Root wins for identity/transport/analytics keys.</b> A key already present at the top
+     * level is never overwritten by {@code la_pn} — so the wrapper keys that drive dedup
+     * ({@code wzrk_pid}), the in-place notification id ({@code cleverTapActivityId}), attribution
+     * ({@code wzrk_id}/{@code wzrk_campaignId}/…) and analytics cannot be corrupted even if the
+     * backend accidentally duplicates them inside {@code la_pn}. {@code la_pn} supplies the render
+     * keys (which live only inside it: {@code pt_id}, {@code nt}, {@code nm}, {@code pt_progress_*},
+     * {@code wzrk_cid}, {@code pr}, …).</p>
      */
     private static void surfaceLiveActivityPayload(Bundle message) {
         String laPn = message.getString(Constants.WZRK_LIVE_ACTIVITY_PN);
@@ -40,6 +48,10 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             Iterator<String> keys = json.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
+                if (message.containsKey(key)) {
+                    // Root-level value is authoritative; do not let la_pn overwrite it.
+                    continue;
+                }
                 Object value = json.get(key);
                 message.putString(key, value instanceof String ? (String) value : value.toString());
             }
@@ -88,11 +100,11 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             if (cleverTapAPI != null) {
                 cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
-                // Live Update Mode B: when no client factory is registered, surface the nested
-                // la_pn payload (incl. pt_id) to the top level so the normal PT/core routing below
-                // renders it. Factory (Mode A) takes precedence and is handled in _createNotification.
-                if ("true".equalsIgnoreCase(message.getString(Constants.WZRK_LIVE_ACTIVITY, ""))
-                        && CleverTapAPI.getNotificationFactory() == null) {
+                // Live Update Mode B: surface the nested la_pn payload (incl. pt_id) to the top
+                // level so the normal PT/core routing below renders it. Presence of la_pn is an
+                // explicit BE instruction to use the SDK renderer and takes precedence over a client
+                // factory (the Mode A vs Mode B decision is finalised in _createNotification).
+                if ("true".equalsIgnoreCase(message.getString(Constants.WZRK_LIVE_ACTIVITY, ""))) {
                     surfaceLiveActivityPayload(message);
                 }
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {

@@ -197,16 +197,21 @@ public class PushProviders implements CTPushProviderListener {
                         .equalsIgnoreCase("true");
 
                 if (isLiveActivity) {
+                    // Precedence: la_pn (an explicit "SDK render this" payload, e.g. pt_progress)
+                    // wins over a client factory. Only when there is NO la_pn does the factory
+                    // (Mode A) render. Otherwise the SDK renders (Mode B) via the current renderer
+                    // (Core, or Push Template when la_pn.pt_id was surfaced at the gate).
+                    boolean hasLaPn = !TextUtils.isEmpty(extras.getString(Constants.WZRK_LIVE_ACTIVITY_PN));
                     ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
-                    if (customFactory != null) {
+
+                    if (!hasLaPn && customFactory != null) {
                         // Mode A — client factory renders the Notification.
                         triggerLiveActivityNotification(context, extras, customFactory);
                         return;
                     }
-                    // Mode B — no factory: render via the current renderer (Core, or Push Template
-                    // when la_pn.pt_id was surfaced at the gate), but with the SDK-owned in-place id
-                    // so successive updates for the same activity replace the same notification.
-                    // Lifecycle events are raised in postNotificationRendered for both modes.
+                    // Mode B — SDK renders with the SDK-owned in-place id so successive updates for
+                    // the same activity replace the same notification. Lifecycle events are raised in
+                    // postNotificationRendered for both modes.
                     String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
                     if (!TextUtils.isEmpty(activityId)) {
                         liveActivityNotificationId = activityId.hashCode() & 0x7fffffff;
@@ -1040,6 +1045,13 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         Notification n = nb.build();
+
+        // Live Update Mode B (SDK-rendered): attach the dismissal delete intent so swipe-away
+        // raises the "Dismissed" event — respecting any delete intent a Push Template already set.
+        if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equalsIgnoreCase("true")) {
+            applyLiveActivityDismissIntent(context, n, extras, notificationId);
+        }
+
         notificationManager.notify(notificationId, n);
         config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n);//cb
 
@@ -1101,9 +1113,7 @@ public class PushProviders implements CTPushProviderListener {
                 Constants.WZRK_LIVE_ACTIVITY_EVENT_UPDATE);
 
         // Attach a delete intent for dismissal tracking, without clobbering one the client set.
-        if (notification.deleteIntent == null) {
-            notification.deleteIntent = liveActivityDismissIntent(context, extras, notificationId);
-        }
+        applyLiveActivityDismissIntent(context, notification, extras, notificationId);
 
         // Guarantee the notification's channel exists so Android O+ does not silently drop it.
         ensureLiveActivityChannel(context, notification, notificationManager);
@@ -1166,6 +1176,23 @@ public class PushProviders implements CTPushProviderListener {
             notificationManager.createNotificationChannel(channel);
             config.getLogger().debug(config.getAccountId(),
                     "Created missing channel '" + channelId + "' at default importance for Live Activity.");
+        }
+    }
+
+    /**
+     * Attaches the CleverTap dismissal delete intent to a Live Update notification so a swipe-away
+     * raises the "Dismissed" event — but only if the notification does not already carry a delete
+     * intent set by the client (Mode A factory) or a Push Template. In that case CleverTap respects
+     * the existing intent, does not override it, and logs that it will not track the Dismissed event.
+     */
+    private void applyLiveActivityDismissIntent(Context context, Notification notification,
+                                                Bundle extras, int notificationId) {
+        if (notification.deleteIntent == null) {
+            notification.deleteIntent = liveActivityDismissIntent(context, extras, notificationId);
+        } else {
+            config.getLogger().debug(config.getAccountId(),
+                    "Live Update: notification already has a delete intent set by the client/template; "
+                            + "CleverTap will not override it and will not track the Dismissed event for this push.");
         }
     }
 
