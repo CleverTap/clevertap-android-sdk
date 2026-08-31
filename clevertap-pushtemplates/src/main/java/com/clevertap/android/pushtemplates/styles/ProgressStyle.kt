@@ -1,29 +1,45 @@
 package com.clevertap.android.pushtemplates.styles
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import org.json.JSONArray
 
 /**
- * Native progress-centric template (`pt_progress`) — the only promotable Push Template.
+ * Progress-centric template (`pt_progress`).
  *
- * Renders [NotificationCompat.ProgressStyle] (segments / points / tracker icon) and requests
- * promotion ([NotificationCompat.Builder.setRequestPromotedOngoing]) so on Android 16 it becomes a
- * pinned, always-expanded Live Update with a status-bar chip. Unlike the other templates it uses a
- * base style with NO custom RemoteViews — a hard requirement for promotion.
+ * Two rendering tiers, gated on the OS:
+ * - **Android 16+ (API 36):** native [NotificationCompat.ProgressStyle] — segments, points,
+ *   tracker icon, status chip, and promotion ([NotificationCompat.Builder.setRequestPromotedOngoing]).
+ *   This is a base style with NO custom RemoteViews, which is what makes promotion possible.
+ * - **Below API 36:** a custom-RemoteViews fallback that mimics the same look — tracker icon,
+ *   title/message, and a dots-and-connectors progress row (points as dots, segments as weighted
+ *   colored connectors). Not promotable (promotion is a 16+ OS feature), but kept ongoing so it
+ *   behaves like a live update.
  *
- * Contract: TAN §14. This is the first cut (SDK-6086); fallback-tier fidelity on API < 16 and full
- * action support are follow-ups (SDK-6087 / SDK-6088).
+ * Both tiers read the same `pt_progress_*` contract (TAN §14).
  */
 internal class ProgressStyle(private val renderer: TemplateRenderer) {
+
+    private data class SegmentData(val length: Int, val color: Int?)
+    private data class PointData(val position: Int, val color: Int?)
+
+    companion object {
+        // Android 16 (Baklava) introduced Notification.ProgressStyle + promotion.
+        private const val API_PROGRESS_STYLE = 36
+        private val COLOR_INACTIVE = Color.parseColor("#48484A")
+        private val COLOR_POINT_DEFAULT = Color.parseColor("#FFFFFF")
+    }
 
     fun builderFromStyle(
         context: Context,
@@ -33,75 +49,168 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
     ): NotificationCompat.Builder {
 
         val ended = "end".equals(extras.getString(PTConstants.PT_LA_EVENT), ignoreCase = true)
+        val title = renderer.getTitle(extras, context) ?: ""
+        val message = renderer.getMessage(extras) ?: ""
+        val segments = parseSegments(extras.getString(PTConstants.PT_PROGRESS_SEGMENTS))
+        val points = parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS))
+        val trackerIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_TRACKER_ICON))
 
         nb.setSmallIcon(renderer.smallIcon)
-            .setContentTitle(renderer.getTitle(extras, context)?.let { Html.fromHtml(it) } ?: "")
-            .setContentText(renderer.getMessage(extras) ?: "")
+            .setContentTitle(Html.fromHtml(title))
+            .setContentText(message)
             .setOnlyAlertOnce(true)          // updates should not re-alert
             .setOngoing(!ended)              // ongoing while the activity is live
             .setAutoCancel(ended)
             .setColor(parseColor(renderer.smallIconColour))
 
+        return if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) {
+            buildNative(context, extras, nb, segments, points, trackerIcon, ended)
+        } else {
+            buildFallback(context, extras, nb, title, message, segments, points, trackerIcon)
+        }
+    }
+
+    // --- Android 16+ : native ProgressStyle + promotion ---
+
+    private fun buildNative(
+        context: Context,
+        extras: Bundle,
+        nb: NotificationCompat.Builder,
+        segments: List<SegmentData>,
+        points: List<PointData>,
+        trackerIcon: Bitmap?,
+        ended: Boolean
+    ): NotificationCompat.Builder {
         val progressStyle = NotificationCompat.ProgressStyle()
             .setStyledByProgress(boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
             .setProgress(extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
 
-        parseSegments(extras.getString(PTConstants.PT_PROGRESS_SEGMENTS)).takeIf { it.isNotEmpty() }
-            ?.let { progressStyle.setProgressSegments(it) }
-        parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS)).takeIf { it.isNotEmpty() }
-            ?.let { progressStyle.setProgressPoints(it) }
-
-        icon(context, extras.getString(PTConstants.PT_PROGRESS_TRACKER_ICON))?.let {
-            progressStyle.setProgressTrackerIcon(it)
+        if (segments.isNotEmpty()) {
+            progressStyle.setProgressSegments(segments.map {
+                val s = NotificationCompat.ProgressStyle.Segment(it.length)
+                it.color?.let { c -> s.setColor(c) }
+                s
+            })
         }
-        icon(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))?.let {
-            progressStyle.setProgressStartIcon(it)
+        if (points.isNotEmpty()) {
+            progressStyle.setProgressPoints(points.map {
+                val p = NotificationCompat.ProgressStyle.Point(it.position)
+                it.color?.let { c -> p.setColor(c) }
+                p
+            })
         }
-        icon(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))?.let {
-            progressStyle.setProgressEndIcon(it)
-        }
+        trackerIcon?.let { progressStyle.setProgressTrackerIcon(IconCompat.createWithBitmap(it)) }
+        bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
+            ?.let { progressStyle.setProgressStartIcon(IconCompat.createWithBitmap(it)) }
+        bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
+            ?.let { progressStyle.setProgressEndIcon(IconCompat.createWithBitmap(it)) }
 
         nb.setStyle(progressStyle)
+        applyNativeChip(extras, nb)
 
-        applyChip(context, extras, nb)
-
-        // Request promotion (Android 16 Live Update). Compat no-ops on older OS.
         if (!ended && !"false".equals(extras.getString(PTConstants.PT_PROMOTE), ignoreCase = true)) {
             nb.setRequestPromotedOngoing(true)
         }
-
         return nb
     }
 
-    private fun applyChip(context: Context, extras: Bundle, nb: NotificationCompat.Builder) {
+    private fun applyNativeChip(extras: Bundle, nb: NotificationCompat.Builder) {
         when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
             "text" -> extras.getString(PTConstants.PT_CHIP_TEXT)?.takeIf { it.isNotEmpty() }
                 ?.let { nb.setShortCriticalText(it) }
 
-            "timer", "countdown" -> {
-                val whenMs = extras.getString(PTConstants.PT_WHEN)?.toLongOrNull()
-                if (whenMs != null) {
-                    nb.setWhen(whenMs).setUsesChronometer(true)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        nb.setChronometerCountDown(
-                            boolean(extras, PTConstants.PT_COUNTDOWN, def = false)
-                        )
-                    }
+            "timer", "countdown" -> extras.getString(PTConstants.PT_WHEN)?.toLongOrNull()?.let { whenMs ->
+                nb.setWhen(whenMs).setUsesChronometer(true)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    nb.setChronometerCountDown(boolean(extras, PTConstants.PT_COUNTDOWN, def = false))
                 }
             }
         }
     }
 
-    private fun parseSegments(json: String?): List<NotificationCompat.ProgressStyle.Segment> {
-        val out = ArrayList<NotificationCompat.ProgressStyle.Segment>()
+    // --- Below API 36 : custom-RemoteViews fallback that mimics the ProgressStyle look ---
+
+    private fun buildFallback(
+        context: Context,
+        extras: Bundle,
+        nb: NotificationCompat.Builder,
+        title: String,
+        message: String,
+        segments: List<SegmentData>,
+        points: List<PointData>,
+        trackerIcon: Bitmap?
+    ): NotificationCompat.Builder {
+        val chipText = extras.getString(PTConstants.PT_CHIP_TEXT)
+
+        val big = fallbackView(context, R.layout.pt_progress_fallback, title, message,
+            chipText, trackerIcon, segments, points)
+        val small = fallbackView(context, R.layout.pt_progress_fallback_collapsed, title, message,
+            chipText, trackerIcon, segments, points)
+
+        nb.setCustomContentView(small)
+            .setCustomBigContentView(big)
+            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+            .setOngoing(true) // no OS promotion below 16; keep it sticky like a live update
+        return nb
+    }
+
+    private fun fallbackView(
+        context: Context,
+        layoutId: Int,
+        title: String,
+        message: String,
+        chipText: String?,
+        trackerIcon: Bitmap?,
+        segments: List<SegmentData>,
+        points: List<PointData>
+    ): RemoteViews {
+        val rv = RemoteViews(context.packageName, layoutId)
+        rv.setTextViewText(R.id.pt_title, Html.fromHtml(title))
+        rv.setTextViewText(R.id.pt_message, message)
+
+        if (!chipText.isNullOrEmpty()) {
+            rv.setTextViewText(R.id.pt_chip, chipText)
+            rv.setViewVisibility(R.id.pt_chip, android.view.View.VISIBLE)
+        }
+        if (trackerIcon != null) {
+            rv.setImageViewBitmap(R.id.pt_tracker, trackerIcon)
+            rv.setViewVisibility(R.id.pt_tracker, android.view.View.VISIBLE)
+        }
+
+        // Points as dots, segments as weighted colored connectors between them.
+        rv.removeAllViews(R.id.pt_progress_container)
+        if (points.isNotEmpty()) {
+            points.forEachIndexed { i, p ->
+                val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
+                dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
+                rv.addView(R.id.pt_progress_container, dot)
+                if (i < segments.size) {
+                    rv.addView(R.id.pt_progress_container, segmentView(context, segments[i]))
+                }
+            }
+        } else {
+            // No points: render a continuous weighted segmented bar.
+            segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
+        }
+        return rv
+    }
+
+    private fun segmentView(context: Context, seg: SegmentData): RemoteViews {
+        val v = RemoteViews(context.packageName, R.layout.pt_progress_segment)
+        v.setInt(R.id.pt_seg, "setBackgroundColor", seg.color ?: COLOR_INACTIVE)
+        return v
+    }
+
+    // --- shared parsing ---
+
+    private fun parseSegments(json: String?): List<SegmentData> {
+        val out = ArrayList<SegmentData>()
         if (json.isNullOrEmpty()) return out
         try {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                val seg = NotificationCompat.ProgressStyle.Segment(o.optInt("length", 1))
-                o.optString("color").takeIf { it.isNotEmpty() }?.let { seg.setColor(Color.parseColor(it)) }
-                out.add(seg)
+                out.add(SegmentData(o.optInt("length", 1), colorOrNull(o.optString("color"))))
             }
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to parse segments", t)
@@ -109,16 +218,14 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         return out
     }
 
-    private fun parsePoints(json: String?): List<NotificationCompat.ProgressStyle.Point> {
-        val out = ArrayList<NotificationCompat.ProgressStyle.Point>()
+    private fun parsePoints(json: String?): List<PointData> {
+        val out = ArrayList<PointData>()
         if (json.isNullOrEmpty()) return out
         try {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                val pt = NotificationCompat.ProgressStyle.Point(o.optInt("position", 0))
-                o.optString("color").takeIf { it.isNotEmpty() }?.let { pt.setColor(Color.parseColor(it)) }
-                out.add(pt)
+                out.add(PointData(o.optInt("position", 0), colorOrNull(o.optString("color"))))
             }
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to parse points", t)
@@ -126,11 +233,10 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         return out
     }
 
-    private fun icon(context: Context, url: String?): IconCompat? {
+    private fun bitmap(context: Context, url: String?): Bitmap? {
         if (url.isNullOrEmpty()) return null
         return try {
             renderer.templateMediaManager.getNotificationBitmap(url, false, context)
-                ?.let { IconCompat.createWithBitmap(it) }
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to load icon $url", t)
             null
@@ -140,9 +246,9 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
     private fun boolean(extras: Bundle, key: String, def: Boolean): Boolean =
         extras.getString(key)?.let { "true".equals(it, ignoreCase = true) } ?: def
 
-    private fun parseColor(hex: String?): Int = try {
-        if (hex.isNullOrEmpty()) Color.parseColor(PTConstants.PT_COLOUR_GREY) else Color.parseColor(hex)
-    } catch (t: Throwable) {
-        Color.parseColor(PTConstants.PT_COLOUR_GREY)
-    }
+    private fun colorOrNull(hex: String?): Int? =
+        if (hex.isNullOrEmpty()) null else try { Color.parseColor(hex) } catch (t: Throwable) { null }
+
+    private fun parseColor(hex: String?): Int =
+        colorOrNull(hex) ?: Color.parseColor(PTConstants.PT_COLOUR_GREY)
 }

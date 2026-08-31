@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pt_dot"
+    android:layout_width="14dp"
+    android:layout_height="14dp"
+    android:src="@drawable/pt_progress_dot"
+    android:contentDescription="@null" />
