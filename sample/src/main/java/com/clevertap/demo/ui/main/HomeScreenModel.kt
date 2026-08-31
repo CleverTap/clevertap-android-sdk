@@ -89,7 +89,8 @@ object HomeScreenModel {
                 "Input Box - CTA - DOC false",
                 "Input Box - reminder - DOC true",
                 "Input Box - reminder - DOC false",
-                "Three CTA"
+                "Three CTA",
+                "Progress Live Update (local demo)"
             ),
             "PROMPT LOCAL IAM" to listOf(
                 "Half-Interstitial Local IAM",

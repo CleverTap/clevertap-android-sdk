@@ -109,6 +109,7 @@ class HomeScreenFragment : Fragment() {
 
                 "8-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
                 "3-16" -> startActivity(Intent(activity, CustomInboxComposeActivity::class.java)) // Launch Compose Inbox
+                "10-20" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context) // progress-centric Live Update demo
             }
         }
 
