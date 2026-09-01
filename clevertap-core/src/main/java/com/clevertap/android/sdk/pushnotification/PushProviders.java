@@ -1119,11 +1119,12 @@ public class PushProviders implements CTPushProviderListener {
         String event = extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT,
                 Constants.WZRK_LIVE_ACTIVITY_EVENT_UPDATE);
 
+        // Guarantee the notification lands in a real channel (same fallback as core push). This may
+        // rebuild the notification, so resolve the channel BEFORE attaching the dismiss intent.
+        notification = ensureLiveActivityChannel(context, notification, notificationManager);
+
         // Attach a delete intent for dismissal tracking, without clobbering one the client set.
         applyLiveActivityDismissIntent(context, notification, extras, notificationId);
-
-        // Guarantee the notification's channel exists so Android O+ does not silently drop it.
-        ensureLiveActivityChannel(context, notification, notificationManager);
 
         notificationManager.notify(notificationId, notification);
         config.getLogger().debug(config.getAccountId(),
@@ -1154,36 +1155,46 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     /**
-     * Guards against Android O+ silently dropping a Live Activity notification posted to a channel
-     * that does not exist.
+     * Guards against Android O+ silently dropping a Live Activity (Mode A / factory) notification
+     * posted to a channel that does not exist — reusing the <b>same</b> channel resolution + fallback
+     * as ordinary CleverTap push notifications ({@link CTXtensions#getOrCreateChannel}): the payload
+     * channel ({@code wzrk_cid}) if it exists, else the app's manifest default channel, else the
+     * shared {@link Constants#FCM_FALLBACK_NOTIFICATION_CHANNEL_ID} (created at default importance).
+     * No bespoke "Live Updates" channel is created — Mode B already routes through the same helper.
      *
-     * <p>Primary (payload-driven): the factory should use the payload channel id
-     * {@link Constants#WZRK_CHANNEL_ID} ({@code wzrk_cid}) as the notification's channel.</p>
-     *
-     * <p>Fallback: if the channel the built notification references does not exist, the SDK creates
-     * it at {@link NotificationManager#IMPORTANCE_DEFAULT} and shows the notification in it — so a
-     * client that forgot to create the channel never hits a silent drop. A channel cannot be
-     * re-attached to an already-built notification, so an empty channel id is only logged.</p>
+     * <p>If the built notification references a missing/empty channel, it is retargeted onto the
+     * resolved channel via {@link Notification.Builder#recoverBuilder} (which preserves content,
+     * actions, and intents) so it is never silently dropped — this also fixes the previous
+     * empty-channel-id case which was only logged. Returns the notification to post (rebuilt only
+     * when the channel had to change).</p>
      */
-    private void ensureLiveActivityChannel(Context context, Notification notification,
-                                           NotificationManager notificationManager) {
+    private Notification ensureLiveActivityChannel(Context context, Notification notification,
+                                                   NotificationManager notificationManager) {
         if (VERSION.SDK_INT < VERSION_CODES.O) {
-            return; // channels are not required before Android O
+            return notification; // channels are not required before Android O
         }
-        String channelId = notification.getChannelId();
-        if (channelId == null || channelId.trim().isEmpty()) {
+        String desired = notification.getChannelId();
+        // Same resolution + fallback as core push (payload -> manifest -> shared fcm fallback).
+        String resolved = CTXtensions.getOrCreateChannel(notificationManager, desired, context, false);
+        if (resolved == null) {
             config.getLogger().debug(config.getAccountId(),
-                    "Live Activity notification has no channel id; on Android O+ it will not be shown. "
-                            + "Set the channel id (recommended: the payload's wzrk_cid) in your factory.");
-            return;
+                    "Live Update: could not resolve a notification channel; posting as-is.");
+            return notification;
         }
-        if (notificationManager.getNotificationChannel(channelId) == null) {
-            NotificationChannel channel = new NotificationChannel(channelId,
-                    Constants.LIVE_ACTIVITY_DEFAULT_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
-            notificationManager.createNotificationChannel(channel);
-            config.getLogger().debug(config.getAccountId(),
-                    "Created missing channel '" + channelId + "' at default importance for Live Activity.");
+        if (!resolved.equals(desired)) {
+            // Notification was built against a missing/empty channel; move it to the shared fallback.
+            try {
+                notification = Notification.Builder.recoverBuilder(context, notification)
+                        .setChannelId(resolved)
+                        .build();
+                config.getLogger().debug(config.getAccountId(),
+                        "Live Update: retargeted notification to fallback channel '" + resolved + "'.");
+            } catch (Throwable t) {
+                config.getLogger().debug(config.getAccountId(),
+                        "Live Update: failed to retarget notification to channel '" + resolved + "'.", t);
+            }
         }
+        return notification;
     }
 
     /**
