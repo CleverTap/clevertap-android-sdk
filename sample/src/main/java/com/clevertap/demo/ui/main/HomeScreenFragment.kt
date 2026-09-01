@@ -109,8 +109,12 @@ class HomeScreenFragment : Fragment() {
 
                 "8-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
                 "3-16" -> startActivity(Intent(activity, CustomInboxComposeActivity::class.java)) // Launch Compose Inbox
-                "10-20" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context) // native progress-centric Live Update demo
+                "10-20" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.DEFAULT) // baseline progress tracker
                 "10-21" -> com.clevertap.demo.CustomLiveUpdateDemo.start(context) // custom-factory (Mode A) Live Update demo
+                "10-22" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.ACTIONS) // tap deep link + action buttons
+                "10-23" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.COUNTDOWN) // countdown chip + promotion
+                "10-24" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.NON_PROMOTED) // promotion off
+                "10-25" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.ICONS) // start/end icons + styled-by-progress
             }
         }
 

@@ -262,10 +262,26 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
     private fun bitmap(context: Context, url: String?): Bitmap? {
         if (url.isNullOrEmpty()) return null
         return try {
-            renderer.templateMediaManager.getNotificationBitmap(url, false, context)
+            renderer.templateMediaManager.getNotificationBitmap(url, false, context)?.let { squareCrop(it) }
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to load icon $url", t)
             null
+        }
+    }
+
+    /**
+     * Center-crops to a square so a rectangular source photo isn't stretched — the tracker/start/end
+     * icons are rendered in a square slot both on the native bar and in the fallback ImageView.
+     */
+    private fun squareCrop(src: Bitmap): Bitmap {
+        val size = minOf(src.width, src.height)
+        if (src.width == size && src.height == size) return src
+        val x = (src.width - size) / 2
+        val y = (src.height - size) / 2
+        return try {
+            Bitmap.createBitmap(src, x, y, size, size)
+        } catch (t: Throwable) {
+            src
         }
     }
 
