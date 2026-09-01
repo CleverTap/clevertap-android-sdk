@@ -284,11 +284,10 @@ public interface Constants {
     // todo - confirm final key names with BE contract.
     /** Marker present on a Live Activity (live update) push. Value is "true". */
     String WZRK_LIVE_ACTIVITY = "wzrk_la";
-    /** Backend-assigned stable activity id (routing/transport key — NOT {@code wzrk_}-prefixed, so it
-     *  does not itself flow into analytics evtData). The SDK derives the in-place notification id from
-     *  it. Attribution in the lifecycle event relies on a separate {@code wzrk_}-prefixed key sent by
-     *  BE (e.g. {@code wzrk_activityId}); see TAN §5.1 / §10 item 5. */
-    String LIVE_ACTIVITY_ID = "cleverTapActivityId";
+    /** Backend-assigned stable activity id. The SDK derives the in-place notification id from it, and
+     *  because it is {@code wzrk_}-prefixed it also flows into the lifecycle event {@code evtData}
+     *  automatically (serves both routing and attribution). See TAN §5.1 / §6. */
+    String WZRK_LIVE_ACTIVITY_ID = "wzrk_activityId";
     /** Nested CleverTap push payload (Mode B) the SDK renders itself, e.g. {@code {"pt_id":"pt_progress", ...}}.
      *  Not {@code wzrk_}-prefixed on purpose so the render blob never leaks into analytics evtData. */
     String WZRK_LIVE_ACTIVITY_PT_DATA = "la_pt_data";

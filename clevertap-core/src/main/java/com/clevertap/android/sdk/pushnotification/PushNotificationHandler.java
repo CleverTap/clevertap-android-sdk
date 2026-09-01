@@ -27,12 +27,23 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     /**
      * Merges the nested {@code la_pt_data} JSON payload of a Live Update push into the top-level bundle
      * so downstream routing (Push Template selection via {@code pt_id}) and rendering read it like a
-     * normal push. Nested values (incl. JSON arrays like {@code pt_progress_segments}) are stored as
-     * strings.
+     * normal push.
+     *
+     * <p><b>Values are surfaced as strings — intentionally.</b> An FCM data message is a
+     * {@code Map<String,String>}, so a normal (flat) Push Template campaign already delivers every
+     * value ({@code pt_progress}, {@code pt_promote}, and JSON arrays like {@code pt_progress_segments})
+     * as a string, and the renderers read them back via {@code getString(...)} and parse. Surfacing
+     * {@code la_pt_data} as strings keeps Mode B byte-for-byte identical to that flat path — the same
+     * template renders the same way whether the payload arrived flat or nested. Preserving primitive
+     * types ({@code putInt}/{@code putBoolean}) would make those {@code getString(...)} reads return
+     * {@code null} and break rendering. Nested objects/arrays are serialized back to compact JSON
+     * ({@code JSONArray/JSONObject.toString()}), which is exactly what the renderers re-parse, so lists
+     * are handled correctly. JSON {@code null} values are skipped (never written as the literal
+     * "null").</p>
      *
      * <p><b>Root wins for identity/transport/analytics keys.</b> A key already present at the top
      * level is never overwritten by {@code la_pt_data} — so the wrapper keys that drive dedup
-     * ({@code wzrk_pid}), the in-place notification id ({@code cleverTapActivityId}), attribution
+     * ({@code wzrk_pid}), the in-place notification id ({@code wzrk_activityId}), attribution
      * ({@code wzrk_id}/{@code wzrk_campaignId}/…) and analytics cannot be corrupted even if the
      * backend accidentally duplicates them inside {@code la_pt_data}. {@code la_pt_data} supplies the render
      * keys (which live only inside it: {@code pt_id}, {@code nt}, {@code nm}, {@code pt_progress_*},
@@ -53,6 +64,12 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                     continue;
                 }
                 Object value = json.get(key);
+                if (value == null || value == JSONObject.NULL) {
+                    // Skip JSON null rather than writing the literal string "null".
+                    continue;
+                }
+                // Strings pass through; numbers/booleans and nested objects/arrays serialize to their
+                // string / compact-JSON form (parity with a flat FCM Push Template payload — see javadoc).
                 message.putString(key, value instanceof String ? (String) value : value.toString());
             }
         } catch (Throwable t) {

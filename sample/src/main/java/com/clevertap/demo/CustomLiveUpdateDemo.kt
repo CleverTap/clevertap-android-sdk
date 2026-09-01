@@ -48,14 +48,14 @@ object CustomLiveUpdateDemo {
 
     private fun render(context: Context, ct: CleverTapAPI, step: Step, runId: Long) {
         // wzrk_la + NO la_pt_data + a registered factory => Mode A (factory renders). The SDK derives
-        // the notification id from cleverTapActivityId, so updates land in place.
+        // the notification id from wzrk_activityId, so updates land in place.
         val b = Bundle().apply {
             putString("wzrk_pn", "true")
             putString("wzrk_id", "0_${runId}_${step.step}")
             putString("wzrk_pid", "pid_${runId}_${step.step}")
             putString("wzrk_cid", CHANNEL_ID)
             putString("wzrk_la", "true")
-            putString("cleverTapActivityId", ACTIVITY_ID)
+            putString("wzrk_activityId", ACTIVITY_ID)
             putString("wzrk_la_event", step.event)
             putString("la_store", "Pizza place")
             putString("la_items", "2 Pizza")

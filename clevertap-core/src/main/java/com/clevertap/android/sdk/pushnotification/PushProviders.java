@@ -212,7 +212,7 @@ public class PushProviders implements CTPushProviderListener {
                     // Mode B — SDK renders with the SDK-owned in-place id so successive updates for
                     // the same activity replace the same notification. Lifecycle events are raised in
                     // postNotificationRendered for both modes.
-                    String activityId = extras.getString(Constants.LIVE_ACTIVITY_ID);
+                    String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
                     if (!TextUtils.isEmpty(activityId)) {
                         liveActivityNotificationId = activityId.hashCode() & 0x7fffffff;
                     }
@@ -1065,7 +1065,7 @@ public class PushProviders implements CTPushProviderListener {
      * the iOS Live Activity contract:</p>
      * <ul>
      *   <li>The notification id is derived deterministically from the backend-assigned
-     *       {@link Constants#LIVE_ACTIVITY_ID} so successive pushes for the same activity
+     *       {@link Constants#WZRK_LIVE_ACTIVITY_ID} so successive pushes for the same activity
      *       update the same notification in place (instead of the client picking the id).</li>
      *   <li>A "Live Activity" lifecycle event is raised: {@code Started} on first render,
      *       {@code Updated} on subsequent renders, {@code Ended} when the push carries
@@ -1101,9 +1101,9 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         // SDK owns the id so updates land on the same notification (in-place). It is derived from
-        // the stable cleverTapActivityId; if a malformed push omits it, fall back to the per-send
+        // the stable wzrk_activityId; if a malformed push omits it, fall back to the per-send
         // wzrk_pid so the notification still shows (it just won't update in place).
-        String activityId = extras.getString(Constants.LIVE_ACTIVITY_ID);
+        String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
         int notificationId;
         if (!TextUtils.isEmpty(activityId)) {
             notificationId = activityId.hashCode() & 0x7fffffff;
@@ -1113,7 +1113,7 @@ public class PushProviders implements CTPushProviderListener {
                     ? (fallbackKey.hashCode() & 0x7fffffff)
                     : (int) clock.currentTimeSeconds();
             config.getLogger().debug(config.getAccountId(),
-                    "Live Update push missing cleverTapActivityId; in-place updates will not work.");
+                    "Live Update push missing wzrk_activityId; in-place updates will not work.");
         }
 
         String event = extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT,
@@ -1218,7 +1218,7 @@ public class PushProviders implements CTPushProviderListener {
         // Raise the "Live Activity" lifecycle event for any live-update render (factory Mode A or
         // SDK-rendered Mode B) — exactly once, and independent of the wzrk_rnv (viewed) gate below.
         if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equalsIgnoreCase("true")) {
-            String activityId = extras.getString(Constants.LIVE_ACTIVITY_ID);
+            String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
             boolean isEnd = Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equalsIgnoreCase(
                     extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT));
             String state = isEnd

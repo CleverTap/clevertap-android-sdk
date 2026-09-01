@@ -19,7 +19,7 @@ import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory
  * ### How the demo works
  * The backend/FCM sends a Live Update data push carrying:
  * - `wzrk_la = "true"`            marks the push as a Live Update (SDK routes it here)
- * - `cleverTapActivityId`        stable order id — the SDK derives the notification id from it,
+ * - `wzrk_activityId`        stable order id — the SDK derives the notification id from it,
  *                                so every update lands on the **same** notification (in place)
  * - `wzrk_la_event`              `update` (default) or `end` (terminal / Delivered)
  * - demo order fields (below)    store, items, order id, ETA, status, step index
@@ -71,7 +71,7 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
         val collapsedView = buildCollapsedView(context, extras)
         val expandedView = buildOrderTrackerView(context, extras)
 
-        // The SDK owns the notification id (derived from cleverTapActivityId), so we just build
+        // The SDK owns the notification id (derived from wzrk_activityId), so we just build
         // and return the Notification.
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
