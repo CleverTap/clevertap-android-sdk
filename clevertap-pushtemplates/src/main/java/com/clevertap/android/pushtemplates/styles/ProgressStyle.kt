@@ -13,6 +13,9 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.content.PROGRESS_CONTENT_PENDING_INTENT
+import com.clevertap.android.pushtemplates.content.PendingIntentFactory
+import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 
 /**
@@ -63,11 +66,34 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
             .setAutoCancel(ended)
             .setColor(parseColor(renderer.smallIconColour))
 
-        return if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) {
+        if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) {
             buildNative(context, extras, nb, segments, points, trackerIcon, ended)
         } else {
             buildFallback(context, extras, nb, title, message, segments, points, trackerIcon)
         }
+
+        // Tap action (deep link / launch) + action buttons — shared across both tiers, reusing
+        // the standard Push Template machinery (wzrk_dl content intent, wzrk_acts buttons).
+        applyContentIntent(context, extras, notificationId, nb)
+        applyActionButtons(context, extras, notificationId, nb)
+        return nb
+    }
+
+    /** Sets the notification tap intent from the standard deep-link key (wzrk_dl), like BasicStyle. */
+    private fun applyContentIntent(context: Context, extras: Bundle, notificationId: Int, nb: NotificationCompat.Builder) {
+        val deepLink = extras.getString(Constants.DEEP_LINK_KEY)
+        PendingIntentFactory.getPendingIntent(
+            context, notificationId, extras, true, PROGRESS_CONTENT_PENDING_INTENT, deepLink
+        )?.let { nb.setContentIntent(it) }
+    }
+
+    /** Adds action buttons from the standard wzrk_acts payload, reusing the shared ActionButtonsHandler. */
+    private fun applyActionButtons(context: Context, extras: Bundle, notificationId: Int, nb: NotificationCompat.Builder) {
+        val actions = extras.getString(Constants.WZRK_ACTIONS)
+            ?.let { runCatching { JSONArray(it) }.getOrNull() } ?: return
+        if (actions.length() == 0) return
+        renderer.actionButtons = renderer.getActionButtons(context, extras, notificationId, actions)
+        ActionButtonsHandler(renderer).addActionButtons(context, extras, notificationId, nb)
     }
 
     // --- Android 16+ : native ProgressStyle + promotion ---
