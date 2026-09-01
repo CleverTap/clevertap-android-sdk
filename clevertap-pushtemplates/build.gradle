@@ -24,9 +24,24 @@ android {
     namespace 'com.clevertap.android.pushtemplates'
 }
 
+// The progress-centric Live Update (pt_progress) compiles against androidx.core 1.17.0
+// (NotificationCompat.ProgressStyle + promotion). We resolve 1.17.0 for THIS module's own
+// compile/test classpaths via a resolutionStrategy force — which, unlike a published
+// `constraints {}` block, is NOT written into the module metadata, so consumers are not forced
+// onto 1.17.0. Apps that use the feature add androidx.core:core:1.17.0 themselves (TAN §15);
+// the renderer guards the native path so an older core degrades to the fallback.
+configurations.configureEach {
+    resolutionStrategy {
+        force "androidx.core:core:${libs.versions.core17.get()}"
+    }
+}
+
 dependencies {
     compileOnly project(':clevertap-core')
     compileOnly (libs.android.material)
+    // compileOnly (not implementation) so 1.17.0 is available to compile ProgressStyle but is
+    // never published as a runtime requirement for pushtemplates consumers.
+    compileOnly (libs.androidx.core.progress)
 
     implementation (libs.androidx.core.ktx)
     implementation (libs.androidx.appcompat)

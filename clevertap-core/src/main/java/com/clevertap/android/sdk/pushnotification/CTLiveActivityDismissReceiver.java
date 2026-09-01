@@ -30,7 +30,7 @@ public class CTLiveActivityDismissReceiver extends BroadcastReceiver {
                 return;
             }
             Logger.v("CTLiveActivityDismissReceiver: live activity dismissed for "
-                    + extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
+                    + extras.getString(Constants.LIVE_ACTIVITY_ID));
             CleverTapAPI.handleLiveActivityDismissed(context.getApplicationContext(), extras);
         } catch (Throwable t) {
             Logger.v("CTLiveActivityDismissReceiver: failed to handle dismissal", t);

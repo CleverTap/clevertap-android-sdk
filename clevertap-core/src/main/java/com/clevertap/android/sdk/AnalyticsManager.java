@@ -734,47 +734,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    /**
-     * Records a Live Activity push impression — identical shape/queue to a push "Notification
-     * Viewed" event (mirrors iOS {@code recordLiveActivityImpression}). Unlike
-     * {@link #pushNotificationViewedEvent(Bundle)} this is a client-raised, opt-in API: the
-     * supplied {@code wzrk} map becomes the event data verbatim.
-     */
-    public void recordLiveActivityImpression(Map<String, Object> wzrk) {
-        if (wzrk == null || wzrk.isEmpty()) {
-            config.getLogger().debug(config.getAccountId(),
-                    "recordLiveActivityImpression: wzrk must not be empty.");
-            return;
-        }
-        try {
-            JSONObject notif = new JSONObject(wzrk);
-            JSONObject event = AnalyticsManagerBundler.notificationViewedJson(notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
-        } catch (Throwable t) {
-            config.getLogger().debug("Failed to record Live Activity impression " + t);
-        }
-    }
-
-    /**
-     * Records a Live Activity click — identical shape/queue to a push "Notification Clicked"
-     * event (mirrors iOS {@code recordLiveActivityClicked}). The supplied {@code wzrk} map
-     * becomes the event data verbatim.
-     */
-    public void recordLiveActivityClicked(Map<String, Object> wzrk) {
-        if (wzrk == null || wzrk.isEmpty()) {
-            config.getLogger().debug(config.getAccountId(),
-                    "recordLiveActivityClicked: wzrk must not be empty.");
-            return;
-        }
-        try {
-            JSONObject notif = new JSONObject(wzrk);
-            JSONObject event = AnalyticsManagerBundler.notificationClickedJson(notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
-        } catch (Throwable t) {
-            config.getLogger().debug("Failed to record Live Activity click " + t);
-        }
-    }
-
     @Override
     public void pushProfile(final Map<String, Object> profile) {
         config.getLogger().verbose(config.getAccountId(), "pushProfile: profile=" + profile);

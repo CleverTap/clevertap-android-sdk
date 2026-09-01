@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.app.Notification
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -56,7 +57,7 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
     override fun onCreateNotification(
         context: Context,
         extras: Bundle
-    ): ICleverTapNotificationFactory.NotificationResult? {
+    ): Notification? {
 
         // Option 3: use the channel id supplied in the payload (wzrk_cid); fall back to our own.
         // We still create it here so the sample is robust standalone; the SDK will also create
@@ -70,7 +71,9 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
         val collapsedView = buildCollapsedView(context, extras)
         val expandedView = buildOrderTrackerView(context, extras)
 
-        val notification = NotificationCompat.Builder(context, channelId)
+        // The SDK owns the notification id (derived from cleverTapActivityId), so we just build
+        // and return the Notification.
+        return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(COLOR_ACTIVE)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -81,9 +84,6 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
             .setOnlyAlertOnce(true) // updates should not re-alert on every push
             .setAutoCancel(isEnded(extras))
             .build()
-
-        // notificationId is a fallback only — the SDK derives the real id from cleverTapActivityId.
-        return ICleverTapNotificationFactory.NotificationResult(notification, 0)
     }
 
     private fun buildOrderTrackerView(context: Context, extras: Bundle): RemoteViews {

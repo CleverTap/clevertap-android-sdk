@@ -94,8 +94,6 @@ import java.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import kotlin.jvm.Volatile;
-
 
 /**
  * <h1>CleverTapAPI</h1>
@@ -2772,32 +2770,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationClickedEvent(final Bundle extras) {
         coreState.getAnalyticsManager().pushNotificationClickedEvent(extras);
-    }
-
-    /**
-     * Records a Live Activity push impression. Behaves like a push "Notification Viewed" event —
-     * the supplied {@code wzrk} map becomes the event data. Mirrors iOS
-     * {@code recordLiveActivityImpression}.
-     *
-     * <p>Note: for CleverTap Live Activity pushes rendered by an
-     * {@link com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory}, the SDK
-     * already raises the impression automatically. Use this only to raise impressions the SDK
-     * cannot observe (e.g. a custom surface).</p>
-     *
-     * @param wzrk The {@code wzrk} campaign map from the activity payload.
-     */
-    public void recordLiveActivityImpression(final Map<String, Object> wzrk) {
-        coreState.getAnalyticsManager().recordLiveActivityImpression(wzrk);
-    }
-
-    /**
-     * Records a Live Activity click. Behaves like a push "Notification Clicked" event — the
-     * supplied {@code wzrk} map becomes the event data. Mirrors iOS {@code recordLiveActivityClicked}.
-     *
-     * @param wzrk The {@code wzrk} campaign map from the activity payload.
-     */
-    public void recordLiveActivityClicked(final Map<String, Object> wzrk) {
-        coreState.getAnalyticsManager().recordLiveActivityClicked(wzrk);
     }
 
     /**

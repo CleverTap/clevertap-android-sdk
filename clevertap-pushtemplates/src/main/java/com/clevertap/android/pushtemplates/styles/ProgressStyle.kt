@@ -40,8 +40,11 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
     companion object {
         // Android 16 (Baklava) introduced Notification.ProgressStyle + promotion.
         private const val API_PROGRESS_STYLE = 36
-        private val COLOR_INACTIVE = Color.parseColor("#48484A")
-        private val COLOR_POINT_DEFAULT = Color.parseColor("#FFFFFF")
+        // Fallback-only defaults: used by the pre-16 RemoteViews path when a segment/point in the
+        // payload omits its own color. On native 16+ colors come from the payload and the platform
+        // supplies its own default, so these are never applied there.
+        private val COLOR_INACTIVE = Color.parseColor("#48484A")   // inactive segment/track gray
+        private val COLOR_POINT_DEFAULT = Color.parseColor("#FFFFFF") // uncolored milestone dot
     }
 
     fun builderFromStyle(
@@ -66,9 +69,15 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
             .setAutoCancel(ended)
             .setColor(parseColor(renderer.smallIconColour))
 
-        if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) {
-            buildNative(context, extras, nb, segments, points, trackerIcon, ended)
-        } else {
+        // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
+        // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
+        // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
+        // consumer, we catch the class/method absence and degrade to the RemoteViews fallback.
+        val nativeOk = Build.VERSION.SDK_INT >= API_PROGRESS_STYLE &&
+            runCatching { buildNative(context, extras, nb, segments, points, trackerIcon, ended) }
+                .onFailure { PTLog.verbose("pt_progress: native ProgressStyle unavailable (androidx.core < 1.17.0?), using fallback", it) }
+                .isSuccess
+        if (!nativeOk) {
             buildFallback(context, extras, nb, title, message, segments, points, trackerIcon)
         }
 
