@@ -27,15 +27,17 @@ class ProgressPayloadParserTest {
     }
 
     @Test
-    fun `parsePoints reads position and color, defaults position to 0`() {
+    fun `parsePoints reads position, color and title, defaults position to 0`() {
         val pts = ProgressPayloadParser.parsePoints(
-            """[{"position":60,"color":"#9E9E9E"},{}]"""
+            """[{"position":60,"color":"#9E9E9E","title":"Pickup"},{}]"""
         )
         assertEquals(2, pts.size)
         assertEquals(60, pts[0].position)
         assertEquals(Color.parseColor("#9E9E9E"), pts[0].color)
+        assertEquals("Pickup", pts[0].title)
         assertEquals(0, pts[1].position)  // default when missing
         assertNull(pts[1].color)
+        assertNull(pts[1].title)          // missing title -> null
     }
 
     @Test

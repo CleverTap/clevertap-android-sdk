@@ -323,6 +323,11 @@ internal class ValidatorFactory {
                     // No validation needed for cancel template
                     emptyMap()
                 }
+
+                is ProgressTemplateData -> {
+                    // No required content — the progress template always renders a bar.
+                    emptyMap()
+                }
             }
         }
 
@@ -344,6 +349,7 @@ internal class ValidatorFactory {
                 TemplateType.TIMER -> ContentValidator(keys)
                 TemplateType.INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
                 TemplateType.VERTICAL_IMAGE -> VerticalImageTemplateValidator(ContentValidator(keys))
+                TemplateType.PROGRESS -> ContentValidator(keys) // always valid (no required keys)
                 else -> null
             }
         }

@@ -199,3 +199,15 @@ internal data class VerticalImageTemplateData(
     val buttonData: VerticalImageButtonData? = null,
     val collapsedButtonData: VerticalImageButtonData? = null,
 ) : TemplateData()
+/**
+ * Progress-centric (`pt_progress`) template data. Unlike other templates this one does NOT feed a
+ * `Style` subclass (its native Android-16 tier is a base `NotificationCompat.ProgressStyle` with no
+ * custom RemoteViews, which is what allows promotion) — it is rendered by the specialized
+ * [com.clevertap.android.pushtemplates.styles.ProgressStyle]. It still flows through the normal
+ * [TemplateDataFactory] pipeline: the segments/points (incl. point titles) are parsed here once.
+ */
+internal data class ProgressTemplateData(
+    override val templateType: TemplateType = TemplateType.PROGRESS,
+    val segments: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData>,
+    val points: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData>,
+) : TemplateData()

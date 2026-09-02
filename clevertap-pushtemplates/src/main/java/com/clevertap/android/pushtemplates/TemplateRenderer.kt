@@ -110,12 +110,6 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
         }
         val templateType = TemplateType.fromString(id)
 
-        if (templateType == TemplateType.PROGRESS) {
-            // Native, promotable Live Update (Android 16 ProgressStyle). Bypasses the
-            // TemplateData/Style (custom RemoteViews) pipeline — promotion forbids RemoteViews.
-            return ProgressStyle(this).builderFromStyle(context, extras, notificationId, nb)
-        }
-
         val altTextDefault = context.getString(R.string.pt_big_image_alt)
 
         val templateData = TemplateDataFactory.createTemplateData(
@@ -217,6 +211,14 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
             is VerticalImageTemplateData -> templateData.buildIfValid {
                 VerticalImageStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is ProgressTemplateData -> templateData.buildIfValid {
+                // Progress-centric Live Update. Rendered by the specialized ProgressStyle (native
+                // NotificationCompat.ProgressStyle on 16+, segmented RemoteViews fallback below) — the
+                // one style that does NOT extend the RemoteViews-based Style base, because its native
+                // tier is a base style with no custom RemoteViews (which is what allows promotion).
+                ProgressStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
             }
 
             is CancelTemplateData -> {

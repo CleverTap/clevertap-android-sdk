@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates
 
 import android.os.Bundle
+import com.clevertap.android.pushtemplates.styles.ProgressPayloadParser
 import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BG
 import com.clevertap.android.pushtemplates.PTConstants.PT_BIG_IMG
@@ -164,8 +165,18 @@ internal object TemplateDataFactory {
                 defaultAltText
             )
 
+            TemplateType.PROGRESS -> createProgressTemplateData(extras)
+
             else -> null
         }
+    }
+
+    /** Parses the pt_progress segments/points (incl. point titles) once, in the normal pipeline. */
+    private fun createProgressTemplateData(extras: Bundle): ProgressTemplateData {
+        return ProgressTemplateData(
+            segments = ProgressPayloadParser.parseSegments(extras.getString(PTConstants.PT_PROGRESS_SEGMENTS)),
+            points = ProgressPayloadParser.parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS))
+        )
     }
 
     private fun createBasicTemplateData(

@@ -12,7 +12,7 @@ import org.json.JSONArray
 internal object ProgressPayloadParser {
 
     data class SegmentData(val length: Int, val color: Int?)
-    data class PointData(val position: Int, val color: Int?)
+    data class PointData(val position: Int, val color: Int?, val title: String? = null)
 
     /** Each element: `{ "length": Int (default 1), "color": "#RRGGBB" (optional) }`. */
     fun parseSegments(json: String?): List<SegmentData> {
@@ -38,7 +38,13 @@ internal object ProgressPayloadParser {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                out.add(PointData(o.optInt("position", 0), Utils.getColourOrNull(o.optString("color"))))
+                out.add(
+                    PointData(
+                        o.optInt("position", 0),
+                        Utils.getColourOrNull(o.optString("color")),
+                        o.optString("title").takeIf { it.isNotEmpty() }
+                    )
+                )
             }
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to parse points", t)
