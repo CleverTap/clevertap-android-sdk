@@ -25,15 +25,17 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     }
 
     /**
-     * Merges the nested {@code la_pt_data} JSON payload of a Live Update push into the top-level bundle
-     * so downstream routing (Push Template selection via {@code pt_id}) and rendering read it like a
-     * normal push.
+     * Merges the single nested {@code data} JSON object of a Live Update push into the top-level bundle
+     * so downstream routing (Mode B / Push Template selection via {@code pt_id}) and rendering read it
+     * like a normal push, and so a Mode A factory can read the fields as flat extras. The {@code data}
+     * object holds the render content for both modes; the presence of {@code pt_id} inside it is what
+     * distinguishes Mode B (SDK/PT render) from Mode A (client factory).
      *
      * <p><b>Values are surfaced as strings — intentionally.</b> An FCM data message is a
      * {@code Map<String,String>}, so a normal (flat) Push Template campaign already delivers every
      * value ({@code pt_progress}, {@code pt_promote}, and JSON arrays like {@code pt_progress_segments})
      * as a string, and the renderers read them back via {@code getString(...)} and parse. Surfacing
-     * {@code la_pt_data} as strings keeps Mode B byte-for-byte identical to that flat path — the same
+     * {@code data} as strings keeps Mode B byte-for-byte identical to that flat path — the same
      * template renders the same way whether the payload arrived flat or nested. Preserving primitive
      * types ({@code putInt}/{@code putBoolean}) would make those {@code getString(...)} reads return
      * {@code null} and break rendering. Nested objects/arrays are serialized back to compact JSON
@@ -42,15 +44,15 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
      * "null").</p>
      *
      * <p><b>Root wins for identity/transport/analytics keys.</b> A key already present at the top
-     * level is never overwritten by {@code la_pt_data} — so the wrapper keys that drive dedup
+     * level is never overwritten by {@code data} — so the wrapper keys that drive dedup
      * ({@code wzrk_pid}), the in-place notification id ({@code wzrk_activityId}), attribution
      * ({@code wzrk_id}/{@code wzrk_campaignId}/…) and analytics cannot be corrupted even if the
-     * backend accidentally duplicates them inside {@code la_pt_data}. {@code la_pt_data} supplies the render
+     * backend accidentally duplicates them inside {@code data}. {@code data} supplies the render
      * keys (which live only inside it: {@code pt_id}, {@code nt}, {@code nm}, {@code pt_progress_*},
      * {@code wzrk_cid}, {@code pr}, …).</p>
      */
     private static void surfaceLiveActivityPayload(Bundle message) {
-        String laPn = message.getString(Constants.WZRK_LIVE_ACTIVITY_PT_DATA);
+        String laPn = message.getString(Constants.WZRK_LIVE_ACTIVITY_DATA);
         if (laPn == null || laPn.isEmpty()) {
             return;
         }
@@ -60,7 +62,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             while (keys.hasNext()) {
                 String key = keys.next();
                 if (message.containsKey(key)) {
-                    // Root-level value is authoritative; do not let la_pt_data overwrite it.
+                    // Root-level value is authoritative; do not let data overwrite it.
                     continue;
                 }
                 Object value = json.get(key);
@@ -73,7 +75,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                 message.putString(key, value instanceof String ? (String) value : value.toString());
             }
         } catch (Throwable t) {
-            Logger.d(LOG_TAG, "Failed to surface la_pt_data payload", t);
+            Logger.d(LOG_TAG, "Failed to surface Live Update data payload", t);
         }
     }
 
@@ -117,10 +119,10 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             if (cleverTapAPI != null) {
                 cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
-                // Live Update Mode B: surface the nested la_pt_data payload (incl. pt_id) to the top
-                // level so the normal PT/core routing below renders it. Presence of la_pt_data is an
-                // explicit BE instruction to use the SDK renderer and takes precedence over a client
-                // factory (the Mode A vs Mode B decision is finalised in _createNotification).
+                // Live Update: surface the single nested `data` object (incl. pt_id, if any) to the
+                // top level so the normal PT/core routing below can read it. A `pt_id` inside `data`
+                // selects Mode B (SDK/PT render); its absence means Mode A (client factory). The
+                // Mode A vs Mode B decision is finalised in _createNotification.
                 if ("true".equalsIgnoreCase(message.getString(Constants.WZRK_LIVE_ACTIVITY, ""))) {
                     surfaceLiveActivityPayload(message);
                 }

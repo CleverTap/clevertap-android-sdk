@@ -288,9 +288,11 @@ public interface Constants {
      *  because it is {@code wzrk_}-prefixed it also flows into the lifecycle event {@code evtData}
      *  automatically (serves both routing and attribution). See TAN §5.1 / §6. */
     String WZRK_LIVE_ACTIVITY_ID = "wzrk_activityId";
-    /** Nested CleverTap push payload (Mode B) the SDK renders itself, e.g. {@code {"pt_id":"pt_progress", ...}}.
-     *  Not {@code wzrk_}-prefixed on purpose so the render blob never leaks into analytics evtData. */
-    String WZRK_LIVE_ACTIVITY_PT_DATA = "la_pt_data";
+    /** Single nested payload object carried by a Live Update push. Holds the render content for BOTH
+     *  modes: if it contains a {@code pt_id} the SDK renders it (Mode B, e.g. {@code {"pt_id":"pt_progress", ...}});
+     *  otherwise it is the client factory's custom data (Mode A). Not {@code wzrk_}-prefixed on purpose
+     *  so the render blob never leaks into analytics evtData. */
+    String WZRK_LIVE_ACTIVITY_DATA = "data";
     /** Lifecycle event carried by the push: {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} or {@link #WZRK_LIVE_ACTIVITY_EVENT_END}. */
     String WZRK_LIVE_ACTIVITY_EVENT = "wzrk_la_event";
     String WZRK_LIVE_ACTIVITY_EVENT_UPDATE = "update";

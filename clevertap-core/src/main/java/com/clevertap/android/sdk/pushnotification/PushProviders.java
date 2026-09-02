@@ -6,7 +6,6 @@ import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobScheduler;
@@ -197,14 +196,15 @@ public class PushProviders implements CTPushProviderListener {
                         .equalsIgnoreCase("true");
 
                 if (isLiveActivity) {
-                    // Precedence: la_pt_data (an explicit "SDK render this" payload, e.g. pt_progress)
-                    // wins over a client factory. Only when there is NO la_pt_data does the factory
-                    // (Mode A) render. Otherwise the SDK renders (Mode B) via the current renderer
-                    // (Core, or Push Template when la_pt_data.pt_id was surfaced at the gate).
-                    boolean hasLaPn = !TextUtils.isEmpty(extras.getString(Constants.WZRK_LIVE_ACTIVITY_PT_DATA));
+                    // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
+                    // the gate): pt_id present => Mode B (SDK/Push Template renders, and it takes
+                    // precedence over a client factory); pt_id absent => Mode A (client factory renders
+                    // the `data` custom content). Lifecycle events are raised in postNotificationRendered
+                    // for both modes.
+                    boolean isPtMode = PushNotificationHandler.isForPushTemplates(extras);
                     ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
 
-                    if (!hasLaPn && customFactory != null) {
+                    if (!isPtMode && customFactory != null) {
                         // Mode A — client factory renders the Notification.
                         triggerLiveActivityNotification(context, extras, customFactory);
                         return;

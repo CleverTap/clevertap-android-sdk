@@ -15,8 +15,8 @@ import com.clevertap.android.sdk.CleverTapAPI
  *
  * Fires an order-tracking Live Update that advances in place (Placed → Preparing → En Route →
  * Delivered), rendered by the app's [CustomNotificationFactory] (custom RemoteViews). Because the
- * push carries `wzrk_la` (and NO `la_pt_data`), the SDK routes it to the registered factory —
- * the same path a real BE campaign that sends `la_custom_data` would take.
+ * push carries `wzrk_la` and its `data` object has NO `pt_id`, the SDK routes it to the registered
+ * factory — the same path a real BE campaign (which nests the custom fields in `data`) would take.
  *
  * Pair this with [ProgressLiveUpdateDemo] (native ProgressStyle) to see both flows side by side.
  */
@@ -47,8 +47,8 @@ object CustomLiveUpdateDemo {
     }
 
     private fun render(context: Context, ct: CleverTapAPI, step: Step, runId: Long) {
-        // wzrk_la + NO la_pt_data + a registered factory => Mode A (factory renders). The SDK derives
-        // the notification id from wzrk_activityId, so updates land in place.
+        // wzrk_la + no pt_id + a registered factory => Mode A (factory renders). The factory reads the
+        // custom fields directly; the SDK derives the notification id from wzrk_activityId (in place).
         val b = Bundle().apply {
             putString("wzrk_pn", "true")
             putString("wzrk_id", "0_${runId}_${step.step}")

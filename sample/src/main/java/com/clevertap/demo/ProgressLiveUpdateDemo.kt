@@ -85,7 +85,7 @@ object ProgressLiveUpdateDemo {
         // Rendered as a pt_progress Push Template. A fixed notificationId makes successive
         // stages replace the same notification (in place). We do NOT set wzrk_la here so this
         // local demo always exercises the pt_progress renderer even if a notification factory
-        // is registered (a real BE campaign uses wzrk_la + la_pt_data to drive the same template).
+        // is registered (a real BE campaign uses wzrk_la + a `data` object containing pt_id).
         val b = Bundle().apply {
             putString("wzrk_pn", "true")
             putString("wzrk_id", "0_${runId}_${step.index}")
