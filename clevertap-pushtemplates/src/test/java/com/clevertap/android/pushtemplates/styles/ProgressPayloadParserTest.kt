@@ -48,10 +48,9 @@ class ProgressPayloadParserTest {
     }
 
     @Test
-    fun `colorOrNull parses valid hex and returns null for blank or invalid`() {
-        assertEquals(Color.parseColor("#FF9500"), ProgressPayloadParser.colorOrNull("#FF9500"))
-        assertNull(ProgressPayloadParser.colorOrNull(null))
-        assertNull(ProgressPayloadParser.colorOrNull(""))
-        assertNull(ProgressPayloadParser.colorOrNull("nope"))
+    fun `invalid segment color falls back to null via safe parse`() {
+        val segs = ProgressPayloadParser.parseSegments("""[{"length":1,"color":"not-a-color"}]""")
+        assertEquals(1, segs.size)
+        assertNull(segs[0].color)
     }
 }

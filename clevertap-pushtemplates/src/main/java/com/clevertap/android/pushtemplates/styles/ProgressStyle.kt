@@ -13,6 +13,7 @@ import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.PROGRESS_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.sdk.Constants
@@ -302,5 +303,5 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         extras.getString(key)?.let { "true".equals(it, ignoreCase = true) } ?: def
 
     private fun parseColor(hex: String?): Int =
-        ProgressPayloadParser.colorOrNull(hex) ?: Color.parseColor(PTConstants.PT_COLOUR_GREY)
+        Utils.getColour(hex, PTConstants.PT_COLOUR_GREY)
 }

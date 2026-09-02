@@ -718,7 +718,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      *               {@link Constants#LIVE_ACTIVITY_STATE_UPDATED},
      *               {@link Constants#LIVE_ACTIVITY_STATE_ENDED},
      *               {@link Constants#LIVE_ACTIVITY_STATE_DISMISSED}.
+     *
+     * <p>Must be called on a worker thread — it queues the event synchronously via
+     * {@code baseEventQueueManager.queueEvent(...)} ({@link WorkerThread}), mirroring
+     * {@link #pushNotificationViewedEvent(Bundle)}. Render-path callers are already on a worker;
+     * the dismiss path (main-thread receiver) dispatches via {@code postAsyncSafelyTask}.</p>
      */
+    @WorkerThread
     public void raiseLiveActivityLifecycleEvent(Bundle extras, String state) {
         if (extras == null || extras.isEmpty()) {
             return;

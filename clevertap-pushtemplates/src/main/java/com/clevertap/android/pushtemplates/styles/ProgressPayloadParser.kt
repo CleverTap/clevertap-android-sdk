@@ -1,7 +1,7 @@
 package com.clevertap.android.pushtemplates.styles
 
-import android.graphics.Color
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.Utils
 import org.json.JSONArray
 
 /**
@@ -22,7 +22,7 @@ internal object ProgressPayloadParser {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                out.add(SegmentData(o.optInt("length", 1), colorOrNull(o.optString("color"))))
+                out.add(SegmentData(o.optInt("length", 1), Utils.getColourOrNull(o.optString("color"))))
             }
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to parse segments", t)
@@ -38,15 +38,11 @@ internal object ProgressPayloadParser {
             val arr = JSONArray(json)
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                out.add(PointData(o.optInt("position", 0), colorOrNull(o.optString("color"))))
+                out.add(PointData(o.optInt("position", 0), Utils.getColourOrNull(o.optString("color"))))
             }
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to parse points", t)
         }
         return out
     }
-
-    /** Parses a hex color, or null if blank/invalid (so callers can apply their own default). */
-    fun colorOrNull(hex: String?): Int? =
-        if (hex.isNullOrEmpty()) null else try { Color.parseColor(hex) } catch (t: Throwable) { null }
 }
