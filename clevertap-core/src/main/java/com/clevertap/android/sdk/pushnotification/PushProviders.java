@@ -204,17 +204,16 @@ public class PushProviders implements CTPushProviderListener {
                     boolean isPtMode = PushNotificationHandler.isForPushTemplates(extras);
                     ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
 
-                    if (!isPtMode && customFactory != null) {
+                    if (LiveActivityRouter.mode(isPtMode, customFactory != null) == LiveActivityMode.FACTORY) {
                         // Mode A — client factory renders the Notification.
                         triggerLiveActivityNotification(context, extras, customFactory);
                         return;
                     }
-                    // Mode B — SDK renders with the SDK-owned in-place id so successive updates for
-                    // the same activity replace the same notification. Lifecycle events are raised in
-                    // postNotificationRendered for both modes.
-                    String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
-                    if (!TextUtils.isEmpty(activityId)) {
-                        liveActivityNotificationId = activityId.hashCode() & 0x7fffffff;
+                    // Mode B — SDK renders with the SDK-owned in-place id (derived from wzrk_activityId)
+                    // so successive updates for the same activity replace the same notification.
+                    Integer inPlaceId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
+                    if (inPlaceId != null) {
+                        liveActivityNotificationId = inPlaceId;
                     }
                     // fall through to normal rendering
                 }
@@ -1103,15 +1102,13 @@ public class PushProviders implements CTPushProviderListener {
         // SDK owns the id so updates land on the same notification (in-place). It is derived from
         // the stable wzrk_activityId; if a malformed push omits it, fall back to the per-send
         // wzrk_pid so the notification still shows (it just won't update in place).
-        String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
+        Integer activityNotifId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
         int notificationId;
-        if (!TextUtils.isEmpty(activityId)) {
-            notificationId = activityId.hashCode() & 0x7fffffff;
+        if (activityNotifId != null) {
+            notificationId = activityNotifId;
         } else {
-            String fallbackKey = extras.getString(Constants.WZRK_PUSH_ID);
-            notificationId = !TextUtils.isEmpty(fallbackKey)
-                    ? (fallbackKey.hashCode() & 0x7fffffff)
-                    : (int) clock.currentTimeSeconds();
+            Integer pidNotifId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_PUSH_ID));
+            notificationId = pidNotifId != null ? pidNotifId : (int) clock.currentTimeSeconds();
             config.getLogger().debug(config.getAccountId(),
                     "Live Update push missing wzrk_activityId; in-place updates will not work.");
         }
@@ -1232,11 +1229,9 @@ public class PushProviders implements CTPushProviderListener {
             String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
             boolean isEnd = Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equalsIgnoreCase(
                     extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT));
-            String state = isEnd
-                    ? Constants.LIVE_ACTIVITY_STATE_ENDED
-                    : (isFirstLiveActivityRender(context, activityId)
-                            ? Constants.LIVE_ACTIVITY_STATE_STARTED
-                            : Constants.LIVE_ACTIVITY_STATE_UPDATED);
+            // Short-circuit: on `end` we do not touch the first-render dedup store (state is terminal).
+            boolean isFirstRender = !isEnd && isFirstLiveActivityRender(context, activityId);
+            String state = LiveActivityLifecycle.state(isEnd, isFirstRender);
             analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
         }
 

@@ -10,8 +10,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
-import java.util.Iterator;
-import org.json.JSONObject;
+import java.util.Map;
 
 public class PushNotificationHandler implements ActionButtonClickHandler {
 
@@ -25,57 +24,22 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     }
 
     /**
-     * Merges the single nested {@code data} JSON object of a Live Update push into the top-level bundle
-     * so downstream routing (Mode B / Push Template selection via {@code pt_id}) and rendering read it
-     * like a normal push, and so a Mode A factory can read the fields as flat extras. The {@code data}
-     * object holds the render content for both modes; the presence of {@code pt_id} inside it is what
-     * distinguishes Mode B (SDK/PT render) from Mode A (client factory).
+     * Merges the single nested {@code data} JSON object of a Live Update push into the top-level
+     * bundle so downstream routing (Mode B / Push Template selection via {@code pt_id}) and rendering
+     * read it like a normal push, and so a Mode A factory can read the fields as flat extras. The
+     * presence of {@code pt_id} inside {@code data} distinguishes Mode B (SDK/PT render) from Mode A
+     * (client factory).
      *
-     * <p><b>Values are surfaced as strings — intentionally.</b> An FCM data message is a
-     * {@code Map<String,String>}, so a normal (flat) Push Template campaign already delivers every
-     * value ({@code pt_progress}, {@code pt_promote}, and JSON arrays like {@code pt_progress_segments})
-     * as a string, and the renderers read them back via {@code getString(...)} and parse. Surfacing
-     * {@code data} as strings keeps Mode B byte-for-byte identical to that flat path — the same
-     * template renders the same way whether the payload arrived flat or nested. Preserving primitive
-     * types ({@code putInt}/{@code putBoolean}) would make those {@code getString(...)} reads return
-     * {@code null} and break rendering. Nested objects/arrays are serialized back to compact JSON
-     * ({@code JSONArray/JSONObject.toString()}), which is exactly what the renderers re-parse, so lists
-     * are handled correctly. JSON {@code null} values are skipped (never written as the literal
-     * "null").</p>
-     *
-     * <p><b>Root wins for identity/transport/analytics keys.</b> A key already present at the top
-     * level is never overwritten by {@code data} — so the wrapper keys that drive dedup
-     * ({@code wzrk_pid}), the in-place notification id ({@code wzrk_activityId}), attribution
-     * ({@code wzrk_id}/{@code wzrk_campaignId}/…) and analytics cannot be corrupted even if the
-     * backend accidentally duplicates them inside {@code data}. {@code data} supplies the render
-     * keys (which live only inside it: {@code pt_id}, {@code nt}, {@code nm}, {@code pt_progress_*},
-     * {@code wzrk_cid}, {@code pr}, …).</p>
+     * <p>The flatten semantics (string coercion, compact-JSON for nested arrays/objects, JSON-null
+     * skip, and root-wins so wrapper/identity/analytics keys are never overwritten) live in
+     * {@link LiveActivityPayloadSurfacer#flatten} — a pure, unit-tested seam. This method just applies
+     * the result to the bundle.</p>
      */
     private static void surfaceLiveActivityPayload(Bundle message) {
-        String laPn = message.getString(Constants.WZRK_LIVE_ACTIVITY_DATA);
-        if (laPn == null || laPn.isEmpty()) {
-            return;
-        }
-        try {
-            JSONObject json = new JSONObject(laPn);
-            Iterator<String> keys = json.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                if (message.containsKey(key)) {
-                    // Root-level value is authoritative; do not let data overwrite it.
-                    continue;
-                }
-                Object value = json.get(key);
-                if (value == null || value == JSONObject.NULL) {
-                    // Skip JSON null rather than writing the literal string "null".
-                    continue;
-                }
-                // Strings pass through; numbers/booleans and nested objects/arrays serialize to their
-                // string / compact-JSON form (parity with a flat FCM Push Template payload — see javadoc).
-                message.putString(key, value instanceof String ? (String) value : value.toString());
-            }
-        } catch (Throwable t) {
-            Logger.d(LOG_TAG, "Failed to surface Live Update data payload", t);
+        String data = message.getString(Constants.WZRK_LIVE_ACTIVITY_DATA);
+        Map<String, String> toSurface = LiveActivityPayloadSurfacer.flatten(data, message.keySet());
+        for (Map.Entry<String, String> entry : toSurface.entrySet()) {
+            message.putString(entry.getKey(), entry.getValue());
         }
     }
 

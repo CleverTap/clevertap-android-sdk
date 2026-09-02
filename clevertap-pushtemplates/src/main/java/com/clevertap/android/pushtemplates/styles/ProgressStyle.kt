@@ -18,6 +18,10 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 
+// Parsed segment/point models live in the (unit-tested) ProgressPayloadParser.
+private typealias SegmentData = ProgressPayloadParser.SegmentData
+private typealias PointData = ProgressPayloadParser.PointData
+
 /**
  * Progress-centric template (`pt_progress`).
  *
@@ -34,9 +38,6 @@ import org.json.JSONArray
  * Both tiers read the same `pt_progress_*` contract (TAN §14).
  */
 internal class ProgressStyle(private val renderer: TemplateRenderer) {
-
-    private data class SegmentData(val length: Int, val color: Int?)
-    private data class PointData(val position: Int, val color: Int?)
 
     companion object {
         // Android 16 (Baklava) introduced Notification.ProgressStyle + promotion.
@@ -58,8 +59,8 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         val ended = "end".equals(extras.getString(PTConstants.PT_LA_EVENT), ignoreCase = true)
         val title = renderer.getTitle(extras, context) ?: ""
         val message = renderer.getMessage(extras) ?: ""
-        val segments = parseSegments(extras.getString(PTConstants.PT_PROGRESS_SEGMENTS))
-        val points = parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS))
+        val segments = ProgressPayloadParser.parseSegments(extras.getString(PTConstants.PT_PROGRESS_SEGMENTS))
+        val points = ProgressPayloadParser.parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS))
         val trackerIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_TRACKER_ICON))
 
         nb.setSmallIcon(renderer.smallIcon)
@@ -269,37 +270,7 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         return v
     }
 
-    // --- shared parsing ---
-
-    private fun parseSegments(json: String?): List<SegmentData> {
-        val out = ArrayList<SegmentData>()
-        if (json.isNullOrEmpty()) return out
-        try {
-            val arr = JSONArray(json)
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                out.add(SegmentData(o.optInt("length", 1), colorOrNull(o.optString("color"))))
-            }
-        } catch (t: Throwable) {
-            PTLog.verbose("pt_progress: failed to parse segments", t)
-        }
-        return out
-    }
-
-    private fun parsePoints(json: String?): List<PointData> {
-        val out = ArrayList<PointData>()
-        if (json.isNullOrEmpty()) return out
-        try {
-            val arr = JSONArray(json)
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                out.add(PointData(o.optInt("position", 0), colorOrNull(o.optString("color"))))
-            }
-        } catch (t: Throwable) {
-            PTLog.verbose("pt_progress: failed to parse points", t)
-        }
-        return out
-    }
+    // --- media / helpers ---
 
     private fun bitmap(context: Context, url: String?): Bitmap? {
         if (url.isNullOrEmpty()) return null
@@ -330,9 +301,6 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
     private fun boolean(extras: Bundle, key: String, def: Boolean): Boolean =
         extras.getString(key)?.let { "true".equals(it, ignoreCase = true) } ?: def
 
-    private fun colorOrNull(hex: String?): Int? =
-        if (hex.isNullOrEmpty()) null else try { Color.parseColor(hex) } catch (t: Throwable) { null }
-
     private fun parseColor(hex: String?): Int =
-        colorOrNull(hex) ?: Color.parseColor(PTConstants.PT_COLOUR_GREY)
+        ProgressPayloadParser.colorOrNull(hex) ?: Color.parseColor(PTConstants.PT_COLOUR_GREY)
 }
