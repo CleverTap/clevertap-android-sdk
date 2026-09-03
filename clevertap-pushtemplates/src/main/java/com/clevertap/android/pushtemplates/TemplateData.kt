@@ -208,6 +208,19 @@ internal data class VerticalImageTemplateData(
  */
 internal data class ProgressTemplateData(
     override val templateType: TemplateType = TemplateType.PROGRESS,
+    val title: String?,
+    val progress: Int?,
+    val progressMax: Int?,
+    val indeterminate: Boolean,
     val segments: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData>,
     val points: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData>,
-) : TemplateData()
+) : TemplateData() {
+
+    /**
+     * The progress indicator is **segmented** (dots + connectors / native segments) when the payload
+     * carries segments or points; otherwise it is a **plain bar** — indeterminate when
+     * [indeterminate] is set, else determinate from [progress] / [progressMax]. The two are mutually
+     * exclusive (a client uses either milestones or a simple bar, never both).
+     */
+    val isSegmented: Boolean get() = segments.isNotEmpty() || points.isNotEmpty()
+}

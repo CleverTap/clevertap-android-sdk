@@ -182,6 +182,11 @@ internal class ValidatorFactory {
          * Only instantiates the validation checkers required for the specific template type.
          */
         fun getValidator(templateData: TemplateData): Validator? {
+            // Progress validation is field-based (title + a progress indicator), so it needs the data
+            // itself rather than the Checker-map framework used by the RemoteViews templates.
+            if (templateData is ProgressTemplateData) {
+                return ProgressTemplateValidator(templateData)
+            }
             val keys = buildCheckersForTemplateData(templateData)
             return createValidatorFromKeys(templateData.templateType, keys)
         }
@@ -349,7 +354,7 @@ internal class ValidatorFactory {
                 TemplateType.TIMER -> ContentValidator(keys)
                 TemplateType.INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
                 TemplateType.VERTICAL_IMAGE -> VerticalImageTemplateValidator(ContentValidator(keys))
-                TemplateType.PROGRESS -> ProgressTemplateValidator(keys) // no required content keys
+                // PROGRESS is handled in getValidator() (field-based ProgressTemplateValidator).
                 else -> null
             }
         }

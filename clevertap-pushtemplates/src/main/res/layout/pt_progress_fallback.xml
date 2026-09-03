@@ -63,8 +63,10 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- start icon + dots/connectors row + end icon -->
+    <!-- SEGMENTED indicator: start icon + dots/connectors row + end icon (shown when segments/points
+         are present; hidden in favour of pt_bar otherwise) -->
     <LinearLayout
+        android:id="@+id/pt_segmented_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
@@ -98,13 +100,15 @@
             android:contentDescription="@null" />
     </LinearLayout>
 
-    <!-- determinate progress fill (pt_progress / pt_progress_max) -->
+    <!-- PLAIN bar (mutually exclusive with pt_segmented_row): determinate (pt_progress/max) or
+         indeterminate (pt_progress_indeterminate). Hidden when the segmented indicator is used. -->
     <ProgressBar
         android:id="@+id/pt_bar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:max="100"
-        android:progress="0" />
+        android:progress="0"
+        android:visibility="gone" />
 </LinearLayout>

@@ -218,17 +218,20 @@ internal class ProgressStyle(
         val chipText = extras.getString(PTConstants.PT_CHIP_TEXT)
         val startIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
         val endIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
-        val progress = extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0
-        // Determinate fill: pt_progress_max, else the summed segment lengths, else 100.
-        val progressMax = extras.getString(PTConstants.PT_PROGRESS_MAX)?.toIntOrNull()
-            ?: segments.sumOf { it.length }.takeIf { it > 0 } ?: 100
 
-        // Expanded view gets the start/end icons, the progress-fill bar and point titles; the
-        // height-limited collapsed view keeps just the tracker + dots/connectors row.
-        val big = fallbackView(context, R.layout.pt_progress_fallback, expanded = true, title, message,
-            chipText, trackerIcon, startIcon, endIcon, segments, points, progress, progressMax)
-        val small = fallbackView(context, R.layout.pt_progress_fallback_collapsed, expanded = false, title, message,
-            chipText, trackerIcon, null, null, segments, points, progress, progressMax)
+        // Either/or: milestones (dots + connectors) when segments/points are present, else a plain
+        // bar — indeterminate when flagged, else determinate. Never both. (Segmented ignores the
+        // indeterminate flag; a milestone bar is inherently determinate.)
+        val segmented = data.isSegmented
+        val indeterminate = data.indeterminate && !segmented
+        val progress = data.progress ?: 0
+        // Determinate max: pt_progress_max, else the summed segment lengths, else 100.
+        val progressMax = data.progressMax ?: segments.sumOf { it.length }.takeIf { it > 0 } ?: 100
+
+        val big = fallbackView(context, R.layout.pt_progress_fallback, expanded = true, segmented, indeterminate,
+            title, message, chipText, trackerIcon, startIcon, endIcon, segments, points, progress, progressMax)
+        val small = fallbackView(context, R.layout.pt_progress_fallback_collapsed, expanded = false, segmented,
+            indeterminate, title, message, chipText, trackerIcon, null, null, segments, points, progress, progressMax)
 
         nb.setCustomContentView(small)
             .setCustomBigContentView(big)
@@ -241,6 +244,8 @@ internal class ProgressStyle(
         context: Context,
         layoutId: Int,
         expanded: Boolean,
+        segmented: Boolean,
+        indeterminate: Boolean,
         title: String,
         message: String,
         chipText: String?,
@@ -265,37 +270,46 @@ internal class ProgressStyle(
             rv.setViewVisibility(R.id.pt_tracker, android.view.View.VISIBLE)
         }
 
-        // start/end icons + determinate progress-fill bar exist only in the expanded layout.
-        if (expanded) {
-            startIcon?.let {
-                rv.setImageViewBitmap(R.id.pt_start_icon, it)
-                rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
-            }
-            endIcon?.let {
-                rv.setImageViewBitmap(R.id.pt_end_icon, it)
-                rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
-            }
-            rv.setProgressBar(R.id.pt_bar, progressMax, progress.coerceIn(0, progressMax), false)
-        }
-
-        // Points as dots (with optional titles in the expanded view), segments as weighted connectors.
-        rv.removeAllViews(R.id.pt_progress_container)
-        if (points.isNotEmpty()) {
-            points.forEachIndexed { i, p ->
-                val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
-                dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
-                if (expanded && !p.title.isNullOrEmpty()) {
-                    dot.setTextViewText(R.id.pt_point_title, p.title)
-                    dot.setViewVisibility(R.id.pt_point_title, android.view.View.VISIBLE)
+        if (segmented) {
+            // Milestones: show the dots/connectors row, hide the plain bar.
+            rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
+            if (expanded) {
+                startIcon?.let {
+                    rv.setImageViewBitmap(R.id.pt_start_icon, it)
+                    rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
                 }
-                rv.addView(R.id.pt_progress_container, dot)
-                if (i < segments.size) {
-                    rv.addView(R.id.pt_progress_container, segmentView(context, segments[i]))
+                endIcon?.let {
+                    rv.setImageViewBitmap(R.id.pt_end_icon, it)
+                    rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
                 }
+            }
+            rv.removeAllViews(R.id.pt_progress_container)
+            if (points.isNotEmpty()) {
+                points.forEachIndexed { i, p ->
+                    val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
+                    dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
+                    if (expanded && !p.title.isNullOrEmpty()) {
+                        dot.setTextViewText(R.id.pt_point_title, p.title)
+                        dot.setViewVisibility(R.id.pt_point_title, android.view.View.VISIBLE)
+                    }
+                    rv.addView(R.id.pt_progress_container, dot)
+                    if (i < segments.size) {
+                        rv.addView(R.id.pt_progress_container, segmentView(context, segments[i]))
+                    }
+                }
+            } else {
+                segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
             }
         } else {
-            // No points: render a continuous weighted segmented bar.
-            segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
+            // Plain bar: hide the segmented row/container, show the bar (indeterminate or determinate).
+            rv.setViewVisibility(R.id.pt_segmented_row, android.view.View.GONE) // expanded only; no-op on collapsed
+            rv.setViewVisibility(R.id.pt_progress_container, android.view.View.GONE)
+            rv.setViewVisibility(R.id.pt_bar, android.view.View.VISIBLE)
+            if (indeterminate) {
+                rv.setProgressBar(R.id.pt_bar, 0, 0, true)
+            } else {
+                rv.setProgressBar(R.id.pt_bar, progressMax, progress.coerceIn(0, progressMax), false)
+            }
         }
         return rv
     }

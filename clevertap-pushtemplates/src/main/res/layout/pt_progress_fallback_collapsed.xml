@@ -47,6 +47,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <!-- SEGMENTED indicator (dots/connectors) — mutually exclusive with pt_bar. -->
     <LinearLayout
         android:id="@+id/pt_progress_container"
         android:layout_width="match_parent"
@@ -54,4 +55,15 @@
         android:layout_marginTop="8dp"
         android:gravity="top"
         android:orientation="horizontal" />
+
+    <!-- PLAIN bar (determinate or indeterminate) — shown when there are no segments/points. -->
+    <ProgressBar
+        android:id="@+id/pt_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:max="100"
+        android:progress="0"
+        android:visibility="gone" />
 </LinearLayout>
