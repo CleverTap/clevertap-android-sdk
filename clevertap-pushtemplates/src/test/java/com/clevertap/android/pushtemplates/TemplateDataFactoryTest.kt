@@ -2432,4 +2432,57 @@ class TemplateDataFactoryTest {
         assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, collapsedButtonData.borderRadius)
         assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, collapsedButtonData.borderWidth)
     }
+
+    @Test
+    fun `createTemplateData should create ProgressTemplateData for PROGRESS template type`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns null
+        every { mockBundle.getString(com.clevertap.android.sdk.Constants.NOTIF_TITLE) } returns "Order #1"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "40"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS_MAX) } returns "100"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS_INDETERMINATE) } returns "false"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS_SEGMENTS) } returns """[{"length":1},{"length":2}]"""
+        every { mockBundle.getString(PTConstants.PT_PROGRESS_POINTS) } returns """[{"position":0,"title":"Start"}]"""
+        every { Utils.getColourOrNull(any()) } returns null
+
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.PROGRESS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        assertNotNull(result)
+        assertTrue(result is ProgressTemplateData)
+        val d = result as ProgressTemplateData
+        assertEquals(TemplateType.PROGRESS, d.templateType)
+        assertEquals("Order #1", d.title) // nt fallback when pt_title is absent
+        assertEquals(40, d.progress)
+        assertEquals(100, d.progressMax)
+        assertFalse(d.indeterminate)
+        assertEquals(2, d.segments.size)
+        assertEquals(1, d.segments[0].length)
+        assertEquals(2, d.segments[1].length)
+        assertEquals(1, d.points.size)
+        assertEquals("Start", d.points[0].title)
+        assertTrue(d.isSegmented)
+    }
+
+    @Test
+    fun `createProgressTemplateData with no segments or points is not segmented`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Bar only"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS_INDETERMINATE) } returns "true"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS_SEGMENTS) } returns null
+        every { mockBundle.getString(PTConstants.PT_PROGRESS_POINTS) } returns null
+
+        val d = TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData
+
+        assertTrue(d.segments.isEmpty())
+        assertTrue(d.points.isEmpty())
+        assertTrue(d.indeterminate)
+        assertFalse(d.isSegmented)
+    }
 }

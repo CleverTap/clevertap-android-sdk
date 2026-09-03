@@ -63,6 +63,9 @@ class TemplateRendererTest {
     private lateinit var mockBasicTemplateData: BasicTemplateData
 
     @MockK(relaxed = true)
+    private lateinit var mockProgressTemplateData: ProgressTemplateData
+
+    @MockK(relaxed = true)
     private lateinit var mockAutoCarouselTemplateData: AutoCarouselTemplateData
 
     @MockK(relaxed = true)
@@ -321,6 +324,57 @@ class TemplateRendererTest {
             )
         }
         assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    fun test_renderNotification_progress_template_valid() {
+        val progressBundle = Bundle(testBundle)
+        progressBundle.putString(PTConstants.PT_ID, "pt_progress")
+
+        val templateRendererLocal = TemplateRenderer(context, progressBundle, mockConfig)
+
+        // Arrange: PROGRESS routes through the normal createTemplateData -> validate -> dispatch pipeline.
+        every {
+            TemplateDataFactory.createTemplateData(TemplateType.PROGRESS, progressBundle, false, any(), any())
+        } returns mockProgressTemplateData
+        every { ValidatorFactory.getValidator(mockProgressTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        mockkConstructor(ProgressStyle::class)
+        every {
+            anyConstructed<ProgressStyle>().builderFromStyle(any(), any(), any(), any())
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            progressBundle, context, mockNotificationBuilder, mockConfig, 123
+        )
+
+        // Assert: ProgressStyle (not a Style subclass) rendered it via the when-dispatch, not the old early-return.
+        verify {
+            anyConstructed<ProgressStyle>().builderFromStyle(any(), progressBundle, 123, mockNotificationBuilder)
+        }
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+    @Test
+    fun test_renderNotification_progress_template_invalid_is_suppressed() {
+        val progressBundle = Bundle(testBundle)
+        progressBundle.putString(PTConstants.PT_ID, "pt_progress")
+
+        val templateRendererLocal = TemplateRenderer(context, progressBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(TemplateType.PROGRESS, progressBundle, false, any(), any())
+        } returns mockProgressTemplateData
+        every { ValidatorFactory.getValidator(mockProgressTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false // e.g. no title / no indicator
+
+        val result = templateRendererLocal.renderNotification(
+            progressBundle, context, mockNotificationBuilder, mockConfig, 123
+        )
+
+        assertNull(result)
     }
 
     @Test
