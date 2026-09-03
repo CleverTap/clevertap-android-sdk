@@ -44,7 +44,13 @@ object ProgressLiveUpdateDemo {
         NON_PROMOTED,
 
         /** Adds start + end icons and styled-by-progress coloring. */
-        ICONS
+        ICONS,
+
+        /** No segments/points -> a plain DETERMINATE bar filled from pt_progress (0..100). */
+        PLAIN_BAR,
+
+        /** No segments/points + pt_progress_indeterminate=true -> a spinner-style INDETERMINATE bar. */
+        INDETERMINATE
     }
 
     private const val CHANNEL_ID = "live_updates_channel"
@@ -98,8 +104,12 @@ object ProgressLiveUpdateDemo {
             putString("nm", step.status)
             putString("pt_progress", progressPercent(step.index).toString())
             putString("pt_progress_tracker_icon", TRACKER_ICON)
-            putString("pt_progress_segments", segmentsJson(step.index))
-            putString("pt_progress_points", pointsJson(step.index))
+            // Milestone variants carry segments/points (segmented indicator); the bar variants omit
+            // them so the SDK renders a plain determinate / indeterminate bar instead (either/or).
+            if (variant != Variant.PLAIN_BAR && variant != Variant.INDETERMINATE) {
+                putString("pt_progress_segments", segmentsJson(step.index))
+                putString("pt_progress_points", pointsJson(step.index))
+            }
             applyVariant(this, variant, step)
         }
         ct.renderPushNotification(TemplateRenderer(context, b), context, b)
@@ -142,6 +152,19 @@ object ProgressLiveUpdateDemo {
                 b.putString("pt_progress_start_icon", START_ICON)
                 b.putString("pt_progress_end_icon", END_ICON)
                 b.putString("pt_styled_by_progress", "true")
+            }
+
+            Variant.PLAIN_BAR -> {
+                // No segments/points (see render) -> plain determinate bar filled from pt_progress.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+            }
+
+            Variant.INDETERMINATE -> {
+                // No segments/points + indeterminate flag -> spinner-style bar (unknown progress).
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.status)
+                b.putString("pt_progress_indeterminate", "true")
             }
         }
     }

@@ -95,7 +95,9 @@ object HomeScreenModel {
                 "Progress: Actions + Deep Link (local demo)",
                 "Progress: Countdown Chip + Promoted (local demo)",
                 "Progress: No Promotion (local demo)",
-                "Progress: Start/End Icons (local demo)"
+                "Progress: Start/End Icons (local demo)",
+                "Progress: Plain Bar - determinate (local demo)",
+                "Progress: Indeterminate Bar (local demo)"
             ),
             "PROMPT LOCAL IAM" to listOf(
                 "Half-Interstitial Local IAM",

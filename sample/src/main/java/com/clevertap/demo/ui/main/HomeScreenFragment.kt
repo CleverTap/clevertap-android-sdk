@@ -115,6 +115,8 @@ class HomeScreenFragment : Fragment() {
                 "10-23" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.COUNTDOWN) // countdown chip + promotion
                 "10-24" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.NON_PROMOTED) // promotion off
                 "10-25" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.ICONS) // start/end icons + styled-by-progress
+                "10-26" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.PLAIN_BAR) // plain determinate bar (no segments)
+                "10-27" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.INDETERMINATE) // indeterminate bar
             }
         }
 
