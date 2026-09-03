@@ -349,7 +349,7 @@ internal class ValidatorFactory {
                 TemplateType.TIMER -> ContentValidator(keys)
                 TemplateType.INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
                 TemplateType.VERTICAL_IMAGE -> VerticalImageTemplateValidator(ContentValidator(keys))
-                TemplateType.PROGRESS -> ContentValidator(keys) // always valid (no required keys)
+                TemplateType.PROGRESS -> ProgressTemplateValidator(keys) // no required content keys
                 else -> null
             }
         }

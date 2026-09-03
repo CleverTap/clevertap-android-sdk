@@ -42,7 +42,8 @@ object CustomLiveUpdateDemo {
         val runId = System.currentTimeMillis()
         val handler = Handler(Looper.getMainLooper())
         steps.forEachIndexed { i, step ->
-            handler.postDelayed({ Thread { render(appContext, ct, step, runId) }.start() }, i * STEP_GAP_MS)
+            // renderPushNotification posts to the SDK's own worker executor, so no manual Thread needed.
+            handler.postDelayed({ render(appContext, ct, step, runId) }, i * STEP_GAP_MS)
         }
     }
 
@@ -65,7 +66,7 @@ object CustomLiveUpdateDemo {
             putString("la_step", step.step.toString())
         }
         // Renderer arg is ignored on the Mode A (factory) path; passed to satisfy the API.
-        ct.renderPushNotificationOnCallerThread(TemplateRenderer(context, b), context, b)
+        ct.renderPushNotification(TemplateRenderer(context, b), context, b)
     }
 
     private fun ensureChannel(context: Context) {

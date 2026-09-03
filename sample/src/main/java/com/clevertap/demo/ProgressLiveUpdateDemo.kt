@@ -77,7 +77,8 @@ object ProgressLiveUpdateDemo {
         val runId = System.currentTimeMillis() // fresh ids each run so re-tapping always renders
         val handler = Handler(Looper.getMainLooper())
         steps.forEachIndexed { i, step ->
-            handler.postDelayed({ Thread { render(appContext, ct, step, runId, variant) }.start() }, i * STEP_GAP_MS)
+            // renderPushNotification posts to the SDK's own worker executor, so no manual Thread needed.
+            handler.postDelayed({ render(appContext, ct, step, runId, variant) }, i * STEP_GAP_MS)
         }
     }
 
@@ -101,7 +102,7 @@ object ProgressLiveUpdateDemo {
             putString("pt_progress_points", pointsJson(step.index))
             applyVariant(this, variant, step)
         }
-        ct.renderPushNotificationOnCallerThread(TemplateRenderer(context, b), context, b)
+        ct.renderPushNotification(TemplateRenderer(context, b), context, b)
     }
 
     /** Layers the variant-specific keys onto the baseline payload. */
