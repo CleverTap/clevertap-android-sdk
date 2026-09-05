@@ -44,8 +44,11 @@ internal abstract class Style(private val data: BaseContent, private val rendere
             notificationBuilder.setOngoing(data.notificationBehavior.isSticky)
         }
 
+        // The builder title is what the system shows when it stacks notifications into a group
+        // summary, where RemoteViews are not rendered. Left unset when a style passes null.
+        pt_title?.let { notificationBuilder.setContentTitle(Html.fromHtml(it)) }
+
         return notificationBuilder.setSmallIcon(renderer.smallIcon)
-            .setContentTitle(Html.fromHtml(pt_title))
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())
