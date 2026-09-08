@@ -6,7 +6,6 @@ import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobScheduler;
@@ -168,6 +167,8 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         try {
+            // May be overridden below for Live Update Mode B so successive updates land in place.
+            int liveActivityNotificationId = notificationId;
             boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equalsIgnoreCase("true");
             if (isSilent) {
                 analyticsManager.pushNotificationViewedEvent(extras);
@@ -195,14 +196,26 @@ public class PushProviders implements CTPushProviderListener {
                         .equalsIgnoreCase("true");
 
                 if (isLiveActivity) {
+                    // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
+                    // the gate): pt_id present => Mode B (SDK/Push Template renders, and it takes
+                    // precedence over a client factory); pt_id absent => Mode A (client factory renders
+                    // the `data` custom content). Lifecycle events are raised in postNotificationRendered
+                    // for both modes.
+                    boolean isPtMode = PushNotificationHandler.isForPushTemplates(extras);
                     ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
-                    if (customFactory != null) {
+
+                    if (LiveActivityRouter.mode(isPtMode, customFactory != null) == LiveActivityMode.FACTORY) {
+                        // Mode A — client factory renders the Notification.
                         triggerLiveActivityNotification(context, extras, customFactory);
-                    } else {
-                        config.getLogger().debug(config.getAccountId(),
-                                "Live Activity push received but no ICleverTapNotificationFactory is set; ignoring.");
+                        return;
                     }
-                    return;
+                    // Mode B — SDK renders with the SDK-owned in-place id (derived from wzrk_activityId)
+                    // so successive updates for the same activity replace the same notification.
+                    Integer inPlaceId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
+                    if (inPlaceId != null) {
+                        liveActivityNotificationId = inPlaceId;
+                    }
+                    // fall through to normal rendering
                 }
 
                 String notifMessage = iNotificationRenderer.getMessage(extras);
@@ -226,7 +239,7 @@ public class PushProviders implements CTPushProviderListener {
                     context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
             notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
                     : notifTitle;//common
-            triggerNotification(context, extras, notificationId);
+            triggerNotification(context, extras, liveActivityNotificationId);
         } catch (Throwable t) {
             // Occurs if the notification image was null
             // Let's return, as we couldn't get a handle on the app's icon
@@ -1031,6 +1044,13 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         Notification n = nb.build();
+
+        // Live Update Mode B (SDK-rendered): attach the dismissal delete intent so swipe-away
+        // raises the "Dismissed" event — respecting any delete intent a Push Template already set.
+        if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equalsIgnoreCase("true")) {
+            applyLiveActivityDismissIntent(context, n, extras, notificationId);
+        }
+
         notificationManager.notify(notificationId, n);
         config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n);//cb
 
@@ -1064,109 +1084,111 @@ public class PushProviders implements CTPushProviderListener {
             return;
         }
 
-        ICleverTapNotificationFactory.NotificationResult result;
+        Notification notification;
         try {
-            result = customFactory.onCreateNotification(context, extras);
+            notification = customFactory.onCreateNotification(context, extras);
         } catch (Throwable t) {
             config.getLogger().debug(config.getAccountId(),
                     "ICleverTapNotificationFactory threw an exception", t);
             return;
         }
 
-        if (result == null) {
+        if (notification == null) {
             config.getLogger().debug(config.getAccountId(),
                     "ICleverTapNotificationFactory returned null, not rendering notification");
             return;
         }
 
-        Notification notification = result.getNotification();
-
-        String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
-        // SDK owns the id so updates land on the same notification. Fall back to the
-        // factory-supplied id only when the backend did not send an activity id.
-        int notificationId = !TextUtils.isEmpty(activityId)
-                ? (activityId.hashCode() & 0x7fffffff)
-                : result.getNotificationId();
+        // SDK owns the id so updates land on the same notification (in-place). It is derived from
+        // the stable wzrk_activityId; if a malformed push omits it, fall back to the per-send
+        // wzrk_pid so the notification still shows (it just won't update in place).
+        Integer activityNotifId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
+        int notificationId;
+        if (activityNotifId != null) {
+            notificationId = activityNotifId;
+        } else {
+            Integer pidNotifId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_PUSH_ID));
+            notificationId = pidNotifId != null ? pidNotifId : (int) clock.currentTimeSeconds();
+            config.getLogger().debug(config.getAccountId(),
+                    "Live Update push missing wzrk_activityId; in-place updates will not work.");
+        }
 
         String event = extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT,
                 Constants.WZRK_LIVE_ACTIVITY_EVENT_UPDATE);
-        boolean isEnd = Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equalsIgnoreCase(event);
+
+        // Guarantee the notification lands in a real channel (same fallback as core push). This may
+        // rebuild the notification, so resolve the channel BEFORE attaching the dismiss intent.
+        notification = ensureLiveActivityChannel(context, notification, notificationManager);
 
         // Attach a delete intent for dismissal tracking, without clobbering one the client set.
-        if (notification.deleteIntent == null) {
-            notification.deleteIntent = liveActivityDismissIntent(context, extras, notificationId);
-        }
-
-        // Guarantee the notification's channel exists so Android O+ does not silently drop it.
-        ensureLiveActivityChannel(context, notification, notificationManager);
+        applyLiveActivityDismissIntent(context, notification, extras, notificationId);
 
         notificationManager.notify(notificationId, notification);
         config.getLogger().debug(config.getAccountId(),
                 "Rendered Live Activity notification (id=" + notificationId + ", event=" + event + ")");
 
-        // Raise the lifecycle event on par with iOS (Started / Updated / Ended).
-        String state;
-        if (isEnd) {
-            state = Constants.LIVE_ACTIVITY_STATE_ENDED;
-        } else {
-            state = isFirstLiveActivityRender(context, activityId)
-                    ? Constants.LIVE_ACTIVITY_STATE_STARTED
-                    : Constants.LIVE_ACTIVITY_STATE_UPDATED;
-        }
-        analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
-
+        // Lifecycle events (Started/Updated/Ended) are raised centrally in postNotificationRendered
+        // so both the factory (Mode A) and SDK-rendered (Mode B) paths report them exactly once.
         postNotificationRendered(context, extras);
     }
 
     /**
-     * Returns {@code true} the first time an activity id is rendered and records it so later
-     * pushes for the same activity are reported as {@code Updated}. Persisted (not in-memory)
-     * because each FCM push may run in a fresh process. Reuses the push-id dedup store.
+     * Guards against Android O+ silently dropping a Live Activity (Mode A / factory) notification
+     * posted to a channel that does not exist — reusing the <b>same</b> channel resolution + fallback
+     * as ordinary CleverTap push notifications ({@link CTXtensions#getOrCreateChannel}): the payload
+     * channel ({@code wzrk_cid}) if it exists, else the app's manifest default channel, else the
+     * shared {@link Constants#FCM_FALLBACK_NOTIFICATION_CHANNEL_ID} (created at default importance).
+     * No bespoke "Live Updates" channel is created — Mode B already routes through the same helper.
+     *
+     * <p>If the built notification references a missing/empty channel, it is retargeted onto the
+     * resolved channel via {@link Notification.Builder#recoverBuilder} (which preserves content,
+     * actions, and intents) so it is never silently dropped — this also fixes the previous
+     * empty-channel-id case which was only logged. Returns the notification to post (rebuilt only
+     * when the channel had to change).</p>
      */
-    private boolean isFirstLiveActivityRender(Context context, String activityId) {
-        if (TextUtils.isEmpty(activityId)) {
-            return true;
+    private Notification ensureLiveActivityChannel(Context context, Notification notification,
+                                                   NotificationManager notificationManager) {
+        if (VERSION.SDK_INT < VERSION_CODES.O) {
+            return notification; // channels are not required before Android O
         }
-        String key = Constants.WZRK_LIVE_ACTIVITY + "_" + activityId;
-        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        if (dbAdapter.doesPushNotificationIdExist(key)) {
-            return false;
+        String desired = notification.getChannelId();
+        // Same resolution + fallback as core push (payload -> manifest -> shared fcm fallback).
+        String resolved = CTXtensions.getOrCreateChannel(notificationManager, desired, context, false);
+        if (resolved == null) {
+            config.getLogger().debug(config.getAccountId(),
+                    "Live Update: could not resolve a notification channel; posting as-is.");
+            return notification;
         }
-        dbAdapter.storePushNotificationId(key,
-                clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS);
-        return true;
+        if (!resolved.equals(desired)) {
+            // Notification was built against a missing/empty channel; move it to the shared fallback.
+            try {
+                notification = Notification.Builder.recoverBuilder(context, notification)
+                        .setChannelId(resolved)
+                        .build();
+                config.getLogger().debug(config.getAccountId(),
+                        "Live Update: retargeted notification to fallback channel '" + resolved + "'.");
+            } catch (Throwable t) {
+                config.getLogger().debug(config.getAccountId(),
+                        "Live Update: failed to retarget notification to channel '" + resolved + "'.", t);
+            }
+        }
+        return notification;
     }
 
     /**
-     * Guards against Android O+ silently dropping a Live Activity notification posted to a channel
-     * that does not exist.
-     *
-     * <p>Primary (payload-driven): the factory should use the payload channel id
-     * {@link Constants#WZRK_CHANNEL_ID} ({@code wzrk_cid}) as the notification's channel.</p>
-     *
-     * <p>Fallback: if the channel the built notification references does not exist, the SDK creates
-     * it at {@link NotificationManager#IMPORTANCE_DEFAULT} and shows the notification in it — so a
-     * client that forgot to create the channel never hits a silent drop. A channel cannot be
-     * re-attached to an already-built notification, so an empty channel id is only logged.</p>
+     * Attaches the CleverTap dismissal delete intent to a Live Update notification so a swipe-away
+     * raises the "Dismissed" event — but only if the notification does not already carry a delete
+     * intent set by the client (Mode A factory) or a Push Template. In that case CleverTap respects
+     * the existing intent, does not override it, and logs that it will not track the Dismissed event.
      */
-    private void ensureLiveActivityChannel(Context context, Notification notification,
-                                           NotificationManager notificationManager) {
-        if (VERSION.SDK_INT < VERSION_CODES.O) {
-            return; // channels are not required before Android O
-        }
-        String channelId = notification.getChannelId();
-        if (channelId == null || channelId.trim().isEmpty()) {
+    private void applyLiveActivityDismissIntent(Context context, Notification notification,
+                                                Bundle extras, int notificationId) {
+        if (notification.deleteIntent == null) {
+            notification.deleteIntent = liveActivityDismissIntent(context, extras, notificationId);
+        } else {
             config.getLogger().debug(config.getAccountId(),
-                    "Live Activity notification has no channel id; on Android O+ it will not be shown. "
-                            + "Set the channel id (recommended: the payload's wzrk_cid) in your factory.");
-            return;
-        }
-        if (notificationManager.getNotificationChannel(channelId) == null) {
-            NotificationChannel channel = new NotificationChannel(channelId,
-                    Constants.LIVE_ACTIVITY_DEFAULT_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
-            notificationManager.createNotificationChannel(channel);
-            config.getLogger().debug(config.getAccountId(),
-                    "Created missing channel '" + channelId + "' at default importance for Live Activity.");
+                    "Live Update: notification already has a delete intent set by the client/template; "
+                            + "CleverTap will not override it and will not track the Dismissed event for this push.");
         }
     }
 
@@ -1182,6 +1204,15 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void postNotificationRendered(Context context, Bundle extras) {
+        // Raise the "Live Activity" lifecycle event for any live-update render (factory Mode A or
+        // SDK-rendered Mode B) — exactly once, and independent of the wzrk_rnv (viewed) gate below.
+        if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equalsIgnoreCase("true")) {
+            // State is driven entirely by the BE-sent wzrk_la_event (start/update/end) — no local
+            // first-render tracking. See LiveActivityLifecycle.
+            String state = LiveActivityLifecycle.state(extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT));
+            analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
+        }
+
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);
