@@ -225,9 +225,12 @@ internal object TemplateDataFactory {
         return FiveIconsTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
+            // Raw pt_* keys only (no nt/nm/wzrk_nms fallback); an empty string counts as absent,
+            // as everywhere else in this factory, so the layouts and the builder agree.
             iconTextData = BaseTextData(
-                title = extras.getString(PT_TITLE),
-                message = extras.getString(PT_MSG)
+                title = extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() },
+                message = extras.getString(PT_MSG).takeUnless { it.isNullOrEmpty() },
+                messageSummary = extras.getString(PT_MSG_SUMMARY).takeUnless { it.isNullOrEmpty() }
             )
         )
     }
