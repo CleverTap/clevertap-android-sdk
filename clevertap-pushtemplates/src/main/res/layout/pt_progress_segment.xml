@@ -4,5 +4,6 @@
     android:layout_width="0dp"
     android:layout_height="3dp"
     android:layout_weight="1"
+    android:layout_marginTop="6dp"
     android:background="#48484A"
     android:contentDescription="@null" />
