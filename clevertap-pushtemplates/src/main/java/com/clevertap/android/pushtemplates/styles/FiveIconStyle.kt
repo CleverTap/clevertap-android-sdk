@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
-import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.FiveIconsTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.*
@@ -17,23 +16,12 @@ internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: 
     lateinit var fiveIconBigContentView: ContentView
 
     /**
-     * Passes pt_title instead of baseContent's title, which falls back to nt. An icon-only
-     * five icons notification must not surface the base title once the system stacks it into
-     * a group summary. baseContent keeps the fallback for the basic template fallback path.
+     * pt_title only, not baseContent's title, which falls back to nt. An icon-only five icons
+     * notification must not surface the base title once the system stacks it into a group
+     * summary. baseContent keeps the fallback for the basic template fallback path.
      */
-    override fun setNotificationBuilderBasics(
-        notificationBuilder: NotificationCompat.Builder,
-        contentViewSmall: RemoteViews?,
-        contentViewBig: RemoteViews?,
-        pt_title: String?,
-        pIntent: PendingIntent?,
-        dIntent: PendingIntent?
-    ): NotificationCompat.Builder {
-        return super.setNotificationBuilderBasics(
-            notificationBuilder, contentViewSmall,
-            contentViewBig, data.iconTextData.title, pIntent, dIntent
-        )
-    }
+    override val builderTitle: String?
+        get() = data.iconTextData.title
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         fiveIconSmallContentView = FiveIconSmallContentView(context, renderer, data, extras)
