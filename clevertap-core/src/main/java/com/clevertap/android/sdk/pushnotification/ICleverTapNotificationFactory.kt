@@ -8,16 +8,21 @@ import android.os.Bundle
  * Factory interface that gives the client complete control over creating
  * push notifications for CleverTap pushes.
  *
- * When registered, the SDK will invoke [onCreateNotification] instead
- * of using its built-in renderers. The client is responsible for:
- * - Creating the notification channel
+ * When registered, the SDK will invoke [onCreateNotification] for CleverTap Live Activity
+ * (live update) pushes instead of using its built-in renderers. The client is responsible for:
  * - Building the [Notification]
- * - Choosing the notification ID
+ * - Setting its channel id (recommended: the payload's `wzrk_cid`)
  *
  * The SDK still handles:
  * - Push deduplication
  * - Silent push detection
  * - Displaying the notification via [android.app.NotificationManager]
+ * - Creating the notification's channel at default importance if it does not already exist,
+ *   so the notification is never silently dropped on Android O+
+ * - **The notification ID** — owned entirely by the SDK and derived deterministically from the
+ *   backend-assigned `wzrk_activityId`, so successive updates for the same activity land on
+ *   the same notification (in-place update). The client does not supply an id.
+ * - The "Live Activity" lifecycle events (Started / Updated / Ended / Dismissed)
  * - Push notification analytics (viewed events)
  * - TTL and push ID storage
  *
@@ -26,20 +31,12 @@ import android.os.Bundle
 interface ICleverTapNotificationFactory {
 
     /**
-     * Called when a CleverTap push notification needs to be rendered.
+     * Called when a CleverTap Live Activity push needs to be rendered.
      *
      * @param context The application context.
      * @param extras  The notification payload bundle containing all CleverTap keys.
-     * @return A [NotificationResult] containing the built notification and notification ID,
-     *         or `null` to skip rendering this notification.
+     * @return The built [Notification] to display, or `null` to skip rendering this notification.
+     *         The SDK owns the notification id (derived from `wzrk_activityId`).
      */
-    fun onCreateNotification(context: Context, extras: Bundle): NotificationResult?
-
-    /**
-     * Holds the result of a custom notification build.
-     */
-    class NotificationResult(
-        val notification: Notification,
-        val notificationId: Int
-    )
+    fun onCreateNotification(context: Context, extras: Bundle): Notification?
 }

@@ -707,6 +707,39 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    /**
+     * Raises the single "Live Activity" lifecycle event (mirrors iOS' Live Activity event).
+     * The wzrk_* keys from the push become the event data, plus a {@code state} field
+     * ("Started"/"Updated"/"Ended"/"Dismissed"). Routed through the Notification Viewed
+     * pipeline so it is attributed exactly like a push impression.
+     *
+     * @param extras the Live Activity push payload.
+     * @param state  one of {@link Constants#LIVE_ACTIVITY_STATE_STARTED},
+     *               {@link Constants#LIVE_ACTIVITY_STATE_UPDATED},
+     *               {@link Constants#LIVE_ACTIVITY_STATE_ENDED},
+     *               {@link Constants#LIVE_ACTIVITY_STATE_DISMISSED}.
+     *
+     * <p>Must be called on a worker thread — it queues the event synchronously via
+     * {@code baseEventQueueManager.queueEvent(...)} ({@link WorkerThread}), mirroring
+     * {@link #pushNotificationViewedEvent(Bundle)}. Render-path callers are already on a worker;
+     * the dismiss path (main-thread receiver) dispatches via {@code postAsyncSafelyTask}.</p>
+     */
+    @WorkerThread
+    public void raiseLiveActivityLifecycleEvent(Bundle extras, String state) {
+        if (extras == null || extras.isEmpty()) {
+            return;
+        }
+        try {
+            JSONObject notif = wzrkBundleToJson(extras);
+            JSONObject event = AnalyticsManagerBundler.liveActivityEventJson(notif, state);
+            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
+            config.getLogger().debug(config.getAccountId(),
+                    "Recorded Live Activity event (" + state + ") for: " + extras);
+        } catch (JSONException e) {
+            config.getLogger().debug("Failed to record Live Activity event " + e);
+        }
+    }
+
     @Override
     public void pushProfile(final Map<String, Object> profile) {
         config.getLogger().verbose(config.getAccountId(), "pushProfile: profile=" + profile);

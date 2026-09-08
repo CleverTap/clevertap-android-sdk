@@ -94,8 +94,6 @@ import java.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import kotlin.jvm.Volatile;
-
 
 /**
  * <h1>CleverTapAPI</h1>
@@ -899,6 +897,42 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 break;
             }
         }
+    }
+
+    /**
+     * Raises the "Live Activity" lifecycle event with state {@code Dismissed}. Invoked by
+     * {@link com.clevertap.android.sdk.pushnotification.CTLiveActivityDismissReceiver} when a
+     * live-update notification is swiped away.
+     */
+    @RestrictTo(Scope.LIBRARY)
+    public static void handleLiveActivityDismissed(Context context, Bundle notification) {
+        if (notification == null) {
+            return;
+        }
+
+        String _accountId = null;
+        try {
+            _accountId = notification.getString(Constants.WZRK_ACCT_ID_KEY);
+        } catch (Throwable t) {
+            // no-op
+        }
+
+        // Reuse the shared instance-resolution (default vs multi-instance) instead of re-implementing
+        // the instances.keySet() loop — same path handleNotificationClicked and friends use.
+        final CleverTapAPI instance = fromAccountId(context, _accountId);
+        if (instance == null) {
+            return;
+        }
+
+        // Dismissal is delivered on the BroadcastReceiver's main thread; raise the event on a worker
+        // so the analytics/DB queue work (raiseLiveActivityLifecycleEvent is @WorkerThread) never runs
+        // on the main thread.
+        Task<Void> task = instance.getCoreState().getExecutors().postAsyncSafelyTask();
+        task.execute("handleLiveActivityDismissed", () -> {
+            instance.getCoreState().getAnalyticsManager()
+                    .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
+            return null;
+        });
     }
 
     /**
@@ -2890,7 +2924,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Sets the listener to get the list of currently running Display Campaigns via callback
      *
-     * @param listener- {@link DisplayUnitListener}
+     * @param listener {@link DisplayUnitListener}
      */
     public void setDisplayUnitListener(DisplayUnitListener listener) {
         coreState.getCallbackManager().setDisplayUnitListener(listener);
