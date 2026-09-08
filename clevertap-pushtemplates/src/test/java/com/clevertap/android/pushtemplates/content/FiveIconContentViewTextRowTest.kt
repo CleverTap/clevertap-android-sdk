@@ -19,7 +19,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,7 +83,22 @@ class FiveIconContentViewTextRowTest {
         assertEquals(View.VISIBLE, big.findViewById<View>(R.id.rel_lyt).visibility)
         assertEquals(View.GONE, big.findViewById<TextView>(R.id.title).visibility)
         assertEquals("PT Summary", big.findViewById<TextView>(R.id.msg).text.toString())
-        assertNull(small.findViewById<View>(R.id.rel_lyt))   // icon-only layout has no text block
+        assertEquals(View.GONE, small.findViewById<View>(R.id.rel_lyt).visibility)
+    }
+
+    @Test
+    fun `icon only payload hides the text block but keeps the app header`() {
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null))
+
+        val small = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+        val big = inflate(FiveIconBigContentView(context, renderer(), data, Bundle()))
+
+        for (view in listOf(small, big)) {
+            assertEquals(View.GONE, view.findViewById<View>(R.id.rel_lyt).visibility)
+            // Below Android 12 the layout carries its own header; it must survive without text.
+            assertEquals(View.VISIBLE, view.findViewById<View>(R.id.metadata).visibility)
+            assertEquals("Test App", view.findViewById<TextView>(R.id.app_name).text.toString())
+        }
     }
 
     @Test

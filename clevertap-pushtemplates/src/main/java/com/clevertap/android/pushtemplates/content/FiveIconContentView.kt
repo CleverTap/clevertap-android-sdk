@@ -23,18 +23,27 @@ internal abstract class FiveIconContentView(
     private var imageCounter: Int = 0
 
     /**
-     * Binds pt_title/pt_msg and the header keys into the text row. Either text key may be set on
-     * its own, so the unused view is hidden rather than left as a blank line. The row also
-     * reserves a 36dp large icon slot, which is hidden unless pt_ico is set.
+     * App name, timestamp and subtitle. Below Android 12 the system draws no header around a
+     * custom notification, so this row is what identifies the app; it is set even for icon-only
+     * campaigns. The layout-v31 variants carry no header of their own and let the system decorate.
+     */
+    protected fun setupHeader(data: FiveIconsTemplateData, renderer: TemplateRenderer) {
+        setCustomContentViewBasicKeys(
+            data.baseContent.textData.subtitle,
+            data.baseContent.colorData.metaColor
+        )
+        setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
+    }
+
+    /**
+     * Binds pt_title/pt_msg into the text block. Either text key may be set on its own, so the
+     * unused view is hidden rather than left as a blank line. The block also reserves a 36dp
+     * large icon slot, which is hidden unless pt_ico is set.
      *
      * @param hideMessage whether the message view has nothing to show; the expanded view also
      * fills this slot with pt_msg_summary, so it decides this differently from the collapsed view.
      */
     protected fun setupTextRow(data: FiveIconsTemplateData, hideMessage: Boolean) {
-        setCustomContentViewBasicKeys(
-            data.baseContent.textData.subtitle,
-            data.baseContent.colorData.metaColor
-        )
         setCustomContentViewTitle(data.iconTextData.title)
         setCustomContentViewMessage(data.iconTextData.message)
         if (data.iconTextData.title.isNullOrEmpty()) remoteView.setViewVisibility(R.id.title, View.GONE)
@@ -42,6 +51,14 @@ internal abstract class FiveIconContentView(
         setCustomContentViewLargeIcon(data.baseContent.iconData.largeIcon)
         setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
         setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+    }
+
+    /**
+     * Hides the title/message block (R.id.rel_lyt inside the included text row) for icon-only
+     * campaigns. The header row is a sibling and stays visible.
+     */
+    protected fun hideTextRow() {
+        remoteView.setViewVisibility(R.id.rel_lyt, View.GONE)
     }
 
     /**

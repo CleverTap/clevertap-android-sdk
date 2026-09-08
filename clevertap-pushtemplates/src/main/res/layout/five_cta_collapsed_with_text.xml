@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <include
-        android:id="@+id/rel_lyt"
+        android:id="@+id/five_cta_text_row"
         layout="@layout/content_view_small_single_line_msg" />
 
     <LinearLayout
