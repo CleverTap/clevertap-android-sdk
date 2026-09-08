@@ -19,6 +19,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,6 +72,37 @@ class FiveIconContentViewTextRowTest {
 
         assertEquals(View.VISIBLE, msg.visibility)
         assertEquals("PT Summary", msg.text.toString())
+    }
+
+    @Test
+    fun `summary only shows the summary in the expanded view and icons only when collapsed`() {
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = "PT Summary"))
+
+        val big = inflate(FiveIconBigContentView(context, renderer(), data, Bundle()))
+        val small = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+
+        assertEquals(View.VISIBLE, big.findViewById<View>(R.id.rel_lyt).visibility)
+        assertEquals(View.GONE, big.findViewById<TextView>(R.id.title).visibility)
+        assertEquals("PT Summary", big.findViewById<TextView>(R.id.msg).text.toString())
+        assertNull(small.findViewById<View>(R.id.rel_lyt))   // icon-only layout has no text block
+    }
+
+    @Test
+    fun `dashboard summary does not open the expanded text row on an icon only campaign`() {
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null, wzrkNms = "Dashboard summary"))
+
+        val big = inflate(FiveIconBigContentView(context, renderer(), data, Bundle()))
+
+        assertEquals(View.GONE, big.findViewById<View>(R.id.rel_lyt).visibility)
+    }
+
+    @Test
+    fun `dashboard summary does not replace pt_msg in the expanded view`() {
+        val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null, wzrkNms = "Dashboard summary"))
+
+        val big = inflate(FiveIconBigContentView(context, renderer(), data, Bundle()))
+
+        assertEquals("PT Message", big.findViewById<TextView>(R.id.msg).text.toString())
     }
 
     @Test

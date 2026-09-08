@@ -17,11 +17,11 @@ internal class FiveIconBigContentView(
     init {
         /**
          * five_cta_expanded always includes the text row, so it is hidden outright when the
-         * campaign set no pt_title/pt_msg - otherwise the icons sit below an empty strip.
+         * campaign set no pt_title/pt_msg/pt_msg_summary - otherwise the icons sit below an empty strip.
          */
-        if (hasText(data)) {
+        if (hasExpandedText(data)) {
             // The expanded view shows pt_msg_summary in the message slot, so keep it when only the summary is set.
-            val messageSummary = data.baseContent.textData.messageSummary
+            val messageSummary = data.iconTextData.messageSummary
             setupTextRow(
                 data,
                 hideMessage = data.iconTextData.message.isNullOrEmpty() && messageSummary.isNullOrEmpty()

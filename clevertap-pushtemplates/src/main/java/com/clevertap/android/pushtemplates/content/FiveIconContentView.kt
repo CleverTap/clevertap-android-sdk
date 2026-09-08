@@ -119,12 +119,19 @@ internal abstract class FiveIconContentView(
         )
 
         /**
-         * Only pt_title/pt_msg drive the layout choice. nt/nm are populated on every campaign,
+         * Only the pt_* text keys drive the layout choice. nt/nm are populated on every campaign,
          * so consulting them here would make the icon-only layout unreachable.
+         *
+         * The collapsed view shows pt_title/pt_msg; the expanded view shows pt_msg_summary in the
+         * message slot as well, so a summary-only campaign still gets its text row there.
          */
-        internal fun hasText(data: FiveIconsTemplateData): Boolean {
+        internal fun hasCollapsedText(data: FiveIconsTemplateData): Boolean {
             return !data.iconTextData.title.isNullOrEmpty() ||
                     !data.iconTextData.message.isNullOrEmpty()
+        }
+
+        internal fun hasExpandedText(data: FiveIconsTemplateData): Boolean {
+            return hasCollapsedText(data) || !data.iconTextData.messageSummary.isNullOrEmpty()
         }
     }
 }

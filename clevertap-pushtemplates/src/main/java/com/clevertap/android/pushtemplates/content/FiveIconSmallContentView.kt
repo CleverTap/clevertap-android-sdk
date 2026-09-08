@@ -14,7 +14,7 @@ internal class FiveIconSmallContentView(
 ) : FiveIconContentView(
     context,
     renderer,
-    if (hasText(data)) R.layout.five_cta_collapsed_with_text else R.layout.five_cta_collapsed
+    if (hasCollapsedText(data)) R.layout.five_cta_collapsed_with_text else R.layout.five_cta_collapsed
 ) {
 
     init {
@@ -22,7 +22,7 @@ internal class FiveIconSmallContentView(
          * five_cta_collapsed is icon-only and carries none of the text view ids, so the text
          * keys are only applied when the text variant of the layout is in use.
          */
-        if (hasText(data)) {
+        if (hasCollapsedText(data)) {
             setupTextRow(data, hideMessage = data.iconTextData.message.isNullOrEmpty())
         }
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
