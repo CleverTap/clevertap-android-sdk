@@ -284,13 +284,20 @@ public interface Constants {
     // todo - confirm final key names with BE contract.
     /** Marker present on a Live Activity (live update) push. Value is "true". */
     String WZRK_LIVE_ACTIVITY = "wzrk_la";
-    /** Backend-assigned stable activity id; SDK derives the notification id from this. */
-    String WZRK_LIVE_ACTIVITY_ID = "cleverTapActivityId";
-    /** Nested CleverTap push payload (Mode B) the SDK renders itself, e.g. {@code {"pt_id":"pt_progress", ...}}.
-     *  Not {@code wzrk_}-prefixed on purpose so the render blob never leaks into analytics evtData. */
-    String WZRK_LIVE_ACTIVITY_PT_DATA = "la_pt_data";
-    /** Lifecycle event carried by the push: {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} or {@link #WZRK_LIVE_ACTIVITY_EVENT_END}. */
+    /** Backend-assigned stable activity id. The SDK derives the in-place notification id from it, and
+     *  because it is {@code wzrk_}-prefixed it also flows into the lifecycle event {@code evtData}
+     *  automatically (serves both routing and attribution). See TAN §5.1 / §6. */
+    String WZRK_LIVE_ACTIVITY_ID = "wzrk_activityId";
+    /** Single nested payload object carried by a Live Update push. Holds the render content for BOTH
+     *  modes: if it contains a {@code pt_id} the SDK renders it (Mode B, e.g. {@code {"pt_id":"pt_progress", ...}});
+     *  otherwise it is the client factory's custom data (Mode A). Not {@code wzrk_}-prefixed on purpose
+     *  so the render blob never leaks into analytics evtData. */
+    String WZRK_LIVE_ACTIVITY_DATA = "data";
+    /** Lifecycle event carried by the push, sent by BE, mapped 1:1 to the analytics state:
+     *  {@link #WZRK_LIVE_ACTIVITY_EVENT_START} → Started, {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} →
+     *  Updated, {@link #WZRK_LIVE_ACTIVITY_EVENT_END} → Ended. Anything else defaults to Updated. */
     String WZRK_LIVE_ACTIVITY_EVENT = "wzrk_la_event";
+    String WZRK_LIVE_ACTIVITY_EVENT_START = "start";
     String WZRK_LIVE_ACTIVITY_EVENT_UPDATE = "update";
     String WZRK_LIVE_ACTIVITY_EVENT_END = "end";
     /** Single event name raised for every Live Activity lifecycle transition (mirrors iOS kCTLAEventName). */
@@ -301,8 +308,8 @@ public interface Constants {
     String LIVE_ACTIVITY_STATE_UPDATED = "Updated";
     String LIVE_ACTIVITY_STATE_ENDED = "Ended";
     String LIVE_ACTIVITY_STATE_DISMISSED = "Dismissed";
-    /** User-visible name for the channel the SDK auto-creates when a live-update notification's channel is missing. */
-    String LIVE_ACTIVITY_DEFAULT_CHANNEL_NAME = "Live Updates";
+    // Note: a missing Live Update channel now falls back to the shared push fallback channel
+    // (FCM_FALLBACK_NOTIFICATION_CHANNEL_ID via CTXtensions.getOrCreateChannel), not a bespoke one.
 
     String WZRK_STICKY = "wzrk_sticky";
     String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";

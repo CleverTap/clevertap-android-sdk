@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A milestone point in the pre-16 fallback: a dot with an optional title label below it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/pt_dot"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:src="@drawable/pt_progress_dot"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/pt_point_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="#B0B0B5"
+        android:textSize="9sp"
+        android:visibility="gone" />
+</LinearLayout>
