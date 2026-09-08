@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
+import java.util.Map;
 
 public class PushNotificationHandler implements ActionButtonClickHandler {
 
@@ -20,6 +21,26 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
 
     public static NotificationHandler getPushNotificationHandler() {
         return SingletonNotificationHandler.INSTANCE;
+    }
+
+    /**
+     * Merges the single nested {@code data} JSON object of a Live Update push into the top-level
+     * bundle so downstream routing (Mode B / Push Template selection via {@code pt_id}) and rendering
+     * read it like a normal push, and so a Mode A factory can read the fields as flat extras. The
+     * presence of {@code pt_id} inside {@code data} distinguishes Mode B (SDK/PT render) from Mode A
+     * (client factory).
+     *
+     * <p>The flatten semantics (string coercion, compact-JSON for nested arrays/objects, JSON-null
+     * skip, and root-wins so wrapper/identity/analytics keys are never overwritten) live in
+     * {@link LiveActivityPayloadSurfacer#flatten} — a pure, unit-tested seam. This method just applies
+     * the result to the bundle.</p>
+     */
+    private static void surfaceLiveActivityPayload(Bundle message) {
+        String data = message.getString(Constants.WZRK_LIVE_ACTIVITY_DATA);
+        Map<String, String> toSurface = LiveActivityPayloadSurfacer.flatten(data, message.keySet());
+        for (Map.Entry<String, String> entry : toSurface.entrySet()) {
+            message.putString(entry.getKey(), entry.getValue());
+        }
     }
 
     public static boolean isForPushTemplates(Bundle extras) {
@@ -62,6 +83,13 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
             if (cleverTapAPI != null) {
                 cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
+                // Live Update: surface the single nested `data` object (incl. pt_id, if any) to the
+                // top level so the normal PT/core routing below can read it. A `pt_id` inside `data`
+                // selects Mode B (SDK/PT render); its absence means Mode A (client factory). The
+                // Mode A vs Mode B decision is finalised in _createNotification.
+                if ("true".equalsIgnoreCase(message.getString(Constants.WZRK_LIVE_ACTIVITY, ""))) {
+                    surfaceLiveActivityPayload(message);
+                }
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template
                     CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType);
