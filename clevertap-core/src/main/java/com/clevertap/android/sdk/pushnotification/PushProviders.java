@@ -1133,25 +1133,6 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     /**
-     * Returns {@code true} the first time an activity id is rendered and records it so later
-     * pushes for the same activity are reported as {@code Updated}. Persisted (not in-memory)
-     * because each FCM push may run in a fresh process. Reuses the push-id dedup store.
-     */
-    private boolean isFirstLiveActivityRender(Context context, String activityId) {
-        if (TextUtils.isEmpty(activityId)) {
-            return true;
-        }
-        String key = Constants.WZRK_LIVE_ACTIVITY + "_" + activityId;
-        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        if (dbAdapter.doesPushNotificationIdExist(key)) {
-            return false;
-        }
-        dbAdapter.storePushNotificationId(key,
-                clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS);
-        return true;
-    }
-
-    /**
      * Guards against Android O+ silently dropping a Live Activity (Mode A / factory) notification
      * posted to a channel that does not exist — reusing the <b>same</b> channel resolution + fallback
      * as ordinary CleverTap push notifications ({@link CTXtensions#getOrCreateChannel}): the payload
@@ -1226,12 +1207,9 @@ public class PushProviders implements CTPushProviderListener {
         // Raise the "Live Activity" lifecycle event for any live-update render (factory Mode A or
         // SDK-rendered Mode B) — exactly once, and independent of the wzrk_rnv (viewed) gate below.
         if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equalsIgnoreCase("true")) {
-            String activityId = extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID);
-            boolean isEnd = Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equalsIgnoreCase(
-                    extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT));
-            // Short-circuit: on `end` we do not touch the first-render dedup store (state is terminal).
-            boolean isFirstRender = !isEnd && isFirstLiveActivityRender(context, activityId);
-            String state = LiveActivityLifecycle.state(isEnd, isFirstRender);
+            // State is driven entirely by the BE-sent wzrk_la_event (start/update/end) — no local
+            // first-render tracking. See LiveActivityLifecycle.
+            String state = LiveActivityLifecycle.state(extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT));
             analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
         }
 
