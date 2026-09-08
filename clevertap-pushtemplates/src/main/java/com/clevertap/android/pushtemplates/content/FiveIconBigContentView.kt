@@ -32,6 +32,15 @@ internal class FiveIconBigContentView constructor(
             )
             setCustomContentViewTitle(data.iconTextData.title)
             setCustomContentViewMessage(data.iconTextData.message)
+            // Either key may be set on its own; hide the other view so it does not leave a blank line.
+            if (data.iconTextData.title.isNullOrEmpty()) remoteView.setViewVisibility(R.id.title, View.GONE)
+            // The expanded view shows pt_msg_summary in the message slot, so keep it when only the summary is set.
+            if (data.iconTextData.message.isNullOrEmpty() && data.baseContent.textData.messageSummary.isNullOrEmpty()) {
+                remoteView.setViewVisibility(R.id.msg, View.GONE)
+            }
+            // The text row reserves a 36dp large icon slot; hide it unless pt_ico is set, otherwise
+            // a single text line sits in a row that is still icon-height tall.
+            setCustomContentViewLargeIcon(data.baseContent.iconData.largeIcon)
             setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
             setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
             setCustomContentViewMessageSummary(data.baseContent.textData.messageSummary)
