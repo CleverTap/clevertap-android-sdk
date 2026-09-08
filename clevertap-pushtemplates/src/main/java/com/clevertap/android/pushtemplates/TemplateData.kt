@@ -199,3 +199,28 @@ internal data class VerticalImageTemplateData(
     val buttonData: VerticalImageButtonData? = null,
     val collapsedButtonData: VerticalImageButtonData? = null,
 ) : TemplateData()
+/**
+ * Progress-centric (`pt_progress`) template data. Unlike other templates this one does NOT feed a
+ * `Style` subclass (its native Android-16 tier is a base `NotificationCompat.ProgressStyle` with no
+ * custom RemoteViews, which is what allows promotion) — it is rendered by the specialized
+ * [com.clevertap.android.pushtemplates.styles.ProgressStyle]. It still flows through the normal
+ * [TemplateDataFactory] pipeline: the segments/points (incl. point titles) are parsed here once.
+ */
+internal data class ProgressTemplateData(
+    override val templateType: TemplateType = TemplateType.PROGRESS,
+    val title: String?,
+    val progress: Int?,
+    val progressMax: Int?,
+    val indeterminate: Boolean,
+    val segments: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData>,
+    val points: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData>,
+) : TemplateData() {
+
+    /**
+     * The progress indicator is **segmented** (dots + connectors / native segments) when the payload
+     * carries segments or points; otherwise it is a **plain bar** — indeterminate when
+     * [indeterminate] is set, else determinate from [progress] / [progressMax]. The two are mutually
+     * exclusive (a client uses either milestones or a simple bar, never both).
+     */
+    val isSegmented: Boolean get() = segments.isNotEmpty() || points.isNotEmpty()
+}
