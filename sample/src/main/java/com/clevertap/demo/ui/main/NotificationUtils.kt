@@ -11,14 +11,9 @@ object NotificationUtils {
     //Require to close notification on action button click
     fun dismissNotification(intent: Intent?, applicationContext: Context){
         intent?.extras?.apply {
-            var autoCancel = true
-            var notificationId = -1
+            val autoCancel = getBoolean("autoCancel", true)
+            val notificationId = getInt("notificationId", -1)
 
-            getString("actionId")?.let {
-                Log.d("ACTION_ID", it)
-                autoCancel = getBoolean("autoCancel", true)
-                notificationId = getInt("notificationId", -1)
-            }
             /**
              * If using InputBox template, add ptDismissOnClick flag to not dismiss notification
              * if pt_dismiss_on_click is false in InputBox template payload. Alternatively if normal
