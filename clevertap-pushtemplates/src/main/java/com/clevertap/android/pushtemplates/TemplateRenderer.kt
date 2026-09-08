@@ -30,6 +30,7 @@ import com.clevertap.android.pushtemplates.styles.FiveIconStyle
 import com.clevertap.android.pushtemplates.styles.InputBoxStyle
 import com.clevertap.android.pushtemplates.styles.ManualCarouselStyle
 import com.clevertap.android.pushtemplates.styles.ProductDisplayStyle
+import com.clevertap.android.pushtemplates.styles.ProgressStyle
 import com.clevertap.android.pushtemplates.styles.RatingStyle
 import com.clevertap.android.pushtemplates.styles.TimerStyle
 import com.clevertap.android.pushtemplates.styles.VerticalImageStyle
@@ -108,6 +109,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             return null
         }
         val templateType = TemplateType.fromString(id)
+
         val altTextDefault = context.getString(R.string.pt_big_image_alt)
 
         val templateData = TemplateDataFactory.createTemplateData(
@@ -209,6 +211,14 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
             is VerticalImageTemplateData -> templateData.buildIfValid {
                 VerticalImageStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is ProgressTemplateData -> templateData.buildIfValid {
+                // Progress-centric Live Update. Rendered by the specialized ProgressStyle (native
+                // NotificationCompat.ProgressStyle on 16+, segmented RemoteViews fallback below) — the
+                // one style that does NOT extend the RemoteViews-based Style base, because its native
+                // tier is a base style with no custom RemoteViews (which is what allows promotion).
+                ProgressStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
             }
 
             is CancelTemplateData -> {
