@@ -77,58 +77,21 @@ internal class FiveIconBigContentView constructor(
 
         val deepLinkList = data.baseContent.deepLinkList
 
-        val bundleCTA1 = extras.clone() as Bundle
-        bundleCTA1.putBoolean("cta1", true)
-        bundleCTA1.putString(Constants.DEEP_LINK_KEY, deepLinkList.get(0))
-        bundleCTA1.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 1 + "_" + deepLinkList.get(0))
-        remoteView.setOnClickPendingIntent(
-            R.id.cta1,
-            LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA1, context)
-        )
-
-        val bundleCTA2 = extras.clone() as Bundle
-        bundleCTA2.putBoolean("cta2", true)
-        bundleCTA2.putString(Constants.DEEP_LINK_KEY,deepLinkList.get(1))
-        bundleCTA2.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 2 + "_" + deepLinkList.get(1))
-        remoteView.setOnClickPendingIntent(
-            R.id.cta2,
-            LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA2, context)
-        )
-
-        val bundleCTA3 = extras.clone() as Bundle
-        bundleCTA3.putBoolean("cta3", true)
-        bundleCTA3.putString(Constants.DEEP_LINK_KEY, deepLinkList.get(2))
-        bundleCTA3.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 3 + "_" + deepLinkList.get(2))
-        remoteView.setOnClickPendingIntent(
-            R.id.cta3,
-            LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA3, context)
-        )
-
-        if(deepLinkList.size > 3) {
-            val bundleCTA4 = extras.clone() as Bundle
-            bundleCTA4.putBoolean("cta4", true)
-            bundleCTA4.putString(Constants.DEEP_LINK_KEY, deepLinkList.get(3))
-            bundleCTA4.putString(
-                Constants.KEY_C2A,
-                PTConstants.PT_5CTA_C2A_KEY + 4 + "_" + deepLinkList.get(3)
-            )
+        // Validation guarantees at least three deep links; icons 4 and 5 are wired only when
+        // their deep link is present, matching the icons made visible above.
+        deepLinkList.take(ctaIds.size).forEachIndexed { index, deepLink ->
+            val ctaNumber = index + 1
+            val bundleCTA = extras.clone() as Bundle
+            bundleCTA.putBoolean("cta$ctaNumber", true)
+            bundleCTA.putString(Constants.DEEP_LINK_KEY, deepLink)
+            bundleCTA.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + ctaNumber + "_" + deepLink)
+            // Same keys the core SDK puts on action button clicks, so the documented Android 12+
+            // client-side dismiss handling covers icon taps too.
+            bundleCTA.putString(PTConstants.PT_ACTION_ID, "cta$ctaNumber")
+            bundleCTA.putBoolean(PTConstants.PT_AUTO_CANCEL, true)
             remoteView.setOnClickPendingIntent(
-                R.id.cta4,
-                LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA4, context)
-            )
-        }
-
-        if(deepLinkList.size > 4) {
-            val bundleCTA5 = extras.clone() as Bundle
-            bundleCTA5.putBoolean("cta5", true)
-            bundleCTA5.putString(Constants.DEEP_LINK_KEY, deepLinkList.get(4))
-            bundleCTA5.putString(
-                Constants.KEY_C2A,
-                PTConstants.PT_5CTA_C2A_KEY + 5 + "_" + deepLinkList.get(4)
-            )
-            remoteView.setOnClickPendingIntent(
-                R.id.cta5,
-                LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA5, context)
+                ctaIds[index],
+                LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA, context)
             )
         }
 
