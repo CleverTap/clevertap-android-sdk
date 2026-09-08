@@ -12,8 +12,8 @@ import com.clevertap.android.sdk.Constants
 
 internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
 
-    lateinit var fiveIconSmallContentView: ContentView
-    lateinit var fiveIconBigContentView: ContentView
+    lateinit var fiveIconSmallContentView: FiveIconContentView
+    lateinit var fiveIconBigContentView: FiveIconContentView
 
     /**
      * pt_title only, not baseContent's title, which falls back to nt. An icon-only five icons

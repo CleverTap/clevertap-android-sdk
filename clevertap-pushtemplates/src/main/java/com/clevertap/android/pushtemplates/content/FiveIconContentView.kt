@@ -1,0 +1,130 @@
+package com.clevertap.android.pushtemplates.content
+
+import android.content.Context
+import android.os.Bundle
+import android.view.View
+import com.clevertap.android.pushtemplates.FiveIconsTemplateData
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.R
+import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
+
+/**
+ * Shared rendering for the five icons collapsed and expanded views: the optional text row, the
+ * icon row and the per-icon click intents. Subclasses pick the layout and call the helpers.
+ */
+internal abstract class FiveIconContentView(
+    context: Context,
+    renderer: TemplateRenderer,
+    layoutId: Int
+) : ContentView(context, layoutId, renderer.templateMediaManager) {
+
+    private var imageCounter: Int = 0
+
+    /**
+     * Binds pt_title/pt_msg and the header keys into the text row. Either text key may be set on
+     * its own, so the unused view is hidden rather than left as a blank line. The row also
+     * reserves a 36dp large icon slot, which is hidden unless pt_ico is set.
+     *
+     * @param hideMessage whether the message view has nothing to show; the expanded view also
+     * fills this slot with pt_msg_summary, so it decides this differently from the collapsed view.
+     */
+    protected fun setupTextRow(data: FiveIconsTemplateData, hideMessage: Boolean) {
+        setCustomContentViewBasicKeys(
+            data.baseContent.textData.subtitle,
+            data.baseContent.colorData.metaColor
+        )
+        setCustomContentViewTitle(data.iconTextData.title)
+        setCustomContentViewMessage(data.iconTextData.message)
+        if (data.iconTextData.title.isNullOrEmpty()) remoteView.setViewVisibility(R.id.title, View.GONE)
+        if (hideMessage) remoteView.setViewVisibility(R.id.msg, View.GONE)
+        setCustomContentViewLargeIcon(data.baseContent.iconData.largeIcon)
+        setCustomTextColour(data.baseContent.colorData.titleColor, R.id.title)
+        setCustomTextColour(data.baseContent.colorData.messageColor, R.id.msg)
+    }
+
+    /**
+     * Shows one icon per image and loads it; an icon whose image cannot be loaded is hidden and
+     * counted so the renderer can fall back to the basic template when too many are missing.
+     */
+    protected fun setupIcons(data: FiveIconsTemplateData) {
+        data.imageList.forEachIndexed { index, imageData ->
+            val imageUrl = imageData.url
+            val altText = imageData.altText
+            if (index >= ctaIds.size) return@forEachIndexed
+
+            val viewId = ctaIds[index]
+            remoteView.setViewVisibility(viewId, View.VISIBLE)
+
+            val description = if (altText.isNotEmpty()) altText
+                              else context.getString(fallbackDescriptions[index])
+            remoteView.setContentDescription(viewId, description)
+
+            val fallback = loadImageURLIntoRemoteView(
+                viewId,
+                imageUrl,
+                remoteView,
+                altText
+            )
+
+            if (fallback) {
+                remoteView.setViewVisibility(viewId, View.GONE)
+                imageCounter++
+            }
+        }
+    }
+
+    /**
+     * Attaches one click intent per deep link. Validation guarantees at least three deep links;
+     * icons 4 and 5 are wired only when their deep link is present, matching the icons shown.
+     */
+    protected fun setupIconClicks(data: FiveIconsTemplateData, extras: Bundle, notificationId: Int) {
+        extras.putInt(PTConstants.PT_NOTIF_ID, notificationId)
+        extras.putBoolean(Constants.CLOSE_SYSTEM_DIALOGS, true)
+
+        data.baseContent.deepLinkList.take(ctaIds.size).forEachIndexed { index, deepLink ->
+            val ctaNumber = index + 1
+            val bundleCTA = extras.clone() as Bundle
+            bundleCTA.putBoolean("cta$ctaNumber", true)
+            bundleCTA.putString(Constants.DEEP_LINK_KEY, deepLink)
+            bundleCTA.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + ctaNumber + "_" + deepLink)
+            // Same keys the core SDK puts on action button clicks, so the documented Android 12+
+            // client-side dismiss handling covers icon taps too.
+            bundleCTA.putString(PTConstants.PT_ACTION_ID, "cta$ctaNumber")
+            bundleCTA.putBoolean(PTConstants.PT_AUTO_CANCEL, true)
+            remoteView.setOnClickPendingIntent(
+                ctaIds[index],
+                LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA, context)
+            )
+        }
+    }
+
+    /**
+     * Returns total number of five icon URL's which does not convert to bitmap
+     */
+    internal fun getUnloadedFiveIconsCount(): Int {
+        return imageCounter
+    }
+
+    companion object {
+
+        private val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
+        private val fallbackDescriptions = listOf(
+            R.string.pt_five_icon_1,
+            R.string.pt_five_icon_2,
+            R.string.pt_five_icon_3,
+            R.string.pt_five_icon_4,
+            R.string.pt_five_icon_5
+        )
+
+        /**
+         * Only pt_title/pt_msg drive the layout choice. nt/nm are populated on every campaign,
+         * so consulting them here would make the icon-only layout unreachable.
+         */
+        internal fun hasText(data: FiveIconsTemplateData): Boolean {
+            return !data.iconTextData.title.isNullOrEmpty() ||
+                    !data.iconTextData.message.isNullOrEmpty()
+        }
+    }
+}
