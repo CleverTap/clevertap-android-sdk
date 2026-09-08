@@ -8,7 +8,7 @@ import org.json.JSONObject
  * the top level, extracted from `PushNotificationHandler.surfaceLiveActivityPayload` so the merge
  * semantics are unit-testable without a real [android.os.Bundle].
  *
- * Rules (see TAN §5.3):
+ * Rules:
  * - **Root-wins:** a key already present at the top level ([existingKeys]) is never overwritten, so
  *   wrapper/identity/analytics keys (`wzrk_pid`, `wzrk_activityId`, `wzrk_id`, …) can't be corrupted.
  * - **String coercion:** values are emitted as strings — parity with a flat FCM Push Template

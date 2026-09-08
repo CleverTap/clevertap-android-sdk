@@ -281,12 +281,11 @@ public interface Constants {
     // On Android there is no ActivityKit token concept — live updates are ordinary
     // FCM data pushes routed to an ICleverTapNotificationFactory. These keys mark such
     // pushes and carry the backend-assigned identity used for in-place updates + attribution.
-    // todo - confirm final key names with BE contract.
     /** Marker present on a Live Activity (live update) push. Value is "true". */
     String WZRK_LIVE_ACTIVITY = "wzrk_la";
     /** Backend-assigned stable activity id. The SDK derives the in-place notification id from it, and
      *  because it is {@code wzrk_}-prefixed it also flows into the lifecycle event {@code evtData}
-     *  automatically (serves both routing and attribution). See TAN §5.1 / §6. */
+     *  automatically (serves both routing and attribution). */
     String WZRK_LIVE_ACTIVITY_ID = "wzrk_activityId";
     /** Single nested payload object carried by a Live Update push. Holds the render content for BOTH
      *  modes: if it contains a {@code pt_id} the SDK renders it (Mode B, e.g. {@code {"pt_id":"pt_progress", ...}});

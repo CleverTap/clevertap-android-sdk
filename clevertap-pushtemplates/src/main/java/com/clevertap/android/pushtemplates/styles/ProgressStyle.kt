@@ -37,7 +37,7 @@ private typealias PointData = ProgressPayloadParser.PointData
  *   colored connectors). Not promotable (promotion is a 16+ OS feature), but kept ongoing so it
  *   behaves like a live update.
  *
- * Both tiers read the same `pt_progress_*` contract (TAN §14).
+ * Both tiers read the same `pt_progress_*` contract.
  */
 internal class ProgressStyle(
     private val data: ProgressTemplateData,

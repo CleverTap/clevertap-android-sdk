@@ -900,13 +900,20 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Raises the "Live Activity" lifecycle event with state {@code Dismissed}. Invoked by
-     * {@link com.clevertap.android.sdk.pushnotification.CTLiveActivityDismissReceiver} when a
-     * live-update notification is swiped away.
+     * Raises the "Live Activity" lifecycle event with state {@code Dismissed} for the given push
+     * bundle. Call this from your own delete intent when you render a Live Activity with custom
+     * dismiss handling and want CleverTap to record the dismissal.
+     *
+     * <p>No-op unless {@code notification} is a CleverTap Live Activity push, so it can never raise a
+     * Dismissed event for a normal notification.
      */
-    @RestrictTo(Scope.LIBRARY)
     public static void handleLiveActivityDismissed(Context context, Bundle notification) {
         if (notification == null) {
+            return;
+        }
+
+        if (!"true".equalsIgnoreCase(notification.getString(Constants.WZRK_LIVE_ACTIVITY))) {
+            Logger.v("handleLiveActivityDismissed called with a non Live Activity bundle; ignoring.");
             return;
         }
 
