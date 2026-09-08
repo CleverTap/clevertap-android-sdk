@@ -89,13 +89,7 @@ object HomeScreenModel {
                 "Input Box - CTA - DOC false",
                 "Input Box - reminder - DOC true",
                 "Input Box - reminder - DOC false",
-                "Three CTA",
-                "Progress: Order Tracker (local demo)",
-                "Custom Live Update (local demo)",
-                "Progress: Actions + Deep Link (local demo)",
-                "Progress: Countdown Chip + Promoted (local demo)",
-                "Progress: No Promotion (local demo)",
-                "Progress: Start/End Icons (local demo)"
+                "Three CTA"
             ),
             "PROMPT LOCAL IAM" to listOf(
                 "Half-Interstitial Local IAM",
@@ -142,6 +136,19 @@ object HomeScreenModel {
                 "Opt Out - userOptOut: false, allowSystemEvents: false",
                 "Opt Out - userOptOut: true (single param)",
                 "Opt Out - userOptOut: false (single param)"
+            ),
+            // Live Update local demos (SDK-rendered pt_progress + the Mode A custom factory). Section
+            // index 19 -> click codes "19-N" are handled in HomeScreenFragment (they render locally,
+            // needing a Context).
+            "LIVE UPDATES" to listOf(
+                "Progress: Order Tracker (local demo)",
+                "Progress: Actions + Deep Link (local demo)",
+                "Progress: Countdown Chip + Promoted (local demo)",
+                "Progress: No Promotion (local demo)",
+                "Progress: Start/End Icons (local demo)",
+                "Progress: Plain Bar - determinate (local demo)",
+                "Progress: Indeterminate Bar (local demo)",
+                "Custom Live Update - Mode A factory (local demo)"
             ),
         )
     }

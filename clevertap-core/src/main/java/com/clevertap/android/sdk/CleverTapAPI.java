@@ -917,28 +917,22 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             // no-op
         }
 
-        if (instances == null) {
-            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
-            if (instance != null) {
-                instance.coreState.getAnalyticsManager()
-                        .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
-            }
+        // Reuse the shared instance-resolution (default vs multi-instance) instead of re-implementing
+        // the instances.keySet() loop — same path handleNotificationClicked and friends use.
+        final CleverTapAPI instance = fromAccountId(context, _accountId);
+        if (instance == null) {
             return;
         }
 
-        for (String accountId : instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            boolean shouldProcess = false;
-            if (instance != null) {
-                shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
-                        || instance.getAccountId().equals(_accountId);
-            }
-            if (shouldProcess) {
-                instance.coreState.getAnalyticsManager()
-                        .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
-                break;
-            }
-        }
+        // Dismissal is delivered on the BroadcastReceiver's main thread; raise the event on a worker
+        // so the analytics/DB queue work (raiseLiveActivityLifecycleEvent is @WorkerThread) never runs
+        // on the main thread.
+        Task<Void> task = instance.getCoreState().getExecutors().postAsyncSafelyTask();
+        task.execute("handleLiveActivityDismissed", () -> {
+            instance.getCoreState().getAnalyticsManager()
+                    .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
+            return null;
+        });
     }
 
     /**
@@ -2930,7 +2924,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Sets the listener to get the list of currently running Display Campaigns via callback
      *
-     * @param listener- {@link DisplayUnitListener}
+     * @param listener {@link DisplayUnitListener}
      */
     public void setDisplayUnitListener(DisplayUnitListener listener) {
         coreState.getCallbackManager().setDisplayUnitListener(listener);

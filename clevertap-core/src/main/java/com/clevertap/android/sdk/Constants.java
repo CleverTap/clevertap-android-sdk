@@ -293,8 +293,11 @@ public interface Constants {
      *  otherwise it is the client factory's custom data (Mode A). Not {@code wzrk_}-prefixed on purpose
      *  so the render blob never leaks into analytics evtData. */
     String WZRK_LIVE_ACTIVITY_DATA = "data";
-    /** Lifecycle event carried by the push: {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} or {@link #WZRK_LIVE_ACTIVITY_EVENT_END}. */
+    /** Lifecycle event carried by the push, sent by BE, mapped 1:1 to the analytics state:
+     *  {@link #WZRK_LIVE_ACTIVITY_EVENT_START} → Started, {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} →
+     *  Updated, {@link #WZRK_LIVE_ACTIVITY_EVENT_END} → Ended. Anything else defaults to Updated. */
     String WZRK_LIVE_ACTIVITY_EVENT = "wzrk_la_event";
+    String WZRK_LIVE_ACTIVITY_EVENT_START = "start";
     String WZRK_LIVE_ACTIVITY_EVENT_UPDATE = "update";
     String WZRK_LIVE_ACTIVITY_EVENT_END = "end";
     /** Single event name raised for every Live Activity lifecycle transition (mirrors iOS kCTLAEventName). */
