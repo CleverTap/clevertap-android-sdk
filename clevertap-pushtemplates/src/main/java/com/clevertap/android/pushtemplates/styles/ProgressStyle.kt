@@ -11,19 +11,26 @@ import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.ProgressTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.PROGRESS_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 
+// Parsed segment/point models live in the (unit-tested) ProgressPayloadParser.
+private typealias SegmentData = ProgressPayloadParser.SegmentData
+private typealias PointData = ProgressPayloadParser.PointData
+
 /**
  * Progress-centric template (`pt_progress`).
  *
  * Two rendering tiers, gated on the OS:
- * - **Android 16+ (API 36):** native [NotificationCompat.ProgressStyle] — segments, points,
- *   tracker icon, status chip, and promotion ([NotificationCompat.Builder.setRequestPromotedOngoing]).
+ * - **Android 16+ (API 36):** native `NotificationCompat.ProgressStyle` — segments, points,
+ *   tracker icon, status chip, and promotion (`setRequestPromotedOngoing`). Invoked via reflection
+ *   (see [buildNative]) so the SDK needs no build-time dependency on androidx.core 1.17.0.
  *   This is a base style with NO custom RemoteViews, which is what makes promotion possible.
  * - **Below API 36:** a custom-RemoteViews fallback that mimics the same look — tracker icon,
  *   title/message, and a dots-and-connectors progress row (points as dots, segments as weighted
@@ -32,16 +39,19 @@ import org.json.JSONArray
  *
  * Both tiers read the same `pt_progress_*` contract (TAN §14).
  */
-internal class ProgressStyle(private val renderer: TemplateRenderer) {
-
-    private data class SegmentData(val length: Int, val color: Int?)
-    private data class PointData(val position: Int, val color: Int?)
+internal class ProgressStyle(
+    private val data: ProgressTemplateData,
+    private val renderer: TemplateRenderer
+) {
 
     companion object {
         // Android 16 (Baklava) introduced Notification.ProgressStyle + promotion.
         private const val API_PROGRESS_STYLE = 36
-        private val COLOR_INACTIVE = Color.parseColor("#48484A")
-        private val COLOR_POINT_DEFAULT = Color.parseColor("#FFFFFF")
+        // Fallback-only defaults: used by the pre-16 RemoteViews path when a segment/point in the
+        // payload omits its own color. On native 16+ colors come from the payload and the platform
+        // supplies its own default, so these are never applied there.
+        private val COLOR_INACTIVE = Color.parseColor("#48484A")   // inactive segment/track gray
+        private val COLOR_POINT_DEFAULT = Color.parseColor("#FFFFFF") // uncolored milestone dot
     }
 
     fun builderFromStyle(
@@ -54,8 +64,9 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         val ended = "end".equals(extras.getString(PTConstants.PT_LA_EVENT), ignoreCase = true)
         val title = renderer.getTitle(extras, context) ?: ""
         val message = renderer.getMessage(extras) ?: ""
-        val segments = parseSegments(extras.getString(PTConstants.PT_PROGRESS_SEGMENTS))
-        val points = parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS))
+        // Segments/points (incl. point titles) are parsed once in TemplateDataFactory.
+        val segments = data.segments
+        val points = data.points
         val trackerIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_TRACKER_ICON))
 
         nb.setSmallIcon(renderer.smallIcon)
@@ -66,9 +77,15 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
             .setAutoCancel(ended)
             .setColor(parseColor(renderer.smallIconColour))
 
-        if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) {
-            buildNative(context, extras, nb, segments, points, trackerIcon, ended)
-        } else {
+        // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
+        // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
+        // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
+        // consumer, we catch the class/method absence and degrade to the RemoteViews fallback.
+        val nativeOk = Build.VERSION.SDK_INT >= API_PROGRESS_STYLE &&
+            runCatching { buildNative(context, extras, nb, segments, points, trackerIcon, ended) }
+                .onFailure { PTLog.verbose("pt_progress: native ProgressStyle unavailable (androidx.core < 1.17.0?), using fallback", it) }
+                .isSuccess
+        if (!nativeOk) {
             buildFallback(context, extras, nb, title, message, segments, points, trackerIcon)
         }
 
@@ -96,7 +113,16 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         ActionButtonsHandler(renderer).addActionButtons(context, extras, notificationId, nb)
     }
 
-    // --- Android 16+ : native ProgressStyle + promotion ---
+    // --- Android 16+ : native ProgressStyle + promotion (via reflection) ---
+    //
+    // NotificationCompat.ProgressStyle + the promotion/chip builder methods only exist in
+    // androidx.core 1.17.0. We invoke them REFLECTIVELY so this SDK compiles WITHOUT a build-time
+    // dependency on 1.17.0 (no compileOnly / resolutionStrategy force needed): the host app supplies
+    // whatever androidx.core it ships. If that runtime core is < 1.17.0 the reflected class/methods
+    // are absent -> the first Class.forName throws -> builderFromStyle's runCatching falls back to
+    // the RemoteViews path. The literal class/method names below track androidx.core 1.17.0.
+    // Everything already present in the baseline core (IconCompat, setStyle/Style, setWhen/chronometer)
+    // is called directly and type-safely.
 
     private fun buildNative(
         context: Context,
@@ -107,43 +133,66 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         trackerIcon: Bitmap?,
         ended: Boolean
     ): NotificationCompat.Builder {
-        val progressStyle = NotificationCompat.ProgressStyle()
-            .setStyledByProgress(boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
-            .setProgress(extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
+        val psClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle")
+        val progressStyle = psClass.getConstructor().newInstance()
+
+        psClass.getMethod("setStyledByProgress", Boolean::class.javaPrimitiveType)
+            .invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
+        psClass.getMethod("setProgress", Int::class.javaPrimitiveType)
+            .invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
 
         if (segments.isNotEmpty()) {
-            progressStyle.setProgressSegments(segments.map {
-                val s = NotificationCompat.ProgressStyle.Segment(it.length)
-                it.color?.let { c -> s.setColor(c) }
-                s
-            })
+            val segClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle\$Segment")
+            val segCtor = segClass.getConstructor(Int::class.javaPrimitiveType)
+            val segSetColor = segClass.getMethod("setColor", Int::class.javaPrimitiveType)
+            val segList = segments.map { seg ->
+                segCtor.newInstance(seg.length).also { s -> seg.color?.let { segSetColor.invoke(s, it) } }
+            }
+            psClass.getMethod("setProgressSegments", List::class.java).invoke(progressStyle, segList)
         }
         if (points.isNotEmpty()) {
-            progressStyle.setProgressPoints(points.map {
-                val p = NotificationCompat.ProgressStyle.Point(it.position)
-                it.color?.let { c -> p.setColor(c) }
-                p
-            })
+            val ptClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle\$Point")
+            val ptCtor = ptClass.getConstructor(Int::class.javaPrimitiveType)
+            val ptSetColor = ptClass.getMethod("setColor", Int::class.javaPrimitiveType)
+            val ptList = points.map { pt ->
+                ptCtor.newInstance(pt.position).also { p -> pt.color?.let { ptSetColor.invoke(p, it) } }
+            }
+            psClass.getMethod("setProgressPoints", List::class.java).invoke(progressStyle, ptList)
         }
-        trackerIcon?.let { progressStyle.setProgressTrackerIcon(IconCompat.createWithBitmap(it)) }
-        bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
-            ?.let { progressStyle.setProgressStartIcon(IconCompat.createWithBitmap(it)) }
-        bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
-            ?.let { progressStyle.setProgressEndIcon(IconCompat.createWithBitmap(it)) }
 
-        nb.setStyle(progressStyle)
+        trackerIcon?.let {
+            psClass.getMethod("setProgressTrackerIcon", IconCompat::class.java)
+                .invoke(progressStyle, IconCompat.createWithBitmap(it))
+        }
+        bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))?.let {
+            psClass.getMethod("setProgressStartIcon", IconCompat::class.java)
+                .invoke(progressStyle, IconCompat.createWithBitmap(it))
+        }
+        bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))?.let {
+            psClass.getMethod("setProgressEndIcon", IconCompat::class.java)
+                .invoke(progressStyle, IconCompat.createWithBitmap(it))
+        }
+
+        // setStyle(Style) exists in the baseline core; ProgressStyle is-a Style at runtime.
+        nb.setStyle(progressStyle as NotificationCompat.Style)
         applyNativeChip(extras, nb)
 
         if (!ended && !"false".equals(extras.getString(PTConstants.PT_PROMOTE), ignoreCase = true)) {
-            nb.setRequestPromotedOngoing(true)
+            NotificationCompat.Builder::class.java
+                .getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
+                .invoke(nb, true)
         }
         return nb
     }
 
     private fun applyNativeChip(extras: Bundle, nb: NotificationCompat.Builder) {
         when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
-            "text" -> extras.getString(PTConstants.PT_CHIP_TEXT)?.takeIf { it.isNotEmpty() }
-                ?.let { nb.setShortCriticalText(it) }
+            "text" -> extras.getString(PTConstants.PT_CHIP_TEXT)?.takeIf { it.isNotEmpty() }?.let {
+                // setShortCriticalText is androidx.core 1.17.0-only -> reflect (same tier as ProgressStyle).
+                NotificationCompat.Builder::class.java
+                    .getMethod("setShortCriticalText", String::class.java)
+                    .invoke(nb, it)
+            }
 
             "timer", "countdown" -> extras.getString(PTConstants.PT_WHEN)?.toLongOrNull()?.let { whenMs ->
                 nb.setWhen(whenMs).setUsesChronometer(true)
@@ -167,11 +216,22 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         trackerIcon: Bitmap?
     ): NotificationCompat.Builder {
         val chipText = extras.getString(PTConstants.PT_CHIP_TEXT)
+        val startIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
+        val endIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
 
-        val big = fallbackView(context, R.layout.pt_progress_fallback, title, message,
-            chipText, trackerIcon, segments, points)
-        val small = fallbackView(context, R.layout.pt_progress_fallback_collapsed, title, message,
-            chipText, trackerIcon, segments, points)
+        // Either/or: milestones (dots + connectors) when segments/points are present, else a plain
+        // bar — indeterminate when flagged, else determinate. Never both. (Segmented ignores the
+        // indeterminate flag; a milestone bar is inherently determinate.)
+        val segmented = data.isSegmented
+        val indeterminate = data.indeterminate && !segmented
+        val progress = data.progress ?: 0
+        // Determinate max: pt_progress_max, else the summed segment lengths, else 100.
+        val progressMax = data.progressMax ?: segments.sumOf { it.length }.takeIf { it > 0 } ?: 100
+
+        val big = fallbackView(context, R.layout.pt_progress_fallback, expanded = true, segmented, indeterminate,
+            title, message, chipText, trackerIcon, startIcon, endIcon, segments, points, progress, progressMax)
+        val small = fallbackView(context, R.layout.pt_progress_fallback_collapsed, expanded = false, segmented,
+            indeterminate, title, message, chipText, trackerIcon, null, null, segments, points, progress, progressMax)
 
         nb.setCustomContentView(small)
             .setCustomBigContentView(big)
@@ -183,12 +243,19 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
     private fun fallbackView(
         context: Context,
         layoutId: Int,
+        expanded: Boolean,
+        segmented: Boolean,
+        indeterminate: Boolean,
         title: String,
         message: String,
         chipText: String?,
         trackerIcon: Bitmap?,
+        startIcon: Bitmap?,
+        endIcon: Bitmap?,
         segments: List<SegmentData>,
-        points: List<PointData>
+        points: List<PointData>,
+        progress: Int,
+        progressMax: Int
     ): RemoteViews {
         val rv = RemoteViews(context.packageName, layoutId)
         rv.setTextViewText(R.id.pt_title, Html.fromHtml(title))
@@ -203,20 +270,46 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
             rv.setViewVisibility(R.id.pt_tracker, android.view.View.VISIBLE)
         }
 
-        // Points as dots, segments as weighted colored connectors between them.
-        rv.removeAllViews(R.id.pt_progress_container)
-        if (points.isNotEmpty()) {
-            points.forEachIndexed { i, p ->
-                val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
-                dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
-                rv.addView(R.id.pt_progress_container, dot)
-                if (i < segments.size) {
-                    rv.addView(R.id.pt_progress_container, segmentView(context, segments[i]))
+        if (segmented) {
+            // Milestones: show the dots/connectors row, hide the plain bar.
+            rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
+            if (expanded) {
+                startIcon?.let {
+                    rv.setImageViewBitmap(R.id.pt_start_icon, it)
+                    rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
+                }
+                endIcon?.let {
+                    rv.setImageViewBitmap(R.id.pt_end_icon, it)
+                    rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
                 }
             }
+            rv.removeAllViews(R.id.pt_progress_container)
+            if (points.isNotEmpty()) {
+                points.forEachIndexed { i, p ->
+                    val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
+                    dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
+                    if (expanded && !p.title.isNullOrEmpty()) {
+                        dot.setTextViewText(R.id.pt_point_title, p.title)
+                        dot.setViewVisibility(R.id.pt_point_title, android.view.View.VISIBLE)
+                    }
+                    rv.addView(R.id.pt_progress_container, dot)
+                    if (i < segments.size) {
+                        rv.addView(R.id.pt_progress_container, segmentView(context, segments[i]))
+                    }
+                }
+            } else {
+                segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
+            }
         } else {
-            // No points: render a continuous weighted segmented bar.
-            segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
+            // Plain bar: hide the segmented row/container, show the bar (indeterminate or determinate).
+            rv.setViewVisibility(R.id.pt_segmented_row, android.view.View.GONE) // expanded only; no-op on collapsed
+            rv.setViewVisibility(R.id.pt_progress_container, android.view.View.GONE)
+            rv.setViewVisibility(R.id.pt_bar, android.view.View.VISIBLE)
+            if (indeterminate) {
+                rv.setProgressBar(R.id.pt_bar, 0, 0, true)
+            } else {
+                rv.setProgressBar(R.id.pt_bar, progressMax, progress.coerceIn(0, progressMax), false)
+            }
         }
         return rv
     }
@@ -227,37 +320,7 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
         return v
     }
 
-    // --- shared parsing ---
-
-    private fun parseSegments(json: String?): List<SegmentData> {
-        val out = ArrayList<SegmentData>()
-        if (json.isNullOrEmpty()) return out
-        try {
-            val arr = JSONArray(json)
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                out.add(SegmentData(o.optInt("length", 1), colorOrNull(o.optString("color"))))
-            }
-        } catch (t: Throwable) {
-            PTLog.verbose("pt_progress: failed to parse segments", t)
-        }
-        return out
-    }
-
-    private fun parsePoints(json: String?): List<PointData> {
-        val out = ArrayList<PointData>()
-        if (json.isNullOrEmpty()) return out
-        try {
-            val arr = JSONArray(json)
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                out.add(PointData(o.optInt("position", 0), colorOrNull(o.optString("color"))))
-            }
-        } catch (t: Throwable) {
-            PTLog.verbose("pt_progress: failed to parse points", t)
-        }
-        return out
-    }
+    // --- media / helpers ---
 
     private fun bitmap(context: Context, url: String?): Bitmap? {
         if (url.isNullOrEmpty()) return null
@@ -288,9 +351,6 @@ internal class ProgressStyle(private val renderer: TemplateRenderer) {
     private fun boolean(extras: Bundle, key: String, def: Boolean): Boolean =
         extras.getString(key)?.let { "true".equals(it, ignoreCase = true) } ?: def
 
-    private fun colorOrNull(hex: String?): Int? =
-        if (hex.isNullOrEmpty()) null else try { Color.parseColor(hex) } catch (t: Throwable) { null }
-
     private fun parseColor(hex: String?): Int =
-        colorOrNull(hex) ?: Color.parseColor(PTConstants.PT_COLOUR_GREY)
+        Utils.getColour(hex, PTConstants.PT_COLOUR_GREY)
 }
