@@ -273,6 +273,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
+     * <p>This entry renders core push notifications and client-factory (Mode A) Live Updates. For
+     * SDK-rendered Push Templates — including the {@code pt_progress} (Mode B) Live Update — call
+     * {@code CTFcmMessageHandler().createNotification(context, remoteMessage)} instead, which routes
+     * through the template renderer.</p>
+     *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
      * Note: Starting from core v5.1.0, this method runs on the caller's thread. Make sure to call it
      * in onMessageReceive() of messaging service.

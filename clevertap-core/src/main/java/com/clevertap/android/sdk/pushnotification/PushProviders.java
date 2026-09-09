@@ -169,6 +169,15 @@ public class PushProviders implements CTPushProviderListener {
         try {
             // May be overridden below for Live Update Mode B so successive updates land in place.
             int liveActivityNotificationId = notificationId;
+
+            // Live Update: flatten the nested `data` (pt_id + client render keys) to the top level so
+            // the factory routing below can read it. Idempotent (root-wins), so it is a no-op when the
+            // SDK's FCM handler path already surfaced it — this is what lets a Mode A client-factory
+            // Live Update work on the CleverTapAPI.createNotification entry point too.
+            if ("true".equalsIgnoreCase(extras.getString(Constants.WZRK_LIVE_ACTIVITY, ""))) {
+                PushNotificationHandler.surfaceLiveActivityPayload(extras);
+            }
+
             boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equalsIgnoreCase("true");
             if (isSilent) {
                 analyticsManager.pushNotificationViewedEvent(extras);

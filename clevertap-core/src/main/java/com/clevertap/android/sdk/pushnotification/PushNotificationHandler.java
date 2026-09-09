@@ -35,7 +35,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
      * {@link LiveActivityPayloadSurfacer#flatten} — a pure, unit-tested seam. This method just applies
      * the result to the bundle.</p>
      */
-    private static void surfaceLiveActivityPayload(Bundle message) {
+    static void surfaceLiveActivityPayload(Bundle message) {
         String data = message.getString(Constants.WZRK_LIVE_ACTIVITY_DATA);
         Map<String, String> toSurface = LiveActivityPayloadSurfacer.flatten(data, message.keySet());
         for (Map.Entry<String, String> entry : toSurface.entrySet()) {
