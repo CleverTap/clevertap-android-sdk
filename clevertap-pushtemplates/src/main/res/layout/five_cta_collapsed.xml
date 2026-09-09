@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Collapsed five icons for an icon only campaign. The text block is hidden at runtime but the
+     row is still included, since below Android 12 it carries the app name that identifies the
+     notification; with no text to make room for, the strip takes the taller height. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
@@ -8,7 +11,7 @@
 
     <include
         android:id="@+id/five_cta_text_row"
-        layout="@layout/content_view_small_multi_line_msg" />
+        layout="@layout/content_view_small_single_line_msg" />
 
     <include
         android:id="@+id/five_cta_icon_row"

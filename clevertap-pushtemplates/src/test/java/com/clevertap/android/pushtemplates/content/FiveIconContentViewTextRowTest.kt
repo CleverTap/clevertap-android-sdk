@@ -19,6 +19,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -151,6 +152,102 @@ class FiveIconContentViewTextRowTest {
         assertEquals(View.GONE, small.findViewById<View>(R.id.large_icon).visibility)
     }
 
+    /**
+     * Android 12 gives a collapsed custom view 48dp, measured on a device, and only to apps that
+     * target it. A title and message fill that on their own, so the strip is dropped there and
+     * the icons are the expanded view's to show; an app that still has the full height keeps both
+     * together, which is why this follows what the app targets and not the device.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun `collapsed view drops the icon strip for text where the 48dp row applies`() {
+        targetAndroid12OrLater()
+        val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null))
+
+        val collapsed = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+        val expanded = inflate(FiveIconBigContentView(context, renderer(), data, Bundle()))
+
+        assertEquals(View.GONE, iconRow(collapsed).visibility)
+        assertEquals(View.VISIBLE, collapsed.findViewById<View>(R.id.title).visibility)
+        assertEquals(View.VISIBLE, collapsed.findViewById<View>(R.id.msg).visibility)
+        assertEquals(View.VISIBLE, iconRow(expanded).visibility)
+        assertEquals(dimen(R.dimen.five_cta_icon_row_full), iconRow(expanded).layoutParams.height)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun `collapsed view keeps the icon strip for an icon only campaign where the 48dp row applies`() {
+        targetAndroid12OrLater()
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null))
+
+        val collapsed = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+
+        // Resized to the row rather than clipped by it, as the full strip was.
+        assertEquals(View.VISIBLE, iconRow(collapsed).visibility)
+        assertEquals(dimen(R.dimen.five_cta_icon_row_compact), iconRow(collapsed).layoutParams.height)
+    }
+
+    @Test
+    fun `collapsed view keeps text and icons together for an app that does not target Android 12`() {
+        val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null))
+
+        val collapsed = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+
+        assertEquals(View.VISIBLE, iconRow(collapsed).visibility)
+        assertEquals(dimen(R.dimen.five_cta_icon_row_with_text), iconRow(collapsed).layoutParams.height)
+    }
+
+    @Test
+    fun `icon only collapsed view keeps the full strip for an app that does not target Android 12`() {
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null))
+
+        val collapsed = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+
+        // Regression: this case briefly shared the shorter strip, halving these icons.
+        assertEquals(dimen(R.dimen.five_cta_icon_row_full), iconRow(collapsed).layoutParams.height)
+    }
+
+    /**
+     * The strip an icon only campaign keeps has to fit the 48dp row with its icons whole, which
+     * the full strip did not. This lays the real thing out under that constraint.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun `icon only collapsed view fills the 48dp row without clipping its icons`() {
+        targetAndroid12OrLater()
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null))
+        val root = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+
+        val icons = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
+            .map { root.findViewById<View>(it) }
+        icons.forEach { it.visibility = View.VISIBLE }
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(dp(COLLAPSED_ROW_WIDTH_DP), View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(dp(COLLAPSED_ROW_DP), View.MeasureSpec.AT_MOST)
+        )
+        root.layout(0, 0, root.measuredWidth, root.measuredHeight)
+
+        val iconHeight = icons.minOf { it.height }
+        assertTrue(
+            "collapsed view is ${px(root.measuredHeight)}dp, past the ${COLLAPSED_ROW_DP}dp row",
+            root.measuredHeight <= dp(COLLAPSED_ROW_DP)
+        )
+        assertTrue("icons measured ${px(iconHeight)}dp", iconHeight >= dp(30))
+    }
+
+    /** The 48dp row applies to apps targeting Android 12+, which Robolectric does not by default. */
+    private fun targetAndroid12OrLater() {
+        context.applicationInfo.targetSdkVersion = Build.VERSION_CODES.TIRAMISU
+    }
+
+    private fun iconRow(root: View) = root.findViewById<View>(R.id.five_cta_icon_row)
+
+    private fun dp(value: Int) = (value * context.resources.displayMetrics.density).toInt()
+
+    private fun px(value: Int) = value / context.resources.displayMetrics.density
+
+    private fun dimen(id: Int) = context.resources.getDimensionPixelSize(id)
+
     private fun inflate(view: ContentView): View = view.remoteView.apply(context, FrameLayout(context))
 
     private fun renderer() = TemplateRenderer(context, Bundle()).apply { notificationId = 1 }
@@ -169,5 +266,13 @@ class FiveIconContentViewTextRowTest {
         ptMsg?.let { putString("pt_msg", it) }
         ptSummary?.let { putString("pt_msg_summary", it) }
         for (i in 1..3) putString("pt_dl$i", "myapp://s$i")
+    }
+
+    private companion object {
+
+        // Measured on an Android 15 emulator with an app targeting 36: the row the system lays a
+        // collapsed custom view out in, and the width it left the view at 480dpi.
+        const val COLLAPSED_ROW_DP = 48
+        const val COLLAPSED_ROW_WIDTH_DP = 287
     }
 }

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Collapsed five icons for a campaign that sets pt_title or pt_msg. The strip is shorter than
+     the expanded one so the text and the icons both fit the collapsed view; where that view is
+     only 48dp the strip is hidden altogether, see FiveIconSmallContentView. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
@@ -10,60 +13,9 @@
         android:id="@+id/five_cta_text_row"
         layout="@layout/content_view_small_single_line_msg" />
 
-    <LinearLayout
+    <include
+        android:id="@+id/five_cta_icon_row"
+        layout="@layout/five_cta_icon_row"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:orientation="horizontal"
-        android:padding="@dimen/five_cta_padding">
-
-        <ImageView
-            android:id="@+id/cta1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:contentDescription="@null"
-            android:visibility="gone"
-            android:src="@drawable/pt_image" />
-
-        <ImageView
-            android:id="@+id/cta2"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:contentDescription="@null"
-            android:visibility="gone"
-            android:src="@drawable/pt_image" />
-
-        <ImageView
-            android:id="@+id/cta3"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:contentDescription="@null"
-            android:visibility="gone"
-            android:src="@drawable/pt_image" />
-
-        <ImageView
-            android:id="@+id/cta4"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:contentDescription="@null"
-            android:visibility="gone"
-            android:src="@drawable/pt_image" />
-
-        <ImageView
-            android:id="@+id/cta5"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:contentDescription="@null"
-            android:visibility="gone"
-            android:src="@drawable/pt_image" />
-    </LinearLayout>
+        android:layout_height="@dimen/five_cta_icon_row_with_text" />
 </LinearLayout>
