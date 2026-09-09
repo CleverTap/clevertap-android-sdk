@@ -2,7 +2,6 @@ package com.clevertap.android.pushtemplates.styles
 
 import android.app.PendingIntent
 import android.content.Context
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -11,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.Utils
 
 internal abstract class Style(private val data: BaseContent, private val renderer: TemplateRenderer) {
 
@@ -49,7 +49,7 @@ internal abstract class Style(private val data: BaseContent, private val rendere
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())
-            .setColor(Color.parseColor(renderer.smallIconColour?: PTConstants.PT_META_CLR_DEFAULTS))
+            .setColor(Utils.getColour(renderer.smallIconColour, PTConstants.PT_META_CLR_DEFAULTS))
             .setAutoCancel(true)
             .setStyle(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

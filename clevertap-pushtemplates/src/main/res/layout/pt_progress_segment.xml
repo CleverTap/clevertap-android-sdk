@@ -6,4 +6,4 @@
     android:layout_weight="1"
     android:layout_marginTop="6dp"
     android:background="#48484A"
-    android:contentDescription="@null" />
+    android:importantForAccessibility="no" />

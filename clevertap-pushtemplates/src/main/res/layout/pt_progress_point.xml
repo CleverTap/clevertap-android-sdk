@@ -11,7 +11,7 @@
         android:layout_width="14dp"
         android:layout_height="14dp"
         android:src="@drawable/pt_progress_dot"
-        android:contentDescription="@null" />
+        android:importantForAccessibility="no" />
 
     <TextView
         android:id="@+id/pt_point_title"

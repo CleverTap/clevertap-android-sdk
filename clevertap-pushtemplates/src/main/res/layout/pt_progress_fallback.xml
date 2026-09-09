@@ -23,7 +23,7 @@
             android:layout_height="36dp"
             android:scaleType="centerCrop"
             android:visibility="gone"
-            android:contentDescription="@null" />
+            android:contentDescription="@string/pt_progress_tracker_cd" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -80,7 +80,7 @@
             android:layout_marginEnd="6dp"
             android:scaleType="centerCrop"
             android:visibility="gone"
-            android:contentDescription="@null" />
+            android:contentDescription="@string/pt_progress_start_cd" />
 
         <LinearLayout
             android:id="@+id/pt_progress_container"
@@ -97,7 +97,7 @@
             android:layout_marginStart="6dp"
             android:scaleType="centerCrop"
             android:visibility="gone"
-            android:contentDescription="@null" />
+            android:contentDescription="@string/pt_progress_end_cd" />
     </LinearLayout>
 
     <!-- PLAIN bar (mutually exclusive with pt_segmented_row): determinate (pt_progress/max) or

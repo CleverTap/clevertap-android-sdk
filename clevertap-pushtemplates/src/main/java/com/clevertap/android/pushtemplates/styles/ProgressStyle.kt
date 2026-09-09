@@ -52,8 +52,8 @@ internal class ProgressStyle(
         // Fallback-only defaults: used by the pre-16 RemoteViews path when a segment/point in the
         // payload omits its own color. On native 16+ colors come from the payload and the platform
         // supplies its own default, so these are never applied there.
-        private val COLOR_INACTIVE = Color.parseColor("#48484A")   // inactive segment/track gray
-        private val COLOR_POINT_DEFAULT = Color.parseColor("#FFFFFF") // uncolored milestone dot
+        private val COLOR_INACTIVE = Utils.getColourOrNull("#48484A") ?: Color.GRAY   // inactive segment/track gray
+        private val COLOR_POINT_DEFAULT = Utils.getColourOrNull("#FFFFFF") ?: Color.WHITE // uncolored milestone dot
     }
 
     fun builderFromStyle(
@@ -312,8 +312,12 @@ internal class ProgressStyle(
             rv.setViewVisibility(R.id.pt_bar, android.view.View.VISIBLE)
             if (indeterminate) {
                 rv.setProgressBar(R.id.pt_bar, 0, 0, true)
+                rv.setContentDescription(R.id.pt_bar, context.getString(R.string.pt_progress_indeterminate_cd))
             } else {
-                rv.setProgressBar(R.id.pt_bar, progressMax, progress.coerceIn(0, progressMax), false)
+                val clamped = progress.coerceIn(0, progressMax)
+                rv.setProgressBar(R.id.pt_bar, progressMax, clamped, false)
+                val percent = if (progressMax > 0) clamped * 100 / progressMax else 0
+                rv.setContentDescription(R.id.pt_bar, context.getString(R.string.pt_progress_bar_cd, percent))
             }
         }
         return rv

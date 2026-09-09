@@ -22,7 +22,7 @@
             android:layout_height="28dp"
             android:scaleType="centerCrop"
             android:visibility="gone"
-            android:contentDescription="@null" />
+            android:contentDescription="@string/pt_progress_tracker_cd" />
 
         <TextView
             android:id="@+id/pt_title"
