@@ -169,8 +169,12 @@ object ProgressLiveUpdateDemo {
         }
     }
 
-    // 4 steps mapped to a 0..100 progress value for the native bar.
-    private fun progressPercent(step: Int): Int = (step * 100) / (steps.size - 1)
+    // Milestone position on a 0..100 track. Native ProgressStyle's total = sum of segment lengths,
+    // so points, segments and pt_progress must all share one scale. 4 steps -> 0, 33, 66, 100.
+    private fun pointPosition(step: Int): Int = (step * 100) / (steps.size - 1)
+
+    // pt_progress rides the same 0..100 scale as the segment total (see pointPosition).
+    private fun progressPercent(step: Int): Int = pointPosition(step)
 
     private fun etaMillis(step: Step): Long =
         (step.eta.filter { it.isDigit() }.toLongOrNull() ?: 0L) * 60_000L
@@ -191,25 +195,27 @@ object ProgressLiveUpdateDemo {
         return arr.toString()
     }
 
-    // 3 connectors between 4 points: done up to the current step, else pending.
+    // Connectors between the milestones, each spanning the gap between adjacent points so the
+    // lengths sum to 100 (same scale as pt_progress). Done up to the current step, else pending.
     private fun segmentsJson(step: Int): String {
         val arr = JSONArray()
-        for (i in 0 until 3) {
+        for (i in 0 until steps.size - 1) {
+            val length = pointPosition(i + 1) - pointPosition(i)
             val color = if (i < step) COLOR_DONE else COLOR_PENDING
-            arr.put(JSONObject().put("length", 1).put("color", color))
+            arr.put(JSONObject().put("length", length).put("color", color))
         }
         return arr.toString()
     }
 
     private fun pointsJson(step: Int): String {
         val arr = JSONArray()
-        for (i in 0 until 4) {
+        for (i in steps.indices) {
             val color = when {
                 i < step -> COLOR_DONE
                 i == step -> COLOR_ACTIVE
                 else -> COLOR_PENDING
             }
-            arr.put(JSONObject().put("position", i).put("color", color))
+            arr.put(JSONObject().put("position", pointPosition(i)).put("color", color))
         }
         return arr.toString()
     }
