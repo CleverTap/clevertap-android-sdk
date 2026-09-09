@@ -3,7 +3,9 @@ package com.clevertap.demo
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
@@ -28,7 +30,9 @@ import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory
  * - `la_progress_max`  max (default 100)
  *
  * The SDK owns the wrapper: routing (`wzrk_la`), the in-place id (`wzrk_activityId`), the lifecycle
- * events (Started/Updated/Ended/Dismissed) and impression. This factory only builds the Notification.
+ * events (Started/Updated/Ended/Dismissed) and the impression ("Notification Viewed"). This factory
+ * builds the Notification and, because a client-rendered notification owns its own content intent,
+ * wires the click so CleverTap records "Notification Clicked" (see [contentIntent]).
  */
 class CustomNotificationFactory : ICleverTapNotificationFactory {
 
@@ -71,6 +75,16 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
             .setOngoing(!ended)              // ongoing while the order is live
             .setAutoCancel(ended)
 
+        // A fully client-rendered notification owns its own content intent, so the SDK does NOT wire
+        // click tracking for it (unlike core/template pushes). Open the app with the push extras;
+        // because MyApplication registers ActivityLifecycleCallback, CleverTap raises "Notification
+        // Clicked" automatically when the launched screen resumes. If your app does not register
+        // ActivityLifecycleCallback, call
+        // CleverTapAPI.getDefaultInstance(context)?.pushNotificationClickedEvent(extras) yourself
+        // instead — but never both, or the click is counted twice. ("Notification Viewed" is always
+        // raised by the SDK, so the client should not raise it here either.)
+        nb.setContentIntent(contentIntent(context, extras))
+
         if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) {
             // Android 16+ : native, promotable ProgressStyle (client uses androidx.core 1.17.0 directly).
             val segments = ArrayList<NotificationCompat.ProgressStyle.Segment>()
@@ -92,6 +106,25 @@ class CustomNotificationFactory : ICleverTapNotificationFactory {
         }
 
         return nb.build()
+    }
+
+    /**
+     * Opens the app on tap, carrying the push extras so CleverTap can attribute the click to this
+     * push (the extras hold `wzrk_pn`/`wzrk_id`/`wzrk_pid`/`wzrk_acct_id`).
+     */
+    private fun contentIntent(context: Context, extras: Bundle): PendingIntent {
+        val launch = Intent(context, HomeScreenActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtras(extras)
+        }
+        // Stable request code per activity so successive in-place updates refresh the same
+        // PendingIntent (FLAG_UPDATE_CURRENT) rather than leaking one per update.
+        val requestCode = extras.getString("wzrk_activityId")?.hashCode() ?: 0
+        var flags = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags = flags or PendingIntent.FLAG_IMMUTABLE
+        }
+        return PendingIntent.getActivity(context, requestCode, launch, flags)
     }
 
     private fun isEnded(extras: Bundle): Boolean =
