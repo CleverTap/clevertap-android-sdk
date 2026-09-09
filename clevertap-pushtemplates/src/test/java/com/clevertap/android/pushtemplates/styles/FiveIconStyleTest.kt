@@ -27,9 +27,10 @@ import org.robolectric.annotation.Config
 
 /**
  * The builder title is what the system shows when it stacks notifications into a group
- * summary, where our RemoteViews are not rendered. Five icons must feed it pt_title only,
+ * summary, where our RemoteViews are not rendered. Five icons must feed it the pt_* text only,
  * otherwise the nt fallback (the base title, e.g. the iOS title) leaks into the summary
- * for an icon-only notification.
+ * for an icon-only notification. pt_msg stands in for a campaign that sets no pt_title, which
+ * would otherwise be a blank row in the summary.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -52,6 +53,30 @@ class FiveIconStyleTest {
     }
 
     @Test
+    fun `builder title falls back to pt_msg when only it is set`() {
+        val style = styleWith(baseTitle = "IOS title", ptTitle = null, ptMsg = "PT message")
+
+        val notification = style.builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertEquals(
+            "PT message",
+            notification.extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString()
+        )
+    }
+
+    @Test
+    fun `builder title is pt_title when both pt keys are set`() {
+        val style = styleWith(baseTitle = "IOS title", ptTitle = "PT title", ptMsg = "PT message")
+
+        val notification = style.builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertEquals(
+            "PT title",
+            notification.extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString()
+        )
+    }
+
+    @Test
     fun `builder title is pt_title when it is set`() {
         val style = styleWith(baseTitle = "PT title", ptTitle = "PT title")
 
@@ -62,7 +87,7 @@ class FiveIconStyleTest {
 
     private fun newBuilder() = NotificationCompat.Builder(context, "test_channel")
 
-    private fun styleWith(baseTitle: String, ptTitle: String?): FiveIconStyle {
+    private fun styleWith(baseTitle: String, ptTitle: String?, ptMsg: String? = null): FiveIconStyle {
         val data = FiveIconsTemplateData(
             baseContent = BaseContent(
                 textData = BaseTextData(title = baseTitle, message = "base message"),
@@ -72,7 +97,7 @@ class FiveIconStyleTest {
                 notificationBehavior = NotificationBehavior()
             ),
             imageList = arrayListOf(),
-            iconTextData = BaseTextData(title = ptTitle, message = null)
+            iconTextData = BaseTextData(title = ptTitle, message = ptMsg)
         )
         val renderer = TemplateRenderer(context, Bundle()).apply {
             smallIcon = android.R.drawable.ic_dialog_info
