@@ -229,7 +229,9 @@ public class PushProviders implements CTPushProviderListener {
 
                 String notifMessage = iNotificationRenderer.getMessage(extras);
                 notifMessage = (notifMessage != null) ? notifMessage : "";
-                if (notifMessage.isEmpty()) {
+                // A Live Update is an explicit render request validated by its own template validator
+                // (message optional), so an empty message must NOT be treated as a silent push here.
+                if (notifMessage.isEmpty() && !isLiveActivity) {
                     //silent notification
                     config.getLogger()
                             .verbose(config.getAccountId(),
