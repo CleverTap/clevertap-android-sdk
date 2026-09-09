@@ -37,7 +37,9 @@ private typealias PointData = ProgressPayloadParser.PointData
  *   colored connectors). Not promotable (promotion is a 16+ OS feature), but kept ongoing so it
  *   behaves like a live update.
  *
- * Both tiers read the same `pt_progress_*` contract.
+ * Both tiers read the same `pt_progress_*` contract. On the native tier the track total is the sum
+ * of the segment lengths (there is no separate max), so `pt_progress` and point positions must be on
+ * that scale; `pt_progress_max` and `pt_progress_indeterminate` apply to the fallback tier only.
  */
 internal class ProgressStyle(
     private val data: ProgressTemplateData,
@@ -86,7 +88,7 @@ internal class ProgressStyle(
                 .onFailure { PTLog.verbose("pt_progress: native ProgressStyle unavailable (androidx.core < 1.17.0?), using fallback", it) }
                 .isSuccess
         if (!nativeOk) {
-            buildFallback(context, extras, nb, title, message, segments, points, trackerIcon)
+            buildFallback(context, extras, nb, title, message, segments, points, trackerIcon, ended)
         }
 
         // Tap action (deep link / launch) + action buttons — shared across both tiers, reusing
@@ -138,6 +140,8 @@ internal class ProgressStyle(
 
         psClass.getMethod("setStyledByProgress", Boolean::class.javaPrimitiveType)
             .invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
+        // Native ProgressStyle has no max: the track total is the sum of segment lengths, so pt_progress
+        // must be on that scale. pt_progress_max and pt_progress_indeterminate are fallback-only here.
         psClass.getMethod("setProgress", Int::class.javaPrimitiveType)
             .invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
 
@@ -213,7 +217,8 @@ internal class ProgressStyle(
         message: String,
         segments: List<SegmentData>,
         points: List<PointData>,
-        trackerIcon: Bitmap?
+        trackerIcon: Bitmap?,
+        ended: Boolean
     ): NotificationCompat.Builder {
         val chipText = extras.getString(PTConstants.PT_CHIP_TEXT)
         val startIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
@@ -236,7 +241,7 @@ internal class ProgressStyle(
         nb.setCustomContentView(small)
             .setCustomBigContentView(big)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setOngoing(true) // no OS promotion below 16; keep it sticky like a live update
+            .setOngoing(!ended) // sticky like a live update while active; swipeable once ended
         return nb
     }
 

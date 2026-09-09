@@ -1,65 +1,81 @@
 # Live Updates demo (order tracking)
 
 Demonstrates **CleverTap Live Updates** on Android using the notification-factory flow
-(SDK-5612), rendering an order-tracking notification that updates **in place** as an order
-progresses — the Android counterpart of an iOS Live Activity order tracker.
+(SDK-5612) — **Mode A**, where the client fully renders the notification. It shows a
+progress-centric order tracker that updates **in place** as an order progresses, the Android
+counterpart of an iOS Live Activity order tracker.
+
+> For the **SDK-rendered** progress template (**Mode B**, `pt_id: pt_progress`), see
+> [`live-updates-test/PT_PROGRESS_PAYLOAD.md`](live-updates-test/PT_PROGRESS_PAYLOAD.md).
 
 Jira: [SDK-6039](https://wizrocket.atlassian.net/browse/SDK-6039) · Epic: [SDK-5253](https://wizrocket.atlassian.net/browse/SDK-5253)
 
 ## How it works
 
-1. The backend / FCM sends a **Live Update data push**.
-2. The SDK sees the `wzrk_la` marker and routes the payload to the app's
+1. The backend / FCM sends a **Live Update data push** carrying `wzrk_la` and a nested `data`
+   object with the client's render keys (and **no** `pt_id`).
+2. The SDK sees the `wzrk_la` marker, surfaces the nested `data` to the top level, and — because
+   there is no `pt_id` and a factory is registered — routes to the app's
    [`CustomNotificationFactory`](src/main/java/com/clevertap/demo/CustomNotificationFactory.kt)
    (an `ICleverTapNotificationFactory`), registered in `MyApplication` via
    `CleverTapAPI.setNotificationFactory(...)`.
-3. The factory builds the order-tracking notification (custom `RemoteViews`,
-   [`notification_live_order.xml`](src/main/res/layout/notification_live_order.xml)) and returns it.
-4. The SDK renders it. It **derives the notification id from `cleverTapActivityId`**, so every
-   subsequent push for the same order updates the **same** notification in place (no stacking),
-   and raises the "Live Activity" lifecycle events (Started / Updated / Ended / Dismissed).
+3. The factory builds the notification: on **Android 16+** a native `NotificationCompat.ProgressStyle`
+   (promoted, status-bar chip); below 16 a classic determinate progress-bar notification. It also
+   wires a content intent so taps are click-tracked (see the factory's `contentIntent`).
+4. The SDK **derives the notification id from `wzrk_activityId`**, so every subsequent push for the
+   same order updates the **same** notification in place (no stacking), owns the impression, and
+   raises the "Live Activity" lifecycle events (Started / Updated / Ended / Dismissed).
 
 ## Demo payload
 
-| Key                   | Purpose                                                        | Example          |
-|-----------------------|---------------------------------------------------------------|------------------|
-| `wzrk_la`             | Marks the push as a Live Update (routes to the factory)       | `"true"`         |
-| `cleverTapActivityId` | Stable order id — SDK derives the notification id from this   | `order_123456`   |
-| `wzrk_la_event`       | `update` (default) or `end` (terminal → Delivered)            | `update`         |
-| `la_store`            | Store name (title)                                            | `Pizza place`    |
-| `la_items`            | Item summary                                                  | `2 Pizza`        |
-| `la_order`            | Order id label                                                | `Order #123456`  |
-| `la_eta`              | ETA value                                                     | `50 min`         |
-| `la_status`           | Status line                                                   | `Order confirmed`|
-| `la_step`             | Progress step: `0`=Placed, `1`=Preparing, `2`=En Route, `3`=Delivered | `0`     |
+| Key               | Purpose                                                       | Example           |
+|-------------------|--------------------------------------------------------------|-------------------|
+| `wzrk_la`         | Marks the push as a Live Update (routes to the factory)      | `"true"`          |
+| `wzrk_activityId` | Stable order id — SDK derives the notification id from this  | `order_A1234`     |
+| `wzrk_la_event`   | `start` \| `update` \| `end` (terminal → Delivered)          | `update`          |
+| `wzrk_cid`        | Target notification channel id                               | `live_updates_channel` |
+| `nt`              | Title                                                        | `Your order`      |
+| `la_status`       | Status line                                                  | `Out for delivery`|
+| `la_eta`          | ETA text (status-bar chip on 16+)                            | `12 min`          |
+| `la_progress`     | Current progress, `0..la_progress_max`                       | `66`              |
+| `la_progress_max` | Max (default `100`)                                          | `100`             |
 
-> The `wzrk_*` keys are CleverTap's; the `la_*` keys are client-defined for this demo. A real
-> integration aligns the `la_*` keys with whatever the backend sends.
+> The `wzrk_*` keys are CleverTap's; the `nt` / `la_*` keys are client-defined for this demo and are
+> read by `CustomNotificationFactory`. A real integration aligns them with whatever the backend nests
+> inside `data`.
 
 ## Trigger it
 
-Send successive pushes with the **same `cleverTapActivityId`** and an increasing `la_step`; each one
-updates the single notification. Example progression (raw FCM data payload):
+Send successive pushes with the **same `wzrk_activityId`** and an increasing `la_progress`; each one
+updates the single notification. The client render keys go inside the `data` object (the SDK surfaces
+them to the top level):
 
 ```jsonc
-// 1) Placed
-{ "wzrk_la": "true", "cleverTapActivityId": "order_123456", "wzrk_la_event": "update",
-  "la_store": "Pizza place", "la_items": "2 Pizza", "la_order": "Order #123456",
-  "la_eta": "50 min", "la_status": "Order confirmed", "la_step": "0" }
+// 1) Confirmed
+{ "wzrk_la": "true", "wzrk_activityId": "order_A1234", "wzrk_la_event": "start",
+  "wzrk_cid": "live_updates_channel",
+  "data": { "nt": "Order #A1234", "la_status": "Order confirmed", "la_eta": "50 min",
+            "la_progress": "0", "la_progress_max": "100" } }
 
 // 2) Preparing
-{ "wzrk_la": "true", "cleverTapActivityId": "order_123456", "wzrk_la_event": "update",
-  "la_eta": "40 min", "la_status": "Preparing your order", "la_step": "1", /* ...store/items/order */ }
+{ "wzrk_la": "true", "wzrk_activityId": "order_A1234", "wzrk_la_event": "update",
+  "wzrk_cid": "live_updates_channel",
+  "data": { "nt": "Order #A1234", "la_status": "Preparing your order", "la_eta": "40 min",
+            "la_progress": "33", "la_progress_max": "100" } }
 
-// 3) En Route
-{ "wzrk_la": "true", "cleverTapActivityId": "order_123456", "wzrk_la_event": "update",
-  "la_eta": "12 min", "la_status": "Out for delivery", "la_step": "2", /* ... */ }
+// 3) Out for delivery
+{ "wzrk_la": "true", "wzrk_activityId": "order_A1234", "wzrk_la_event": "update",
+  "wzrk_cid": "live_updates_channel",
+  "data": { "nt": "Order #A1234", "la_status": "Out for delivery", "la_eta": "12 min",
+            "la_progress": "66", "la_progress_max": "100" } }
 
 // 4) Delivered (terminal)
-{ "wzrk_la": "true", "cleverTapActivityId": "order_123456", "wzrk_la_event": "end",
-  "la_eta": "0 min", "la_status": "Delivered — enjoy!", "la_step": "3", /* ... */ }
+{ "wzrk_la": "true", "wzrk_activityId": "order_A1234", "wzrk_la_event": "end",
+  "wzrk_cid": "live_updates_channel",
+  "data": { "nt": "Order #A1234", "la_status": "Delivered — enjoy!", "la_eta": "0 min",
+            "la_progress": "100", "la_progress_max": "100" } }
 ```
 
 Each push must also carry the standard CleverTap push keys (`wzrk_pn`, `wzrk_id`, `wzrk_pid`,
-`wzrk_acct_id`, …) so the SDK processes it — these are added automatically when the campaign is
-sent from the CleverTap dashboard.
+`wzrk_acct_id`, `wzrk_rnv`, …) so the SDK processes it — these are added automatically when the
+campaign is sent from the CleverTap dashboard.

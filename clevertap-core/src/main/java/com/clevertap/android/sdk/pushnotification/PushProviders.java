@@ -1120,6 +1120,17 @@ public class PushProviders implements CTPushProviderListener {
         // rebuild the notification, so resolve the channel BEFORE attaching the dismiss intent.
         notification = ensureLiveActivityChannel(context, notification, notificationManager);
 
+        // Respect a user-blocked channel: don't post (or record lifecycle/Viewed) for a notification
+        // nobody will see — same gate triggerNotification applies to core pushes.
+        if (VERSION.SDK_INT >= VERSION_CODES.O) {
+            String channelId = notification.getChannelId();
+            if (channelId != null && !CTXtensions.isNotificationChannelEnabled(context, channelId)) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "Not rendering Live Update as channel = " + channelId + " is blocked by user");
+                return;
+            }
+        }
+
         // Attach a delete intent for dismissal tracking, without clobbering one the client set.
         applyLiveActivityDismissIntent(context, notification, extras, notificationId);
 
