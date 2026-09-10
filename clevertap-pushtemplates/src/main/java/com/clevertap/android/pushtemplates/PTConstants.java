@@ -167,6 +167,14 @@ public class PTConstants {
 
     public static final String PT_ACTION_ID = "actionId";
 
+    /**
+     * Same key the core SDK puts on action button click intents. Five icons CTA clicks carry it so
+     * the app-side dismiss handler can cancel the notification: the SDK does not dismiss on an icon
+     * tap on any Android version, since below API 31 the tap is broadcast to
+     * CTPushNotificationReceiver, which does not cancel either.
+     */
+    public static final String PT_AUTO_CANCEL = "autoCancel";
+
     public static final String PT_RIGHT_SWIPE = "right_swipe";
 
     public static final String PT_MANUAL_CAROUSEL_FROM = "manual_carousel_from";

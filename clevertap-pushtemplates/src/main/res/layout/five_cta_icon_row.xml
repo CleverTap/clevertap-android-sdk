@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The row of five tappable icons, shared by the collapsed and expanded five icons layouts.
+     Each of them includes this with the height it can afford, so the icons are sized by the room
+     the notification has: see five_cta_collapsed.xml, five_cta_collapsed_with_text.xml and
+     five_cta_expanded.xml. Every icon starts hidden and is shown once its image loads. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/five_cta_padding">
+
+    <ImageView
+        android:id="@+id/cta1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/five_cta_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta2"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/five_cta_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta3"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/five_cta_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta4"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/five_cta_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta5"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/five_cta_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+</LinearLayout>

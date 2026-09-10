@@ -18,8 +18,6 @@ import com.clevertap.android.pushtemplates.PTConstants.*
 import com.clevertap.android.pushtemplates.TemplateDataFactory.getActions
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateData
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toTerminalBasicTemplateData
-import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
-import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
@@ -152,8 +150,8 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                      * If most icon bitmaps fail to load, gracefully fall back to a basic
                      * title/message notification instead of suppressing the notification.
                      */
-                    if ((fiveIconStyle.fiveIconSmallContentView as FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
-                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2) {
+                    if (fiveIconStyle.fiveIconSmallContentView.getUnloadedFiveIconsCount() > 2 ||
+                        fiveIconStyle.fiveIconBigContentView.getUnloadedFiveIconsCount() > 2) {
                         PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, reverting to basic template.")
                         buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                     } else {

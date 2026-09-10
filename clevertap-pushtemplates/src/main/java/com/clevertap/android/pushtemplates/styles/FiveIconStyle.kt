@@ -12,8 +12,18 @@ import com.clevertap.android.sdk.Constants
 
 internal class FiveIconStyle(private val data: FiveIconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
 
-    lateinit var fiveIconSmallContentView: ContentView
-    lateinit var fiveIconBigContentView: ContentView
+    lateinit var fiveIconSmallContentView: FiveIconContentView
+    lateinit var fiveIconBigContentView: FiveIconContentView
+
+    /**
+     * The pt_* text only, not baseContent's title, which falls back to nt. This is what the system
+     * shows for the notification once it stacks it into a group summary, where the layouts are not
+     * rendered: pt_msg stands in when a campaign sets no pt_title, so a message only campaign is
+     * not a blank row there, and an icon only campaign stays blank rather than surfacing nt.
+     * baseContent keeps the fallback for the basic template fallback path.
+     */
+    override val builderTitle: String?
+        get() = data.iconTextData.title ?: data.iconTextData.message
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         fiveIconSmallContentView = FiveIconSmallContentView(context, renderer, data, extras)

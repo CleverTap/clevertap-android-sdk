@@ -14,6 +14,14 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 
 internal abstract class Style(private val data: BaseContent, private val renderer: TemplateRenderer) {
 
+    /**
+     * Title set on the notification builder. The system shows it where RemoteViews are not
+     * rendered, e.g. the stacked group summary. Styles whose layouts render their own text can
+     * override this to keep the base title's nt fallback out of the builder.
+     */
+    protected open val builderTitle: String?
+        get() = data.textData.title
+
     protected open fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,
         contentViewSmall: RemoteViews?,
@@ -44,8 +52,11 @@ internal abstract class Style(private val data: BaseContent, private val rendere
             notificationBuilder.setOngoing(data.notificationBehavior.isSticky)
         }
 
+        // The builder title is what the system shows when it stacks notifications into a group
+        // summary, where RemoteViews are not rendered. Left unset when a style passes null.
+        pt_title?.let { notificationBuilder.setContentTitle(Html.fromHtml(it)) }
+
         return notificationBuilder.setSmallIcon(renderer.smallIcon)
-            .setContentTitle(Html.fromHtml(pt_title))
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())
@@ -74,7 +85,7 @@ internal abstract class Style(private val data: BaseContent, private val rendere
     ): NotificationCompat.Builder {
         return setNotificationBuilderBasics(
             nb, makeSmallContentRemoteView(context, renderer), makeBigContentRemoteView(context, renderer),
-            data.textData.title, makePendingIntent(context, extras, notificationId),
+            builderTitle, makePendingIntent(context, extras, notificationId),
             makeDismissIntent(context, extras, notificationId)
         )
     }
