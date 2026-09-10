@@ -153,6 +153,37 @@ class FiveIconContentViewTextRowTest {
     }
 
     /**
+     * The same two payloads on Android 12 and up, where the text row resolves to its layout-v31
+     * variant, which has no header of its own for the system to leave room for.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun `icon only payload hides the text block from Android 12`() {
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null))
+
+        val small = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+        val big = inflate(FiveIconBigContentView(context, renderer(), data, Bundle()))
+
+        for (view in listOf(small, big)) {
+            assertEquals(View.GONE, view.findViewById<View>(R.id.rel_lyt).visibility)
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun `summary only shows the summary in the expanded view from Android 12`() {
+        val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = "PT Summary"))
+
+        val big = inflate(FiveIconBigContentView(context, renderer(), data, Bundle()))
+        val small = inflate(FiveIconSmallContentView(context, renderer(), data, Bundle()))
+
+        assertEquals(View.VISIBLE, big.findViewById<View>(R.id.rel_lyt).visibility)
+        assertEquals(View.GONE, big.findViewById<TextView>(R.id.title).visibility)
+        assertEquals("PT Summary", big.findViewById<TextView>(R.id.msg).text.toString())
+        assertEquals(View.GONE, small.findViewById<View>(R.id.rel_lyt).visibility)
+    }
+
+    /**
      * Android 12 gives a collapsed custom view 48dp, measured on a device, and only to apps that
      * target it. A title and message fill that on their own, so the strip is dropped there and
      * the icons are the expanded view's to show; an app that still has the full height keeps both
@@ -212,7 +243,7 @@ class FiveIconContentViewTextRowTest {
      * the full strip did not. This lays the real thing out under that constraint.
      */
     @Test
-    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU], qualifiers = "sw400dp")
     fun `icon only collapsed view fills the 48dp row without clipping its icons`() {
         targetAndroid12OrLater()
         val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null))
@@ -232,6 +263,8 @@ class FiveIconContentViewTextRowTest {
             "collapsed view is ${px(root.measuredHeight)}dp, past the ${COLLAPSED_ROW_DP}dp row",
             root.measuredHeight <= dp(COLLAPSED_ROW_DP)
         )
+        // On the widest bucket the icons get 48dp less their 8dp margins; narrower screens use a
+        // smaller margin and so get more. The row itself has no padding from Android 12 up.
         assertTrue("icons measured ${px(iconHeight)}dp", iconHeight >= dp(30))
     }
 

@@ -93,8 +93,12 @@ internal abstract class FiveIconContentView(
     }
 
     /**
-     * Attaches one click intent per deep link. Validation guarantees at least three deep links;
-     * icons 4 and 5 are wired only when their deep link is present, matching the icons shown.
+     * Attaches one click intent per deep link. Validation guarantees at least three deep links,
+     * and icons 4 and 5 are wired only when theirs is present.
+     *
+     * Note the icons shown come from pt_img and the clicks from pt_dl, which the validator checks
+     * independently, so a payload with more images than deep links leaves its last icons falling
+     * through to the notification's own content intent.
      */
     protected fun setupIconClicks(data: FiveIconsTemplateData, extras: Bundle, notificationId: Int) {
         extras.putInt(PTConstants.PT_NOTIF_ID, notificationId)
