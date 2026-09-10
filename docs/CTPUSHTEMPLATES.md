@@ -153,7 +153,7 @@ Five icons template is a push notification that can display a title and message 
 
 Where text is set, what the collapsed notification can show depends on the Android version the app targets. Android 12 reduced a collapsed custom view to 48dp, which a title and a message fill on their own, so from Android 12 the collapsed notification shows the text and the icons appear once it is expanded. Below Android 12, and for an app that still targets Android 11, the collapsed notification shows the text and the icon row together. The expanded notification always shows both, with `pt_msg_summary` in the message line when it is set.
 
-An icon tap opens its deep link directly on Android 12 and above and the SDK does not dismiss the notification, so the app has to, with the same `dismissNotification` snippet as the Input Box template below.
+An icon tap opens its deep link directly and the SDK never dismisses the notification on any Android version, so the app has to, with the same `dismissNotification` snippet as the Input Box template below. Call it unconditionally, not only on Android 12 and above: below Android 12 the tap is broadcast to `CTPushNotificationReceiver`, which raises the click and starts the activity but does not cancel the notification either.
 
 If the payload does not contain enough valid icon/deeplink data, or if 3 or more icon images are not retrieved at render time, the library falls back to a basic notification using the available title and message content.
 
