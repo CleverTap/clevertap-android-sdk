@@ -4,10 +4,22 @@ name: Vision AI Review
 #   CF_REVIEW_NOTIFIER_CLIENT_ID
 #   CF_REVIEW_NOTIFIER_CLIENT_SECRET
 #
-# No GitHub App token is needed — the PR number is read directly from the
-# event payload (github.event.issue.number / github.event.pull_request.number)
-# and the actual review is generated server-side by review-notifier, which
-# handles its own GitHub auth via the Vision Bot installation.
+# No GitHub App token is needed: the review is generated server-side by review-notifier, which
+# handles its own GitHub auth via the Vision Bot installation. The repo-scoped `github.token`
+# is used only to read the PR and its existing reviews, which is what the routing decides on.
+#
+# Routing mirrors Ultron's, because review cost is driven by how much of the diff gets re-read
+# and by which model reads it:
+#   * A PR Vision has already reviewed gets a delta-scoped FOLLOW_UP_REVIEW on sonnet. Without
+#     this, every push re-reviewed the whole PR from scratch, on opus.
+#   * A first review is routed by size: sonnet up to 1000 changed lines, opus above it.
+# The agentic tier is deliberately never used here: it fans out one sub-agent per CODEOWNERS
+# group to load that group's `.claude/code-review-skills/<Group>.skill.md`, and this repo ships
+# none, so it would pay opus for briefs that do not exist.
+#
+# The push path and the comment path share one job on purpose. They were separate, and the
+# routing drifted between them - the comment path only ever recognised one of the three
+# command spellings.
 
 on:
   pull_request:
@@ -18,91 +30,153 @@ on:
 permissions: {}
 
 jobs:
-  # Auto-trigger on PR open / ready-for-review / non-draft push.
-  # Drafts are skipped on all three actions so we don't pay twice when a PR
-  # is opened-as-draft and later marked ready. Fork PRs are also skipped:
-  # untrusted code must not trigger our backend.
-  on-pr:
+  # Drafts are skipped on all three pull_request actions so we don't pay twice when a PR is
+  # opened as a draft and later marked ready. Fork PRs are skipped on both paths: untrusted
+  # code must not trigger our backend. Comments are gated to repo members, or anyone could
+  # spend our review budget.
+  review:
     if: >-
       ${{
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        github.event.pull_request.draft == false &&
         (
-          github.event.action == 'opened' ||
-          github.event.action == 'ready_for_review' ||
-          github.event.action == 'synchronize'
-        )
-      }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger review
-        env:
-          REPO:          ${{ github.repository }}
-          PR_NUMBER:     ${{ github.event.pull_request.number }}
-          CLIENT_ID:     ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_SECRET }}
-        run: |
-          set -euo pipefail
-          payload=$(jq -n \
-            --argjson pullRequestId "$PR_NUMBER" \
-            --arg repo "$REPO" \
-            '{pullRequestId: $pullRequestId, repo: $repo}')
-          echo "Triggering Vision AI review for $REPO PR #$PR_NUMBER..."
-          curl --fail --show-error --silent --max-time 30 -X POST \
-            -H "Content-Type: application/json" \
-            -H "CF-Access-Client-Id: $CLIENT_ID" \
-            -H "CF-Access-Client-Secret: $CLIENT_SECRET" \
-            -d "$payload" \
-            https://review-notifier.clevertap.net/review-with-claude-code
-
-  # On-demand `/vision-review-deep` PR comment.
-  # Gated so only repo members can trigger, AND only on same-repo PRs.
-  # issue_comment events don't expose pull_request.head.repo, so we fetch
-  # the PR via the API and check head.repo.full_name before triggering.
-  on-comment:
-    if: >-
-      ${{
-        github.event_name == 'issue_comment' &&
-        github.event.issue.pull_request.url != '' &&
-        github.event.comment.body == '/vision-review-deep' &&
-        (
-          github.event.comment.author_association == 'OWNER' ||
-          github.event.comment.author_association == 'MEMBER' ||
-          github.event.comment.author_association == 'COLLABORATOR'
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.draft == false &&
+          (
+            github.event.action == 'opened' ||
+            github.event.action == 'ready_for_review' ||
+            github.event.action == 'synchronize'
+          )
+        ) || (
+          github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request.url != '' &&
+          startsWith(github.event.comment.body, '/vision-review') &&
+          (
+            github.event.comment.author_association == 'OWNER' ||
+            github.event.comment.author_association == 'MEMBER' ||
+            github.event.comment.author_association == 'COLLABORATOR'
+          )
         )
       }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     steps:
-      - name: Resolve PR head repo
-        id: pr
+      - name: Resolve the target PR
+        id: target
         env:
-          PR_URL:   ${{ github.event.issue.pull_request.url }}
-          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME:    ${{ github.event_name }}
+          COMMENT_BODY:  ${{ github.event.comment.body }}
+          PR_URL:        ${{ github.event.issue.pull_request.url }}
+          PR_NUMBER:     ${{ github.event.pull_request.number }}
+          PR_ADDITIONS:  ${{ github.event.pull_request.additions }}
+          PR_DELETIONS:  ${{ github.event.pull_request.deletions }}
+          GH_TOKEN:      ${{ github.token }}
         run: |
           set -euo pipefail
-          head=$(curl --fail --show-error --silent --max-time 15 \
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            # head.repo and the line counts are already in the event payload.
+            {
+              echo "trigger=true"
+              echo "pr=$PR_NUMBER"
+              echo "additions=${PR_ADDITIONS:-0}"
+              echo "deletions=${PR_DELETIONS:-0}"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # `/vision-review`, `/vision-review-deep` and `/vision-review-agentic` are the same
+          # command. -deep and -agentic used to force a full re-review, which is how authors
+          # ended up iterating on drafts at the most expensive tier.
+          #
+          # The body is normalised before matching: a trailing carriage return or space is
+          # invisible in the GitHub UI and, against an exact string comparison, silently made
+          # the command do nothing at all.
+          command=$(printf '%s' "$COMMENT_BODY" | tr -d '\r' | head -1 \
+            | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+          case "$command" in
+            /vision-review|/vision-review-deep|/vision-review-agentic)
+              echo "Command: $command (all three request the same review)" ;;
+            *)
+              echo "Not a review command: '$command' -> ignoring."
+              echo "trigger=false" >> "$GITHUB_OUTPUT"
+              exit 0 ;;
+          esac
+
+          # issue_comment events don't expose pull_request.head.repo, so the PR is fetched to
+          # check it - and its line counts come along for the routing below.
+          pr=$(curl --fail --show-error --silent --max-time 20 \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer $GH_TOKEN" \
-            "$PR_URL" | jq -r '.head.repo.full_name')
-          echo "PR head repo: $head"
-          echo "head=$head" >> "$GITHUB_OUTPUT"
+            "$PR_URL")
+          head=$(printf '%s' "$pr" | jq -r '.head.repo.full_name // empty')
+          if [[ "$head" != "$GITHUB_REPOSITORY" ]]; then
+            echo "PR head '$head' is not '$GITHUB_REPOSITORY'; skipping fork PR."
+            echo "trigger=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-      - name: Trigger review
-        if: steps.pr.outputs.head == github.repository
+          {
+            echo "trigger=true"
+            echo "pr=$(printf '%s' "$pr" | jq -r '.number')"
+            echo "additions=$(printf '%s' "$pr" | jq -r '.additions // 0')"
+            echo "deletions=$(printf '%s' "$pr" | jq -r '.deletions // 0')"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Route and trigger the review
+        if: steps.target.outputs.trigger == 'true'
         env:
           REPO:          ${{ github.repository }}
-          PR_NUMBER:     ${{ github.event.issue.number }}
+          PR_NUMBER:     ${{ steps.target.outputs.pr }}
+          PR_ADDITIONS:  ${{ steps.target.outputs.additions }}
+          PR_DELETIONS:  ${{ steps.target.outputs.deletions }}
+          GH_TOKEN:      ${{ github.token }}
           CLIENT_ID:     ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CF_REVIEW_NOTIFIER_CLIENT_SECRET }}
         run: |
           set -euo pipefail
-          payload=$(jq -n \
-            --argjson pullRequestId "$PR_NUMBER" \
-            --arg repo "$REPO" \
-            '{pullRequestId: $pullRequestId, repo: $repo}')
+
+          # yes / no / unknown. A review Vision actually posted, as opposed to the review
+          # record GitHub creates to hold an in-thread reply (empty body) or the thread-reply
+          # flow's auto-approve: both carry the head SHA of their own moment, so counting them
+          # would read as "already reviewed" on a PR nothing has reviewed.
+          prior_review() {
+            local reviews
+            reviews=$(curl --fail --show-error --silent --max-time 20 \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews?per_page=100" || true)
+            if [[ -z "$reviews" ]]; then
+              echo unknown
+            elif printf '%s' "$reviews" \
+              | jq -e '[.[] | select((.user.login | startswith("clevertap-vision"))
+                                     and ((.body // "") | startswith("# Code Review")))] | length > 0' >/dev/null; then
+              echo yes
+            else
+              echo no
+            fi
+          }
+
+          prior=$(prior_review)
+          total_lines=$(( ${PR_ADDITIONS:-0} + ${PR_DELETIONS:-0} ))
+
+          if [[ "$prior" == "yes" ]]; then
+            echo "Vision has reviewed this PR before -> delta follow-up (sonnet)"
+            payload=$(jq -n --argjson pullRequestId "$PR_NUMBER" --arg repo "$REPO" \
+              '{pullRequestId: $pullRequestId, repo: $repo, promptType: "FOLLOW_UP_REVIEW", model: "sonnet"}')
+          elif (( total_lines > 1000 )); then
+            # Includes prior=unknown: if GitHub could not be read, a first review of a large PR
+            # is the safer guess - the follow-up prompt falls back to a full review anyway when
+            # it finds no anchor, but on the cheaper model.
+            echo "First review ($prior prior), PR size $total_lines lines -> full review (opus)"
+            payload=$(jq -n --argjson pullRequestId "$PR_NUMBER" --arg repo "$REPO" \
+              '{pullRequestId: $pullRequestId, repo: $repo, promptType: "FULL_REVIEW"}')
+          else
+            echo "First review ($prior prior), PR size $total_lines lines -> full review (sonnet)"
+            payload=$(jq -n --argjson pullRequestId "$PR_NUMBER" --arg repo "$REPO" \
+              '{pullRequestId: $pullRequestId, repo: $repo, promptType: "FULL_REVIEW", model: "sonnet"}')
+          fi
+
           echo "Triggering Vision AI review for $REPO PR #$PR_NUMBER..."
           curl --fail --show-error --silent --max-time 30 -X POST \
             -H "Content-Type: application/json" \
@@ -110,8 +184,3 @@ jobs:
             -H "CF-Access-Client-Secret: $CLIENT_SECRET" \
             -d "$payload" \
             https://review-notifier.clevertap.net/review-with-claude-code
-
-      - name: Skipped (fork PR)
-        if: steps.pr.outputs.head != github.repository
-        run: |
-          echo "PR head '${{ steps.pr.outputs.head }}' is not '${{ github.repository }}'; skipping fork PR."
