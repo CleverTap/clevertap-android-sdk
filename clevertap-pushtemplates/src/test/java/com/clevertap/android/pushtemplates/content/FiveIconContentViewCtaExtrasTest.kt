@@ -29,8 +29,9 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * On Android 12+ the icon tap opens the deep link activity directly, so the app has to clear the
- * notification itself from the intent extras. The documented client-side handler keys off
+ * An icon tap opens its deep link without the SDK cancelling the notification, on Android 12+
+ * through the activity directly and below that through CTPushNotificationReceiver, so the app has
+ * to clear it itself from the intent extras. The documented client-side handler keys off
  * "actionId" / "autoCancel" / "notificationId", the same extras the core SDK puts on action button
  * clicks. Both five icons content views must attach them to every icon bundle.
  */

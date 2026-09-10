@@ -110,8 +110,9 @@ internal abstract class FiveIconContentView(
             bundleCTA.putBoolean("cta$ctaNumber", true)
             bundleCTA.putString(Constants.DEEP_LINK_KEY, deepLink)
             bundleCTA.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + ctaNumber + "_" + deepLink)
-            // Same keys the core SDK puts on action button clicks, so the documented Android 12+
-            // client-side dismiss handling covers icon taps too.
+            // Same keys the core SDK puts on action button clicks, so the documented client-side
+            // dismiss handling covers icon taps too. Needed on every Android version: below API 31
+            // the tap is broadcast to CTPushNotificationReceiver, which does not cancel either.
             bundleCTA.putString(PTConstants.PT_ACTION_ID, "cta$ctaNumber")
             bundleCTA.putBoolean(PTConstants.PT_AUTO_CANCEL, true)
             remoteView.setOnClickPendingIntent(
