@@ -29,9 +29,10 @@ internal class FiveIconSmallContentView(
             hideTextRow()
         }
         setCustomBackgroundColour(data.baseContent.colorData.backgroundColor, R.id.content_view_big)
-        fitIconRowToCollapsedView(hasText = hasCollapsedText(data))
-        setupIcons(data)
-        setupIconClicks(data, extras, renderer.notificationId)
+        if (fitIconRowToCollapsedView(hasText = hasCollapsedText(data))) {
+            setupIcons(data)
+            setupIconClicks(data, extras, renderer.notificationId)
+        }
     }
 
     /**
@@ -44,21 +45,28 @@ internal class FiveIconSmallContentView(
      * view rather than squeezed into what is left, where it came out a few dp tall; the expanded
      * view has room to show the icons at full size. An icon only campaign has no text to make room
      * for and keeps its strip, resized to the 48dp so the system does not clip it.
+     *
+     * @return whether the strip is shown, and so worth binding icons and click intents into. A
+     * hidden strip is left empty: its bitmaps would be parcelled to the system a second time on
+     * top of the expanded view's copy, and five large images is the payload shape that runs into
+     * the notification size limit. The expanded view still loads all five, so the renderer's
+     * fallback on too many failed images is unaffected.
      */
-    private fun fitIconRowToCollapsedView(hasText: Boolean) {
+    private fun fitIconRowToCollapsedView(hasText: Boolean): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             context.applicationInfo.targetSdkVersion < Build.VERSION_CODES.S
         ) {
-            return
+            return true
         }
         if (hasText) {
             remoteView.setViewVisibility(R.id.five_cta_icon_row, View.GONE)
-        } else {
-            remoteView.setViewLayoutHeight(
-                R.id.five_cta_icon_row,
-                context.resources.getDimension(R.dimen.five_cta_icon_row_compact),
-                TypedValue.COMPLEX_UNIT_PX
-            )
+            return false
         }
+        remoteView.setViewLayoutHeight(
+            R.id.five_cta_icon_row,
+            context.resources.getDimension(R.dimen.five_cta_icon_row_compact),
+            TypedValue.COMPLEX_UNIT_PX
+        )
+        return true
     }
 }

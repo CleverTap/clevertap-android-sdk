@@ -207,6 +207,24 @@ class FiveIconContentViewTextRowTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun `collapsed view binds no icons into a hidden strip`() {
+        targetAndroid12OrLater()
+        val withImages = payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null)
+            .apply { for (i in 1..5) putString("pt_img$i", "https://example.invalid/$i.png") }
+        val data = dataFrom(withImages)
+
+        val collapsed = FiveIconSmallContentView(context, renderer(), data, Bundle())
+        val expanded = FiveIconBigContentView(context, renderer(), data, Bundle())
+
+        // Nothing was loaded into the hidden strip, so its bitmaps are not parcelled a second
+        // time; the expanded view still loads all five, which is what the renderer's fallback on
+        // too many failed images counts.
+        assertEquals(0, collapsed.getUnloadedFiveIconsCount())
+        assertEquals(5, expanded.getUnloadedFiveIconsCount())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
     fun `collapsed view keeps the icon strip for an icon only campaign where the 48dp row applies`() {
         targetAndroid12OrLater()
         val data = dataFrom(payload(ptTitle = null, ptMsg = null, ptSummary = null))
