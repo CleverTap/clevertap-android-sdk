@@ -341,6 +341,11 @@ class TemplateRendererTest {
         every { mockContentValidator.validate() } returns true
 
         mockkConstructor(ProgressStyle::class)
+        // Force ProgressStyle's class-init now: its companion parses two default colors via the
+        // (statically-mocked) Utils.getColourOrNull. If that clinit fired lazily inside the every{}
+        // block below, it would be recorded in round 1 only, so mockk sees a different call count
+        // per recording round and throws ("Recorded calls count differ between runs").
+        Class.forName("com.clevertap.android.pushtemplates.styles.ProgressStyle")
         every {
             anyConstructed<ProgressStyle>().builderFromStyle(any(), any(), any(), any())
         } returns mockNotificationBuilder
