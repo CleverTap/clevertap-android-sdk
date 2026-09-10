@@ -149,7 +149,7 @@ pt_product_display_linear | Optional | `true`
 
 Five icons template is a push notification that can display a title and message above a row of up to 5 icons. It helps users go directly to the functionality of their choice with a button click.
 
-`pt_title` and `pt_msg` are optional, and only these `pt_*` keys are read: the dashboard's `nt` and `nm` are not used as a fallback, so a payload that sets neither renders as icons alone, and such a notification also contributes a blank row to a stacked group summary.
+`pt_title` and `pt_msg` are optional, and only these `pt_*` keys are read: the dashboard's `nt` and `nm` are not used as a fallback, so a payload that sets neither renders as icons alone and gives the system no text of its own to show when several notifications are stacked into a group summary. Where only `pt_msg` is set, it stands in for the title there.
 
 Where text is set, what the collapsed notification can show depends on the Android version the app targets. Android 12 reduced a collapsed custom view to 48dp, which a title and a message fill on their own, so from Android 12 the collapsed notification shows the text and the icons appear once it is expanded. Below Android 12, and for an app that still targets Android 11, the collapsed notification shows the text and the icon row together. The expanded notification always shows both, with `pt_msg_summary` in the message line when it is set.
 
