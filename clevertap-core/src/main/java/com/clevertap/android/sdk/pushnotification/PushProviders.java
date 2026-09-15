@@ -229,9 +229,16 @@ public class PushProviders implements CTPushProviderListener {
 
                 String notifMessage = iNotificationRenderer.getMessage(extras);
                 notifMessage = (notifMessage != null) ? notifMessage : "";
-                // A Live Update is an explicit render request validated by its own template validator
-                // (message optional), so an empty message must NOT be treated as a silent push here.
-                if (notifMessage.isEmpty() && !isLiveActivity) {
+                // A Live Update rendered by a self-validating template renderer (pt_progress, whose
+                // validator makes the message optional) may legitimately have an empty message, so it
+                // must NOT be treated as a silent push. The core renderer can't validate that: it would
+                // post a blank/app-name notification AND raise a false Started/Viewed impression — e.g. a
+                // Mode A payload delivered to a build with no factory registered (SDK_RENDER fall-through),
+                // or a Mode B pt_progress on the createNotification entry that never reached the template
+                // renderer. Keep treating an empty message there as a silent push (pre-Live-Update behavior).
+                boolean liveActivityTemplateRender =
+                        isLiveActivity && !(iNotificationRenderer instanceof CoreNotificationRenderer);
+                if (notifMessage.isEmpty() && !liveActivityTemplateRender) {
                     //silent notification
                     config.getLogger()
                             .verbose(config.getAccountId(),

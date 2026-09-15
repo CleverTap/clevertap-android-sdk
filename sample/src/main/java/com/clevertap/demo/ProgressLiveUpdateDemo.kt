@@ -65,13 +65,13 @@ object ProgressLiveUpdateDemo {
     private const val START_ICON = "https://imgur.com/6DavQwg.jpg"
     private const val END_ICON = "https://imgur.com/6DavQwg.jpg"
 
-    private data class Step(val status: String, val eta: String, val index: Int)
+    private data class Step(val status: String, val eta: String, val index: Int, val event: String = "update")
 
     private val steps = listOf(
-        Step("Order confirmed", "50 min", 0),
+        Step("Order confirmed", "50 min", 0, "start"),
         Step("Preparing your order", "40 min", 1),
         Step("Out for delivery", "12 min", 2),
-        Step("Delivered — enjoy!", "0 min", 3)
+        Step("Delivered — enjoy!", "0 min", 3, "end")
     )
 
     /** Kicks off the timed, in-place progress sequence for [variant]. */
@@ -100,6 +100,12 @@ object ProgressLiveUpdateDemo {
             putString("wzrk_cid", CHANNEL_ID)
             putInt("notificationId", NOTIF_ID)
             putString("pt_id", "pt_progress")
+            // Drives ProgressStyle's `ended` state (start/update/end). The terminal "end" step clears
+            // ongoing + enables auto-cancel so the finished tracker is swipeable — without it the
+            // "Delivered" notification stays ongoing and, since a tap no longer cancels it, sticks on
+            // API < 34 (ongoing notifications are undismissable before Android 14). Read straight from
+            // the extras by ProgressStyle, independent of wzrk_la.
+            putString("wzrk_la_event", step.event)
             putString("nt", "Order #A1234")
             putString("nm", step.status)
             putString("pt_progress", progressPercent(step.index).toString())

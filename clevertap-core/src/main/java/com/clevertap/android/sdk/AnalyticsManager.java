@@ -733,8 +733,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject notif = wzrkBundleToJson(extras);
             JSONObject event = AnalyticsManagerBundler.liveActivityEventJson(notif, state);
             baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
+            // Log only the state + the (non-sensitive) in-place activity id, not the whole payload —
+            // the bundle can carry title/message/deep-link PII that shouldn't hit Logcat (CWE-532).
             config.getLogger().debug(config.getAccountId(),
-                    "Recorded Live Activity event (" + state + ") for: " + extras);
+                    "Recorded Live Activity event (" + state + ") for activityId: "
+                            + extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
         } catch (JSONException e) {
             config.getLogger().debug("Failed to record Live Activity event " + e);
         }
