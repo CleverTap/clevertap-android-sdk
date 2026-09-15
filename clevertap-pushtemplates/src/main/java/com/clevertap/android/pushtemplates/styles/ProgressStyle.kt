@@ -314,9 +314,13 @@ internal class ProgressStyle(
                 rv.setProgressBar(R.id.pt_bar, 0, 0, true)
                 rv.setContentDescription(R.id.pt_bar, context.getString(R.string.pt_progress_indeterminate_cd))
             } else {
-                val clamped = progress.coerceIn(0, progressMax)
-                rv.setProgressBar(R.id.pt_bar, progressMax, clamped, false)
-                val percent = if (progressMax > 0) clamped * 100 / progressMax else 0
+                // pt_progress_max is parsed with no lower bound, so a malformed negative value would
+                // make coerceIn(0, progressMax) throw ("empty range") and drop the whole push. Clamp
+                // the max to at least 1 so a bad payload degrades to an empty bar instead of crashing.
+                val safeMax = progressMax.coerceAtLeast(1)
+                val clamped = progress.coerceIn(0, safeMax)
+                rv.setProgressBar(R.id.pt_bar, safeMax, clamped, false)
+                val percent = clamped * 100 / safeMax
                 rv.setContentDescription(R.id.pt_bar, context.getString(R.string.pt_progress_bar_cd, percent))
             }
         }

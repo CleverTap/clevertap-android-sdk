@@ -11,8 +11,16 @@ object NotificationUtils {
     //Require to close notification on action button click
     fun dismissNotification(intent: Intent?, applicationContext: Context){
         intent?.extras?.apply {
-            val autoCancel = getBoolean("autoCancel", true)
-            val notificationId = getInt("notificationId", -1)
+            // Only action-button clicks carry an "actionId"; scope the cancel to them. A plain
+            // content-intent tap must NOT auto-cancel — every Push-Template content intent carries an
+            // int notificationId, so reading it unconditionally would dismiss the (ongoing) pt_progress
+            // Live Update on the first tap.
+            var autoCancel = false
+            var notificationId = -1
+            getString("actionId")?.let {
+                autoCancel = getBoolean("autoCancel", true)
+                notificationId = getInt("notificationId", -1)
+            }
 
             /**
              * If using InputBox template, add ptDismissOnClick flag to not dismiss notification
