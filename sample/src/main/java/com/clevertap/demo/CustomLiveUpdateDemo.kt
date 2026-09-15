@@ -27,6 +27,8 @@ object CustomLiveUpdateDemo {
     private const val ACTIVITY_ID = "sample_order_custom"
     private const val STEP_GAP_MS = 6000L
 
+    private val handler = Handler(Looper.getMainLooper())
+
     // progress is 0..100; the first step "starts" the activity (wzrk_la_event=start).
     private data class Step(val status: String, val eta: String, val progress: Int, val event: String)
 
@@ -42,7 +44,10 @@ object CustomLiveUpdateDemo {
         ensureChannel(context)
         val appContext = context.applicationContext
         val runId = System.currentTimeMillis()
-        val handler = Handler(Looper.getMainLooper())
+        // Cancel any still-pending steps from a previous START: all runs share ACTIVITY_ID (one
+        // in-place notification), so without this an older sequence could post a stale end/update
+        // over a newer one.
+        handler.removeCallbacksAndMessages(null)
         steps.forEachIndexed { i, step ->
             // renderPushNotification posts to the SDK's own worker executor, so no manual Thread needed.
             handler.postDelayed({ render(appContext, ct, step, runId) }, i * STEP_GAP_MS)

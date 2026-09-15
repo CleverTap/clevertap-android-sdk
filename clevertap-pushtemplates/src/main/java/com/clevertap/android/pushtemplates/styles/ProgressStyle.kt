@@ -106,13 +106,17 @@ internal class ProgressStyle(
         )?.let { nb.setContentIntent(it) }
     }
 
-    /** Adds action buttons from the standard wzrk_acts payload, reusing the shared ActionButtonsHandler. */
+    /** Adds action buttons from the standard wzrk_acts payload as system actions (all API levels). */
     private fun applyActionButtons(context: Context, extras: Bundle, notificationId: Int, nb: NotificationCompat.Builder) {
         val actions = extras.getString(Constants.WZRK_ACTIONS)
             ?.let { runCatching { JSONArray(it) }.getOrNull() } ?: return
         if (actions.length() == 0) return
         renderer.actionButtons = renderer.getActionButtons(context, extras, notificationId, actions)
-        ActionButtonsHandler(renderer).addActionButtons(context, extras, notificationId, nb)
+        // pt_progress renders via native ProgressStyle (16+) or DecoratedCustomViewStyle (fallback),
+        // so standard addAction() buttons show on EVERY API level. That's unlike the RemoteViews
+        // templates, which draw buttons inside their own layout and so gate via ActionButtonsHandler
+        // at API 31+. Attaching directly here means wzrk_acts isn't silently dropped on API 23–30.
+        renderer.setActionButtons(context, extras, notificationId, nb, null)
     }
 
     // --- Android 16+ : native ProgressStyle + promotion (via reflection) ---
@@ -289,6 +293,17 @@ internal class ProgressStyle(
                 }
             }
             rv.removeAllViews(R.id.pt_progress_container)
+            // TalkBack: the dots (pt_progress_point) and connectors (pt_progress_segment) are
+            // importantForAccessibility="no", so describe the whole track on the container instead.
+            // In the segmented case progressMax is the summed segment length and progress is on that
+            // scale, so the same percent string as the plain bar applies.
+            if (progressMax > 0) {
+                val percent = progress.coerceIn(0, progressMax) * 100 / progressMax
+                rv.setContentDescription(
+                    R.id.pt_progress_container,
+                    context.getString(R.string.pt_progress_bar_cd, percent)
+                )
+            }
             if (points.isNotEmpty()) {
                 points.forEachIndexed { i, p ->
                     val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
