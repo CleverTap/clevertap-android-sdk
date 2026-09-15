@@ -240,6 +240,9 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         val campaignId = "campaign123"
         val currentTimestamp = System.currentTimeMillis() / 1000
+        // perDay now derives "now" from the injected Clock (SDK-6131); anchor it to real now so the
+        // real-midnight-based reference timestamps below still line up.
+        every { clock.newDate() } returns Date()
 
         val referenceTimestamp = getSecondsSinceLastMidnight()
 
@@ -314,6 +317,9 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         val campaignId = "campaign123"
         val currentTimestamp = System.currentTimeMillis() / 1000
+        // perWeek now derives "now" from the injected Clock (SDK-6131); anchor it to real now so the
+        // real-week-based reference timestamps below still line up.
+        every { clock.newDate() } returns Date()
 
         val referenceTimestamp = getSecondsSinceFirstDayOfCurrentWeek()
 

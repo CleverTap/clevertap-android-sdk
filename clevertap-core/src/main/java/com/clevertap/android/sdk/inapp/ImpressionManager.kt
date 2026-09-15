@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.inapp
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -109,8 +108,8 @@ internal class ImpressionManager @JvmOverloads constructor(
     fun perDay(campaignId: String, days: Int): Int {
         val calendar =
             Calendar.getInstance(locale).apply {
-                val currentDate = Date()
-                // Set the calendar's time to the current date and time
+                val currentDate = clock.newDate()
+                // Set the calendar to "now" via the injected Clock (SYSTEM in prod; testable via FakeClock)
                 time = currentDate
                 set(Calendar.HOUR_OF_DAY, 0)
                 set(Calendar.MINUTE, 0)
@@ -142,8 +141,8 @@ internal class ImpressionManager @JvmOverloads constructor(
         // start of week is Monday for some countries and Sunday in others
         val calendar =
             Calendar.getInstance(locale).apply {
-                val currentDate = Date()
-                // Set the calendar's time to the current date and time
+                val currentDate = clock.newDate()
+                // Set the calendar to "now" via the injected Clock (SYSTEM in prod; testable via FakeClock)
                 time = currentDate
                 set(Calendar.HOUR_OF_DAY, 0)
                 set(Calendar.MINUTE, 0)
