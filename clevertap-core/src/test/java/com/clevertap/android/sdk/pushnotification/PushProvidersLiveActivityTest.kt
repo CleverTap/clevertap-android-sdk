@@ -45,18 +45,8 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
         every { renderer.getMessage(any()) } returns ""
         every { renderer.getTitle(any(), any()) } returns "Order #A1234"
 
-        // Build a real PushProviders via its private constructor (skips provider discovery in init()).
-        val ctor = PushProviders::class.java.getDeclaredConstructor(
-            Context::class.java,
-            CleverTapInstanceConfig::class.java,
-            BaseDatabaseManager::class.java,
-            ValidationResultStack::class.java,
-            AnalyticsManager::class.java,
-            CTWorkManager::class.java,
-            Clock::class.java
-        )
-        ctor.isAccessible = true
-        pushProviders = ctor.newInstance(
+        // Build a real PushProviders via its internal constructor (skips provider discovery in init()).
+        pushProviders = PushProviders(
             appCtx,
             cleverTapInstanceConfig,
             baseDatabaseManager,
@@ -65,7 +55,7 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
             mockk<CTWorkManager>(relaxed = true),
             mockk<Clock>(relaxed = true)
         )
-        pushProviders.setPushNotificationRenderer(renderer)
+        pushProviders.pushNotificationRenderer = renderer
     }
 
     @Test

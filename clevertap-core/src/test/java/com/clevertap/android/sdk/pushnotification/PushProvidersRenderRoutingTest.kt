@@ -60,26 +60,17 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
         unmockkStatic(CleverTapAPI::class)
     }
 
-    /** Builds a real PushProviders via its private constructor (skips provider discovery in init()). */
+    /** Builds a real PushProviders via its internal constructor (skips provider discovery in init()). */
     private fun buildSut(
         config: CleverTapInstanceConfig = cleverTapInstanceConfig,
         theRenderer: INotificationRenderer = renderer
     ): PushProviders {
-        val ctor = PushProviders::class.java.getDeclaredConstructor(
-            Context::class.java,
-            CleverTapInstanceConfig::class.java,
-            BaseDatabaseManager::class.java,
-            ValidationResultStack::class.java,
-            com.clevertap.android.sdk.AnalyticsManager::class.java,
-            CTWorkManager::class.java,
-            Clock::class.java
-        ).apply { isAccessible = true }
-        val sut = ctor.newInstance(
+        val sut = PushProviders(
             appCtx, config, baseDatabaseManager,
             mockk<ValidationResultStack>(relaxed = true),
             analyticsManager, mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true)
         )
-        sut.setPushNotificationRenderer(theRenderer)
+        sut.pushNotificationRenderer = theRenderer
         return sut
     }
 
