@@ -43,7 +43,7 @@ class PushProvidersTokenTest : BaseTestCase() {
     }
 
     @After
-    fun tearDownStatics() {
+    fun tearDown() {
         unmockkStatic(CTExecutorFactory::class)
     }
 
