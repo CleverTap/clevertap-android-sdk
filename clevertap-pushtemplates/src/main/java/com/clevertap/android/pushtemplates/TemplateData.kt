@@ -118,7 +118,6 @@ internal data class FiveIconsTemplateData(
     val title: String? = null,
     val subtitle: String? = null,
     val notificationBehavior: NotificationBehavior,
-    val imageBorderData: ImageBorderData = ImageBorderData(),
 ) : TemplateData()
 
 internal data class ManualCarouselTemplateData(

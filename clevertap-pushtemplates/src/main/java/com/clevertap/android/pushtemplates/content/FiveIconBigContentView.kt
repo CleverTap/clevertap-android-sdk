@@ -35,8 +35,7 @@ internal class FiveIconBigContentView constructor(
                 viewId,
                 imageUrl,
                 remoteView,
-                altText,
-                data.imageBorderData
+                altText
             )
 
             if (fallback) {

@@ -231,8 +231,9 @@ internal object TemplateDataFactory {
             backgroundColor = colorMap[PT_BG],
             title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE),
             subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE),
-            notificationBehavior = createNotificationBehaviorData(extras),
-            imageBorderData = createImageBorderData(extras, colorMap)
+            // No image styling here: the Five Icons assets are transparent 1:1 glyphs, where a
+            // rectangular corner clip is a no-op and a border frames each glyph individually.
+            notificationBehavior = createNotificationBehaviorData(extras)
         )
     }
 

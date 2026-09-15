@@ -2569,7 +2569,7 @@ class TemplateDataFactoryTest {
     }
 
     @Test
-    fun `createImageBorderData should reach carousel five icon and product templates`() {
+    fun `createImageBorderData should reach carousel and product templates`() {
         // Given - the same keys must be picked up by templates that build their own media data
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
@@ -2584,13 +2584,6 @@ class TemplateDataFactoryTest {
             defaultAltText = defaultAltText,
             notificationIdsProvider = notificationIdsProvider
         ) as AutoCarouselTemplateData
-        val fiveIcons = TemplateDataFactory.createTemplateData(
-            templateType = TemplateType.FIVE_ICONS,
-            extras = mockBundle,
-            isDarkMode = false,
-            defaultAltText = defaultAltText,
-            notificationIdsProvider = notificationIdsProvider
-        ) as FiveIconsTemplateData
         val product = TemplateDataFactory.createTemplateData(
             templateType = TemplateType.PRODUCT_DISPLAY,
             extras = mockBundle,

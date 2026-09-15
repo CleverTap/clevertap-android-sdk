@@ -453,9 +453,6 @@ pt_dl4 | Optional  | Deep Link for fourth icon
 pt_dl5 | Optional  | Deep Link for fifth icon
 pt_bg | Optional  | Background Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
-pt_img_corner_radius | Optional | Corner radius applied to each icon, as a percentage (`0`-`50`) of the icon's shortest side. Defaults to `0` (square corners)
-pt_img_border_clr | Optional | Border color applied to each icon in HEX
-pt_img_border_width | Optional | Border width applied to each icon, as a percentage (`0`-`25`) of the icon's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
 pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
 pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
