@@ -2473,7 +2473,7 @@ class TemplateDataFactoryTest {
         assertFalse(border.isActive)
         assertNull(border.borderColor)
         assertEquals(0f, border.cornerRadiusPercent)
-        assertNull(border.borderWidthPercent)
+        assertEquals(0f, border.borderWidthPercent)
     }
 
     @Test
@@ -2520,7 +2520,7 @@ class TemplateDataFactoryTest {
         // Then - garbage in the payload must not crash the render
         val border = result.mediaData.imageBorderData
         assertEquals(0f, border.cornerRadiusPercent)
-        assertNull(border.borderWidthPercent)
+        assertEquals(0f, border.borderWidthPercent)
         assertFalse(border.isActive)
     }
 
@@ -2594,8 +2594,109 @@ class TemplateDataFactoryTest {
 
         // Then
         assertEquals(15f, carousel.carouselData.imageBorderData.cornerRadiusPercent)
-        assertEquals(15f, fiveIcons.imageBorderData.cornerRadiusPercent)
         assertEquals(15f, product.imageBorderData.cornerRadiusPercent)
+    }
+
+    @Test
+    fun `border needs both a width and a colour`() {
+        // Given/Then - each key alone is inert; only the pair draws a stroke
+        val widthOnly = ImageBorderData(borderWidthPercent = 6f, borderColor = null)
+        assertFalse("a width with no colour must not draw", widthOnly.hasBorder)
+        assertFalse(widthOnly.isActive)
+
+        val colourOnly = ImageBorderData(borderWidthPercent = 0f, borderColor = android.graphics.Color.RED)
+        assertFalse("a colour with no width must not draw", colourOnly.hasBorder)
+        assertFalse(colourOnly.isActive)
+
+        val pair = ImageBorderData(borderWidthPercent = 6f, borderColor = android.graphics.Color.RED)
+        assertTrue(pair.hasBorder)
+        assertTrue(pair.isActive)
+    }
+
+    @Test
+    fun `a corner radius activates styling on its own`() {
+        // Given - the radius is independent of the border pair
+        val radiusOnly = ImageBorderData(cornerRadiusPercent = 10f)
+
+        // Then
+        assertTrue(radiusOnly.isActive)
+        assertFalse(radiusOnly.hasBorder)
+    }
+
+    @Test
+    fun `createImageBorderData should default the border width to zero rather than inventing one`() {
+        // Given - a colour with no width, which is the easiest payload to send by mistake
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then - no silent default width, so the marketer never gets a border they did not ask for
+        assertEquals(0f, result.mediaData.imageBorderData.borderWidthPercent)
+        assertFalse(result.mediaData.imageBorderData.hasBorder)
+    }
+
+    @Test
+    fun `createImageBorderData should ignore non finite sizes`() {
+        // Given - values send-time validation should have caught, arriving anyway
+        listOf("abc", "12px", "", "NaN", "Infinity", "-Infinity").forEach { raw ->
+            setupBasicMockBundle()
+            every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns raw
+            every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns raw
+
+            // When
+            val result = TemplateDataFactory.createTemplateData(
+                templateType = TemplateType.BASIC,
+                extras = mockBundle,
+                isDarkMode = false,
+                defaultAltText = defaultAltText,
+                notificationIdsProvider = notificationIdsProvider
+            ) as BasicTemplateData
+
+            // Then - treated exactly as though the key were absent
+            val border = result.mediaData.imageBorderData
+            assertEquals("radius for '$raw'", 0f, border.cornerRadiusPercent)
+            assertEquals("width for '$raw'", 0f, border.borderWidthPercent)
+            assertFalse("'$raw' must not activate styling", border.isActive)
+        }
+    }
+
+    @Test
+    fun `five icons template should not carry any image styling`() {
+        // Given - a payload that sets every styling key on the one template that excludes them.
+        // The assets are transparent 1:1 glyphs, so a corner clip is a no-op and a border would
+        // frame each glyph individually.
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "15"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "8"
+
+        // When
+        val fiveIcons = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.FIVE_ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as FiveIconsTemplateData
+
+        // Then - the template data has no styling field at all for the icon slots to read from,
+        // so the keys cannot reach the renderer even on a raw or test payload that bypasses
+        // send-time validation.
+        assertTrue(
+            "FiveIconsTemplateData must not expose image styling",
+            fiveIcons::class.java.declaredFields.none { it.name.contains("imageBorder") }
+        )
     }
 
     @Test

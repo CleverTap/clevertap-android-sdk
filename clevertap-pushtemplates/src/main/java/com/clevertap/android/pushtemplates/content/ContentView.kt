@@ -196,15 +196,20 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
+        // Styling is baked into each frame rather than clipped on the hosting view. A view outline
+        // would be Android 12+ only, would give the GIF a different geometry from the template's
+        // static images, and cannot stroke a border at all. Frames are pre-extracted stills, so
+        // baking costs nothing during playback and adds no bitmaps to the RemoteViews parcel.
         val border = imageBorderData?.takeIf { it.isActive }
 
         for (frame in frames) {
-            // GIF frames are decoded fresh on every call, so recycling the pre-border frame is
+            // GIF frames are decoded fresh on every call, so recycling the pre-styling frame is
             // safe here. Static images come from TemplateMediaManager's cache and must not be.
+            // applyRoundedBorderToBitmap returns its own argument when there is nothing to draw,
+            // so only recycle a frame that was genuinely replaced.
             val processedFrame = if (border != null) {
-                NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    frame, border.cornerRadiusPercent, border.borderColor, border.borderWidthPercent
-                ).also { frame.recycle() }
+                NotificationBitmapUtils.applyRoundedBorderToBitmap(frame, border)
+                    .also { if (it !== frame) frame.recycle() }
             } else frame
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
             frameRemoteViews.setImageViewBitmap(imageViewId, processedFrame)
@@ -245,15 +250,10 @@ internal open class ContentView(
         altText: String?,
         imageBorderData: ImageBorderData?
     ): Boolean {
-        val rawImage = templateMediaManager.getImageBitmap(imageUrl)
-        if (rawImage != null) {
-            // rawImage is owned by TemplateMediaManager's cache, so it is never recycled here
-            val border = imageBorderData?.takeIf { it.isActive }
-            val image = if (border != null) {
-                NotificationBitmapUtils.applyRoundedBorderToBitmap(
-                    rawImage, border.cornerRadiusPercent, border.borderColor, border.borderWidthPercent
-                )
-            } else rawImage
+        // Both the raw and the styled bitmap are owned by TemplateMediaManager's caches, so
+        // neither is ever recycled here.
+        val image = templateMediaManager.getStyledImageBitmap(imageUrl, imageBorderData)
+        if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image)
             if (!TextUtils.isEmpty(altText)) {
                 remoteViews.setContentDescription(imageViewID, altText)

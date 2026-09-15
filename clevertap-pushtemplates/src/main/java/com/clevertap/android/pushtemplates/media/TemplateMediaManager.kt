@@ -2,8 +2,10 @@ package com.clevertap.android.pushtemplates.media
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.clevertap.android.pushtemplates.ImageBorderData
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.pushtemplates.content.NotificationBitmapUtils
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import kotlin.system.measureTimeMillis
 
@@ -15,6 +17,7 @@ internal class TemplateMediaManager(
     // Simple in-memory cache to avoid duplicate downloads of successful results
     private val bitmapCache = mutableMapOf<String, Bitmap>()
     private val bytesCache = mutableMapOf<String, ByteArray>()
+    private val styledBitmapCache = mutableMapOf<Pair<String, ImageBorderData>, Bitmap>()
 
     fun getGifFrames(gifUrl: String?, maxFrames: Int): GifResult {
         if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase()
@@ -111,10 +114,34 @@ internal class TemplateMediaManager(
     }
 
     /**
-     * Clears both bitmap and bytes caches. Useful for cleanup after template processing.
+     * Returns the image for [imageUrl] with [border] baked in, or the unstyled bitmap when there is
+     * nothing to draw.
+     *
+     * The styled result is cached per (url, style) so that slots sharing an image — a template's
+     * expanded and collapsed views, for instance — hand RemoteViews the *same* Bitmap instance.
+     * RemoteViews de-duplicates bitmaps by object identity when it marshals its parcel, so reusing
+     * the instance keeps a styled notification's payload the same size as an unstyled one.
+     */
+    fun getStyledImageBitmap(imageUrl: String?, border: ImageBorderData?): Bitmap? {
+        val url = imageUrl ?: return null
+        val rawBitmap = getImageBitmap(url) ?: return null
+        if (border == null || !border.isActive) return rawBitmap
+
+        val key = url to border
+        val cached = styledBitmapCache[key]
+        if (cached != null && !cached.isRecycled) return cached
+
+        return NotificationBitmapUtils.applyRoundedBorderToBitmap(rawBitmap, border)
+            .also { styledBitmapCache[key] = it }
+    }
+
+    /**
+     * Clears the bitmap, styled-bitmap and bytes caches. Useful for cleanup after template
+     * processing.
      */
     fun clearCaches() {
         bitmapCache.clear()
+        styledBitmapCache.clear()
         bytesCache.clear()
         PTLog.verbose("Media caches cleared")
     }

@@ -375,13 +375,22 @@ internal object TemplateDataFactory {
 
     private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
         return ImageBorderData(
-            // Parse here rather than at draw time so an invalid colour never marks the border active
-            borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) },
-            // Both values are percentages of the image's shortest side, clamped when drawn
-            cornerRadiusPercent = extras.getString(PT_IMG_CORNER_RADIUS)?.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f,
-            borderWidthPercent = extras.getString(PT_IMG_BORDER_WIDTH)?.toFloatOrNull()?.takeIf { it.isFinite() }
+            // Both sizes are percentages of the image's shortest side, clamped when drawn
+            cornerRadiusPercent = extras.getStylingPercent(PT_IMG_CORNER_RADIUS),
+            borderWidthPercent = extras.getStylingPercent(PT_IMG_BORDER_WIDTH),
+            // Parsed here rather than at draw time, so an unparseable colour never reaches the
+            // canvas. Color.parseColor accepts #RRGGBB (fully opaque) and #AARRGGBB alike.
+            borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) }
         )
     }
+
+    /**
+     * Reads a styling percentage from the payload. Anything the payload cannot express as a finite
+     * number — missing, non-numeric, NaN or Infinity — is treated as 0, which is the same as the
+     * key being absent.
+     */
+    private fun Bundle.getStylingPercent(key: String): Float =
+        getString(key)?.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f
 
     private fun createBaseContent(extras: Bundle, colorMap: Map<String, String>): BaseContent {
         return BaseContent(

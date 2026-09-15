@@ -32,26 +32,34 @@ internal data class BaseTextData(
 )
 
 /**
- * Border/corner configuration for the main notification image.
+ * Corner/border configuration for a template's content images.
  *
- * [borderColor] is already parsed into an Android colour int by [TemplateDataFactory], so an
- * unparseable colour from the payload lands here as null and [isActive] stays honest about
- * whether there is anything to draw.
+ * Both size values are percentages of the image's shortest side, not absolute pixels: campaign
+ * images arrive at whatever resolution the marketer uploaded, and the SDK never learns how far the
+ * notification tray scales them, so only a proportional value renders consistently across assets.
+ * See [com.clevertap.android.pushtemplates.content.NotificationBitmapUtils.applyRoundedBorderToBitmap].
  *
- * The two size values are percentages of the image's shortest side, not absolute pixels, because
- * campaign images vary in resolution. See NotificationBitmapUtils.applyRoundedBorderToBitmap.
+ * A border needs both of its keys: [borderWidthPercent] switches it on and [borderColor] says what
+ * to paint it with, so a colour without a width and a width without a colour both draw nothing.
+ * [borderColor] is already parsed by [TemplateDataFactory], so an unparseable payload colour lands
+ * here as null and the border is simply skipped while the corner radius still applies.
  */
 internal data class ImageBorderData(
-    val borderColor: Int? = null,
     val cornerRadiusPercent: Float = 0f,
-    val borderWidthPercent: Float? = null,
+    val borderWidthPercent: Float = 0f,
+    val borderColor: Int? = null,
 ) {
-    val isActive: Boolean get() = cornerRadiusPercent > 0f || borderColor != null
+
+    /** Nothing is stroked without both a width to draw and a colour to draw it in. */
+    val hasBorder: Boolean get() = borderWidthPercent > 0f && borderColor != null
+
+    val isActive: Boolean get() = cornerRadiusPercent > 0f || hasBorder
 }
 
 /**
- * Rounded corners and borders are baked into the bitmap, so a CENTER_CROP image view would crop
- * them away. Returns FIT_CENTER whenever a border is active, otherwise the requested scale type.
+ * Corners and borders are baked into the bitmap, so a CENTER_CROP image view would scale the
+ * bitmap to fill and clip away the very band the styling lives in. Returns FIT_CENTER whenever
+ * styling is active, otherwise the requested scale type.
  */
 internal fun ImageBorderData?.effectiveScaleType(requested: PTScaleType): PTScaleType {
     if (this == null || !isActive) return requested
