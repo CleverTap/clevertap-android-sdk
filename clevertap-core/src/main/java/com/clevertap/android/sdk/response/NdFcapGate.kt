@@ -34,8 +34,11 @@ internal object NdFcapGate {
             }
             val excludeFromCaps = json.optInt(Constants.KEY_EFC, UNCAPPED) == 1 ||
                 json.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, UNCAPPED) == 1
+            // Gate on the stable campaign id (ti), NOT unitID (= wzrk_id, ti_yyyyMMdd, rotates daily) —
+            // must match how didShow records and how the evaluator keys whenLimits (SDK-6132).
+            val campaignId = json.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val canShow = ndFCManager.canShow(
-                unit.unitID,
+                campaignId,
                 excludeFromCaps,
                 json.optInt(Constants.KEY_TLC, UNCAPPED),
                 json.optInt(Constants.KEY_TDC, UNCAPPED),

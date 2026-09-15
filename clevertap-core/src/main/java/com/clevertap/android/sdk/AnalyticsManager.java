@@ -357,7 +357,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     // unmarked/legacy unit's view can't consume the ND global budget and starve gated ones.
                     NdFCManager ndFCManager = controllerManager.getNdFCManager();
                     if (ndFCManager != null && NdFCManager.isFcapManaged(displayUnit.getJsonObject())) {
-                        ndFCManager.didShow(unitID);
+                        // Key on the stable campaign id (ti), NOT unitID (= wzrk_id, which is ti_yyyyMMdd
+                        // and rotates daily). The ND evaluator's whenLimits are keyed by ti, so recording
+                        // by wzrk_id would never be seen by them (SDK-6132). Mirrors in-app's InAppFCManager,
+                        // which records by inapp.getId() (ti).
+                        String ndCampaignId = displayUnit.getJsonObject().optString(Constants.INAPP_ID_IN_PAYLOAD);
+                        ndFCManager.didShow(ndCampaignId);
                     }
 
                     JSONObject eventExtras = displayUnit.getWZRKFields();
