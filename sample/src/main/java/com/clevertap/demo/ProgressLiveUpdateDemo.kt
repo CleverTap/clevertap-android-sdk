@@ -65,13 +65,19 @@ object ProgressLiveUpdateDemo {
     private const val START_ICON = "https://imgur.com/6DavQwg.jpg"
     private const val END_ICON = "https://imgur.com/6DavQwg.jpg"
 
-    private data class Step(val status: String, val eta: String, val index: Int, val event: String = "update")
+    private data class Step(
+        val status: String,
+        val eta: String,
+        val index: Int,
+        val label: String,
+        val event: String = "update"
+    )
 
     private val steps = listOf(
-        Step("Order confirmed", "50 min", 0, "start"),
-        Step("Preparing your order", "40 min", 1),
-        Step("Out for delivery", "12 min", 2),
-        Step("Delivered — enjoy!", "0 min", 3, "end")
+        Step("Order confirmed", "50 min", 0, "Placed", "start"),
+        Step("Preparing your order", "40 min", 1, "Cooking"),
+        Step("Out for delivery", "12 min", 2, "On way"),
+        Step("Delivered — enjoy!", "0 min", 3, "Delivered", "end")
     )
 
     /** Kicks off the timed, in-place progress sequence for [variant]. */
@@ -221,7 +227,14 @@ object ProgressLiveUpdateDemo {
                 i == step -> COLOR_ACTIVE
                 else -> COLOR_PENDING
             }
-            arr.put(JSONObject().put("position", pointPosition(i)).put("color", color))
+            // `title` = milestone label; shown under each dot in the pre-16 expanded fallback
+            // (native ProgressStyle points carry no text, so it's a no-op on 16+).
+            arr.put(
+                JSONObject()
+                    .put("position", pointPosition(i))
+                    .put("color", color)
+                    .put("title", steps[i].label)
+            )
         }
         return arr.toString()
     }
