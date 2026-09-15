@@ -645,7 +645,8 @@ class PushProviders internal constructor(
         }
     }
 
-    private fun isTimeBetweenDNDTime(startTime: Date, stopTime: Date, currentTime: Date): Boolean {
+    @androidx.annotation.VisibleForTesting
+    internal fun isTimeBetweenDNDTime(startTime: Date, stopTime: Date, currentTime: Date): Boolean {
         //Start Time
         val startTimeCalendar = Calendar.getInstance()
         startTimeCalendar.time = startTime
