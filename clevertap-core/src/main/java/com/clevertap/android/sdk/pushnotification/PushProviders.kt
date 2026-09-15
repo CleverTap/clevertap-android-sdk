@@ -50,6 +50,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class PushProviders internal constructor(
@@ -389,7 +390,7 @@ class PushProviders internal constructor(
         val hour = now.get(Calendar.HOUR_OF_DAY) // Get hour in 24 hour format
         val minute = now.get(Calendar.MINUTE)
 
-        val inputParser = SimpleDateFormat(inputFormat, Locale.US)
+        val inputParser = SimpleDateFormat(INPUT_FORMAT, Locale.US)
 
         val currentTime = parseTimeToDate("$hour:$minute", inputParser)
         val startTime = parseTimeToDate(Constants.DND_START, inputParser)
@@ -436,7 +437,7 @@ class PushProviders internal constructor(
         val pingFrequency = getPingFrequency(context)
 
         // no running work and nothing to create
-        if (existingWorkName == "" && pingFrequency <= 0) {
+        if (existingWorkName.isEmpty() && pingFrequency <= 0) {
             config.logger.debug(config.accountId, "Pushamp - There is no running work and nothing to create")
             return
         }
@@ -452,7 +453,7 @@ class PushProviders internal constructor(
             val workManager = WorkManager.getInstance(context)
 
             // Create a work request only when it doesn't exist already or the ping frequency is updated
-            if (existingWorkName == "" || isPingFrequencyUpdated) {
+            if (existingWorkName.isEmpty() || isPingFrequencyUpdated) {
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .setRequiresCharging(false)
@@ -466,7 +467,7 @@ class PushProviders internal constructor(
                     .setConstraints(constraints)
                     .build()
 
-                val workName = if (existingWorkName == "") config.accountId else existingWorkName
+                val workName = if (existingWorkName.isEmpty()) config.accountId else existingWorkName
 
                 workManager.enqueueUniquePeriodicWork(workName, ExistingPeriodicWorkPolicy.UPDATE, request)
                 StorageHelper.putString(context, PF_WORK_ID, workName)
@@ -486,7 +487,7 @@ class PushProviders internal constructor(
 
     private fun stopWorker() {
         val existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "") ?: ""
-        if (existingWorkName != "") {
+        if (existingWorkName.isNotEmpty()) {
             try {
                 val workManager = WorkManager.getInstance(context)
                 workManager.cancelUniqueWork(existingWorkName)
@@ -657,14 +658,13 @@ class PushProviders internal constructor(
         val stopTimeCalendar = Calendar.getInstance()
         stopTimeCalendar.time = stopTime
 
-        if (stopTime.compareTo(startTime) < 0) {
-            if (currentTimeCalendar.compareTo(stopTimeCalendar) < 0) {
+        if (stopTime < startTime) {
+            if (currentTimeCalendar < stopTimeCalendar) {
                 currentTimeCalendar.add(Calendar.DATE, 1)
             }
             stopTimeCalendar.add(Calendar.DATE, 1)
         }
-        return currentTimeCalendar.compareTo(startTimeCalendar) >= 0 &&
-            currentTimeCalendar.compareTo(stopTimeCalendar) < 0
+        return currentTimeCalendar >= startTimeCalendar && currentTimeCalendar < stopTimeCalendar
     }
 
     private fun isValid(provider: CTPushProvider): Boolean {
@@ -838,15 +838,10 @@ class PushProviders internal constructor(
 
         iNotificationRenderer.setSmallIcon(smallIcon, context)
 
-        var priorityInt = NotificationCompat.PRIORITY_DEFAULT
-        val priority = extras.getString(Constants.NOTIF_PRIORITY)
-        if (priority != null) {
-            if (priority == Constants.PRIORITY_HIGH) {
-                priorityInt = NotificationCompat.PRIORITY_HIGH
-            }
-            if (priority == Constants.PRIORITY_MAX) {
-                priorityInt = NotificationCompat.PRIORITY_MAX
-            }
+        val priorityInt = when (extras.getString(Constants.NOTIF_PRIORITY)) {
+            Constants.PRIORITY_HIGH -> NotificationCompat.PRIORITY_HIGH
+            Constants.PRIORITY_MAX -> NotificationCompat.PRIORITY_MAX
+            else -> NotificationCompat.PRIORITY_DEFAULT
         }
 
         // if we have no user set notificationID then try collapse key
@@ -854,24 +849,25 @@ class PushProviders internal constructor(
             try {
                 val collapseKey = iNotificationRenderer.getCollapseKey(extras)
                 if (collapseKey != null) {
-                    if (collapseKey is Number) {
-                        notifId = collapseKey.toInt()
-                    } else if (collapseKey is String) {
-                        try {
-                            notifId = collapseKey.toString().toInt()
-                            config.logger.verbose(
-                                config.accountId,
-                                "Converting collapse_key: $collapseKey to notificationId int: $notifId"
-                            )
-                        } catch (e: NumberFormatException) {
-                            notifId = collapseKey.toString().hashCode()
-                            config.logger.verbose(
-                                config.accountId,
-                                "Converting collapse_key: $collapseKey to notificationId int: $notifId"
-                            )
+                    when (collapseKey) {
+                        is Number -> notifId = collapseKey.toInt()
+                        is String -> {
+                            try {
+                                notifId = collapseKey.toInt()
+                                config.logger.verbose(
+                                    config.accountId,
+                                    "Converting collapse_key: $collapseKey to notificationId int: $notifId"
+                                )
+                            } catch (e: NumberFormatException) {
+                                notifId = collapseKey.hashCode()
+                                config.logger.verbose(
+                                    config.accountId,
+                                    "Converting collapse_key: $collapseKey to notificationId int: $notifId"
+                                )
+                            }
                         }
                     }
-                    notifId = Math.abs(notifId) //Notification Id always needs to be positive
+                    notifId = abs(notifId) //Notification Id always needs to be positive
                     config.logger.debug(
                         config.accountId,
                         "Creating the notification id: $notifId from collapse_key: $collapseKey"
@@ -1160,7 +1156,7 @@ class PushProviders internal constructor(
         private const val PF_JOB_ID = "pfjobid"
         private const val PF_WORK_ID = "pfworkid"
         private const val PING_FREQUENCY = "pf"
-        private const val inputFormat = "HH:mm"
+        private const val INPUT_FORMAT = "HH:mm"
 
         /**
          * Factory method to load push providers.

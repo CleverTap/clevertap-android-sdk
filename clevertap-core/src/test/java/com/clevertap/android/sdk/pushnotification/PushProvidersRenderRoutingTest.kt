@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
+import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -39,7 +40,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
 
     private lateinit var dbAdapter: DBAdapter
     private lateinit var baseDatabaseManager: BaseDatabaseManager
-    private lateinit var analyticsManager: com.clevertap.android.sdk.AnalyticsManager
+    private lateinit var analyticsManager: AnalyticsManager
     private lateinit var renderer: INotificationRenderer
 
     @Before
@@ -56,7 +57,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
     }
 
     @After
-    fun tearDownStatics() {
+    fun tearDown() {
         unmockkStatic(CleverTapAPI::class)
     }
 
