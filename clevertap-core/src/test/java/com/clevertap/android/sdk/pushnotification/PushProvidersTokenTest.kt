@@ -48,16 +48,7 @@ class PushProvidersTokenTest : BaseTestCase() {
     }
 
     private fun buildSut(): PushProviders {
-        val ctor = PushProviders::class.java.getDeclaredConstructor(
-            Context::class.java,
-            CleverTapInstanceConfig::class.java,
-            BaseDatabaseManager::class.java,
-            ValidationResultStack::class.java,
-            AnalyticsManager::class.java,
-            CTWorkManager::class.java,
-            Clock::class.java
-        ).apply { isAccessible = true }
-        return ctor.newInstance(
+        return PushProviders(
             appCtx, cleverTapInstanceConfig, mockk<BaseDatabaseManager>(relaxed = true),
             mockk<ValidationResultStack>(relaxed = true), mockk<AnalyticsManager>(relaxed = true),
             mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true)
@@ -86,7 +77,7 @@ class PushProvidersTokenTest : BaseTestCase() {
     @Test
     fun `isNotificationSupported is false when no provider tokens exist`() {
         // No providers were discovered (init() skipped), so there are no available push types.
-        assertFalse(buildSut().isNotificationSupported())
+        assertFalse(buildSut().isNotificationSupported)
     }
 
     @Test
