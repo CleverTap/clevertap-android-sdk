@@ -281,9 +281,9 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the big image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_width | Optional | Border width for the big image, as a percentage (`0`-`25`) of the image's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
 pt_title_clr | Optional | Title Color in HEX
@@ -312,9 +312,9 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the big image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_width | Optional | Border width for the big image, as a percentage (`0`-`25`) of the image's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
@@ -345,9 +345,9 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the big image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_width | Optional | Border width for the big image, as a percentage (`0`-`25`) of the image's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
@@ -370,9 +370,9 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the big image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_width | Optional | Border width for the big image, as a percentage (`0`-`25`) of the image's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_default_dl | Required  | Default Deep Link for Push Notification
@@ -405,9 +405,9 @@ pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required  | Image Three
 pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the big image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_width | Optional | Border width for the big image, as a percentage (`0`-`25`) of the image's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bt1 | Required  | Big text for first image
 pt_bt2 | Required  | Big text for second image
 pt_bt3 | Required  | Big text for third image
@@ -475,9 +475,9 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the big image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_width | Optional | Border width for the big image, as a percentage (`0`-`25`) of the image's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_gif_alt | Optional | GIF to show when timer expires
 pt_gif_frames_alt | Optional | Number of frames to extract from the alternate GIF
@@ -516,9 +516,9 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the big image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners). Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_clr | Optional | Border color for the big image in HEX. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_width | Optional | Border width for the big image, as a percentage (`0`-`25`) of the image's shortest side. Defaults to `10`. Requires `pt_img_border_clr`
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_big_img_collapsed | Optional | Image for the collapsed view
 pt_gif_collapsed | Optional | GIF for the collapsed view
 pt_gif_frames_collapsed | Optional | Number of frames to extract from the GIF for the collapsed view
@@ -632,31 +632,50 @@ following keys to the payload:
 
 Key | Description
 :---|:---
-`pt_img_corner_radius` | Corner radius as a **percentage of the image's shortest side**, `0`-`50`. Defaults to `0` (square corners); `50` produces a fully rounded pill
-`pt_img_border_clr` | Border color in HEX, for example `#FF5722`. When omitted, no border is drawn
-`pt_img_border_width` | Border width as a **percentage of the image's shortest side**, `0`-`25`. Defaults to `10`. Only used when `pt_img_border_clr` is set
+`pt_img_corner_radius` | Corner radius as a **percentage of the image's shortest side**, `0`-`50`. Defaults to `0` (square corners). `50` is half the shortest side, which is a fully rounded image; larger values are clamped to it because they have no further visible effect
+`pt_img_border_width` | Border width as a **percentage of the image's shortest side**, `0`-`10`. Defaults to `0` (no border)
+`pt_img_border_clr` | Border color in HEX, either `#RRGGBB` (rendered fully opaque) or `#AARRGGBB`. For example `#FF5722`
+
+A border needs **both** of its keys. A width without a colour and a colour without a width each draw
+nothing, so neither key alone changes how a notification renders.
 
 ### Why percentages and not pixels
 
-Campaign images vary in resolution, so a fixed pixel value would look different on every image. A
-value of `10` renders as 18px on a 240x180 image and as 80px on a 1200x800 one, which is the same
-proportion and therefore the same result on screen. Set the value once and it stays consistent
-across every campaign, whatever the asset size.
+A notification image is drawn by the system UI, which scales it to whatever width the tray gives it.
+That width depends on the device, the OEM skin, the orientation and the user's display-size setting,
+and the SDK never learns it. An absolute value baked into the bitmap would therefore render at a
+different on-screen size for every campaign image: a value meant to look like a small radius on a
+240x180 asset would look five times smaller on a 1200x800 one.
 
-Note that this differs from `pt_btn_border_radius` and `pt_chrono_border_radius`, which are absolute
-values because the SDK draws those on a fixed-size canvas.
+A percentage scales with the image, so a value of `10` renders as 18px on a 240x180 image and as
+80px on a 1200x800 one — the same proportion, and therefore the same result on screen. Set the value
+once and it stays consistent across every campaign, whatever the asset size.
+
+Note that this differs from `pt_btn_border_radius` and `pt_chrono_border_radius`, which the SDK
+draws on a fixed-size canvas of its own and which therefore take absolute values.
 
 ### Notes
 
 * `pt_img_border_clr` supports the dark mode suffix, so `pt_img_border_clr_dark` is used when the
   device is in dark mode. See [Dark Mode](#dark-mode).
-* Because the corners are baked into the bitmap, a `center_crop` image view would crop them away.
-  Whenever either key is active the SDK renders the image with `fit_center` and ignores
-  `pt_scale_type`.
+* Because the styling is baked into the bitmap, a `center_crop` image view would scale the image to
+  fill the slot and clip away the very band the corners and border live in. Whenever either key is
+  active the SDK renders the image with `fit_center` and ignores `pt_scale_type`. This can letterbox
+  an image that previously filled the slot.
 * Values outside the supported range are clamped to the nearest valid value (for example a negative
-  radius becomes `0`). Truly invalid values — an unparseable color, a non-numeric radius or width,
-  NaN, or Infinity — are ignored as though the key were absent.
-* The keys apply to GIFs as well as static images.
+  radius becomes `0`, a radius of `80` becomes `50`, and a width of `40` becomes `10`). Values that
+  are not finite numbers — an unparseable radius or width, `NaN`, or `Infinity` — are ignored as
+  though the key were absent. An unparseable colour skips the border while the corner radius still
+  applies.
+* The keys apply to GIFs exactly as they do to static images. The SDK extracts a GIF into still
+  frames once, when it builds the notification, so the styling is baked into each frame at that
+  point and costs nothing while the notification is on screen.
+* The same value is not guaranteed to look identical on Android and iOS. The value is proportional
+  to the image, and each platform lays the image out in its own slot, so treat the key as "match my
+  brand's corner language" rather than as an exact cross-platform measurement.
+* The keys are **not supported on the Five Icons template** and are ignored there. Its assets are
+  transparent 1:1 glyphs, where a rectangular corner clip does nothing and a border would frame each
+  glyph individually.
 
 ## Android 12 Trampoline restrictions
 

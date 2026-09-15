@@ -2,7 +2,7 @@
 ### Version 2.5.0 (Unreleased)
 
 #### New Features
-* **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border color (`pt_img_border_clr`), and border width (`pt_img_border_width`) for the notification image. The radius and width are percentages of the image's shortest side, so a single value renders consistently across images of any resolution across the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Product Catalog`, `Five Icons`, `Timer`, `Zero Bezel`, and `Image with CTA` templates. Also applies to GIFs. `pt_img_border_clr` honours the dark mode suffix (`pt_img_border_clr_dark`).
+* **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border width (`pt_img_border_width`), and border color (`pt_img_border_clr`) for notification images. The radius and width are percentages of the image's shortest side, so a single value renders consistently across images of any resolution. Supported on the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Product Catalog`, `Timer`, `Zero Bezel`, and `Image with CTA` templates, and on GIFs. A border requires both `pt_img_border_width` and `pt_img_border_clr`; neither key alone draws anything. `pt_img_border_clr` accepts `#RRGGBB` and `#AARRGGBB`, and honours the dark mode suffix (`pt_img_border_clr_dark`). Not supported on `Five Icons`.
 
 #### Bug Fixes
 * Fixes a crash in the `Manual Carousel` template when navigating between images in a campaign that has no deep links configured.
