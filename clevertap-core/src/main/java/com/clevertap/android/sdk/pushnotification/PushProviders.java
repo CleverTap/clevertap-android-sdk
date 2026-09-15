@@ -183,74 +183,71 @@ public class PushProviders implements CTPushProviderListener {
                 analyticsManager.pushNotificationViewedEvent(extras);
                 return;
             }
-            String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-            if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-                config.getLogger()
-                        .debug(config.getAccountId(),
-                                "Handling notification: " + extras);
+            config.getLogger()
+                    .debug(config.getAccountId(),
+                            "Handling notification: " + extras);
 
-                if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                    if (baseDatabaseManager.loadDBAdapter(context)
-                            .doesPushNotificationIdExist(
-                                    extras.getString(Constants.WZRK_PUSH_ID))) {
-                        config.getLogger().debug(config.getAccountId(),
-                                "Push Notification already rendered, not showing again");
-                        return;
-                    }
-                }
-
-                // Live Activity (live update) pushes are rendered by a client-supplied factory.
-                // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
-                boolean isLiveActivity = extras.getString(Constants.WZRK_LIVE_ACTIVITY, "")
-                        .equalsIgnoreCase("true");
-
-                if (isLiveActivity) {
-                    // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
-                    // the gate): pt_id present => Mode B (SDK/Push Template renders, and it takes
-                    // precedence over a client factory); pt_id absent => Mode A (client factory renders
-                    // the `data` custom content). Lifecycle events are raised in postNotificationRendered
-                    // for both modes.
-                    boolean isPtMode = PushNotificationHandler.isForPushTemplates(extras);
-                    ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
-
-                    if (LiveActivityRouter.mode(isPtMode, customFactory != null) == LiveActivityMode.FACTORY) {
-                        // Mode A — client factory renders the Notification.
-                        triggerLiveActivityNotification(context, extras, customFactory);
-                        return;
-                    }
-                    // Mode B — SDK renders with the SDK-owned in-place id (derived from wzrk_activityId)
-                    // so successive updates for the same activity replace the same notification.
-                    Integer inPlaceId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
-                    if (inPlaceId != null) {
-                        liveActivityNotificationId = inPlaceId;
-                    }
-                    // fall through to normal rendering
-                }
-
-                String notifMessage = iNotificationRenderer.getMessage(extras);
-                notifMessage = (notifMessage != null) ? notifMessage : "";
-                // A Live Update rendered by a self-validating template renderer (pt_progress, whose
-                // validator makes the message optional) may legitimately have an empty message, so it
-                // must NOT be treated as a silent push. The core renderer can't validate that: it would
-                // post a blank/app-name notification AND raise a false Started/Viewed impression — e.g. a
-                // Mode A payload delivered to a build with no factory registered (SDK_RENDER fall-through),
-                // or a Mode B pt_progress on the createNotification entry that never reached the template
-                // renderer. Keep treating an empty message there as a silent push (pre-Live-Update behavior).
-                boolean liveActivityTemplateRender =
-                        isLiveActivity && !(iNotificationRenderer instanceof CoreNotificationRenderer);
-                if (notifMessage.isEmpty() && !liveActivityTemplateRender) {
-                    //silent notification
-                    config.getLogger()
-                            .verbose(config.getAccountId(),
-                                    "Push notification message is empty, not rendering");
-                    baseDatabaseManager.loadDBAdapter(context)
-                            .storeUninstallTimestamp();
-                    String pingFreq = extras.getString("pf", "");
-                    if (!TextUtils.isEmpty(pingFreq)) {
-                        updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
-                    }
+            if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                if (baseDatabaseManager.loadDBAdapter(context)
+                        .doesPushNotificationIdExist(
+                                extras.getString(Constants.WZRK_PUSH_ID))) {
+                    config.getLogger().debug(config.getAccountId(),
+                            "Push Notification already rendered, not showing again");
                     return;
                 }
+            }
+
+            // Live Activity (live update) pushes are rendered by a client-supplied factory.
+            // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
+            boolean isLiveActivity = extras.getString(Constants.WZRK_LIVE_ACTIVITY, "")
+                    .equalsIgnoreCase("true");
+
+            if (isLiveActivity) {
+                // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
+                // the gate): pt_id present => Mode B (SDK/Push Template renders, and it takes
+                // precedence over a client factory); pt_id absent => Mode A (client factory renders
+                // the `data` custom content). Lifecycle events are raised in postNotificationRendered
+                // for both modes.
+                boolean isPtMode = PushNotificationHandler.isForPushTemplates(extras);
+                ICleverTapNotificationFactory customFactory = CleverTapAPI.getNotificationFactory();
+
+                if (LiveActivityRouter.mode(isPtMode, customFactory != null) == LiveActivityMode.FACTORY) {
+                    // Mode A — client factory renders the Notification.
+                    triggerLiveActivityNotification(context, extras, customFactory);
+                    return;
+                }
+                // Mode B — SDK renders with the SDK-owned in-place id (derived from wzrk_activityId)
+                // so successive updates for the same activity replace the same notification.
+                Integer inPlaceId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
+                if (inPlaceId != null) {
+                    liveActivityNotificationId = inPlaceId;
+                }
+                // fall through to normal rendering
+            }
+
+            String notifMessage = iNotificationRenderer.getMessage(extras);
+            notifMessage = (notifMessage != null) ? notifMessage : "";
+            // A Live Update rendered by a self-validating template renderer (pt_progress, whose
+            // validator makes the message optional) may legitimately have an empty message, so it
+            // must NOT be treated as a silent push. The core renderer can't validate that: it would
+            // post a blank/app-name notification AND raise a false Started/Viewed impression — e.g. a
+            // Mode A payload delivered to a build with no factory registered (SDK_RENDER fall-through),
+            // or a Mode B pt_progress on the createNotification entry that never reached the template
+            // renderer. Keep treating an empty message there as a silent push (pre-Live-Update behavior).
+            boolean liveActivityTemplateRender =
+                    isLiveActivity && !(iNotificationRenderer instanceof CoreNotificationRenderer);
+            if (notifMessage.isEmpty() && !liveActivityTemplateRender) {
+                //silent notification
+                config.getLogger()
+                        .verbose(config.getAccountId(),
+                                "Push notification message is empty, not rendering");
+                baseDatabaseManager.loadDBAdapter(context)
+                        .storeUninstallTimestamp();
+                String pingFreq = extras.getString("pf", "");
+                if (!TextUtils.isEmpty(pingFreq)) {
+                    updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                }
+                return;
             }
 
             String notifTitle = iNotificationRenderer.getTitle(extras,
@@ -1242,40 +1239,37 @@ public class PushProviders implements CTPushProviderListener {
             analyticsManager.raiseLiveActivityLifecycleEvent(extras, state);
         }
 
-        String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-        if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);
-            long wzrkTtl = clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS;
-            if (ttl != null) {
-                wzrkTtl = Long.parseLong(ttl);
-            }
-            String wzrkPid = extras.getString(Constants.WZRK_PUSH_ID);
-            DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-            if (wzrkPid != null) {
-                config.getLogger().verbose("Storing Push Notification..." + wzrkPid + " - with ttl - " + ttl);
-                dbAdapter.storePushNotificationId(wzrkPid, wzrkTtl);
-            } else {
-                config.getLogger().verbose("Will not save Push Notification in DB due to invalid id");
-            }
-
-            boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
-            if (!notificationViewedEnabled) {
-                ValidationResult notificationViewedError = ValidationResultFactory
-                        .create(ValidationError.NOTIFICATION_VIEWED_DISABLED, extras.toString());
-                config.getLogger().debug(notificationViewedError.getErrorDesc());
-                validationResultStack.pushValidationResult(notificationViewedError);
-                return;
-            }
-
-            long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
-            if (omrStart >= 0) {
-                long prt = clock.currentTimeMillis() - omrStart;
-                config.getLogger()
-                        .verbose("Rendered Push Notification in " + prt + " millis");
-            }
-
-            ctWorkManager.init();
-            analyticsManager.pushNotificationViewedEvent(extras);
+        String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE);
+        long wzrkTtl = clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS;
+        if (ttl != null) {
+            wzrkTtl = Long.parseLong(ttl);
         }
+        String wzrkPid = extras.getString(Constants.WZRK_PUSH_ID);
+        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+        if (wzrkPid != null) {
+            config.getLogger().verbose("Storing Push Notification..." + wzrkPid + " - with ttl - " + ttl);
+            dbAdapter.storePushNotificationId(wzrkPid, wzrkTtl);
+        } else {
+            config.getLogger().verbose("Will not save Push Notification in DB due to invalid id");
+        }
+
+        boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
+        if (!notificationViewedEnabled) {
+            ValidationResult notificationViewedError = ValidationResultFactory
+                    .create(ValidationError.NOTIFICATION_VIEWED_DISABLED, extras.toString());
+            config.getLogger().debug(notificationViewedError.getErrorDesc());
+            validationResultStack.pushValidationResult(notificationViewedError);
+            return;
+        }
+
+        long omrStart = extras.getLong(Constants.OMR_INVOKE_TIME_IN_MILLIS, -1);
+        if (omrStart >= 0) {
+            long prt = clock.currentTimeMillis() - omrStart;
+            config.getLogger()
+                    .verbose("Rendered Push Notification in " + prt + " millis");
+        }
+
+        ctWorkManager.init();
+        analyticsManager.pushNotificationViewedEvent(extras);
     }
 }
