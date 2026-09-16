@@ -134,6 +134,45 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     @Test
+    fun `filters app-launched content by whenLimits and delivers only survivors`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70001,"wzrk_id":"70001_20260810","type":"simple"},
+                {"ti":70002,"wzrk_id":"70002_20260810","type":"simple"}
+            ]}"""
+        )
+        // whenLimits filter keeps 70001, drops 70002 (over cap).
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers {
+            firstArg<List<JSONObject>>().filter { it.optString("ti") == "70001" }
+        }
+
+        response.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)
+        assertEquals("70001_20260810", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `does not deliver app-launched suppressed stubs to the whenLimits filter`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70003,"wzrk_id":"70003_20260810","suppressed":true,"wzrk_cgId":0},
+                {"ti":70004,"wzrk_id":"70004_20260810","type":"simple"}
+            ]}"""
+        )
+        val slot = slot<List<JSONObject>>()
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(capture(slot)) } answers { firstArg() }
+
+        response.processResponse(json, "", context)
+
+        // Only the non-suppressed unit reaches the filter; the CG stub is excluded (acked separately).
+        assertEquals(1, slot.captured.size)
+        assertEquals("70004", slot.captured[0].optString("ti"))
+    }
+
+    @Test
     fun `on user switch ingests meta but skips content delivery`() {
         val json = JSONObject("""{"ndmc":1,"ndmp":10,"adUnit_notifs":[{"wzrk_id":"u1","type":"simple"}]}""")
 

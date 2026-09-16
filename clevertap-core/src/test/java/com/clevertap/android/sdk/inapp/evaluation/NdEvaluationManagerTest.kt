@@ -137,4 +137,50 @@ class NdEvaluationManagerTest {
         assertEquals("70004_20260810", manager.suppressedNdCampaigns[0][Constants.NOTIFICATION_ID_TAG])
         assertEquals("wzrk_default", manager.suppressedNdCampaigns[0][Constants.INAPP_WZRK_PIVOT])
     }
+
+    // ---- App-Launched content-in-advance whenLimits filter (SDK-6138) ----
+
+    @Test
+    fun `retainAppLaunchedWithinLimits keeps units within whenLimits and drops over-cap ones`() {
+        val rule1 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+        val rule2 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70002")
+        every { ndStore.readServerSideNdMetaData() } returns listOf(rule1, rule2)
+        every { ndLimitsMatcher.matchWhenLimits(any(), "70001") } returns true
+        every { ndLimitsMatcher.matchWhenLimits(any(), "70002") } returns false
+
+        val within = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+        val overCap = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70002")
+
+        val kept = manager.retainAppLaunchedWithinLimits(listOf(within, overCap))
+
+        assertEquals(listOf(within), kept)
+        // Trigger is counted for BOTH — occurrence limits advance even when the unit is ultimately dropped.
+        verify(exactly = 1) { ndTriggersManager.increment("70001") }
+        verify(exactly = 1) { ndTriggersManager.increment("70002") }
+    }
+
+    @Test
+    fun `retainAppLaunchedWithinLimits passes simple campaigns through without touching triggers or limits`() {
+        val rule = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+        every { ndStore.readServerSideNdMetaData() } returns listOf(rule)
+
+        val simple = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "88888") // no advanced-rule entry
+
+        val kept = manager.retainAppLaunchedWithinLimits(listOf(simple))
+
+        assertEquals(listOf(simple), kept)
+        verify(exactly = 0) { ndTriggersManager.increment(any()) }
+        verify(exactly = 0) { ndLimitsMatcher.matchWhenLimits(any(), any()) }
+    }
+
+    @Test
+    fun `retainAppLaunchedWithinLimits returns content unchanged when there is no ss-metadata`() {
+        every { ndStore.readServerSideNdMetaData() } returns emptyList()
+        val unit = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+
+        val kept = manager.retainAppLaunchedWithinLimits(listOf(unit))
+
+        assertEquals(listOf(unit), kept)
+        verify(exactly = 0) { ndTriggersManager.increment(any()) }
+    }
 }

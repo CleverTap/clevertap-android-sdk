@@ -185,7 +185,12 @@ internal class DisplayUnitResponse(
     private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?) {
         val parsed = ArrayList<CleverTapDisplayUnit>()
         notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it, skipSuppressed = false)) }
-        appLaunched?.let { parsed.addAll(parseDisplayUnitsFromJson(it, skipSuppressed = true)) }
+        appLaunched?.let {
+            // App-Launched content arrives in advance with no adUnit_eval vote, so advanced whenLimits are
+            // otherwise never applied to it — filter here (SDK-6138). Suppressed CG stubs are excluded (and
+            // acked separately in ackCgSuppressedStubs), so the survivors are all non-suppressed.
+            parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it)), skipSuppressed = false))
+        }
         if (parsed.isEmpty()) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No valid Display Units to process")
             return
@@ -204,6 +209,22 @@ internal class DisplayUnitResponse(
         if (displayUnits.isNotEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(displayUnits)
         }
+    }
+
+    /**
+     * Applies advanced `whenLimits` to the non-suppressed App-Launched content (SDK-6138). Content-in-advance
+     * arrives with no `adUnit_eval` vote, so this is the only place client-side `whenLimits` can gate it.
+     * Suppressed CG stubs are excluded here (they are acked separately in [ackCgSuppressedStubs]); the
+     * send-test / preview path has no ND evaluator wired and passes content through unchanged.
+     */
+    private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
+        val nonSuppressed = ArrayList<JSONObject>()
+        for (i in 0 until appLaunched.length()) {
+            val entry = appLaunched.optJSONObject(i) ?: continue
+            if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) continue
+            nonSuppressed.add(entry)
+        }
+        return ndEvaluationManager?.retainAppLaunchedWithinLimits(nonSuppressed) ?: nonSuppressed
     }
 
     private fun parseDisplayUnitsFromJson(messages: JSONArray, skipSuppressed: Boolean): List<CleverTapDisplayUnit> {

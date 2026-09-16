@@ -119,6 +119,40 @@ internal class NdEvaluationManager(
     }
 
     /**
+     * App-Launched content-in-advance `whenLimits` filter (SDK-6138). The server ships App-Launched ND
+     * content proactively — there is no `adUnit_eval` vote — so advanced `whenLimits` are otherwise never
+     * applied to it. Mirror the in-app App-Launched flow ([EvaluationManager.evaluate]): join each unit's
+     * rules from the ss-metadata bundle by `ti`, bump the ND trigger, and keep the unit only if its
+     * `whenLimits` still pass. Units with no advanced-rule entry (simple campaigns) pass through untouched —
+     * the server already qualified them. Unlike in-app there is no single-winner selection: every survivor
+     * is returned. Suppressed CG stubs are excluded upstream and acked separately via [recordCgSuppressed].
+     *
+     * @param content the non-suppressed App-Launched display-unit payloads.
+     * @return the subset still within its advanced `whenLimits` (input order preserved).
+     */
+    @WorkerThread
+    fun retainAppLaunchedWithinLimits(content: List<JSONObject>): List<JSONObject> {
+        if (content.isEmpty()) return content
+        val ndStore = storeRegistry.ndStore ?: return content
+        val metadata = ndStore.readServerSideNdMetaData()
+        if (metadata.isEmpty()) return content
+        val rulesByTi = metadata.associateBy { it.optString(Constants.INAPP_ID_IN_PAYLOAD) }
+
+        return content.filter { unit ->
+            val ti = unit.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            val rule = rulesByTi[ti]
+            if (ti.isEmpty() || rule == null) {
+                true // simple / non-advanced campaign — no client rules to apply; server already qualified it
+            } else {
+                ndTriggersManager.increment(ti)
+                ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(rule), ti).also { within ->
+                    if (!within) Logger.v(TAG, "App-Launched ND $ti suppressed by whenLimits")
+                }
+            }
+        }
+    }
+
+    /**
      * Records a CG-suppressed App-Launched ND stub as an `adUnit_suppressed` ack. The server ships
      * stubs (`suppressed:true` + `wzrk_cgId`) inline in `adUnit_notifs_applaunched`; the SDK acks at
      * its would-have-been-surfaced moment (App-Launched path only — regular events need no ack) so the

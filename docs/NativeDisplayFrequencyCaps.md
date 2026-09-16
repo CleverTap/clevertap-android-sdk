@@ -277,7 +277,10 @@ flowchart TD
     F -- ok --> ALLOW
 ```
 
-**Divergence from in-app: no delivery-time whenLimits re-check (intentional).**
+**Divergence from in-app: no delivery-time whenLimits re-check for *voted* content (intentional).**
+This applies to the regular-event path only, where content was already `whenLimits`-filtered at vote time.
+The App-Launched content-in-advance path is the exception — it is never voted, so it *does* get a
+client-side `whenLimits` filter at delivery; see the App-Launched note at the end of this section (SDK-6138).
 In-app evaluates `whenLimits` **twice** — once at eval, then again right before render via
 `InAppFCManager.canShow`'s `matchWhenLimitsBeforeDisplay` step. That second check exists because in-app
 *eval and render are decoupled by an on-device queue*: a selected in-app can sit in
@@ -303,6 +306,18 @@ The only window this leaves is a single flush round-trip between the vote and th
 counter caps (`tdc`/session/global-daily) cover the common same-day/same-session over-delivery within
 it. If strict in-app parity is ever required, the gate can look up the campaign's rules from `NdStore`
 by `ti` and call `ndLimitsMatcher.matchWhenLimits` before `canShow`.
+
+**Exception — App-Launched content-in-advance IS `whenLimits`-filtered client-side (SDK-6138).**
+App-Launched ND content is shipped proactively in `adUnit_notifs_applaunched` **without** an `adUnit_eval`
+vote (the online event path skips App-Launched, and the server can't know the device's live impression/
+trigger state — the same blind spot that makes in-app deliver *all* app-launched candidates for the SDK to
+filter). So the "already applied at vote time" argument above does **not** cover this content. For it,
+`NdEvaluationManager.retainAppLaunchedWithinLimits` mirrors in-app's `evaluateOnAppLaunchedServerSide`:
+per non-suppressed unit, join the advanced rules from the `adUnit_notifs_ss` bundle by `ti`, increment the
+ND trigger, and keep the unit only if `matchWhenLimits` passes. Unlike in-app there is **no single-winner
+selection** — every survivor is delivered via `DisplayUnitListener`. Simple campaigns (no advanced-rule
+entry) pass through untouched. CG-suppressed stubs are excluded from this filter and acked separately via
+`recordCgSuppressed` (their ack remains ungated — out of scope for SDK-6138).
 
 ### 7.3 App-Launched vs regular-event dispatch (server-side, for SDK context)
 - **App-Launched:** union of app-launched + no-trigger ND targets, sorted priority DESC then ti ASC.
