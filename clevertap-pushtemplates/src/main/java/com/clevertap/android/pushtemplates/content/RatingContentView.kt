@@ -7,11 +7,8 @@ import android.os.Bundle
 import android.view.View
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
-import com.clevertap.android.pushtemplates.R.drawable
-import com.clevertap.android.pushtemplates.R.id
 import com.clevertap.android.pushtemplates.RatingTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.*
 
@@ -98,44 +95,6 @@ internal class RatingContentView(
             )
         } else {
             remoteView.setViewVisibility(R.id.tVRatingConfirmation, View.GONE)
-        }
-        val extrasFrom = extras.getString(Constants.EXTRAS_FROM, "")
-        if (extrasFrom == "PTReceiver") {
-            if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                remoteView.setImageViewResource(id.star1, drawable.pt_star_filled)
-            } else {
-                remoteView.setImageViewResource(id.star1, drawable.pt_star_outline)
-            }
-            if (2 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                remoteView.setImageViewResource(id.star1, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star2, drawable.pt_star_filled)
-            } else {
-                remoteView.setImageViewResource(id.star2, drawable.pt_star_outline)
-            }
-            if (3 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                remoteView.setImageViewResource(id.star1, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star2, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star3, drawable.pt_star_filled)
-            } else {
-                remoteView.setImageViewResource(id.star3, drawable.pt_star_outline)
-            }
-            if (4 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                remoteView.setImageViewResource(id.star1, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star2, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star3, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star4, drawable.pt_star_filled)
-            } else {
-                remoteView.setImageViewResource(id.star4, drawable.pt_star_outline)
-            }
-            if (5 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
-                remoteView.setImageViewResource(id.star1, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star2, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star3, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star4, drawable.pt_star_filled)
-                remoteView.setImageViewResource(id.star5, drawable.pt_star_filled)
-            } else {
-                remoteView.setImageViewResource(id.star5, drawable.pt_star_outline)
-            }
         }
     }
 }
