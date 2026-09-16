@@ -177,12 +177,20 @@ public class InAppResponse extends CleverTapResponseDecorator {
             }
 
             // CS in-apps (inapp_notifs_cs)
-            DurationPartitionedInApps.ImmediateAndDelayed partitionedClientSideInApps = res.getPartitionedClientSideInApps();
-            if (partitionedClientSideInApps.hasImmediateInApps()) {
-                inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
-            }
-            if (partitionedClientSideInApps.hasDelayedInApps()) {
-                inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
+            // Guard: storeClientSideInApps is a full replace of a persisted store. A content-fetch
+            // response carries only a partial (or empty) set, so applying it here would wipe the
+            // client-side campaigns delivered by /a1. Only /a1 is authoritative for CS in-apps.
+            if (responseSource != CTResponseSource.CONTENT_FETCH) {
+                DurationPartitionedInApps.ImmediateAndDelayed partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+                if (partitionedClientSideInApps.hasImmediateInApps()) {
+                    inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
+                }
+                if (partitionedClientSideInApps.hasDelayedInApps()) {
+                    inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
+                }
+            } else {
+                logger.verbose(config.getAccountId(),
+                        "Ignoring inapp_notifs_cs from a content fetch response to protect the client-side store");
             }
 
             // SS in-apps (inapp_notifs_ss -> IN-ACTION + NORMAL in-app campaigns WITH advance display rules )

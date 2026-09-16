@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.response.CTResponseSource
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.Clock
@@ -131,7 +132,9 @@ internal class ContentFetchManager(
                 return true
             }
 
-            clevertapResponseHandler?.handleResponse(false, bodyJson, bodyString, isUserSwitching)
+            clevertapResponseHandler?.handleResponse(
+                false, bodyJson, bodyString, isUserSwitching, CTResponseSource.CONTENT_FETCH
+            )
             return true
         } else {
             when (response.code) {

@@ -13,6 +13,14 @@ internal class ClevertapResponseHandler(
         bodyJson: JSONObject?,
         bodyString: String,
         isUserSwitching: Boolean
+    ) = handleResponse(isFullResponse, bodyJson, bodyString, isUserSwitching, CTResponseSource.A1)
+
+    fun handleResponse(
+        isFullResponse: Boolean,
+        bodyJson: JSONObject?,
+        bodyString: String,
+        isUserSwitching: Boolean,
+        source: CTResponseSource
     ) {
         if (isUserSwitching) {
             responses
@@ -21,6 +29,7 @@ internal class ClevertapResponseHandler(
                 }
                 .forEach { decorator ->
                     decorator.isFullResponse = isFullResponse
+                    decorator.responseSource = source
                     if (decorator is InAppResponse) {
                         decorator.processResponse(bodyJson, bodyString, context, true)
                     } else {
@@ -30,6 +39,7 @@ internal class ClevertapResponseHandler(
         } else {
             responses.forEach { decorator ->
                 decorator.isFullResponse = isFullResponse
+                decorator.responseSource = source
                 decorator.processResponse(bodyJson, bodyString, context)
             }
         }
