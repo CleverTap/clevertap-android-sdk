@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.response;
 import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -11,6 +12,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -96,11 +98,54 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             return;
         }
 
-        ArrayList<CleverTapDisplayUnit> displayUnits = parseDisplayUnitsFromJson(messages);
-        cache.updateDisplayUnits(displayUnits);
-        if (!displayUnits.isEmpty()) {
-            callbackManager.notifyDisplayUnitsLoaded(displayUnits);
+        ArrayList<CleverTapDisplayUnit> parsedUnits = parseDisplayUnitsFromJson(messages);
+
+        // A /content response carries only the personalized subset of display units. The cache's
+        // default updateDisplayUnits() is a REPLACE, so applying that subset as-is would wipe the
+        // units delivered by /a1. When the source is a content fetch we merge by unitID into the
+        // current set instead; /a1 stays authoritative and keeps REPLACE. The merge lives here,
+        // before the cache, so it also holds for a host-supplied DisplayUnitCache and needs no
+        // public API change (mirrors iOS).
+        final ArrayList<CleverTapDisplayUnit> unitsToApply;
+        if (responseSource == CTResponseSource.CONTENT_FETCH) {
+            unitsToApply = mergeByUnitId(cache.getAllDisplayUnits(), parsedUnits);
+        } else {
+            unitsToApply = parsedUnits;
         }
+
+        cache.updateDisplayUnits(unitsToApply);
+        if (!unitsToApply.isEmpty()) {
+            callbackManager.notifyDisplayUnitsLoaded(unitsToApply);
+        }
+    }
+
+    /**
+     * Merges {@code incoming} units into {@code existing} keyed by unitID: a unit whose unitID is
+     * already present replaces it in place (original position preserved), a new unitID is appended.
+     * Units with an empty unitID are skipped, matching
+     * {@link com.clevertap.android.sdk.displayunits.CTDisplayUnitController#updateDisplayUnits}.
+     *
+     * TODO(SDK-6142 review): the sentinel unitID "0_0" (substituted when a payload has no wzrk_id)
+     * collapses several such units to the last one seen — same limitation as the default cache.
+     */
+    @NonNull
+    private ArrayList<CleverTapDisplayUnit> mergeByUnitId(
+            @Nullable ArrayList<CleverTapDisplayUnit> existing,
+            @NonNull ArrayList<CleverTapDisplayUnit> incoming) {
+        final LinkedHashMap<String, CleverTapDisplayUnit> merged = new LinkedHashMap<>();
+        if (existing != null) {
+            for (CleverTapDisplayUnit unit : existing) {
+                if (unit != null && !TextUtils.isEmpty(unit.getUnitID())) {
+                    merged.put(unit.getUnitID(), unit);
+                }
+            }
+        }
+        for (CleverTapDisplayUnit unit : incoming) {
+            if (unit != null && !TextUtils.isEmpty(unit.getUnitID())) {
+                merged.put(unit.getUnitID(), unit);
+            }
+        }
+        return new ArrayList<>(merged.values());
     }
 
     /**
