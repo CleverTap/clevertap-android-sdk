@@ -136,6 +136,14 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 return;
             }
 
+            // SDK-6141: if this /a1 carries a content_fetch that can yield an app-launch in-app, open
+            // an arbitration window so the app-launch winner evaluated below is held and merged with
+            // the /content winner rather than shown twice. Content-fetch responses never open a
+            // window (that is the recursion guard's job).
+            if (responseSource != CTResponseSource.CONTENT_FETCH) {
+                controllerManager.getInAppController().openAppLaunchArbitrationWindowIfNeeded(response);
+            }
+
             // Legacy SS in-apps (inapp_notifs -> NORMAL/DELAYED in-app campaigns WITHOUT advance display rules)
             DurationPartitionedInApps.ImmediateAndDelayed partitionedLegacyInApps = res.getPartitionedLegacyInApps();
             if (partitionedLegacyInApps.hasImmediateInApps()) {

@@ -41,6 +41,10 @@ internal class ContentFetchManager(
 
     var clevertapResponseHandler: ClevertapResponseHandler? = null
 
+    // Fired once when a content-fetch batch settles (success/error/timeout/cancellation). Drives the
+    // app-launch arbitration window close (SDK-6141). Wired in CleverTapFactory.
+    var onFetchBatchComplete: (() -> Unit)? = null
+
     var parentJob = SupervisorJob()
 
     private var scope = CoroutineScope(
@@ -61,6 +65,13 @@ internal class ContentFetchManager(
                 logger.verbose(TAG, "Fetch job was cancelled.")
             } catch (e: Exception) {
                 logger.verbose(TAG, "Unexpected error during content fetch", e)
+            } finally {
+                // Exactly-once settled signal — must never be skipped, or the arbitration window
+                // would stay in its suppressing phase for the rest of the session.
+                // TODO(SDK-6141 review): with several concurrent batches this fires per batch and the
+                // window closes on the first. Fine for the single-batch app-launch case; revisit for
+                // multi-batch (iOS Q4).
+                onFetchBatchComplete?.invoke()
             }
         }
     }

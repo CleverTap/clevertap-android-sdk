@@ -55,6 +55,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
+import com.clevertap.android.sdk.network.ContentFetchItem
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
@@ -108,6 +109,11 @@ internal class InAppController(
         const val LOCAL_INAPP_COUNT = "local_in_app_count"
         const val IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest"
 
+        // UX bound for the app-launch content-fetch arbitration window. Correctness comes from the
+        // closed-suppressing phase inside AppLaunchInAppArbitrator, not from this timeout.
+        // TODO(SDK-6141 review): SDK-configurable vs hard constant (iOS Q1).
+        private const val APP_LAUNCH_ARBITRATION_TIMEOUT_MS = 3_000L
+
         private val pendingNotifications =
             Collections.synchronizedList(ArrayList<CTInAppNotification>())
 
@@ -138,6 +144,16 @@ internal class InAppController(
 
     private val logger = config.logger
     private val defaultLogTag = config.accountId
+
+    // App-launch × content-fetch in-app arbitration (SDK-6141). Holds the /a1 winner until the
+    // /content winner is known (or the timeout fires), then shows exactly one.
+    private val appLaunchArbitrator = AppLaunchInAppArbitrator(
+        logger = logger,
+        logTag = defaultLogTag,
+        timeoutMs = APP_LAUNCH_ARBITRATION_TIMEOUT_MS,
+        sortByPriority = evaluationManager::sortByPriority,
+        showWinner = { winner -> addInAppNotificationsToQueue(listOf(winner)) }
+    )
 
     @Volatile
     private var inAppState = InAppState.RESUMED
@@ -668,10 +684,47 @@ internal class InAppController(
                 appLaunchServerSideInApps, appLaunchedProperties, userLocation
             )
 
-        if (serverSideInAppsToDisplayImmediate.isNotEmpty()) {
-            addInAppNotificationsToQueue(serverSideInAppsToDisplayImmediate)
+        // Route through arbitration: shown immediately when no window is open (today's behaviour),
+        // otherwise buffered (OPEN) or dropped (CLOSED). Applies to both the /a1 and /content winners.
+        val toShow = appLaunchArbitrator.routeWinners(serverSideInAppsToDisplayImmediate)
+        if (toShow.isNotEmpty()) {
+            addInAppNotificationsToQueue(toShow)
         }
+    }
 
+    /**
+     * Opens an app-launch arbitration window when this `/a1` response carries a `content_fetch` that
+     * can produce an app-launch in-app — so the winner evaluated below is held and merged with the
+     * `/content` winner instead of shown twice. Called from [InAppResponse] on `/a1` only.
+     */
+    fun openAppLaunchArbitrationWindowIfNeeded(response: JSONObject) {
+        if (hasInAppContentFetchForAppLaunch(response)) {
+            appLaunchArbitrator.openWindow()
+        }
+    }
+
+    // S1 (responseKey is the app-launch in-app key) + S2 (eventName == "App Launched").
+    // Conservative: when the wire omits a field we still open (wait) rather than risk showing two;
+    // we only skip when an item is explicitly for a different channel or event.
+    // TODO(SDK-6141 review): confirm responseKey/eventName are present on Android's /content
+    // directive (verified on iOS). If always absent, this reduces to "any content_fetch present".
+    private fun hasInAppContentFetchForAppLaunch(response: JSONObject): Boolean {
+        val items = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?: return false
+        return ContentFetchItem.listFrom(items).any { item ->
+            val responseKeyMatches =
+                item.responseKey == null || item.responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY
+            val eventNameMatches =
+                item.eventName == null || item.eventName == Constants.APP_LAUNCHED_EVENT
+            responseKeyMatches && eventNameMatches
+        }
+    }
+
+    /**
+     * Completion signal for the content-fetch batch (fired exactly once, on success/error/timeout/
+     * user-switch). Closes the window, shows the merged winner if not already shown, and tears down.
+     */
+    fun onAppLaunchContentFetchComplete() {
+        appLaunchArbitrator.onContentFetchComplete()
     }
 
     fun onAppLaunchServerSideInactionInAppsResponse(
