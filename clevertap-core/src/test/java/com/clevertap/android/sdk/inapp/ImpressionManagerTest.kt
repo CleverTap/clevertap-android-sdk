@@ -631,7 +631,7 @@ class ImpressionManagerTest : BaseTestCase() {
         // The point of SDK-6131: day/week windows now honour the injected Clock, so a FakeClock can
         // drive them deterministically (previously perDay/perWeek read the real system Date()).
         val fakeClock = FakeClock() // fixed instant; newDate() == Date(timeMillis), consistent w/ seconds
-        val im = ImpressionManager(storeRegistry = storeRegistry, clock = fakeClock)
+        val im = ImpressionManager(impressionStoreProvider = { storeRegistry.impressionStore }, clock = fakeClock)
         val campaignId = "clock_driven"
 
         // Two shows "today" (at the fake clock's instant).

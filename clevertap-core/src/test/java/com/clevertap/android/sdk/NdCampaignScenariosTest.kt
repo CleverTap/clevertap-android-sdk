@@ -181,14 +181,17 @@ class NdCampaignScenariosTest : BaseTestCase() {
     }
 
     @Test
-    fun `day cap exhaustion - footer1 3 per day`() {
-        // ImpressionManager.perDay/perWeek key off the real device date (Date(), not the injected Clock —
-        // tracked in SDK-6131), so align the clock to now and test exhaustion within today.
-        clock.timeMillis = System.currentTimeMillis()
+    fun `day cap exhaustion and next-day reset - footer1 3 per day`() {
+        // perDay now honours the injected clock (SDK-6131), so this is fully deterministic via FakeClock.
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
         assertFalse("4th within the day breaches 3/day", fire("Footer1", footer1))
+
+        // Cross two calendar days so today's shows fall outside perDay(id,1)'s "since yesterday 00:00" window.
+        clock.advanceOneDay()
+        clock.advanceOneDay()
+        assertTrue("re-eligible on a new day", fire("Footer1", footer1))
     }
 
     @Test
