@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.network.EndpointId
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -46,8 +47,10 @@ class NdEvaluationManagerTest {
         manager.evaluateOnEvent("Home Viewed", emptyMap(), null)
 
         assertTrue(manager.evaluatedNdCampaignIds.contains(70001L))
-        verify { ndTriggersManager.increment("70001") }
-        verify { ndStore.storeEvaluatedServerSideNdIds(any()) }
+        verify(exactly = 1) { ndStore.readServerSideNdMetaData() }
+        verify(exactly = 1) { ndTriggersManager.increment("70001") }
+        verify(exactly = 1) { ndStore.storeEvaluatedServerSideNdIds(any()) }
+        confirmVerified(ndTriggersManager, ndStore) // exactly these interactions, nothing else
     }
 
     @Test

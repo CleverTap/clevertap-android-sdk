@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.store.preference
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import io.mockk.Runs
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -43,7 +44,9 @@ class NdCountsStoreTest {
         every { ctPreference.readString("70001", "") } returns "2,9"
         every { ctPreference.writeString(any(), any()) } just Runs
         store.increment("70001")
-        verify { ctPreference.writeString("70001", "3,10") }
+        verify(exactly = 1) { ctPreference.readString("70001", "") }
+        verify(exactly = 1) { ctPreference.writeString("70001", "3,10") }
+        confirmVerified(ctPreference)
     }
 
     @Test
@@ -90,19 +93,22 @@ class NdCountsStoreTest {
         every { ctPreference.writeInt(any(), any()) } just Runs
         store.maxPerDay = 10
         store.maxPerSession = 3
-        verify { ctPreference.writeInt(Constants.KEY_ND_MAX_PER_DAY, 10) }
-        verify { ctPreference.writeInt(Constants.ND_MAX_PER_SESSION_KEY, 3) }
+        verify(exactly = 1) { ctPreference.writeInt(Constants.KEY_ND_MAX_PER_DAY, 10) }
+        verify(exactly = 1) { ctPreference.writeInt(Constants.ND_MAX_PER_SESSION_KEY, 3) }
+        confirmVerified(ctPreference)
     }
 
     @Test
     fun `remove deletes a target`() {
         store.remove("70001")
-        verify { ctPreference.remove("70001") }
+        verify(exactly = 1) { ctPreference.remove("70001") }
+        confirmVerified(ctPreference)
     }
 
     @Test
     fun `onChangeUser repoints to the counts namespace for the new user`() {
         store.onChangeUser("device_id", "account_id")
-        verify { ctPreference.changePreferenceName("${Constants.KEY_ND_COUNTS_PER_TARGET}:device_id:account_id") }
+        verify(exactly = 1) { ctPreference.changePreferenceName("${Constants.KEY_ND_COUNTS_PER_TARGET}:device_id:account_id") }
+        confirmVerified(ctPreference)
     }
 }
