@@ -17,12 +17,12 @@ import io.mockk.every
 import io.mockk.mockk
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Deterministic verification of the real ND fcap campaigns from scratch_17.json — limit exhaustion,
@@ -129,30 +129,30 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
     @Test
     fun `session cap breach - sadas suppressed after 1 per session, re-eligible next session`() {
-        assertTrue("1st in session should vote", fire("sadas", sadas))
-        assertFalse("2nd in same session breaches session<=1", fire("sadas", sadas))
+        assertTrue(fire("sadas", sadas), "1st in session should vote")
+        assertFalse(fire("sadas", sadas), "2nd in same session breaches session<=1")
 
         impressionManager.clearSessionData()
-        assertTrue("new session resets the session cap", fire("sadas", sadas))
+        assertTrue(fire("sadas", sadas), "new session resets the session cap")
     }
 
     @Test
     fun `ever cap exhaustion - sadas dies after 3 lifetime shows even across sessions`() {
         repeat(3) {
-            assertTrue("show ${it + 1} of 3 should vote", fire("sadas", sadas))
+            assertTrue(fire("sadas", sadas), "show ${it + 1} of 3 should vote")
             impressionManager.clearSessionData() // isolate the ever<=3 cap from session<=1
         }
-        assertFalse("4th ever breaches ever<=3", fire("sadas", sadas))
+        assertFalse(fire("sadas", sadas), "4th ever breaches ever<=3")
     }
 
     @Test
     fun `hour window exhaustion and clock-driven reset - footer2 2 per hour`() {
         assertTrue(fire("Footer2", footer2))
         assertTrue(fire("Footer2", footer2))
-        assertFalse("3rd within the hour breaches 2/hour", fire("Footer2", footer2))
+        assertFalse(fire("Footer2", footer2), "3rd within the hour breaches 2/hour")
 
         clock.timeMillis += TimeUnit.HOURS.toMillis(1) + 1000
-        assertTrue("window reset after an hour", fire("Footer2", footer2))
+        assertTrue(fire("Footer2", footer2), "window reset after an hour")
     }
 
     @Test
@@ -162,22 +162,22 @@ class NdCampaignScenariosTest : BaseTestCase() {
         assertFalse(fire("iin", iin))
 
         clock.timeMillis += TimeUnit.MINUTES.toMillis(1) + 1000
-        assertTrue("window reset after a minute", fire("iin", iin))
+        assertTrue(fire("iin", iin), "window reset after a minute")
     }
 
     @Test
     fun `onEvery 2 - footer4 votes on every 2nd trigger`() {
-        assertFalse("trigger 1", fire("Footer4", footer4))
-        assertTrue("trigger 2", fire("Footer4", footer4))
-        assertFalse("trigger 3", fire("Footer4", footer4))
-        assertTrue("trigger 4", fire("Footer4", footer4))
+        assertFalse(fire("Footer4", footer4), "trigger 1")
+        assertTrue(fire("Footer4", footer4), "trigger 2")
+        assertFalse(fire("Footer4", footer4), "trigger 3")
+        assertTrue(fire("Footer4", footer4), "trigger 4")
     }
 
     @Test
     fun `onExactly 1 - xhjjv votes only on the first trigger`() {
-        assertTrue("trigger 1", fire("xhjjv", xhjjv))
-        assertFalse("trigger 2", fire("xhjjv", xhjjv))
-        assertFalse("trigger 3", fire("xhjjv", xhjjv))
+        assertTrue(fire("xhjjv", xhjjv), "trigger 1")
+        assertFalse(fire("xhjjv", xhjjv), "trigger 2")
+        assertFalse(fire("xhjjv", xhjjv), "trigger 3")
     }
 
     @Test
@@ -186,48 +186,47 @@ class NdCampaignScenariosTest : BaseTestCase() {
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
-        assertFalse("4th within the day breaches 3/day", fire("Footer1", footer1))
+        assertFalse(fire("Footer1", footer1), "4th within the day breaches 3/day")
 
         // Cross two calendar days so today's shows fall outside perDay(id,1)'s "since yesterday 00:00" window.
         clock.advanceOneDay()
         clock.advanceOneDay()
-        assertTrue("re-eligible on a new day", fire("Footer1", footer1))
+        assertTrue(fire("Footer1", footer1), "re-eligible on a new day")
     }
 
     @Test
     fun `ever cap exhaustion - vasegent2 dies after 4 lifetime shows`() {
-        repeat(4) { assertTrue("show ${it + 1} of 4 should vote", fire("vasegent2", vasegent2)) }
-        assertFalse("5th ever breaches ever<=4", fire("vasegent2", vasegent2))
+        repeat(4) { assertTrue(fire("vasegent2", vasegent2), "show ${it + 1} of 4 should vote") }
+        assertFalse(fire("vasegent2", vasegent2), "5th ever breaches ever<=4")
     }
 
     @Test
     fun `session cap - footer3 3 per session, re-eligible next session`() {
-        repeat(3) { assertTrue("show ${it + 1} of 3 should vote", fire("Footer3", footer3)) }
-        assertFalse("4th in same session breaches session<=3", fire("Footer3", footer3))
+        repeat(3) { assertTrue(fire("Footer3", footer3), "show ${it + 1} of 3 should vote") }
+        assertFalse(fire("Footer3", footer3), "4th in same session breaches session<=3")
 
         impressionManager.clearSessionData()
-        assertTrue("new session resets the session cap", fire("Footer3", footer3))
+        assertTrue(fire("Footer3", footer3), "new session resets the session cap")
     }
 
     @Test
     fun `property trigger - iitest votes only when number greater than 100`() {
-        assertFalse("100 is not > 100", fire("iitest", iitest, mapOf("number" to 100)))
-        assertFalse("50 is not > 100", fire("iitest", iitest, mapOf("number" to 50)))
-        assertTrue("150 > 100 matches", fire("iitest", iitest, mapOf("number" to 150)))
+        assertFalse(fire("iitest", iitest, mapOf("number" to 100)), "100 is not > 100")
+        assertFalse(fire("iitest", iitest, mapOf("number" to 50)), "50 is not > 100")
+        assertTrue(fire("iitest", iitest, mapOf("number" to 150)), "150 > 100 matches")
     }
 
     @Test
     fun `two Charged campaigns - onEvery1 fires each time, onExactly3 only on the 3rd`() {
         repeat(3) { round ->
-            manager.evaluatedNdCampaignIds.clear()
-            manager.evaluateOnEvent("Charged", emptyMap(), null)
-            val votes = manager.evaluatedNdCampaignIds
+            // Check the votes THIS fire appended (delta), not the accumulating list — no clear() needed.
+            val votes = votesFrom { manager.evaluateOnEvent("Charged", emptyMap(), null) }
 
-            assertTrue("onEvery1 should vote on Charged #${round + 1}", votes.contains(chargedEvery.toLong()))
+            assertTrue(votes.contains(chargedEvery.toLong()), "onEvery1 should vote on Charged #${round + 1}")
             assertEquals(
-                "onExactly3 should vote only on the 3rd Charged",
                 round == 2,
                 votes.contains(chargedExactly.toLong()),
+                "onExactly3 should vote only on the 3rd Charged",
             )
 
             if (votes.contains(chargedEvery.toLong())) analytics.pushDisplayUnitViewedEventForID(wzrkId(chargedEvery))
@@ -257,7 +256,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
         cache.updateDisplayUnits(listOf(contentUnit("99999001"))) // a later, separate delivery
 
         val after = cache.getAllDisplayUnits()!!
-        assertEquals("units must accumulate, not replace", before + 1, after.size)
+        assertEquals(before + 1, after.size, "units must accumulate, not replace")
         assertTrue(after.any { it.unitID == wzrkId("99999001") })
     }
 
@@ -273,11 +272,19 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
     /** Fires an event; if voted eligible, drives the real public show API which records the impression. */
     private fun fire(event: String, ti: String, props: Map<String, Any> = emptyMap()): Boolean {
-        manager.evaluatedNdCampaignIds.clear() // simulate the prior vote batch having been sent
-        manager.evaluateOnEvent(event, props, null)
-        val voted = manager.evaluatedNdCampaignIds.contains(ti.toLong())
+        val voted = ti.toLong() in votesFrom { manager.evaluateOnEvent(event, props, null) }
         if (voted) analytics.pushDisplayUnitViewedEventForID(wzrkId(ti))
         return voted
+    }
+
+    /**
+     * Runs [evaluate] and returns only the campaign ids it appended to the (accumulating) eval list —
+     * i.e. the votes from *this* evaluation. Avoids clearing/mutating the manager's list between events.
+     */
+    private fun votesFrom(evaluate: () -> Unit): List<Long> {
+        val before = manager.evaluatedNdCampaignIds.size
+        evaluate()
+        return manager.evaluatedNdCampaignIds.drop(before)
     }
 
     private fun wzrkId(ti: String) = "${ti}_20250101"
