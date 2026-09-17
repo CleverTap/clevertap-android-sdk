@@ -357,6 +357,54 @@ internal class EvaluationManager(
         event: EventAdapter,
         inappNotifs: List<JSONObject>,
         clearResource: (url: String) -> Unit = {}
+    ): List<JSONObject> = collectEligibleInApps(
+        event = event,
+        inappNotifs = inappNotifs,
+        clearResource = clearResource,
+        recordTrigger = { triggersManager.increment(it) }, // live path: record the trigger
+        limits = limitsMatcher                              // live counts
+    )
+
+    /**
+     * Non-mutating twin of [evaluate], for Option-2 arbitration prediction (SDK-6144).
+     *
+     * Runs the same eligibility gates as [evaluate] but with the trigger "punch" suppressed
+     * (`recordTrigger = {}`) and limits matched against a virtual count (live + 1) via
+     * [OffsetTriggerCounter] — so the result equals what the real [evaluate] will produce when the
+     * `/content` winner actually arrives, while mutating nothing. Sorting/selection is left to the
+     * caller (via [sortByPriority]).
+     *
+     * Dormant in practice: synthetic candidates only exist once the backend sends `priority` per
+     * `content_fetch` item (see [com.clevertap.android.sdk.network.ContentFetchItem.syntheticInAppPayload]).
+     */
+    internal fun evaluateDryRun(
+        event: EventAdapter,
+        syntheticCandidates: List<JSONObject>
+    ): List<JSONObject> {
+        if (syntheticCandidates.isEmpty()) return emptyList()
+        return collectEligibleInApps(
+            event = event,
+            inappNotifs = syntheticCandidates,
+            clearResource = {},
+            recordTrigger = {}, // dry run: never record
+            limits = limitsMatcher.withTriggerCounter(OffsetTriggerCounter(triggersManager))
+        )
+    }
+
+    /**
+     * Shared eligibility pass. The two side effects that differ between a real evaluation and a
+     * dry run are injected: [recordTrigger] (the trigger-count "punch") and [limits] (the count
+     * source). This mirrors how [clearResource] is already injected, keeping command-and-query
+     * separated at the one place that mutates — and avoids a second copy of the gate logic.
+     * Order is load-bearing: [recordTrigger] runs before limits are checked (occurrence limits are
+     * defined on the post-increment count).
+     */
+    private fun collectEligibleInApps(
+        event: EventAdapter,
+        inappNotifs: List<JSONObject>,
+        clearResource: (url: String) -> Unit,
+        recordTrigger: (campaignId: String) -> Unit,
+        limits: LimitsMatcher
     ): List<JSONObject> {
         val eligibleInApps: MutableList<JSONObject> = mutableListOf()
 
@@ -372,10 +420,10 @@ internal class EvaluationManager(
                 triggersMatcher.matchEvent(getWhenTriggers(inApp), event)
             if (matchesTrigger) {
                 Logger.v("INAPP", "Triggers matched for event ${event.eventName} against inApp $campaignId")
-                triggersManager.increment(campaignId)
+                recordTrigger(campaignId)
 
-                val matchesLimits = limitsMatcher.matchWhenLimits(getWhenLimits(inApp), campaignId)
-                val discardData = limitsMatcher.shouldDiscard(getWhenLimits(inApp), campaignId)
+                val matchesLimits = limits.matchWhenLimits(getWhenLimits(inApp), campaignId)
+                val discardData = limits.shouldDiscard(getWhenLimits(inApp), campaignId)
 
                 if (discardData) {
                     clearResource.invoke("") // todo pass correct url
@@ -388,45 +436,6 @@ internal class EvaluationManager(
                 }
             } else {
                 Logger.v("INAPP", "Triggers did not matched for event ${event.eventName} against inApp $campaignId")
-            }
-        }
-        return eligibleInApps
-    }
-
-    /**
-     * Non-mutating twin of [evaluate], for Option-2 arbitration prediction (SDK-6144).
-     *
-     * Returns the eligible subset of [syntheticCandidates] WITHOUT the [triggersManager] increment
-     * side effect, matching limits against a virtual trigger count (live + 1) via
-     * [OffsetTriggerCounter] — so the result equals what the real [evaluate] would produce when the
-     * `/content` winner actually arrives. Sorting/selection is left to the caller (via
-     * [sortByPriority]); this method mutates nothing and persists nothing.
-     *
-     * Dormant in practice: synthetic candidates only exist once the backend sends `priority` per
-     * `content_fetch` item (see [com.clevertap.android.sdk.network.ContentFetchItem.syntheticInAppPayload]).
-     */
-    internal fun evaluateDryRun(
-        event: EventAdapter,
-        syntheticCandidates: List<JSONObject>
-    ): List<JSONObject> {
-        if (syntheticCandidates.isEmpty()) return emptyList()
-
-        val dryRunLimits = limitsMatcher.withTriggerCounter(OffsetTriggerCounter(triggersManager))
-        val eligibleInApps = mutableListOf<JSONObject>()
-
-        for (inApp in syntheticCandidates) {
-            val templateName = CustomTemplateInAppData.createFromJson(inApp)?.templateName
-            if (templateName != null && !templatesManager.isTemplateRegistered(templateName)) {
-                continue
-            }
-            if (!triggersMatcher.matchEvent(getWhenTriggers(inApp), event)) {
-                continue
-            }
-            // No triggersManager.increment here — a dry run must not mutate. The offset counter
-            // already reflects the +1 the real evaluate applies before checking limits.
-            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
-            if (dryRunLimits.matchWhenLimits(getWhenLimits(inApp), campaignId)) {
-                eligibleInApps.add(inApp)
             }
         }
         return eligibleInApps
