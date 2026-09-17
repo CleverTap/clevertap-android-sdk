@@ -157,17 +157,21 @@ From the design TAN §7, the SDK's responsibilities (what the SDK must enforce l
 | Cap | Applies to | SDK enforces? | How on SDK |
 |---|---|---|---|
 | `isNdFcapEnabled == false` short-circuit | all | yes | skip ND eval entirely → deliver as today |
-| `efc == 1` (exclude from caps) | basic campaigns + journeys | yes | short-circuit allow |
+| `efc == 1` **or** `excludeGlobalFCaps == 1` (exclude from caps) | basic campaigns + journeys | yes | short-circuit allow |
 | `tlc` once-per-user-for-campaign | basic campaigns + journeys | yes | lifetime counter (`ndtlc[…][2]`) |
 | `tdc` once-per-day | basic campaigns + journeys | yes | today counter (`ndtlc[…][1]`) + daily reset |
 | `mdc` once-per-session | basic campaigns + journeys | **yes (SDK-only)** | in-memory session count |
 | `frequencyLimits` (AND) | advanced campaigns | yes | `LimitsMatcher` over ND ImpressionStore |
 | `occurrenceLimits` (onEvery/onExactly) | advanced campaigns | yes | `LimitsMatcher` over ND TriggerManager |
-| ND global daily (`ndmp`, def 10) | all ND unless `excludeGlobalFCaps` | yes (canShow re-check) | global `ndstc` vs `ndmp` ceiling |
+| ND global daily (`ndmp`, def 10) | all ND unless `efc`/`excludeGlobalFCaps` (both bypass all caps) | yes (canShow re-check) | global `ndstc` vs `ndmp` ceiling |
 | ND global session (`ndsm`/`ndmc`, def 1) | all ND | **yes (SDK-only)** | session render count vs `ndmc` |
 
-Precedence (same as in-app): `isNdFcapEnabled==false` overrides all; then `efc==1` short-circuits;
-`excludeGlobalFCaps==true` bypasses only the ND global-daily cap.
+Precedence (same as in-app): `isNdFcapEnabled==false` overrides all; then **either** `efc==1` **or**
+`excludeGlobalFCaps==1` short-circuits and bypasses **all** counter caps. This mirrors in-app exactly —
+`CTInAppNotification.isExcludeFromCaps` is set by `efc==1 || excludeGlobalFCaps==1`, and both `canShow`
+implementations return early on that single flag. So despite the name, `excludeGlobalFCaps` is **not**
+scoped to the global-daily cap in either channel; treating it as "bypass only global-daily" would make ND
+diverge from in-app. (If per-cap granularity is ever wanted, it must change in both channels together.)
 
 *Where each is enforced:* `frequencyLimits`/`occurrenceLimits` are enforced at **eval time** (the
 `adUnit_eval` vote) and are **not** re-checked at delivery; the counter caps (`efc`/`tlc`/`tdc`/`mdc`
@@ -277,7 +281,10 @@ flowchart TD
     F -- ok --> ALLOW
 ```
 
-**Divergence from in-app: no delivery-time whenLimits re-check (intentional).**
+**Divergence from in-app: no delivery-time whenLimits re-check for *voted* content (intentional).**
+This applies to the regular-event path only, where content was already `whenLimits`-filtered at vote time.
+The App-Launched content-in-advance path is the exception — it is never voted, so it *does* get a
+client-side `whenLimits` filter at delivery; see the App-Launched note at the end of this section (SDK-6138).
 In-app evaluates `whenLimits` **twice** — once at eval, then again right before render via
 `InAppFCManager.canShow`'s `matchWhenLimitsBeforeDisplay` step. That second check exists because in-app
 *eval and render are decoupled by an on-device queue*: a selected in-app can sit in
@@ -303,6 +310,18 @@ The only window this leaves is a single flush round-trip between the vote and th
 counter caps (`tdc`/session/global-daily) cover the common same-day/same-session over-delivery within
 it. If strict in-app parity is ever required, the gate can look up the campaign's rules from `NdStore`
 by `ti` and call `ndLimitsMatcher.matchWhenLimits` before `canShow`.
+
+**Exception — App-Launched content-in-advance IS `whenLimits`-filtered client-side (SDK-6138).**
+App-Launched ND content is shipped proactively in `adUnit_notifs_applaunched` **without** an `adUnit_eval`
+vote (the online event path skips App-Launched, and the server can't know the device's live impression/
+trigger state — the same blind spot that makes in-app deliver *all* app-launched candidates for the SDK to
+filter). So the "already applied at vote time" argument above does **not** cover this content. For it,
+`NdEvaluationManager.retainAppLaunchedWithinLimits` mirrors in-app's `evaluateOnAppLaunchedServerSide`:
+per non-suppressed unit, join the advanced rules from the `adUnit_notifs_ss` bundle by `ti`, increment the
+ND trigger, and keep the unit only if `matchWhenLimits` passes. Unlike in-app there is **no single-winner
+selection** — every survivor is delivered via `DisplayUnitListener`. Simple campaigns (no advanced-rule
+entry) pass through untouched. CG-suppressed stubs are excluded from this filter and acked separately via
+`recordCgSuppressed` (their ack remains ungated — out of scope for SDK-6138).
 
 ### 7.3 App-Launched vs regular-event dispatch (server-side, for SDK context)
 - **App-Launched:** union of app-launched + no-trigger ND targets, sorted priority DESC then ti ASC.

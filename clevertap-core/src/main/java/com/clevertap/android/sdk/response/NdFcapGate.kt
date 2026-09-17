@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 
 /**
- * Native Display frequency-cap gate (SDK-6055). Filters display units through [NdFCManager.canShow]
+ * Native Display frequency-cap gate. Filters display units through [NdFCManager.canShow]
  * before they are handed to the host — the ND analog of in-app's pre-display cap gate.
  *
  * Only units carrying an fcap marker (`efc`/`tlc`/`tdc`/`mdc`/`excludeGlobalFCaps`) are gated; unmarked
@@ -35,7 +35,7 @@ internal object NdFcapGate {
             val excludeFromCaps = json.optInt(Constants.KEY_EFC, UNCAPPED) == 1 ||
                 json.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, UNCAPPED) == 1
             // Gate on the stable campaign id (ti), NOT unitID (= wzrk_id, ti_yyyyMMdd, rotates daily) —
-            // must match how didShow records and how the evaluator keys whenLimits (SDK-6132).
+            // must match how didShow records and how the evaluator keys whenLimits.
             val campaignId = json.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val canShow = ndFCManager.canShow(
                 campaignId,

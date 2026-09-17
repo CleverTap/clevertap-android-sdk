@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
  * A "show" is driven through the **production public API**
  * [AnalyticsManager.pushDisplayUnitViewedEventForID] (the same call `CleverTapAPI` exposes): it looks
  * the unit up in the display-unit cache, gates on fcap-managed, and records the ND impression via a real
- * [NdFCManager]. This is what caught SDK-6132 — the impression must be recorded under the stable `ti`
+ * [NdFCManager]. The impression must be recorded under the stable `ti`
  * (not the `wzrk_id`) so the evaluator's whenLimits actually see it.
  *
  * The cache is an accumulating one (units persist across per-event deliveries), so the viewed lookup
@@ -77,13 +77,18 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
         val ndStore = mockk<NdStore>(relaxed = true)
         every { ndStore.readServerSideNdMetaData() } answers { metadata }
-        val storeRegistry = mockk<StoreRegistry>(relaxed = true).also { every { it.ndStore } returns ndStore }
-        manager = NdEvaluationManager(triggersMatcher, ndTriggersManager, limitsMatcher, storeRegistry)
+        val ndCountsStore = StoreProvider.getInstance().provideNdCountsStore(appCtx, "device", account)
+        // One registry supplies both the evaluator's ndStore and the FC manager's counts store, exactly
+        // as NdStoreProvider does in production.
+        val storeRegistry = mockk<StoreRegistry>(relaxed = true).also {
+            every { it.ndStore } returns ndStore
+            every { it.ndCountsStore } returns ndCountsStore
+        }
+        manager = NdEvaluationManager(cleverTapInstanceConfig, triggersMatcher, ndTriggersManager, limitsMatcher, storeRegistry)
 
         // Real NdFCManager sharing the same ImpressionManager as the evaluator's LimitsMatcher, so a show
         // recorded via the manager is visible to the next evaluation's whenLimits.
-        val ndCountsStore = StoreProvider.getInstance().provideNdCountsStore(appCtx, "device", account)
-        val ndFCManager = NdFCManager(cleverTapInstanceConfig, ndCountsStore, impressionManager, MockCTExecutors(), clock)
+        val ndFCManager = NdFCManager(cleverTapInstanceConfig, storeRegistry, impressionManager, MockCTExecutors(), clock)
 
         // Real AnalyticsManager: a show goes through pushDisplayUnitViewedEventForID (the public API),
         // which reads the unit from the cache and records the impression via the wired NdFCManager.
@@ -174,6 +179,18 @@ class NdCampaignScenariosTest : BaseTestCase() {
     }
 
     @Test
+    fun `app-launched filter honours occurrenceLimits via the real matcher - footer4 onEvery 2`() {
+        // Drives retainAppLaunchedWithinLimits (the App-Launched content-in-advance path) against the real
+        // TriggerManager + LimitsMatcher, so the join-by-ti + increment-then-matchWhenLimits arithmetic is
+        // exercised for real (not mocked). onEvery 2: keep only when the (post-increment) count % 2 == 0.
+        val units = listOf(appLaunchedUnit(footer4))
+        assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 1 -> dropped")
+        assertEquals(1, manager.retainAppLaunchedWithinLimits(units).size, "trigger 2 -> kept")
+        assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 3 -> dropped")
+        assertEquals(1, manager.retainAppLaunchedWithinLimits(units).size, "trigger 4 -> kept")
+    }
+
+    @Test
     fun `onExactly 1 - xhjjv votes only on the first trigger`() {
         assertTrue(fire("xhjjv", xhjjv), "trigger 1")
         assertFalse(fire("xhjjv", xhjjv), "trigger 2")
@@ -182,7 +199,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
     @Test
     fun `day cap exhaustion and next-day reset - footer1 3 per day`() {
-        // perDay now honours the injected clock (SDK-6131), so this is fully deterministic via FakeClock.
+        // perDay now honours the injected clock, so this is fully deterministic via FakeClock.
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
@@ -234,7 +251,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
         }
     }
 
-    // ---- viewed event records the impression under the stable ti (SDK-6132 regression guard) ----
+    // ---- viewed event records the impression under the stable ti (regression guard) ----
 
     @Test
     fun `pushDisplayUnitViewedEventForID records the impression under ti so whenLimits see it`() {
@@ -298,6 +315,12 @@ class NdCampaignScenariosTest : BaseTestCase() {
             .put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, false) // presence marks it fcap-managed
         return CleverTapDisplayUnit.toDisplayUnit(json)
     }
+
+    /** A non-suppressed App-Launched content-in-advance payload (JSON, as the response filter sees it). */
+    private fun appLaunchedUnit(ti: String) = JSONObject()
+        .put(Constants.NOTIFICATION_ID_TAG, wzrkId(ti))
+        .put(Constants.INAPP_ID_IN_PAYLOAD, ti)
+        .put(Constants.KEY_TYPE, "simple")
 
     private fun campaign(ti: String, event: String, freq: JSONArray = JSONArray(), occ: JSONArray = JSONArray()) =
         JSONObject().apply {

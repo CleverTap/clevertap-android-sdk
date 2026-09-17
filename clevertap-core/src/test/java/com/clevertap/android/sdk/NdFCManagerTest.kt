@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.inapp.ImpressionManager
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -76,11 +78,15 @@ class NdFCManagerTest : BaseTestCase() {
     }
 
     private fun create(deviceId: String = "deviceId"): NdFCManager {
+        // Real counts store (its own prefs file); only the registry locator is mocked to hand it back —
+        // the manager exercises the real counting logic, matching how NdStoreProvider supplies it in prod.
         val countsStore = StoreProvider.getInstance()
             .provideNdCountsStore(appCtx, deviceId, cleverTapInstanceConfig.accountId)
+        val storeRegistry = mockk<StoreRegistry>(relaxed = true)
+        every { storeRegistry.ndCountsStore } returns countsStore
         return NdFCManager(
             config = cleverTapInstanceConfig,
-            countsStore = countsStore,
+            storeRegistry = storeRegistry,
             impressionManager = impressionManager,
             executors = MockCTExecutors(),
             clock = clock,

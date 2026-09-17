@@ -105,10 +105,4 @@ class NdCountsStoreTest {
         confirmVerified(ctPreference)
     }
 
-    @Test
-    fun `onChangeUser repoints to the counts namespace for the new user`() {
-        store.onChangeUser("device_id", "account_id")
-        verify(exactly = 1) { ctPreference.changePreferenceName("${Constants.KEY_ND_COUNTS_PER_TARGET}:device_id:account_id") }
-        confirmVerified(ctPreference)
-    }
 }

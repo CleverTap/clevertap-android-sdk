@@ -79,10 +79,4 @@ class NdStoreTest {
         ndStore.removeServerSideNdMetaData()
         verify { ctPreference.remove(Constants.PREFS_ND_KEY_SS) }
     }
-
-    @Test
-    fun `onChangeUser repoints to the ND namespace for the new user`() {
-        ndStore.onChangeUser("device_id", "account_id")
-        verify { ctPreference.changePreferenceName("${Constants.ND_KEY}:device_id:account_id") }
-    }
 }

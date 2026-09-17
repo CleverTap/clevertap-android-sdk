@@ -271,7 +271,7 @@ internal class EventQueueManager(
                 localDataStore.setDataSyncFlag(event)
                 baseDatabaseManager.queueEventToDB(context, event, eventType)
 
-                initInAppEvaluation(context, event, eventType, flattenedEventData)
+                initEventEvaluation(context, event, eventType, flattenedEventData)
 
                 scheduleQueueFlush(context)
             } catch (e: Throwable) {
@@ -280,7 +280,12 @@ internal class EventQueueManager(
         }
     }
 
-    fun initInAppEvaluation(
+    /**
+     * Runs the on-device evaluation for a just-queued event across every messaging channel that reacts to
+     * the event stream: in-app (via [ControllerManager.inAppController]) and Native Display (via
+     * [ControllerManager.nativeDisplayController]). Named generically because it is no longer in-app only.
+     */
+    fun initEventEvaluation(
         context: Context?,
         event: JSONObject,
         eventType: Int,
@@ -351,7 +356,7 @@ internal class EventQueueManager(
                 config.logger
                     .verbose(config.accountId, "Pushing Notification Viewed event onto DB")
                 baseDatabaseManager.queuePushNotificationViewedEventToDB(context, event)
-                initInAppEvaluation(context, event, eventType, flattenedEventData)
+                initEventEvaluation(context, event, eventType, flattenedEventData)
                 config.logger
                     .verbose(
                         config.accountId,

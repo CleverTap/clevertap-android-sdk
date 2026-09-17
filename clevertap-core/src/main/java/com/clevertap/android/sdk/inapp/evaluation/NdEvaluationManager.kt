@@ -3,8 +3,8 @@ package com.clevertap.android.sdk.inapp.evaluation
 import android.location.Location
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.network.EndpointId
@@ -14,7 +14,7 @@ import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONObject
 
 /**
- * Local evaluation of Native Display (ND) advanced-rule campaigns (SDK-6055, Phase 4).
+ * Local evaluation of Native Display (ND) advanced-rule campaigns.
  *
  * ND is SS-only. On each event the SDK evaluates the cached advanced-rule metadata bundle
  * (`adUnit_notifs_ss`) exactly like in-app SS: match `whenTriggers` → increment the ND trigger
@@ -30,15 +30,12 @@ import org.json.JSONObject
  * Reuses [TriggersMatcher] and [LimitsMatcher]; only the stores differ from in-app.
  */
 internal class NdEvaluationManager(
+    private val config: CleverTapInstanceConfig,
     private val triggersMatcher: TriggersMatcher,
     private val ndTriggersManager: TriggerManager,
     private val ndLimitsMatcher: LimitsMatcher,
     private val storeRegistry: StoreRegistry
 ) : NetworkHeadersListener {
-
-    companion object {
-        private val TAG = NdEvaluationManager::class.java.simpleName
-    }
 
     @VisibleForTesting
     internal var evaluatedNdCampaignIds: MutableList<Long> = ArrayList()
@@ -106,15 +103,56 @@ internal class NdEvaluationManager(
                 if (ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(inApp), campaignId)) {
                     val ti = campaignId.toLongOrNull() ?: continue
                     // Append without a contains() guard: a re-vote while a prior send is in flight must
-                    // not be dropped (onSentHeaders removes only what was sent). Server dedups (§6.2).
+                    // not be dropped (onSentHeaders removes only what was sent). Server dedups.
                     evaluatedNdCampaignIds.add(ti)
                     updated = true
-                    Logger.v(TAG, "ND campaign $ti eligible -> adUnit_eval")
+                    config.logger.verbose(config.accountId,"ND campaign $ti eligible -> adUnit_eval")
                 }
             }
         }
         if (updated) {
             saveEvaluatedNdIds()
+        }
+    }
+
+    /**
+     * App-Launched content-in-advance `whenLimits` filter. The server ships App-Launched ND
+     * content proactively — there is no `adUnit_eval` vote — so advanced `whenLimits` are otherwise never
+     * applied to it. Mirror the in-app App-Launched flow ([EvaluationManager.evaluate]): join each unit's
+     * rules from the ss-metadata bundle by `ti`, bump the ND trigger, and keep the unit only if its
+     * `whenLimits` still pass. Units with no advanced-rule entry (simple campaigns) pass through untouched —
+     * the server already qualified them. Unlike in-app there is no single-winner selection: every survivor
+     * is returned. Suppressed CG stubs are excluded upstream and acked separately via [recordCgSuppressed].
+     *
+     * The trigger [increment][TriggerManager.increment] here is the *only* place an App-Launched campaign's
+     * occurrence count advances online, because `EventQueueManager.initEventEvaluation` skips the online
+     * App-Launched event. An *offline* launch does count it via that event path, but the server then
+     * delivers that (voted) campaign as regular `adUnit_notifs` — not `adUnit_notifs_applaunched`, which
+     * carries only content-in-advance for campaigns the SDK could not vote — so this method never sees it
+     * and there is no double count. (Same increment shape as in-app's App-Launched flow.)
+     *
+     * @param content the non-suppressed App-Launched display-unit payloads.
+     * @return the subset still within its advanced `whenLimits` (input order preserved).
+     */
+    @WorkerThread
+    fun retainAppLaunchedWithinLimits(content: List<JSONObject>): List<JSONObject> {
+        if (content.isEmpty()) return content
+        val ndStore = storeRegistry.ndStore ?: return content
+        val metadata = ndStore.readServerSideNdMetaData()
+        if (metadata.isEmpty()) return content
+        val rulesByTi = metadata.associateBy { it.optString(Constants.INAPP_ID_IN_PAYLOAD) }
+
+        return content.filter { unit ->
+            val ti = unit.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            val rule = rulesByTi[ti]
+            if (ti.isEmpty() || rule == null) {
+                true // simple / non-advanced campaign — no client rules to apply; server already qualified it
+            } else {
+                ndTriggersManager.increment(ti)
+                ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(rule), ti).also { within ->
+                    if (!within) config.logger.verbose(config.accountId,"App-Launched ND $ti suppressed by whenLimits")
+                }
+            }
         }
     }
 
@@ -128,9 +166,9 @@ internal class NdEvaluationManager(
     fun recordCgSuppressed(stub: JSONObject) {
         val wzrkId = stub.optString(Constants.NOTIFICATION_ID_TAG)
         if (wzrkId.isEmpty()) {
-            // Per contract §5.4 the CG stub always ships wzrk_id (unlike in-app payloads which carry
+            // The CG stub always ships wzrk_id (unlike in-app payloads which carry
             // only ti). Log if one ever doesn't, rather than dropping the ack silently.
-            Logger.v(TAG, "Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
+            config.logger.verbose(config.accountId,"Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
             return
         }
         suppressedNdCampaigns.add(
@@ -141,7 +179,7 @@ internal class NdEvaluationManager(
             )
         )
         saveSuppressedNdIds()
-        Logger.v(TAG, "Recorded ND CG-suppression ack for $wzrkId")
+        config.logger.verbose(config.accountId,"Recorded ND CG-suppression ack for $wzrkId")
     }
 
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {

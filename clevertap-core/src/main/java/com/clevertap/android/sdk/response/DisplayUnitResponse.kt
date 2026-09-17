@@ -16,7 +16,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Single owner of the Display Units / Native Display (ND) channel (SDK-6055).
+ * Single owner of the Display Units / Native Display (ND) channel.
  *
  * Handles the whole channel in one pass, in order, so there is no cross-processor ordering dependency
  * (the meta must land before the content gate reads ceilings):
@@ -93,7 +93,7 @@ internal class DisplayUnitResponse(
             val ndFCManager = controllerManager.ndFCManager
 
             // Account-level ceilings. `has(ndmc)` is load-bearing: `ndmc` is emitted on every V2
-            // response (contract §5.1), so its presence is what tells us this is a cap-aware response
+            // response, so its presence is what tells us this is a cap-aware response
             // worth writing ceilings for. `ndmp` absent => uncapped daily, which optInt's Int.MAX_VALUE
             // default already expresses (no separate has() needed).
             if (response.has(Constants.ND_MAX_PER_SESSION_KEY) && ndFCManager != null) {
@@ -110,7 +110,7 @@ internal class DisplayUnitResponse(
 
             // Advanced-rule metadata bundle (rules only) for local evaluation. Full replace, including
             // an empty array: the bundle is emitted only on App-Launched / ND-meta-fetch and is always
-            // the complete current set (contract §5.2), so [] legitimately means "clear".
+            // the complete current set, so [] legitimately means "clear".
             if (response.has(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)) {
                 val ssArray = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)
                 val ndStore: NdStore? = stores.ndStore
@@ -184,11 +184,12 @@ internal class DisplayUnitResponse(
      */
     private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?) {
         val parsed = ArrayList<CleverTapDisplayUnit>()
-        notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it, skipSuppressed = false)) }
-        appLaunched?.let { parsed.addAll(parseDisplayUnitsFromJson(it, skipSuppressed = true)) }
-        if (parsed.isEmpty()) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No valid Display Units to process")
-            return
+        notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it)) }
+        appLaunched?.let {
+            // App-Launched content arrives in advance with no adUnit_eval vote, so advanced whenLimits are
+            // otherwise never applied to it — filter here. Suppressed CG stubs are excluded (and
+            // acked separately in ackCgSuppressedStubs), so the survivors are all non-suppressed.
+            parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it))))
         }
 
         val cache = controllerManager.orCreateDisplayUnitCache
@@ -200,20 +201,49 @@ internal class DisplayUnitResponse(
         val displayUnits = ArrayList(
             NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
         )
+        // Write even when empty. deliverContent only calls this when the response carried content, so a
+        // fully-filtered/suppressed result must reset the cache (updateDisplayUnits replaces, not merges) —
+        // else a host reading getAllDisplayUnits() keeps rendering a unit this response just suppressed.
         cache.updateDisplayUnits(displayUnits)
         if (displayUnits.isNotEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(displayUnits)
+        } else {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared")
         }
     }
 
-    private fun parseDisplayUnitsFromJson(messages: JSONArray, skipSuppressed: Boolean): List<CleverTapDisplayUnit> {
+    /**
+     * Applies advanced `whenLimits` to the non-suppressed App-Launched content. Content-in-advance
+     * arrives with no `adUnit_eval` vote, so this is the only place client-side `whenLimits` can gate it.
+     * Suppressed CG stubs are excluded here (they are acked separately in [ackCgSuppressedStubs]); the
+     * send-test / preview path has no ND evaluator wired and passes content through unchanged.
+     *
+     * The filter is guarded: a malformed advanced rule can throw from deep in `LimitsMatcher` (e.g. an
+     * `onEvery`/`onExactly` rule with `limit == 0` divides by zero). This runs inside the shared
+     * `parseDisplayUnits`, so an unguarded throw would drop the whole response — `adUnit_notifs` and all.
+     * Degrade to "whenLimits not applied" for App-Launched content instead, matching how the rest of the
+     * ND path (`NativeDisplayController.runGuarded`, `ingestNdMeta`) isolates faults from delivery.
+     */
+    private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
+        val nonSuppressed = ArrayList<JSONObject>()
+        for (i in 0 until appLaunched.length()) {
+            val entry = appLaunched.optJSONObject(i) ?: continue
+            if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) continue
+            nonSuppressed.add(entry)
+        }
+        return try {
+            ndEvaluationManager?.retainAppLaunchedWithinLimits(nonSuppressed) ?: nonSuppressed
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND whenLimits filter failed", t)
+            nonSuppressed
+        }
+    }
+
+    private fun parseDisplayUnitsFromJson(messages: JSONArray): List<CleverTapDisplayUnit> {
         val list = ArrayList<CleverTapDisplayUnit>()
         for (i in 0 until messages.length()) {
             try {
                 val json = messages.getJSONObject(i)
-                if (skipSuppressed && json.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
-                    continue
-                }
                 val unit = CleverTapDisplayUnit.toDisplayUnit(json)
                 if (unit.error.isNullOrEmpty()) {
                     list.add(unit)

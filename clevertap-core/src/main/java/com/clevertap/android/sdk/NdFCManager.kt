@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
@@ -29,11 +30,18 @@ import java.util.Locale
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class NdFCManager internal constructor(
     private val config: CleverTapInstanceConfig,
-    private val countsStore: NdCountsStore,
+    private val storeRegistry: StoreRegistry,
     private val impressionManager: ImpressionManager,
     private val executors: CTExecutors,
     private val clock: Clock,
 ) {
+
+    // Read through the registry (like InAppFCManager) so the ND counts store repoints with the user via
+    // NdStoreProvider — this manager never holds a per-user store reference of its own. Nullable until the
+    // device id resolves; every read degrades gracefully (0/null/no-op/"not capped") rather than throwing,
+    // so a not-yet-ready store can never break a caller — e.g. QueueHeaderBuilder reading shownTodayCount.
+    private val countsStore: NdCountsStore?
+        get() = storeRegistry.ndCountsStore
 
     companion object {
 
@@ -99,9 +107,13 @@ class NdFCManager internal constructor(
         }
     }
 
-    fun changeUser(deviceId: String) {
+    /**
+     * Re-checks the daily rollover and clears the in-memory session state for the new user. Takes no
+     * device id: the counts store repoints itself via [NdStoreProvider] off the registry's (already
+     * updated) device id, so the only contract is that callers invoke this *after* the identity is set.
+     */
+    fun changeUser() {
         impressionManager.clearSessionData()
-        countsStore.onChangeUser(deviceId, config.accountId)
         resetDailyStateIfNewDay()
     }
 
@@ -115,20 +127,22 @@ class NdFCManager internal constructor(
         }
         executors.ioTask<Unit>().execute("recordNdImpressionsAndCounts") {
             impressionManager.recordImpression(id)
-            countsStore.increment(id)
-            countsStore.shownToday += 1
+            countsStore?.let {
+                it.increment(id)
+                it.shownToday += 1
+            }
         }
     }
 
-    /** The SDK's total ND render count today (`ndmp` request value). */
+    /** The SDK's total ND render count today (`ndmp` request value); 0 before the store is ready. */
     val shownTodayCount: Int
-        get() = countsStore.shownToday
+        get() = countsStore?.shownToday ?: 0
 
     /** The `ndtlc` array: `[[targetId, todayCount, lifetimeCount], ...]`, or null on failure. */
     fun getNdCounts(): JSONArray? {
         return try {
             val arr = JSONArray()
-            countsStore.allTargetCounts().forEach { (targetId, counts) ->
+            countsStore?.allTargetCounts()?.forEach { (targetId, counts) ->
                 arr.put(
                     JSONArray().apply {
                         put(0, targetId)
@@ -139,7 +153,7 @@ class NdFCManager internal constructor(
             }
             arr
         } catch (t: Throwable) {
-            Logger.v("Failed to get ND counts", t)
+            config.logger.verbose(config.accountId, "Failed to get ND counts", t)
             null
         }
     }
@@ -152,29 +166,34 @@ class NdFCManager internal constructor(
         for (i in 0 until staleIds.length()) {
             val targetId = staleIds.optString(i)
             if (targetId.isNotEmpty()) {
-                countsStore.remove(targetId)
-                Logger.d("Purged stale ND target - $targetId")
+                countsStore?.remove(targetId)
+                config.logger.debug(config.accountId, "Purged stale ND target - $targetId")
             }
         }
     }
 
     /** Stores the account-level ND ceilings pushed on every response (`ndmp`/`ndmc`). */
     fun updateLimits(perDay: Int, perSession: Int) {
-        countsStore.maxPerDay = perDay
-        countsStore.maxPerSession = perSession
+        countsStore?.let {
+            it.maxPerDay = perDay
+            it.maxPerSession = perSession
+        }
     }
 
     private fun hasDailyCapacityMaxedOut(id: String, totalDailyCount: Int): Boolean {
+        val store = countsStore ?: return false // store not ready -> not capped
         // 1. Global daily cap.
-        if (countsStore.shownToday >= countsStore.maxPerDay) {
+        if (store.shownToday >= store.maxPerDay) {
             return true
         }
         // 2. Per-target daily cap.
-        return totalDailyCount != UNCAPPED && countsStore.counts(id).today >= totalDailyCount
+        return totalDailyCount != UNCAPPED && store.counts(id).today >= totalDailyCount
     }
 
-    private fun hasLifetimeCapacityMaxedOut(id: String, totalLifetimeCount: Int): Boolean =
-        totalLifetimeCount != UNCAPPED && countsStore.counts(id).lifetime >= totalLifetimeCount
+    private fun hasLifetimeCapacityMaxedOut(id: String, totalLifetimeCount: Int): Boolean {
+        val store = countsStore ?: return false // store not ready -> not capped
+        return totalLifetimeCount != UNCAPPED && store.counts(id).lifetime >= totalLifetimeCount
+    }
 
     private fun hasSessionCapacityMaxedOut(id: String, maxPerSession: Int): Boolean {
         // 1. Per-target session cap (in-memory).
@@ -183,18 +202,20 @@ class NdFCManager internal constructor(
             return true
         }
         // 2. Global per-session cap (ndmc).
-        return impressionManager.perSessionTotal() >= countsStore.maxPerSession
+        val store = countsStore ?: return false // store not ready -> not capped
+        return impressionManager.perSessionTotal() >= store.maxPerSession
     }
 
     /** Resets the daily counters when the stored date differs from today (keeps lifetime counts). */
     private fun resetDailyStateIfNewDay() {
         try {
+            val store = countsStore ?: return
             val today = ddMMyyyy.format(clock.newDate())
-            if (countsStore.lastResetDate == today) {
+            if (store.lastResetDate == today) {
                 return
             }
-            countsStore.lastResetDate = today
-            countsStore.resetDailyKeepingLifetime()
+            store.lastResetDate = today
+            store.resetDailyKeepingLifetime()
         } catch (e: Exception) {
             config.logger.verbose(config.accountId, "Failed to reset ND daily state: ${e.localizedMessage}")
         }
