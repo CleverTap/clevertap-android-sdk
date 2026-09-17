@@ -16,7 +16,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Single owner of the Display Units / Native Display (ND) channel (SDK-6055).
+ * Single owner of the Display Units / Native Display (ND) channel.
  *
  * Handles the whole channel in one pass, in order, so there is no cross-processor ordering dependency
  * (the meta must land before the content gate reads ceilings):
@@ -93,7 +93,7 @@ internal class DisplayUnitResponse(
             val ndFCManager = controllerManager.ndFCManager
 
             // Account-level ceilings. `has(ndmc)` is load-bearing: `ndmc` is emitted on every V2
-            // response (contract §5.1), so its presence is what tells us this is a cap-aware response
+            // response, so its presence is what tells us this is a cap-aware response
             // worth writing ceilings for. `ndmp` absent => uncapped daily, which optInt's Int.MAX_VALUE
             // default already expresses (no separate has() needed).
             if (response.has(Constants.ND_MAX_PER_SESSION_KEY) && ndFCManager != null) {
@@ -110,7 +110,7 @@ internal class DisplayUnitResponse(
 
             // Advanced-rule metadata bundle (rules only) for local evaluation. Full replace, including
             // an empty array: the bundle is emitted only on App-Launched / ND-meta-fetch and is always
-            // the complete current set (contract §5.2), so [] legitimately means "clear".
+            // the complete current set, so [] legitimately means "clear".
             if (response.has(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)) {
                 val ssArray = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)
                 val ndStore: NdStore? = stores.ndStore
@@ -187,7 +187,7 @@ internal class DisplayUnitResponse(
         notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it, skipSuppressed = false)) }
         appLaunched?.let {
             // App-Launched content arrives in advance with no adUnit_eval vote, so advanced whenLimits are
-            // otherwise never applied to it — filter here (SDK-6138). Suppressed CG stubs are excluded (and
+            // otherwise never applied to it — filter here. Suppressed CG stubs are excluded (and
             // acked separately in ackCgSuppressedStubs), so the survivors are all non-suppressed.
             parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it)), skipSuppressed = false))
         }
@@ -212,7 +212,7 @@ internal class DisplayUnitResponse(
     }
 
     /**
-     * Applies advanced `whenLimits` to the non-suppressed App-Launched content (SDK-6138). Content-in-advance
+     * Applies advanced `whenLimits` to the non-suppressed App-Launched content. Content-in-advance
      * arrives with no `adUnit_eval` vote, so this is the only place client-side `whenLimits` can gate it.
      * Suppressed CG stubs are excluded here (they are acked separately in [ackCgSuppressedStubs]); the
      * send-test / preview path has no ND evaluator wired and passes content through unchanged.

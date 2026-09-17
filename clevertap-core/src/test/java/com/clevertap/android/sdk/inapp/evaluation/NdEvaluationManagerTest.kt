@@ -77,7 +77,7 @@ class NdEvaluationManagerTest {
         manager.evaluateOnEvent("e1", emptyMap(), null)
         manager.evaluateOnEvent("e2", emptyMap(), null)
 
-        // Must NOT be de-duped — onSentHeaders removes only what was sent (see §6.2).
+        // Must NOT be de-duped — onSentHeaders removes only what was sent.
         assertEquals(listOf(70001L, 70001L), manager.evaluatedNdCampaignIds)
     }
 
@@ -138,7 +138,7 @@ class NdEvaluationManagerTest {
         assertEquals("wzrk_default", manager.suppressedNdCampaigns[0][Constants.INAPP_WZRK_PIVOT])
     }
 
-    // ---- App-Launched content-in-advance whenLimits filter (SDK-6138) ----
+    // ---- App-Launched content-in-advance whenLimits filter ----
 
     @Test
     fun `retainAppLaunchedWithinLimits keeps units within whenLimits and drops over-cap ones`() {
@@ -157,6 +157,9 @@ class NdEvaluationManagerTest {
         // Trigger is counted for BOTH — occurrence limits advance even when the unit is ultimately dropped.
         verify(exactly = 1) { ndTriggersManager.increment("70001") }
         verify(exactly = 1) { ndTriggersManager.increment("70002") }
+        verify(exactly = 1) { ndLimitsMatcher.matchWhenLimits(any(), "70001") }
+        verify(exactly = 1) { ndLimitsMatcher.matchWhenLimits(any(), "70002") }
+        confirmVerified(ndTriggersManager, ndLimitsMatcher) // exactly these interactions, nothing else
     }
 
     @Test
@@ -169,8 +172,7 @@ class NdEvaluationManagerTest {
         val kept = manager.retainAppLaunchedWithinLimits(listOf(simple))
 
         assertEquals(listOf(simple), kept)
-        verify(exactly = 0) { ndTriggersManager.increment(any()) }
-        verify(exactly = 0) { ndLimitsMatcher.matchWhenLimits(any(), any()) }
+        confirmVerified(ndTriggersManager, ndLimitsMatcher) // no advanced rule -> evaluator untouched
     }
 
     @Test
@@ -181,6 +183,6 @@ class NdEvaluationManagerTest {
         val kept = manager.retainAppLaunchedWithinLimits(listOf(unit))
 
         assertEquals(listOf(unit), kept)
-        verify(exactly = 0) { ndTriggersManager.increment(any()) }
+        confirmVerified(ndTriggersManager, ndLimitsMatcher) // short-circuits before any evaluation
     }
 }

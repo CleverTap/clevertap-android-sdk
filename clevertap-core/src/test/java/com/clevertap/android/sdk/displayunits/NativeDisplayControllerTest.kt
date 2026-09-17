@@ -15,7 +15,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 /**
- * Verifies ND evaluation is driven by its own controller (SDK-6055 Phase 10): each hook merges the
+ * Verifies ND evaluation is driven by its own controller: each hook merges the
  * app-launched fields with the event props, delegates to [NdEvaluationManager], and swallows faults.
  */
 class NativeDisplayControllerTest {

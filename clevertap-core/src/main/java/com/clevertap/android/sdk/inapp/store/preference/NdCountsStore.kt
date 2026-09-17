@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.store.preference.ICTPreference
 
 /**
- * DAO for the Native Display (ND) frequency-cap **counter** state (SDK-6055).
+ * DAO for the Native Display (ND) frequency-cap **counter** state.
  *
  * Owns everything counter-related in a single prefs namespace (`nd_counts_per_target:<deviceId>:<accountId>`):
  * - per-target counts, keyed by target id (`ti`), value `"today,lifetime"`,

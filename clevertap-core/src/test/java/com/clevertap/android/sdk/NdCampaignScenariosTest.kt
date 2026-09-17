@@ -31,7 +31,7 @@ import kotlin.test.assertTrue
  * A "show" is driven through the **production public API**
  * [AnalyticsManager.pushDisplayUnitViewedEventForID] (the same call `CleverTapAPI` exposes): it looks
  * the unit up in the display-unit cache, gates on fcap-managed, and records the ND impression via a real
- * [NdFCManager]. This is what caught SDK-6132 — the impression must be recorded under the stable `ti`
+ * [NdFCManager]. The impression must be recorded under the stable `ti`
  * (not the `wzrk_id`) so the evaluator's whenLimits actually see it.
  *
  * The cache is an accumulating one (units persist across per-event deliveries), so the viewed lookup
@@ -182,7 +182,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
     @Test
     fun `day cap exhaustion and next-day reset - footer1 3 per day`() {
-        // perDay now honours the injected clock (SDK-6131), so this is fully deterministic via FakeClock.
+        // perDay now honours the injected clock, so this is fully deterministic via FakeClock.
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
         assertTrue(fire("Footer1", footer1))
@@ -234,7 +234,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
         }
     }
 
-    // ---- viewed event records the impression under the stable ti (SDK-6132 regression guard) ----
+    // ---- viewed event records the impression under the stable ti (regression guard) ----
 
     @Test
     fun `pushDisplayUnitViewedEventForID records the impression under ti so whenLimits see it`() {

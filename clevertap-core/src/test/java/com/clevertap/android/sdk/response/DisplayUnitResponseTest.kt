@@ -23,7 +23,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 /**
- * Covers the single merged Display Units / ND processor (SDK-6055 Phase 10): fcap meta ingestion
+ * Covers the single merged Display Units / ND processor: fcap meta ingestion
  * (absorbed from the former AdUnitResponse) + content delivery + user-switch handling.
  *
  * Runs under Robolectric (via [BaseTestCase]) because the content path uses `android.text.TextUtils`.
@@ -149,8 +149,9 @@ class DisplayUnitResponseTest : BaseTestCase() {
         response.processResponse(json, "", context)
 
         val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify(exactly = 1) { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } // filter runs
         verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
-        assertEquals(1, slot.captured.size)
+        assertEquals(1, slot.captured.size)                     // only the survivor is delivered
         assertEquals("70001_20260810", slot.captured[0].unitID)
     }
 
@@ -168,6 +169,8 @@ class DisplayUnitResponseTest : BaseTestCase() {
         response.processResponse(json, "", context)
 
         // Only the non-suppressed unit reaches the filter; the CG stub is excluded (acked separately).
+        verify(exactly = 1) { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) }
+        verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(any()) } // the CG stub is still acked
         assertEquals(1, slot.captured.size)
         assertEquals("70004", slot.captured[0].optString("ti"))
     }

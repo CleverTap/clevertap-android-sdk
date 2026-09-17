@@ -43,7 +43,7 @@ class NdFcapGateTest {
         val out = NdFcapGate.filter(arrayListOf(unit(json)), ndfc, logger, "acc")
 
         assertEquals(1, out.size)
-        // Must gate on the campaign ti ("70001"), NOT the wzrk_id ("70001_20250101") — SDK-6132.
+        // Must gate on the campaign ti ("70001"), NOT the wzrk_id ("70001_20250101").
         verify(exactly = 1) { ndfc.canShow("70001", false, 5, -1, -1, false) }
         confirmVerified(ndfc)
     }

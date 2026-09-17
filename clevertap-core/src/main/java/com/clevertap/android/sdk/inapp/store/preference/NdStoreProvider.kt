@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.StoreProvider
 
 /**
  * Lazily creates and caches the Native Display stores ([NdStore] + ND [ImpressionStore]), keyed by
- * device id (SDK-6055).
+ * device id.
  *
  * ND stores can't be built at factory time because they're namespaced by the device id, which resolves
  * asynchronously. Instead of the previous pattern (nullable [StoreRegistry] fields created in two

@@ -14,7 +14,7 @@ import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONObject
 
 /**
- * Local evaluation of Native Display (ND) advanced-rule campaigns (SDK-6055, Phase 4).
+ * Local evaluation of Native Display (ND) advanced-rule campaigns.
  *
  * ND is SS-only. On each event the SDK evaluates the cached advanced-rule metadata bundle
  * (`adUnit_notifs_ss`) exactly like in-app SS: match `whenTriggers` → increment the ND trigger
@@ -106,7 +106,7 @@ internal class NdEvaluationManager(
                 if (ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(inApp), campaignId)) {
                     val ti = campaignId.toLongOrNull() ?: continue
                     // Append without a contains() guard: a re-vote while a prior send is in flight must
-                    // not be dropped (onSentHeaders removes only what was sent). Server dedups (§6.2).
+                    // not be dropped (onSentHeaders removes only what was sent). Server dedups.
                     evaluatedNdCampaignIds.add(ti)
                     updated = true
                     Logger.v(TAG, "ND campaign $ti eligible -> adUnit_eval")
@@ -119,7 +119,7 @@ internal class NdEvaluationManager(
     }
 
     /**
-     * App-Launched content-in-advance `whenLimits` filter (SDK-6138). The server ships App-Launched ND
+     * App-Launched content-in-advance `whenLimits` filter. The server ships App-Launched ND
      * content proactively — there is no `adUnit_eval` vote — so advanced `whenLimits` are otherwise never
      * applied to it. Mirror the in-app App-Launched flow ([EvaluationManager.evaluate]): join each unit's
      * rules from the ss-metadata bundle by `ti`, bump the ND trigger, and keep the unit only if its
@@ -162,7 +162,7 @@ internal class NdEvaluationManager(
     fun recordCgSuppressed(stub: JSONObject) {
         val wzrkId = stub.optString(Constants.NOTIFICATION_ID_TAG)
         if (wzrkId.isEmpty()) {
-            // Per contract §5.4 the CG stub always ships wzrk_id (unlike in-app payloads which carry
+            // The CG stub always ships wzrk_id (unlike in-app payloads which carry
             // only ti). Log if one ever doesn't, rather than dropping the ack silently.
             Logger.v(TAG, "Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
             return
