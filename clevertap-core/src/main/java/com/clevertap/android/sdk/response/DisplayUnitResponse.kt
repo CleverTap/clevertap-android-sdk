@@ -216,6 +216,12 @@ internal class DisplayUnitResponse(
      * arrives with no `adUnit_eval` vote, so this is the only place client-side `whenLimits` can gate it.
      * Suppressed CG stubs are excluded here (they are acked separately in [ackCgSuppressedStubs]); the
      * send-test / preview path has no ND evaluator wired and passes content through unchanged.
+     *
+     * The filter is guarded: a malformed advanced rule can throw from deep in `LimitsMatcher` (e.g. an
+     * `onEvery`/`onExactly` rule with `limit == 0` divides by zero). This runs inside the shared
+     * `parseDisplayUnits`, so an unguarded throw would drop the whole response — `adUnit_notifs` and all.
+     * Degrade to "whenLimits not applied" for App-Launched content instead, matching how the rest of the
+     * ND path (`NativeDisplayController.runGuarded`, `ingestNdMeta`) isolates faults from delivery.
      */
     private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
         val nonSuppressed = ArrayList<JSONObject>()
@@ -224,7 +230,12 @@ internal class DisplayUnitResponse(
             if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) continue
             nonSuppressed.add(entry)
         }
-        return ndEvaluationManager?.retainAppLaunchedWithinLimits(nonSuppressed) ?: nonSuppressed
+        return try {
+            ndEvaluationManager?.retainAppLaunchedWithinLimits(nonSuppressed) ?: nonSuppressed
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND whenLimits filter failed", t)
+            nonSuppressed
+        }
     }
 
     private fun parseDisplayUnitsFromJson(messages: JSONArray, skipSuppressed: Boolean): List<CleverTapDisplayUnit> {

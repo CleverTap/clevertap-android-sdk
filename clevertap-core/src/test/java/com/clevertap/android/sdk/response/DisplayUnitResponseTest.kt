@@ -176,6 +176,26 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     @Test
+    fun `a throwing app-launched whenLimits filter degrades to delivery, not dropping the whole response`() {
+        // A malformed advanced rule (e.g. onEvery limit=0 -> divide-by-zero) makes the filter throw.
+        val json = JSONObject(
+            """{
+                "adUnit_notifs":[{"wzrk_id":"reg1","type":"simple"}],
+                "adUnit_notifs_applaunched":[{"ti":70001,"wzrk_id":"70001_20260810","type":"simple"}]
+            }""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } throws RuntimeException("divide by zero")
+
+        response.processResponse(json, "", context)
+
+        // Guarded: both the regular unit and the (un-filtered) app-launched unit are still delivered —
+        // without the guard the throw would abort parseDisplayUnits and drop everything.
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(2, slot.captured.size)
+    }
+
+    @Test
     fun `on user switch ingests meta but skips content delivery`() {
         val json = JSONObject("""{"ndmc":1,"ndmp":10,"adUnit_notifs":[{"wzrk_id":"u1","type":"simple"}]}""")
 
