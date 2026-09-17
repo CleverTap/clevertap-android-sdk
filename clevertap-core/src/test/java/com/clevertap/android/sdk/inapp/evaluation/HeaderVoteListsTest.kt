@@ -75,4 +75,22 @@ class HeaderVoteListsTest {
         assertEquals(1, list.size)
         assertEquals("70004_20260810", list[0][Constants.NOTIFICATION_ID_TAG])
     }
+
+    @Test
+    fun `removeSentSuppressed matches on exact id, not substring`() {
+        // "234_20260915" is a substring of the sent "1234_20260915"; it must NOT be removed.
+        val list = mutableListOf<Map<String, Any?>>(
+            mapOf(Constants.NOTIFICATION_ID_TAG to "234_20260915"),
+        )
+        val sent = JSONObject().put(
+            suppressedKey,
+            JSONArray().put(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "1234_20260915")),
+        )
+
+        val updated = HeaderVoteLists.removeSentSuppressed(sent, suppressedKey, list)
+
+        assertTrue(!updated)
+        assertEquals(1, list.size)
+        assertEquals("234_20260915", list[0][Constants.NOTIFICATION_ID_TAG])
+    }
 }

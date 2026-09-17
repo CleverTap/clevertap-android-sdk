@@ -73,12 +73,17 @@ internal object HeaderVoteLists {
         suppressed: MutableList<Map<String, Any?>>
     ): Boolean {
         val sent = sentHeader.optJSONArray(suppressedMetaKey) ?: return false
-        val sentString = sent.toString()
+        // Match on the exact wzrk_id of each sent entry, not a substring of the serialized array: a
+        // wzrk_id like "234_20260915" is a substring of "1234_20260915", so `sentString.contains(id)`
+        // would drop an ack that was never sent (losing that CG-suppression report).
+        val sentIds = (0 until sent.length())
+            .mapNotNull { sent.optJSONObject(it)?.optString(Constants.NOTIFICATION_ID_TAG)?.takeIf(String::isNotEmpty) }
+            .toSet()
         var updated = false
         val iterator = suppressed.iterator()
         while (iterator.hasNext()) {
             val id = iterator.next()[Constants.NOTIFICATION_ID_TAG] as? String
-            if (id != null && sentString.contains(id)) {
+            if (id != null && id in sentIds) {
                 iterator.remove()
                 updated = true
             }
