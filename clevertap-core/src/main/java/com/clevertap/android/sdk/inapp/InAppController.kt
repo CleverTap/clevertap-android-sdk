@@ -47,6 +47,7 @@ import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
 import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.evaluation.EventAdapter
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
@@ -684,8 +685,14 @@ internal class InAppController(
                 appLaunchServerSideInApps, appLaunchedProperties, userLocation
             )
 
-        // Route through arbitration: shown immediately when no window is open (today's behaviour),
-        // otherwise buffered (OPEN) or dropped (CLOSED). Applies to both the /a1 and /content winners.
+        // Option 2 fast path: if the window carries synthetic content candidates and the /a1 winner
+        // already tops the merged sort, show it now and skip the wait. Dormant without priority.
+        if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, appLaunchedProperties, userLocation)) {
+            return
+        }
+
+        // Option 1: shown immediately when no window is open (today's behaviour), otherwise buffered
+        // (OPEN) or dropped (CLOSED). Applies to both the /a1 and /content winners.
         val toShow = appLaunchArbitrator.routeWinners(serverSideInAppsToDisplayImmediate)
         if (toShow.isNotEmpty()) {
             addInAppNotificationsToQueue(toShow)
@@ -693,30 +700,71 @@ internal class InAppController(
     }
 
     /**
+     * Option 2 prediction. Returns true (and shows [a1Winner] immediately, closing the window) when
+     * waiting for the `/content` reply cannot change the outcome — i.e. no synthetic content
+     * candidate qualifies, or the `/a1` winner tops the merged sort. Returns false to fall back to
+     * Option 1 (wait). No-op unless the window was opened WITH synthetic candidates, which needs the
+     * backend to send `priority` per item — so this is dormant today.
+     */
+    private fun tryAppLaunchFastPath(
+        a1Winner: List<JSONObject>,
+        appLaunchedProperties: Map<String, Any>,
+        userLocation: Location?
+    ): Boolean {
+        val synthetics = appLaunchArbitrator.syntheticCandidates() ?: return false // no window
+        if (synthetics.isEmpty()) return false // Option 1 (no priority): must wait
+        if (a1Winner.isEmpty()) return false   // nothing to show now; wait for content
+
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, appLaunchedProperties, userLocation = userLocation)
+        val eligibleContent = evaluationManager.evaluateDryRun(event, synthetics)
+
+        val a1WinnerTops = if (eligibleContent.isEmpty()) {
+            true // no content candidate can qualify -> waiting cannot change the outcome
+        } else {
+            val top = evaluationManager.sortByPriority(a1Winner + eligibleContent).firstOrNull()
+            top != null && !top.optBoolean(Constants.INAPP_SYNTHETIC_CANDIDATE, false)
+        }
+        if (!a1WinnerTops) return false // a content candidate could win -> fall back to Option 1
+
+        appLaunchArbitrator.closeForFastPath(a1Winner.first())
+        addInAppNotificationsToQueue(a1Winner)
+        return true
+    }
+
+    /**
      * Opens an app-launch arbitration window when this `/a1` response carries a `content_fetch` that
-     * can produce an app-launch in-app — so the winner evaluated below is held and merged with the
-     * `/content` winner instead of shown twice. Called from [InAppResponse] on `/a1` only.
+     * can produce an app-launch in-app — so the winner evaluated afterwards is held and merged with
+     * the `/content` winner instead of shown twice. When every such item also carries `priority`,
+     * the window is opened WITH synthetic candidates enabling the Option 2 fast path (all-or-nothing:
+     * a partial set could mispredict, so it falls back to Option 1). Called from [InAppResponse] on
+     * `/a1` only.
      */
     fun openAppLaunchArbitrationWindowIfNeeded(response: JSONObject) {
-        if (hasInAppContentFetchForAppLaunch(response)) {
-            appLaunchArbitrator.openWindow()
+        val items = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?: return
+        val appLaunchItems = ContentFetchItem.listFrom(items).filter { isAppLaunchInAppItem(it) }
+        if (appLaunchItems.isEmpty()) return // S1/S2: no in-app app-launch content fetch
+
+        // Option 2: build synthetic candidates, all-or-nothing (every item must carry priority).
+        val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
+        val syntheticCandidates = if (synthetics.all { it != null }) {
+            synthetics.filterNotNull()
+        } else {
+            emptyList() // partial priority -> Option 1 wait
         }
+        appLaunchArbitrator.openWindow(syntheticCandidates)
     }
 
     // S1 (responseKey is the app-launch in-app key) + S2 (eventName == "App Launched").
-    // Conservative: when the wire omits a field we still open (wait) rather than risk showing two;
-    // we only skip when an item is explicitly for a different channel or event.
+    // Conservative: when the wire omits a field we still treat it as a match (wait) rather than risk
+    // showing two; we only skip an item explicitly for a different channel or event.
     // TODO(SDK-6141 review): confirm responseKey/eventName are present on Android's /content
     // directive (verified on iOS). If always absent, this reduces to "any content_fetch present".
-    private fun hasInAppContentFetchForAppLaunch(response: JSONObject): Boolean {
-        val items = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?: return false
-        return ContentFetchItem.listFrom(items).any { item ->
-            val responseKeyMatches =
-                item.responseKey == null || item.responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY
-            val eventNameMatches =
-                item.eventName == null || item.eventName == Constants.APP_LAUNCHED_EVENT
-            responseKeyMatches && eventNameMatches
-        }
+    private fun isAppLaunchInAppItem(item: ContentFetchItem): Boolean {
+        val responseKeyMatches =
+            item.responseKey == null || item.responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY
+        val eventNameMatches =
+            item.eventName == null || item.eventName == Constants.APP_LAUNCHED_EVENT
+        return responseKeyMatches && eventNameMatches
     }
 
     /**

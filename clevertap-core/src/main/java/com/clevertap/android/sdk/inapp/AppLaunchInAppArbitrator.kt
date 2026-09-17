@@ -51,24 +51,55 @@ internal class AppLaunchInAppArbitrator(
     private var timeoutJob: Job? = null
     private val buffered = mutableListOf<JSONObject>()
 
+    // Option 2 state. [synthetics] are the content candidates predicted against at /a1 time (empty =
+    // Option 1). [shownWinner] is what was displayed, used for the mispredict diagnostic.
+    private var synthetics: List<JSONObject> = emptyList()
+    private var shownWinner: JSONObject? = null
+
     /**
      * Open a window and arm the timeout. No-op if one is already open — the first window survives
      * (a second `/a1` with a content fetch does not restart arbitration).
+     *
+     * @param syntheticCandidates content candidates for the Option 2 fast path; empty means Option 1
+     *   (wait), the only mode active until the backend sends `priority` per item.
      */
-    fun openWindow() = synchronized(lock) {
+    fun openWindow(syntheticCandidates: List<JSONObject> = emptyList()) = synchronized(lock) {
         if (phase != null) {
             logger.verbose(logTag, "[Arbitration] window already open, ignoring")
             return
         }
         phase = Phase.OPEN
         buffered.clear()
+        synthetics = syntheticCandidates
+        shownWinner = null
         timeoutJob = scope.launch {
             delay(timeoutMs)
             // UX bound: show the /a1 winner now; the window stays in its CLOSED-suppressing phase
             // until completion tears it down, so a slow /content reply is dropped, not shown.
             closeAndShow("timeout")
         }
-        logger.verbose(logTag, "[Arbitration] window opened")
+        logger.verbose(logTag, "[Arbitration] window opened (synthetics=${syntheticCandidates.size})")
+    }
+
+    /**
+     * The synthetic content candidates of the currently OPEN window (Option 2), or null when there
+     * is no open window or it was opened without them (Option 1).
+     */
+    fun syntheticCandidates(): List<JSONObject>? = synchronized(lock) {
+        if (phase == Phase.OPEN) synthetics else null
+    }
+
+    /**
+     * Option 2 fast path: the caller has predicted the `/a1` winner wins and is showing [shown] now.
+     * Move to the suppressing phase and cancel the timeout; teardown still happens on completion, and
+     * a later `/content` winner is dropped (with a mispredict log if it would have outranked [shown]).
+     */
+    fun closeForFastPath(shown: JSONObject) = synchronized(lock) {
+        if (phase != Phase.OPEN) return
+        phase = Phase.CLOSED
+        shownWinner = shown
+        timeoutJob?.cancel()
+        logger.verbose(logTag, "[Arbitration] fast path: /a1 winner shown immediately, window closed")
     }
 
     /**
@@ -86,11 +117,23 @@ internal class AppLaunchInAppArbitrator(
                 emptyList()
             }
             Phase.CLOSED -> {
-                // TODO(SDK-6144): emit a mispredict diagnostic when a dropped winner would have
-                // outranked the one already shown.
+                logMispredictIfAny(winners)
                 logger.verbose(logTag, "[Arbitration] window closed, dropping ${winners.size} late winner(s)")
                 emptyList()
             }
+        }
+    }
+
+    // Called under [lock]. Logs when a dropped late winner would have outranked the one already
+    // shown — i.e. the fast path (or the timeout) mispredicted the outcome.
+    private fun logMispredictIfAny(dropped: List<JSONObject>) {
+        val shown = shownWinner ?: return
+        val outranks = dropped.any { sortByPriority(listOf(shown, it)).firstOrNull() === it }
+        if (outranks) {
+            logger.verbose(
+                logTag,
+                "[Arbitration] MISPREDICT: a dropped content winner would have outranked the shown in-app"
+            )
         }
     }
 
@@ -105,6 +148,8 @@ internal class AppLaunchInAppArbitrator(
             timeoutJob = null
             phase = null
             buffered.clear()
+            synthetics = emptyList()
+            shownWinner = null
             logger.verbose(logTag, "[Arbitration] window torn down")
         }
     }
@@ -114,6 +159,7 @@ internal class AppLaunchInAppArbitrator(
             if (phase != Phase.OPEN) return
             phase = Phase.CLOSED
             val selected = sortByPriority(buffered).firstOrNull()
+            shownWinner = selected
             logger.verbose(
                 logTag,
                 "[Arbitration] closing ($reason): ${buffered.size} buffered -> ${if (selected != null) "1 winner" else "nothing"}"
