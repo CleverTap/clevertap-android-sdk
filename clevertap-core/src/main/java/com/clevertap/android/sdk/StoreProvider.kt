@@ -9,6 +9,8 @@ import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
+import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore
+import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.store.preference.CTPreference
 
 const val STORE_TYPE_INAPP = 1
@@ -16,6 +18,11 @@ const val STORE_TYPE_IMPRESSION = 2
 const val STORE_TYPE_LEGACY_INAPP = 3
 const val STORE_TYPE_INAPP_ASSETS = 4
 const val STORE_TYPE_FILES = 5
+
+// Native Display (ND) frequency caps (SDK-6055)
+const val STORE_TYPE_ND = 6
+const val STORE_TYPE_ND_IMPRESSION = 7
+const val STORE_TYPE_ND_COUNTS = 8
 
 /**
  * The `StoreProvider` class is responsible for providing different types of stores
@@ -112,6 +119,45 @@ internal class StoreProvider {
     }
 
     /**
+     * Provides an instance of [NdStore] (Native Display SS metadata + eval/suppressed lists).
+     * Plaintext — ND is SS-only, there is no CS-style encrypted content on device.
+     */
+    fun provideNdStore(
+        context: Context,
+        deviceId: String,
+        accountId: String
+    ): NdStore {
+        val prefName = constructStorePreferenceName(STORE_TYPE_ND, deviceId, accountId)
+        return NdStore(getCTPreference(context, prefName))
+    }
+
+    /**
+     * Provides an [ImpressionStore] pointed at the Native Display namespace, so ND impression
+     * timestamps never collide with in-app's. Reuses the in-app [ImpressionStore] implementation.
+     */
+    fun provideNdImpressionStore(
+        context: Context,
+        deviceId: String,
+        accountId: String
+    ): ImpressionStore {
+        val prefName = constructStorePreferenceName(STORE_TYPE_ND_IMPRESSION, deviceId, accountId)
+        return ImpressionStore(getCTPreference(context, prefName), STORE_TYPE_ND_IMPRESSION)
+    }
+
+    /**
+     * Provides the [NdCountsStore] DAO — per-target today/lifetime counts plus the ND global
+     * shown-today counter, ceilings and daily-reset date, in its own namespace.
+     */
+    fun provideNdCountsStore(
+        context: Context,
+        deviceId: String,
+        accountId: String
+    ): NdCountsStore {
+        val prefName = constructStorePreferenceName(STORE_TYPE_ND_COUNTS, deviceId, accountId)
+        return NdCountsStore(getCTPreference(context, prefName))
+    }
+
+    /**
      * Provides an instance of [LegacyInAppStore] using the given parameters.
      *
      * @param context The Android application context.
@@ -147,6 +193,9 @@ internal class StoreProvider {
             STORE_TYPE_FILES -> "$FILE_STORE_PREFIX:$accountId"
             STORE_TYPE_INAPP -> "${Constants.INAPP_KEY}:$deviceId:$accountId"
             STORE_TYPE_IMPRESSION -> "${Constants.KEY_COUNTS_PER_INAPP}:$deviceId:$accountId"
+            STORE_TYPE_ND -> "${Constants.ND_KEY}:$deviceId:$accountId"
+            STORE_TYPE_ND_IMPRESSION -> "${Constants.KEY_ND_IMPRESSIONS_PER_TARGET}:$deviceId:$accountId"
+            STORE_TYPE_ND_COUNTS -> "${Constants.KEY_ND_COUNTS_PER_TARGET}:$deviceId:$accountId"
             STORE_TYPE_LEGACY_INAPP -> Constants.CLEVERTAP_STORAGE_TAG
             else -> Constants.CLEVERTAP_STORAGE_TAG
         }

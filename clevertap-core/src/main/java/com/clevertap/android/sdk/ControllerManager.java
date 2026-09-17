@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
+import com.clevertap.android.sdk.displayunits.NativeDisplayController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
@@ -26,6 +27,8 @@ import org.json.JSONArray;
 public class ControllerManager {
 
     private InAppFCManager inAppFCManager;
+
+    private NdFCManager ndFCManager;
 
     private final BaseDatabaseManager baseDatabaseManager;
 
@@ -60,6 +63,8 @@ public class ControllerManager {
     private final DeviceInfo deviceInfo;
 
     private InAppController inAppController;
+
+    private NativeDisplayController nativeDisplayController;
 
     private PushProviders pushProviders;
 
@@ -207,12 +212,29 @@ public class ControllerManager {
         this.inAppController = inAppController;
     }
 
+    public NativeDisplayController getNativeDisplayController() {
+        return nativeDisplayController;
+    }
+
+    public void setNativeDisplayController(
+            final NativeDisplayController nativeDisplayController) {
+        this.nativeDisplayController = nativeDisplayController;
+    }
+
     public InAppFCManager getInAppFCManager() {
         return inAppFCManager;
     }
 
     public void setInAppFCManager(final InAppFCManager inAppFCManager) {
         this.inAppFCManager = inAppFCManager;
+    }
+
+    public NdFCManager getNdFCManager() {
+        return ndFCManager;
+    }
+
+    public void setNdFCManager(final NdFCManager ndFCManager) {
+        this.ndFCManager = ndFCManager;
     }
 
     public PushProviders getPushProviders() {

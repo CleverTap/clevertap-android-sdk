@@ -351,6 +351,20 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (cache != null) {
                 CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
+                    // Native Display frequency caps (SDK-6055): the viewed event is the ND impression
+                    // hook (the host renders the unit; the SDK is not in the render path). Record it so
+                    // ndtlc/ndmp/session counters stay accurate — but ONLY for fcap-managed units, so an
+                    // unmarked/legacy unit's view can't consume the ND global budget and starve gated ones.
+                    NdFCManager ndFCManager = controllerManager.getNdFCManager();
+                    if (ndFCManager != null && NdFCManager.isFcapManaged(displayUnit.getJsonObject())) {
+                        // Key on the stable campaign id (ti), NOT unitID (= wzrk_id, which is ti_yyyyMMdd
+                        // and rotates daily). The ND evaluator's whenLimits are keyed by ti, so recording
+                        // by wzrk_id would never be seen by them (SDK-6132). Mirrors in-app's InAppFCManager,
+                        // which records by inapp.getId() (ti).
+                        String ndCampaignId = displayUnit.getJsonObject().optString(Constants.INAPP_ID_IN_PAYLOAD);
+                        ndFCManager.didShow(ndCampaignId);
+                    }
+
                     JSONObject eventExtras = displayUnit.getWZRKFields();
                     if (eventExtras != null) {
                         event.put("evtData", eventExtras);
