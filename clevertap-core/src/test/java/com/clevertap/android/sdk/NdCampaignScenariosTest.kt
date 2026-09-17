@@ -179,6 +179,18 @@ class NdCampaignScenariosTest : BaseTestCase() {
     }
 
     @Test
+    fun `app-launched filter honours occurrenceLimits via the real matcher - footer4 onEvery 2`() {
+        // Drives retainAppLaunchedWithinLimits (the App-Launched content-in-advance path) against the real
+        // TriggerManager + LimitsMatcher, so the join-by-ti + increment-then-matchWhenLimits arithmetic is
+        // exercised for real (not mocked). onEvery 2: keep only when the (post-increment) count % 2 == 0.
+        val units = listOf(appLaunchedUnit(footer4))
+        assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 1 -> dropped")
+        assertEquals(1, manager.retainAppLaunchedWithinLimits(units).size, "trigger 2 -> kept")
+        assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 3 -> dropped")
+        assertEquals(1, manager.retainAppLaunchedWithinLimits(units).size, "trigger 4 -> kept")
+    }
+
+    @Test
     fun `onExactly 1 - xhjjv votes only on the first trigger`() {
         assertTrue(fire("xhjjv", xhjjv), "trigger 1")
         assertFalse(fire("xhjjv", xhjjv), "trigger 2")
@@ -303,6 +315,12 @@ class NdCampaignScenariosTest : BaseTestCase() {
             .put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, false) // presence marks it fcap-managed
         return CleverTapDisplayUnit.toDisplayUnit(json)
     }
+
+    /** A non-suppressed App-Launched content-in-advance payload (JSON, as the response filter sees it). */
+    private fun appLaunchedUnit(ti: String) = JSONObject()
+        .put(Constants.NOTIFICATION_ID_TAG, wzrkId(ti))
+        .put(Constants.INAPP_ID_IN_PAYLOAD, ti)
+        .put(Constants.KEY_TYPE, "simple")
 
     private fun campaign(ti: String, event: String, freq: JSONArray = JSONArray(), occ: JSONArray = JSONArray()) =
         JSONObject().apply {

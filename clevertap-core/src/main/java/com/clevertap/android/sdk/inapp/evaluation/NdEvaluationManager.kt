@@ -124,6 +124,13 @@ internal class NdEvaluationManager(
      * the server already qualified them. Unlike in-app there is no single-winner selection: every survivor
      * is returned. Suppressed CG stubs are excluded upstream and acked separately via [recordCgSuppressed].
      *
+     * The trigger [increment][TriggerManager.increment] here is the *only* place an App-Launched campaign's
+     * occurrence count advances online, because `EventQueueManager.initEventEvaluation` skips the online
+     * App-Launched event. An *offline* launch does count it via that event path, but the server then
+     * delivers that (voted) campaign as regular `adUnit_notifs` — not `adUnit_notifs_applaunched`, which
+     * carries only content-in-advance for campaigns the SDK could not vote — so this method never sees it
+     * and there is no double count. (Same increment shape as in-app's App-Launched flow.)
+     *
      * @param content the non-suppressed App-Launched display-unit payloads.
      * @return the subset still within its advanced `whenLimits` (input order preserved).
      */

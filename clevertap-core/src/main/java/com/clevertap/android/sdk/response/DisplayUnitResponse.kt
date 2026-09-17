@@ -184,16 +184,12 @@ internal class DisplayUnitResponse(
      */
     private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?) {
         val parsed = ArrayList<CleverTapDisplayUnit>()
-        notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it, skipSuppressed = false)) }
+        notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it)) }
         appLaunched?.let {
             // App-Launched content arrives in advance with no adUnit_eval vote, so advanced whenLimits are
             // otherwise never applied to it — filter here. Suppressed CG stubs are excluded (and
             // acked separately in ackCgSuppressedStubs), so the survivors are all non-suppressed.
-            parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it)), skipSuppressed = false))
-        }
-        if (parsed.isEmpty()) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No valid Display Units to process")
-            return
+            parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it))))
         }
 
         val cache = controllerManager.orCreateDisplayUnitCache
@@ -205,9 +201,14 @@ internal class DisplayUnitResponse(
         val displayUnits = ArrayList(
             NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
         )
+        // Write even when empty. deliverContent only calls this when the response carried content, so a
+        // fully-filtered/suppressed result must reset the cache (updateDisplayUnits replaces, not merges) —
+        // else a host reading getAllDisplayUnits() keeps rendering a unit this response just suppressed.
         cache.updateDisplayUnits(displayUnits)
         if (displayUnits.isNotEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(displayUnits)
+        } else {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared")
         }
     }
 
@@ -238,14 +239,11 @@ internal class DisplayUnitResponse(
         }
     }
 
-    private fun parseDisplayUnitsFromJson(messages: JSONArray, skipSuppressed: Boolean): List<CleverTapDisplayUnit> {
+    private fun parseDisplayUnitsFromJson(messages: JSONArray): List<CleverTapDisplayUnit> {
         val list = ArrayList<CleverTapDisplayUnit>()
         for (i in 0 until messages.length()) {
             try {
                 val json = messages.getJSONObject(i)
-                if (skipSuppressed && json.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
-                    continue
-                }
                 val unit = CleverTapDisplayUnit.toDisplayUnit(json)
                 if (unit.error.isNullOrEmpty()) {
                     list.add(unit)

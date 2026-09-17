@@ -196,6 +196,21 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     @Test
+    fun `clears the cache when the response carried content but the filter dropped everything`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[{"ti":70001,"wzrk_id":"70001_20260810","type":"simple"}]}""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } returns emptyList()
+
+        response.processResponse(json, "", context)
+
+        // Content was present but nothing survived -> reset the cache (don't leave a suppressed unit
+        // renderable via getAllDisplayUnits); no callback fires.
+        verify(exactly = 1) { cache.updateDisplayUnits(match { it.isEmpty() }) }
+        verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) }
+    }
+
+    @Test
     fun `on user switch ingests meta but skips content delivery`() {
         val json = JSONObject("""{"ndmc":1,"ndmp":10,"adUnit_notifs":[{"wzrk_id":"u1","type":"simple"}]}""")
 
