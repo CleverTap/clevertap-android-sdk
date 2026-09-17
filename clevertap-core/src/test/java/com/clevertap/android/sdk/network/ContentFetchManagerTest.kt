@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.response.CTResponseSource
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.utils.configMock
 import io.mockk.*
@@ -151,7 +152,7 @@ class ContentFetchManagerTest {
 
         verify { mockQueueHeaderBuilder.buildHeader(null) }
         verify { mockCtApi.sendContentFetch(any()) }
-        verify { mockClevertapResponseHandler.handleResponse(false, any(), any(), any()) }
+        verify { mockClevertapResponseHandler.handleResponse(false, any(), any(), any(), CTResponseSource.CONTENT_FETCH) }
     }
 
     @Test
@@ -236,7 +237,8 @@ class ContentFetchManagerTest {
                 false,
                 any(),
                 responseJson.toString(),
-                any()
+                any(),
+                CTResponseSource.CONTENT_FETCH
             )
         }
     }
