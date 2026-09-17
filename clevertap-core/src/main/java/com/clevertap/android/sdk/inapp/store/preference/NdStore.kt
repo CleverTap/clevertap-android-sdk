@@ -3,9 +3,6 @@ package com.clevertap.android.sdk.inapp.store.preference
 import com.clevertap.android.sdk.Constants.PREFS_EVALUATED_ND_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_ND_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_SUPPRESSED_ND_KEY
-import com.clevertap.android.sdk.STORE_TYPE_ND
-import com.clevertap.android.sdk.StoreProvider
-import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import com.clevertap.android.sdk.toList
 import org.json.JSONArray
@@ -22,10 +19,15 @@ import org.json.JSONObject
  *  - the pending `adUnit_suppressed` CG-ack list.
  *
  * Prefs file: `WizRocket_adUnit:<deviceId>:<accountId>`.
+ *
+ * Unlike [InAppStore], this store is **not** a [com.clevertap.android.sdk.login.ChangeUserCallback]:
+ * its user-switch lifecycle is owned by [NdStoreProvider], which builds a fresh instance (pointed at the
+ * new user's prefs, with an empty [metaCache]) on the next access after the device id changes. Do not
+ * re-add a change-user callback here — the provider is the single owner.
  */
 internal class NdStore(
     private val ctPreference: ICTPreference,
-) : ChangeUserCallback {
+) {
 
     private var metaCache: List<JSONObject>? = null
 
@@ -103,14 +105,5 @@ internal class NdStore(
         } catch (e: JSONException) {
             JSONArray()
         }
-    }
-
-    override fun onChangeUser(deviceId: String, accountId: String) {
-        // Invalidate the in-memory cache before repointing, else the next read returns the previous
-        // user's metadata bundle until a fresh adUnit_notifs_ss arrives.
-        metaCache = null
-        val newPrefName =
-            StoreProvider.getInstance().constructStorePreferenceName(STORE_TYPE_ND, deviceId, accountId)
-        ctPreference.changePreferenceName(newPrefName)
     }
 }
