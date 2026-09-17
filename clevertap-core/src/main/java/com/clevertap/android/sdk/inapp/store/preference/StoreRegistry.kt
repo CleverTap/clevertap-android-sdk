@@ -28,4 +28,8 @@ internal data class StoreRegistry(
     /** Native Display impression store — lazily created once the device id resolves, else null. */
     val ndImpressionStore: ImpressionStore?
         get() = ndStoreProvider?.ndImpressionStore
+
+    /** Native Display counter-cap store — lazily created once the device id resolves, else null. */
+    val ndCountsStore: NdCountsStore?
+        get() = ndStoreProvider?.ndCountsStore
 }

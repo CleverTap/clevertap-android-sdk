@@ -329,7 +329,7 @@ internal object CleverTapFactory {
             if (deviceId != null && controllerManager.ndFCManager == null) {
                 controllerManager.ndFCManager = NdFCManager(
                     config = config,
-                    countsStore = storeProvider.provideNdCountsStore(context, deviceId, config.accountId),
+                    storeRegistry = storeRegistry,
                     impressionManager = ndImpressionManager,
                     executors = executors,
                     clock = SYSTEM,

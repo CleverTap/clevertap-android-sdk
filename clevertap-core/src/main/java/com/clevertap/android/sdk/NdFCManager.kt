@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.inapp.ImpressionManager
 import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import org.json.JSONArray
@@ -29,11 +30,17 @@ import java.util.Locale
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class NdFCManager internal constructor(
     private val config: CleverTapInstanceConfig,
-    private val countsStore: NdCountsStore,
+    private val storeRegistry: StoreRegistry,
     private val impressionManager: ImpressionManager,
     private val executors: CTExecutors,
     private val clock: Clock,
 ) {
+
+    // Read through the registry (like InAppFCManager) so the ND counts store repoints with the user via
+    // NdStoreProvider — this manager never holds a per-user store reference of its own. Non-null in
+    // practice: the manager is only created once the device id has resolved, so the provider can build it.
+    private val countsStore: NdCountsStore
+        get() = requireNotNull(storeRegistry.ndCountsStore) { "ND counts store accessed before device id resolved" }
 
     companion object {
 
@@ -100,8 +107,9 @@ class NdFCManager internal constructor(
     }
 
     fun changeUser(deviceId: String) {
+        // The counts store repoints itself via NdStoreProvider (keyed on the new device id); we only need
+        // to clear the in-memory session state and re-check the daily rollover for the new user.
         impressionManager.clearSessionData()
-        countsStore.onChangeUser(deviceId, config.accountId)
         resetDailyStateIfNewDay()
     }
 
@@ -139,7 +147,7 @@ class NdFCManager internal constructor(
             }
             arr
         } catch (t: Throwable) {
-            Logger.v("Failed to get ND counts", t)
+            config.logger.verbose(config.accountId, "Failed to get ND counts", t)
             null
         }
     }
@@ -153,7 +161,7 @@ class NdFCManager internal constructor(
             val targetId = staleIds.optString(i)
             if (targetId.isNotEmpty()) {
                 countsStore.remove(targetId)
-                Logger.d("Purged stale ND target - $targetId")
+                config.logger.debug(config.accountId, "Purged stale ND target - $targetId")
             }
         }
     }

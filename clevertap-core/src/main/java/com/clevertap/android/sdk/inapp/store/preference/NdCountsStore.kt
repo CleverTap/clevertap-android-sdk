@@ -1,8 +1,6 @@
 package com.clevertap.android.sdk.inapp.store.preference
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.STORE_TYPE_ND_COUNTS
-import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.store.preference.ICTPreference
 
 /**
@@ -88,12 +86,6 @@ internal class NdCountsStore(
     var lastResetDate: String
         get() = ctPreference.readString(Constants.KEY_ND_LAST_RESET_DATE, DEFAULT_DATE) ?: DEFAULT_DATE
         set(value) = ctPreference.writeString(Constants.KEY_ND_LAST_RESET_DATE, value)
-
-    fun onChangeUser(deviceId: String, accountId: String) {
-        ctPreference.changePreferenceName(
-            StoreProvider.getInstance().constructStorePreferenceName(STORE_TYPE_ND_COUNTS, deviceId, accountId),
-        )
-    }
 
     /** Parses a `"today,lifetime"` value, or null if absent/malformed. */
     private fun parseOrNull(raw: String?): Counts? {

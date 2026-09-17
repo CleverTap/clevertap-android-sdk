@@ -50,7 +50,6 @@ import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
-import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -3248,10 +3247,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (coreState.getControllerManager().getNdFCManager() == null) {
             getConfigLogger().verbose(accountId + ":async_deviceID",
                     "Initializing NdFC after Device ID Created = " + deviceId);
-            NdCountsStore ndCountsStore = StoreProvider.getInstance()
-                    .provideNdCountsStore(context, deviceId, accountId);
             coreState.getControllerManager()
-                    .setNdFCManager(new NdFCManager(coreState.getConfig(), ndCountsStore,
+                    .setNdFCManager(new NdFCManager(coreState.getConfig(), coreState.getStoreRegistry(),
                             coreState.getNdImpressionManager(),
                             coreState.getExecutors(), clevertapClock));
         }

@@ -77,13 +77,18 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
         val ndStore = mockk<NdStore>(relaxed = true)
         every { ndStore.readServerSideNdMetaData() } answers { metadata }
-        val storeRegistry = mockk<StoreRegistry>(relaxed = true).also { every { it.ndStore } returns ndStore }
+        val ndCountsStore = StoreProvider.getInstance().provideNdCountsStore(appCtx, "device", account)
+        // One registry supplies both the evaluator's ndStore and the FC manager's counts store, exactly
+        // as NdStoreProvider does in production.
+        val storeRegistry = mockk<StoreRegistry>(relaxed = true).also {
+            every { it.ndStore } returns ndStore
+            every { it.ndCountsStore } returns ndCountsStore
+        }
         manager = NdEvaluationManager(triggersMatcher, ndTriggersManager, limitsMatcher, storeRegistry)
 
         // Real NdFCManager sharing the same ImpressionManager as the evaluator's LimitsMatcher, so a show
         // recorded via the manager is visible to the next evaluation's whenLimits.
-        val ndCountsStore = StoreProvider.getInstance().provideNdCountsStore(appCtx, "device", account)
-        val ndFCManager = NdFCManager(cleverTapInstanceConfig, ndCountsStore, impressionManager, MockCTExecutors(), clock)
+        val ndFCManager = NdFCManager(cleverTapInstanceConfig, storeRegistry, impressionManager, MockCTExecutors(), clock)
 
         // Real AnalyticsManager: a show goes through pushDisplayUnitViewedEventForID (the public API),
         // which reads the unit from the cache and records the impression via the wired NdFCManager.
