@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.inapp.ImpressionManager
-import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.TriggerCounting
 
 /**
  * The `LimitsMatcher` class is responsible for evaluating limits defined by [LimitAdapter]s for a given campaign.
@@ -9,12 +9,20 @@ import com.clevertap.android.sdk.inapp.TriggerManager
  * be discarded based on certain conditions.
  *
  * @property manager The [ImpressionManager] used to track campaign impressions.
- * @property triggerManager The [TriggerManager] used to manage triggers for in-app notifications.
+ * @property triggerManager The [TriggerCounting] source of per-campaign trigger counts (the live
+ *   [com.clevertap.android.sdk.inapp.TriggerManager], or an offset view for dry-run evaluation).
  */
 internal class LimitsMatcher(
     private val manager: ImpressionManager,
-    private val triggerManager: TriggerManager
+    private val triggerManager: TriggerCounting
 ) {
+
+    /**
+     * A view of this matcher that counts triggers via [counter] instead of the live store, reusing
+     * the same [ImpressionManager]. Used by the non-mutating dry-run evaluation (SDK-6143) to match
+     * limits against a virtual trigger count without incrementing.
+     */
+    fun withTriggerCounter(counter: TriggerCounting): LimitsMatcher = LimitsMatcher(manager, counter)
 
     /**
      * Checks if all given limits specified by [LimitAdapter]s are met for a campaign.

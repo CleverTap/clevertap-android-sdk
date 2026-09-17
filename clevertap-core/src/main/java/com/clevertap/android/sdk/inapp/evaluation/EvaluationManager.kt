@@ -5,6 +5,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.OffsetTriggerCounter
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
@@ -387,6 +388,45 @@ internal class EvaluationManager(
                 }
             } else {
                 Logger.v("INAPP", "Triggers did not matched for event ${event.eventName} against inApp $campaignId")
+            }
+        }
+        return eligibleInApps
+    }
+
+    /**
+     * Non-mutating twin of [evaluate], for Option-2 arbitration prediction (SDK-6144).
+     *
+     * Returns the eligible subset of [syntheticCandidates] WITHOUT the [triggersManager] increment
+     * side effect, matching limits against a virtual trigger count (live + 1) via
+     * [OffsetTriggerCounter] — so the result equals what the real [evaluate] would produce when the
+     * `/content` winner actually arrives. Sorting/selection is left to the caller (via
+     * [sortByPriority]); this method mutates nothing and persists nothing.
+     *
+     * Dormant in practice: synthetic candidates only exist once the backend sends `priority` per
+     * `content_fetch` item (see [com.clevertap.android.sdk.network.ContentFetchItem.syntheticInAppPayload]).
+     */
+    internal fun evaluateDryRun(
+        event: EventAdapter,
+        syntheticCandidates: List<JSONObject>
+    ): List<JSONObject> {
+        if (syntheticCandidates.isEmpty()) return emptyList()
+
+        val dryRunLimits = limitsMatcher.withTriggerCounter(OffsetTriggerCounter(triggersManager))
+        val eligibleInApps = mutableListOf<JSONObject>()
+
+        for (inApp in syntheticCandidates) {
+            val templateName = CustomTemplateInAppData.createFromJson(inApp)?.templateName
+            if (templateName != null && !templatesManager.isTemplateRegistered(templateName)) {
+                continue
+            }
+            if (!triggersMatcher.matchEvent(getWhenTriggers(inApp), event)) {
+                continue
+            }
+            // No triggersManager.increment here — a dry run must not mutate. The offset counter
+            // already reflects the +1 the real evaluate applies before checking limits.
+            val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            if (dryRunLimits.matchWhenLimits(getWhenLimits(inApp), campaignId)) {
+                eligibleInApps.add(inApp)
             }
         }
         return eligibleInApps
