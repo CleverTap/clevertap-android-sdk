@@ -269,6 +269,7 @@ internal object CleverTapFactory {
         // Native Display (ND) evaluator (SDK-6055) — reuses matchers over ND's own stores.
         val ndLimitsMatcher = LimitsMatcher(manager = ndImpressionManager, triggerManager = ndTriggersManager)
         val ndEvaluationManager = NdEvaluationManager(
+            config = config,
             triggersMatcher = triggersMatcher,
             ndTriggersManager = ndTriggersManager,
             ndLimitsMatcher = ndLimitsMatcher,

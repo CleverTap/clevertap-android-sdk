@@ -84,7 +84,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
             every { it.ndStore } returns ndStore
             every { it.ndCountsStore } returns ndCountsStore
         }
-        manager = NdEvaluationManager(triggersMatcher, ndTriggersManager, limitsMatcher, storeRegistry)
+        manager = NdEvaluationManager(cleverTapInstanceConfig, triggersMatcher, ndTriggersManager, limitsMatcher, storeRegistry)
 
         // Real NdFCManager sharing the same ImpressionManager as the evaluator's LimitsMatcher, so a show
         // recorded via the manager is visible to the next evaluation's whenLimits.

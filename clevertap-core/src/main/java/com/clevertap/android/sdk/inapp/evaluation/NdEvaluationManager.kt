@@ -3,8 +3,8 @@ package com.clevertap.android.sdk.inapp.evaluation
 import android.location.Location
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.network.EndpointId
@@ -30,15 +30,12 @@ import org.json.JSONObject
  * Reuses [TriggersMatcher] and [LimitsMatcher]; only the stores differ from in-app.
  */
 internal class NdEvaluationManager(
+    private val config: CleverTapInstanceConfig,
     private val triggersMatcher: TriggersMatcher,
     private val ndTriggersManager: TriggerManager,
     private val ndLimitsMatcher: LimitsMatcher,
     private val storeRegistry: StoreRegistry
 ) : NetworkHeadersListener {
-
-    companion object {
-        private val TAG = NdEvaluationManager::class.java.simpleName
-    }
 
     @VisibleForTesting
     internal var evaluatedNdCampaignIds: MutableList<Long> = ArrayList()
@@ -109,7 +106,7 @@ internal class NdEvaluationManager(
                     // not be dropped (onSentHeaders removes only what was sent). Server dedups.
                     evaluatedNdCampaignIds.add(ti)
                     updated = true
-                    Logger.v(TAG, "ND campaign $ti eligible -> adUnit_eval")
+                    config.logger.verbose(config.accountId,"ND campaign $ti eligible -> adUnit_eval")
                 }
             }
         }
@@ -146,7 +143,7 @@ internal class NdEvaluationManager(
             } else {
                 ndTriggersManager.increment(ti)
                 ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(rule), ti).also { within ->
-                    if (!within) Logger.v(TAG, "App-Launched ND $ti suppressed by whenLimits")
+                    if (!within) config.logger.verbose(config.accountId,"App-Launched ND $ti suppressed by whenLimits")
                 }
             }
         }
@@ -164,7 +161,7 @@ internal class NdEvaluationManager(
         if (wzrkId.isEmpty()) {
             // The CG stub always ships wzrk_id (unlike in-app payloads which carry
             // only ti). Log if one ever doesn't, rather than dropping the ack silently.
-            Logger.v(TAG, "Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
+            config.logger.verbose(config.accountId,"Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
             return
         }
         suppressedNdCampaigns.add(
@@ -175,7 +172,7 @@ internal class NdEvaluationManager(
             )
         )
         saveSuppressedNdIds()
-        Logger.v(TAG, "Recorded ND CG-suppression ack for $wzrkId")
+        config.logger.verbose(config.accountId,"Recorded ND CG-suppression ack for $wzrkId")
     }
 
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {

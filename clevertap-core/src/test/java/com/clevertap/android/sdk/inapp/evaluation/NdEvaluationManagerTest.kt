@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.store.preference.NdStore
@@ -24,17 +25,19 @@ class NdEvaluationManagerTest {
     private lateinit var ndLimitsMatcher: LimitsMatcher
     private lateinit var storeRegistry: StoreRegistry
     private lateinit var ndStore: NdStore
+    private lateinit var config: CleverTapInstanceConfig
     private lateinit var manager: NdEvaluationManager
 
     @Before
     fun setUp() {
+        config = mockk(relaxed = true) // relaxed -> logger calls are no-ops
         triggersMatcher = mockk()
         ndTriggersManager = mockk(relaxed = true)
         ndLimitsMatcher = mockk()
         ndStore = mockk(relaxed = true)
         storeRegistry = mockk(relaxed = true)
         every { storeRegistry.ndStore } returns ndStore
-        manager = NdEvaluationManager(triggersMatcher, ndTriggersManager, ndLimitsMatcher, storeRegistry)
+        manager = NdEvaluationManager(config, triggersMatcher, ndTriggersManager, ndLimitsMatcher, storeRegistry)
     }
 
     @Test
