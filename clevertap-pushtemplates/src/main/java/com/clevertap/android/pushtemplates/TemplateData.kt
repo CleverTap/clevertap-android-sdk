@@ -79,6 +79,13 @@ internal data class FiveIconsTemplateData(
     override val templateType: TemplateType = TemplateType.FIVE_ICONS,
     val baseContent: BaseContent,
     val imageList: ArrayList<ImageData>,
+    /**
+     * Text the five icons layouts themselves render, taken from pt_title/pt_msg/pt_msg_summary
+     * only. baseContent still falls back to nt/nm/wzrk_nms because the notification builder and
+     * the basic fallback need text; the layouts must not, or the icon-only layout is never reachable
+     * and dashboard defaults leak into the template.
+     */
+    val iconTextData: BaseTextData,
 ) : TemplateData()
 
 internal data class ManualCarouselTemplateData(

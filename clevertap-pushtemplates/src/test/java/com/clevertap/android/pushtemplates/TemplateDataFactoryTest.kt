@@ -234,6 +234,85 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    fun `createTemplateData should not fall back to nt-nm for FIVE_ICONS icon text`() {
+        // Given - campaign leaves pt_title/pt_msg unset but nt/nm are always populated
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TITLE) } returns null
+        every { mockBundle.getString(PT_MSG) } returns null
+        every { mockBundle.getString(PT_MSG_SUMMARY) } returns null
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.FIVE_ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then - the layouts see no text, so the icon-only layouts stay reachable
+        val fiveIconsData = result as FiveIconsTemplateData
+        assertNull(fiveIconsData.iconTextData.title)
+        assertNull(fiveIconsData.iconTextData.message)
+        assertNull(fiveIconsData.iconTextData.messageSummary)
+        // but the builder and the basic fallback still get nt/nm/wzrk_nms
+        assertEquals(SAMPLE_TITLE, fiveIconsData.baseContent.textData.title)
+        assertEquals(SAMPLE_MESSAGE, fiveIconsData.baseContent.textData.message)
+        assertEquals(SAMPLE_SUMMARY, fiveIconsData.baseContent.textData.messageSummary)
+    }
+
+    @Test
+    fun `createTemplateData should treat empty pt text keys as absent for FIVE_ICONS icon text`() {
+        // Given - an API payload can carry "" where the dashboard would omit the key
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TITLE) } returns ""
+        every { mockBundle.getString(PT_MSG) } returns ""
+        every { mockBundle.getString(PT_MSG_SUMMARY) } returns ""
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.FIVE_ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then - null, not "", so the builder title is left unset like the layouts' text row
+        val fiveIconsData = result as FiveIconsTemplateData
+        assertNull(fiveIconsData.iconTextData.title)
+        assertNull(fiveIconsData.iconTextData.message)
+        assertNull(fiveIconsData.iconTextData.messageSummary)
+    }
+
+    @Test
+    fun `createTemplateData should use pt_title pt_msg and pt_msg_summary for FIVE_ICONS icon text`() {
+        // Given
+        setupBasicMockBundle()
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.FIVE_ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val fiveIconsData = result as FiveIconsTemplateData
+        assertEquals(SAMPLE_TITLE, fiveIconsData.iconTextData.title)
+        assertEquals(SAMPLE_MESSAGE, fiveIconsData.iconTextData.message)
+        assertEquals(SAMPLE_SUMMARY, fiveIconsData.iconTextData.messageSummary)
+    }
+
+    @Test
     fun `createTemplateData should create ProductTemplateData for PRODUCT_DISPLAY template type`() {
         // Given
         setupBasicMockBundle()
@@ -917,6 +996,7 @@ class TemplateDataFactoryTest {
                 notificationBehavior = NotificationBehavior()
             ),
             imageList = arrayListOf(),
+            iconTextData = BaseTextData(title = SAMPLE_TITLE)
         )
     }
 

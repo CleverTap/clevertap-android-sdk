@@ -33,6 +33,14 @@
     <dimen name="five_cta_icon_margin">4dp</dimen>
     <dimen name="five_cta_padding">6dp</dimen>
 
+    <!-- Height five_cta_icon_row is included with. The expanded view and an icon only collapsed
+         view can afford the full strip; beside a title or message the collapsed view can only
+         afford the shorter one. An app targeting Android 12+ gets a 48dp collapsed view for
+         everything, so an icon only campaign's strip is set to that at runtime. -->
+    <dimen name="five_cta_icon_row_full">64dp</dimen>
+    <dimen name="five_cta_icon_row_with_text">40dp</dimen>
+    <dimen name="five_cta_icon_row_compact">48dp</dimen>
+
     <dimen name="manual_carousel_arrow">30dp</dimen>
     <dimen name="manual_carousel_arrow_touch_target">48dp</dimen>
     <!-- 48dp - manual_carousel_arrow visual width, applied on the side away from the screen edge -->
