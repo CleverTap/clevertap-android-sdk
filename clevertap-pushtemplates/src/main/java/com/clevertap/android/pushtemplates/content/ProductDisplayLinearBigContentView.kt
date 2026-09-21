@@ -12,7 +12,6 @@ import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.ProductTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
 internal open class ProductDisplayLinearBigContentView(
@@ -30,15 +29,6 @@ internal open class ProductDisplayLinearBigContentView(
     private var productDL: String = data.baseContent.deepLinkList[0]
 
     init {
-        var currentPosition = 0
-        val extrasFrom = extras.getString(Constants.EXTRAS_FROM, "")
-        if (extrasFrom == "PTReceiver") {
-            currentPosition = extras.getInt(PTConstants.PT_CURRENT_POSITION, 0)
-            productName = data.bigTextList[currentPosition]
-            productPrice = data.priceList[currentPosition]
-            productMessage = data.smallTextList[currentPosition]
-            productDL = data.baseContent.deepLinkList[currentPosition]
-        }
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
 
         if (data.bigTextList.isNotEmpty()) setCustomContentViewText(
@@ -57,7 +47,7 @@ internal open class ProductDisplayLinearBigContentView(
         setCustomTextColour(data.displayActionTextColor, R.id.product_action)
 
         setImageList(data, data.scaleType, extras)
-        remoteView.setDisplayedChild(R.id.carousel_image, currentPosition)
+        remoteView.setDisplayedChild(R.id.carousel_image, 0)
 
         setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)
 
