@@ -1,6 +1,10 @@
 package com.clevertap.demo.ui.main
 
+import com.clevertap.demo.BuildConfig
+
 object HomeScreenModel {
+
+    const val LOCAL_PUSH_SECTION = "LOCAL PUSH (JSON)"
 
     val listData: Map<String, List<String>> by lazy {
         mapOf(
@@ -137,6 +141,21 @@ object HomeScreenModel {
                 "Opt Out - userOptOut: true (single param)",
                 "Opt Out - userOptOut: false (single param)"
             ),
-        )
+        ) + localPushSection()
     }
+
+    /**
+     * Command string for the local push tester, or null when the section is absent. Derived from the
+     * section's position so it cannot drift out of step with [listData].
+     */
+    val localPushCommand: String? by lazy {
+        listData.keys.indexOf(LOCAL_PUSH_SECTION).takeIf { it >= 0 }?.let { "$it-0" }
+    }
+
+    /**
+     * Debug-only section: LocalPushActivity lives in the debug source set, so there is nothing to
+     * open in a release build. Appended last, which keeps every other section's index unchanged.
+     */
+    private fun localPushSection(): Map<String, List<String>> =
+        if (BuildConfig.DEBUG) mapOf(LOCAL_PUSH_SECTION to listOf("Open Local Push Tester")) else emptyMap()
 }
