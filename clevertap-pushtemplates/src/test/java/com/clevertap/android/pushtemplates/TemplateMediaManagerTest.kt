@@ -712,7 +712,7 @@ class TemplateMediaManagerTest {
         assertSame(raw, templateMediaManager.getStyledImageBitmap(url, ImageBorderData()))
         assertSame(
             raw,
-            templateMediaManager.getStyledImageBitmap(url, ImageBorderData(borderWidthPercent = 5f))
+            templateMediaManager.getStyledImageBitmap(url, ImageBorderData(borderWidthValue = 5f))
         )
     }
 
