@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.inapp.evaluation.TriggersMatcher
 import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.network.EndpointId
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.shared.test.BaseTestCase
@@ -41,6 +42,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
     private lateinit var clock: FakeClock
     private lateinit var impressionManager: ImpressionManager
     private lateinit var manager: NdEvaluationManager
+    private lateinit var ndFCManager: NdFCManager
     private lateinit var analytics: AnalyticsManager
     private lateinit var cache: AccumulatingDisplayUnitCache
     private val metadata = mutableListOf<JSONObject>()
@@ -86,7 +88,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
         // Real NdFCManager sharing the same ImpressionManager as the evaluator's LimitsMatcher, so a show
         // recorded via the manager is visible to the next evaluation's whenLimits.
-        val ndFCManager = NdFCManager(cleverTapInstanceConfig, storeRegistry, impressionManager, MockCTExecutors(), clock)
+        ndFCManager = NdFCManager(cleverTapInstanceConfig, storeRegistry, impressionManager, MockCTExecutors(), clock)
 
         // Real AnalyticsManager: a show goes through pushDisplayUnitViewedEventForID (the public API),
         // which reads the unit from the cache and records the impression via the wired NdFCManager.
@@ -263,6 +265,50 @@ class NdCampaignScenariosTest : BaseTestCase() {
         // Recorded under the bare ti (NOT the wzrk_id), which is the key the evaluator's whenLimits read.
         assertEquals(1, impressionManager.getImpressions(sadas).size)
         assertEquals(0, impressionManager.getImpressions(wzrkId(sadas)).size)
+    }
+
+    // ---- request-meta headers (adUnit_eval / adUnit_suppressed) + ndtlc counters, end-to-end ----
+
+    @Test
+    fun `the ti the evaluator votes is attached to the adUnit_eval header, then cleared on send`() {
+        assertTrue(fire("sadas", sadas)) // real eval over real metadata -> vote
+
+        // Assert the actual request-meta header (not just the internal list): meta carries the fired ti.
+        val header = manager.onAttachHeaders(EndpointId.ENDPOINT_A1)!!
+        val eval = header.optJSONArray(Constants.ND_SS_EVAL_META)!!
+        assertEquals(1, eval.length())
+        assertEquals(sadas.toLong(), eval.optLong(0))
+
+        // Server acks exactly what was sent -> list clears -> nothing left to attach.
+        manager.onSentHeaders(header, EndpointId.ENDPOINT_A1)
+        assertNull(manager.onAttachHeaders(EndpointId.ENDPOINT_A1))
+    }
+
+    @Test
+    fun `a viewed show increments ndtlc and the global shown-today counter`() {
+        assertEquals(0, ndFCManager.shownTodayCount)
+
+        assertTrue(fire("sadas", sadas)) // votes + drives the real viewed path -> didShow
+
+        // Real NdCountsStore, no stubbing: today+lifetime bumped for the ti, plus the global daily counter.
+        assertEquals(1, ndFCManager.shownTodayCount)
+        val ndtlc = ndFCManager.getNdCounts()!!
+        val row = (0 until ndtlc.length()).map { ndtlc.getJSONArray(it) }.first { it.getString(0) == sadas }
+        assertEquals(1, row.getInt(1), "today")
+        assertEquals(1, row.getInt(2), "lifetime")
+    }
+
+    @Test
+    fun `a CG-suppressed stub is attached under adUnit_suppressed in the request meta`() {
+        manager.recordCgSuppressed(
+            JSONObject()
+                .put(Constants.NOTIFICATION_ID_TAG, wzrkId(sadas))
+                .put(Constants.INAPP_WZRK_CGID, 0),
+        )
+
+        val supp = manager.onAttachHeaders(EndpointId.ENDPOINT_A1)!!.optJSONArray(Constants.ND_SUPPRESSED_META)!!
+        assertEquals(1, supp.length())
+        assertEquals(wzrkId(sadas), supp.getJSONObject(0).optString(Constants.NOTIFICATION_ID_TAG))
     }
     // Note: the accumulating cache here is only a fixture (so setUp's 11 per-unit deliveries survive); its
     // accumulate semantics are the OPPOSITE of production CTDisplayUnitController (which reset()s + replaces),
