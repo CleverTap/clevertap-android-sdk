@@ -292,19 +292,23 @@ In-app evaluates `whenLimits` **twice** — once at eval, then again right befor
 showing, blacklisted/suspended activity, media still downloading), during which impressions can accrue
 — so it re-verifies the frequency limits at the last moment.
 
-ND deliberately does **not** re-run `whenLimits` at delivery (`NdFcapGate` passes
-`frequencyLimitsMaxedOut = false`). The counter caps (`efc`/`tlc`/`tdc`/`mdc` + global) *are* still
-re-checked. This is the right shape for ND, not a gap, because:
+ND deliberately does **not** meaningfully re-check caps at delivery — neither `whenLimits`
+(`NdFcapGate` passes `frequencyLimitsMaxedOut = false`) nor the counter caps. `NdFcapGate` still runs,
+but the delivered content payload carries no fcap keys (contract §5.3 — advanced rules live in
+`adUnit_notifs_ss`, legacy caps are server-side), so its `canShow` read resolves to "uncapped" and the
+gate is effectively pass-through for real content. This is the right shape for ND, not a gap, because:
 
 1. **No on-device deferred display queue.** ND content is handed to the host as the response is
    processed — there's no `pendingNotifications`-style deferral, so the long eval→render gap that
    in-app's re-check guards essentially doesn't exist.
-2. **The SDK can't gate the actual show anyway.** The host renders ND (and reports `viewed`) whenever
-   it chooses; the SDK's gate runs at *delivery*, not at render, so a delivery-time re-check would not
-   cover the host's render timing regardless.
-3. **The server is the authority for ND advanced caps.** LC gates content on the `adUnit_eval` vote and
-   trusts it (contract §6.4/§6.9); the vote *is* the enforcement point for `whenLimits`, and the
-   delivery counter-cap check is the belt-and-suspenders layer on top.
+2. **The SDK is callback-only — not in the render path.** Unlike in-app (which owns a main-thread
+   display flow: queue → activity lifecycle → media → modal show, and so re-checks at `canShow` right
+   before it renders), ND just delivers the list via `DisplayUnitListener` and is done. The host renders
+   and reports `viewed` whenever it chooses; a delivery-time re-check could not cover that timing anyway.
+3. **The server is the authority for ND caps.** LC gates advanced content on the `adUnit_eval` vote (the
+   vote *is* the `whenLimits` enforcement point) and enforces global/legacy counter caps from the
+   SDK-reported `ndtlc`/`ndmp`. The SDK's job is to keep those counters accurate (via `didShow`), not to
+   re-gate at delivery.
 
 The only window this leaves is a single flush round-trip between the vote and the content arriving; the
 counter caps (`tdc`/session/global-daily) cover the common same-day/same-session over-delivery within
