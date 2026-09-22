@@ -1,0 +1,13 @@
+{
+  "pt_id": "pt_carousel",
+  "pt_title": "Auto carousel",
+  "pt_msg": "Three images, cycling on their own",
+  "pt_msg_summary": "Border and corner keys apply to every slide",
+  "pt_img1": "https://picsum.photos/id/1011/1024/512",
+  "pt_img2": "https://picsum.photos/id/1015/1024/512",
+  "pt_img3": "https://picsum.photos/id/1016/1024/512",
+  "pt_img_corner_radius": "12",
+  "pt_img_border_width": "40",
+  "pt_img_border_clr": "#3F51B5",
+  "pt_dl1": "ctdemo://com.clevertap.demo/HomeScreenActivity"
+}
