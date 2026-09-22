@@ -176,7 +176,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     @Test
-    fun `a throwing app-launched whenLimits filter degrades to delivery, not dropping the whole response`() {
+    fun `a throwing app-launched whenLimits filter fails closed - drops app-launched, keeps regular content`() {
         // A malformed advanced rule (e.g. onEvery limit=0 -> divide-by-zero) makes the filter throw.
         val json = JSONObject(
             """{
@@ -188,11 +188,12 @@ class DisplayUnitResponseTest : BaseTestCase() {
 
         response.processResponse(json, "", context)
 
-        // Guarded: both the regular unit and the (un-filtered) app-launched unit are still delivered —
-        // without the guard the throw would abort parseDisplayUnits and drop everything.
+        // Fail-closed: the un-cap-checkable app-launched unit is dropped (must not bypass caps), but the
+        // throw is contained so the regular adUnit_notifs unit still delivers.
         val slot = slot<ArrayList<CleverTapDisplayUnit>>()
         verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
-        assertEquals(2, slot.captured.size)
+        assertEquals(1, slot.captured.size)
+        assertEquals("reg1", slot.captured[0].unitID)
     }
 
     @Test

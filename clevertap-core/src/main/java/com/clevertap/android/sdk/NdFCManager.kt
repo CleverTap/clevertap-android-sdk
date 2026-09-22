@@ -48,9 +48,9 @@ class NdFCManager internal constructor(
         private const val SESSION_CAP_DEFAULT = 1000
 
         /**
-         * Whether an ND unit/target carries any frequency-cap configuration. Only such units are gated
-         * at delivery and counted at impression time; unmarked (legacy) units bypass ND capping
-         * entirely so existing display units are never affected and never consume the ND global budget.
+         * Whether an ND unit/target carries any frequency-cap configuration. Used by [NdFcapGate] to decide
+         * which units to counter-cap at delivery; unmarked (legacy) units pass through the gate unchanged.
+         * (Impression counting is NOT gated on this — every viewed unit is counted, mirroring in-app.)
          */
         @JvmStatic
         fun isFcapManaged(json: JSONObject?): Boolean =
@@ -122,7 +122,9 @@ class NdFCManager internal constructor(
         if (id.isNullOrEmpty()) {
             return
         }
-        executors.ioTask<Unit>().execute("recordNdImpressionsAndCounts") {
+        // Single-thread executor (not the IO pool): increment / shownToday are read-modify-write over
+        // SharedPreferences, so concurrent viewed events on a pool would lose counts and undercount ndtlc/ndmp.
+        executors.postAsyncSafelyTask<Unit>().execute("recordNdImpressionsAndCounts") {
             impressionManager.recordImpression(id)
             countsStore?.let {
                 it.increment(id)

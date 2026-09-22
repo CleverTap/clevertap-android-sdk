@@ -343,7 +343,7 @@ multi-account isolation), and the file is chosen by the *store type*.
 | What | Prefs file (Android `xml` name) | Keys | Value format | Written by |
 |---|---|---|---|---|
 | **Per-in-app counters** (today + lifetime) | `WizRocket_counts_per_inapp:<deviceId>:<accountId>` | `<inAppId>` | `"<today>,<lifetime>"` (CSV of two ints) | `InAppFCManager.incrementInAppCountsInPersistentStore` (350-362) |
-| **Impression timestamps** (whenLimits time windows) | **same file** `WizRocket_counts_per_inapp:<deviceId>:<accountId>` | `__impressions_<campaignId>` | comma-joined unix-**seconds** | `ImpressionStore.write` (`ImpressionStore.kt` 38-63) |
+| **Impression timestamps** (whenLimits time windows) | `counts_per_inapp:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix; a *different* file from the counters above**) | `__impressions_<campaignId>` | comma-joined unix-**seconds** | `ImpressionStore.write` (`ImpressionStore.kt` 38-63) |
 | **Trigger counts** (onEvery / onExactly) | `WizRocket_triggers_per_inapp:<deviceId>:<accountId>` | `__triggers_<campaignId>` | single int | `TriggerManager.increment` (`TriggerManager.kt` 42-46) |
 | **Global FC counters + limits** | base `WizRocket` | `istc_inapp:<deviceId>:<accountId>` (shown-today), `istmcd_inapp:<…>` (max/day), `imc:<…>` (max/session), `ict_date:<…>` (reset date, `ddMMyyyy`) | ints / date string | `InAppFCManager.updateLimits` / `didShow` / `init` |
 | **CS/SS in-app payloads & meta** | `WizRocket_inApp:<deviceId>:<accountId>` | `inapp_notifs_cs`, `inapp_notifs_ss`, `inaction_inapp_notifs_ss`, `delayed_inapp_notifs_cs`, `inApp` (SS display queue), `evaluated_ss`, `suppressed_ss` | JSON arrays (CS keys **encrypted**) | `InAppStore.kt` |
@@ -351,9 +351,11 @@ multi-account isolation), and the file is chosen by the *store type*.
 
 Key points and gotchas:
 
-- **Impressions live in the *same* `counts_per_inapp` file as the today/lifetime counters** — they
-  are just distinguished by the `__impressions_` key prefix. `STORE_TYPE_IMPRESSION` maps to the
-  `KEY_COUNTS_PER_INAPP` namespace (`StoreProvider.kt`), so the two share one xml file.
+- **Impressions and the today/lifetime counters share the `counts_per_inapp` *namespace* but NOT the same
+  file.** The counters are written via `StorageHelper` (which prefixes `WizRocket_`), while `ImpressionStore`
+  writes via `CTPreference` (no prefix) — so they land in `WizRocket_counts_per_inapp:…` and
+  `counts_per_inapp:…` respectively, two distinct xml files distinguished additionally by the
+  `__impressions_` key prefix.
 - **Two different "impression" notions**: `ImpressionManager` keeps an *in-memory* per-session map
   (`perSession`, `perSessionTotal`, cleared on session end) **and** delegates durable timestamps to
   `ImpressionStore`. `recordImpression(id)` writes both. Session counts never hit disk; time-window

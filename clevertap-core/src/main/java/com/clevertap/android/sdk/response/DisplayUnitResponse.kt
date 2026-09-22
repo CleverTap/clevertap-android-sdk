@@ -215,9 +215,10 @@ internal class DisplayUnitResponse(
 
     /**
      * Returns the non-suppressed App-Launched units still within their advanced `whenLimits`. Suppressed
-     * CG stubs are dropped here (acked separately in [ackCgSuppressedStubs]). Guarded: a malformed rule
-     * degrades to "not filtered" rather than throwing out of the shared [parseDisplayUnits] and dropping
-     * the whole response.
+     * CG stubs are dropped here (acked separately in [ackCgSuppressedStubs]). Guarded and **fail-closed**:
+     * if a malformed rule makes the filter throw, drop the App-Launched units (they can't be cap-checked, so
+     * they must not bypass caps) — but the throw is contained here so regular `adUnit_notifs` content still
+     * delivers. The evaluator is absent only on the send-test/preview path, which has no ND caps to apply.
      */
     private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
         val nonSuppressed = ArrayList<JSONObject>()
@@ -226,11 +227,12 @@ internal class DisplayUnitResponse(
             if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) continue
             nonSuppressed.add(entry)
         }
+        val evaluator = ndEvaluationManager ?: return nonSuppressed // preview path: no caps to apply
         return try {
-            ndEvaluationManager?.retainAppLaunchedWithinLimits(nonSuppressed) ?: nonSuppressed
+            evaluator.retainAppLaunchedWithinLimits(nonSuppressed)
         } catch (t: Throwable) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND whenLimits filter failed", t)
-            nonSuppressed
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND whenLimits filter failed; dropping App-Launched units", t)
+            emptyList() // fail-closed: don't let un-cap-checked units through
         }
     }
 

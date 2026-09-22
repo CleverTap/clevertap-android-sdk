@@ -131,10 +131,10 @@ impressions do **not** share a file:
 
 | State | Prefs file (Android xml name) | Key | Value | Mirror of |
 |---|---|---|---|---|
-| Per-target counters (today+lifetime) | `WizRocket_nd_counts_per_target:<deviceId>:<accountId>` (StorageHelper) | `<ti>` | `"today,lifetime"` | `counts_per_inapp` (`InAppFCManager`) |
+| Per-target counters (today+lifetime) | `nd_counts_per_target:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix**) | `<ti>` | `"today,lifetime"` | `NdCountsStore` |
 | Impression timestamps (whenLimits windows) | `nd_impressions:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix; a *different* file from the counters**) | `__impressions_<ti>` | unix-seconds CSV | `ImpressionStore` |
 | Trigger counts (onEvery/onExactly) | `nd_triggers_per_target:<deviceId>:<accountId>` (CTPreference) | `__triggers_<ti>` | int | `TriggerManager` |
-| Global ND counters + ceilings | base `WizRocket` | `ndstc:<…>` (shown-today), `ndstmcd:<…>` (day ceiling, `KEY_ND_MAX_PER_DAY`), `ndmc:<…>` (session ceiling), `nd_ict_date:<…>` | ints / date | `istc_inapp`/`istmcd_inapp`/`imc`/`ict_date` |
+| Global ND counters + ceilings | **same `nd_counts_per_target` file** (CTPreference) | shown-today, day ceiling (`KEY_ND_MAX_PER_DAY`), session ceiling (`ND_MAX_PER_SESSION_KEY`), last-reset-date | ints / date | `NdCountsStore` |
 | Advanced metadata bundle | `adUnit:<deviceId>:<accountId>` (CTPreference) | `adUnit_notifs_ss` | JSON array (plaintext — SS only, no CS encryption) | `inapp_notifs_ss` in `InAppStore` |
 | Eval / suppressed pending report | `adUnit:…` (CTPreference) | `evaluated_nd_ss`, `suppressed_nd` | JSON arrays | `evaluated_ss` / `suppressed_ss` |
 
@@ -189,7 +189,7 @@ correct by construction — journeys and simple campaigns never reach the SDK ev
 
 ### 6.1 Where ND evaluation hooks in
 Same event stream as in-app (§0 of the in-app doc): on the per-account serial executor, right after
-the event is queued to DB, `initInAppEvaluation` runs. We add an **ND evaluation sibling** invoked in
+the event is queued to DB, `initEventEvaluation` runs. We add an **ND evaluation sibling** invoked in
 the same place so ND sees the committed event. It reads the `adUnit_notifs_ss` bundle and, per event:
 1. `TriggersMatcher.matchEvent(whenTriggers, event)`  *(see open question Q1)*
 2. on match → ND `TriggerManager.increment(ti)`
@@ -321,11 +321,13 @@ vote (the online event path skips App-Launched, and the server can't know the de
 trigger state — the same blind spot that makes in-app deliver *all* app-launched candidates for the SDK to
 filter). So the "already applied at vote time" argument above does **not** cover this content. For it,
 `NdEvaluationManager.retainAppLaunchedWithinLimits` mirrors in-app's `evaluateOnAppLaunchedServerSide`:
-per non-suppressed unit, join the advanced rules from the `adUnit_notifs_ss` bundle by `ti`, increment the
-ND trigger, and keep the unit only if `matchWhenLimits` passes. Unlike in-app there is **no single-winner
-selection** — every survivor is delivered via `DisplayUnitListener`. Simple campaigns (no advanced-rule
-entry) pass through untouched. CG-suppressed stubs are excluded from this filter and acked separately via
-`recordCgSuppressed` (their ack remains ungated — out of scope for SDK-6138).
+per non-suppressed unit, read the advanced rules **inline from the unit's own payload**
+(`EvalRules.whenLimits(unit)` — `frequencyLimits`/`occurrenceLimits`), increment the ND trigger, and keep
+the unit only if `matchWhenLimits` passes. Rules are read inline, **not** joined from `adUnit_notifs_ss` —
+App-Launched campaigns are deliberately excluded from that bundle (contract §5.2), so the full payload here
+carries the rules. Unlike in-app there is **no single-winner selection** — every survivor is delivered via
+`DisplayUnitListener`. Units with no inline rules (simple campaigns) pass through untouched. CG-suppressed
+stubs are excluded from this filter and acked separately via `recordCgSuppressed`.
 
 ### 7.3 App-Launched vs regular-event dispatch (server-side, for SDK context)
 - **App-Launched:** union of app-launched + no-trigger ND targets, sorted priority DESC then ti ASC.
