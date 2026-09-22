@@ -3220,6 +3220,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 // can cause ANR if called from main thread
                 coreState.getCallbackManager().addChangeUserCallback(impStore);
             }
+            // Native Display (ND) stores are created lazily by storeRegistry.ndStoreProvider; prime the
+            // evaluator's in-memory eval/suppressed lists now that the device id is available.
+            coreState.getNdEvaluationManager().loadEvaluatedAndSuppressedNdIds();
             return null;
         });
 
@@ -3234,6 +3237,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             coreState.getControllerManager()
                     .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId,
                             coreState.getStoreRegistry(), coreState.getImpressionManager(),
+                            coreState.getExecutors(), clevertapClock));
+        }
+
+        /*
+          Reinitialising NdFCManager (Native Display frequency caps) with device id, if it's null
+          during first initialisation from CleverTapFactory.getCoreState()
+         */
+        if (coreState.getControllerManager().getNdFCManager() == null) {
+            getConfigLogger().verbose(accountId + ":async_deviceID",
+                    "Initializing NdFC after Device ID Created = " + deviceId);
+            coreState.getControllerManager()
+                    .setNdFCManager(new NdFCManager(coreState.getConfig(), coreState.getStoreRegistry(),
+                            coreState.getNdImpressionManager(),
                             coreState.getExecutors(), clevertapClock));
         }
 
@@ -3774,6 +3790,25 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS);
+        coreState.getAnalyticsManager().sendFetchEvent(event);
+    }
+
+    /**
+     * Requests a fresh Native Display (ND) advanced-rule metadata bundle mid-session (SDK-6055).
+     * Sends a {@code wzrk_fetch} event with {@code t = FETCH_TYPE_ND_META}; the server responds with
+     * {@code adUnit_notifs_ss} (see {@link com.clevertap.android.sdk.response.DisplayUnitResponse}). Old
+     * SDKs/servers ignore the unknown fetch type, so this is forward/backward compatible.
+     *
+     * Note: the exact refresh cadence (when the SDK fires this) is still to be finalised, so this stays
+     * SDK-internal ({@code LIBRARY_GROUP}) until then — not a customer-facing contract yet.
+     */
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public void fetchNativeDisplayMeta() {
+        if (coreState.getConfig().isAnalyticsOnly()) {
+            return;
+        }
+        Logger.v(Constants.FEATURE_DISPLAY_UNIT + "Fetching Native Display metadata...");
+        JSONObject event = getFetchRequestAsJson(Constants.FETCH_TYPE_ND_META);
         coreState.getAnalyticsManager().sendFetchEvent(event);
     }
 
