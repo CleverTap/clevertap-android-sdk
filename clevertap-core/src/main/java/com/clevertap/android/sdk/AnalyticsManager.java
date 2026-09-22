@@ -351,16 +351,21 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (cache != null) {
                 CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
-                    // Native Display frequency caps (SDK-6055): the viewed event is the ND impression
-                    // hook (the host renders the unit; the SDK is not in the render path). Record it so
-                    // ndtlc/ndmp/session counters stay accurate — but ONLY for fcap-managed units, so an
-                    // unmarked/legacy unit's view can't consume the ND global budget and starve gated ones.
+                    // Native Display frequency caps: the viewed event is the ND impression hook (the host
+                    // renders the unit; the SDK is not in the render path). Count every shown ND unit,
+                    // exactly as in-app does — InAppController calls InAppFCManager.didShow unconditionally
+                    // (no isExcludeFromCaps / fcap-managed gate); the exclude flag only affects canShow
+                    // (whether to display), never counting. All ND counts toward the account global cap per
+                    // the FE/BE/SDK contract, so ndtlc/ndmp must reflect every render (advanced + legacy).
+                    // A content-key gate here would be wrong: delivered content carries no fcap keys (they
+                    // live in adUnit_notifs_ss), so it would drop virtually every real unit — the bug that
+                    // left ndtlc/ndmp stale and the request-meta headers under-reporting.
                     NdFCManager ndFCManager = controllerManager.getNdFCManager();
-                    if (ndFCManager != null && NdFCManager.isFcapManaged(displayUnit.getJsonObject())) {
+                    if (ndFCManager != null) {
                         // Key on the stable campaign id (ti), NOT unitID (= wzrk_id, which is ti_yyyyMMdd
                         // and rotates daily). The ND evaluator's whenLimits are keyed by ti, so recording
-                        // by wzrk_id would never be seen by them (SDK-6132). Mirrors in-app's InAppFCManager,
-                        // which records by inapp.getId() (ti).
+                        // by wzrk_id would never be seen by them. Mirrors in-app's InAppFCManager, which
+                        // records by inapp.getId() (ti). didShow no-ops on a null/empty id.
                         String ndCampaignId = displayUnit.getJsonObject().optString(Constants.INAPP_ID_IN_PAYLOAD);
                         ndFCManager.didShow(ndCampaignId);
                     }

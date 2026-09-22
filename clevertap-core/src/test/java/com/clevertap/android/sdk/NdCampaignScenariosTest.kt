@@ -257,7 +257,8 @@ class NdCampaignScenariosTest : BaseTestCase() {
     fun `pushDisplayUnitViewedEventForID records the impression under ti so whenLimits see it`() {
         assertEquals(0, impressionManager.getImpressions(sadas).size)
 
-        // Real public path: pushViewed(wzrk_id) -> cache lookup -> isFcapManaged -> didShow(ti) -> record.
+        // Real public path: pushViewed(wzrk_id) -> cache lookup -> didShow(ti) -> record.
+        // The delivered content carries NO fcap keys (see contentUnit); counting must still happen.
         analytics.pushDisplayUnitViewedEventForID(wzrkId(sadas))
 
         // Recorded under the bare ti (NOT the wzrk_id), which is the key the evaluator's whenLimits read.
@@ -306,13 +307,16 @@ class NdCampaignScenariosTest : BaseTestCase() {
 
     private fun wzrkId(ti: String) = "${ti}_20250101"
 
-    /** A delivered content unit (host-visible), keyed by wzrk_id and carrying the stable ti + an fcap marker. */
+    /**
+     * A delivered content unit (host-visible) in the real wire shape (contract §5.3): wzrk_id + ti + type,
+     * and NO fcap keys — those ship separately in adUnit_notifs_ss. Counting must not depend on inline
+     * fcap keys (the delivered payload never carries them).
+     */
     private fun contentUnit(ti: String): CleverTapDisplayUnit {
         val json = JSONObject()
             .put(Constants.NOTIFICATION_ID_TAG, wzrkId(ti)) // unitID = wzrk_id
             .put(Constants.INAPP_ID_IN_PAYLOAD, ti) // stable campaign id the fcaps key on
             .put(Constants.KEY_TYPE, "simple")
-            .put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, false) // presence marks it fcap-managed
         return CleverTapDisplayUnit.toDisplayUnit(json)
     }
 
