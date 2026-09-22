@@ -17,6 +17,10 @@ internal class VerticalImageBigContentView(
     extras: Bundle
 ) : VerticalImageContentView(context, renderer, R.layout.vertical_image_big, extras) {
 
+    /** This template's picture has a declared size, so the reference comes from the layout. */
+    override val imageStyleReferenceDimen: Int
+        get() = R.dimen.pt_image_style_reference_vertical
+
     init {
         setCustomContentViewBasicKeys(data.baseContent.textData.subtitle, data.baseContent.colorData.metaColor)
         setCustomContentViewSmallIcon(renderer.smallIconBitmap, renderer.smallIcon)

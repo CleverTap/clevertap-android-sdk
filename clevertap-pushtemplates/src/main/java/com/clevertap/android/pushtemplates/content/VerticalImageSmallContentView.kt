@@ -32,7 +32,9 @@ internal class VerticalImageSmallContentView(
                 mediaData.scaleType,
                 mediaData.bigImage.altText,
                 mediaData.gif.numberOfFrames,
-                mediaData.imageBorderData
+                // A 40dp thumbnail, whose row height the system decides. See
+                // ZeroBezelSmallContentView for why collapsed views are left unstyled.
+                null
             )
         } else {
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)

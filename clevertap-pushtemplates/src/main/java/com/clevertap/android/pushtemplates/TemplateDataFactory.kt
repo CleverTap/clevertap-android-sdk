@@ -254,7 +254,8 @@ internal object TemplateDataFactory {
             displayActionTextColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR],
             isLinear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
                 ?.equals("true", ignoreCase = true) ?: false,
-            imageBorderData = createImageBorderData(extras, colorMap)
+            // No image styling on Product Catalog, on either variant - product's decision. The
+            // styling keys are read for other templates but never reach this one.
         )
     }
 
@@ -374,10 +375,16 @@ internal object TemplateDataFactory {
     }
 
     private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
+        // Image styling is an Android 12+ feature: only there can the tray clip and frame the
+        // image itself, so a "scale to fill" image keeps its border. Older versions ignore the
+        // keys and render exactly as they did before the keys existed.
+        if (!useNativeImageStyling) return ImageBorderData()
         return ImageBorderData(
-            // Both sizes are percentages of the image's shortest side, clamped when drawn
+            // Both sizes resolve against the picture's height and are clamped when drawn. The
+            // radius is a percentage of it; the border width is divided by 1000, matching
+            // Native Display, so the same dashboard value gives the same stroke on both channels.
             cornerRadiusPercent = extras.getStylingPercent(PT_IMG_CORNER_RADIUS),
-            borderWidthPercent = extras.getStylingPercent(PT_IMG_BORDER_WIDTH),
+            borderWidthValue = extras.getStylingPercent(PT_IMG_BORDER_WIDTH),
             // Parsed here rather than at draw time, so an unparseable colour never reaches the
             // canvas. Color.parseColor accepts #RRGGBB (fully opaque) and #AARRGGBB alike.
             borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) }

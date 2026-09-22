@@ -23,8 +23,12 @@ internal open class ZeroBezelSmallContentView(
             data.collapsedMediaData.scaleType,
             data.collapsedMediaData.bigImage.altText,
             data.collapsedMediaData.gif.numberOfFrames,
-            data.collapsedMediaData.imageBorderData
+            // The collapsed row has no height of its own in the layout - the system decides it -
+            // so there is no reference a percentage could honestly be resolved against. It is also
+            // the one place the styling would barely show. The expanded view carries it instead.
+            null
         )
+
         if (!isMediaLoaded) {
             if (data.showCollapsedBackgroundImage) {
                 PTLog.debug("Download failed for all media in ZeroBezel Collapsed Notification. Not showing the image")

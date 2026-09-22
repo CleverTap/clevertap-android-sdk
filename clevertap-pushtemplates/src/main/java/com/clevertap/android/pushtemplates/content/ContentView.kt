@@ -9,13 +9,17 @@ import android.text.Html
 import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
+import android.util.TypedValue
+import androidx.annotation.RequiresApi
 import com.clevertap.android.pushtemplates.ImageBorderData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.Utils
-import com.clevertap.android.pushtemplates.effectiveScaleType
+import com.clevertap.android.pushtemplates.bakedInto
+import com.clevertap.android.pushtemplates.useNativeImageStyling
+import com.clevertap.android.pushtemplates.usesNativeImageStyling
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 import com.clevertap.android.pushtemplates.media.GifResult
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
@@ -153,15 +157,18 @@ internal open class ContentView(
     ): Boolean {
         if (imageUrl.isNullOrBlank()) return false
 
-        val imageViewId = when (imageBorderData.effectiveScaleType(scaleType)) {
+        val imageViewId = when (scaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        val loaded = !loadImageURLIntoRemoteView(imageViewId, imageUrl, remoteView, altText, imageBorderData)
+        val loaded = !loadImageURLIntoRemoteView(
+            imageViewId, imageUrl, remoteView, altText, imageBorderData.bakedInto(scaleType)
+        )
 
         if (loaded) {
             remoteView.setViewVisibility(imageViewId, View.VISIBLE)
+            applyNativeImageStyling(remoteView, imageViewId, imageBorderData, scaleType)
             remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
         } else {
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)
@@ -191,16 +198,21 @@ internal open class ContentView(
         PTLog.debug("Total duration: " + duration + "ms")
         PTLog.debug("Flip interval: " + flipInterval + "ms")
 
-        val imageViewId = when (imageBorderData.effectiveScaleType(scaleType)) {
+        val imageViewId = when (scaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        // Styling is baked into each frame rather than clipped on the hosting view. A view outline
-        // would be Android 12+ only, would give the GIF a different geometry from the template's
-        // static images, and cannot stroke a border at all. Frames are pre-extracted stills, so
-        // baking costs nothing during playback and adds no bitmaps to the RemoteViews parcel.
-        val border = imageBorderData?.takeIf { it.isActive }
+        // A FIT_CENTER GIF is styled by baking it into every frame, as its static image is.
+        // Frames are pre-extracted stills, so baking costs nothing during playback and adds no
+        // bitmaps to the RemoteViews parcel.
+        //
+        // withScrim counts as something to draw even though it leaves isActive false: for Zero
+        // Bezel the views draw the radius and the ring, and the bitmap carries only the scrim. The
+        // scrim view is hidden either way, so dropping this would leave a GIF with no darkening at
+        // all behind its text.
+        val border = imageBorderData.bakedInto(scaleType)
+            ?.takeIf { it.isActive || it.withScrim }
 
         for (frame in frames) {
             // GIF frames are decoded fresh on every call, so recycling the pre-styling frame is
@@ -214,6 +226,7 @@ internal open class ContentView(
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
             frameRemoteViews.setImageViewBitmap(imageViewId, processedFrame)
             frameRemoteViews.setViewVisibility(imageViewId, View.VISIBLE)
+            applyNativeImageStyling(frameRemoteViews, imageViewId, imageBorderData, scaleType)
             remoteView.addView(R.id.view_flipper, frameRemoteViews)
         }
 
@@ -225,6 +238,165 @@ internal open class ContentView(
         remoteView.setViewVisibility(R.id.view_flipper, View.VISIBLE)
 
         return true
+    }
+
+    /**
+     * The height this template's image area is laid out at, which styling percentages are resolved
+     * against. See `R.dimen.pt_image_style_reference` for why a value known up front is needed at
+     * all, and why it cannot be the same for every template.
+     *
+     * Templates that give their image more or less room than the standard area override this.
+     */
+    protected open val imageStyleReferenceDimen: Int
+        get() = R.dimen.pt_image_style_reference
+
+    /**
+     * On API 31+ draws [border] with the views instead of baking it into the bitmap: the image
+     * view clips its own corners, and when a border is wanted `big_image_frame` is painted in the
+     * border colour, clipped to the outer radius, and the image is inset by the border width so
+     * the frame shows through as a ring.
+     *
+     * Because nothing is baked, the tray can crop the bitmap to fill and the styling stays on the
+     * visible edge. Used only for CENTER_CROP, where the image fills the view; a FIT_CENTER image
+     * is styled by baking instead, see [usesNativeImageStyling]. No-op otherwise and when there is
+     * nothing to draw.
+     *
+     * A CENTER_CROP image fills the area, so its height is the area's height, and both sizes are
+     * resolved against [R.dimen.pt_image_style_reference] accordingly.
+     */
+    fun applyNativeImageStyling(
+        remoteViews: RemoteViews,
+        imageViewId: Int,
+        border: ImageBorderData?,
+        scaleType: PTScaleType,
+        frameId: Int = R.id.big_image_frame
+    ) {
+        if (border == null || !border.isActive || !scaleType.usesNativeImageStyling()) return
+        applyNativeImageStylingS(remoteViews, imageViewId, border, frameId)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun applyNativeImageStylingS(
+        remoteViews: RemoteViews,
+        imageViewId: Int,
+        border: ImageBorderData,
+        frameId: Int
+    ) {
+        val referencePx = context.resources.getDimension(imageStyleReferenceDimen).toInt()
+        val radiusPx = NotificationBitmapUtils.resolveCornerRadiusPx(
+            referencePx, border.cornerRadiusPercent
+        )
+        val borderPx =
+            if (border.hasBorder) NotificationBitmapUtils.resolveBorderWidthPx(
+                referencePx, border.borderWidthValue
+            ) else 0f
+        val borderColor = border.borderColor
+
+        PTLog.debug(
+            "Native image styling: corner radius ${border.cornerRadiusPercent}% -> ${radiusPx}px, " +
+                    "border width ${border.borderWidthValue} -> ${borderPx}px"
+        )
+
+        if (borderPx > 0f && borderColor != null) {
+            remoteViews.setInt(frameId, "setBackgroundColor", borderColor)
+            remoteViews.setViewOutlinePreferredRadius(frameId, radiusPx, TypedValue.COMPLEX_UNIT_PX)
+            for (side in intArrayOf(
+                RemoteViews.MARGIN_LEFT, RemoteViews.MARGIN_TOP,
+                RemoteViews.MARGIN_RIGHT, RemoteViews.MARGIN_BOTTOM
+            )) {
+                remoteViews.setViewLayoutMargin(imageViewId, side, borderPx, TypedValue.COMPLEX_UNIT_PX)
+            }
+        }
+        // The image sits inside the ring, so its own corner follows the inner edge.
+        val innerRadius = (radiusPx - borderPx).coerceAtLeast(0f)
+        remoteViews.setViewOutlinePreferredRadius(imageViewId, innerRadius, TypedValue.COMPLEX_UNIT_PX)
+    }
+
+    /**
+     * Rounds the Zero Bezel media surface - the picture area and the scrim that covers it - so the
+     * corner lands on our own layout's edge rather than only on the picture.
+     *
+     * Deliberately NOT applied to `content_view_big`. That is the root of the custom content view
+     * and it holds `rel_lyt`, the title and message that overlay the picture. `clipToOutline` clips
+     * every child, so rounding the root cuts the corners off the text: a radius of 50 measured
+     * against the reference resolves to 372px, which eats the first characters of both lines. The
+     * surface the user sees is the media and the scrim, and rounding just those two leaves the text
+     * whole.
+     *
+     * Applied for both scale types. The outline clips the surface at whatever bounds the tray gives
+     * it, so it does not depend on the picture filling that surface - which is what lets FIT_CENTER
+     * round the same way CENTER_CROP does. What FIT_CENTER must not also do is bake a radius into
+     * the picture: that curve is measured against the bitmap rather than the surface, so the two
+     * would never meet. See [ZeroBezelBigContentView], which withholds the baked styling.
+     */
+    fun applyZeroBezelSurfaceStyling(
+        remoteViews: RemoteViews,
+        border: ImageBorderData?,
+        scaleType: PTScaleType
+    ) {
+        if (border == null || border.cornerRadiusPercent <= 0f || !useNativeImageStyling) return
+        applyZeroBezelSurfaceStylingS(remoteViews, border, scaleType)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun applyZeroBezelSurfaceStylingS(
+        remoteViews: RemoteViews,
+        border: ImageBorderData,
+        scaleType: PTScaleType
+    ) {
+        val referencePx = context.resources.getDimension(imageStyleReferenceDimen).toInt()
+        val radiusPx = NotificationBitmapUtils.resolveCornerRadiusPx(
+            referencePx, border.cornerRadiusPercent
+        )
+        // A border needs an edge to sit on, and FIT_CENTER has no single edge to give it: the
+        // picture's edge is inside the surface, the surface's edge is out in the empty bands. Drawn
+        // on the picture it becomes a second outline inside the card's corner; painted on the
+        // surface it stops reading as a ring at all and simply floods the bands with the border
+        // colour. Both were tried on a device and neither is a border.
+        //
+        // So FIT_CENTER takes the corner and leaves the ring. The corner works because the outline
+        // clips whatever bounds the tray hands the surface, which is true whether or not the
+        // picture fills it.
+        val borderPx =
+            if (border.hasBorder && scaleType.usesNativeImageStyling()) {
+                NotificationBitmapUtils.resolveBorderWidthPx(referencePx, border.borderWidthValue)
+            } else 0f
+        val innerRadius = (radiusPx - borderPx).coerceAtLeast(0f)
+
+        PTLog.debug(
+            "Zero Bezel surface styling: corner radius ${border.cornerRadiusPercent}% -> ${radiusPx}px"
+        )
+
+        remoteViews.setViewOutlinePreferredRadius(
+            R.id.big_media_configurable, radiusPx, TypedValue.COMPLEX_UNIT_PX
+        )
+
+        // The scrim is a sibling of the media rather than a child, so it carries a corner of its
+        // own - left square it would paint its gradient back into the corners the media just gave
+        // up - and an inset of the border width, so it darkens the picture without dulling the ring.
+        remoteViews.setViewOutlinePreferredRadius(
+            R.id.zero_bezel_scrim, innerRadius, TypedValue.COMPLEX_UNIT_PX
+        )
+        for (side in intArrayOf(
+            RemoteViews.MARGIN_LEFT, RemoteViews.MARGIN_TOP,
+            RemoteViews.MARGIN_RIGHT, RemoteViews.MARGIN_BOTTOM
+        )) {
+            remoteViews.setViewLayoutMargin(
+                R.id.zero_bezel_scrim, side, borderPx, TypedValue.COMPLEX_UNIT_PX
+            )
+        }
+
+        // Keep the text inside the rounded picture instead of letting the corner cut it or letting
+        // it spill past the curve. A corner arc of radius r passes through the point
+        // r x (1 - 1/sqrt 2) in from both edges, so insetting the text block by that much - on top
+        // of the ring it also has to clear - lands its corners on the arc rather than outside it.
+        val textInset = (innerRadius * CORNER_ARC_INSET_RATIO + borderPx).toInt()
+        val horizontal =
+            context.resources.getDimensionPixelSize(R.dimen.padding_horizontal) + textInset
+        val vertical = context.resources.getDimensionPixelSize(R.dimen.padding_vertical)
+        remoteViews.setViewPadding(
+            R.id.rel_lyt, horizontal, vertical, horizontal, vertical + textInset
+        )
     }
 
     fun loadImageURLIntoRemoteView(
@@ -277,3 +449,9 @@ internal open class ContentView(
         }
     }
 }
+/**
+ * How far in from both edges a corner arc of radius r passes at 45 degrees: r x (1 - 1/sqrt 2).
+ * Content inset by this much on both axes has its corner on the arc rather than outside it.
+ */
+private const val CORNER_ARC_INSET_RATIO = 0.293f
+

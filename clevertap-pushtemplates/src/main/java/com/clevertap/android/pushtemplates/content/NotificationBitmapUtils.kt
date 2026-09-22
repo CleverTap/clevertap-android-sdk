@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates.content
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
@@ -108,14 +109,33 @@ internal object NotificationBitmapUtils {
     private const val BORDER_STROKE_RATIO = 0.10f
 
     /**
-     * Half the shortest side is already a fully rounded image, so a larger radius has no further
+     * Half the picture's height is already a fully rounded image, so a larger radius has no further
      * visible effect. Clamping here means an over-large payload value renders as a full circle
      * rather than being rejected.
      */
     internal const val MAX_CORNER_RADIUS_PERCENT = 50f
 
-    /** Payload ceiling for `pt_img_border_width`, as a percentage of the image's shortest side. */
-    internal const val MAX_BORDER_WIDTH_PERCENT = 10f
+    /**
+     * Payload ceiling for `pt_img_border_width`. The value is not a percentage: it is divided by
+     * [BORDER_WIDTH_DIVISOR], so this ceiling is a stroke of a tenth of the picture's height -
+     * the same maximum the old percentage scale allowed.
+     */
+    internal const val MAX_BORDER_WIDTH_VALUE = 100f
+
+    /**
+     * Native Display resolves a border width as `containerHeight * value / 1000`, and the dashboard
+     * emits the same value for both channels. Dividing by 1000 here - rather than by 100, the way a
+     * corner radius is resolved - is what keeps a push template's border the thickness the
+     * dashboard preview shows.
+     */
+    internal const val BORDER_WIDTH_DIVISOR = 1000f
+
+    /**
+     * Darkest point of the Zero Bezel scrim, at the bottom of the picture, fading to transparent at
+     * the top. Kept in step with `res/drawable/pt_scrim.xml`, which the scrim view uses when the
+     * styling is off and the scrim is not baked in.
+     */
+    private const val SCRIM_BOTTOM_COLOR = 0xAA000000.toInt()
 
 
     /**
@@ -128,17 +148,23 @@ internal object NotificationBitmapUtils {
     fun applyRoundedBorderToBitmap(source: Bitmap, border: ImageBorderData): Bitmap {
         val width = source.width
         val height = source.height
-        if (width <= 0 || height <= 0 || !border.isActive) return source
+        // A scrim on its own is reason enough to redraw, even with no radius or ring to add.
+        if (width <= 0 || height <= 0 || (!border.isActive && !border.withScrim)) return source
 
-        val minDimension = minOf(width, height)
+        // The percentage is of the picture's HEIGHT, which is the same rule the view-drawn path
+        // applies for CENTER_CROP. The tray scales the bitmap and its baked styling together, so a
+        // share of the bitmap's height stays that same share of the displayed picture's height.
         val strokeWidth =
-            if (border.hasBorder) resolveBorderWidthPx(minDimension, border.borderWidthPercent) else 0f
-        val safeRadius = resolveCornerRadiusPx(minDimension, border.cornerRadiusPercent)
+            if (border.hasBorder) resolveBorderWidthPx(height, border.borderWidthValue) else 0f
+        // A portrait image can produce a radius wider than the picture itself, so it is also held
+        // to half the shorter side - the point at which the corner is already fully rounded.
+        val safeRadius = resolveCornerRadiusPx(height, border.cornerRadiusPercent)
+            .coerceAtMost(minOf(width, height) / 2f)
 
         PTLog.debug(
             "Image styling on ${width}x$height bitmap: corner radius " +
                     "${border.cornerRadiusPercent}% -> ${safeRadius}px, border width " +
-                    "${border.borderWidthPercent}% -> ${strokeWidth}px"
+                    "${border.borderWidthValue} -> ${strokeWidth}px"
         )
 
         val output = createBitmap(width, height)
@@ -153,6 +179,22 @@ internal object NotificationBitmapUtils {
             RectF(0f, 0f, width.toFloat(), height.toFloat()),
             safeRadius, safeRadius, imagePaint
         )
+
+        // The Zero Bezel scrim, painted inside the same rounded path as the picture. Drawn after
+        // the image and before the ring, exactly where the separate scrim view used to sit in the
+        // stack, so the text stays as readable as it was.
+        if (border.withScrim) {
+            val scrimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = LinearGradient(
+                    0f, height.toFloat(), 0f, 0f,
+                    SCRIM_BOTTOM_COLOR, Color.TRANSPARENT, Shader.TileMode.CLAMP
+                )
+            }
+            canvas.drawRoundRect(
+                RectF(0f, 0f, width.toFloat(), height.toFloat()),
+                safeRadius, safeRadius, scrimPaint
+            )
+        }
 
         val strokeColor = border.borderColor
         if (strokeWidth > 0f && strokeColor != null) {
@@ -184,23 +226,22 @@ internal object NotificationBitmapUtils {
     }
 
     /**
-     * Resolves [cornerRadiusPercent] against the image's shortest side, clamped to
-     * [MAX_CORNER_RADIUS_PERCENT].
+     * Resolves [cornerRadiusPercent] against [reference], clamped to [MAX_CORNER_RADIUS_PERCENT].
      *
      * Kept separate from the drawing code so the conversion can be asserted directly; Canvas
      * operations are no-ops under Robolectric's legacy graphics mode, so a test that only inspects
      * the output bitmap cannot tell a percentage from a raw pixel count.
      */
-    internal fun resolveCornerRadiusPx(minDimension: Int, cornerRadiusPercent: Float): Float =
-        minDimension * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / 100f
+    internal fun resolveCornerRadiusPx(reference: Int, cornerRadiusPercent: Float): Float =
+        reference * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / 100f
 
     /**
-     * Resolves [borderWidthPercent] against the image's shortest side, clamped to
-     * [MAX_BORDER_WIDTH_PERCENT].
+     * Resolves [borderWidthValue] against [reference], clamped to [MAX_BORDER_WIDTH_VALUE] and
+     * divided by [BORDER_WIDTH_DIVISOR] to match Native Display.
      *
      * Clamped at both ends: a negative payload value must not produce a negative stroke, which
      * would both drop the border and push the draw rect outside the bitmap bounds.
      */
-    internal fun resolveBorderWidthPx(minDimension: Int, borderWidthPercent: Float): Float =
-        minDimension * borderWidthPercent.coerceIn(0f, MAX_BORDER_WIDTH_PERCENT) / 100f
+    internal fun resolveBorderWidthPx(reference: Int, borderWidthValue: Float): Float =
+        reference * borderWidthValue.coerceIn(0f, MAX_BORDER_WIDTH_VALUE) / BORDER_WIDTH_DIVISOR
 }

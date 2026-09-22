@@ -9,7 +9,6 @@ import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
-import com.clevertap.android.pushtemplates.effectiveScaleType
 import com.clevertap.android.pushtemplates.ProductTemplateData
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -115,7 +114,7 @@ internal open class ProductDisplayLinearBigContentView(
         smallImageLayoutIds.add(R.id.small_image2)
         smallImageLayoutIds.add(R.id.small_image3)
         val tempImageList = ArrayList<String>()
-        val imageViewId = when (data.imageBorderData.effectiveScaleType(scaleType)) {
+        val imageViewId = when (scaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
@@ -125,14 +124,14 @@ internal open class ProductDisplayLinearBigContentView(
             val altText = imageData.altText
 
             loadImageURLIntoRemoteView(
-                smallImageLayoutIds[imageCounter], imageUrl, remoteView, altText,
-                data.imageBorderData
+                smallImageLayoutIds[imageCounter], imageUrl, remoteView, altText, null
             )
 
             val tempRemoteView =
                 RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
-            val fallback =
-                loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, altText, data.imageBorderData)
+            val fallback = loadImageURLIntoRemoteView(
+                imageViewId, imageUrl, tempRemoteView, altText, null
+            )
 
             if (!fallback) {
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
