@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.response
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 
@@ -21,7 +21,7 @@ internal object NdFcapGate {
     fun filter(
         units: List<CleverTapDisplayUnit>,
         ndFCManager: NdFCManager?,
-        logger: Logger,
+        logger: ILogger,
         accountId: String?,
     ): List<CleverTapDisplayUnit> {
         if (ndFCManager == null) {

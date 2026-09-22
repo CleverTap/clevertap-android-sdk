@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.response
 
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import io.mockk.confirmVerified
@@ -14,13 +14,14 @@ import kotlin.test.assertEquals
 
 class NdFcapGateTest {
 
-    private val logger = mockk<Logger>(relaxed = true)
+    private val logger = mockk<ILogger>(relaxed = true)
 
+    // Real display unit built from JSON (no content array -> no Android deps), not a mock: the gate reads
+    // jsonObject/unitID off it, so exercising the real parse is the point.
     private fun unit(json: JSONObject, wzrkId: String = "70001_20250101"): CleverTapDisplayUnit {
-        val u = mockk<CleverTapDisplayUnit>(relaxed = true)
-        every { u.jsonObject } returns json
-        every { u.unitID } returns wzrkId
-        return u
+        json.put(Constants.NOTIFICATION_ID_TAG, wzrkId)
+        if (!json.has(Constants.KEY_TYPE)) json.put(Constants.KEY_TYPE, "simple")
+        return CleverTapDisplayUnit.toDisplayUnit(json)
     }
 
     @Test
