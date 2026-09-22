@@ -40,10 +40,18 @@ class AppLaunchInAppArbitratorTest {
             logger = mockk<Logger>(relaxed = true),
             logTag = "test",
             timeoutMs = 3000L,
+            hardTeardownMs = 15000L,
             sortByPriority = sortByPriority,
             showWinner = { shown.add(it) },
             dispatchers = dispatchers
         )
+    }
+
+    // Fire only the 3s show-timeout, leaving the window in its CLOSED-suppressing phase (the hard
+    // backstop at 15s does NOT run).
+    private fun fireShowTimeout() {
+        scheduler.advanceTimeBy(3000L)
+        scheduler.runCurrent()
     }
 
     private fun inApp(ti: String, priority: Int) =
@@ -84,7 +92,7 @@ class AppLaunchInAppArbitratorTest {
         arbitrator.openWindow()
         arbitrator.routeWinners(listOf(inApp("100", 1))) // /a1 buffered
 
-        scheduler.advanceUntilIdle() // fire the 3s timeout
+        fireShowTimeout() // fire the 3s show-timeout (window stays CLOSED)
 
         assertEquals(1, shown.size)
         assertEquals("100", shown[0].optString("ti"))
@@ -98,11 +106,29 @@ class AppLaunchInAppArbitratorTest {
     fun `completion after timeout does not show a second in-app`() {
         arbitrator.openWindow()
         arbitrator.routeWinners(listOf(inApp("100", 1)))
-        scheduler.advanceUntilIdle()
+        fireShowTimeout()
 
         arbitrator.onContentFetchComplete() // tears down only; no second show
 
         assertEquals(1, shown.size)
+    }
+
+    @Test
+    fun `hard backstop tears down the window even if completion never arrives`() {
+        arbitrator.openWindow(listOf(inApp("200", 1)))
+        arbitrator.routeWinners(listOf(inApp("100", 1))) // /a1 buffered
+
+        // No onContentFetchComplete() ever — simulate a skipped completion signal.
+        scheduler.advanceUntilIdle() // runs show-timeout (3s) then the hard backstop (15s)
+
+        assertEquals(1, shown.size) // /a1 winner shown by the show-timeout
+        // Window has self-healed: no synthetics, and a subsequent winner is shown normally (not dropped).
+        assertNull(arbitrator.syntheticCandidates())
+        val next = listOf(inApp("300", 1))
+        assertEquals(next, arbitrator.routeWinners(next)) // phase == null again → passthrough
+        // And a fresh window can open (not permanently stuck).
+        arbitrator.openWindow(listOf(inApp("400", 1)))
+        assertEquals(1, arbitrator.syntheticCandidates()?.size)
     }
 
     @Test

@@ -110,10 +110,17 @@ internal class InAppController(
         const val LOCAL_INAPP_COUNT = "local_in_app_count"
         const val IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest"
 
-        // UX bound for the app-launch content-fetch arbitration window. Correctness comes from the
-        // closed-suppressing phase inside AppLaunchInAppArbitrator, not from this timeout.
+        // UX bound for the app-launch content-fetch arbitration window: show the /a1 winner by now.
+        // Correctness comes from the closed-suppressing phase inside AppLaunchInAppArbitrator, not
+        // from this timeout.
         // TODO(SDK-6141 review): SDK-configurable vs hard constant (iOS Q1).
         private const val APP_LAUNCH_ARBITRATION_TIMEOUT_MS = 3_000L
+
+        // Hard backstop: the arbitration window self-tears-down by this bound even if the content-fetch
+        // completion signal is never delivered (cancelled coroutine, aborted decorator loop, etc.), so
+        // it can never permanently suppress app-launch in-apps. Comfortably beyond the content-fetch
+        // request timeout, so no /content is still in flight when it fires.
+        private const val APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS = 15_000L
 
         private val pendingNotifications =
             Collections.synchronizedList(ArrayList<CTInAppNotification>())
@@ -152,6 +159,7 @@ internal class InAppController(
         logger = logger,
         logTag = defaultLogTag,
         timeoutMs = APP_LAUNCH_ARBITRATION_TIMEOUT_MS,
+        hardTeardownMs = APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS,
         sortByPriority = evaluationManager::sortByPriority,
         showWinner = { winner -> addInAppNotificationsToQueue(listOf(winner)) }
     )

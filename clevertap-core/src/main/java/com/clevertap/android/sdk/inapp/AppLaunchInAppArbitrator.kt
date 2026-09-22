@@ -29,14 +29,24 @@ import org.json.JSONObject
  *
  * Three phases:
  * - **no window** (`phase == null`) — every response shows immediately (today's behaviour).
- * - **OPEN** — winners are buffered; ends on completion or timeout.
+ * - **OPEN** — winners are buffered; ends on completion or the [timeoutMs] show-timeout.
  * - **CLOSED** (suppressing) — a winner has been shown; late responses are dropped. This, not the
- *   timeout, is what guarantees "exactly one". Torn down on completion.
+ *   timeout, is what guarantees "exactly one".
+ *
+ * **Self-healing is not dependent on the external completion signal.** The window is torn down by
+ * whichever comes first: [onContentFetchComplete] (the prompt path) or a hard [hardTeardownMs]
+ * backstop armed on this arbiter's own scope (a `SupervisorJob` that is never cancelled and is
+ * independent of the content-fetch coroutine, the decorator chain, and the callback wiring). So even
+ * if the completion signal is skipped for any reason — cancelled fetch coroutine, an aborted
+ * decorator loop, an unwired callback — the window cannot get permanently stuck and suppress
+ * app-launch in-apps for the rest of the session. Completion is an optimization, not a correctness
+ * dependency.
  */
 internal class AppLaunchInAppArbitrator(
     private val logger: Logger,
     private val logTag: String,
     private val timeoutMs: Long,
+    private val hardTeardownMs: Long,
     private val sortByPriority: (List<JSONObject>) -> List<JSONObject>,
     private val showWinner: (JSONObject) -> Unit,
     dispatchers: DispatcherProvider = CtDefaultDispatchers()
@@ -72,11 +82,19 @@ internal class AppLaunchInAppArbitrator(
         buffered.clear()
         synthetics = syntheticCandidates
         shownWinner = null
+        // Single lifecycle timer on this arbiter's own (never-cancelled) scope. It runs to completion
+        // regardless of the content-fetch coroutine, so the window can never stick even if the
+        // completion signal is skipped. Completion (onContentFetchComplete) cancels it and tears down
+        // earlier on the happy path.
         timeoutJob = scope.launch {
             delay(timeoutMs)
-            // UX bound: show the /a1 winner now; the window stays in its CLOSED-suppressing phase
-            // until completion tears it down, so a slow /content reply is dropped, not shown.
+            // UX bound: show the /a1 winner now (no-op if already closed via fast path / completion).
             closeAndShow("timeout")
+            // Hard backstop: guarantee the CLOSED-suppressing phase ends and the window self-heals
+            // even if no completion signal ever arrives. hardTeardownMs is comfortably beyond the
+            // fetch's own request timeout, so by the time this fires no /content is still in flight.
+            delay((hardTeardownMs - timeoutMs).coerceAtLeast(0))
+            forceTeardown("hard backstop")
         }
         logger.verbose(logTag, "[Arbitration] window opened (synthetics=${syntheticCandidates.size})")
     }
@@ -91,14 +109,14 @@ internal class AppLaunchInAppArbitrator(
 
     /**
      * Option 2 fast path: the caller has predicted the `/a1` winner wins and is showing [shown] now.
-     * Move to the suppressing phase and cancel the timeout; teardown still happens on completion, and
-     * a later `/content` winner is dropped (with a mispredict log if it would have outranked [shown]).
+     * Move to the suppressing phase; a later `/content` winner is dropped (with a mispredict log if it
+     * would have outranked [shown]). The lifecycle timer is deliberately left running so its hard
+     * backstop still tears the window down if the completion signal never arrives.
      */
     fun closeForFastPath(shown: JSONObject) = synchronized(lock) {
         if (phase != Phase.OPEN) return
         phase = Phase.CLOSED
         shownWinner = shown
-        timeoutJob?.cancel()
         logger.verbose(logTag, "[Arbitration] fast path: /a1 winner shown immediately, window closed")
     }
 
@@ -143,15 +161,23 @@ internal class AppLaunchInAppArbitrator(
      */
     fun onContentFetchComplete() {
         closeAndShow("content fetch complete")
-        synchronized(lock) {
-            timeoutJob?.cancel()
-            timeoutJob = null
-            phase = null
-            buffered.clear()
-            synthetics = emptyList()
-            shownWinner = null
-            logger.verbose(logTag, "[Arbitration] window torn down")
-        }
+        teardown("content fetch complete")
+    }
+
+    // Hard backstop, fired by the lifecycle timer. Guarantees the window ends even if no completion
+    // signal ever arrives. No-op if completion already tore it down.
+    private fun forceTeardown(reason: String) = teardown(reason)
+
+    // Resets to the no-window state. Idempotent under [lock].
+    private fun teardown(reason: String) = synchronized(lock) {
+        if (phase == null) return // already torn down
+        timeoutJob?.cancel()
+        timeoutJob = null
+        phase = null
+        buffered.clear()
+        synthetics = emptyList()
+        shownWinner = null
+        logger.verbose(logTag, "[Arbitration] window torn down ($reason)")
     }
 
     private fun closeAndShow(reason: String) {
