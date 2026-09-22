@@ -142,17 +142,25 @@ class NdEvaluationManagerTest {
     }
 
     // ---- App-Launched content-in-advance whenLimits filter ----
+    // Rules are read INLINE from each app-launched payload (contract §5.2 excludes app-launched campaigns
+    // from adUnit_notifs_ss), mirroring in-app. So these fixtures carry frequencyLimits/occurrenceLimits
+    // on the unit itself, NOT in the ss-bundle.
+
+    /** An app-launched unit carrying an inline advanced rule (so EvalRules.whenLimits is non-empty). */
+    private fun appLaunchedUnitWithRule(ti: String) = JSONObject()
+        .put(Constants.INAPP_ID_IN_PAYLOAD, ti)
+        .put(
+            Constants.INAPP_FC_LIMITS,
+            JSONArray().put(JSONObject().put("type", "session").put("limit", 1)),
+        )
 
     @Test
     fun `retainAppLaunchedWithinLimits keeps units within whenLimits and drops over-cap ones`() {
-        val rule1 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
-        val rule2 = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70002")
-        every { ndStore.readServerSideNdMetaData() } returns listOf(rule1, rule2)
         every { ndLimitsMatcher.matchWhenLimits(any(), "70001") } returns true
         every { ndLimitsMatcher.matchWhenLimits(any(), "70002") } returns false
 
-        val within = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
-        val overCap = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70002")
+        val within = appLaunchedUnitWithRule("70001")
+        val overCap = appLaunchedUnitWithRule("70002")
 
         val kept = manager.retainAppLaunchedWithinLimits(listOf(within, overCap))
 
@@ -166,26 +174,25 @@ class NdEvaluationManagerTest {
     }
 
     @Test
-    fun `retainAppLaunchedWithinLimits passes simple campaigns through without touching triggers or limits`() {
-        val rule = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
-        every { ndStore.readServerSideNdMetaData() } returns listOf(rule)
-
-        val simple = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "88888") // no advanced-rule entry
+    fun `retainAppLaunchedWithinLimits passes units with no inline rules through untouched`() {
+        // A simple campaign: full content payload, but no frequencyLimits/occurrenceLimits inline.
+        val simple = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "88888")
 
         val kept = manager.retainAppLaunchedWithinLimits(listOf(simple))
 
         assertEquals(listOf(simple), kept)
-        confirmVerified(ndTriggersManager, ndLimitsMatcher) // no advanced rule -> evaluator untouched
+        confirmVerified(ndTriggersManager, ndLimitsMatcher) // no inline rules -> evaluator untouched
     }
 
     @Test
-    fun `retainAppLaunchedWithinLimits returns content unchanged when there is no ss-metadata`() {
-        every { ndStore.readServerSideNdMetaData() } returns emptyList()
-        val unit = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+    fun `retainAppLaunchedWithinLimits does not consult the ss-bundle`() {
+        // App-launched campaigns are excluded from adUnit_notifs_ss (contract §5.2); the filter must
+        // rely solely on inline rules and never read the bundle.
+        val unit = appLaunchedUnitWithRule("70001")
+        every { ndLimitsMatcher.matchWhenLimits(any(), "70001") } returns true
 
-        val kept = manager.retainAppLaunchedWithinLimits(listOf(unit))
+        manager.retainAppLaunchedWithinLimits(listOf(unit))
 
-        assertEquals(listOf(unit), kept)
-        confirmVerified(ndTriggersManager, ndLimitsMatcher) // short-circuits before any evaluation
+        verify(exactly = 0) { ndStore.readServerSideNdMetaData() }
     }
 }

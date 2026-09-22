@@ -116,20 +116,25 @@ internal class NdEvaluationManager(
     }
 
     /**
-     * App-Launched content-in-advance `whenLimits` filter. The server ships App-Launched ND
-     * content proactively — there is no `adUnit_eval` vote — so advanced `whenLimits` are otherwise never
-     * applied to it. Mirror the in-app App-Launched flow ([EvaluationManager.evaluate]): join each unit's
-     * rules from the ss-metadata bundle by `ti`, bump the ND trigger, and keep the unit only if its
-     * `whenLimits` still pass. Units with no advanced-rule entry (simple campaigns) pass through untouched —
-     * the server already qualified them. Unlike in-app there is no single-winner selection: every survivor
-     * is returned. Suppressed CG stubs are excluded upstream and acked separately via [recordCgSuppressed].
+     * App-Launched content-in-advance `whenLimits` filter. The server ships App-Launched ND content
+     * proactively — there is no `adUnit_eval` vote — so advanced `whenLimits` are otherwise never applied
+     * to it. Mirrors the in-app App-Launched flow ([EvaluationManager.evaluate]) exactly: read each unit's
+     * `whenLimits` **inline from its own payload**, bump the ND trigger, and keep the unit only if its
+     * limits still pass against the local ND impression/trigger stores.
+     *
+     * The rules are read inline (not from the `adUnit_notifs_ss` bundle) because the contract deliberately
+     * **excludes** App-Launched campaigns from that bundle — the full payload here already carries the rules
+     * (contract §5.2: "they get full content in `adUnit_notifs_applaunched`; sending them metadata
+     * separately would be redundant"). Just like in-app, whose app-launched payloads carry the caps inline.
+     * A unit with no inline advanced rules passes through untouched (simple campaign; nothing to enforce).
+     * Unlike in-app there is no single-winner selection — every survivor is returned. Suppressed CG stubs
+     * are excluded upstream and acked separately via [recordCgSuppressed].
      *
      * The trigger [increment][TriggerManager.increment] here is the *only* place an App-Launched campaign's
      * occurrence count advances online, because `EventQueueManager.initEventEvaluation` skips the online
      * App-Launched event. An *offline* launch does count it via that event path, but the server then
-     * delivers that (voted) campaign as regular `adUnit_notifs` — not `adUnit_notifs_applaunched`, which
-     * carries only content-in-advance for campaigns the SDK could not vote — so this method never sees it
-     * and there is no double count. (Same increment shape as in-app's App-Launched flow.)
+     * delivers that (voted) campaign as regular `adUnit_notifs` — not `adUnit_notifs_applaunched` — so this
+     * method never sees it and there is no double count. (Same increment shape as in-app.)
      *
      * @param content the non-suppressed App-Launched display-unit payloads.
      * @return the subset still within its advanced `whenLimits` (input order preserved).
@@ -137,20 +142,16 @@ internal class NdEvaluationManager(
     @WorkerThread
     fun retainAppLaunchedWithinLimits(content: List<JSONObject>): List<JSONObject> {
         if (content.isEmpty()) return content
-        val ndStore = storeRegistry.ndStore ?: return content
-        val metadata = ndStore.readServerSideNdMetaData()
-        if (metadata.isEmpty()) return content
-        val rulesByTi = metadata.associateBy { it.optString(Constants.INAPP_ID_IN_PAYLOAD) }
 
         return content.filter { unit ->
             val ti = unit.optString(Constants.INAPP_ID_IN_PAYLOAD)
-            val rule = rulesByTi[ti]
-            if (ti.isEmpty() || rule == null) {
-                true // simple / non-advanced campaign — no client rules to apply; server already qualified it
+            val whenLimits = EvalRules.whenLimits(unit) // inline rules, mirroring in-app's getWhenLimits(inApp)
+            if (ti.isEmpty() || whenLimits.isEmpty()) {
+                true // simple / non-advanced campaign — no inline rules to enforce
             } else {
                 ndTriggersManager.increment(ti)
-                ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(rule), ti).also { within ->
-                    if (!within) config.logger.verbose(config.accountId,"App-Launched ND $ti suppressed by whenLimits")
+                ndLimitsMatcher.matchWhenLimits(whenLimits, ti).also { within ->
+                    if (!within) config.logger.verbose(config.accountId, "App-Launched ND $ti suppressed by whenLimits")
                 }
             }
         }

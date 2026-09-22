@@ -181,9 +181,10 @@ class NdCampaignScenariosTest : BaseTestCase() {
     @Test
     fun `app-launched filter honours occurrenceLimits via the real matcher - footer4 onEvery 2`() {
         // Drives retainAppLaunchedWithinLimits (the App-Launched content-in-advance path) against the real
-        // TriggerManager + LimitsMatcher, so the join-by-ti + increment-then-matchWhenLimits arithmetic is
-        // exercised for real (not mocked). onEvery 2: keep only when the (post-increment) count % 2 == 0.
-        val units = listOf(appLaunchedUnit(footer4))
+        // TriggerManager + LimitsMatcher, so the inline-rules read + increment-then-matchWhenLimits
+        // arithmetic is exercised for real (not mocked). Rules ride INLINE on the payload (§5.2), not the
+        // ss-bundle. onEvery 2: keep only when the (post-increment) count % 2 == 0.
+        val units = listOf(appLaunchedUnit(footer4, occ = jarr(occ("onEvery", 2))))
         assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 1 -> dropped")
         assertEquals(1, manager.retainAppLaunchedWithinLimits(units).size, "trigger 2 -> kept")
         assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 3 -> dropped")
@@ -320,11 +321,18 @@ class NdCampaignScenariosTest : BaseTestCase() {
         return CleverTapDisplayUnit.toDisplayUnit(json)
     }
 
-    /** A non-suppressed App-Launched content-in-advance payload (JSON, as the response filter sees it). */
-    private fun appLaunchedUnit(ti: String) = JSONObject()
-        .put(Constants.NOTIFICATION_ID_TAG, wzrkId(ti))
-        .put(Constants.INAPP_ID_IN_PAYLOAD, ti)
-        .put(Constants.KEY_TYPE, "simple")
+    /**
+     * A non-suppressed App-Launched content-in-advance payload (JSON, as the response filter sees it),
+     * carrying its advanced rules INLINE — App-Launched campaigns are excluded from adUnit_notifs_ss
+     * (contract §5.2), so the payload itself is the only source of whenLimits.
+     */
+    private fun appLaunchedUnit(ti: String, freq: JSONArray = JSONArray(), occ: JSONArray = JSONArray()) =
+        JSONObject()
+            .put(Constants.NOTIFICATION_ID_TAG, wzrkId(ti))
+            .put(Constants.INAPP_ID_IN_PAYLOAD, ti)
+            .put(Constants.KEY_TYPE, "simple")
+            .put("frequencyLimits", freq)
+            .put("occurrenceLimits", occ)
 
     private fun campaign(ti: String, event: String, freq: JSONArray = JSONArray(), occ: JSONArray = JSONArray()) =
         JSONObject().apply {
