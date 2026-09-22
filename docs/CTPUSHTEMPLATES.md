@@ -281,8 +281,8 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
@@ -312,8 +312,8 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -345,8 +345,8 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -370,8 +370,8 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
@@ -405,8 +405,8 @@ pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required  | Image Three
 pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bt1 | Required  | Big text for first image
 pt_bt2 | Required  | Big text for second image
@@ -475,8 +475,8 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_gif_alt | Optional | GIF to show when timer expires
@@ -516,8 +516,8 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's shortest side. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a percentage (`0`-`10`) of the image's shortest side. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_big_img_collapsed | Optional | Image for the collapsed view
 pt_gif_collapsed | Optional | GIF for the collapsed view
