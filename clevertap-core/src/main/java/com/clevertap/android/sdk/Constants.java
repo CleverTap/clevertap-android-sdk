@@ -398,8 +398,8 @@ public interface Constants {
     int FETCH_TYPE_IN_APPS = 5;
     int FETCH_TYPE_IN_ACTION_IN_APPS = 6;
     int FETCH_TYPE_INBOX_V2 = 7;
-    // Native Display SS metadata refresh (SDK-6055). Placeholder value 100 — LOCK with BE before release.
-    int FETCH_TYPE_ND_META = 100;
+    // Native Display SS metadata refresh — wzrk_fetch t value, agreed with BE.
+    int FETCH_TYPE_ND_META = 8;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";

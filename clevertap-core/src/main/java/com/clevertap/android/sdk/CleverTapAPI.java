@@ -3799,9 +3799,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * {@code adUnit_notifs_ss} (see {@link com.clevertap.android.sdk.response.DisplayUnitResponse}). Old
      * SDKs/servers ignore the unknown fetch type, so this is forward/backward compatible.
      *
-     * Note: the placeholder fetch-type value must be locked with BE before release, and the exact
-     * refresh cadence (when the SDK fires this) is still to be finalised. Kept SDK-internal
-     * ({@code LIBRARY_GROUP}) until both are locked, so it isn't a customer-facing contract yet.
+     * Note: the exact refresh cadence (when the SDK fires this) is still to be finalised, so this stays
+     * SDK-internal ({@code LIBRARY_GROUP}) until then — not a customer-facing contract yet.
      */
     @RestrictTo(Scope.LIBRARY_GROUP)
     public void fetchNativeDisplayMeta() {

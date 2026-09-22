@@ -98,7 +98,7 @@ The existing render/callback path (host renders the unit) is **unchanged**; cont
 | Global daily count | `imp` (pre-summed int) | `ndmp` (pre-summed int) | req (overload) |
 | Eval vote list | `inapps_eval` | `adUnit_eval` | req |
 | CG-suppressed acks | `inapps_suppressed` | `adUnit_suppressed` | req |
-| SS meta-fetch trigger | `FETCH_TYPE_IN_APPS = 5` | `WZRK_FETCH_ND_META` (**placeholder 100 — lock with BE**) | req |
+| SS meta-fetch trigger | `FETCH_TYPE_IN_APPS = 5` | `FETCH_TYPE_ND_META = 8` (agreed with BE) | req |
 | Account defaults (session/day) | `ism`/`imp` = 1/10 | `ndsm`/`ndmp` = **1/10** | account |
 | Legacy campaign caps | `efc`/`tlc`/`tdc`/`mdc` | same keys | resp/config |
 
@@ -398,8 +398,7 @@ Also resolved:
   against `whenTriggers` and evaluates `frequencyLimits`/`occurrenceLimits` the same way in-app does.
 
 Still to lock:
-1. **Lock `WZRK_FETCH_ND_META`** (placeholder `100`; distinct from `FETCH_TYPE_IN_APPS = 5`).
-2. **SDK impression-map size for ND** (design TAN open Q7) — mirror in-app's cap or ND-specific?
+1. **SDK impression-map size for ND** — mirror in-app's cap or ND-specific?
 3. **Mid-session refresh cadence** — when exactly does the SDK fire `wzrk_fetch t=ND_META`?
    (e.g., bundle empty + advanced campaign delivered, or on a timer.)
 4. **Re-view / dedupe semantics** — the ND impression hook is the viewed event
@@ -432,8 +431,8 @@ Notes on adjustments made during implementation:
 - The `adUnit_notifs_applaunched` content path landed with **Phase 6** (alongside CG acks), once the
   cap gate existed, so ND content is never delivered ungated.
 
-Still to lock with BE before release: the `FETCH_TYPE_ND_META` value (placeholder `100`), the
-mid-session refresh cadence, ND impression-map size, and viewed-event re-view/dedupe semantics.
+Still to finalise before release: the mid-session refresh cadence, ND impression-map size, and
+viewed-event re-view/dedupe semantics. (`FETCH_TYPE_ND_META = 8` is now agreed with BE.)
 
 ---
 
