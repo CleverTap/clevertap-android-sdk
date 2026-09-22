@@ -1,25 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_weight="1"
     android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/big_image"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:minHeight="196dp"
-        android:layout_weight="1"
-        android:scaleType="centerCrop"
-        android:visibility="gone" />
+    <!-- The image area. A CENTER_CROP image fills it, so on Android 12+ the styling is drawn by
+         these views: big_image_frame is painted in the border colour and clipped to the radius,
+         and big_image is inset inside it. Nothing is baked into the bitmap, so the tray is free to
+         crop and the styling still lands on the visible edge.
 
-    <ImageView
-        android:id="@+id/big_image_fitCenter"
+         A FIT_CENTER image does NOT fill the area - it is scaled to fit and centred - so neither
+         view's edge is the picture's edge and the styling has to be baked into the bitmap instead.
+         See ContentView.applyNativeImageStyling and NotificationBitmapUtils. -->
+    <FrameLayout
+        android:id="@+id/big_image_frame"
+        android:clipToOutline="true"
+        tools:targetApi="s"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:minHeight="196dp"
-        android:layout_weight="1"
-        android:scaleType="fitCenter"
-        android:visibility="gone" />
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/big_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
+            tools:targetApi="s"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/big_image_fitCenter"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

@@ -30,6 +30,14 @@
 
     <dimen name="large_icon">36dp</dimen>
 
+    <!-- Image styling percentages resolve against these. The tray measures the notification in its
+         own process, so the SDK picks the height up front; ContentView.imageStyleReferenceDimen
+         chooses per template. Collapsed views stay unstyled - they declare no height. -->
+    <dimen name="pt_image_style_reference">196dp</dimen>
+    <dimen name="pt_image_style_reference_zero_bezel">248dp</dimen>
+    <dimen name="pt_image_style_reference_vertical">180dp</dimen>
+
+
     <dimen name="five_cta_icon_margin">4dp</dimen>
     <dimen name="five_cta_padding">6dp</dimen>
 

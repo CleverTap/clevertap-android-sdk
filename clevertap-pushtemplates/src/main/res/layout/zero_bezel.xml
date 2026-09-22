@@ -20,6 +20,8 @@
 
         <ImageView
             android:id="@+id/zero_bezel_scrim"
+            android:clipToOutline="true"
+            tools:targetApi="s"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignBottom="@+id/big_media_configurable"
