@@ -126,6 +126,9 @@ class MediaPlayerRecyclerView : RecyclerView {
         removeVideoView()
         initialize()
         val currentVolume = handle.playerVolume()
+        // Set before addMediaPlayer(): it starts playback, and the buffering/ready callbacks
+        // read playingHolder to find the views they must show.
+        playingHolder = targetHolder
         val addedVideo = targetHolder.addMediaPlayer(
             currentVolume,
             {
@@ -143,8 +146,8 @@ class MediaPlayerRecyclerView : RecyclerView {
             },
             handle.videoSurface()
         )
-        if (addedVideo) {
-            playingHolder = targetHolder
+        if (!addedVideo) {
+            playingHolder = null
         }
     }
 
@@ -163,7 +166,7 @@ class MediaPlayerRecyclerView : RecyclerView {
      * otherwise the surface view stays parented inside a holder that gets rebound to a
      * different message. [stop] is not enough for that: it forgets [playingHolder] without
      * clearing the holder's video container, leaving an orphaned surface behind.
-     * [removeVideoView] must run first — it needs [playingHolder] to locate the container.
+     * [removeVideoView] both empties that container and forgets the holder.
      */
     fun prepareForListRebind() {
         Logger.v(
@@ -174,7 +177,6 @@ class MediaPlayerRecyclerView : RecyclerView {
             }
         )
         removeVideoView()
-        playingHolder = null
     }
 
     private fun findBestVisibleMediaHolder(): CTInboxBaseMessageViewHolder? {
@@ -241,5 +243,8 @@ class MediaPlayerRecyclerView : RecyclerView {
     private fun removeVideoView() {
         handle.pause()
         playingHolder?.playerRemoved() // removes all the views from video container
+        // The surface is gone, so keeping the reference would let playVideo() take its Case 2
+        // shortcut and flip playWhenReady on a released player. Case 3 re-attaches instead.
+        playingHolder = null
     }
 }
