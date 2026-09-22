@@ -172,8 +172,34 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             viewPager.setAdapter(inboxTabAdapter);
             inboxTabAdapter.notifyDataSetChanged();
             viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+            viewPager.addOnPageChangeListener(createPageSettledListener(viewPager, inboxTabAdapter));
             tabLayout.setupWithViewPager(viewPager);
         }
+    }
+
+    /**
+     * Tells the tab that just came to rest it is fully on screen, so its video can start.
+     * onPageSelected() fires while the page is still animating, when rows still measure zero
+     * visible height - only SCROLL_STATE_IDLE means settled.
+     */
+    static ViewPager.OnPageChangeListener createPageSettledListener(final ViewPager pager,
+            final CTInboxTabAdapter adapter) {
+        return new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                if (state != ViewPager.SCROLL_STATE_IDLE) {
+                    return;
+                }
+                int position = pager.getCurrentItem();
+                if (position < 0 || position >= adapter.getCount()) {
+                    return;
+                }
+                Fragment fragment = adapter.getItem(position);
+                if (fragment instanceof CTInboxListViewFragment) {
+                    ((CTInboxListViewFragment) fragment).onPageSettled();
+                }
+            }
+        };
     }
 
     @Override

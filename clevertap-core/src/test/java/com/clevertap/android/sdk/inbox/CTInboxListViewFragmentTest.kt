@@ -11,6 +11,7 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.FetchInboxCallback
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.justRun
@@ -22,6 +23,7 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.robolectric.Robolectric
@@ -464,5 +466,30 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         verify(exactly = 0) {
             ctInboxListViewFragmentSpy.fireUrlThroughIntent("ctdemo://com.clevertap.demo/WebViewActivity")
         }
+    }
+
+
+    @Test
+    fun test_onPageSettled_starts_playback_on_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onPageSettled()
+
+        // playVideo(), not onRestartPlayer(): the player is already initialised by this point.
+        verify(exactly = 1) { media.playVideo() }
+        verify(exactly = 0) { media.onRestartPlayer() }
+    }
+
+    @Test
+    fun test_onPageSettled_is_a_no_op_without_video_support() {
+        // haveVideoPlayerSupport = false leaves mediaRecyclerView null.
+        val fragment = viewReadyFragment()
+        assertNull("precondition: this tab has no media recycler", fragment.mediaRecyclerView)
+
+        fragment.onPageSettled()
+
+        assertNull(fragment.mediaRecyclerView)
     }
 }
