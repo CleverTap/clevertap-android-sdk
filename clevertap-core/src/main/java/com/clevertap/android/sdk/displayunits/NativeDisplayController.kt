@@ -9,13 +9,9 @@ import com.clevertap.android.sdk.variables.JsonUtil
 
 /**
  * Owns Native Display (Display Units) evaluation on the event stream — the ND analog of the
- * `InAppController.onQueue*` hooks.
- *
- * ND evaluation used to piggyback on `InAppController`; that coupled a separate channel to the in-app
- * feature controller. This gives ND its own entry point: `EventQueueManager.initEventEvaluation` calls
- * both controllers for a queued event. Each hook merges the app-launched system fields with the event
- * properties (same shape the in-app hooks use) and delegates to [NdEvaluationManager], guarded so an
- * ND fault can never break in-app evaluation or queue-flush scheduling.
+ * `InAppController.onQueue*` hooks. Each hook merges the app-launched system fields with the event
+ * properties and delegates to [NdEvaluationManager], guarded so an ND fault can't break in-app
+ * evaluation or queue-flush scheduling.
  */
 internal class NativeDisplayController(
     private val config: CleverTapInstanceConfig,

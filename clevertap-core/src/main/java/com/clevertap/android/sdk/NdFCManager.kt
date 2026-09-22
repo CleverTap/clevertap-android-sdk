@@ -36,10 +36,8 @@ class NdFCManager internal constructor(
     private val clock: Clock,
 ) {
 
-    // Read through the registry (like InAppFCManager) so the ND counts store repoints with the user via
-    // NdStoreProvider — this manager never holds a per-user store reference of its own. Nullable until the
-    // device id resolves; every read degrades gracefully (0/null/no-op/"not capped") rather than throwing,
-    // so a not-yet-ready store can never break a caller — e.g. QueueHeaderBuilder reading shownTodayCount.
+    // Read through the registry so the store repoints with the user via NdStoreProvider (no per-user ref
+    // held here). Nullable until the device id resolves; every read degrades gracefully rather than throw.
     private val countsStore: NdCountsStore?
         get() = storeRegistry.ndCountsStore
 
@@ -108,9 +106,8 @@ class NdFCManager internal constructor(
     }
 
     /**
-     * Re-checks the daily rollover and clears the in-memory session state for the new user. Takes no
-     * device id: the counts store repoints itself via [NdStoreProvider] off the registry's (already
-     * updated) device id, so the only contract is that callers invoke this *after* the identity is set.
+     * Clears in-memory session state and re-checks the daily rollover for the new user. Must be called
+     * after the new device id is set — the counts store repoints itself via [NdStoreProvider].
      */
     fun changeUser() {
         impressionManager.clearSessionData()

@@ -7,23 +7,16 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Channel-agnostic logic for the `/a1` header "vote" lists — the evaluated-campaign ids and the
- * CG/suppressed acks that each evaluator attaches and then removes-exactly-what-was-sent.
- *
- * Only the wire keys and the persistence sinks differ per channel (in-app `inapps_eval` /
- * `inapps_suppressed` vs ND `adUnit_eval` / `adUnit_suppressed`); the attach, remove-exactly-sent,
- * and int-safe id parsing are identical. Keeping them here removes the copy-paste that already caused
- * drift — the `optLong` reload fix (F3) previously had to be applied in two places
- * (prototype B — SDK-6055 design review).
- *
- * State (the actual lists) stays owned by each evaluator; this object only holds the shared algorithms.
+ * Channel-agnostic algorithms for the `/a1` header "vote" lists — the evaluated-campaign ids and the
+ * CG/suppressed acks each evaluator attaches, then removes exactly what was sent. Shared by in-app
+ * (`inapps_eval`/`inapps_suppressed`) and ND (`adUnit_eval`/`adUnit_suppressed`); only the wire keys
+ * and persistence sinks differ. The lists themselves stay owned by each evaluator.
  */
 internal object HeaderVoteLists {
 
     /**
-     * Parses persisted eval ids without dropping int-range values. `org.json` deserializes numeric
-     * literals within `Int` range as `Integer`, so a reified `toList<Long>()` filter would silently
-     * discard every id (campaign ids are epoch-second, always int-range).
+     * Parses persisted eval ids without dropping int-range values (`org.json` deserializes int-range
+     * numbers as `Integer`, which a reified `toList<Long>()` would silently discard).
      */
     fun readEvalIds(stored: JSONArray): MutableList<Long> =
         (0 until stored.length()).map { stored.optLong(it) }.filter { it != 0L }.toMutableList()

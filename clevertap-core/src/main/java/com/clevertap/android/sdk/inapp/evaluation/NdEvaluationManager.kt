@@ -116,28 +116,11 @@ internal class NdEvaluationManager(
     }
 
     /**
-     * App-Launched content-in-advance `whenLimits` filter. The server ships App-Launched ND content
-     * proactively — there is no `adUnit_eval` vote — so advanced `whenLimits` are otherwise never applied
-     * to it. Mirrors the in-app App-Launched flow ([EvaluationManager.evaluate]) exactly: read each unit's
-     * `whenLimits` **inline from its own payload**, bump the ND trigger, and keep the unit only if its
-     * limits still pass against the local ND impression/trigger stores.
-     *
-     * The rules are read inline (not from the `adUnit_notifs_ss` bundle) because the contract deliberately
-     * **excludes** App-Launched campaigns from that bundle — the full payload here already carries the rules
-     * (contract §5.2: "they get full content in `adUnit_notifs_applaunched`; sending them metadata
-     * separately would be redundant"). Just like in-app, whose app-launched payloads carry the caps inline.
-     * A unit with no inline advanced rules passes through untouched (simple campaign; nothing to enforce).
-     * Unlike in-app there is no single-winner selection — every survivor is returned. Suppressed CG stubs
-     * are excluded upstream and acked separately via [recordCgSuppressed].
-     *
-     * The trigger [increment][TriggerManager.increment] here is the *only* place an App-Launched campaign's
-     * occurrence count advances online, because `EventQueueManager.initEventEvaluation` skips the online
-     * App-Launched event. An *offline* launch does count it via that event path, but the server then
-     * delivers that (voted) campaign as regular `adUnit_notifs` — not `adUnit_notifs_applaunched` — so this
-     * method never sees it and there is no double count. (Same increment shape as in-app.)
-     *
-     * @param content the non-suppressed App-Launched display-unit payloads.
-     * @return the subset still within its advanced `whenLimits` (input order preserved).
+     * Filters App-Launched content-in-advance by its advanced `whenLimits`, returning the units still
+     * within cap (order preserved). App-Launched content is never voted, so this is where its limits are
+     * applied. Rules are read inline from each payload (App-Launched campaigns are excluded from
+     * `adUnit_notifs_ss`); a unit with no inline rules passes through. All survivors are returned — no
+     * single-winner selection. Suppressed CG stubs are excluded upstream (acked via [recordCgSuppressed]).
      */
     @WorkerThread
     fun retainAppLaunchedWithinLimits(content: List<JSONObject>): List<JSONObject> {
@@ -158,17 +141,13 @@ internal class NdEvaluationManager(
     }
 
     /**
-     * Records a CG-suppressed App-Launched ND stub as an `adUnit_suppressed` ack. The server ships
-     * stubs (`suppressed:true` + `wzrk_cgId`) inline in `adUnit_notifs_applaunched`; the SDK acks at
-     * its would-have-been-surfaced moment (App-Launched path only — regular events need no ack) so the
-     * CG event fires at render time rather than server-delivery time. Bare shape mirrors in-app's
-     * `inapps_suppressed`.
+     * Records a CG-suppressed App-Launched stub as an `adUnit_suppressed` ack, so the CG event fires at
+     * the would-have-been-surfaced moment. Bare shape mirrors in-app's `inapps_suppressed`.
      */
     fun recordCgSuppressed(stub: JSONObject) {
         val wzrkId = stub.optString(Constants.NOTIFICATION_ID_TAG)
         if (wzrkId.isEmpty()) {
-            // The CG stub always ships wzrk_id (unlike in-app payloads which carry
-            // only ti). Log if one ever doesn't, rather than dropping the ack silently.
+            // CG stubs always ship wzrk_id; log rather than drop silently if one doesn't.
             config.logger.verbose(config.accountId,"Dropping ND CG ack: stub missing wzrk_id (ti=${stub.optString(Constants.INAPP_ID_IN_PAYLOAD)})")
             return
         }

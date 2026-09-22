@@ -92,10 +92,8 @@ internal class DisplayUnitResponse(
         try {
             val ndFCManager = controllerManager.ndFCManager
 
-            // Account-level ceilings. `has(ndmc)` is load-bearing: `ndmc` is emitted on every V2
-            // response, so its presence is what tells us this is a cap-aware response
-            // worth writing ceilings for. `ndmp` absent => uncapped daily, which optInt's Int.MAX_VALUE
-            // default already expresses (no separate has() needed).
+            // Account-level ceilings. `ndmc` presence marks a cap-aware response; absent `ndmp` => uncapped
+            // daily (the Int.MAX_VALUE default expresses that).
             if (response.has(Constants.ND_MAX_PER_SESSION_KEY) && ndFCManager != null) {
                 val perSession = response.optInt(Constants.ND_MAX_PER_SESSION_KEY, 1)
                 val perDay = response.optInt(Constants.ND_MAX_PER_DAY_KEY, Int.MAX_VALUE)
@@ -108,9 +106,8 @@ internal class DisplayUnitResponse(
                 ndFCManager?.processResponse(staleIds)
             }
 
-            // Advanced-rule metadata bundle (rules only) for local evaluation. Full replace, including
-            // an empty array: the bundle is emitted only on App-Launched / ND-meta-fetch and is always
-            // the complete current set, so [] legitimately means "clear".
+            // Advanced-rule metadata bundle for local evaluation. Full replace, including an empty array
+            // (the bundle is always the complete current set, so [] means "clear").
             if (response.has(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)) {
                 val ssArray = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_SS_KEY)
                 val ndStore: NdStore? = stores.ndStore
@@ -185,12 +182,8 @@ internal class DisplayUnitResponse(
     private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?) {
         val parsed = ArrayList<CleverTapDisplayUnit>()
         notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it)) }
-        appLaunched?.let {
-            // App-Launched content arrives in advance with no adUnit_eval vote, so advanced whenLimits are
-            // otherwise never applied to it — filter here. Suppressed CG stubs are excluded (and
-            // acked separately in ackCgSuppressedStubs), so the survivors are all non-suppressed.
-            parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it))))
-        }
+        // App-Launched content is filtered by whenLimits here (it carries no adUnit_eval vote).
+        appLaunched?.let { parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it)))) }
 
         val cache = controllerManager.orCreateDisplayUnitCache
         if (cache == null) {
@@ -201,9 +194,8 @@ internal class DisplayUnitResponse(
         val displayUnits = ArrayList(
             NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
         )
-        // Write even when empty. deliverContent only calls this when the response carried content, so a
-        // fully-filtered/suppressed result must reset the cache (updateDisplayUnits replaces, not merges) —
-        // else a host reading getAllDisplayUnits() keeps rendering a unit this response just suppressed.
+        // Write even when empty: a fully-filtered response must reset the cache (updateDisplayUnits
+        // replaces, not merges) so getAllDisplayUnits() can't keep serving a now-suppressed unit.
         cache.updateDisplayUnits(displayUnits)
         if (displayUnits.isNotEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(displayUnits)
@@ -213,16 +205,10 @@ internal class DisplayUnitResponse(
     }
 
     /**
-     * Applies advanced `whenLimits` to the non-suppressed App-Launched content. Content-in-advance
-     * arrives with no `adUnit_eval` vote, so this is the only place client-side `whenLimits` can gate it.
-     * Suppressed CG stubs are excluded here (they are acked separately in [ackCgSuppressedStubs]); the
-     * send-test / preview path has no ND evaluator wired and passes content through unchanged.
-     *
-     * The filter is guarded: a malformed advanced rule can throw from deep in `LimitsMatcher` (e.g. an
-     * `onEvery`/`onExactly` rule with `limit == 0` divides by zero). This runs inside the shared
-     * `parseDisplayUnits`, so an unguarded throw would drop the whole response — `adUnit_notifs` and all.
-     * Degrade to "whenLimits not applied" for App-Launched content instead, matching how the rest of the
-     * ND path (`NativeDisplayController.runGuarded`, `ingestNdMeta`) isolates faults from delivery.
+     * Returns the non-suppressed App-Launched units still within their advanced `whenLimits`. Suppressed
+     * CG stubs are dropped here (acked separately in [ackCgSuppressedStubs]). Guarded: a malformed rule
+     * degrades to "not filtered" rather than throwing out of the shared [parseDisplayUnits] and dropping
+     * the whole response.
      */
     private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
         val nonSuppressed = ArrayList<JSONObject>()
