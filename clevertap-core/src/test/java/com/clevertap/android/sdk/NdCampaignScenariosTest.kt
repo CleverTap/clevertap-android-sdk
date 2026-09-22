@@ -30,13 +30,11 @@ import kotlin.test.assertTrue
  *
  * A "show" is driven through the **production public API**
  * [AnalyticsManager.pushDisplayUnitViewedEventForID] (the same call `CleverTapAPI` exposes): it looks
- * the unit up in the display-unit cache, gates on fcap-managed, and records the ND impression via a real
- * [NdFCManager]. The impression must be recorded under the stable `ti`
- * (not the `wzrk_id`) so the evaluator's whenLimits actually see it.
+ * the unit up in the display-unit cache and records the ND impression via a real [NdFCManager], under the
+ * stable `ti` (not the `wzrk_id`) so the evaluator's whenLimits actually see it.
  *
- * The cache is an accumulating one (units persist across per-event deliveries), so the viewed lookup
- * always resolves; its behavior is asserted too. Lives in this package because AnalyticsManager's
- * constructor is package-private.
+ * The cache is an accumulating fixture so the viewed lookup always resolves across per-event deliveries.
+ * Lives in this package because AnalyticsManager's constructor is package-private.
  */
 class NdCampaignScenariosTest : BaseTestCase() {
 
@@ -266,26 +264,9 @@ class NdCampaignScenariosTest : BaseTestCase() {
         assertEquals(1, impressionManager.getImpressions(sadas).size)
         assertEquals(0, impressionManager.getImpressions(wzrkId(sadas)).size)
     }
-
-    // ---- display-unit cache behavior ----
-
-    @Test
-    fun `cache accumulates delivered units across deliveries`() {
-        val before = cache.getAllDisplayUnits()!!.size
-        cache.updateDisplayUnits(listOf(contentUnit("99999001"))) // a later, separate delivery
-
-        val after = cache.getAllDisplayUnits()!!
-        assertEquals(before + 1, after.size, "units must accumulate, not replace")
-        assertTrue(after.any { it.unitID == wzrkId("99999001") })
-    }
-
-    @Test
-    fun `cache getDisplayUnitForID resolves the delivered unit, null otherwise`() {
-        assertEquals(wzrkId(sadas), cache.getDisplayUnitForID(wzrkId(sadas))?.unitID)
-        assertNull(cache.getDisplayUnitForID("unknown_id"))
-        assertNull(cache.getDisplayUnitForID(null))
-        assertNull(cache.getDisplayUnitForID(""))
-    }
+    // Note: the accumulating cache here is only a fixture (so setUp's 11 per-unit deliveries survive); its
+    // accumulate semantics are the OPPOSITE of production CTDisplayUnitController (which reset()s + replaces),
+    // so there are deliberately no tests asserting the fixture's own behavior — that would test the double.
 
     // ---- helpers ----
 

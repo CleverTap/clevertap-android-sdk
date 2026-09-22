@@ -74,8 +74,10 @@ internal class DisplayUnitResponse(
             return
         }
 
-        // 1. ND fcap meta — always, even on a user switch.
-        ingestNdMeta(response, context)
+        // 1. ND fcap meta. Account-level ceilings + dead-target GC run always; the per-user ss-bundle and
+        //    CG acks are skipped on a user switch (mirrors InAppResponse, which stores the SS bundle only
+        //    after its isUserSwitching return) so the outgoing user's rules never land in the new user's prefs.
+        ingestNdMeta(response, context, isUserSwitching)
 
         // 2. ND content — skipped on a user switch.
         if (!isUserSwitching) {
@@ -85,7 +87,7 @@ internal class DisplayUnitResponse(
 
     // ---- ND fcap meta ----------------------------------------------------------------------------
 
-    private fun ingestNdMeta(response: JSONObject, context: Context) {
+    private fun ingestNdMeta(response: JSONObject, context: Context, isUserSwitching: Boolean) {
         // Content-only (send-test/preview) path has no ND stores wired — skip meta entirely.
         val stores = storeRegistry ?: return
         val evalManager = ndEvaluationManager ?: return
@@ -105,6 +107,10 @@ internal class DisplayUnitResponse(
                 clearStaleNdCache(stores, staleIds)
                 ndFCManager?.processResponse(staleIds)
             }
+
+            // The ss-bundle and CG acks are per-user; skip them on a user switch so the outgoing user's
+            // rules/acks aren't written into the just-switched-in user's stores (mirrors InAppResponse).
+            if (isUserSwitching) return
 
             // Advanced-rule metadata bundle for local evaluation. Full replace, including an empty array
             // (the bundle is always the complete current set, so [] means "clear").
@@ -192,7 +198,10 @@ internal class DisplayUnitResponse(
         }
 
         val displayUnits = ArrayList(
-            NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
+            // Never cap-gate the send-test / push-preview path (content-only constructor, no ND stores) —
+            // a marketer's preview must always render.
+            if (storeRegistry == null) parsed
+            else NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
         )
         // Write even when empty: a fully-filtered response must reset the cache (updateDisplayUnits
         // replaces, not merges) so getAllDisplayUnits() can't keep serving a now-suppressed unit.

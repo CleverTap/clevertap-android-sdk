@@ -3796,7 +3796,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Requests a fresh Native Display (ND) advanced-rule metadata bundle mid-session (SDK-6055).
      * Sends a {@code wzrk_fetch} event with {@code t = FETCH_TYPE_ND_META}; the server responds with
-     * {@code adUnit_notifs_ss} (see {@link com.clevertap.android.sdk.response.AdUnitResponse}). Old
+     * {@code adUnit_notifs_ss} (see {@link com.clevertap.android.sdk.response.DisplayUnitResponse}). Old
      * SDKs/servers ignore the unknown fetch type, so this is forward/backward compatible.
      *
      * Note: the placeholder fetch-type value must be locked with BE before release, and the exact

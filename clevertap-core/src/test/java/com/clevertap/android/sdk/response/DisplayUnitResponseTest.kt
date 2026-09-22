@@ -219,4 +219,34 @@ class DisplayUnitResponseTest : BaseTestCase() {
         verify { ndFCManager.updateLimits(10, 1) }               // meta ingested
         verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) } // content skipped
     }
+
+    @Test
+    fun `on user switch persists per-account ceilings but NOT the per-user ss-bundle or CG acks`() {
+        val json = JSONObject(
+            """{"ndmc":1,"ndmp":10,
+                "adUnit_notifs_ss":[{"ti":70001}],
+                "adUnit_notifs_applaunched":[{"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}]}""",
+        )
+
+        response.processResponse(json, "", context, true)
+
+        verify { ndFCManager.updateLimits(10, 1) }                        // per-account: kept
+        verify(exactly = 0) { ndStore.storeServerSideNdMetaData(any()) }  // per-user bundle: skipped
+        verify(exactly = 0) { ndEvaluationManager.recordCgSuppressed(any()) } // per-user CG ack: skipped
+    }
+
+    @Test
+    fun `send-test preview path is never cap-gated`() {
+        // Content-only constructor -> storeRegistry null -> the fcap gate must be skipped so a marketer's
+        // preview always renders, even if canShow would deny.
+        val preview = DisplayUnitResponse(config, callbackManager, controllerManager)
+        every { ndFCManager.canShow(any(), any(), any(), any(), any(), any()) } returns false
+        val json = JSONObject("""{"adUnit_notifs":[{"wzrk_id":"p1","ti":70001,"type":"simple","tlc":1}]}""")
+
+        preview.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size) // delivered despite canShow=false
+    }
 }

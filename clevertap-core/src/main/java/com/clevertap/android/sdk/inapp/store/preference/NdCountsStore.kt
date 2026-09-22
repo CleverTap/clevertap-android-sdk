@@ -32,6 +32,9 @@ internal class NdCountsStore(
             Constants.KEY_ND_LAST_RESET_DATE,
         )
         private const val DEFAULT_DATE = "20140428"
+
+        // Contract default for the account global daily cap until the server pushes `ndmp`.
+        private const val DEFAULT_MAX_PER_DAY = 10
     }
 
     // ---- per-target counts ----
@@ -72,9 +75,9 @@ internal class NdCountsStore(
         get() = ctPreference.readInt(Constants.KEY_ND_COUNTS_SHOWN_TODAY, 0)
         set(value) = ctPreference.writeInt(Constants.KEY_ND_COUNTS_SHOWN_TODAY, value)
 
-    /** Account global daily ceiling (`ndstmcd`), default 1 until the server pushes it. */
+    /** Account global daily ceiling (`ndmp`), contract default 10 until the server pushes it. */
     var maxPerDay: Int
-        get() = ctPreference.readInt(Constants.KEY_ND_MAX_PER_DAY, 1)
+        get() = ctPreference.readInt(Constants.KEY_ND_MAX_PER_DAY, DEFAULT_MAX_PER_DAY)
         set(value) = ctPreference.writeInt(Constants.KEY_ND_MAX_PER_DAY, value)
 
     /** Account global session ceiling (`ndmc`), default 1 until the server pushes it. */

@@ -81,10 +81,10 @@ class NdCountsStoreTest {
     }
 
     @Test
-    fun `global ceilings default to 1 until set`() {
-        every { ctPreference.readInt(Constants.KEY_ND_MAX_PER_DAY, 1) } returns 1
+    fun `global ceilings use contract defaults until set - daily 10, session 1`() {
+        every { ctPreference.readInt(Constants.KEY_ND_MAX_PER_DAY, 10) } returns 10
         every { ctPreference.readInt(Constants.ND_MAX_PER_SESSION_KEY, 1) } returns 1
-        assertEquals(1, store.maxPerDay)
+        assertEquals(10, store.maxPerDay)
         assertEquals(1, store.maxPerSession)
     }
 

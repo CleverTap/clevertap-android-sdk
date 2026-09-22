@@ -132,7 +132,7 @@ impressions do **not** share a file:
 | State | Prefs file (Android xml name) | Key | Value | Mirror of |
 |---|---|---|---|---|
 | Per-target counters (today+lifetime) | `WizRocket_nd_counts_per_target:<deviceId>:<accountId>` (StorageHelper) | `<ti>` | `"today,lifetime"` | `counts_per_inapp` (`InAppFCManager`) |
-| Impression timestamps (whenLimits windows) | `nd_counts_per_target:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix; a *different* file from the counters**) | `__impressions_<ti>` | unix-seconds CSV | `ImpressionStore` |
+| Impression timestamps (whenLimits windows) | `nd_impressions:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix; a *different* file from the counters**) | `__impressions_<ti>` | unix-seconds CSV | `ImpressionStore` |
 | Trigger counts (onEvery/onExactly) | `nd_triggers_per_target:<deviceId>:<accountId>` (CTPreference) | `__triggers_<ti>` | int | `TriggerManager` |
 | Global ND counters + ceilings | base `WizRocket` | `ndstc:<…>` (shown-today), `ndstmcd:<…>` (day ceiling, `KEY_ND_MAX_PER_DAY`), `ndmc:<…>` (session ceiling), `nd_ict_date:<…>` | ints / date | `istc_inapp`/`istmcd_inapp`/`imc`/`ict_date` |
 | Advanced metadata bundle | `adUnit:<deviceId>:<accountId>` (CTPreference) | `adUnit_notifs_ss` | JSON array (plaintext — SS only, no CS encryption) | `inapp_notifs_ss` in `InAppStore` |
@@ -244,7 +244,7 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     RESP[/a1 response/] --> CRH[ClevertapResponseHandler chain]
-    CRH --> NDR[AdUnitResponse - NEW]
+    CRH --> NDR[DisplayUnitResponse]
     NDR --> SS[adUnit_notifs_ss<br/>store metadata bundle]
     NDR --> AL[adUnit_notifs_applaunched<br/>content + CG stubs]
     NDR --> NF[adUnit_notifs<br/>winner content]
@@ -353,7 +353,7 @@ entry) pass through untouched. CG-suppressed stubs are excluded from this filter
   `canShow`-equivalent, `didShow`-equivalent (driven by the viewed event), `ndtlc`/`ndmp` serializers.
 - `NdStore` (sibling of the SS half of `InAppStore`): metadata bundle + eval/suppressed lists.
 - `NdEvaluationManager` (or a generalized `EvaluationManager<Channel>`).
-- `AdUnitResponse` `CleverTapResponse` processor, wired into `CleverTapFactory` chain.
+- `DisplayUnitResponse` `CleverTapResponse` processor, wired into `CleverTapFactory` chain.
 - ND `NetworkHeadersListener` contributions (`adUnit_eval`/`adUnit_suppressed`/`ndtlc`/`ndmp`).
 - New constants incl. `FETCH_TYPE_ND_META` and the trigger for mid-session refresh.
 - **No new renderer** — reuse the existing Display Units delivery/callback path; hook impression
