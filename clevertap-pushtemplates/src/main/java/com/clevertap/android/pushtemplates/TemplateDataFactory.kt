@@ -134,6 +134,12 @@ internal object TemplateDataFactory {
                 defaultAltText
             )
 
+            TemplateType.ICONS -> createIconsTemplateData(
+                extras,
+                darkModeAdaptiveColors,
+                defaultAltText
+            )
+
             TemplateType.PRODUCT_DISPLAY -> createProductTemplateData(
                 extras,
                 darkModeAdaptiveColors,
@@ -225,8 +231,18 @@ internal object TemplateDataFactory {
         return FiveIconsTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
-            // Raw pt_* keys only (no nt/nm/wzrk_nms fallback); an empty string counts as absent,
-            // as everywhere else in this factory, so the layouts and the builder agree.
+        )
+    }
+
+    private fun createIconsTemplateData(
+        extras: Bundle,
+        colorMap: Map<String, String>,
+        defaultAltText: String
+    ): IconsTemplateData {
+        return IconsTemplateData(
+            baseContent = createBaseContent(extras, colorMap),
+            imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
+            // pt_* keys only; an empty string counts as absent.
             iconTextData = BaseTextData(
                 title = extras.getString(PT_TITLE).takeUnless { it.isNullOrEmpty() },
                 message = extras.getString(PT_MSG).takeUnless { it.isNullOrEmpty() },
@@ -586,6 +602,17 @@ internal object TemplateDataFactory {
     }
 
     internal fun FiveIconsTemplateData.toBasicTemplateData(): BasicTemplateData {
+        return BasicTemplateData(
+            baseContent = this.baseContent,
+            mediaData = MediaData(
+                bigImage = ImageData(altText = ""),
+                gif = GifData()
+            ),
+            actions = null
+        )
+    }
+
+    internal fun IconsTemplateData.toBasicTemplateData(): BasicTemplateData {
         return BasicTemplateData(
             baseContent = this.baseContent,
             mediaData = MediaData(

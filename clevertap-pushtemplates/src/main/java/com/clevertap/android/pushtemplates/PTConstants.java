@@ -168,10 +168,8 @@ public class PTConstants {
     public static final String PT_ACTION_ID = "actionId";
 
     /**
-     * Same key the core SDK puts on action button click intents. Five icons CTA clicks carry it so
-     * the app-side dismiss handler can cancel the notification: the SDK does not dismiss on an icon
-     * tap on any Android version, since below API 31 the tap is broadcast to
-     * CTPushNotificationReceiver, which does not cancel either.
+     * Same key core action buttons use. Icons template taps carry it so the app can dismiss the
+     * notification, since the SDK does not.
      */
     public static final String PT_AUTO_CANCEL = "autoCancel";
 

@@ -17,6 +17,7 @@
     <dimen name="large_icon">48dp</dimen>
 
     <dimen name="five_cta_icon_margin">8dp</dimen>
+    <dimen name="icons_icon_margin">8dp</dimen>
 
     <dimen name="manual_carousel_arrow">48dp</dimen>
     <dimen name="manual_carousel_arrow_padding">0dp</dimen>

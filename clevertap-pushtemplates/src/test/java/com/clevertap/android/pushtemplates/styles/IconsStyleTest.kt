@@ -9,7 +9,7 @@ import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.BaseColorData
 import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.BaseTextData
-import com.clevertap.android.pushtemplates.FiveIconsTemplateData
+import com.clevertap.android.pushtemplates.IconsTemplateData
 import com.clevertap.android.pushtemplates.IconData
 import com.clevertap.android.pushtemplates.NotificationBehavior
 import com.clevertap.android.pushtemplates.TemplateRenderer
@@ -26,15 +26,12 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * The builder title is what the system shows when it stacks notifications into a group
- * summary, where our RemoteViews are not rendered. Five icons must feed it the pt_* text only,
- * otherwise the nt fallback (the base title, e.g. the iOS title) leaks into the summary
- * for an icon-only notification. pt_msg stands in for a campaign that sets no pt_title, which
- * would otherwise be a blank row in the summary.
+ * The builder title shows in a stacked group summary. It must come from pt_title or pt_msg,
+ * never the nt fallback.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
-class FiveIconStyleTest {
+class IconsStyleTest {
 
     private val context: Context = RuntimeEnvironment.getApplication()
 
@@ -87,8 +84,8 @@ class FiveIconStyleTest {
 
     private fun newBuilder() = NotificationCompat.Builder(context, "test_channel")
 
-    private fun styleWith(baseTitle: String, ptTitle: String?, ptMsg: String? = null): FiveIconStyle {
-        val data = FiveIconsTemplateData(
+    private fun styleWith(baseTitle: String, ptTitle: String?, ptMsg: String? = null): IconsStyle {
+        val data = IconsTemplateData(
             baseContent = BaseContent(
                 textData = BaseTextData(title = baseTitle, message = "base message"),
                 colorData = BaseColorData(),
@@ -102,8 +99,8 @@ class FiveIconStyleTest {
         val renderer = TemplateRenderer(context, Bundle()).apply {
             smallIcon = android.R.drawable.ic_dialog_info
         }
-        // The content views load icon bitmaps over the network; they are not what this test covers.
-        return spyk(FiveIconStyle(data, renderer, Bundle()), recordPrivateCalls = true).also { spy ->
+        // Skip the content views, which download icon bitmaps.
+        return spyk(IconsStyle(data, renderer, Bundle()), recordPrivateCalls = true).also { spy ->
             every { spy["makeSmallContentRemoteView"](any<Context>(), any<TemplateRenderer>()) } returns null as RemoteViews?
             every { spy["makeBigContentRemoteView"](any<Context>(), any<TemplateRenderer>()) } returns null as RemoteViews?
             every { spy["makePendingIntent"](any<Context>(), any<Bundle>(), any<Int>()) } returns null as PendingIntent?

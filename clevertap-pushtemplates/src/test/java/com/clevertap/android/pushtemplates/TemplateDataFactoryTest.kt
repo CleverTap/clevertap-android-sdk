@@ -234,8 +234,8 @@ class TemplateDataFactoryTest {
     }
 
     @Test
-    fun `createTemplateData should not fall back to nt-nm for FIVE_ICONS icon text`() {
-        // Given - campaign leaves pt_title/pt_msg unset but nt/nm are always populated
+    fun `createTemplateData should not fall back to nt-nm for ICONS icon text`() {
+        // Given - pt_title/pt_msg unset, nt/nm set
         setupBasicMockBundle()
         every { mockBundle.getString(PT_TITLE) } returns null
         every { mockBundle.getString(PT_MSG) } returns null
@@ -245,27 +245,27 @@ class TemplateDataFactoryTest {
 
         // When
         val result = TemplateDataFactory.createTemplateData(
-            templateType = TemplateType.FIVE_ICONS,
+            templateType = TemplateType.ICONS,
             extras = mockBundle,
             isDarkMode = false,
             defaultAltText = defaultAltText,
             notificationIdsProvider = notificationIdsProvider
         )
 
-        // Then - the layouts see no text, so the icon-only layouts stay reachable
-        val fiveIconsData = result as FiveIconsTemplateData
-        assertNull(fiveIconsData.iconTextData.title)
-        assertNull(fiveIconsData.iconTextData.message)
-        assertNull(fiveIconsData.iconTextData.messageSummary)
-        // but the builder and the basic fallback still get nt/nm/wzrk_nms
-        assertEquals(SAMPLE_TITLE, fiveIconsData.baseContent.textData.title)
-        assertEquals(SAMPLE_MESSAGE, fiveIconsData.baseContent.textData.message)
-        assertEquals(SAMPLE_SUMMARY, fiveIconsData.baseContent.textData.messageSummary)
+        // Then - no icon text
+        val iconsData = result as IconsTemplateData
+        assertNull(iconsData.iconTextData.title)
+        assertNull(iconsData.iconTextData.message)
+        assertNull(iconsData.iconTextData.messageSummary)
+        // but baseContent keeps the nt/nm fallback
+        assertEquals(SAMPLE_TITLE, iconsData.baseContent.textData.title)
+        assertEquals(SAMPLE_MESSAGE, iconsData.baseContent.textData.message)
+        assertEquals(SAMPLE_SUMMARY, iconsData.baseContent.textData.messageSummary)
     }
 
     @Test
-    fun `createTemplateData should treat empty pt text keys as absent for FIVE_ICONS icon text`() {
-        // Given - an API payload can carry "" where the dashboard would omit the key
+    fun `createTemplateData should treat empty pt text keys as absent for ICONS icon text`() {
+        // Given - empty pt text keys
         setupBasicMockBundle()
         every { mockBundle.getString(PT_TITLE) } returns ""
         every { mockBundle.getString(PT_MSG) } returns ""
@@ -275,22 +275,22 @@ class TemplateDataFactoryTest {
 
         // When
         val result = TemplateDataFactory.createTemplateData(
-            templateType = TemplateType.FIVE_ICONS,
+            templateType = TemplateType.ICONS,
             extras = mockBundle,
             isDarkMode = false,
             defaultAltText = defaultAltText,
             notificationIdsProvider = notificationIdsProvider
         )
 
-        // Then - null, not "", so the builder title is left unset like the layouts' text row
-        val fiveIconsData = result as FiveIconsTemplateData
-        assertNull(fiveIconsData.iconTextData.title)
-        assertNull(fiveIconsData.iconTextData.message)
-        assertNull(fiveIconsData.iconTextData.messageSummary)
+        // Then - treated as absent
+        val iconsData = result as IconsTemplateData
+        assertNull(iconsData.iconTextData.title)
+        assertNull(iconsData.iconTextData.message)
+        assertNull(iconsData.iconTextData.messageSummary)
     }
 
     @Test
-    fun `createTemplateData should use pt_title pt_msg and pt_msg_summary for FIVE_ICONS icon text`() {
+    fun `createTemplateData should use pt_title pt_msg and pt_msg_summary for ICONS icon text`() {
         // Given
         setupBasicMockBundle()
         every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
@@ -298,7 +298,7 @@ class TemplateDataFactoryTest {
 
         // When
         val result = TemplateDataFactory.createTemplateData(
-            templateType = TemplateType.FIVE_ICONS,
+            templateType = TemplateType.ICONS,
             extras = mockBundle,
             isDarkMode = false,
             defaultAltText = defaultAltText,
@@ -306,10 +306,10 @@ class TemplateDataFactoryTest {
         )
 
         // Then
-        val fiveIconsData = result as FiveIconsTemplateData
-        assertEquals(SAMPLE_TITLE, fiveIconsData.iconTextData.title)
-        assertEquals(SAMPLE_MESSAGE, fiveIconsData.iconTextData.message)
-        assertEquals(SAMPLE_SUMMARY, fiveIconsData.iconTextData.messageSummary)
+        val iconsData = result as IconsTemplateData
+        assertEquals(SAMPLE_TITLE, iconsData.iconTextData.title)
+        assertEquals(SAMPLE_MESSAGE, iconsData.iconTextData.message)
+        assertEquals(SAMPLE_SUMMARY, iconsData.iconTextData.messageSummary)
     }
 
     @Test
@@ -996,7 +996,6 @@ class TemplateDataFactoryTest {
                 notificationBehavior = NotificationBehavior()
             ),
             imageList = arrayListOf(),
-            iconTextData = BaseTextData(title = SAMPLE_TITLE)
         )
     }
 

@@ -13,6 +13,7 @@
     <dimen name="large_icon">36dp</dimen>
 
     <dimen name="five_cta_icon_margin">6dp</dimen>
+    <dimen name="icons_icon_margin">6dp</dimen>
 
     <dimen name="manual_carousel_arrow">36dp</dimen>
     <dimen name="manual_carousel_arrow_padding">12dp</dimen>

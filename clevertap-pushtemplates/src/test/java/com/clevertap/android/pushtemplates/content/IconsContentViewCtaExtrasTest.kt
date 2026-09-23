@@ -8,7 +8,7 @@ import android.os.Bundle
 import com.clevertap.android.pushtemplates.BaseColorData
 import com.clevertap.android.pushtemplates.BaseContent
 import com.clevertap.android.pushtemplates.BaseTextData
-import com.clevertap.android.pushtemplates.FiveIconsTemplateData
+import com.clevertap.android.pushtemplates.IconsTemplateData
 import com.clevertap.android.pushtemplates.IconData
 import com.clevertap.android.pushtemplates.NotificationBehavior
 import com.clevertap.android.pushtemplates.PTConstants
@@ -29,15 +29,12 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * An icon tap opens its deep link without the SDK cancelling the notification, on Android 12+
- * through the activity directly and below that through CTPushNotificationReceiver, so the app has
- * to clear it itself from the intent extras. The documented client-side handler keys off
- * "actionId" / "autoCancel" / "notificationId", the same extras the core SDK puts on action button
- * clicks. Both five icons content views must attach them to every icon bundle.
+ * The SDK does not dismiss on an icon tap, so every icon bundle must carry the actionId,
+ * autoCancel and notificationId extras the app's dismiss handler reads.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
-class FiveIconContentViewCtaExtrasTest {
+class IconsContentViewCtaExtrasTest {
 
     private val context: Context = RuntimeEnvironment.getApplication()
     private val notificationId = 4521
@@ -45,7 +42,7 @@ class FiveIconContentViewCtaExtrasTest {
 
     @Before
     fun setUp() {
-        // The views print the app name in the header; Robolectric's test application has no label.
+        // Robolectric's test app has no label for the header.
         context.applicationInfo.nonLocalizedLabel = "Test App"
         mockkStatic(LaunchPendingIntentFactory::class)
         every { LaunchPendingIntentFactory.getLaunchPendingIntent(any(), any()) } answers {
@@ -61,38 +58,38 @@ class FiveIconContentViewCtaExtrasTest {
 
     @Test
     fun `small view attaches actionId autoCancel and notificationId to all five icon bundles`() {
-        FiveIconSmallContentView(context, rendererWith(notificationId), dataWith(fiveDeepLinks), Bundle())
+        IconsSmallContentView(context, rendererWith(notificationId), dataWith(fiveDeepLinks), Bundle())
 
         assertCtaExtras(fiveDeepLinks)
     }
 
     @Test
     fun `big view attaches actionId autoCancel and notificationId to all five icon bundles`() {
-        FiveIconBigContentView(context, rendererWith(notificationId), dataWith(fiveDeepLinks), Bundle())
+        IconsBigContentView(context, rendererWith(notificationId), dataWith(fiveDeepLinks), Bundle())
 
         assertCtaExtras(fiveDeepLinks)
     }
 
     @Test
     fun `four deep links wire exactly four icons in both views`() {
-        FiveIconSmallContentView(context, rendererWith(notificationId), dataWith(fourDeepLinks), Bundle())
+        IconsSmallContentView(context, rendererWith(notificationId), dataWith(fourDeepLinks), Bundle())
         assertCtaExtras(fourDeepLinks)
 
         capturedBundles.clear()
-        FiveIconBigContentView(context, rendererWith(notificationId), dataWith(fourDeepLinks), Bundle())
+        IconsBigContentView(context, rendererWith(notificationId), dataWith(fourDeepLinks), Bundle())
         assertCtaExtras(fourDeepLinks)
     }
 
     @Test
     fun `small view only builds bundles for the icons that have a deep link`() {
-        FiveIconSmallContentView(context, rendererWith(notificationId), dataWith(threeDeepLinks), Bundle())
+        IconsSmallContentView(context, rendererWith(notificationId), dataWith(threeDeepLinks), Bundle())
 
         assertCtaExtras(threeDeepLinks)
     }
 
     @Test
     fun `big view only builds bundles for the icons that have a deep link`() {
-        FiveIconBigContentView(context, rendererWith(notificationId), dataWith(threeDeepLinks), Bundle())
+        IconsBigContentView(context, rendererWith(notificationId), dataWith(threeDeepLinks), Bundle())
 
         assertCtaExtras(threeDeepLinks)
     }
@@ -113,8 +110,8 @@ class FiveIconContentViewCtaExtrasTest {
         this.notificationId = notificationId
     }
 
-    // No images: the views would try to download them, and the icon bundles are what this test covers.
-    private fun dataWith(deepLinks: List<String>) = FiveIconsTemplateData(
+    // No images, so nothing is downloaded.
+    private fun dataWith(deepLinks: List<String>) = IconsTemplateData(
         baseContent = BaseContent(
             textData = BaseTextData(title = "title", message = "message"),
             colorData = BaseColorData(),
