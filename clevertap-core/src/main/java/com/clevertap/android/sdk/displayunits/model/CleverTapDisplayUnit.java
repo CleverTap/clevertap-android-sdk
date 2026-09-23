@@ -174,6 +174,32 @@ public class CleverTapDisplayUnit implements Parcelable {
         return customExtras;
     }
 
+    /**
+     * Returns the per-item {@code wzrk_*} attribution for the content item at
+     * {@code contentIndex}, including server-supplied element ID/index, title-based
+     * CTA, and Android action/data fields.
+     * <p>
+     * Ready for use with display unit element click/view events. Returns an empty
+     * map when the index is invalid or no item-level attribution exists, in which
+     * case only unit-level {@code wzrk_*} attribution is recorded. Applies to all
+     * Native Display types.
+     *
+     * @param contentIndex zero-based index into {@link #getContents()}
+     * @return item-level attribution; never null
+     */
+    @NonNull
+    @SuppressWarnings("unused")
+    public HashMap<String, Object> getMetaDataForContent(int contentIndex) {
+        if (contents == null || contentIndex < 0 || contentIndex >= contents.size()) {
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT,
+                    "Content index " + contentIndex + " out of range for unit " + unitID);
+            return new HashMap<>();
+        }
+        // Defensive copy: prevent callers from modifying stored attribution.
+        HashMap<String, Object> metaData = contents.get(contentIndex).getMetaData();
+        return metaData != null ? new HashMap<>(metaData) : new HashMap<String, Object>();
+    }
+
     public String getError() {
         return error;
     }
