@@ -339,6 +339,66 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         return out;
     }
 
+    /**
+     * Raises a Native Display element view event.
+     *
+     * Viewed analog of {@link #pushDisplayUnitElementClickedEventForID(String, HashMap)} —
+     * records that a single child element of a unit came on screen (e.g. one carousel
+     * slide) instead of the whole unit.
+     *
+     * Caller's additionalProperties are merged verbatim first; the cached unit's
+     * wzrk_* fields are then layered on top, so server-controlled attribution wins.
+     */
+    @Override
+    public void pushDisplayUnitElementViewedEventForID(
+            String unitID,
+            HashMap<String, Object> additionalProperties) {
+        JSONObject event = new JSONObject();
+        try {
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no display-unit cache installed");
+                return;
+            }
+            CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
+            if (displayUnit == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no unit found for id: " + unitID);
+                return;
+            }
+
+            JSONObject eventExtraData = new JSONObject();
+            mergeAdditionalProperties(eventExtraData, additionalProperties);
+            JSONObject cachedWzrkFields = displayUnit.getWZRKFields();
+            if (cachedWzrkFields != null) {
+                Iterator<String> it = cachedWzrkFields.keys();
+                while (it.hasNext()) {
+                    String k = it.next();
+                    try {
+                        eventExtraData.put(k, cachedWzrkFields.get(k));
+                    } catch (JSONException ignored) {
+                    }
+                }
+            }
+
+            event.put("evtData", eventExtraData);
+            try {
+                coreMetaData.setWzrkParams(filterWzrkFields(eventExtraData));
+            } catch (Throwable t) {
+                // no-op
+            }
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
+                    getFlattenedEventProperties(eventExtraData));
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT
+                            + "Failed to push Display Unit element viewed event" + t);
+        }
+    }
+
     @Override
     public void pushDisplayUnitViewedEventForID(String unitID) {
         JSONObject event = new JSONObject();

@@ -2538,9 +2538,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * <p>{@code evtData} is assembled in two layers (later layers win on key collision):
      * <ol>
-     *   <li>Caller's {@code additionalProperties}, merged verbatim — should include
-     *       {@code wzrk_element_id} and other {@code wzrk_*} attribution fields injected
-     *       by the BE into the action's {@code metadata} object.</li>
+     *   <li>Caller's {@code additionalProperties}, merged verbatim — for a per-item event
+     *       pass {@link CleverTapDisplayUnit#getMetaDataForContent(int)}, which carries
+     *       that item's {@code wzrk_element_id} and {@code wzrk_index} from the
+     *       {@code metadata} object the BE attaches to each {@code content[]} item,
+     *       alongside {@code action}.</li>
      *   <li>Cached unit's {@code wzrk_*} fields layered on top — so server-controlled
      *       attribution always wins over same-named caller-supplied keys.</li>
      * </ol>
@@ -2555,6 +2557,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             String unitID,
             HashMap<String, Object> additionalProperties) {
         coreState.getAnalyticsManager().pushDisplayUnitElementClickedEventForID(
+                unitID, additionalProperties);
+    }
+    
+    /**
+     * Raises a Native Display element view event for the given unit and element.
+     * Merges caller properties with cached unit {@code wzrk_*} fields, with cached
+     * values taking precedence.
+     *
+     * @param unitID               the Display Unit ID
+     * @param additionalProperties per-element context, typically from
+     *                             {@link CleverTapDisplayUnit#getMetaDataForContent(int)}
+     */
+    @SuppressWarnings("unused")
+    public void pushDisplayUnitElementViewedEventForID(
+            String unitID,
+            HashMap<String, Object> additionalProperties) {
+        coreState.getAnalyticsManager().pushDisplayUnitElementViewedEventForID(
                 unitID, additionalProperties);
     }
 

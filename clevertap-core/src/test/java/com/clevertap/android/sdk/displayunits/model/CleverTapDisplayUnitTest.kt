@@ -69,4 +69,81 @@ class CleverTapDisplayUnitTest : BaseTestCase() {
         Assert.assertEquals(displayUnit.bgColor, createdFromParcel.bgColor)
         assertJsonEquals(displayUnit.jsonObject, createdFromParcel.jsonObject)
     }
+
+    // ── getMetaDataForContent ──────────────────────────────────────────────
+
+    private fun carouselJson(): org.json.JSONObject = org.json.JSONObject()
+        .put("wzrk_id", "unit_123")
+        .put("type", "carousel")
+        .put(
+            "content",
+            org.json.JSONArray()
+                .put(
+                    org.json.JSONObject()
+                        .put("title", org.json.JSONObject().put("text", "Title1"))
+                        .put(
+                            "action",
+                            org.json.JSONObject().put(
+                                "url",
+                                org.json.JSONObject().put(
+                                    "android",
+                                    org.json.JSONObject().put("text", "https://www.android.com")
+                                )
+                            )
+                        )
+                        .put(
+                            "metadata",
+                            org.json.JSONObject()
+                                .put("wzrk_element_id", "1907971814")
+                                .put("wzrk_index", "0")
+                        )
+                )
+                // image-only slide, no metadata
+                .put(org.json.JSONObject().put("title", org.json.JSONObject().put("text", "Title2")))
+        )
+
+    @Test
+    fun test_getMetaDataForContent_returnsThatItemsAttribution() {
+        val unit = CleverTapDisplayUnit.toDisplayUnit(carouselJson())
+        val metaData = unit.getMetaDataForContent(0)
+        Assert.assertEquals("1907971814", metaData["wzrk_element_id"])
+        Assert.assertEquals("0", metaData["wzrk_index"])
+        Assert.assertEquals("https://www.android.com", metaData["wzrk_data"])
+    }
+
+    /** The getter must hand back a copy, or a caller edits the unit's stored attribution. */
+    @Test
+    fun test_getMetaDataForContent_returnsCopy_callerCannotMutateStoredAttribution() {
+        val unit = CleverTapDisplayUnit.toDisplayUnit(carouselJson())
+        val props = unit.getMetaDataForContent(0)
+        props["wzrk_element_id"] = "tampered"
+        props["injected"] = "x"
+
+        Assert.assertEquals("1907971814", unit.getMetaDataForContent(0)["wzrk_element_id"])
+        Assert.assertNull(unit.getMetaDataForContent(0)["injected"])
+    }
+
+    @Test
+    fun test_getMetaDataForContent_itemWithoutMetadata_returnsEmptyMap() {
+        val unit = CleverTapDisplayUnit.toDisplayUnit(carouselJson())
+        Assert.assertTrue(unit.getMetaDataForContent(1).isEmpty())
+    }
+
+    @Test
+    fun test_getMetaDataForContent_indexPastEnd_returnsEmptyMap() {
+        val unit = CleverTapDisplayUnit.toDisplayUnit(carouselJson())
+        Assert.assertTrue(unit.getMetaDataForContent(99).isEmpty())
+    }
+
+    @Test
+    fun test_getMetaDataForContent_negativeIndex_returnsEmptyMap() {
+        val unit = CleverTapDisplayUnit.toDisplayUnit(carouselJson())
+        Assert.assertTrue(unit.getMetaDataForContent(-1).isEmpty())
+    }
+
+    @Test
+    fun test_getMetaDataForContent_unitWithNoContent_returnsEmptyMap() {
+        val unit = CleverTapDisplayUnit.toDisplayUnit(org.json.JSONObject().put("wzrk_id", "x"))
+        Assert.assertTrue(unit.getMetaDataForContent(0).isEmpty())
+    }
 }

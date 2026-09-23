@@ -318,6 +318,7 @@ public interface Constants {
     String KEY_ORIENTATION = "orientation";
     String KEY_WZRK_PARAMS = "wzrkParams";
     String KEY_CONTENT = "content";
+    String KEY_METADATA = "metadata";
     String KEY_CUSTOM_KV = "custom_kv";
     String KEY_BORDER = "border";
     String KEY_RADIUS = "radius";

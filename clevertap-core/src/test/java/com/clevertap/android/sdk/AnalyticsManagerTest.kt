@@ -878,6 +878,35 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun `pushDisplayUnitElementViewedEventForID raises Notification Viewed with merged per-slide attribution`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        val unitJson = JSONObject()
+            .put("wzrk_id", "1234_5678")
+            .put("wzrk_pivot", "wzrk_default")
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(unitJson)
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_VIEWED_EVENT_NAME)
+
+        val extras = HashMap<String, Any>().apply {
+            put("wzrk_element_id", "1907971814")
+            put("wzrk_index", "0")
+        }
+        analyticsManagerSUT.pushDisplayUnitElementViewedEventForID("id", extras)
+
+        verify(exactly = 1) {
+            eventQueueManager.queueEvent(any(), match { event ->
+                val evtData = event.getJSONObject(Constants.KEY_EVT_DATA)
+                event.getString(Constants.KEY_EVT_NAME) == Constants.NOTIFICATION_VIEWED_EVENT_NAME
+                        && evtData.optString("wzrk_element_id") == "1907971814"
+                        && evtData.optString("wzrk_index") == "0"
+                        && evtData.optString("wzrk_id") == "1234_5678"
+                        && evtData.optString("wzrk_pivot") == "wzrk_default"
+            }, Constants.RAISED_EVENT, any<FlattenedEventData.EventProperties>())
+        }
+    }
+
+    @Test
     fun `pushDisplayUnitElementClickedEventForID cached wzrk_ wins over caller wzrk_ but novel wzrk_ keys pass through`() {
         val displayController = mockk<CTDisplayUnitController>()
         val unitJson = JSONObject().put("wzrk_id", "real_id")
