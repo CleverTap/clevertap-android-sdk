@@ -28,7 +28,8 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * pt_title and pt_msg are each optional. The text row shows what was sent without blank lines.
+ * The collapsed view shows only icons. The expanded view shows what pt_* text was sent, without
+ * blank lines.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -48,18 +49,18 @@ class IconsContentViewTextRowTest {
     fun tearDown() = unmockkAll()
 
     @Test
-    fun `title message and summary all set shows message when collapsed and summary when expanded`() {
+    fun `title message and summary all set shows icons only when collapsed and title with summary when expanded`() {
         val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = "PT Summary"))
 
         val small = inflate(IconsSmallContentView(context, renderer(), data, Bundle()))
         val big = inflate(IconsBigContentView(context, renderer(), data, Bundle()))
 
-        for (view in listOf(small, big)) {
-            assertEquals(View.VISIBLE, view.findViewById<View>(R.id.rel_lyt).visibility)
-            assertEquals("PT Title", view.findViewById<TextView>(R.id.title).text.toString())
-        }
-        assertEquals("PT Message", small.findViewById<TextView>(R.id.msg).text.toString())
+        assertEquals(View.GONE, small.findViewById<View>(R.id.rel_lyt).visibility)
+        assertEquals(View.VISIBLE, iconRow(small).visibility)
+        assertEquals(View.VISIBLE, big.findViewById<View>(R.id.rel_lyt).visibility)
+        assertEquals("PT Title", big.findViewById<TextView>(R.id.title).text.toString())
         assertEquals("PT Summary", big.findViewById<TextView>(R.id.msg).text.toString())
+        assertEquals(View.VISIBLE, iconRow(big).visibility)
     }
 
     @Test
@@ -119,35 +120,36 @@ class IconsContentViewTextRowTest {
     }
 
     @Test
-    fun `collapsed view hides the message line when pt_msg is absent`() {
-        val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = null, ptSummary = "PT Summary"))
-
-        val view = inflate(IconsSmallContentView(context, renderer(), data, Bundle()))
-
-        assertEquals(View.VISIBLE, view.findViewById<TextView>(R.id.title).visibility)
-        assertEquals(View.GONE, view.findViewById<TextView>(R.id.msg).visibility)
-    }
-
-    @Test
-    fun `both views hide the title line when pt_title is absent`() {
+    fun `message only shows icons when collapsed and the message without a title line when expanded`() {
         val data = dataFrom(payload(ptTitle = null, ptMsg = "PT Message", ptSummary = null))
 
         val small = inflate(IconsSmallContentView(context, renderer(), data, Bundle()))
         val big = inflate(IconsBigContentView(context, renderer(), data, Bundle()))
 
-        assertEquals(View.GONE, small.findViewById<TextView>(R.id.title).visibility)
-        assertEquals("PT Message", small.findViewById<TextView>(R.id.msg).text.toString())
+        assertEquals(View.GONE, small.findViewById<View>(R.id.rel_lyt).visibility)
         assertEquals(View.GONE, big.findViewById<TextView>(R.id.title).visibility)
         assertEquals("PT Message", big.findViewById<TextView>(R.id.msg).text.toString())
+    }
+
+    @Test
+    fun `title only shows icons when collapsed and the title without a message line when expanded`() {
+        val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = null, ptSummary = null))
+
+        val small = inflate(IconsSmallContentView(context, renderer(), data, Bundle()))
+        val big = inflate(IconsBigContentView(context, renderer(), data, Bundle()))
+
+        assertEquals(View.GONE, small.findViewById<View>(R.id.rel_lyt).visibility)
+        assertEquals("PT Title", big.findViewById<TextView>(R.id.title).text.toString())
+        assertEquals(View.GONE, big.findViewById<TextView>(R.id.msg).visibility)
     }
 
     @Test
     fun `large icon slot is hidden when pt_ico is absent`() {
         val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null))
 
-        val small = inflate(IconsSmallContentView(context, renderer(), data, Bundle()))
+        val big = inflate(IconsBigContentView(context, renderer(), data, Bundle()))
 
-        assertEquals(View.GONE, small.findViewById<View>(R.id.large_icon).visibility)
+        assertEquals(View.GONE, big.findViewById<View>(R.id.large_icon).visibility)
     }
 
     /** Same payloads on Android 12+, where the text row uses its layout-v31 variant. */
@@ -178,26 +180,26 @@ class IconsContentViewTextRowTest {
         assertEquals(View.GONE, small.findViewById<View>(R.id.rel_lyt).visibility)
     }
 
-    /** Apps targeting Android 12+ get a 48dp collapsed view, so text hides the icon row. */
+    /** Apps targeting Android 12+ get a 48dp collapsed view; text does not change that. */
     @Test
     @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
-    fun `collapsed view drops the icon strip for text where the 48dp row applies`() {
+    fun `collapsed view keeps the compact icon strip for text where the 48dp row applies`() {
         targetAndroid12OrLater()
         val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null))
 
         val collapsed = inflate(IconsSmallContentView(context, renderer(), data, Bundle()))
         val expanded = inflate(IconsBigContentView(context, renderer(), data, Bundle()))
 
-        assertEquals(View.GONE, iconRow(collapsed).visibility)
-        assertEquals(View.VISIBLE, collapsed.findViewById<View>(R.id.title).visibility)
-        assertEquals(View.VISIBLE, collapsed.findViewById<View>(R.id.msg).visibility)
+        assertEquals(View.GONE, collapsed.findViewById<View>(R.id.rel_lyt).visibility)
+        assertEquals(View.VISIBLE, iconRow(collapsed).visibility)
+        assertEquals(dimen(R.dimen.icons_icon_row_compact), iconRow(collapsed).layoutParams.height)
         assertEquals(View.VISIBLE, iconRow(expanded).visibility)
         assertEquals(dimen(R.dimen.icons_icon_row_full), iconRow(expanded).layoutParams.height)
     }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
-    fun `collapsed view binds no icons into a hidden strip`() {
+    fun `both views bind the icons when text is set`() {
         targetAndroid12OrLater()
         val withImages = payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null)
             .apply { for (i in 1..5) putString("pt_img$i", "https://example.invalid/$i.png") }
@@ -206,8 +208,7 @@ class IconsContentViewTextRowTest {
         val collapsed = IconsSmallContentView(context, renderer(), data, Bundle())
         val expanded = IconsBigContentView(context, renderer(), data, Bundle())
 
-        // The hidden row is not bound; the expanded view still loads the icons.
-        assertEquals(0, collapsed.getUnloadedIconsCount())
+        assertEquals(5, collapsed.getUnloadedIconsCount())
         assertEquals(5, expanded.getUnloadedIconsCount())
     }
 
@@ -225,13 +226,14 @@ class IconsContentViewTextRowTest {
     }
 
     @Test
-    fun `collapsed view keeps text and icons together for an app that does not target Android 12`() {
+    fun `collapsed view keeps the full icon strip for text for an app that does not target Android 12`() {
         val data = dataFrom(payload(ptTitle = "PT Title", ptMsg = "PT Message", ptSummary = null))
 
         val collapsed = inflate(IconsSmallContentView(context, renderer(), data, Bundle()))
 
+        assertEquals(View.GONE, collapsed.findViewById<View>(R.id.rel_lyt).visibility)
         assertEquals(View.VISIBLE, iconRow(collapsed).visibility)
-        assertEquals(dimen(R.dimen.icons_icon_row_with_text), iconRow(collapsed).layoutParams.height)
+        assertEquals(dimen(R.dimen.icons_icon_row_full), iconRow(collapsed).layoutParams.height)
     }
 
     @Test

@@ -15,7 +15,7 @@ internal class IconsBigContentView(
 
     init {
         setupHeader(data, renderer)
-        if (hasExpandedText(data)) {
+        if (hasText(data)) {
             // pt_msg_summary takes the message slot when expanded.
             val messageSummary = data.iconTextData.messageSummary
             setupTextRow(

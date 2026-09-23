@@ -36,9 +36,8 @@
     <dimen name="icons_icon_margin">4dp</dimen>
     <dimen name="icons_padding">6dp</dimen>
 
-    <!-- icons_icon_row heights: full, next to text, and the 48dp Android 12+ collapsed view. -->
+    <!-- icons_icon_row heights: full, and the 48dp Android 12+ collapsed view. -->
     <dimen name="icons_icon_row_full">64dp</dimen>
-    <dimen name="icons_icon_row_with_text">40dp</dimen>
     <dimen name="icons_icon_row_compact">48dp</dimen>
 
     <dimen name="manual_carousel_arrow">30dp</dimen>

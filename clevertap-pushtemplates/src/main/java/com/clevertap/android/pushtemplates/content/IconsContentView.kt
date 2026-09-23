@@ -127,16 +127,13 @@ internal abstract class IconsContentView(
         )
 
         /**
-         * Only pt_* keys decide the layout. nt/nm are always set, so using them would make the
-         * icon-only layout unreachable.
+         * Only pt_* keys decide whether the expanded view has a text row. nt/nm are always set, so
+         * using them would make the icon-only layout unreachable.
          */
-        internal fun hasCollapsedText(data: IconsTemplateData): Boolean {
+        internal fun hasText(data: IconsTemplateData): Boolean {
             return !data.iconTextData.title.isNullOrEmpty() ||
-                    !data.iconTextData.message.isNullOrEmpty()
-        }
-
-        internal fun hasExpandedText(data: IconsTemplateData): Boolean {
-            return hasCollapsedText(data) || !data.iconTextData.messageSummary.isNullOrEmpty()
+                    !data.iconTextData.message.isNullOrEmpty() ||
+                    !data.iconTextData.messageSummary.isNullOrEmpty()
         }
     }
 }

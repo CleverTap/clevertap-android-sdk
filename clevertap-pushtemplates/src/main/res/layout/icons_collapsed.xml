@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Collapsed icons template with no text. The text row stays for its app name header. -->
+<!-- Collapsed icons template: icons only. The text row stays for its app name header. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"

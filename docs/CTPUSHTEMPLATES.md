@@ -161,11 +161,11 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 ## Icons Template
 
-Icons template is a push notification that can display a title and message above a row of up to 5 icons. It helps users go directly to the functionality of their choice with a button click.
+Icons template is a push notification that shows a row of up to 5 icons, with an optional title and message in the expanded view. It helps users go directly to the functionality of their choice with a button click.
 
 `pt_title`, `pt_msg` and `pt_msg_summary` are optional. `nt` and `nm` are not used as a fallback, so a payload without `pt_title` and `pt_msg` shows only icons. In a stacked group summary, `pt_msg` is used as the title when `pt_title` is not set.
 
-For apps targeting Android 12 and above, a collapsed notification with text shows only the text, and the icons appear when expanded. Otherwise the collapsed notification shows the text and icons together. The expanded notification always shows both, with `pt_msg_summary` in the message line when set.
+The collapsed notification shows only the icons. The expanded notification shows the text and the icons, with `pt_msg_summary` in the message line when set.
 
 The SDK does not dismiss the notification on an icon tap. Dismiss it in the app with the `dismissNotification` snippet from the Input Box template below, on all Android versions.
 
