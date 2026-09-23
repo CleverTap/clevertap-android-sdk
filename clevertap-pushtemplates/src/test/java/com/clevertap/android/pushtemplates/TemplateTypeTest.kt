@@ -5,7 +5,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 /**
- * pt_five_icons and pt_icons_template are separate templates.
+ * pt_five_icons and pt_icons are separate templates.
  */
 class TemplateTypeTest {
 
@@ -15,18 +15,18 @@ class TemplateTypeTest {
     }
 
     @Test
-    fun `pt_icons_template resolves to ICONS`() {
-        assertEquals(TemplateType.ICONS, TemplateType.fromString("pt_icons_template"))
+    fun `pt_icons resolves to ICONS`() {
+        assertEquals(TemplateType.ICONS, TemplateType.fromString("pt_icons"))
     }
 
     @Test
     fun `five icons and icons template are different types`() {
-        assertNotEquals(TemplateType.fromString("pt_five_icons"), TemplateType.fromString("pt_icons_template"))
+        assertNotEquals(TemplateType.fromString("pt_five_icons"), TemplateType.fromString("pt_icons"))
     }
 
     @Test
     fun `toString returns the pt_id`() {
         assertEquals("pt_five_icons", TemplateType.FIVE_ICONS.toString())
-        assertEquals("pt_icons_template", TemplateType.ICONS.toString())
+        assertEquals("pt_icons", TemplateType.ICONS.toString())
     }
 }

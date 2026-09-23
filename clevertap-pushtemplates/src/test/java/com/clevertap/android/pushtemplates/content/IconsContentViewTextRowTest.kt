@@ -293,7 +293,7 @@ class IconsContentViewTextRowTest {
 
     // No pt_img keys, so nothing is downloaded.
     private fun payload(ptTitle: String?, ptMsg: String?, ptSummary: String?, wzrkNms: String? = null) = Bundle().apply {
-        putString("pt_id", "pt_icons_template")
+        putString("pt_id", "pt_icons")
         putString("nt", "base title")
         putString("nm", "base message")
         wzrkNms?.let { putString("wzrk_nms", it) }

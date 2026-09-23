@@ -468,7 +468,7 @@ pt_json | Optional | Above keys in JSON format
 
 Icons Template Keys | Required | Description
   ---:|:---:|:--- 
-pt_id | Required  | Value - `pt_icons_template`
+pt_id | Required  | Value - `pt_icons`
 pt_title | Optional | Title rendered above icons
 pt_msg | Optional | Message rendered above icons
 pt_msg_summary | Optional | Message line when Notification is expanded

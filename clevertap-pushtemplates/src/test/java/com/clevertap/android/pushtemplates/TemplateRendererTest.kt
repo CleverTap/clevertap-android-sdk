@@ -511,7 +511,7 @@ class TemplateRendererTest {
     @Test
     fun test_renderNotification_icons_template_invalid() {
         val iconsBundle = Bundle(testBundle)
-        iconsBundle.putString(PTConstants.PT_ID, "pt_icons_template")
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
 
         val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
         val mockIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
@@ -846,7 +846,7 @@ class TemplateRendererTest {
     @Test
     fun test_renderNotification_icons_template_null_validator() {
         val iconsBundle = Bundle(testBundle)
-        iconsBundle.putString(PTConstants.PT_ID, "pt_icons_template")
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
 
         val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
 
@@ -1209,7 +1209,7 @@ class TemplateRendererTest {
                 mockNotificationBuilder
             )
         }
-        // Must not render as pt_icons_template
+        // Must not render as pt_icons
         verify(exactly = 0) {
             anyConstructed<IconsStyle>().builderFromStyle(any(), any(), any(), any())
         }
@@ -1222,7 +1222,7 @@ class TemplateRendererTest {
     fun test_renderNotification_icons_template_valid() {
         // Arrange
         val iconsBundle = Bundle(testBundle)
-        iconsBundle.putString(PTConstants.PT_ID, "pt_icons_template")
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
 
         val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
 
@@ -1349,7 +1349,7 @@ class TemplateRendererTest {
     fun test_renderNotification_icons_small_unloaded_count_3() {
         // Arrange
         val iconsBundle = Bundle(testBundle)
-        iconsBundle.putString(PTConstants.PT_ID, "pt_icons_template")
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
 
         val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
         val mockIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
@@ -1474,7 +1474,7 @@ class TemplateRendererTest {
     fun test_renderNotification_icons_big_unloaded_count_3() {
         // Arrange
         val iconsBundle = Bundle(testBundle)
-        iconsBundle.putString(PTConstants.PT_ID, "pt_icons_template")
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
 
         val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
         val mockIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
