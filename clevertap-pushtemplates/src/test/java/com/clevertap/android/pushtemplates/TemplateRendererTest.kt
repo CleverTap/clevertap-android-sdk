@@ -13,6 +13,8 @@ import com.clevertap.android.pushtemplates.TemplateDataFactory.toBasicTemplateDa
 import com.clevertap.android.pushtemplates.TemplateDataFactory.toTerminalBasicTemplateData
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
+import com.clevertap.android.pushtemplates.content.IconsBigContentView
+import com.clevertap.android.pushtemplates.content.IconsSmallContentView
 import com.clevertap.android.pushtemplates.handlers.CancelTemplateHandler
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.pushtemplates.styles.*
@@ -73,6 +75,9 @@ class TemplateRendererTest {
 
     @MockK(relaxed = true)
     private lateinit var mockFiveIconsTemplateData: FiveIconsTemplateData
+
+    @MockK(relaxed = true)
+    private lateinit var mockIconsTemplateData: IconsTemplateData
 
     @MockK(relaxed = true)
     private lateinit var mockProductTemplateData: ProductTemplateData
@@ -502,6 +507,54 @@ class TemplateRendererTest {
         assertEquals(mockNotificationBuilder, result)
     }
 
+
+    @Test
+    fun test_renderNotification_icons_template_invalid() {
+        val iconsBundle = Bundle(testBundle)
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
+        val mockIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.ICONS,
+                iconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockIconsTemplateData
+        every { ValidatorFactory.getValidator(mockIconsTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns false
+        every { with(TemplateDataFactory) { mockIconsTemplateData.toBasicTemplateData() } } returns mockIconsFallbackData
+        every { ValidatorFactory.getValidator(mockIconsFallbackData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returnsMany listOf(false, true)
+
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                iconsBundle,
+                123,
+                mockNotificationBuilder
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            iconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        assertEquals(mockNotificationBuilder, result)
+    }
+
     @Test
     fun test_renderNotification_product_display_template_invalid() {
         val productBundle = Bundle(testBundle)
@@ -780,6 +833,38 @@ class TemplateRendererTest {
         // Act
         val result = templateRendererLocal.renderNotification(
             fiveIconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertNull(result)
+    }
+
+
+    @Test
+    fun test_renderNotification_icons_template_null_validator() {
+        val iconsBundle = Bundle(testBundle)
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
+
+        // Arrange
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.ICONS,
+                iconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockIconsTemplateData
+        every { ValidatorFactory.getValidator(mockIconsTemplateData) } returns null
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            iconsBundle,
             context,
             mockNotificationBuilder,
             mockConfig,
@@ -1094,6 +1179,7 @@ class TemplateRendererTest {
         every { mockBigContentView.getUnloadedFiveIconsCount() } returns 1
 
         mockkConstructor(FiveIconStyle::class)
+        mockkConstructor(IconsStyle::class)
         every {
             anyConstructed<FiveIconStyle>().builderFromStyle(
                 any(),
@@ -1123,9 +1209,77 @@ class TemplateRendererTest {
                 mockNotificationBuilder
             )
         }
+        // Must not render as pt_icons
+        verify(exactly = 0) {
+            anyConstructed<IconsStyle>().builderFromStyle(any(), any(), any(), any())
+        }
         assertEquals(mockNotificationBuilder, result)
     }
 
+
+
+    @Test
+    fun test_renderNotification_icons_template_valid() {
+        // Arrange
+        val iconsBundle = Bundle(testBundle)
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.ICONS,
+                iconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockIconsTemplateData
+        every { ValidatorFactory.getValidator(mockIconsTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+
+        val mockSmallContentView = mockk<IconsSmallContentView>()
+        val mockBigContentView = mockk<IconsBigContentView>()
+        every { mockSmallContentView.getUnloadedIconsCount() } returns 1
+        every { mockBigContentView.getUnloadedIconsCount() } returns 1
+
+        mockkConstructor(IconsStyle::class)
+        mockkConstructor(FiveIconStyle::class)
+        every {
+            anyConstructed<IconsStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+        every { anyConstructed<IconsStyle>().iconsSmallContentView } returns mockSmallContentView
+        every { anyConstructed<IconsStyle>().iconsBigContentView } returns mockBigContentView
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            iconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        // Assert
+        verify {
+            anyConstructed<IconsStyle>().builderFromStyle(
+                any(),
+                iconsBundle,
+                123,
+                mockNotificationBuilder
+            )
+        }
+        // Must not render as pt_five_icons
+        verify(exactly = 0) {
+            anyConstructed<FiveIconStyle>().builderFromStyle(any(), any(), any(), any())
+        }
+        assertEquals(mockNotificationBuilder, result)
+    }
 
     @Test
     fun test_renderNotification_five_icons_small_unloaded_count_3() {
@@ -1190,6 +1344,69 @@ class TemplateRendererTest {
     }
 
 
+
+    @Test
+    fun test_renderNotification_icons_small_unloaded_count_3() {
+        // Arrange
+        val iconsBundle = Bundle(testBundle)
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
+        val mockIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.ICONS,
+                iconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockIconsTemplateData
+        every { ValidatorFactory.getValidator(mockIconsTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+        every { with(TemplateDataFactory) { mockIconsTemplateData.toBasicTemplateData() } } returns mockIconsFallbackData
+        every { ValidatorFactory.getValidator(mockIconsFallbackData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returnsMany listOf(true, true)
+
+        val mockSmallContentView = mockk<IconsSmallContentView>()
+        val mockBigContentView = mockk<IconsBigContentView>()
+        every { mockSmallContentView.getUnloadedIconsCount() } returns 3
+        every { mockBigContentView.getUnloadedIconsCount() } returns 1
+
+        mockkConstructor(IconsStyle::class)
+        every {
+            anyConstructed<IconsStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+        every { anyConstructed<IconsStyle>().iconsSmallContentView } returns mockSmallContentView
+        every { anyConstructed<IconsStyle>().iconsBigContentView } returns mockBigContentView
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                iconsBundle,
+                123,
+                mockNotificationBuilder
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            iconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertEquals(mockNotificationBuilder, result)
+    }
+
     @Test
     fun test_renderNotification_five_icons_big_unloaded_count_3() {
         // Arrange
@@ -1243,6 +1460,69 @@ class TemplateRendererTest {
         // Act
         val result = templateRendererLocal.renderNotification(
             fiveIconsBundle,
+            context,
+            mockNotificationBuilder,
+            mockConfig,
+            123
+        )
+
+        assertEquals(mockNotificationBuilder, result)
+    }
+
+
+    @Test
+    fun test_renderNotification_icons_big_unloaded_count_3() {
+        // Arrange
+        val iconsBundle = Bundle(testBundle)
+        iconsBundle.putString(PTConstants.PT_ID, "pt_icons")
+
+        val templateRendererLocal = TemplateRenderer(context, iconsBundle, mockConfig)
+        val mockIconsFallbackData = mockk<BasicTemplateData>(relaxed = true)
+
+        every {
+            TemplateDataFactory.createTemplateData(
+                TemplateType.ICONS,
+                iconsBundle,
+                false,
+                any(),
+                any()
+            )
+        } returns mockIconsTemplateData
+        every { ValidatorFactory.getValidator(mockIconsTemplateData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returns true
+        every { with(TemplateDataFactory) { mockIconsTemplateData.toBasicTemplateData() } } returns mockIconsFallbackData
+        every { ValidatorFactory.getValidator(mockIconsFallbackData) } returns mockContentValidator
+        every { mockContentValidator.validate() } returnsMany listOf(true, true)
+
+        val mockSmallContentView = mockk<IconsSmallContentView>()
+        val mockBigContentView = mockk<IconsBigContentView>()
+        every { mockSmallContentView.getUnloadedIconsCount() } returns 1
+        every { mockBigContentView.getUnloadedIconsCount() } returns 3
+
+        mockkConstructor(IconsStyle::class)
+        every {
+            anyConstructed<IconsStyle>().builderFromStyle(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns mockNotificationBuilder
+        every { anyConstructed<IconsStyle>().iconsSmallContentView } returns mockSmallContentView
+        every { anyConstructed<IconsStyle>().iconsBigContentView } returns mockBigContentView
+        mockkConstructor(BasicStyle::class)
+        every {
+            anyConstructed<BasicStyle>().builderFromStyle(
+                any(),
+                iconsBundle,
+                123,
+                mockNotificationBuilder
+            )
+        } returns mockNotificationBuilder
+
+        // Act
+        val result = templateRendererLocal.renderNotification(
+            iconsBundle,
             context,
             mockNotificationBuilder,
             mockConfig,

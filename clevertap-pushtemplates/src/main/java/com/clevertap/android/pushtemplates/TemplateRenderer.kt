@@ -27,6 +27,7 @@ import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.pushtemplates.styles.AutoCarouselStyle
 import com.clevertap.android.pushtemplates.styles.BasicStyle
 import com.clevertap.android.pushtemplates.styles.FiveIconStyle
+import com.clevertap.android.pushtemplates.styles.IconsStyle
 import com.clevertap.android.pushtemplates.styles.InputBoxStyle
 import com.clevertap.android.pushtemplates.styles.ManualCarouselStyle
 import com.clevertap.android.pushtemplates.styles.ProductDisplayStyle
@@ -161,6 +162,36 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                     }
                 } else {
                     PTLog.debug("Five Icons template validation failed, reverting to basic template.")
+                    buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                }
+            }
+
+            is IconsTemplateData -> {
+                val validator = ValidatorFactory.getValidator(templateData)
+                if (validator == null) {
+                    null
+                } else if (validator.validate()) {
+                    val iconsStyle = IconsStyle(templateData, this, extras)
+                    val iconsNotificationBuilder = iconsStyle.builderFromStyle(
+                        context,
+                        extras,
+                        notificationId,
+                        nb
+                    )
+
+                    /**
+                     * If most icon bitmaps fail to load, gracefully fall back to a basic
+                     * title/message notification instead of suppressing the notification.
+                     */
+                    if (iconsStyle.iconsSmallContentView.getUnloadedIconsCount() > 2 ||
+                        iconsStyle.iconsBigContentView.getUnloadedIconsCount() > 2) {
+                        PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")
+                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                    } else {
+                        iconsNotificationBuilder
+                    }
+                } else {
+                    PTLog.debug("Icons template validation failed, reverting to basic template.")
                     buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                 }
             }

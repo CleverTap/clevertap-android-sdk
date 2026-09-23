@@ -159,6 +159,22 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
 
+## Icons Template
+
+Icons template is a push notification that shows a row of up to 5 icons, with an optional title and message in the expanded view. It helps users go directly to the functionality of their choice with a button click.
+
+`pt_title`, `pt_msg` and `pt_msg_summary` are optional. `nt` and `nm` are not used as a fallback, so a payload without `pt_title` and `pt_msg` shows only icons. In a stacked group summary, `pt_msg` is used as the title when `pt_title` is not set.
+
+The collapsed notification shows only the icons. The expanded notification shows the text and the icons, with `pt_msg_summary` in the message line when set.
+
+The SDK does not dismiss the notification on an icon tap. Dismiss it in the app with the `dismissNotification` snippet from the Input Box template below, on all Android versions.
+
+If the payload does not contain enough valid icon/deeplink data, or if 3 or more icon images are not retrieved at render time, the library falls back to a basic notification using the available title and message content.
+
+The CTA associated with each icon is captured in the `Notification Clicked` event under the `wzrk_c2a` property.
+
+If the user clicks anywhere outside the icon CTAs, the default notification click action launches the activity intent.
+
 ## Timer Template
 
 This template features a live countdown timer. You can even choose to show different title, message, and background image after the timer expires.
@@ -427,6 +443,35 @@ Five Icons Template Keys | Required | Description
 pt_id | Required  | Value - `pt_five_icons`
 pt_title | Optional | Title rendered above icons
 pt_msg | Optional | Message rendered above icons
+pt_img1 | Required  | Icon One
+pt_img1_alt_text | Optional | Alt Text for Icon One
+pt_img2 | Required  | Icon Two
+pt_img2_alt_text | Optional | Alt Text for Icon Two
+pt_img3 | Required  | Icon Three
+pt_img3_alt_text | Optional | Alt Text for Icon Three
+pt_img4 | Optional  | Icon Four
+pt_img4_alt_text | Optional | Alt Text for Icon Four
+pt_img5 | Optional  | Icon Five
+pt_img5_alt_text | Optional | Alt Text for Icon Five
+pt_dl1 | Required  | Deep Link for first icon
+pt_dl2 | Required  | Deep Link for second icon
+pt_dl3 | Required  | Deep Link for third icon
+pt_dl4 | Optional  | Deep Link for fourth icon
+pt_dl5 | Optional  | Deep Link for fifth icon
+pt_bg | Optional  | Background Color in HEX
+pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
+pt_json | Optional | Above keys in JSON format
+
+### Icons Template
+
+Icons Template Keys | Required | Description
+  ---:|:---:|:--- 
+pt_id | Required  | Value - `pt_icons`
+pt_title | Optional | Title rendered above icons
+pt_msg | Optional | Message rendered above icons
+pt_msg_summary | Optional | Message line when Notification is expanded
 pt_img1 | Required  | Icon One
 pt_img1_alt_text | Optional | Alt Text for Icon One
 pt_img2 | Required  | Icon Two

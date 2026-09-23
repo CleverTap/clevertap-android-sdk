@@ -2,4 +2,5 @@
 <resources>
     <dimen name="product_display_margin_top">4dp</dimen>
     <dimen name="five_cta_padding">0dp</dimen>
+    <dimen name="icons_padding">0dp</dimen>
 </resources>

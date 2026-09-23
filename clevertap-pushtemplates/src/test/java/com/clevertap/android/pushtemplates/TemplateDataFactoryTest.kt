@@ -234,6 +234,85 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    fun `createTemplateData should not fall back to nt-nm for ICONS icon text`() {
+        // Given - pt_title/pt_msg unset, nt/nm set
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TITLE) } returns null
+        every { mockBundle.getString(PT_MSG) } returns null
+        every { mockBundle.getString(PT_MSG_SUMMARY) } returns null
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then - no icon text
+        val iconsData = result as IconsTemplateData
+        assertNull(iconsData.iconTextData.title)
+        assertNull(iconsData.iconTextData.message)
+        assertNull(iconsData.iconTextData.messageSummary)
+        // but baseContent keeps the nt/nm fallback
+        assertEquals(SAMPLE_TITLE, iconsData.baseContent.textData.title)
+        assertEquals(SAMPLE_MESSAGE, iconsData.baseContent.textData.message)
+        assertEquals(SAMPLE_SUMMARY, iconsData.baseContent.textData.messageSummary)
+    }
+
+    @Test
+    fun `createTemplateData should treat empty pt text keys as absent for ICONS icon text`() {
+        // Given - empty pt text keys
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TITLE) } returns ""
+        every { mockBundle.getString(PT_MSG) } returns ""
+        every { mockBundle.getString(PT_MSG_SUMMARY) } returns ""
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then - treated as absent
+        val iconsData = result as IconsTemplateData
+        assertNull(iconsData.iconTextData.title)
+        assertNull(iconsData.iconTextData.message)
+        assertNull(iconsData.iconTextData.messageSummary)
+    }
+
+    @Test
+    fun `createTemplateData should use pt_title pt_msg and pt_msg_summary for ICONS icon text`() {
+        // Given
+        setupBasicMockBundle()
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val iconsData = result as IconsTemplateData
+        assertEquals(SAMPLE_TITLE, iconsData.iconTextData.title)
+        assertEquals(SAMPLE_MESSAGE, iconsData.iconTextData.message)
+        assertEquals(SAMPLE_SUMMARY, iconsData.iconTextData.messageSummary)
+    }
+
+    @Test
     fun `createTemplateData should create ProductTemplateData for PRODUCT_DISPLAY template type`() {
         // Given
         setupBasicMockBundle()

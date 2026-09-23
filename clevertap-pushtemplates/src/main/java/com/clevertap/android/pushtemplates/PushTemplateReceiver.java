@@ -153,6 +153,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                             handleRatingNotification(context, extras, intent);
                                             break;
                                         case FIVE_ICONS:
+                                        case ICONS:
                                             handleFiveCTANotification(context, extras);
                                             break;
                                         case PRODUCT_DISPLAY:

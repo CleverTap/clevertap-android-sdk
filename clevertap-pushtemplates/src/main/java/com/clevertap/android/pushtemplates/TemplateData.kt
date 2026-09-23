@@ -81,6 +81,17 @@ internal data class FiveIconsTemplateData(
     val imageList: ArrayList<ImageData>,
 ) : TemplateData()
 
+internal data class IconsTemplateData(
+    override val templateType: TemplateType = TemplateType.ICONS,
+    val baseContent: BaseContent,
+    val imageList: ArrayList<ImageData>,
+    /**
+     * pt_title/pt_msg/pt_msg_summary only, with no nt/nm fallback. baseContent keeps the fallback
+     * for the basic template.
+     */
+    val iconTextData: BaseTextData,
+) : TemplateData()
+
 internal data class ManualCarouselTemplateData(
     override val templateType: TemplateType = TemplateType.MANUAL_CAROUSEL,
     val carouselData: CarouselData,

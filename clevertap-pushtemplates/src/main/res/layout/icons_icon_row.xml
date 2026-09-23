@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Row of up to five icons, included by the icons template layouts at their own height. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/icons_padding">
+
+    <ImageView
+        android:id="@+id/cta1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/icons_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta2"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/icons_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta3"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/icons_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta4"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/icons_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+
+    <ImageView
+        android:id="@+id/cta5"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="@dimen/icons_icon_margin"
+        android:contentDescription="@null"
+        android:visibility="gone"
+        android:src="@drawable/pt_image" />
+</LinearLayout>
