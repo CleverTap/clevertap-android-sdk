@@ -34,7 +34,6 @@
          own process, so the SDK picks the height up front; ContentView.imageStyleReferenceDimen
          chooses per template. Collapsed views stay unstyled - they declare no height. -->
     <dimen name="pt_image_style_reference">196dp</dimen>
-    <dimen name="pt_image_style_reference_zero_bezel">248dp</dimen>
     <dimen name="pt_image_style_reference_vertical">180dp</dimen>
 
 
