@@ -169,7 +169,8 @@ public class PTConstants {
 
     /**
      * Same key core action buttons use. Icons template taps carry it so the app can dismiss the
-     * notification, since the SDK does not.
+     * notification, since the SDK does not. It is true unless the payload sets
+     * pt_dismiss_on_click to "false".
      */
     public static final String PT_AUTO_CANCEL = "autoCancel";
 

@@ -87,20 +87,27 @@ internal abstract class IconsContentView(
 
     /**
      * Attaches one click intent per deep link.
+     *
+     * The SDK does not dismiss on an icon tap; the app's dismiss handler does, reading autoCancel.
+     * autoCancel follows pt_dismiss_on_click: only an explicit "false" keeps the notification.
+     * The key itself is removed from the click bundle, because the documented handler treats its
+     * mere presence as "keep", which would make "true" behave like "false".
      */
     protected fun setupIconClicks(data: IconsTemplateData, extras: Bundle, notificationId: Int) {
         extras.putInt(PTConstants.PT_NOTIF_ID, notificationId)
         extras.putBoolean(Constants.CLOSE_SYSTEM_DIALOGS, true)
+        val autoCancel = !extras.getString(PTConstants.PT_DISMISS_ON_CLICK).equals("false", ignoreCase = true)
 
         data.baseContent.deepLinkList.take(ctaIds.size).forEachIndexed { index, deepLink ->
             val ctaNumber = index + 1
             val bundleCTA = extras.clone() as Bundle
+            bundleCTA.remove(PTConstants.PT_DISMISS_ON_CLICK)
             bundleCTA.putBoolean("cta$ctaNumber", true)
             bundleCTA.putString(Constants.DEEP_LINK_KEY, deepLink)
             bundleCTA.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + ctaNumber + "_" + deepLink)
             // Same keys as core action buttons, so the app's dismiss handling covers icon taps too.
             bundleCTA.putString(PTConstants.PT_ACTION_ID, "cta$ctaNumber")
-            bundleCTA.putBoolean(PTConstants.PT_AUTO_CANCEL, true)
+            bundleCTA.putBoolean(PTConstants.PT_AUTO_CANCEL, autoCancel)
             remoteView.setOnClickPendingIntent(
                 ctaIds[index],
                 LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA, context)

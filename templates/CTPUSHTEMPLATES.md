@@ -167,7 +167,7 @@ Icons template is a push notification that shows a row of up to 5 icons, with an
 
 The collapsed notification shows only the icons. The expanded notification shows the text and the icons, with `pt_msg_summary` in the message line when set.
 
-The SDK does not dismiss the notification on an icon tap. Dismiss it in the app with the `dismissNotification` snippet from the Input Box template below, on all Android versions.
+The SDK does not dismiss the notification on an icon tap. Dismiss it in the app with the `dismissNotification` snippet from the Input Box template below, on all Android versions. By default an icon tap dismisses the notification; set `pt_dismiss_on_click` to `false` to keep it.
 
 If the payload does not contain enough valid icon/deeplink data, or if 3 or more icon images are not retrieved at render time, the library falls back to a basic notification using the available title and message content.
 
@@ -491,6 +491,7 @@ pt_bg | Optional  | Background Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
 pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
+pt_dismiss_on_click | Optional | Set to `false` to keep the notification after an icon tap (default dismisses it, via the app's `dismissNotification` snippet)
 pt_json | Optional | Above keys in JSON format
 
 ### Timer Template

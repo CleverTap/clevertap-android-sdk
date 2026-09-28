@@ -20,6 +20,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -30,7 +31,8 @@ import org.robolectric.annotation.Config
 
 /**
  * The SDK does not dismiss on an icon tap, so every icon bundle must carry the actionId,
- * autoCancel and notificationId extras the app's dismiss handler reads.
+ * autoCancel and notificationId extras the app's dismiss handler reads. autoCancel follows
+ * pt_dismiss_on_click: absent or "true" dismisses, "false" keeps.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -94,12 +96,40 @@ class IconsContentViewCtaExtrasTest {
         assertCtaExtras(threeDeepLinks)
     }
 
-    private fun assertCtaExtras(deepLinks: List<String>) {
+    @Test
+    fun `pt_dismiss_on_click false keeps the notification on an icon tap`() {
+        val extras = Bundle().apply { putString(PTConstants.PT_DISMISS_ON_CLICK, "false") }
+
+        IconsSmallContentView(context, rendererWith(notificationId), dataWith(fiveDeepLinks), extras)
+
+        assertCtaExtras(fiveDeepLinks, autoCancel = false)
+    }
+
+    @Test
+    fun `pt_dismiss_on_click true dismisses the notification on an icon tap`() {
+        val extras = Bundle().apply { putString(PTConstants.PT_DISMISS_ON_CLICK, "true") }
+
+        IconsBigContentView(context, rendererWith(notificationId), dataWith(fiveDeepLinks), extras)
+
+        assertCtaExtras(fiveDeepLinks, autoCancel = true)
+    }
+
+    @Test
+    fun `pt_dismiss_on_click is not forwarded to the icon bundles`() {
+        val extras = Bundle().apply { putString(PTConstants.PT_DISMISS_ON_CLICK, "true") }
+
+        IconsSmallContentView(context, rendererWith(notificationId), dataWith(fiveDeepLinks), extras)
+
+        // The app's dismiss handler treats the key's presence as "keep", regardless of value.
+        capturedBundles.forEach { assertFalse(it.containsKey(PTConstants.PT_DISMISS_ON_CLICK)) }
+    }
+
+    private fun assertCtaExtras(deepLinks: List<String>, autoCancel: Boolean = true) {
         assertEquals(deepLinks.size, capturedBundles.size)
         capturedBundles.forEachIndexed { index, bundle ->
             val icon = index + 1
             assertEquals("cta$icon", bundle.getString(PTConstants.PT_ACTION_ID))
-            assertTrue(bundle.getBoolean(PTConstants.PT_AUTO_CANCEL, false))
+            assertEquals(autoCancel, bundle.getBoolean(PTConstants.PT_AUTO_CANCEL, !autoCancel))
             assertEquals(notificationId, bundle.getInt(PTConstants.PT_NOTIF_ID, -1))
             assertTrue(bundle.getBoolean("cta$icon", false))
             assertEquals(deepLinks[index], bundle.getString(Constants.DEEP_LINK_KEY))
