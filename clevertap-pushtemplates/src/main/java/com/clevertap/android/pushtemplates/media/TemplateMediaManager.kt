@@ -125,8 +125,7 @@ internal class TemplateMediaManager(
     fun getStyledImageBitmap(imageUrl: String?, border: ImageBorderData?): Bitmap? {
         val url = imageUrl ?: return null
         val rawBitmap = getImageBitmap(url) ?: return null
-        // A scrim alone still has to be drawn, even with no radius or ring alongside it.
-        if (border == null || (!border.isActive && !border.withScrim)) return rawBitmap
+        if (border == null || !border.isActive) return rawBitmap
 
         val key = url to border
         val cached = styledBitmapCache[key]

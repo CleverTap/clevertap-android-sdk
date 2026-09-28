@@ -357,13 +357,11 @@ class NotificationBitmapUtilsTest {
     private fun style(
         radius: Float = 0f,
         borderWidth: Float = 0f,
-        borderColor: Int? = null,
-        withScrim: Boolean = false
+        borderColor: Int? = null
     ) = ImageBorderData(
         cornerRadiusPercent = radius,
         borderWidthValue = borderWidth,
-        borderColor = borderColor,
-        withScrim = withScrim
+        borderColor = borderColor
     )
 
     @Test
@@ -539,74 +537,6 @@ class NotificationBitmapUtilsTest {
         bitmapsToRecycle.add(result)
 
         // Then
-        assertEquals(1, result.width)
-        assertEquals(1, result.height)
-    }
-
-    // ---------------------------------------------------------------------------------------
-    // The Zero Bezel scrim
-    // ---------------------------------------------------------------------------------------
-
-    @Test
-    fun `a scrim alone is reason enough to redraw the bitmap`() {
-        // Given - what Zero Bezel hands over for a CENTER_CROP picture: no radius and no border,
-        // because the views draw those, but a scrim that only the bitmap can carry
-        val source = sourceBitmap()
-
-        // When
-        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
-            source, style(withScrim = true)
-        )
-        bitmapsToRecycle.add(result)
-
-        // Then - a new bitmap, even though the payload is inactive by the usual measure. Returning
-        // the source here is what left a GIF with no darkening behind its text.
-        assertNotSame(source, result)
-        assertEquals(source.width, result.width)
-        assertEquals(source.height, result.height)
-    }
-
-    @Test
-    fun `a scrim is drawn alongside a radius and a border`() {
-        // Given - what Zero Bezel hands over for FIT_CENTER: everything in one pass
-        val source = sourceBitmap()
-
-        // When
-        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
-            source, style(radius = 20f, borderWidth = 5f, borderColor = borderColor, withScrim = true)
-        )
-        bitmapsToRecycle.add(result)
-
-        // Then
-        assertNotSame(source, result)
-        assertEquals(source.width, result.width)
-        assertEquals(source.height, result.height)
-    }
-
-    @Test
-    fun `no scrim and nothing else still returns the source untouched`() {
-        // Given - the guard has to stay tight: adding the scrim as a reason to redraw must not
-        // make every unstyled notification allocate a bitmap it does not need
-        val source = sourceBitmap()
-
-        // Then
-        assertSame(source, NotificationBitmapUtils.applyRoundedBorderToBitmap(
-            source, style(withScrim = false)
-        ))
-    }
-
-    @Test
-    fun `a scrim survives a bitmap too small to round`() {
-        // Given - a single pixel, where the scrim gradient spans no distance at all
-        val source = sourceBitmap(1, 1)
-
-        // When
-        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
-            source, style(withScrim = true)
-        )
-        bitmapsToRecycle.add(result)
-
-        // Then - it still comes back a valid 1x1 bitmap rather than throwing
         assertEquals(1, result.width)
         assertEquals(1, result.height)
     }

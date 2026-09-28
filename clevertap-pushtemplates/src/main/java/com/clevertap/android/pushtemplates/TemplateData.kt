@@ -66,16 +66,6 @@ internal data class ImageBorderData(
     val cornerRadiusPercent: Float = 0f,
     val borderWidthValue: Float = 0f,
     val borderColor: Int? = null,
-    /**
-     * Draw the Zero Bezel text scrim into the bitmap instead of leaving it to the separate scrim
-     * view. That view covers the picture and has square corners of its own, so rounding only the
-     * picture leaves a square card with a rounded picture inside it. Painting the scrim inside the
-     * same rounded clip removes the square view from the picture entirely.
-     *
-     * Only meaningful while [isActive]: with no styling to draw there is nothing to round, and the
-     * scrim view is left to do its normal job.
-     */
-    val withScrim: Boolean = false,
 ) {
 
     /** Nothing is stroked without both a width to draw and a colour to draw it in. */
@@ -105,36 +95,11 @@ internal fun PTScaleType.usesNativeImageStyling(): Boolean =
     useNativeImageStyling && this == PTScaleType.CENTER_CROP
 
 /**
- * The same styling with the Zero Bezel scrim folded in, so it is painted inside the rounded clip
- * rather than by the square-cornered scrim view sitting on top of the picture.
- *
- * Only for a scale type that fills the area. There, the picture, the scrim and the text all cover
- * the same rectangle, so moving the scrim into the picture loses nothing. A FIT_CENTER picture is
- * smaller than the area: its text still sits at the area's bottom edge, outside the picture, and
- * baking the scrim into the picture would put the darkening where there is no text while taking it
- * away from where there is. That case keeps the scrim view.
- *
- * Returns the data unchanged when there is no styling to draw: without a corner radius there is
- * nothing to round, and the scrim view can go on doing its normal job.
+ * The styling to bake into a bitmap shown with [scaleType], or null when the views draw it instead.
+ * A baked corner or ring is cropped away by a CENTER_CROP, so only FIT_CENTER bakes.
  */
-internal fun ImageBorderData?.forZeroBezel(scaleType: PTScaleType): ImageBorderData? =
-    if (this != null && isActive && scaleType.usesNativeImageStyling()) copy(withScrim = true)
-    else this
-
-/**
- * The styling to bake into a bitmap shown with [scaleType], or null when there is nothing to bake.
- *
- * A scrim can only ever be drawn into the bitmap, so when one is wanted it is baked in whatever the
- * scale type. The radius and the border are separate: where the views can draw those they still do,
- * because a baked corner or ring is cropped away by a CENTER_CROP. That leaves the bitmap carrying
- * the scrim alone, square-cornered, and the view's clip rounds it along with the picture.
- */
-internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? = when {
-    this == null -> null
-    !scaleType.usesNativeImageStyling() -> this
-    withScrim && isActive -> ImageBorderData(withScrim = true)
-    else -> null
-}
+internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? =
+    if (this != null && !scaleType.usesNativeImageStyling()) this else null
 
 internal data class MediaData(
     val bigImage: ImageData,

@@ -13,8 +13,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Covers the decisions that route image styling: whether there is anything to draw, whether the
- * views or the bitmap draw it, and what Zero Bezel adds on top.
+ * Covers the decisions that route image styling: whether there is anything to draw and whether
+ * the views or the bitmap draw it.
  *
  * These are the rules a payload passes through before a single pixel is touched, so they are
  * checked exhaustively rather than by example - each matrix below walks every combination its
@@ -69,18 +69,6 @@ class ImageBorderDataTest {
         assertTrue("a border alone", borderOnly.isActive)
         assertTrue("both together", both.isActive)
         assertFalse("neither", inactive.isActive)
-    }
-
-    @Test
-    fun `a scrim on its own does not make styling active`() {
-        // Given - withScrim describes something extra to paint, not a reason to start painting.
-        // Zero Bezel adds it only to a payload that is already styled; on its own there is no
-        // radius to round the scrim to, so the scrim view is left to do its normal job.
-        val scrimOnly = ImageBorderData(withScrim = true)
-
-        // Then
-        assertFalse(scrimOnly.isActive)
-        assertFalse(scrimOnly.hasBorder)
     }
 
     // ---------------------------------------------------------------- usesNativeImageStyling
@@ -139,7 +127,7 @@ class ImageBorderDataTest {
             val baked = inactive.bakedInto(scaleType)
             assertFalse(
                 "inactive data must never produce something to draw ($scaleType)",
-                baked?.isActive == true || baked?.withScrim == true
+                baked?.isActive == true
             )
         }
     }
@@ -150,79 +138,6 @@ class ImageBorderDataTest {
         val none: ImageBorderData? = null
         PTScaleType.values().forEach { scaleType ->
             assertNull("$scaleType", none.bakedInto(scaleType))
-        }
-    }
-
-    // ---------------------------------------------------------------- scrim routing
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.S])
-    fun `a CENTER_CROP scrim is baked alone, leaving radius and border to the views`() {
-        // Given - Zero Bezel's payload: styled, and asking for the scrim too
-        val zeroBezel = both.forZeroBezel(PTScaleType.CENTER_CROP)!!
-
-        // When
-        val baked = zeroBezel.bakedInto(PTScaleType.CENTER_CROP)!!
-
-        // Then - only the scrim goes into the bitmap. A baked corner or ring would be cropped away
-        // by the fill, which is the whole reason the views draw those.
-        assertTrue("the scrim is baked", baked.withScrim)
-        assertEquals("no radius is baked", 0f, baked.cornerRadiusPercent)
-        assertEquals("no border width is baked", 0f, baked.borderWidthValue)
-        assertNull("no border colour is baked", baked.borderColor)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.S])
-    fun `FIT_CENTER keeps the scrim view instead of baking it into the picture`() {
-        // Given - a picture that does not fill its area. Its text still sits at the area's bottom
-        // edge, outside the picture, so baking the scrim into the picture would darken where there
-        // is no text and leave the text with no darkening at all.
-
-        // When
-        val forFit = both.forZeroBezel(PTScaleType.FIT_CENTER)!!
-
-        // Then - no scrim is folded in, which is what leaves the scrim view in place
-        assertFalse(forFit.withScrim)
-        assertSame("the payload is otherwise untouched", both, forFit)
-
-        // and nothing scrim-shaped reaches the bitmap either
-        assertFalse(forFit.bakedInto(PTScaleType.FIT_CENTER)!!.withScrim)
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.S])
-    fun `forZeroBezel adds the scrim to any styled payload and leaves its sizes alone`() {
-        listOf(radiusOnly, borderOnly, both).forEach { data ->
-            // When
-            val withScrim = data.forZeroBezel(PTScaleType.CENTER_CROP)!!
-
-            // Then
-            assertTrue("$data must gain the scrim", withScrim.withScrim)
-            assertEquals("$data radius", data.cornerRadiusPercent, withScrim.cornerRadiusPercent)
-            assertEquals("$data width", data.borderWidthValue, withScrim.borderWidthValue)
-            assertEquals("$data colour", data.borderColor, withScrim.borderColor)
-        }
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.S])
-    fun `forZeroBezel leaves an unstyled payload alone`() {
-        // Given / Then - with no radius there is nothing to round the scrim to, so the template's
-        // own scrim view is left in place and nothing is baked
-        PTScaleType.values().forEach { scaleType ->
-            assertFalse("$scaleType", inactive.forZeroBezel(scaleType)!!.withScrim)
-            assertNull("$scaleType", null.forZeroBezel(scaleType))
-        }
-    }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.R])
-    fun `below API 31 no scrim is folded in, since nothing is styled there at all`() {
-        // Given / Then - the styling keys are dropped at parse time on these versions, so the
-        // scrim view keeps doing its normal job for both scale types
-        PTScaleType.values().forEach { scaleType ->
-            assertFalse("$scaleType", both.forZeroBezel(scaleType)!!.withScrim)
         }
     }
 }

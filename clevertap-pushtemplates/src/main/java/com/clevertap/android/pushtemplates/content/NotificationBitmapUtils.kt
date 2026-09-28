@@ -3,7 +3,6 @@ package com.clevertap.android.pushtemplates.content
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
@@ -130,13 +129,6 @@ internal object NotificationBitmapUtils {
      */
     internal const val BORDER_WIDTH_DIVISOR = 1000f
 
-    /**
-     * Darkest point of the Zero Bezel scrim, at the bottom of the picture, fading to transparent at
-     * the top. Kept in step with `res/drawable/pt_scrim.xml`, which the scrim view uses when the
-     * styling is off and the scrim is not baked in.
-     */
-    private const val SCRIM_BOTTOM_COLOR = 0xAA000000.toInt()
-
 
     /**
      * Draws [source] into a new bitmap with rounded corners and, when [border] carries a visible
@@ -148,8 +140,7 @@ internal object NotificationBitmapUtils {
     fun applyRoundedBorderToBitmap(source: Bitmap, border: ImageBorderData): Bitmap {
         val width = source.width
         val height = source.height
-        // A scrim on its own is reason enough to redraw, even with no radius or ring to add.
-        if (width <= 0 || height <= 0 || (!border.isActive && !border.withScrim)) return source
+        if (width <= 0 || height <= 0 || !border.isActive) return source
 
         // The percentage is of the picture's HEIGHT, which is the same rule the view-drawn path
         // applies for CENTER_CROP. The tray scales the bitmap and its baked styling together, so a
@@ -179,22 +170,6 @@ internal object NotificationBitmapUtils {
             RectF(0f, 0f, width.toFloat(), height.toFloat()),
             safeRadius, safeRadius, imagePaint
         )
-
-        // The Zero Bezel scrim, painted inside the same rounded path as the picture. Drawn after
-        // the image and before the ring, exactly where the separate scrim view used to sit in the
-        // stack, so the text stays as readable as it was.
-        if (border.withScrim) {
-            val scrimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                shader = LinearGradient(
-                    0f, height.toFloat(), 0f, 0f,
-                    SCRIM_BOTTOM_COLOR, Color.TRANSPARENT, Shader.TileMode.CLAMP
-                )
-            }
-            canvas.drawRoundRect(
-                RectF(0f, 0f, width.toFloat(), height.toFloat()),
-                safeRadius, safeRadius, scrimPaint
-            )
-        }
 
         val strokeColor = border.borderColor
         if (strokeWidth > 0f && strokeColor != null) {
