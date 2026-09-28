@@ -281,8 +281,8 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Android 12 (API 31) and above only; ignored on older versions
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Android 12 (API 31) and above only; ignored on older versions
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
@@ -312,8 +312,8 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Android 12 (API 31) and above only; ignored on older versions
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Android 12 (API 31) and above only; ignored on older versions
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -345,8 +345,8 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Android 12 (API 31) and above only; ignored on older versions
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Android 12 (API 31) and above only; ignored on older versions
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -370,8 +370,8 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Android 12 (API 31) and above only; ignored on older versions
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Android 12 (API 31) and above only; ignored on older versions
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
@@ -405,9 +405,6 @@ pt_img2_alt_text | Optional | Alt Text for Image Two
 pt_img3 | Required  | Image Three
 pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_bt1 | Required  | Big text for first image
 pt_bt2 | Required  | Big text for second image
 pt_bt3 | Required  | Big text for third image
@@ -475,8 +472,8 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
+pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Android 12 (API 31) and above only; ignored on older versions
+pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Android 12 (API 31) and above only; ignored on older versions
 pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_gif_alt | Optional | GIF to show when timer expires
@@ -516,9 +513,6 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Corner radius for the image, as a percentage (`0`-`50`) of the image's height. Defaults to `0` (square corners); `50` is a fully rounded image. Forces `pt_scale_type` to `fit_center` so the rounded corners stay visible
-pt_img_border_width | Optional | Border width for the image, as a value (`0`-`100`) resolved against the image's height as `height x value / 1000`, the same formula Native Display uses. `100` is the maximum, a stroke a tenth of the height. Defaults to `0` (no border). Both this and `pt_img_border_clr` are required to draw a border. Forces `pt_scale_type` to `fit_center` so the border stays visible
-pt_img_border_clr | Optional | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Both this and `pt_img_border_width` are required to draw a border
 pt_big_img_collapsed | Optional | Image for the collapsed view
 pt_gif_collapsed | Optional | GIF for the collapsed view
 pt_gif_frames_collapsed | Optional | Number of frames to extract from the GIF for the collapsed view
@@ -627,13 +621,14 @@ To handle scaling in a Push template, you must add the key `pt_scale_type` key a
 
 ## Image Border and Rounded Corners
 
-Templates that render an image support rounded corners and a border on that image. Add any of the
-following keys to the payload:
+Templates that render an image support rounded corners and a border on that image on Android 12
+(API 31) and above. On older versions the keys are ignored and images render as they always have.
+Add any of the following keys to the payload:
 
 Key | Description
 :---|:---
-`pt_img_corner_radius` | Corner radius as a **percentage of the image's shortest side**, `0`-`50`. Defaults to `0` (square corners). `50` is half the shortest side, which is a fully rounded image; larger values are clamped to it because they have no further visible effect
-`pt_img_border_width` | Border width as a **percentage of the image's shortest side**, `0`-`10`. Defaults to `0` (no border)
+`pt_img_corner_radius` | Corner radius as a **percentage of the image's height**, `0`-`50`. Defaults to `0` (square corners). `50` is half the height, which is a fully rounded image; larger values are clamped to it because they have no further visible effect
+`pt_img_border_width` | Border width as a value `0`-`100`, resolved against the image's height as `height x value / 1000` (the Native Display formula). `100` is a stroke a tenth of the height. Defaults to `0` (no border)
 `pt_img_border_clr` | Border color in HEX, either `#RRGGBB` (rendered fully opaque) or `#AARRGGBB`. For example `#FF5722`
 
 A border needs **both** of its keys. A width without a colour and a colour without a width each draw
@@ -658,18 +653,18 @@ draws on a fixed-size canvas of its own and which therefore take absolute values
 
 * `pt_img_border_clr` supports the dark mode suffix, so `pt_img_border_clr_dark` is used when the
   device is in dark mode. See [Dark Mode](#dark-mode).
-* Because the styling is baked into the bitmap, a `center_crop` image view would scale the image to
-  fill the slot and clip away the very band the corners and border live in. Whenever either key is
-  active the SDK renders the image with `fit_center` and ignores `pt_scale_type`. This can letterbox
-  an image that previously filled the slot.
+* `pt_scale_type` is honoured as usual. A `center_crop` image fills its slot, so the SDK draws the
+  corners and border with the views, on the visible edge, and they survive the tray's crop. A
+  `fit_center` image is smaller than its slot, so the styling is baked into the bitmap and scales
+  with the picture. Either way the values are a share of the displayed picture's height.
 * Values outside the supported range are clamped to the nearest valid value (for example a negative
-  radius becomes `0`, a radius of `80` becomes `50`, and a width of `40` becomes `10`). Values that
+  radius becomes `0`, a radius of `80` becomes `50`, and a width of `150` becomes `100`). Values that
   are not finite numbers — an unparseable radius or width, `NaN`, or `Infinity` — are ignored as
   though the key were absent. An unparseable colour skips the border while the corner radius still
   applies.
 * The keys apply to GIFs exactly as they do to static images. The SDK extracts a GIF into still
-  frames once, when it builds the notification, so the styling is baked into each frame at that
-  point and costs nothing while the notification is on screen.
+  frames once, when it builds the notification, so where the styling is baked it goes into each
+  frame at that point and costs nothing while the notification is on screen.
 * The same value is not guaranteed to look identical on Android and iOS. The value is proportional
   to the image, and each platform lays the image out in its own slot, so treat the key as "match my
   brand's corner language" rather than as an exact cross-platform measurement.
