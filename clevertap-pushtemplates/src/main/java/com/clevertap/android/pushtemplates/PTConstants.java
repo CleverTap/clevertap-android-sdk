@@ -167,11 +167,7 @@ public class PTConstants {
 
     public static final String PT_ACTION_ID = "actionId";
 
-    /**
-     * Same key core action buttons use. Icons template taps carry it so the app can dismiss the
-     * notification, since the SDK does not. It is true unless the payload sets
-     * pt_dismiss_on_click to "false".
-     */
+    // Same key core action buttons use, read by the app's dismiss handler on icon taps
     public static final String PT_AUTO_CANCEL = "autoCancel";
 
     public static final String PT_RIGHT_SWIPE = "right_swipe";

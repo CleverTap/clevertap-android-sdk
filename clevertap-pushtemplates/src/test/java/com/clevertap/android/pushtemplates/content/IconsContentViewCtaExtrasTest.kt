@@ -30,9 +30,8 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * The SDK does not dismiss on an icon tap, so every icon bundle must carry the actionId,
- * autoCancel and notificationId extras the app's dismiss handler reads. autoCancel follows
- * pt_dismiss_on_click: absent or "true" dismisses, "false" keeps.
+ * Every icon bundle must carry the actionId, autoCancel and notificationId extras the app's
+ * dismiss handler reads.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])

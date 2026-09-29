@@ -491,7 +491,7 @@ pt_bg | Optional  | Background Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
 pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
-pt_dismiss_on_click | Optional | Set to `false` to keep the notification after an icon tap (default dismisses it, via the app's `dismissNotification` snippet)
+pt_dismiss_on_click | Optional | Set to `false` to keep the notification after an icon tap
 pt_json | Optional | Above keys in JSON format
 
 ### Timer Template
