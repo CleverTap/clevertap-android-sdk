@@ -36,6 +36,11 @@ public class InboxResponse extends CleverTapResponseDecorator {
         this.controllerManager = controllerManager;
     }
 
+    @Override
+    public boolean runsDuringUserSwitch() {
+        return false; // inbox is reset and re-fetched for the new user after the switch
+    }
+
     //NotificationInbox
     @WorkerThread
     @Override

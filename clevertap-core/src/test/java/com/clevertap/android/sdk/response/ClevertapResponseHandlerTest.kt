@@ -31,6 +31,13 @@ class ClevertapResponseHandlerTest {
         mockFetchVariablesResponse = mockk(relaxed = true)
         mockGenericResponse = mockk(relaxed = true)
         mockBodyJson = mockk()
+
+        // Declare each processor's user-switch policy (the handler now filters on this, not on type).
+        every { mockInAppResponse.runsDuringUserSwitch() } returns true
+        every { mockGenericResponse.runsDuringUserSwitch() } returns true
+        every { mockInboxResponse.runsDuringUserSwitch() } returns false
+        every { mockDisplayUnitResponse.runsDuringUserSwitch() } returns false
+        every { mockFetchVariablesResponse.runsDuringUserSwitch() } returns false
     }
 
     @Test
@@ -133,6 +140,8 @@ class ClevertapResponseHandlerTest {
         // Given
         val mockOtherResponse1 = mockk<CleverTapResponse>(relaxed = true)
         val mockOtherResponse2 = mockk<CleverTapResponse>(relaxed = true)
+        every { mockOtherResponse1.runsDuringUserSwitch() } returns true
+        every { mockOtherResponse2.runsDuringUserSwitch() } returns true
         val responses = listOf(
             mockInAppResponse,
             mockInboxResponse,      // Should be excluded
