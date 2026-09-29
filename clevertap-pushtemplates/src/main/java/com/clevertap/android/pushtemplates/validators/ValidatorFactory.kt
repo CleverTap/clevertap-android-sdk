@@ -30,13 +30,12 @@ fun Iterable<Checker<out Any>>.and(): Boolean {
 }
 
 fun Iterable<Checker<out Any>>.or(): Boolean {
-    var or = false
     for (element in this) {
-        or =
-            element.check() || or
-        if (or) break
+        if (element.check()) {
+            return true
+        }
     }
-    return or
+    return false
 }
 
 /**
@@ -141,6 +140,7 @@ internal class ValidationCheckersBuilder {
     /**
      * Adds integer field validation with minimum value check
      */
+    @Suppress("unused")
     fun addIntValidation(value: Int?, minValue: Int, key: String, errorMessage: String): ValidationCheckersBuilder {
         checkers[key] = IntSizeChecker(value, minValue, errorMessage)
         return this
@@ -149,6 +149,7 @@ internal class ValidationCheckersBuilder {
     /**
      * Adds integer field validation with minimum value check
      */
+    @Suppress("unused")
     fun addLongValidation(value: Long?, minValue: Int, key: String, errorMessage: String): ValidationCheckersBuilder {
         checkers[key] = LongSizeChecker(value, minValue, errorMessage)
         return this
@@ -228,7 +229,7 @@ internal class ValidatorFactory {
 
                 is FiveIconsTemplateData -> {
                     builder
-                        .addDeepLinkValidation(templateData.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
+                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
                         .addImageListValidation(templateData.imageList, 3, key = PT_FIVE_IMAGE_LIST)
                         .build()
                 }

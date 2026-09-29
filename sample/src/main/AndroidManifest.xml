@@ -104,6 +104,9 @@
             android:name="CLEVERTAP_ACTIVITY_EXCLUDE"
             android:value="HomeScreenActivity" />
         <meta-data
+            android:name="CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS"
+            android:value="0" /> <!-- Set to 1 to let custom-html header/footer in-apps render via a WindowManager overlay when the host Activity is not a FragmentActivity (e.g. game engines). Default 0 (disabled); intended for the Unreal/Unity wrapper SDKs. -->
+        <meta-data
             android:name="CLEVERTAP_ENCRYPTION_LEVEL"
             android:value="2" /> <!-- Add meta and set to 1 enable encryption of PII data -->
 

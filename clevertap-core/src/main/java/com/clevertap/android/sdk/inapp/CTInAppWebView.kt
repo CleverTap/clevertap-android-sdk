@@ -11,6 +11,7 @@ import android.webkit.WebView
 import androidx.annotation.Px
 import androidx.annotation.RequiresApi
 import com.clevertap.android.sdk.CTWebInterface
+import com.clevertap.android.sdk.Logger
 
 @SuppressLint("ViewConstructor")
 internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
@@ -57,6 +58,27 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         updateDimension()
         setMeasuredDimension(dim.x, dim.y)
+    }
+
+    /**
+     * Injects a body sizing style based on the current measured [dim] and loads the in-app html.
+     * Shared by the fragment-hosted partial/full html in-apps and the non-fragment
+     * [CTInAppHtmlBannerOverlay]. Callers must ensure [updateDimension] has run first.
+     */
+    fun loadInAppHtml(html: String) {
+        val d = resources.displayMetrics.density
+        val mHeight = (dim.y / d).toInt()
+        val mWidth = (dim.x / d).toInt()
+
+        val style =
+            "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"
+        // Literal (non-regex) replacement: avoids compiling a Regex per render and avoids treating
+        // any $/\ in the replacement as regex back-references.
+        val inAppHtml = html.replaceFirst("<head>", "<head>$style")
+        Logger.v("Density appears to be $d")
+
+        setInitialScale((d * 100).toInt())
+        loadDataWithBaseURL(null, inAppHtml, "text/html", "utf-8", null)
     }
 
     fun updateDimension() {

@@ -1,5 +1,5 @@
 ## CleverTap Push Templates SDK CHANGE LOG
-### Version 2.5.0 (Unreleased)
+### Version 2.6.0 (Unreleased)
 
 #### New Features
 * **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border width (`pt_img_border_width`), and border color (`pt_img_border_clr`) for notification images. The radius is a percentage (`0`-`50`) of the image's height and the width a value (`0`-`100`) resolved as `height x value / 1000`, the same formula Native Display uses, so a single value renders consistently across images of any resolution. Available on Android 12 (API 31) and above; the keys are ignored on older versions. Supported on the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Timer`, and `Image with CTA` templates, and on GIFs. A border requires both `pt_img_border_width` and `pt_img_border_clr`; neither key alone draws anything. `pt_img_border_clr` accepts `#RRGGBB` and `#AARRGGBB`, and honours the dark mode suffix (`pt_img_border_clr_dark`). Not supported on `Five Icons`.
@@ -8,6 +8,20 @@
 * Fixes a crash in the `Manual Carousel` template when navigating between images in a campaign that has no deep links configured.
 * Fixes image list detection so that keys such as `pt_img_border_clr` are no longer treated as carousel images. Only `pt_img<number>` keys are read as images.
 * Fixes the `Image with CTA` template layout so the image is no longer flush against the notification edge.
+
+### Version 2.5.0 (July 28, 2026)
+
+#### New Features
+* **Five Icons Template:** Adds title and message text support to the `Five Icons` template, and a text-only fallback notification when the template cannot be rendered.
+* **Vertical Template:** Adds HTML formatting support for the `line1` and `line2` text fields of the `pt_vertical_image` template.
+
+#### Enhancements
+* Enhances accessibility for the `Manual Carousel` and `Rating` templates for BIS compliance.
+
+#### Bug Fixes
+* Fixes icon clipping in the collapsed view of the `Five Icons` template when a title or message is present, by using a shorter icon strip.
+* Fixes the chronometer color format and border rendering in the `Timer` template.
+* Fixes a crash (`SecurityException`) during the pre-download network check when the host app does not hold the `ACCESS_NETWORK_STATE` permission.
 
 ### Version 2.4.0 (April 13, 2026)
 

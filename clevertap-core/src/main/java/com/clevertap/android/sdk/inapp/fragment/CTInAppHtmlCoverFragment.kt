@@ -17,7 +17,7 @@ internal class CTInAppHtmlCoverFragment : CTInAppBaseFullHtmlFragment() {
         closeIvLp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
         closeIvLp.addRule(RelativeLayout.ALIGN_PARENT_TOP)
 
-        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH) / 4
+        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH) / 4
         closeIvLp.setMargins(0, sub, sub, 0)
         return closeIvLp
     }

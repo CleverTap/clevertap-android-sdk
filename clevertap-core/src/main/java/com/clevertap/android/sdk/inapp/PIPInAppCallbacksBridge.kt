@@ -1,7 +1,10 @@
 package com.clevertap.android.sdk.inapp
 
+import android.os.Bundle
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.inapp.pipsdk.PIPCallbacks
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 
 internal class PIPInAppCallbacksBridge(
     private val inAppNotification: CTInAppNotification,
@@ -22,6 +25,49 @@ internal class PIPInAppCallbacksBridge(
     override fun onClose() {
         logger.debug(LOG_TAG, "PIP onClose for campaign: ${inAppNotification.campaignId}")
         inAppListener.inAppNotificationDidDismiss(inAppNotification, null)
+    }
+
+    /**
+     * Close (X) button tap. Raises a "Notification Clicked" event with close descriptors
+     *  (`wzrk_element_id = closeButton`, `wzrk_c2a = Dismiss Button`,
+     * `wzrk_action = close`, `wzrk_data = close`), matching every other in-app type's close button.
+     * The dismiss itself is reported separately via the [onClose] that follows.
+     */
+    override fun onCloseButtonClick() {
+        logger.debug(LOG_TAG, "PIP onCloseButtonClick for campaign: ${inAppNotification.campaignId}")
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_CLOSE)
+        }
+        inAppListener.inAppNotificationActionTriggered(
+            inAppNotification,
+            CTInAppAction.createCloseAction(),
+            Constants.INAPP_CTA_DISMISS_BUTTON,
+            extras,
+            null
+        )
+    }
+
+    /**
+     * Programmatic dismiss via the public dismissPipInApp() API.
+     * Raises a "Notification Clicked" event with the API-dismiss descriptors
+     * (`wzrk_element_id = dismissApi`, `wzrk_c2a = Dismiss PiP API`,
+     * `wzrk_action = close`, `wzrk_data = close`).
+     * The event records the API call itself and fires even when the PIP was still
+     * loading (never visible) — it may therefore precede or lack a Viewed event.
+     * The dismiss itself is reported separately via the [onClose] that follows.
+     */
+    override fun onApiDismiss() {
+        logger.debug(LOG_TAG, "PIP onApiDismiss for campaign: ${inAppNotification.campaignId}")
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_DISMISS_API)
+        }
+        inAppListener.inAppNotificationActionTriggered(
+            inAppNotification,
+            CTInAppAction.createCloseAction(),
+            Constants.INAPP_CTA_DISMISS_PIP_API,
+            extras,
+            null
+        )
     }
 
     override fun onAction() {
@@ -50,8 +96,13 @@ internal class PIPInAppCallbacksBridge(
         //
         // No Activity finishes, so the app's task is never at risk of being killed
         // because it was never reduced to an empty/background state.
+        //
+        // PIP exposes a single CTA surface, so its element id is the fixed literal "button-cta"
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_PIP_CTA)
+        }
         inAppListener.inAppNotificationActionTriggered(
-            inAppNotification, action, callToAction, null, null
+            inAppNotification, action, callToAction, extras, null
         )
     }
 
@@ -79,8 +130,8 @@ internal class PIPInAppCallbacksBridge(
         logger.debug(LOG_TAG, "PIP onMediaError for campaign: ${inAppNotification.campaignId}, url: $url, error: $error")
     }
 
-    override fun onShowFailed() {
-        logger.debug(LOG_TAG, "PIP onShowFailed for campaign: ${inAppNotification.campaignId}")
-        showFailureHandler.onPIPShowFailed(inAppNotification)
+    override fun onShowFailed(mediaType: PIPMediaType) {
+        logger.debug(LOG_TAG, "PIP onShowFailed for campaign: ${inAppNotification.campaignId}, mediaType: $mediaType")
+        showFailureHandler.onPIPShowFailed(inAppNotification, mediaType)
     }
 }

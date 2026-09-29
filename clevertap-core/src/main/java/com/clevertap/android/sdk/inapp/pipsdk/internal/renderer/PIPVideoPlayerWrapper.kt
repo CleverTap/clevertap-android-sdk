@@ -19,6 +19,7 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.ui.PlayerView
+import com.clevertap.android.sdk.video.inbox.Media3PlayerListener
 import kotlin.math.min
 
 /**
@@ -255,7 +256,7 @@ internal class PIPVideoPlayerWrapper {
      *  after network recovery). Without this, controls only update on user tap.
      *  Registered once in [initPlayer] — survives rotation since the player is not recreated. */
     private fun registerPlayingChangedListener(player: ExoPlayer) {
-        val listener = object : Player.Listener {
+        val listener = object : Media3PlayerListener() {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 onPlayingChanged?.invoke(isPlaying)
             }
@@ -264,11 +265,11 @@ internal class PIPVideoPlayerWrapper {
         player.addListener(listener)
     }
 
-    /** Registers a one-shot [Player.Listener] that fires [onFirstFrame] when the first
+    /** Registers a one-shot [Media3PlayerListener] that fires [onFirstFrame] when the first
      *  video frame is rendered. Used by both [initPlayer] (initial load) and
      *  [rebindSurface] (post-rotation) so [notifyWhenFirstFrame] works in both cases. */
     private fun registerFirstFrameListener(player: ExoPlayer) {
-        player.addListener(object : Player.Listener {
+        player.addListener(object : Media3PlayerListener() {
             override fun onRenderedFirstFrame() {
                 val cb: (() -> Unit)?
                 synchronized(firstFrameLock) {
@@ -283,12 +284,12 @@ internal class PIPVideoPlayerWrapper {
     }
 
     /**
-     * Registers a [Player.Listener] on the underlying player to receive error events.
+     * Registers a [Media3PlayerListener] on the underlying player to receive error events.
      */
     fun setErrorListener(onError: (PlaybackException) -> Unit) {
         val p = player ?: return
         errorListener?.let { p.removeListener(it) }
-        val listener = object : Player.Listener {
+        val listener = object : Media3PlayerListener() {
             override fun onPlayerError(error: PlaybackException) {
                 onError(error)
             }

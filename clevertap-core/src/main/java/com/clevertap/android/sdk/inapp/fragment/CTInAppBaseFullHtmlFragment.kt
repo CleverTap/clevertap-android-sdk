@@ -13,7 +13,6 @@ import android.widget.RelativeLayout
 import com.clevertap.android.sdk.CTWebInterface
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.CTInAppWebView
@@ -56,7 +55,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
         closeIvLp.addRule(RelativeLayout.ABOVE, webViewId)
         closeIvLp.addRule(RelativeLayout.RIGHT_OF, webViewId)
 
-        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH) / 2
+        val sub = getScaledPixels(Constants.INAPP_CLOSE_IV_TOUCH_TARGET_WIDTH) / 2
         closeIvLp.setMargins(-sub, 0, 0, -sub)
         return closeIvLp
     }
@@ -103,7 +102,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
                 val context = inflater.context
                 val closeImageView = CloseImageView(context)
                 val closeIvLp = getLayoutParamsForCloseButton(webView.id)
-                closeImageView.setOnClickListener { didDismiss(null) }
+                closeImageView.setOnClickListener { triggerCloseButtonAction() }
                 closeImageView.contentDescription = context.getString(R.string.ct_inapp_close_btn)
                 this.closeImageView = closeImageView
                 rl.addView(closeImageView, closeIvLp)
@@ -142,22 +141,8 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
 
         val customUrl = inAppNotification.customInAppUrl
         if (customUrl.isNullOrEmpty()) {
-            var mHeight = webView.dim.y
-            var mWidth = webView.dim.x
-
-            val d = resources.displayMetrics.density
-            mHeight = (mHeight / d).toInt()
-            mWidth = (mWidth / d).toInt()
-
-            var html = inAppNotification.html ?: return
-
-            val style =
-                "<style>body{width: ${mWidth}px; height: ${mHeight}px; margin: 0; padding:0;}</style>"
-            html = html.replaceFirst("<head>".toRegex(), "<head>$style")
-            Logger.v("Density appears to be $d")
-
-            webView.setInitialScale((d * 100).toInt())
-            webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null)
+            val html = inAppNotification.html ?: return
+            webView.loadInAppHtml(html)
         } else {
             webView.setWebViewClient(WebViewClient())
             webView.loadUrl(customUrl)

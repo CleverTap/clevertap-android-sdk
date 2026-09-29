@@ -11,6 +11,7 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
+import androidx.core.view.ViewCompat
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
 import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
@@ -137,8 +138,11 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
             CTInAppNativeButtonClickListener()
         )
 
+        relativeLayout?.findViewById<View>(R.id.gifImage)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
+        relativeLayout?.findViewById<View>(R.id.video_frame)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
+
         closeImageView.setOnClickListener {
-            didDismiss(null)
+            triggerCloseButtonAction()
             activity?.finish()
         }
 

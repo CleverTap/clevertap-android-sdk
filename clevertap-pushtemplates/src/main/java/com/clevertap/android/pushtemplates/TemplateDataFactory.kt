@@ -226,14 +226,10 @@ internal object TemplateDataFactory {
         defaultAltText: String
     ): FiveIconsTemplateData {
         return FiveIconsTemplateData(
+            baseContent = createBaseContent(extras, colorMap),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
-            deepLinkList = Utils.getDeepLinkListFromExtras(extras),
-            backgroundColor = colorMap[PT_BG],
-            title = getStringWithFallback(extras, PT_TITLE, Constants.NOTIF_TITLE),
-            subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE),
             // No image styling here: the Five Icons assets are transparent 1:1 glyphs, where a
             // rectangular corner clip is a no-op and a border frames each glyph individually.
-            notificationBehavior = createNotificationBehaviorData(extras)
         )
     }
 
@@ -623,18 +619,16 @@ internal object TemplateDataFactory {
         )
     }
 
-    internal fun FiveIconsTemplateData.toBaseContent(): BaseContent {
-        return BaseContent(
-            textData = BaseTextData(title = this.title, subtitle = this.subtitle),
-            colorData = BaseColorData(
-                backgroundColor = this.backgroundColor,
+    internal fun FiveIconsTemplateData.toBasicTemplateData(): BasicTemplateData {
+        return BasicTemplateData(
+            baseContent = this.baseContent,
+            mediaData = MediaData(
+                bigImage = ImageData(altText = ""),
+                gif = GifData()
             ),
-            iconData = IconData(),
-            deepLinkList = this.deepLinkList,
-            notificationBehavior = this.notificationBehavior
+            actions = null
         )
     }
-
 
     internal fun InputBoxTemplateData.toBaseContent(): BaseContent {
         return BaseContent(
@@ -680,4 +674,3 @@ internal object TemplateDataFactory {
         }
     }
 }
-

@@ -5,10 +5,11 @@ import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
-
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.DidClickForHardPermissionListener
@@ -17,17 +18,17 @@ import com.clevertap.android.sdk.customviews.CloseImageView
 import com.clevertap.android.sdk.inapp.CTInAppAction
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
+import com.clevertap.android.sdk.inapp.InAppActionParser
 import com.clevertap.android.sdk.inapp.InAppActionType
 import com.clevertap.android.sdk.inapp.InAppListener
+import com.clevertap.android.sdk.inapp.InAppWebInteraction
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
 import com.clevertap.android.sdk.inapp.media.NoOpMediaHandler
-import com.clevertap.android.sdk.utils.UriHelper
 
 import java.lang.ref.WeakReference
-import java.net.URLDecoder
 
-internal abstract class CTInAppBaseFragment : Fragment() {
+internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
 
     companion object {
         private const val KEY_ACTIVE_MEDIA_URL = "ct_active_media_url"
@@ -118,6 +119,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        ViewCompat.setAccessibilityPaneTitle(view, getString(R.string.ct_inapp_message_shown))
         didShow(null)
     }
 
@@ -128,56 +130,49 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         setArguments(bundle)
     }
 
-    fun triggerAction(
+    override fun triggerAction(
         action: CTInAppAction, callToAction: String?, additionalData: Bundle?
     ) {
-        var additionalData = additionalData
-        var action = action
-        var callToAction = callToAction
-        if (action.type == InAppActionType.OPEN_URL) {
-            //All URL parameters should be tracked as additional data
-            val urlActionData = UriHelper.getAllKeyValuePairs(action.actionUrl, false)
-
-            // callToAction is handled as a parameter
-            var callToActionUrlParam = urlActionData.getString(Constants.KEY_C2A)
-            // no need to keep it in the data bundle
-            urlActionData.remove(Constants.KEY_C2A)
-
-            // add all additional params, overriding the url params if there is a collision
-            if (additionalData != null) {
-                urlActionData.putAll(additionalData)
-            }
-            // Use the merged data for the action
-            additionalData = urlActionData
-            if (callToActionUrlParam != null) {
-                // check if there is a deeplink within the callToAction param
-                val parts = callToActionUrlParam.split(Constants.URL_PARAM_DL_SEPARATOR)
-                if (parts.size == 2) {
-                    // Decode it here as it is not decoded by UriHelper
-                    try {
-                        // Extract the actual callToAction value
-                        callToActionUrlParam = URLDecoder.decode(parts[0], "UTF-8")
-                    } catch (e: Exception) {
-                        config.logger.debug("Error parsing c2a param", e)
-                    }
-                    // use the url from the callToAction param
-                    action = CTInAppAction.CREATOR.createOpenUrlAction(parts[1])
-                }
-            }
-            if (callToAction == null) {
-                // Use the url param value only if no other value is passed
-                callToAction = callToActionUrlParam
-            }
-        }
-        val actionData = notifyActionTriggered(action, callToAction ?: "", additionalData)
+        val parsed = InAppActionParser.parse(action, callToAction, additionalData, config)
+        val actionData = notifyActionTriggered(parsed.action, parsed.callToAction ?: "", parsed.additionalData)
         didDismiss(actionData)
     }
 
-    fun openActionUrl(url: String) {
+    override fun openActionUrl(url: String) {
         triggerAction(CTInAppAction.CREATOR.createOpenUrlAction(url), null, null)
     }
 
-    fun didDismiss(data: Bundle?) {
+    /**
+     * Close (X) button dismissal, raised as a click: `wzrk_element_id = closeButton`,
+     * `wzrk_c2a = Dismiss Button`, `wzrk_action = close`, `wzrk_data = close`.
+     */
+    fun triggerCloseButtonAction() {
+        val extras = Bundle().apply {
+            putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_CLOSE)
+        }
+        triggerAction(
+            CTInAppAction.CREATOR.createCloseAction(), Constants.INAPP_CTA_DISMISS_BUTTON, extras
+        )
+    }
+
+    /**
+     * Swipe-to-dismiss, raised as a click: `wzrk_c2a = Swipe to Dismiss`, `wzrk_action = close`,
+     * `wzrk_data = close`. No `wzrk_element_id` (gesture, not an element).
+     */
+    fun triggerSwipeDismissAction() {
+        triggerAction(
+            CTInAppAction.CREATOR.createCloseAction(), Constants.INAPP_CTA_SWIPE_DISMISS, null
+        )
+    }
+
+    /**
+     * The swipe/pan dismiss gesture is enabled only when there is no close button and the campaign
+     * allows swipe-to-dismiss. When disabled, the gesture must not be attached at all.
+     */
+    protected fun isSwipeToDismissEnabled(): Boolean =
+        !inAppNotification.isShowClose && inAppNotification.swipeToDismiss
+
+    override fun didDismiss(data: Bundle?) {
         cleanup()
         getListener()?.inAppNotificationDidDismiss(inAppNotification, data)
     }
@@ -211,7 +206,7 @@ internal abstract class CTInAppBaseFragment : Fragment() {
     fun handleButtonClickAtIndex(index: Int) {
         try {
             val button = inAppNotification.buttons[index]
-            val clickData = didClick(button)
+            val clickData = didClick(button, index)
 
             if (inAppNotification.isLocalInApp && didClickForHardPermissionListener != null) {
                 when (index) {
@@ -246,12 +241,22 @@ internal abstract class CTInAppBaseFragment : Fragment() {
         return FileResourceProvider.getInstance(requireContext(), config.logger)
     }
 
-    private fun didClick(button: CTInAppNotificationButton): Bundle? {
+    private fun didClick(button: CTInAppNotificationButton, index: Int): Bundle? {
         var action = button.action
         if (action == null) {
             action = CTInAppAction.CREATOR.createCloseAction()
         }
-        return notifyActionTriggered(action, button.text, null)
+        // Whole-image tap on image-only templates is tagged image-1; otherwise it is a 1-based CTA button.
+        val isImageTap = inAppNotification.isImageOnlyInApp()
+        val elementId = if (isImageTap) {
+            Constants.INAPP_ELEMENT_ID_IMAGE
+        } else {
+            Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX + (index + 1)
+        }
+        val extras = Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, elementId) }
+        // wzrk_c2a: for a whole-image tap use the element id ("image-1"); for a CTA button use its text.
+        val callToAction = if (isImageTap) elementId else button.text
+        return notifyActionTriggered(action, callToAction, extras)
     }
 
     private fun notifyActionTriggered(

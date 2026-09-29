@@ -44,6 +44,11 @@ public class ManifestInfo {
 
     private static final String LABEL_ENCRYPTION_IN_TRANSIT = "CLEVERTAP_ENCRYPTION_IN_TRANSIT";
 
+    // Opt-in (default off) that lets custom-html header/footer in-apps render via a WindowManager
+    // overlay when the host Activity is not a FragmentActivity. Enabled by the gaming wrapper SDKs
+    // (Unreal/Unity) via their merged manifest; regular integrations never set it.
+    private static final String LABEL_INAPP_FRAGMENTLESS_BANNERS = "CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS";
+
     private static ManifestInfo instance; // singleton
 
     public synchronized static ManifestInfo getInstance(Context context) {
@@ -105,6 +110,7 @@ public class ManifestInfo {
     private final String fcmSenderId;
     private final String packageName;
     private final boolean beta;
+    private final boolean fragmentlessInAppBanners;
     private final String intentServiceName;
     private final String devDefaultPushChannelId;
     private final String[] profileKeys;
@@ -172,6 +178,7 @@ public class ManifestInfo {
 
         packageName = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PACKAGE_NAME);
         beta = "1".equals(_getManifestStringValueForKey(metaData, ManifestInfo.LABEL_BETA));
+        fragmentlessInAppBanners = "1".equals(_getManifestStringValueForKey(metaData, ManifestInfo.LABEL_INAPP_FRAGMENTLESS_BANNERS));
         intentServiceName = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_INTENT_SERVICE);
         devDefaultPushChannelId = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_DEFAULT_CHANNEL_ID);
         profileKeys = parseProfileKeys(metaData);
@@ -224,6 +231,8 @@ public class ManifestInfo {
         this.fcmSenderId = fcmSenderId;
         this.packageName = packageName;
         this.beta = beta;
+        // Not exposed through this explicit constructor; only set via the manifest flag.
+        this.fragmentlessInAppBanners = false;
         this.intentServiceName = intentServiceName;
         this.devDefaultPushChannelId = devDefaultPushChannelId;
         this.profileKeys = profileKeys;
@@ -305,6 +314,17 @@ public class ManifestInfo {
 
     boolean isBackgroundSync() {
         return backgroundSync;
+    }
+
+    /**
+     * Whether custom-html header/footer in-apps may fall back to a WindowManager overlay when the
+     * host Activity is not a {@link androidx.fragment.app.FragmentActivity}. Opt-in (default false),
+     * enabled by the gaming wrapper SDKs via the {@code CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS}
+     * manifest flag.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public boolean isFragmentlessInAppBannersEnabled() {
+        return fragmentlessInAppBanners;
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)

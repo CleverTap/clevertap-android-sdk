@@ -57,6 +57,10 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
             }
             dots[position].setImageDrawable(
                     ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_selected_dot, null));
+            viewHolder.imageViewPager.setAccessibilityState(
+                    getImageContentDescription(context, inboxMessage, position),
+                    position,
+                    inboxMessage.getInboxMessageContents().size());
         }
     }
 
@@ -67,6 +71,8 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
     private final CTCarouselViewPager imageViewPager;
 
     private final LinearLayout sliderDots;
+
+    private CarouselPageChangeListener activePageChangeListener;
 
     CTCarouselImageViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -100,6 +106,13 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) this.imageViewPager.getLayoutParams();
         CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(appContext, parent,
                 inboxMessage, layoutParams, position);
+        // Detach the recycled holder's listener BEFORE swapping the adapter. setAdapter() resets
+        // the current item to 0, and that dispatch would otherwise reach a listener still holding
+        // the previous message's data and dots array.
+        if (activePageChangeListener != null) {
+            this.imageViewPager.removeOnPageChangeListener(activePageChangeListener);
+            activePageChangeListener = null;
+        }
         this.imageViewPager.setAdapter(carouselViewPagerAdapter);
         //Adds the dots for the carousel
         int dotsCount = inboxMessage.getInboxMessageContents().size();
@@ -110,13 +123,22 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         setDots(dots, dotsCount, appContext, this.sliderDots);
         dots[0].setImageDrawable(
                 ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_selected_dot, null));
-        CTCarouselImageViewHolder.CarouselPageChangeListener carouselPageChangeListener
-                = new CTCarouselImageViewHolder.CarouselPageChangeListener(
+        activePageChangeListener = new CTCarouselImageViewHolder.CarouselPageChangeListener(
                 parent.getActivity().getApplicationContext(), this, dots, inboxMessage);
-        this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
+        this.imageViewPager.addOnPageChangeListener(activePageChangeListener);
+        // onPageSelected() never fires for the initial page - ViewPager only dispatches on a
+        // change - so page 0's state must be set explicitly, and last, so nothing triggered by
+        // the adapter swap can overwrite it.
+        this.imageViewPager.setAccessibilityState(
+                getImageContentDescription(appContext, inboxMessage, 0), 0, dotsCount);
 
-        this.clickLayout.setOnClickListener(
-                new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager,true, APP_INBOX_ITEM_INDEX));
+        CTInboxButtonClickListener bodyClickListener = new CTInboxButtonClickListener(position, inboxMessage, null,
+                parentWeak, this.imageViewPager, true, APP_INBOX_ITEM_INDEX);
+        this.clickLayout.setOnClickListener(bodyClickListener);
+        // The adapter hides each page from the accessibility tree, which also hides the page's
+        // own click listener. Without this a TalkBack user can page through the carousel but
+        // has no way to open the message.
+        this.imageViewPager.setAccessibilityClickAction(bodyClickListener);
 
         markItemAsRead(inboxMessage, position);
     }

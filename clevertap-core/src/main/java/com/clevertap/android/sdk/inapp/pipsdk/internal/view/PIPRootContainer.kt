@@ -39,6 +39,10 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
     /** Called by internal close/dismiss actions — wired to PIPManager.dismissInternal. */
     var onDismissRequested: (() -> Unit)? = null
 
+    /** Called specifically when the user taps the close (X) button, so the dismissal can be
+     *  attributed as a close-button click (distinct from a CTA-triggered or media-fail dismiss). */
+    var onCloseButtonClicked: (() -> Unit)? = null
+
     /** Called when media failed to load during fresh show — PIP was never visible.
      *  Wired to silent cleanup in PIPManager (no animation, no onClose). */
     var onShowFailed: (() -> Unit)? = null
@@ -149,7 +153,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
             showPlayPauseButton = s.config.showPlayPauseButton,
             showMuteButton = s.config.showMuteButton,
             onCollapse = { collapseToCompact() },
-            onClose = { onDismissRequested?.invoke() },
+            onClose = { onCloseButtonClicked?.invoke() },
             onAction = actionHandler,
         )
         expandedView = ev
@@ -166,7 +170,7 @@ internal class PIPRootContainer(context: Context) : FrameLayout(context) {
         val cv = PIPCompactView(
             context, mv, s,
             onExpand = { expandToFull() },
-            onClose = { onDismissRequested?.invoke() },
+            onClose = { onCloseButtonClicked?.invoke() },
             onAction = actionHandler,
             onSnap = {},   // session.currentPosition already updated inside PIPCompactView
         )

@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp.media
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 
@@ -21,13 +22,17 @@ internal class InAppImageHandler(
         clickListener: View.OnClickListener?
     ) {
         val bitmap = resourceProvider.cachedInAppImageV1(media.mediaUrl) ?: return
-        val imageView = relativeLayout?.findViewById<ImageView>(config.imageViewId)
-        imageView?.setContentDescriptionIfNotBlank(media.contentDescription)
-        imageView?.setImageBitmap(bitmap)
-        imageView?.visibility = View.VISIBLE
+        val layout = relativeLayout ?: return
+        val imageView = layout.findViewById<ImageView>(config.imageViewId) ?: return
+        imageView.setContentDescriptionOrDefault(
+            media.contentDescription,
+            imageView.context.getString(R.string.ct_inapp_img)
+        )
+        imageView.setImageBitmap(bitmap)
+        imageView.visibility = View.VISIBLE
         if (config.clickableMedia && clickListener != null) {
-            imageView?.tag = 0
-            imageView?.setOnClickListener(clickListener)
+            imageView.tag = 0
+            imageView.setOnClickListener(clickListener)
         }
     }
 }

@@ -61,6 +61,8 @@ dependencies {
 
     // Unit testing dependencies
     testImplementation(project(":test_shared"))
+    // material is compileOnly for consumers; tests inflating inbox_activity.xml (TabLayout) need it at runtime
+    testImplementation(libs.android.material)
     testImplementation(libs.firebase.messaging)
     testImplementation(libs.test.coroutines)
 

@@ -508,6 +508,7 @@ internal object CleverTapFactory {
             SYSTEM,
             networkMonitor,
             pipManager,
+            validationResultStack,
         )
         controllerManager.inAppController = inAppController
 

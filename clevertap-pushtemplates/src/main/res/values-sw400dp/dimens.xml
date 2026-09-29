@@ -19,8 +19,10 @@
     <dimen name="five_cta_icon_margin">8dp</dimen>
 
     <dimen name="manual_carousel_arrow">48dp</dimen>
+    <dimen name="manual_carousel_arrow_padding">0dp</dimen>
 
     <dimen name="rating_star">24dp</dimen>
+    <dimen name="rating_star_padding">12dp</dimen>
 
     <dimen name="chronometer_font_size">20sp</dimen>
 

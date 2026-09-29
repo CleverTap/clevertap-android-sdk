@@ -63,7 +63,7 @@ internal abstract class CTInAppBasePartialNativeFragment : CTInAppBasePartialFra
             animSet.isFillEnabled = true
             animSet.setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationEnd(animation: Animation?) {
-                    didDismiss(null)
+                    triggerSwipeDismissAction()
                 }
 
                 override fun onAnimationRepeat(animation: Animation?) {

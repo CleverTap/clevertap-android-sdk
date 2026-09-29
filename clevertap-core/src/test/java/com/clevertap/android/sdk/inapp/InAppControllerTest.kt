@@ -25,14 +25,20 @@ import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
+import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
+import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.network.NetworkMonitor
+import com.clevertap.android.sdk.validation.ValidationResult
+import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.sdk.utils.configMock
+import androidx.fragment.app.FragmentActivity
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
@@ -68,13 +74,15 @@ class InAppControllerTest {
     private lateinit var fakeInAppQueue: FakeInAppQueue
 
     private lateinit var mockNetworkMonitor: NetworkMonitor
+    private lateinit var mockValidationResultStack: ValidationResultStack
     private val fakeClock = FakeClock(timeMillis = 1735686000000) // 01.01.2025
 
     @Before
     fun setUp() {
         mockkStatic(CoreMetaData::class)
         every { CoreMetaData.isAppForeground() } returns true
-        every { CoreMetaData.getCurrentActivity() } returns mockk(relaxed = true)
+        // Default to a FragmentActivity — the normal host for header/footer in-apps.
+        every { CoreMetaData.getCurrentActivity() } returns mockk<FragmentActivity>(relaxed = true)
 
         mockkStatic(InAppNotificationActivity::class)
         every {
@@ -90,6 +98,8 @@ class InAppControllerTest {
 
         mockNetworkMonitor = mockk(relaxed = true)
         every { mockNetworkMonitor.isNetworkOnline() } returns true
+
+        mockValidationResultStack = mockk(relaxed = true)
 
 
         mockInAppActionHandler = mockk(relaxed = true)
@@ -111,6 +121,7 @@ class InAppControllerTest {
 
         mockManifestInfo = mockk()
         every { mockManifestInfo.excludedActivities } returns EXCLUDED_ACTIVITY_NAME
+        every { mockManifestInfo.isFragmentlessInAppBannersEnabled } returns false
 
         mockAnalyticsManager = mockk()
         every {
@@ -316,6 +327,108 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `inAppActionTriggered adds url action descriptors to clicked event`() {
+        val url = "https://clevertap.com"
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.OPEN_URL}",
+            "${Constants.KEY_ANDROID}": "$url"
+        }
+        """.trimIndent()
+        val inApp = getInAppWithAction(actionJsonString)
+
+        createInAppController().inAppNotificationActionTriggered(
+            inApp, CTInAppAction.createFromJson(JSONObject(actionJsonString))!!, "cta", null, null
+        )
+
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
+                data.getString(Constants.KEY_WZRK_ACTION) == InAppActionType.OPEN_URL.toString() &&
+                        data.getString(Constants.KEY_WZRK_DATA) == url
+            })
+        }
+    }
+
+    @Test
+    fun `inAppActionTriggered adds close action descriptors to clicked event`() {
+        val inApp = getInAppWithAction("""{"${Constants.KEY_TYPE}": "${InAppActionType.CLOSE}"}""")
+
+        createInAppController().inAppNotificationActionTriggered(
+            inApp,
+            CTInAppAction.createCloseAction(),
+            Constants.INAPP_CTA_DISMISS_BUTTON,
+            Bundle().apply { putString(Constants.KEY_WZRK_ELEMENT_ID, Constants.INAPP_ELEMENT_ID_CLOSE) },
+            null
+        )
+
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
+                data.getString(Constants.KEY_WZRK_ACTION) == InAppActionType.CLOSE.toString() &&
+                        data.getString(Constants.KEY_WZRK_DATA) == Constants.INAPP_WZRK_DATA_CLOSE &&
+                        data.getString(Constants.KEY_WZRK_ELEMENT_ID) == Constants.INAPP_ELEMENT_ID_CLOSE
+            })
+        }
+    }
+
+    @Test
+    fun `inAppActionTriggered adds kv action descriptors as a nested payload`() {
+        every { mockCallbackManager.getInAppNotificationButtonListener() } returns null
+        val keyValues = hashMapOf("key1" to "value1", "key2" to "value2")
+        val actionJsonString = """
+        {
+            "${Constants.KEY_TYPE}": "${InAppActionType.KEY_VALUES}",
+            "${Constants.KEY_KV}": ${JSONObject((keyValues as Map<*, *>?)!!)}
+        }
+        """.trimIndent()
+        val inApp = getInAppWithAction(actionJsonString)
+
+        createInAppController().inAppNotificationActionTriggered(
+            inApp, CTInAppAction.createFromJson(JSONObject(actionJsonString))!!, "cta", null, null
+        )
+
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
+                @Suppress("UNCHECKED_CAST")
+                val kv = data.getSerializable(Constants.KEY_WZRK_DATA) as? Map<String, String>
+                data.getString(Constants.KEY_WZRK_ACTION) == InAppActionType.KEY_VALUES.toString() &&
+                        kv?.get("key1") == "value1" && kv?.get("key2") == "value2"
+            })
+        }
+    }
+
+    @Test
+    fun `media error on html inapp reports wzrk_error and raises no clicked event`() {
+        val inApp = CTInAppNotification(JSONObject(InAppFixtures.TYPE_ADVANCED_BUILDER_HEADER), true)
+
+        createInAppController().inAppNotificationActionTriggered(
+            inApp, CTInAppAction.createCloseAction(), Constants.INAPP_CTA_IMAGE_ERROR_DISMISS, null, null
+        )
+
+        verify(exactly = 1) {
+            mockValidationResultStack.pushValidationResult(match<ValidationResult> {
+                it.errorCode == Constants.INAPP_IMAGE_LOAD_FAILED_ERROR_CODE
+            })
+        }
+        verify(exactly = 0) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `media error c2a on native inapp is treated as a normal click`() {
+        val inApp = getInAppWithAction("""{"${Constants.KEY_TYPE}": "${InAppActionType.CLOSE}"}""")
+
+        createInAppController().inAppNotificationActionTriggered(
+            inApp, CTInAppAction.createCloseAction(), Constants.INAPP_CTA_IMAGE_ERROR_DISMISS, null, null
+        )
+
+        verify(exactly = 0) { mockValidationResultStack.pushValidationResult(any<ValidationResult>()) }
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, any())
+        }
+    }
+
+    @Test
     fun `inAppNotificationDidClick should trigger the InAppButton's action`() {
         val url = "https://clevertap.com"
         val actionJsonString = """
@@ -326,9 +439,53 @@ class InAppControllerTest {
         """.trimIndent()
         val inApp = getInAppWithAction(actionJsonString)
         val inAppController = createInAppController()
-        inAppController.inAppNotificationDidClick(inApp, inApp.buttons[0], null)
+        inAppController.inAppNotificationDidClick(inApp, inApp.buttons[0], 0, null)
 
         verify(exactly = 1) { mockInAppActionHandler.openUrl(url, null) }
+    }
+
+    @Test
+    fun `inAppNotificationDidClick tags the clicked button with a 1-based element id`() {
+        val inApp = getInAppWithAction("""{"${Constants.KEY_TYPE}": "${InAppActionType.CLOSE}"}""")
+
+        createInAppController().inAppNotificationDidClick(inApp, inApp.buttons[0], 0, null)
+
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
+                data.getString(Constants.KEY_WZRK_ELEMENT_ID) == "${Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX}1" &&
+                        data.getString(Constants.KEY_WZRK_ACTION) == InAppActionType.CLOSE.toString() &&
+                        data.getString(Constants.KEY_WZRK_DATA) == Constants.INAPP_WZRK_DATA_CLOSE
+            })
+        }
+    }
+
+    @Test
+    fun `inAppNotificationDidClick uses the passed index for duplicate button payloads`() {
+        // Two identical button payloads: CTInAppNotificationButton.equals is value-based, so indexOf
+        // would resolve buttons[1] back to slot 0 and mis-tag it button-1.
+        val buttonJson = """{
+            "${Constants.KEY_TEXT}": "OK",
+            "${Constants.KEY_ACTIONS}": {"${Constants.KEY_TYPE}": "${InAppActionType.CLOSE}"}
+        }"""
+        val inApp = CTInAppNotification(
+            JSONObject(
+                """{
+            "${Constants.KEY_TYPE}": "${CTInAppType.CTInAppTypeCover}",
+            "${Constants.NOTIFICATION_ID_TAG}": "test-campaign",
+            "${Constants.KEY_BUTTONS}": [$buttonJson, $buttonJson]
+            }""".trimIndent()
+            ), false
+        )
+        // Sanity: the two buttons really are equal, so indexOf(buttons[1]) == 0 (the bug).
+        assertEquals(inApp.buttons[0], inApp.buttons[1])
+
+        createInAppController().inAppNotificationDidClick(inApp, inApp.buttons[1], 1, null)
+
+        verify(exactly = 1) {
+            mockAnalyticsManager.pushInAppNotificationStateEvent(true, inApp, match { data ->
+                data.getString(Constants.KEY_WZRK_ELEMENT_ID) == "${Constants.INAPP_ELEMENT_ID_BUTTON_PREFIX}2"
+            })
+        }
     }
 
     @Test
@@ -385,6 +542,54 @@ class InAppControllerTest {
         inAppController.inAppNotificationDidDismiss(currentInApp, null)
 
         assertNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
+    fun `HTML header in-app uses the fragment path on a FragmentActivity`() {
+        every { CoreMetaData.getCurrentActivity() } returns mockk<FragmentActivity>(relaxed = true)
+        val inAppController = createInAppController()
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]").toList()
+        )
+
+        verify(exactly = 1) {
+            CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `HTML header in-app is dropped on a non-FragmentActivity when fragmentless banners are disabled`() {
+        // Plain Activity host (not a FragmentActivity); flag defaults to false.
+        every { CoreMetaData.getCurrentActivity() } returns mockk<Activity>(relaxed = true)
+        val inAppController = createInAppController()
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]").toList()
+        )
+
+        verify(exactly = 0) {
+            CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any())
+        }
+        assertNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
+    fun `HTML header in-app shows the overlay on a non-FragmentActivity when fragmentless banners are enabled`() {
+        every { CoreMetaData.getCurrentActivity() } returns mockk<Activity>(relaxed = true)
+        every { mockManifestInfo.isFragmentlessInAppBannersEnabled } returns true
+        mockkConstructor(CTInAppHtmlBannerOverlay::class)
+        every { anyConstructed<CTInAppHtmlBannerOverlay>().show() } just runs
+
+        val inAppController = createInAppController()
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]").toList()
+        )
+
+        verify(exactly = 1) { anyConstructed<CTInAppHtmlBannerOverlay>().show() }
+        verify(exactly = 0) {
+            CTInAppBaseFragment.showOnActivity(any(), any(), any(), any(), any())
+        }
     }
 
     @Test
@@ -665,7 +870,7 @@ class InAppControllerTest {
             JSONArray("[${InAppFixtures.TYPE_INTERSTITIAL_WITH_MEDIA},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
         fakeInAppQueue.enqueueAll(inApps.toList())
 
-        val mockActivity = mockk<Activity>()
+        val mockActivity = mockk<FragmentActivity>()
         every { mockActivity.localClassName } returns EXCLUDED_ACTIVITY_NAME
         every { CoreMetaData.getCurrentActivity() } returns mockActivity
 
@@ -799,7 +1004,9 @@ class InAppControllerTest {
     }
 
 
-    private fun createInAppController(): InAppController {
+    private fun createInAppController(
+        pipManager: PIPManager = mockk(relaxed = true)
+    ): InAppController {
         return InAppController(
             context = mockk(relaxed = true),
             config = mockConfig,
@@ -819,8 +1026,71 @@ class InAppControllerTest {
             inAppInActionManager = mockInAppInActionManager,
             networkMonitor = mockNetworkMonitor,
             clock = fakeClock,
-            pipManager = mockk(relaxed = true),
+            pipManager = pipManager,
+            validationResultStack = mockValidationResultStack,
         )
+    }
+
+    @Test
+    fun `dismissPipInApp delegates to pipManager dismissFromApi`() {
+        val mockPipManager = mockk<PIPManager>(relaxed = true)
+        val inAppController = createInAppController(pipManager = mockPipManager)
+
+        inAppController.dismissPipInApp()
+
+        verify(exactly = 1) { mockPipManager.dismissFromApi() }
+        verify(exactly = 0) { mockPipManager.dismiss() }
+    }
+
+    @Test
+    fun `onPIPShowFailed with VIDEO pushes the PIP video error onto the validation stack`() {
+        val inAppController = createInAppController()
+        val notification = mockk<CTInAppNotification>(relaxed = true) {
+            every { campaignId } returns "pip_campaign"
+        }
+
+        inAppController.onPIPShowFailed(notification, PIPMediaType.VIDEO)
+
+        verify(exactly = 1) {
+            mockValidationResultStack.pushValidationResult(match<ValidationResult> {
+                it.errorCode == Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_CODE &&
+                        it.errorDesc == Constants.INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_MSG
+            })
+        }
+    }
+
+    @Test
+    fun `onPIPShowFailed with IMAGE pushes the PIP image error onto the validation stack`() {
+        val inAppController = createInAppController()
+        val notification = mockk<CTInAppNotification>(relaxed = true) {
+            every { campaignId } returns "pip_campaign"
+        }
+
+        inAppController.onPIPShowFailed(notification, PIPMediaType.IMAGE)
+
+        verify(exactly = 1) {
+            mockValidationResultStack.pushValidationResult(match<ValidationResult> {
+                it.errorCode == Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_CODE &&
+                        it.errorDesc == Constants.INAPP_PIP_IMAGE_LOAD_FAILED_ERROR_MSG
+            })
+        }
+    }
+
+    @Test
+    fun `onPIPShowFailed with GIF pushes the PIP GIF error onto the validation stack`() {
+        val inAppController = createInAppController()
+        val notification = mockk<CTInAppNotification>(relaxed = true) {
+            every { campaignId } returns "pip_campaign"
+        }
+
+        inAppController.onPIPShowFailed(notification, PIPMediaType.GIF)
+
+        verify(exactly = 1) {
+            mockValidationResultStack.pushValidationResult(match<ValidationResult> {
+                it.errorCode == Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_CODE &&
+                        it.errorDesc == Constants.INAPP_PIP_GIF_LOAD_FAILED_ERROR_MSG
+            })
+        }
     }
 
     // Deep Link Attribution Tests

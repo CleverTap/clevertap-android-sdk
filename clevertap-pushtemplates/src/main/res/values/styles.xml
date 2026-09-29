@@ -24,15 +24,17 @@
     </style>
 
     <style name="ManualCarouselArrowRev" parent="android:Widget.TextView">
-        <item name="android:layout_width">@dimen/manual_carousel_arrow</item>
+        <item name="android:layout_width">@dimen/manual_carousel_arrow_touch_target</item>
         <item name="android:layout_height">50dp</item>
+        <item name="android:paddingEnd">@dimen/manual_carousel_arrow_padding</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:src">@drawable/pt_arrow_back</item>
     </style>
 
     <style name="ManualCarouselArrowFwd" parent="android:Widget.TextView">
-        <item name="android:layout_width">@dimen/manual_carousel_arrow</item>
+        <item name="android:layout_width">@dimen/manual_carousel_arrow_touch_target</item>
         <item name="android:layout_height">50dp</item>
+        <item name="android:paddingStart">@dimen/manual_carousel_arrow_padding</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:layout_alignParentEnd">true</item>
         <item name="android:layout_alignParentRight">true</item>

@@ -17,8 +17,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:scaleType="centerCrop"
-            android:focusable="true" />
+            android:scaleType="centerCrop" />
 
         <com.clevertap.android.sdk.gif.GifImageView
             android:id="@+id/gifImage"
@@ -28,7 +27,6 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:scaleType="centerCrop"
-            android:focusable="true"
             android:visibility="gone" />
 
         <TextView
@@ -41,8 +39,7 @@
             android:maxLines="2"
             android:textColor="@android:color/black"
             android:textSize="40sp"
-            android:textStyle="bold"
-            android:focusable="true" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/cover_message"
@@ -57,8 +54,7 @@
             android:layout_marginTop="40dp"
             android:gravity="center"
             android:textColor="@android:color/black"
-            android:textSize="24sp"
-            android:focusable="true" />
+            android:textSize="24sp" />
 
         <LinearLayout
             android:id="@+id/cover_linear_layout"
@@ -93,8 +89,8 @@
 
     <com.clevertap.android.sdk.customviews.CloseImageView
         android:contentDescription="@string/ct_inapp_close_btn"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="top|end"
         android:layout_marginEnd="12dp"
         android:layout_marginRight="12dp"

@@ -15,6 +15,7 @@
     <dimen name="five_cta_icon_margin">6dp</dimen>
 
     <dimen name="manual_carousel_arrow">36dp</dimen>
+    <dimen name="manual_carousel_arrow_padding">12dp</dimen>
 
     <dimen name="chronometer_font_size">20sp</dimen>
 

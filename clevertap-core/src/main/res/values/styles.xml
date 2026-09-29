@@ -50,7 +50,7 @@
          icon dynamically at runtime via PlayerControlView. -->
     <style name="CtVideoControls.Button.Center.PlayPause" parent="CtVideoControls.Button.Center">
         <item name="android:padding">2dp</item>
-        <item name="android:contentDescription">Play</item>
+        <item name="android:contentDescription">@string/ct_pip_play_button_content_description</item>
     </style>
 
     <!-- Exact mirror of ExoStyledControls.TimeText -->

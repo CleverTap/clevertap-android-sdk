@@ -8,6 +8,7 @@ internal interface InAppListener {
     fun inAppNotificationDidClick(
         inAppNotification: CTInAppNotification,
         button: CTInAppNotificationButton,
+        buttonIndex: Int,
         activityContext: Context?
     ): Bundle?
 

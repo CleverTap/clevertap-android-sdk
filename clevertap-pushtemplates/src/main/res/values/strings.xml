@@ -10,4 +10,9 @@
     <string name="rating_star_4">Rating Four Star</string>
     <string name="rating_star_5">Rating Five Star</string>
     <string name="pt_big_image_alt">Notification Image</string>
+    <string name="pt_five_icon_1">Notification Icon 1</string>
+    <string name="pt_five_icon_2">Notification Icon 2</string>
+    <string name="pt_five_icon_3">Notification Icon 3</string>
+    <string name="pt_five_icon_4">Notification Icon 4</string>
+    <string name="pt_five_icon_5">Notification Icon 5</string>
 </resources>

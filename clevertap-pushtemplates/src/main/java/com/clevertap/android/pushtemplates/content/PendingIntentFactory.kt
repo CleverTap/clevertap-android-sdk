@@ -204,7 +204,7 @@ internal object PendingIntentFactory {
             }
 
             FIVE_ICON_CONTENT_PENDING_INTENT -> {
-                extras.putString(Constants.DEEP_LINK_KEY, null)
+                extras.putString(Constants.DEEP_LINK_KEY, deepLink)
                 return setPendingIntent(context, notificationId, extras, launchIntent, requestCode)
             }
 

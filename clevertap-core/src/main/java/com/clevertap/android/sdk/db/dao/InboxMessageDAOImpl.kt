@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db.dao
 
 import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
@@ -73,65 +74,143 @@ internal class InboxMessageDAOImpl(
         return messageDAOArrayList
     }
 
+    /**
+     * Saves a list of inbox messages. A message already in the table is updated; a new one
+     * is inserted.
+     *
+     * ### Why UPDATE-then-INSERT instead of SQLite UPSERT
+     *
+     * The obvious way to write this is SQLite UPSERT:
+     * `INSERT ... ON CONFLICT(messageUser, _id) DO UPDATE SET ...`. We cannot use it.
+     * UPSERT was added in SQLite 3.24.0, and Android does not ship its own SQLite — it uses
+     * the one built into the phone's operating system:
+     *
+     * | API level | Android | SQLite   | UPSERT works? |
+     * |-----------|---------|----------|---------------|
+     * | 23        | 6.0     | 3.8.10.2 | no            |
+     * | 26        | 8.0     | 3.18.2   | no            |
+     * | 28        | 9       | 3.22.0   | no            |
+     * | 29        | 10      | 3.22.0   | no            |
+     * | 30        | 11      | 3.28.0   | yes           |
+     *
+     * Our minSdk is 23, so on Android 6.0 through 10 the phone's SQLite is too old and the
+     * statement fails to compile at all — `near "ON": syntax error`. Watch out for Android
+     * 10: it kept the same SQLite as Android 9, so the cut-off is Android 11, not 10.
+     *
+     * So instead we UPDATE the row for this `(messageUser, _id)` pair, and INSERT only when
+     * the UPDATE found nothing to change. Both are plain SQLite that works everywhere.
+     *
+     * ### Why the read flag and index_state survive correctly
+     *
+     * `index_state` marks whether the server has confirmed a message. A message can be
+     * delivered again later, and when that happens its `index_state` must not be reset —
+     * the cross-device delete sweep would otherwise mistake a valid message for a deleted
+     * one. See [findSweepableV2Ids] and [markIndexed].
+     *
+     * This is why we cannot simply use `insertWithOnConflict(CONFLICT_REPLACE)` either:
+     * REPLACE deletes the old row and inserts a fresh one, wiping `index_state`.
+     *
+     * Our version handles it by construction: `index_state` is not in the UPDATE's column
+     * list at all, so an existing row's value cannot be touched. Only the INSERT sets it.
+     *
+     * Example — the table holds `(_id = m1, messageUser = userA, index_state = INDEXED)`
+     * and message `m1` arrives again for `userA`:
+     * - the UPDATE refreshes the text, read flag and expiry, and leaves `index_state` alone
+     * - so it stays `INDEXED`, which is correct
+     *
+     * ### Why one transaction
+     *
+     * The whole list is written inside a single transaction. That gives two things: the
+     * UPDATE and INSERT for one message cannot be split apart by another process writing
+     * at the same time, and the database commits once for the batch instead of once per
+     * message.
+     */
     @WorkerThread
     override fun upsertMessages(inboxMessages: List<CTMessageDAO>) {
+        if (inboxMessages.isEmpty()) {
+            return
+        }
+
         if (!dbHelper.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return
         }
 
-        // SQLite UPSERT — INSERT writes index_state for fresh rows; the
-        // ON CONFLICT clause intentionally omits index_state so an existing
-        // row's state survives upsert. The cross-device delete sweep relies
-        // on this: an /a1 redelivery (or any subsequent upsert) must never
-        // downgrade an INDEXED row back to PENDING_INDEXING. The FETCH path
-        // promotes survivors via a separate markIndexed() call.
-        val sql = """
-            INSERT INTO ${INBOX_MESSAGES.tableName} (
-                ${Column.ID},
-                ${Column.DATA},
-                ${Column.WZRKPARAMS},
-                ${Column.CAMPAIGN},
-                ${Column.TAGS},
-                ${Column.IS_READ},
-                ${Column.EXPIRES},
-                ${Column.CREATED_AT},
-                ${Column.USER_ID},
-                ${Column.SOURCE},
-                ${Column.INDEX_STATE}
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(${Column.USER_ID}, ${Column.ID}) DO UPDATE SET
-                ${Column.DATA} = excluded.${Column.DATA},
-                ${Column.WZRKPARAMS} = excluded.${Column.WZRKPARAMS},
-                ${Column.CAMPAIGN} = excluded.${Column.CAMPAIGN},
-                ${Column.TAGS} = excluded.${Column.TAGS},
-                ${Column.IS_READ} = excluded.${Column.IS_READ},
-                ${Column.EXPIRES} = excluded.${Column.EXPIRES},
-                ${Column.CREATED_AT} = excluded.${Column.CREATED_AT},
-                ${Column.SOURCE} = excluded.${Column.SOURCE}
-        """.trimIndent()
-
         val db = dbHelper.writableDatabase
-        for (messageDAO in inboxMessages) {
+
+        // The outer catch keeps the long-standing contract that this method never throws.
+        // Before this class used a transaction, every write went through execSQL inside a
+        // try/catch, so callers were never given an exception. beginTransaction() and
+        // endTransaction() can both fail (for example when the disk is full or the database
+        // is locked), and CryptMigrator.migrateInboxData calls us during SDK start-up
+        // without any try/catch of its own — so a throw here would break initialisation.
+        try {
+            db.beginTransaction()
             try {
-                val encryptedData = dbEncryptionHandler.wrapDbData(messageDAO.jsonData.toString())
-                val args = arrayOf<Any?>(
-                    messageDAO.id,
-                    encryptedData,
-                    messageDAO.wzrkParams.toString(),
-                    messageDAO.campaignId,
-                    messageDAO.tags,
-                    messageDAO.isRead(),
-                    messageDAO.expires,
-                    messageDAO.date,
-                    messageDAO.userId,
-                    (messageDAO.source ?: InboxMessageSource.V1).name,
-                    messageDAO.indexState ?: InboxIndexState.PENDING_INDEXING
-                )
-                db.execSQL(sql, args)
-            } catch (e: SQLiteException) {
-                logger.verbose("Error adding data to table ${INBOX_MESSAGES.tableName}", e)
+                inboxMessages.forEach { messageDAO -> writeMessage(db, messageDAO) }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
             }
+        } catch (e: SQLiteException) {
+            logger.verbose("Error writing inbox messages to ${INBOX_MESSAGES.tableName}", e)
+        }
+    }
+
+    /**
+     * Saves one message: update the row for this `(messageUser, _id)` pair, or insert it if
+     * there is no such row yet.
+     *
+     * If saving this one message fails we log it and carry on to the next message, rather
+     * than giving up on the whole list. In SQLite a single failed statement does not cancel
+     * the surrounding transaction, so the other messages still get saved. That matches how
+     * this worked before: one bad message costs you that message, not the whole batch.
+     */
+    @WorkerThread
+    private fun writeMessage(db: SQLiteDatabase, messageDAO: CTMessageDAO) {
+        val tName = INBOX_MESSAGES.tableName
+
+        // The columns a repeat delivery is allowed to overwrite.
+        //
+        // index_state is deliberately missing: leaving it out of the UPDATE is what stops an
+        // already-confirmed message being reset back to unconfirmed. _id and messageUser are
+        // missing because they identify the row — they go in the WHERE clause below, and are
+        // only written when we insert a brand-new row.
+        val mutableColumns = ContentValues().apply {
+            put(Column.DATA, dbEncryptionHandler.wrapDbData(messageDAO.jsonData.toString()))
+            put(Column.WZRKPARAMS, messageDAO.wzrkParams.toString())
+            put(Column.CAMPAIGN, messageDAO.campaignId)
+            put(Column.TAGS, messageDAO.tags)
+            put(Column.IS_READ, messageDAO.isRead())
+            put(Column.EXPIRES, messageDAO.expires)
+            put(Column.CREATED_AT, messageDAO.date)
+            put(Column.SOURCE, (messageDAO.source ?: InboxMessageSource.V1).name)
+        }
+
+        try {
+            val updated = db.update(
+                tName,
+                mutableColumns,
+                "${Column.USER_ID} = ? AND ${Column.ID} = ?",
+                arrayOf(messageDAO.userId, messageDAO.id)
+            )
+            // updated > 0 means a row already existed and we just refreshed it, so there is
+            // nothing left to do.
+            if (updated > 0) {
+                return
+            }
+
+            // We get here only when the UPDATE matched no rows, i.e. this message is new to
+            // this user. Add the two identifying columns, plus index_state — the insert is
+            // the only place index_state is ever written.
+            val insertColumns = ContentValues(mutableColumns).apply {
+                put(Column.ID, messageDAO.id)
+                put(Column.USER_ID, messageDAO.userId)
+                put(Column.INDEX_STATE, messageDAO.indexState ?: InboxIndexState.PENDING_INDEXING)
+            }
+            db.insert(tName, null, insertColumns)
+        } catch (e: SQLiteException) {
+            logger.verbose("Error adding data to table $tName", e)
         }
     }
 

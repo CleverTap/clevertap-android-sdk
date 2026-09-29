@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inbox;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -8,7 +7,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -19,7 +17,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
 
-import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -65,8 +62,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private WeakReference<InboxActivityListener> listenerWeakReference;
 
     private CleverTapAPI cleverTapAPI;
-
-    private CTInboxListener inboxContentUpdatedListener = null;
 
     private PushPermissionHandler pushPermissionHandler;
 
@@ -122,7 +117,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         tabLayout = linearLayout.findViewById(R.id.tab_layout);
         viewPager = linearLayout.findViewById(R.id.view_pager);
-        TextView noMessageView = findViewById(R.id.no_message_view);
         Bundle bundle = new Bundle();
         bundle.putParcelable("config", config);
         bundle.putParcelable("styleConfig", styleConfig);
@@ -130,28 +124,20 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         if (!styleConfig.isUsingTabs()) {
             viewPager.setVisibility(View.GONE);
             tabLayout.setVisibility(View.GONE);
-            if (cleverTapAPI != null && cleverTapAPI.getInboxMessageCount() == 0) {
-                noMessageView.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
-                noMessageView.setVisibility(View.VISIBLE);
-                noMessageView.setText(styleConfig.getNoMessageViewText());
-                noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
-            } else {
-                final FrameLayout listViewFragmentLayout = findViewById(R.id.list_view_fragment);
-                listViewFragmentLayout.setVisibility(View.VISIBLE);
-                boolean fragmentExists = false;
-                noMessageView.setVisibility(View.GONE);
-                for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-                    if (fragment.getTag() != null && !fragment.getTag().equalsIgnoreCase(getFragmentTag())) {
-                        fragmentExists = true;
-                    }
-                }
-                if (!fragmentExists) {
-                    CTInboxListViewFragment listView = new CTInboxListViewFragment();
-                    listView.setArguments(bundle);
-                    getSupportFragmentManager().beginTransaction()
-                            .add(R.id.list_view_fragment, listView, getFragmentTag())
-                            .commit();
-                }
+            // The fragment owns the empty state (its "no messages" view sits inside the
+            // SwipeRefreshLayout), so it is created even when the inbox is empty —
+            // otherwise pull-to-refresh has no surface on an empty inbox.
+            final FrameLayout listViewFragmentLayout = findViewById(R.id.list_view_fragment);
+            listViewFragmentLayout.setVisibility(View.VISIBLE);
+            // On recreation (rotation, process restore) the FragmentManager restores the
+            // previously added fragment before this code runs — adding again would stack
+            // a duplicate list (and a duplicate video player) into the same container.
+            if (getSupportFragmentManager().findFragmentByTag(getFragmentTag()) == null) {
+                CTInboxListViewFragment listView = new CTInboxListViewFragment();
+                listView.setArguments(bundle);
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.list_view_fragment, listView, getFragmentTag())
+                        .commit();
             }
         } else {
             viewPager.setVisibility(View.VISIBLE);
@@ -239,14 +225,31 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
 
+    /**
+     * Repaints every resident inbox list fragment from the already-committed message
+     * store, so tabs never show contradicting data after a refresh. Called only from
+     * the pull-to-refresh success path (explicit user action) — never from background
+     * updates, so an on-screen list never changes without a user gesture.
+     */
+    void refreshAllInboxListFragments() {
+        int refreshed = 0;
+        for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+            if (fragment instanceof CTInboxListViewFragment && fragment.isAdded()) {
+                ((CTInboxListViewFragment) fragment).refreshList();
+                refreshed++;
+            }
+        }
+        Logger.v("refreshAllInboxListFragments: refreshed " + refreshed + " inbox fragment(s)");
+    }
+
     @Override
-    public void messageDidClick(Context baseContext, int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
+    public void messageDidClick(int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
                                 HashMap<String, String> keyValue, int buttonIndex) {
         didClick(data, contentPageIndex, inboxMessage, keyValue, buttonIndex);
     }
 
     @Override
-    public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
+    public void messageDidShow(CTInboxMessage inboxMessage, Bundle data) {
         Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
         didShow(data, inboxMessage);
     }

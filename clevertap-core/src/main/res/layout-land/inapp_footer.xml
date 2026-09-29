@@ -14,8 +14,7 @@
             android:id="@+id/footer_linear_layout_1"
             android:layout_width="match_parent"
             android:layout_height="118dp"
-            android:orientation="horizontal"
-            android:focusable="true" >
+            android:orientation="horizontal" >
 
             <FrameLayout
                 android:id="@+id/footer_media_container"
@@ -29,7 +28,6 @@
                     android:contentDescription="@string/ct_inapp_img"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:focusable="true"
                     android:scaleType="fitCenter" />
 
                 <com.clevertap.android.sdk.gif.GifImageView
@@ -38,7 +36,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="fitCenter"
-                    android:focusable="true"
                     android:visibility="gone" />
 
             </FrameLayout>
