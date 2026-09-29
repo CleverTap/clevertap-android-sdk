@@ -687,13 +687,6 @@ class TemplateMediaManagerTest {
         verify { Utils.getAppIcon(mockContext) }
     }
 
-    // Tests for getStyledImageBitmap
-    //
-    // RemoteViews de-duplicates bitmaps by object identity when it marshals its parcel, and from
-    // Android 17 a parcel that exceeds 1.5 x screen width x height x 4 bytes of bitmaps is a fatal
-    // error. Handing back the same instance for a repeated (url, style) is what keeps a styled
-    // notification the same size on the wire as an unstyled one.
-
     private fun stubSuccessfulDownload(url: String): Bitmap {
         val bitmap = Bitmap.createBitmap(120, 60, Bitmap.Config.ARGB_8888)
         every { mockTemplateRepository.getBitmap(url) } returns
@@ -707,7 +700,7 @@ class TemplateMediaManagerTest {
         val url = "https://example.com/image.png"
         val raw = stubSuccessfulDownload(url)
 
-        // Then - no styling keys, and a payload that parses but cannot draw, both skip compositing
+        // Then
         assertSame(raw, templateMediaManager.getStyledImageBitmap(url, null))
         assertSame(raw, templateMediaManager.getStyledImageBitmap(url, ImageBorderData()))
         assertSame(
@@ -718,17 +711,16 @@ class TemplateMediaManagerTest {
 
     @Test
     fun `getStyledImageBitmap should reuse one styled instance per url and style`() {
-        // Given - the shape that Text over Image and Vertical Image with CTA produce, where the
-        // collapsed view falls back to the expanded view's image URL
+        // Given
         val url = "https://example.com/image.png"
         val raw = stubSuccessfulDownload(url)
         val style = ImageBorderData(cornerRadiusPercent = 20f)
 
-        // When - two slots ask for the same image with the same styling
+        // When
         val first = templateMediaManager.getStyledImageBitmap(url, style)
         val second = templateMediaManager.getStyledImageBitmap(url, style)
 
-        // Then - one styled bitmap, shared, so the parcel carries the image once
+        // Then
         assertNotNull(first)
         assertNotSame(raw, first)
         assertSame(first, second)
@@ -740,11 +732,11 @@ class TemplateMediaManagerTest {
         val url = "https://example.com/image.png"
         stubSuccessfulDownload(url)
 
-        // When - the same image with two different styles
+        // When
         val rounded = templateMediaManager.getStyledImageBitmap(url, ImageBorderData(cornerRadiusPercent = 20f))
         val moreRounded = templateMediaManager.getStyledImageBitmap(url, ImageBorderData(cornerRadiusPercent = 40f))
 
-        // Then - the cache key includes the style, so these must not be conflated
+        // Then
         assertNotSame(rounded, moreRounded)
     }
 
@@ -755,14 +747,14 @@ class TemplateMediaManagerTest {
         every { mockTemplateRepository.getBitmap(url) } returns
                 DownloadedBitmap(null, DownloadedBitmap.Status.DOWNLOAD_FAILED, 1L, null)
 
-        // Then - a failed download is not masked by the styling step
+        // Then
         assertNull(templateMediaManager.getStyledImageBitmap(url, ImageBorderData(cornerRadiusPercent = 20f)))
         assertNull(templateMediaManager.getStyledImageBitmap(null, ImageBorderData(cornerRadiusPercent = 20f)))
     }
 
     @Test
     fun `clearCaches should drop styled bitmaps too`() {
-        // Given - a styled bitmap is cached
+        // Given
         val url = "https://example.com/image.png"
         stubSuccessfulDownload(url)
         val style = ImageBorderData(cornerRadiusPercent = 20f)
@@ -772,7 +764,7 @@ class TemplateMediaManagerTest {
         templateMediaManager.clearCaches()
         stubSuccessfulDownload(url)
 
-        // Then - nothing survives the clear, so a later render starts from a fresh download
+        // Then
         assertNotSame(first, templateMediaManager.getStyledImageBitmap(url, style))
     }
 }

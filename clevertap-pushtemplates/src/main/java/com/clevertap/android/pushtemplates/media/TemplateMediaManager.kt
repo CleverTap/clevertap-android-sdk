@@ -114,13 +114,8 @@ internal class TemplateMediaManager(
     }
 
     /**
-     * Returns the image for [imageUrl] with [border] baked in, or the unstyled bitmap when there is
-     * nothing to draw.
-     *
-     * The styled result is cached per (url, style) so that slots sharing an image — a template's
-     * expanded and collapsed views, for instance — hand RemoteViews the *same* Bitmap instance.
-     * RemoteViews de-duplicates bitmaps by object identity when it marshals its parcel, so reusing
-     * the instance keeps a styled notification's payload the same size as an unstyled one.
+     * Returns the image for [imageUrl] with [border] baked in. Cached so the same Bitmap is
+     * reused across views.
      */
     fun getStyledImageBitmap(imageUrl: String?, border: ImageBorderData?): Bitmap? {
         val url = imageUrl ?: return null
@@ -136,8 +131,7 @@ internal class TemplateMediaManager(
     }
 
     /**
-     * Clears the bitmap, styled-bitmap and bytes caches. Useful for cleanup after template
-     * processing.
+     * Clears all caches. Useful for cleanup after template processing.
      */
     fun clearCaches() {
         bitmapCache.clear()

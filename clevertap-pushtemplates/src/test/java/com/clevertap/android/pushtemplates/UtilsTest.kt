@@ -856,8 +856,6 @@ class UtilsTest {
     @Test
     fun `getImageDataListFromExtras should return list of ImageData objects`() {
         // Given
-        // Only pt_img<digit> keys are carousel images. Bare "pt_img" and the pt_img_* border
-        // configuration keys must be ignored even though they all share the "pt_img" prefix.
         val keys = setOf(
             "pt_img1", "pt_img2", "other_key", "pt_img", "pt_img_alt_text", "pt_img1_alt_text",
             PTConstants.PT_IMG_BORDER_CLR, PTConstants.PT_IMG_CORNER_RADIUS,
@@ -892,7 +890,6 @@ class UtilsTest {
         val nonImageData = result.find { it.url == "not_an_image" }
         assertNull(nonImageData)
 
-        // Bare "pt_img" has no index digit, so it is not a carousel image
         assertNull(result.find { it.url == "https://example.com/large.jpg" })
     }
 

@@ -203,16 +203,11 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        // A FIT_CENTER GIF is styled by baking it into every frame, as its static image is.
-        // Frames are pre-extracted stills, so baking costs nothing during playback and adds no
-        // bitmaps to the RemoteViews parcel.
+        // FIT_CENTER GIFs are styled by baking into each frame.
         val border = imageBorderData.bakedInto(scaleType)?.takeIf { it.isActive }
 
         for (frame in frames) {
-            // GIF frames are decoded fresh on every call, so recycling the pre-styling frame is
-            // safe here. Static images come from TemplateMediaManager's cache and must not be.
-            // applyRoundedBorderToBitmap returns its own argument when there is nothing to draw,
-            // so only recycle a frame that was genuinely replaced.
+            // GIF frames are decoded fresh on every call, so the original can be recycled.
             val processedFrame = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(frame, border)
                     .also { if (it !== frame) frame.recycle() }
@@ -234,29 +229,11 @@ internal open class ContentView(
         return true
     }
 
-    /**
-     * The height this template's image area is laid out at, which styling percentages are resolved
-     * against. See `R.dimen.pt_image_style_reference` for why a value known up front is needed at
-     * all, and why it cannot be the same for every template.
-     *
-     * Templates that give their image more or less room than the standard area override this.
-     */
     protected open val imageStyleReferenceDimen: Int
         get() = R.dimen.pt_image_style_reference
 
     /**
-     * On API 31+ draws [border] with the views instead of baking it into the bitmap: the image
-     * view clips its own corners, and when a border is wanted `big_image_frame` is painted in the
-     * border colour, clipped to the outer radius, and the image is inset by the border width so
-     * the frame shows through as a ring.
-     *
-     * Because nothing is baked, the tray can crop the bitmap to fill and the styling stays on the
-     * visible edge. Used only for CENTER_CROP, where the image fills the view; a FIT_CENTER image
-     * is styled by baking instead, see [usesNativeImageStyling]. No-op otherwise and when there is
-     * nothing to draw.
-     *
-     * A CENTER_CROP image fills the area, so its height is the area's height, and both sizes are
-     * resolved against [R.dimen.pt_image_style_reference] accordingly.
+     * Draws the corner radius and border with the views for CENTER_CROP images on API 31+.
      */
     fun applyNativeImageStyling(
         remoteViews: RemoteViews,
@@ -301,7 +278,6 @@ internal open class ContentView(
                 remoteViews.setViewLayoutMargin(imageViewId, side, borderPx, TypedValue.COMPLEX_UNIT_PX)
             }
         }
-        // The image sits inside the ring, so its own corner follows the inner edge.
         val innerRadius = (radiusPx - borderPx).coerceAtLeast(0f)
         remoteViews.setViewOutlinePreferredRadius(imageViewId, innerRadius, TypedValue.COMPLEX_UNIT_PX)
     }
@@ -329,8 +305,6 @@ internal open class ContentView(
         altText: String?,
         imageBorderData: ImageBorderData?
     ): Boolean {
-        // Both the raw and the styled bitmap are owned by TemplateMediaManager's caches, so
-        // neither is ever recycled here.
         val image = templateMediaManager.getStyledImageBitmap(imageUrl, imageBorderData)
         if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image)

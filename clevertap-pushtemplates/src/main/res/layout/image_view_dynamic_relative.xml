@@ -5,14 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- The image area. A CENTER_CROP image fills it, so on Android 12+ the styling is drawn by
-         these views: big_image_frame is painted in the border colour and clipped to the radius,
-         and big_image is inset inside it. Nothing is baked into the bitmap, so the tray is free to
-         crop and the styling still lands on the visible edge.
-
-         A FIT_CENTER image does NOT fill the area - it is scaled to fit and centred - so neither
-         view's edge is the picture's edge and the styling has to be baked into the bitmap instead.
-         See ContentView.applyNativeImageStyling and NotificationBitmapUtils. -->
+    <!-- big_image_frame draws the border for CENTER_CROP images on Android 12+ -->
     <FrameLayout
         android:id="@+id/big_image_frame"
         android:clipToOutline="true"

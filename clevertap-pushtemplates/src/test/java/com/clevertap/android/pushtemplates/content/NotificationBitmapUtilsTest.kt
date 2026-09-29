@@ -273,19 +273,11 @@ class NotificationBitmapUtilsTest {
         assertEquals(height, bitmap.height)
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Percentage-to-pixel conversion
-    //
-    // Canvas drawing is a no-op under Robolectric's legacy graphics mode, so asserting on the
-    // output bitmap cannot distinguish a percentage from a raw pixel count - only these can.
-    // ---------------------------------------------------------------------------------------
-
     @Test
     fun `resolveCornerRadiusPx should scale with the reference it is given`() {
-        // Given - the same payload value of 10 against differently sized references. The caller
-        // passes the picture's height when baking, and the image area's height when the views draw.
+        // Given
 
-        // Then - 10% of whichever reference it was given, so the result stays proportional
+        // Then
         assertEquals(18f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 10f))
         assertEquals(30f, NotificationBitmapUtils.resolveCornerRadiusPx(300, 10f))
         assertEquals(80f, NotificationBitmapUtils.resolveCornerRadiusPx(800, 10f))
@@ -293,17 +285,17 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `resolveCornerRadiusPx should treat the value as a percentage and not as pixels`() {
-        // Given - a payload value deliberately larger than a raw pixel reading would imply
+        // Given
 
-        // Then - as pixels this would be 40px; as a percentage of 180 it is 72px
+        // Then
         assertEquals(72f, NotificationBitmapUtils.resolveCornerRadiusPx(180, 40f))
     }
 
     @Test
     fun `resolveCornerRadiusPx should cap at half the reference`() {
-        // Given - half the picture's height is already a fully rounded image
+        // Given
 
-        // Then - larger payload values clamp there rather than being rejected
+        // Then
         assertEquals(50f, NotificationBitmapUtils.resolveCornerRadiusPx(100, 50f))
         assertEquals(50f, NotificationBitmapUtils.resolveCornerRadiusPx(100, 80f))
         assertEquals(50f, NotificationBitmapUtils.resolveCornerRadiusPx(100, 1000f))
@@ -316,7 +308,6 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `resolveBorderWidthPx should scale with the reference it is given`() {
-        // The divisor is 1000, not 100, so a value of 50 is a twentieth of the reference
         assertEquals(9f, NotificationBitmapUtils.resolveBorderWidthPx(180, 50f))
         assertEquals(40f, NotificationBitmapUtils.resolveBorderWidthPx(800, 50f))
     }
@@ -334,22 +325,17 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `a fully rounded radius still leaves room for a capped border stroke`() {
-        // Given - the most extreme legal combination, both keys at their ceiling
+        // Given
         val reference = 200
         val radius = NotificationBitmapUtils.resolveCornerRadiusPx(reference, 50f)
         val stroke = NotificationBitmapUtils.resolveBorderWidthPx(reference, 100f)
 
-        // Then - the stroke is inset by half its width and its radius shrinks by the same amount,
-        // so it stays inside the bitmap and still traces a full pill rather than self-intersecting
+        // Then
         assertEquals(100f, radius)
         assertEquals(20f, stroke)
         assertTrue("stroke radius must stay positive", radius - stroke / 2f > 0f)
         assertTrue("stroke must fit inside the reference", stroke < reference / 2f)
     }
-
-    // ---------------------------------------------------------------------------------------
-    // applyRoundedBorderToBitmap
-    // ---------------------------------------------------------------------------------------
 
     private fun sourceBitmap(w: Int = width, h: Int = height): Bitmap =
         Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also { bitmapsToRecycle.add(it) }
@@ -366,22 +352,22 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `should return the source untouched when no styling key is set`() {
-        // Given - the legacy payload shape, with none of the three keys present
+        // Given
         val source = sourceBitmap()
 
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(source, style())
 
-        // Then - the identical instance comes back, so the shipped render path allocates nothing
+        // Then
         assertSame(source, result)
     }
 
     @Test
     fun `should return the source untouched when the payload is inactive`() {
-        // Given - values that parse but cannot draw anything
+        // Given
         val source = sourceBitmap()
 
-        // Then - a colour with no width, a width with no colour, and a zero radius are all no-ops
+        // Then
         assertSame(source, NotificationBitmapUtils.applyRoundedBorderToBitmap(source, style(borderColor = borderColor)))
         assertSame(source, NotificationBitmapUtils.applyRoundedBorderToBitmap(source, style(borderWidth = 5f)))
         assertSame(source, NotificationBitmapUtils.applyRoundedBorderToBitmap(source, style(radius = 0f)))
@@ -389,14 +375,14 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `should composite a new bitmap when only a corner radius is set`() {
-        // Given - the radius activates styling on its own, with no border keys at all
+        // Given
         val source = sourceBitmap()
 
         // When
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(source, style(radius = 20f))
         bitmapsToRecycle.add(result)
 
-        // Then - a new bitmap of identical dimensions, so nothing downstream sees a different shape
+        // Then
         assertNotSame(source, result)
         assertEquals(source.width, result.width)
         assertEquals(source.height, result.height)
@@ -404,7 +390,7 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `should composite a new bitmap when a border width and colour are both set`() {
-        // Given - a border needs both of its keys
+        // Given
         val source = sourceBitmap()
 
         // When
@@ -421,8 +407,7 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `should keep the border out when the colour cannot be parsed`() {
-        // Given - an unparseable colour reaches the data class as null (see TemplateDataFactory),
-        // but the radius must still apply
+        // Given
         val source = sourceBitmap()
 
         // When
@@ -431,28 +416,24 @@ class NotificationBitmapUtilsTest {
         )
         bitmapsToRecycle.add(result)
 
-        // Then - the radius still composites; only the stroke is skipped
+        // Then
         assertNotSame(source, result)
         assertEquals(source.width, result.width)
     }
 
     @Test
     fun `a border wider than twice the radius must not square off the corners`() {
-        // Given - radius 2 % and width 100 on a 400 x 400 asset. The border half-width (20 px) is
-        // wider than the radius (8 px), which is the case a centred stroke cannot express: its
-        // outer edge would land on a square corner and paint over the rounded clip.
+        // Given
         val minDimension = 400
         val radiusPx = NotificationBitmapUtils.resolveCornerRadiusPx(minDimension, 2f)
         val strokePx = NotificationBitmapUtils.resolveBorderWidthPx(minDimension, 100f)
 
-        // Then - the arithmetic that made a centred stroke wrong is still reachable...
+        // Then
         assertEquals(8f, radiusPx)
         assertEquals(40f, strokePx)
         assertTrue("this case only matters while half the stroke exceeds the radius",
             strokePx / 2f > radiusPx)
 
-        // ...and the render must still succeed and keep the source dimensions. The outer edge is
-        // now described by the ring path rather than a stroke, so it stays on the clip's curve.
         val source = sourceBitmap(minDimension, minDimension)
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
             source, style(radius = 2f, borderWidth = 100f, borderColor = borderColor)
@@ -465,8 +446,7 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `the border ring stays inside the bitmap for every radius and width pair`() {
-        // Given - the whole legal grid, including the pairs where the radius is smaller than half
-        // the border width
+        // Given
         val source = sourceBitmap(400, 400)
         for (radius in listOf(0f, 1f, 2f, 5f, 10f, 25f, 50f)) {
             for (width in listOf(0f, 10f, 20f, 50f, 100f)) {
@@ -476,7 +456,7 @@ class NotificationBitmapUtilsTest {
                 )
                 if (result !== source) bitmapsToRecycle.add(result)
 
-                // Then - the inset rect the ring uses must never invert, whatever the pair
+                // Then
                 val strokePx = NotificationBitmapUtils.resolveBorderWidthPx(400, width)
                 assertTrue("inset rect inverts at radius=$radius width=$width",
                     400 - 2 * strokePx > 0f)
@@ -488,17 +468,17 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `should preserve the dimensions of any source size`() {
-        // Given - the range of aspect ratios a marketer can realistically upload
+        // Given
         listOf(1 to 1, 320 to 50, 400 to 200, 1200 to 600, 120 to 180).forEach { (w, h) ->
             val source = sourceBitmap(w, h)
 
-            // When - the most extreme legal styling
+            // When
             val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
                 source, style(radius = 50f, borderWidth = 10f, borderColor = borderColor)
             )
             bitmapsToRecycle.add(result)
 
-            // Then - dimensions never change, so layouts and scale types are unaffected
+            // Then
             assertEquals("width for ${w}x$h", w, result.width)
             assertEquals("height for ${w}x$h", h, result.height)
         }
@@ -506,7 +486,7 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `should not fail for out of range or malformed size values`() {
-        // Given - values that send-time validation should have caught, arriving at render anyway
+        // Given
         val source = sourceBitmap()
 
         listOf(
@@ -519,7 +499,7 @@ class NotificationBitmapUtilsTest {
             val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(source, border)
             bitmapsToRecycle.add(result)
 
-            // Then - clamped and rendered, never thrown
+            // Then
             assertEquals(source.width, result.width)
             assertEquals(source.height, result.height)
         }
@@ -527,7 +507,7 @@ class NotificationBitmapUtilsTest {
 
     @Test
     fun `should handle a single pixel bitmap`() {
-        // Given - the smallest possible image, where every percentage rounds to a sub-pixel value
+        // Given
         val source = sourceBitmap(1, 1)
 
         // When

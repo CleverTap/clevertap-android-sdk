@@ -32,9 +32,7 @@ internal class VerticalImageSmallContentView(
                 mediaData.scaleType,
                 mediaData.bigImage.altText,
                 mediaData.gif.numberOfFrames,
-                // No image styling on this 40dp collapsed thumbnail: the system decides the row
-                // height, so there is no reference a percentage could be resolved against, and the
-                // styling would barely show here. The expanded view carries it instead.
+                // No image styling on the collapsed view.
                 null
             )
         } else {

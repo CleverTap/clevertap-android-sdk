@@ -371,27 +371,14 @@ internal object TemplateDataFactory {
     }
 
     private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
-        // Image styling is an Android 12+ feature: only there can the tray clip and frame the
-        // image itself, so a "scale to fill" image keeps its border. Older versions ignore the
-        // keys and render exactly as they did before the keys existed.
         if (!useNativeImageStyling) return ImageBorderData()
         return ImageBorderData(
-            // Both sizes resolve against the picture's height and are clamped when drawn. The
-            // radius is a percentage of it; the border width is divided by 1000, matching
-            // Native Display, so the same dashboard value gives the same stroke on both channels.
             cornerRadiusPercent = extras.getStylingPercent(PT_IMG_CORNER_RADIUS),
             borderWidthValue = extras.getStylingPercent(PT_IMG_BORDER_WIDTH),
-            // Parsed here rather than at draw time, so an unparseable colour never reaches the
-            // canvas. Color.parseColor accepts #RRGGBB (fully opaque) and #AARRGGBB alike.
             borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) }
         )
     }
 
-    /**
-     * Reads a styling percentage from the payload. Anything the payload cannot express as a finite
-     * number — missing, non-numeric, NaN or Infinity — is treated as 0, which is the same as the
-     * key being absent.
-     */
     private fun Bundle.getStylingPercent(key: String): Float =
         getString(key)?.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f
 

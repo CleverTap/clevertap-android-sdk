@@ -2434,9 +2434,6 @@ class TemplateDataFactoryTest {
         assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, collapsedButtonData.borderWidth)
     }
 
-    // createImageBorderData tests
-
-    /** Adds the image border keys to the default colour map, which setUp() otherwise leaves out. */
     private fun stubBorderColor(color: String?) {
         every { Utils.createColorMap(any(), any()) } returns mapOf(
             PT_TITLE_COLOR to SAMPLE_COLOR,
@@ -2475,7 +2472,7 @@ class TemplateDataFactoryTest {
 
     @Test
     fun `createImageBorderData should be inactive when no border keys are present`() {
-        // Given - a payload from before this feature existed
+        // Given
         setupBasicMockBundle()
         every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns null
         every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
@@ -2489,7 +2486,7 @@ class TemplateDataFactoryTest {
             notificationIdsProvider = notificationIdsProvider
         ) as BasicTemplateData
 
-        // Then - existing campaigns must render exactly as they did before
+        // Then
         val border = result.mediaData.imageBorderData
         assertFalse(border.isActive)
         assertNull(border.borderColor)
@@ -2500,8 +2497,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `createImageBorderData should stay inactive when the colour cannot be parsed`() {
-        // Given - an unparseable colour with no corner radius. The raw string is present, so a
-        // check on the string alone would wrongly mark the border active and force fit_center.
+        // Given
         setupBasicMockBundle()
         stubBorderColor("not-a-colour")
         every { Utils.getColourOrNull("not-a-colour") } returns null
@@ -2540,7 +2536,7 @@ class TemplateDataFactoryTest {
             notificationIdsProvider = notificationIdsProvider
         ) as BasicTemplateData
 
-        // Then - garbage in the payload must not crash the render
+        // Then
         val border = result.mediaData.imageBorderData
         assertEquals(0f, border.cornerRadiusPercent)
         assertEquals(0f, border.borderWidthValue)
@@ -2550,7 +2546,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `createImageBorderData should be active with only a corner radius`() {
-        // Given - rounded corners without a border is a valid configuration
+        // Given
         setupBasicMockBundle()
         every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "20"
         every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
@@ -2574,7 +2570,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `createImageBorderData should use the dark mode colour when the device is in dark mode`() {
-        // Given - createColorMap resolves the _dark suffix, so the factory only sees the winner
+        // Given
         setupBasicMockBundle()
         stubBorderColor("#00FF00")
         every { Utils.getColourOrNull("#00FF00") } returns android.graphics.Color.GREEN
@@ -2596,8 +2592,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `createImageBorderData should reach templates that build their own media data`() {
-        // Given - the same keys must be picked up by a template that does not go through
-        // createMediaData
+        // Given
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
@@ -2619,17 +2614,14 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `product catalog should not carry any image styling`() {
-        // Given - a payload that sets every styling key on a template product excluded from the
-        // feature, on both its variants
+        // Given
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
         every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "15"
         every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "8"
 
-        // When / Then - ProductTemplateData carries no styling field at all, so there is nothing
-        // for the keys to land in. Asserting the data builds is the whole check: were the field
-        // reintroduced, this test would stop compiling rather than silently pass.
+        // When / Then
         listOf("true", "false").forEach { linear ->
             every { mockBundle.getString(PT_PRODUCT_DISPLAY_LINEAR) } returns linear
             val product = TemplateDataFactory.createTemplateData(
@@ -2646,7 +2638,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `border needs both a width and a colour`() {
-        // Given/Then - each key alone is inert; only the pair draws a stroke
+        // Given / Then
         val widthOnly = ImageBorderData(borderWidthValue = 6f, borderColor = null)
         assertFalse("a width with no colour must not draw", widthOnly.hasBorder)
         assertFalse(widthOnly.isActive)
@@ -2663,7 +2655,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `a corner radius activates styling on its own`() {
-        // Given - the radius is independent of the border pair
+        // Given
         val radiusOnly = ImageBorderData(cornerRadiusPercent = 10f)
 
         // Then
@@ -2674,7 +2666,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `createImageBorderData should default the border width to zero rather than inventing one`() {
-        // Given - a colour with no width, which is the easiest payload to send by mistake
+        // Given
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
@@ -2689,7 +2681,7 @@ class TemplateDataFactoryTest {
             notificationIdsProvider = notificationIdsProvider
         ) as BasicTemplateData
 
-        // Then - no silent default width, so the marketer never gets a border they did not ask for
+        // Then
         assertEquals(0f, result.mediaData.imageBorderData.borderWidthValue)
         assertFalse(result.mediaData.imageBorderData.hasBorder)
     }
@@ -2697,7 +2689,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `createImageBorderData should ignore non finite sizes`() {
-        // Given - values send-time validation should have caught, arriving anyway
+        // Given
         listOf("abc", "12px", "", "NaN", "Infinity", "-Infinity").forEach { raw ->
             setupBasicMockBundle()
             every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns raw
@@ -2712,7 +2704,7 @@ class TemplateDataFactoryTest {
                 notificationIdsProvider = notificationIdsProvider
             ) as BasicTemplateData
 
-            // Then - treated exactly as though the key were absent
+            // Then
             val border = result.mediaData.imageBorderData
             assertEquals("radius for '$raw'", 0f, border.cornerRadiusPercent)
             assertEquals("width for '$raw'", 0f, border.borderWidthValue)
@@ -2722,9 +2714,7 @@ class TemplateDataFactoryTest {
 
     @Test
     fun `five icons template should not carry any image styling`() {
-        // Given - a payload that sets every styling key on the one template that excludes them.
-        // The assets are transparent 1:1 glyphs, so a corner clip is a no-op and a border would
-        // frame each glyph individually.
+        // Given
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
@@ -2740,9 +2730,7 @@ class TemplateDataFactoryTest {
             notificationIdsProvider = notificationIdsProvider
         ) as FiveIconsTemplateData
 
-        // Then - the template data has no styling field at all for the icon slots to read from,
-        // so the keys cannot reach the renderer even on a raw or test payload that bypasses
-        // send-time validation.
+        // Then
         assertTrue(
             "FiveIconsTemplateData must not expose image styling",
             fiveIcons::class.java.declaredFields.none { it.name.contains("imageBorder") }
@@ -2752,8 +2740,7 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `zero bezel should ignore the image styling keys on both expanded and collapsed media`() {
-        // Given - Zero Bezel takes no image styling, by product's decision, even on API 31+ with
-        // every styling key present in the payload.
+        // Given
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
@@ -2777,7 +2764,7 @@ class TemplateDataFactoryTest {
 
     @Test
     fun `below API 31 the image styling keys are ignored and the scale type is untouched`() {
-        // Given - class-level config is API M; every styling key is present in the payload
+        // Given
         val extras = Bundle().apply {
             putString(PT_ID, "pt_basic")
             putString(PT_TITLE, "t"); putString(PT_MSG, "m")
@@ -2796,7 +2783,7 @@ class TemplateDataFactoryTest {
             notificationIdsProvider = notificationIdsProvider
         ) as BasicTemplateData
 
-        // Then - nothing to draw, so the image renders exactly as before the feature existed
+        // Then
         assertFalse(result.mediaData.imageBorderData.isActive)
         assertEquals(PTScaleType.CENTER_CROP, result.mediaData.scaleType)
         assertFalse(PTScaleType.CENTER_CROP.usesNativeImageStyling())
@@ -2808,11 +2795,9 @@ class TemplateDataFactoryTest {
         // Given
         val active = ImageBorderData(cornerRadiusPercent = 10f)
 
-        // Then - CENTER_CROP fills its view, so the view clips and frames and nothing is baked
+        // Then
         assertTrue(PTScaleType.CENTER_CROP.usesNativeImageStyling())
         assertNull(active.bakedInto(PTScaleType.CENTER_CROP))
-        // FIT_CENTER is scaled to fit and centred, so no view edge is the picture's edge and the
-        // styling is baked into the bitmap instead
         assertFalse(PTScaleType.FIT_CENTER.usesNativeImageStyling())
         assertEquals(active, active.bakedInto(PTScaleType.FIT_CENTER))
         assertNull(null.bakedInto(PTScaleType.FIT_CENTER))
@@ -2821,19 +2806,17 @@ class TemplateDataFactoryTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.S])
     fun `baked sizes resolve against the picture's height, not its shortest side`() {
-        // Given - a portrait bitmap, where height and shortest side differ
+        // Given
         val portraitHeight = 300
         val landscapeHeight = 200
 
-        // Then - the reference is the height in both orientations, so the same percentage is the
-        // same share of the picture's height however the picture is shaped
+        // Then
         assertEquals(
             30f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 10f)
         )
         assertEquals(
             20f, NotificationBitmapUtils.resolveCornerRadiusPx(landscapeHeight, 10f)
         )
-        // And the ceilings still hold
         assertEquals(
             portraitHeight * 0.5f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 90f)
         )
