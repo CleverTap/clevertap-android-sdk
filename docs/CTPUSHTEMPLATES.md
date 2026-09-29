@@ -627,9 +627,9 @@ To handle scaling in a Push template, you must add the key `pt_scale_type` key a
 
 ## Image Border and Rounded Corners
 
-Templates that render an image support rounded corners and a border on that image on Android 12
-(API 31) and above. On older versions the keys are ignored and images render as they always have.
-Add any of the following keys to the payload:
+The Basic, Auto Carousel, Manual Carousel, Rating, Timer and Image with CTA templates support
+rounded corners and a border on their image on Android 12 (API 31) and above. On older versions the
+keys are ignored and images render as they always have. Add any of the following keys to the payload:
 
 Key | Description
 :---|:---
@@ -674,9 +674,10 @@ draws on a fixed-size canvas of its own and which therefore take absolute values
 * The same value is not guaranteed to look identical on Android and iOS. The value is proportional
   to the image, and each platform lays the image out in its own slot, so treat the key as "match my
   brand's corner language" rather than as an exact cross-platform measurement.
-* The keys are **not supported on the Five Icons template** and are ignored there. Its assets are
-  transparent 1:1 glyphs, where a rectangular corner clip does nothing and a border would frame each
-  glyph individually.
+* The keys are **not supported on the Five Icons, Product Catalog (both variants) and Zero Bezel
+  templates** and are ignored there, so setting them on those templates has no effect. The Five
+  Icons assets are transparent 1:1 glyphs, where a rectangular corner clip does nothing and a border
+  would frame each glyph individually.
 
 ## Android 12 Trampoline restrictions
 

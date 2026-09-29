@@ -356,8 +356,3 @@ internal open class ContentView(
         }
     }
 }
-/**
- * How far in from both edges a corner arc of radius r passes at 45 degrees: r x (1 - 1/sqrt 2).
- * Content inset by this much on both axes has its corner on the arc rather than outside it.
- */
-

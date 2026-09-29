@@ -2751,18 +2751,14 @@ class TemplateDataFactoryTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
-    fun `collapsed media data should inherit the border config from the expanded media`() {
-        // Given - collapsed views deliberately share the expanded border config rather than
-        // expecting a second set of keys in the payload.
-        //
-        // The collapsed *views* do not draw it - their row height is decided by the system, so
-        // there is no honest reference to resolve a percentage against - but the parsed data still
-        // carries it, so that a collapsed view that later gains a real image area can use it
-        // without another round of payload plumbing.
+    fun `zero bezel should ignore the image styling keys on both expanded and collapsed media`() {
+        // Given - Zero Bezel takes no image styling, by product's decision, even on API 31+ with
+        // every styling key present in the payload.
         setupBasicMockBundle()
         stubBorderColor(SAMPLE_COLOR)
         every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
         every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "18"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "5"
         every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns SAMPLE_IMAGE_URL
 
         // When
@@ -2775,12 +2771,8 @@ class TemplateDataFactoryTest {
         ) as ZeroBezelTemplateData
 
         // Then
-        assertEquals(18f, result.mediaData.imageBorderData.cornerRadiusPercent)
-        assertEquals(18f, result.collapsedMediaData.imageBorderData.cornerRadiusPercent)
-        assertEquals(
-            android.graphics.Color.RED,
-            result.collapsedMediaData.imageBorderData.borderColor
-        )
+        assertEquals(ImageBorderData(), result.mediaData.imageBorderData)
+        assertEquals(ImageBorderData(), result.collapsedMediaData.imageBorderData)
     }
 
     @Test

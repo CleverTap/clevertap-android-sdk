@@ -32,8 +32,9 @@ internal class VerticalImageSmallContentView(
                 mediaData.scaleType,
                 mediaData.bigImage.altText,
                 mediaData.gif.numberOfFrames,
-                // A 40dp thumbnail, whose row height the system decides. See
-                // ZeroBezelSmallContentView for why collapsed views are left unstyled.
+                // No image styling on this 40dp collapsed thumbnail: the system decides the row
+                // height, so there is no reference a percentage could be resolved against, and the
+                // styling would barely show here. The expanded view carries it instead.
                 null
             )
         } else {
