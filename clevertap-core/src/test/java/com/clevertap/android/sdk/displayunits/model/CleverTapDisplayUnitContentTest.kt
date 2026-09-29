@@ -190,18 +190,74 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
     }
 
     /**
-     * Pins the merge order: the server block is copied in last, so where the BE sends
-     * wzrk_action / wzrk_data its values replace the SDK-derived pair. Reordering the
-     * two blocks in parseMetaData must fail this test.
+     * Pins the merge order: the SDK-derived pair is written last, so it wins over
+     * anything the BE sends for wzrk_action / wzrk_data. Only the SDK knows which
+     * platform url actually ran, so a BE-sent pair would be the wrong platform's.
+     * Reordering the two blocks in parseMetaData must fail this test.
      */
     @Test
-    fun test_toContent_serverActionAndData_overrideDerivedPair() {
-        val metadata = serverMetadata().put("wzrk_action", "none").put("wzrk_data", "")
+    fun test_toContent_derivedActionAndData_overrideServerPair() {
+        val metadata = serverMetadata()
+            .put("wzrk_action", "none")
+            .put("wzrk_data", "myapp://offers/50-ios")
         val content = CleverTapDisplayUnitContent.toContent(
             contentJson(metadata, "https://www.android.com")
         )
+        Assert.assertEquals("url", content.metaData!!["wzrk_action"])
+        Assert.assertEquals("https://www.android.com", content.metaData!!["wzrk_data"])
+        // Identity keys still come from the server untouched.
+        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+    }
+
+    /** With no Android url there is nothing to derive, so whatever the BE sent stays. */
+    @Test
+    fun test_toContent_noAndroidUrl_keepsServerSentActionPair() {
+        val metadata = serverMetadata().put("wzrk_action", "none").put("wzrk_data", "")
+        val content = CleverTapDisplayUnitContent.toContent(contentJson(metadata, null))
         Assert.assertEquals("none", content.metaData!!["wzrk_action"])
         Assert.assertEquals("", content.metaData!!["wzrk_data"])
+    }
+
+    /**
+     * getString() would coerce this to "12345" and report it as the tapped url.
+     * Only a real JSON string counts, matching the iOS isKindOfClass: guard.
+     */
+    @Test
+    fun test_toContent_nonStringAndroidUrl_omitsActionAndData() {
+        val json = JSONObject()
+            .put("title", JSONObject().put("text", "Title1"))
+            .put(
+                "action",
+                JSONObject().put("url", JSONObject().put("android", JSONObject().put("text", 12345)))
+            )
+            .put("metadata", serverMetadata())
+        val content = CleverTapDisplayUnitContent.toContent(json)
+        Assert.assertNull(content.metaData!!["wzrk_action"])
+        Assert.assertNull(content.metaData!!["wzrk_data"])
+        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+        Assert.assertEquals("", content.actionUrl)
+    }
+
+    /**
+     * The realistic version of the case above - the BE sends "text": null when a slide
+     * has no url, and getString() would turn that into the literal string "null".
+     */
+    @Test
+    fun test_toContent_nullAndroidUrl_omitsActionAndData() {
+        val json = JSONObject()
+            .put("title", JSONObject().put("text", "Title1"))
+            .put(
+                "action",
+                JSONObject().put(
+                    "url",
+                    JSONObject().put("android", JSONObject().put("text", JSONObject.NULL))
+                )
+            )
+            .put("metadata", serverMetadata())
+        val content = CleverTapDisplayUnitContent.toContent(json)
+        Assert.assertNull(content.metaData!!["wzrk_action"])
+        Assert.assertNull(content.metaData!!["wzrk_data"])
+        Assert.assertEquals("", content.actionUrl)
     }
 
     @Test

@@ -197,7 +197,7 @@ public class CleverTapDisplayUnit implements Parcelable {
         }
         // Defensive copy: prevent callers from modifying stored attribution.
         HashMap<String, Object> metaData = contents.get(contentIndex).getMetaData();
-        return metaData != null ? new HashMap<>(metaData) : new HashMap<String, Object>();
+        return metaData != null ? new HashMap<>(metaData) : new HashMap<>();
     }
 
     public String getError() {

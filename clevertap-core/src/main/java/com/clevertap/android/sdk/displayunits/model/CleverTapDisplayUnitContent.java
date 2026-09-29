@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.displayunits.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import java.util.HashMap;
@@ -146,6 +147,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
      *
      * @return attribution map, or {@code null}
      */
+    @Nullable
     @SuppressWarnings("unused")
     public HashMap<String, Object> getMetaData() {
         // Defensive copy, same reason as CleverTapDisplayUnit#getMetaDataForContent(int).
@@ -321,8 +323,11 @@ public class CleverTapDisplayUnitContent implements Parcelable {
                     JSONObject androidObject = urlObject.has(Constants.KEY_ANDROID) ? urlObject
                             .getJSONObject(Constants.KEY_ANDROID) : null;
                     if (androidObject != null) {
-                        actionUrl = androidObject.has(Constants.KEY_TEXT) ? androidObject
-                                .getString(Constants.KEY_TEXT) : "";
+                        // opt + instanceof, not getString: getString coerces a number to
+                        // its digits and a JSON null to the literal "null", either of
+                        // which would then be reported as the tapped url.
+                        Object textValue = androidObject.opt(Constants.KEY_TEXT);
+                        actionUrl = textValue instanceof String ? (String) textValue : "";
                     }
                 }
             }
@@ -356,11 +361,6 @@ public class CleverTapDisplayUnitContent implements Parcelable {
             return null;
         }
         HashMap<String, Object> metaData = new HashMap<>();
-        String trimmedUrl = actionUrl != null ? actionUrl.trim() : "";
-        if (!trimmedUrl.isEmpty()) {
-            metaData.put(Constants.KEY_WZRK_ACTION, "url");
-            metaData.put(Constants.KEY_WZRK_DATA, trimmedUrl);
-        }
         Iterator<String> keys = metaDataObject.keys();
         while (keys.hasNext()) {
             String key = keys.next();
@@ -373,6 +373,11 @@ public class CleverTapDisplayUnitContent implements Parcelable {
                 continue;
             }
             metaData.put(key, value);
+        }
+        String trimmedUrl = actionUrl != null ? actionUrl.trim() : "";
+        if (!trimmedUrl.isEmpty()) {
+            metaData.put(Constants.KEY_WZRK_ACTION, Constants.KEY_URL);
+            metaData.put(Constants.KEY_WZRK_DATA, trimmedUrl);
         }
         return metaData;
     }
