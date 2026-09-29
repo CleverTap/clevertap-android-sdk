@@ -121,6 +121,9 @@ class LoginControllerTest : BaseTestCase() {
             pushProviders.forcePushDeviceToken(false)
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
+            // previous user's buffered in-app is dropped rather than shown to the new user.
+            controllerManager.inAppController.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
@@ -159,6 +162,9 @@ class LoginControllerTest : BaseTestCase() {
             pushProviders.forcePushDeviceToken(false)
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
+            // previous user's buffered in-app is dropped rather than shown to the new user.
+            controllerManager.inAppController.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
@@ -194,6 +200,9 @@ class LoginControllerTest : BaseTestCase() {
             pushProviders.forcePushDeviceToken(false)
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
+            // previous user's buffered in-app is dropped rather than shown to the new user.
+            controllerManager.inAppController.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
@@ -262,6 +271,9 @@ class LoginControllerTest : BaseTestCase() {
             pushProviders.forcePushDeviceToken(false)
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
+            // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
+            // previous user's buffered in-app is dropped rather than shown to the new user.
+            controllerManager.inAppController.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)

@@ -171,4 +171,29 @@ class AppLaunchInAppArbitratorTest {
         arbitrator.openWindow() // ignored
         assertEquals(1, arbitrator.syntheticCandidates()?.size)
     }
+
+    @Test
+    fun `abandon drops the buffered winner without showing and self-heals`() {
+        arbitrator.openWindow(listOf(inApp("200", 1)))
+        arbitrator.routeWinners(listOf(inApp("100", 1))) // /a1 winner buffered
+
+        arbitrator.abandon()
+
+        assertTrue(shown.isEmpty())                  // nothing shown
+        assertNull(arbitrator.syntheticCandidates()) // window discarded
+        val next = listOf(inApp("300", 1))
+        assertEquals(next, arbitrator.routeWinners(next)) // passthrough again (phase == null)
+    }
+
+    @Test
+    fun `completion after abandon does not show the dropped winner`() {
+        // Models user switch: abandon() runs, then cancelAllResponseJobs fires completion.
+        arbitrator.openWindow()
+        arbitrator.routeWinners(listOf(inApp("100", 1)))
+
+        arbitrator.abandon()
+        arbitrator.onContentFetchComplete() // cancel-triggered completion — must be a no-op
+
+        assertTrue(shown.isEmpty())
+    }
 }
