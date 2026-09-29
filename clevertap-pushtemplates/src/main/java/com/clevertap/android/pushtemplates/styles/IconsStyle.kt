@@ -18,8 +18,7 @@ internal class IconsStyle(private val data: IconsTemplateData, renderer: Templat
     lateinit var iconsBigContentView: IconsContentView
 
     /**
-     * The system shows the builder title in a stacked group summary. Use pt_title, else pt_msg,
-     * and never the nt fallback.
+     * Stacked group summaries show this title. Use pt_title, else pt_msg, never nt.
      */
     override fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,

@@ -11,8 +11,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * pt_icons needs at least three icons and three deep links. Text is optional, so a payload with
- * no pt_title/pt_msg/pt_msg_summary must still pass.
+ * pt_icons needs at least three icons and deep links. Text is optional.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.M])

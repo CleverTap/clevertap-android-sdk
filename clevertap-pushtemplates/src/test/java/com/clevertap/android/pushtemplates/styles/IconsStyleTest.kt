@@ -26,8 +26,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * The builder title shows in a stacked group summary. It must come from pt_title or pt_msg,
- * never the nt fallback.
+ * The group summary title must come from pt_title or pt_msg, never nt.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])

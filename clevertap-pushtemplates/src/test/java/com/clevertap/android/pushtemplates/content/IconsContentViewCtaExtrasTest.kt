@@ -30,8 +30,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * Every icon bundle must carry the actionId, autoCancel and notificationId extras the app's
- * dismiss handler reads.
+ * Each icon bundle carries the extras the app's dismiss handler reads.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])

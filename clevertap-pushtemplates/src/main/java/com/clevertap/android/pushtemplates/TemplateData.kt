@@ -86,8 +86,7 @@ internal data class IconsTemplateData(
     val baseContent: BaseContent,
     val imageList: ArrayList<ImageData>,
     /**
-     * pt_title/pt_msg/pt_msg_summary only, with no nt/nm fallback. baseContent keeps the fallback
-     * for the basic template.
+     * pt_* text only, no nt/nm fallback. baseContent keeps the fallback for the basic template.
      */
     val iconTextData: BaseTextData,
 ) : TemplateData()

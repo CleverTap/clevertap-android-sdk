@@ -9,7 +9,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
 /**
- * The collapsed view shows only the icons. Any text shows once the notification is expanded.
+ * Collapsed view with icons only. Text shows when expanded.
  */
 internal class IconsSmallContentView(
     context: Context,
@@ -28,8 +28,7 @@ internal class IconsSmallContentView(
     }
 
     /**
-     * Apps targeting Android 12+ get a 48dp collapsed view, so the icon row is resized to fit.
-     * This checks the target SDK, so it cannot be a -v31 resource.
+     * Apps targeting Android 12+ get a 48dp collapsed view. Uses target SDK, so not a -v31 resource.
      */
     private fun fitIconRowToCollapsedView() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||

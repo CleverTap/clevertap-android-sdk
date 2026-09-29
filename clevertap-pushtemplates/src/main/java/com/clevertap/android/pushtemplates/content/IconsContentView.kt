@@ -22,8 +22,7 @@ internal abstract class IconsContentView(
     private var imageCounter: Int = 0
 
     /**
-     * App name, timestamp and subtitle. Set even for icon-only campaigns, since below Android 12
-     * this row is the only thing that identifies the app.
+     * App name, time and subtitle. Kept for icon-only campaigns: below Android 12 it names the app.
      */
     protected fun setupHeader(data: IconsTemplateData, renderer: TemplateRenderer) {
         setCustomContentViewBasicKeys(
@@ -34,7 +33,7 @@ internal abstract class IconsContentView(
     }
 
     /**
-     * Binds pt_title/pt_msg, hiding whichever is missing so it does not leave a blank line.
+     * Binds pt_title/pt_msg and hides whichever is missing.
      *
      * @param hideMessage whether the message view has nothing to show
      */
@@ -86,9 +85,8 @@ internal abstract class IconsContentView(
     }
 
     /**
-     * Attaches one click intent per deep link. The app dismisses the notification, not the SDK.
-     * pt_dismiss_on_click is removed from the bundle, since the documented handler treats its
-     * presence as "keep" even when it is "true".
+     * One click intent per deep link. The app dismisses on tap, not the SDK. pt_dismiss_on_click is
+     * removed because the documented handler reads its presence as "keep".
      */
     protected fun setupIconClicks(data: IconsTemplateData, extras: Bundle, notificationId: Int) {
         extras.putInt(PTConstants.PT_NOTIF_ID, notificationId)
@@ -130,8 +128,7 @@ internal abstract class IconsContentView(
         )
 
         /**
-         * Only pt_* keys decide whether the expanded view has a text row. nt/nm are always set, so
-         * using them would make the icon-only layout unreachable.
+         * Uses pt_* keys only. nt/nm are always set, so they would hide the icon-only layout.
          */
         internal fun hasText(data: IconsTemplateData): Boolean {
             return !data.iconTextData.title.isNullOrEmpty() ||

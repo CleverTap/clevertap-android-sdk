@@ -28,8 +28,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * The collapsed view shows only icons. The expanded view shows what pt_* text was sent, without
- * blank lines.
+ * Collapsed shows only icons. Expanded shows the pt_* text sent, without blank lines.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
