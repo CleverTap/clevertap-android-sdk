@@ -18,7 +18,6 @@ import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.bakedInto
-import com.clevertap.android.pushtemplates.useNativeImageStyling
 import com.clevertap.android.pushtemplates.usesNativeImageStyling
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 import com.clevertap.android.pushtemplates.media.GifResult
@@ -142,9 +141,8 @@ internal open class ContentView(
         gifFrames: Int,
         imageBorderData: ImageBorderData? = null
     ): Boolean {
-        val isGifLoaded = setCustomContentViewGIF(
-            gifUrl, altText, scaleType, gifFrames, layoutId, imageBorderData
-        )
+        // GIFs are shown as-is; the corner radius and border only apply to static images.
+        val isGifLoaded = setCustomContentViewGIF(gifUrl, altText, scaleType, gifFrames, layoutId)
         return if (isGifLoaded) {
             true
         } else {
@@ -184,8 +182,7 @@ internal open class ContentView(
         altText: String,
         scaleType: PTScaleType,
         numberOfFrames: Int,
-        layoutId: Int,
-        imageBorderData: ImageBorderData? = null
+        layoutId: Int
     ): Boolean {
         val gifResult = templateMediaManager.getGifFrames(gifUrl, numberOfFrames)
 
@@ -206,25 +203,10 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        // FIT_CENTER GIFs are styled by baking into each frame.
-        val border = imageBorderData.bakedInto(scaleType)?.takeIf { it.isActive }
-
         for (frame in frames) {
-            // GIF frames are decoded fresh on every call, so the original can be recycled.
-            val processedFrame = if (border != null) {
-                NotificationBitmapUtils.applyRoundedBorderToBitmap(frame, border)
-                    .also { styled ->
-                        if (styled !== frame) {
-                            frame.recycle()
-                        }
-                    }
-            } else {
-                frame
-            }
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
-            frameRemoteViews.setImageViewBitmap(imageViewId, processedFrame)
+            frameRemoteViews.setImageViewBitmap(imageViewId, frame)
             frameRemoteViews.setViewVisibility(imageViewId, View.VISIBLE)
-            applyNativeImageStyling(frameRemoteViews, imageViewId, imageBorderData, scaleType)
             remoteView.addView(R.id.view_flipper, frameRemoteViews)
         }
 

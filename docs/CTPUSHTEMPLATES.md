@@ -626,7 +626,7 @@ Android supports various image scaling options to control how images appear in p
 To handle scaling in a Push template, you must add the key `pt_scale_type` key and the value is set as `fit_center` or `center_crop` based on the requirement. Refer [here](https://developer.clevertap.com/docs/android-push-templates#image-scaling) for more details
 
 ## Image Border and Rounded Corners
-Supported on the Basic, Auto Carousel, Manual Carousel, Rating, Timer and Image with CTA templates on Android 12 (API 31) and above.
+Supported on the Basic, Auto Carousel, Manual Carousel, Rating, Timer and Image with CTA templates on Android 12 (API 31) and above. Applies to static images only; GIFs are shown without the corner radius or border.
 
 Key | Description
 :---|:---

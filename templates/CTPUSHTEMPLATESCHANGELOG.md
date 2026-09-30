@@ -2,7 +2,7 @@
 ### Version 2.6.0 (Unreleased)
 
 #### New Features
-* **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border width (`pt_img_border_width`), and border color (`pt_img_border_clr`) for images and GIFs in the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Timer`, and `Image with CTA` templates. Available on Android 12 (API 31) and above.
+* **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border width (`pt_img_border_width`), and border color (`pt_img_border_clr`) for static images in the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Timer`, and `Image with CTA` templates. Available on Android 12 (API 31) and above.
 
 #### Bug Fixes
 * Fixes a crash in the `Manual Carousel` template when navigating between images in a campaign that has no deep links configured.
