@@ -171,4 +171,27 @@ class AppLaunchInAppArbitratorTest {
         arbitrator.openWindow() // ignored
         assertEquals(1, arbitrator.syntheticCandidates()?.size)
     }
+
+    @Test
+    fun `a throwing showWinner does not propagate and the window still tears down`() {
+        val throwingArbitrator = AppLaunchInAppArbitrator(
+            logger = mockk<Logger>(relaxed = true),
+            logTag = "test",
+            timeoutMs = 3000L,
+            hardTeardownMs = 15000L,
+            sortByPriority = sortByPriority,
+            showWinner = { throw RuntimeException("boom") }, // SDK crash simulation
+            dispatchers = dispatchers
+        )
+        throwingArbitrator.openWindow()
+        throwingArbitrator.routeWinners(listOf(inApp("100", 1)))
+
+        // Without the guard this would surface as an uncaught coroutine exception (crash).
+        scheduler.advanceUntilIdle()
+
+        // No propagation, and the window self-healed rather than sticking.
+        assertNull(throwingArbitrator.syntheticCandidates())
+        val next = listOf(inApp("300", 1))
+        assertEquals(next, throwingArbitrator.routeWinners(next))
+    }
 }

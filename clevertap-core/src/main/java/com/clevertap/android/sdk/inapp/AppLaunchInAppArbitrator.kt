@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.inapp
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -87,14 +88,23 @@ internal class AppLaunchInAppArbitrator(
         // completion signal is skipped. Completion (onContentFetchComplete) cancels it and tears down
         // earlier on the happy path.
         timeoutJob = scope.launch {
-            delay(timeoutMs)
-            // UX bound: show the /a1 winner now (no-op if already closed via fast path / completion).
-            closeAndShow("timeout")
-            // Hard backstop: guarantee the CLOSED-suppressing phase ends and the window self-heals
-            // even if no completion signal ever arrives. hardTeardownMs is comfortably beyond the
-            // fetch's own request timeout, so by the time this fires no /content is still in flight.
-            delay((hardTeardownMs - timeoutMs).coerceAtLeast(0))
-            forceTeardown("hard backstop")
+            try {
+                delay(timeoutMs)
+                // UX bound: show the /a1 winner now (no-op if already closed via fast path / completion).
+                closeAndShow("timeout")
+                // Hard backstop: guarantee the CLOSED-suppressing phase ends and the window self-heals
+                // even if no completion signal ever arrives. hardTeardownMs is comfortably beyond the
+                // fetch's own request timeout, so by the time this fires no /content is still in flight.
+                delay((hardTeardownMs - timeoutMs).coerceAtLeast(0))
+                forceTeardown("hard backstop")
+            } catch (c: CancellationException) {
+                throw c // normal cancellation (completion / abandon) — let it propagate
+            } catch (t: Throwable) {
+                // SDK safety: never let a failure in the timer crash the host app. Log and still tear
+                // the window down so it can't get stuck.
+                logger.verbose(logTag, "[Arbitration] lifecycle timer failed; tearing down", t)
+                forceTeardown("lifecycle failure")
+            }
         }
         logger.verbose(logTag, "[Arbitration] window opened (synthetics=${syntheticCandidates.size})")
     }

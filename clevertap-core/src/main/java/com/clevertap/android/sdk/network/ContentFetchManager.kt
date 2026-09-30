@@ -71,7 +71,13 @@ internal class ContentFetchManager(
                 // TODO(SDK-6141 review): with several concurrent batches this fires per batch and the
                 // window closes on the first. Fine for the single-batch app-launch case; revisit for
                 // multi-batch (iOS Q4).
-                onFetchBatchComplete?.invoke()
+                // SDK safety: a throwing callback here (runs in a finally) would escape the coroutine
+                // and crash the host app — contain it.
+                try {
+                    onFetchBatchComplete?.invoke()
+                } catch (t: Throwable) {
+                    logger.verbose(TAG, "Error in content fetch completion callback", t)
+                }
             }
         }
     }
