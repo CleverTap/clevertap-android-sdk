@@ -276,16 +276,6 @@ internal open class ContentView(
         remoteViews.setViewOutlinePreferredRadius(imageViewId, innerRadius, TypedValue.COMPLEX_UNIT_PX)
     }
 
-    fun loadImageURLIntoRemoteView(
-        imageViewID: Int, imageUrl: String?,
-        remoteViews: RemoteViews
-    ): Boolean = loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, null, null)
-
-    fun loadImageURLIntoRemoteView(
-        imageViewID: Int, imageUrl: String?,
-        remoteViews: RemoteViews, altText: String?
-    ): Boolean = loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, altText, null)
-
     /**
      * Loads an image URL into a RemoteView.
      *
@@ -298,8 +288,8 @@ internal open class ContentView(
         imageViewID: Int,
         imageUrl: String?,
         remoteViews: RemoteViews,
-        altText: String?,
-        imageBorderData: ImageBorderData?
+        altText: String? = null,
+        imageBorderData: ImageBorderData? = null
     ): Boolean {
         val referencePx = context.resources.getDimension(imageStyleReferenceDimen).toInt()
         val image = templateMediaManager.getStyledImageBitmap(
