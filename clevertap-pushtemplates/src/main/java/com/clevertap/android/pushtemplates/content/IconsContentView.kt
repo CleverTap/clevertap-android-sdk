@@ -90,7 +90,7 @@ internal abstract class IconsContentView(
 
     /**
      * One click intent per deep link. The app dismisses on tap, not the SDK. pt_dismiss_on_click is
-     * removed because the documented handler reads its presence as "keep".
+     * removed on purpose: the dismissNotification snippet skips cancel when the key is present.
      */
     protected fun setupIconClicks(data: IconsTemplateData, extras: Bundle, notificationId: Int) {
         extras.putInt(PTConstants.PT_NOTIF_ID, notificationId)
