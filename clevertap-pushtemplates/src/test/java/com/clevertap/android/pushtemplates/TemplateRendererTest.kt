@@ -1240,8 +1240,8 @@ class TemplateRendererTest {
 
         val mockSmallContentView = mockk<IconsSmallContentView>()
         val mockBigContentView = mockk<IconsBigContentView>()
-        every { mockSmallContentView.getUnloadedIconsCount() } returns 1
-        every { mockBigContentView.getUnloadedIconsCount() } returns 1
+        every { mockSmallContentView.unloadedIconsCount } returns 1
+        every { mockBigContentView.unloadedIconsCount } returns 1
 
         mockkConstructor(IconsStyle::class)
         mockkConstructor(FiveIconStyle::class)
@@ -1371,8 +1371,8 @@ class TemplateRendererTest {
 
         val mockSmallContentView = mockk<IconsSmallContentView>()
         val mockBigContentView = mockk<IconsBigContentView>()
-        every { mockSmallContentView.getUnloadedIconsCount() } returns 3
-        every { mockBigContentView.getUnloadedIconsCount() } returns 1
+        every { mockSmallContentView.unloadedIconsCount } returns 3
+        every { mockBigContentView.unloadedIconsCount } returns 1
 
         mockkConstructor(IconsStyle::class)
         every {
@@ -1496,8 +1496,8 @@ class TemplateRendererTest {
 
         val mockSmallContentView = mockk<IconsSmallContentView>()
         val mockBigContentView = mockk<IconsBigContentView>()
-        every { mockSmallContentView.getUnloadedIconsCount() } returns 1
-        every { mockBigContentView.getUnloadedIconsCount() } returns 3
+        every { mockSmallContentView.unloadedIconsCount } returns 1
+        every { mockBigContentView.unloadedIconsCount } returns 3
 
         mockkConstructor(IconsStyle::class)
         every {

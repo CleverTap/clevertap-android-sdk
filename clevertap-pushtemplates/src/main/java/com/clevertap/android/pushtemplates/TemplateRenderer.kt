@@ -183,8 +183,8 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                      * If most icon bitmaps fail to load, gracefully fall back to a basic
                      * title/message notification instead of suppressing the notification.
                      */
-                    if (iconsStyle.iconsSmallContentView.getUnloadedIconsCount() > 2 ||
-                        iconsStyle.iconsBigContentView.getUnloadedIconsCount() > 2) {
+                    if (iconsStyle.iconsSmallContentView.unloadedIconsCount > 2 ||
+                        iconsStyle.iconsBigContentView.unloadedIconsCount > 2) {
                         PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")
                         buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
                     } else {

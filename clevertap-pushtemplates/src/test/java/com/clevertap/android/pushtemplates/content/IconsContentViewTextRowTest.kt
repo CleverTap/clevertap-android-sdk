@@ -207,8 +207,8 @@ class IconsContentViewTextRowTest {
         val collapsed = IconsSmallContentView(context, renderer(), data, Bundle())
         val expanded = IconsBigContentView(context, renderer(), data, Bundle())
 
-        assertEquals(5, collapsed.getUnloadedIconsCount())
-        assertEquals(5, expanded.getUnloadedIconsCount())
+        assertEquals(5, collapsed.unloadedIconsCount)
+        assertEquals(5, expanded.unloadedIconsCount)
     }
 
     @Test

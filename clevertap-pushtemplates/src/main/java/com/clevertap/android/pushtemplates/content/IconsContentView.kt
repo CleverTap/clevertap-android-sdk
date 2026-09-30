@@ -19,7 +19,11 @@ internal abstract class IconsContentView(
     layoutId: Int
 ) : ContentView(context, layoutId, renderer.templateMediaManager) {
 
-    private var imageCounter: Int = 0
+    /**
+     * Number of icon images that failed to load.
+     */
+    internal var unloadedIconsCount: Int = 0
+        private set
 
     /**
      * App name, time and subtitle. Kept for icon-only campaigns: below Android 12 it names the app.
@@ -79,7 +83,7 @@ internal abstract class IconsContentView(
 
             if (fallback) {
                 remoteView.setViewVisibility(viewId, View.GONE)
-                imageCounter++
+                unloadedIconsCount++
             }
         }
     }
@@ -107,13 +111,6 @@ internal abstract class IconsContentView(
                 LaunchPendingIntentFactory.getLaunchPendingIntent(bundleCTA, context)
             )
         }
-    }
-
-    /**
-     * Returns the number of icon images that failed to load
-     */
-    internal fun getUnloadedIconsCount(): Int {
-        return imageCounter
     }
 
     companion object {
