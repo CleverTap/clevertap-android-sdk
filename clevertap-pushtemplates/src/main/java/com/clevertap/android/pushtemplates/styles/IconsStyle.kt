@@ -8,11 +8,14 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.IconsTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.content.*
+import com.clevertap.android.pushtemplates.content.FIVE_ICON_CONTENT_PENDING_INTENT
+import com.clevertap.android.pushtemplates.content.IconsBigContentView
+import com.clevertap.android.pushtemplates.content.IconsContentView
+import com.clevertap.android.pushtemplates.content.IconsSmallContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.sdk.Constants
 
-internal class IconsStyle(private val data: IconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
+internal class IconsStyle(private val data: IconsTemplateData, renderer: TemplateRenderer, private val extras: Bundle) : Style(data.baseContent, renderer) {
 
     lateinit var iconsSmallContentView: IconsContentView
         private set

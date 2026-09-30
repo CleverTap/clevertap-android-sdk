@@ -116,6 +116,7 @@ internal abstract class IconsContentView(
     companion object {
 
         private val ctaIds = listOf(R.id.cta1, R.id.cta2, R.id.cta3, R.id.cta4, R.id.cta5)
+        // Reuses the Five Icons strings and 5cta_ click prefix.
         private val fallbackDescriptions = listOf(
             R.string.pt_five_icon_1,
             R.string.pt_five_icon_2,

@@ -343,6 +343,7 @@ internal class ValidatorFactory {
                     ContentValidator(keys)
                 )
                 TemplateType.RATING -> RatingTemplateValidator(ContentValidator(keys))
+                // Shared with Five Icons: both templates need the same icon and deep link rules.
                 TemplateType.FIVE_ICONS, TemplateType.ICONS -> FiveIconsTemplateValidator(keys)
                 TemplateType.PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(
                     ContentValidator(keys)
