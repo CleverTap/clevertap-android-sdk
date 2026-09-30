@@ -33,7 +33,7 @@ internal class VerticalImageSmallContentView(
                 mediaData.bigImage.altText,
                 mediaData.gif.numberOfFrames,
                 // No image styling on the collapsed view.
-                null
+                imageBorderData = null
             )
         } else {
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)

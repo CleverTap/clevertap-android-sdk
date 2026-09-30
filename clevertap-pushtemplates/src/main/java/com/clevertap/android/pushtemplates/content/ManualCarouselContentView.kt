@@ -56,8 +56,8 @@ internal class ManualCarouselContentView(
                 imageViewId,
                 imageUrl,
                 tempRemoteView,
-                null,
-                data.carouselData.imageBorderData.bakedInto(scaleType)
+                altText = null,
+                imageBorderData = data.carouselData.imageBorderData.bakedInto(scaleType)
             )
 
             if (!fallback) {

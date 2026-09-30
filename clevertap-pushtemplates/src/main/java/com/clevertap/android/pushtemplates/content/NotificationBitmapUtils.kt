@@ -127,6 +127,8 @@ internal object NotificationBitmapUtils {
 
     internal const val BORDER_WIDTH_DIVISOR = 1000f
 
+    private const val PERCENT_DIVISOR = 100f
+
     /** Smallest border that is a whole pixel on both the bitmap and the view path. */
     internal const val MIN_BORDER_WIDTH_PX = 1f
 
@@ -164,17 +166,7 @@ internal object NotificationBitmapUtils {
         val width = (sourceWidth * scale).toInt().coerceAtLeast(1)
         val height = (sourceHeight * scale).toInt().coerceAtLeast(1)
 
-        if (scale != 1f) {
-            PTLog.debug(
-                "Styled image is taller than the ${maxHeightPx}px cap, drawing the copy at " +
-                        "${width}x$height instead of ${sourceWidth}x$sourceHeight (scale $scale)"
-            )
-        } else if (maxHeightPx > 0) {
-            PTLog.verbose(
-                "Styled image ${sourceWidth}x$sourceHeight is within the ${maxHeightPx}px cap, " +
-                        "drawing the copy at full size"
-            )
-        }
+        logStyledImageScale(source, maxHeightPx, scale, width, height)
 
         // Keep the stroke and radius within half the shorter side for portrait images.
         val halfShortSide = minOf(width, height) / 2f
@@ -226,8 +218,22 @@ internal object NotificationBitmapUtils {
         return output
     }
 
+    private fun logStyledImageScale(source: Bitmap, maxHeightPx: Int, scale: Float, width: Int, height: Int) {
+        if (scale != 1f) {
+            PTLog.debug(
+                "Styled image is taller than the ${maxHeightPx}px cap, drawing the copy at " +
+                        "${width}x$height instead of ${source.width}x${source.height} (scale $scale)"
+            )
+        } else if (maxHeightPx > 0) {
+            PTLog.verbose(
+                "Styled image ${source.width}x${source.height} is within the ${maxHeightPx}px cap, " +
+                        "drawing the copy at full size"
+            )
+        }
+    }
+
     internal fun resolveCornerRadiusPx(reference: Int, cornerRadiusPercent: Float): Float =
-        reference * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / 100f
+        reference * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / PERCENT_DIVISOR
 
     /**
      * Border width in px: `reference * value / 1000`, never below [MIN_BORDER_WIDTH_PX] once a
