@@ -90,11 +90,11 @@ class ImageBorderDataTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.R])
-    fun `below API 31 nothing reaches the views, so the bitmap carries everything`() {
+    fun `below API 31 image styling is ignored for every scale type`() {
         // Given / Then
         listOf(radiusOnly, borderOnly, both).forEach { data ->
             PTScaleType.values().forEach { scaleType ->
-                assertSame("$data with $scaleType", data, data.bakedInto(scaleType))
+                assertNull("$data with $scaleType", data.bakedInto(scaleType))
             }
         }
     }

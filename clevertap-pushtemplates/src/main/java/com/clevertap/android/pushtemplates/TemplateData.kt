@@ -55,10 +55,10 @@ internal fun PTScaleType.usesNativeImageStyling(): Boolean =
     useNativeImageStyling && this == PTScaleType.CENTER_CROP
 
 /**
- * Styling to bake into the bitmap, or null when the views draw it.
+ * Styling to bake into the bitmap, or null when the views draw it or the OS is below API 31.
  */
 internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? {
-    return if (this != null && !scaleType.usesNativeImageStyling()) {
+    return if (this != null && useNativeImageStyling && !scaleType.usesNativeImageStyling()) {
         this
     } else {
         null
