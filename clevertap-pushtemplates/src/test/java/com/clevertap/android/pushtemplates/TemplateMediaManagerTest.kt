@@ -710,20 +710,20 @@ class TemplateMediaManagerTest {
     }
 
     @Test
-    fun `getStyledImageBitmap should reuse one styled instance per url and style`() {
+    fun `getStyledImageBitmap should style a copy and keep the download cached`() {
         // Given
         val url = "https://example.com/image.png"
         val raw = stubSuccessfulDownload(url)
         val style = ImageBorderData(cornerRadiusPercent = 20f)
 
         // When
-        val first = templateMediaManager.getStyledImageBitmap(url, style)
-        val second = templateMediaManager.getStyledImageBitmap(url, style)
+        val styled = templateMediaManager.getStyledImageBitmap(url, style)
 
         // Then
-        assertNotNull(first)
-        assertNotSame(raw, first)
-        assertSame(first, second)
+        assertNotNull(styled)
+        assertNotSame(raw, styled)
+        assertSame(raw, templateMediaManager.getImageBitmap(url))
+        verify(exactly = 1) { mockTemplateRepository.getBitmap(url) }
     }
 
     @Test
@@ -750,21 +750,5 @@ class TemplateMediaManagerTest {
         // Then
         assertNull(templateMediaManager.getStyledImageBitmap(url, ImageBorderData(cornerRadiusPercent = 20f)))
         assertNull(templateMediaManager.getStyledImageBitmap(null, ImageBorderData(cornerRadiusPercent = 20f)))
-    }
-
-    @Test
-    fun `clearCaches should drop styled bitmaps too`() {
-        // Given
-        val url = "https://example.com/image.png"
-        stubSuccessfulDownload(url)
-        val style = ImageBorderData(cornerRadiusPercent = 20f)
-        val first = templateMediaManager.getStyledImageBitmap(url, style)
-
-        // When
-        templateMediaManager.clearCaches()
-        stubSuccessfulDownload(url)
-
-        // Then
-        assertNotSame(first, templateMediaManager.getStyledImageBitmap(url, style))
     }
 }

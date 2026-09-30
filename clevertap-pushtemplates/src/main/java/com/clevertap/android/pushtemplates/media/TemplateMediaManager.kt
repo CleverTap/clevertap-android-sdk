@@ -17,7 +17,6 @@ internal class TemplateMediaManager(
     // Simple in-memory cache to avoid duplicate downloads of successful results
     private val bitmapCache = mutableMapOf<String, Bitmap>()
     private val bytesCache = mutableMapOf<String, ByteArray>()
-    private val styledBitmapCache = mutableMapOf<Pair<String, ImageBorderData>, Bitmap>()
 
     fun getGifFrames(gifUrl: String?, maxFrames: Int): GifResult {
         if (gifUrl.isNullOrBlank() || !gifUrl.startsWith("https") || !gifUrl.lowercase()
@@ -114,8 +113,8 @@ internal class TemplateMediaManager(
     }
 
     /**
-     * Returns the image for [imageUrl] with [border] baked in. Cached so the same Bitmap is
-     * reused across views.
+     * Returns the image for [imageUrl] with [border] baked in. Each view asks for a styled
+     * image once per render, so only the download is cached.
      */
     fun getStyledImageBitmap(imageUrl: String?, border: ImageBorderData?): Bitmap? {
         val url = imageUrl ?: return null
@@ -124,14 +123,7 @@ internal class TemplateMediaManager(
             return rawBitmap
         }
 
-        val key = url to border
-        val cached = styledBitmapCache[key]
-        if (cached != null && !cached.isRecycled) {
-            return cached
-        }
-
         return NotificationBitmapUtils.applyRoundedBorderToBitmap(rawBitmap, border)
-            .also { styledBitmapCache[key] = it }
     }
 
     /**
@@ -139,7 +131,6 @@ internal class TemplateMediaManager(
      */
     fun clearCaches() {
         bitmapCache.clear()
-        styledBitmapCache.clear()
         bytesCache.clear()
         PTLog.verbose("Media caches cleared")
     }
