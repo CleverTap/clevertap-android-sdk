@@ -299,7 +299,10 @@ internal open class ContentView(
         altText: String?,
         imageBorderData: ImageBorderData?
     ): Boolean {
-        val image = templateMediaManager.getStyledImageBitmap(imageUrl, imageBorderData)
+        val referencePx = context.resources.getDimension(imageStyleReferenceDimen).toInt()
+        val image = templateMediaManager.getStyledImageBitmap(
+            imageUrl, imageBorderData, NotificationBitmapUtils.resolveStyledImageMaxHeightPx(referencePx)
+        )
         if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image)
             if (!TextUtils.isEmpty(altText)) {

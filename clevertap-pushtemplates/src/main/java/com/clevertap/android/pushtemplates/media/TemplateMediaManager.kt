@@ -113,17 +113,22 @@ internal class TemplateMediaManager(
     }
 
     /**
-     * Returns the image for [imageUrl] with [border] baked in. Each view asks for a styled
-     * image once per render, so only the download is cached.
+     * Returns the image for [imageUrl] with [border] baked in, no taller than [maxHeightPx]
+     * when that is positive. Each view asks for a styled image once per render, so only the
+     * download is cached.
      */
-    fun getStyledImageBitmap(imageUrl: String?, border: ImageBorderData?): Bitmap? {
+    fun getStyledImageBitmap(
+        imageUrl: String?,
+        border: ImageBorderData?,
+        maxHeightPx: Int = 0
+    ): Bitmap? {
         val url = imageUrl ?: return null
         val rawBitmap = getImageBitmap(url) ?: return null
         if (border == null || !border.isActive) {
             return rawBitmap
         }
 
-        return NotificationBitmapUtils.applyRoundedBorderToBitmap(rawBitmap, border)
+        return NotificationBitmapUtils.applyRoundedBorderToBitmap(rawBitmap, border, maxHeightPx)
     }
 
     /**

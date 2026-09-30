@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RadialGradient
@@ -129,11 +130,50 @@ internal object NotificationBitmapUtils {
     /** Smallest border that is a whole pixel on both the bitmap and the view path. */
     internal const val MIN_BORDER_WIDTH_PX = 1f
 
-    fun applyRoundedBorderToBitmap(source: Bitmap, border: ImageBorderData): Bitmap {
-        val width = source.width
-        val height = source.height
-        if (width <= 0 || height <= 0 || !border.isActive) {
+    /**
+     * The style reference is a little under the real image height, so the styled copy keeps
+     * some extra rows above it before it is considered oversized.
+     */
+    internal const val STYLED_IMAGE_HEIGHT_HEADROOM = 1.5f
+
+    /** Tallest styled bitmap worth handing to the view, given the template's style reference. */
+    internal fun resolveStyledImageMaxHeightPx(referencePx: Int): Int =
+        (referencePx * STYLED_IMAGE_HEIGHT_HEADROOM).toInt()
+
+    /**
+     * Rounds and borders [source] into a new bitmap. When [maxHeightPx] is positive and the
+     * source is taller, the copy is drawn at that height so the styled bitmap never carries
+     * more pixels than the view can show. The source itself is left untouched.
+     */
+    fun applyRoundedBorderToBitmap(
+        source: Bitmap,
+        border: ImageBorderData,
+        maxHeightPx: Int = 0
+    ): Bitmap {
+        val sourceWidth = source.width
+        val sourceHeight = source.height
+        if (sourceWidth <= 0 || sourceHeight <= 0 || !border.isActive) {
             return source
+        }
+
+        val scale = if (maxHeightPx in 1 until sourceHeight) {
+            maxHeightPx / sourceHeight.toFloat()
+        } else {
+            1f
+        }
+        val width = (sourceWidth * scale).toInt().coerceAtLeast(1)
+        val height = (sourceHeight * scale).toInt().coerceAtLeast(1)
+
+        if (scale != 1f) {
+            PTLog.debug(
+                "Styled image is taller than the ${maxHeightPx}px cap, drawing the copy at " +
+                        "${width}x$height instead of ${sourceWidth}x$sourceHeight (scale $scale)"
+            )
+        } else if (maxHeightPx > 0) {
+            PTLog.verbose(
+                "Styled image ${sourceWidth}x$sourceHeight is within the ${maxHeightPx}px cap, " +
+                        "drawing the copy at full size"
+            )
         }
 
         val strokeWidth = if (border.hasBorder) {
@@ -154,8 +194,12 @@ internal object NotificationBitmapUtils {
         val output = createBitmap(width, height)
         val canvas = Canvas(output)
 
-        val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+                if (scale != 1f) {
+                    setLocalMatrix(Matrix().apply { setScale(scale, scale) })
+                }
+            }
         }
         canvas.drawRoundRect(
             RectF(0f, 0f, width.toFloat(), height.toFloat()),

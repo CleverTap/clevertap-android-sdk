@@ -534,4 +534,106 @@ class NotificationBitmapUtilsTest {
         assertEquals(1, result.width)
         assertEquals(1, result.height)
     }
+
+    // Styled image downscaling tests
+
+    @Test
+    fun `resolveStyledImageMaxHeightPx should add headroom above the style reference`() {
+        // 196dp on a 3x screen
+        assertEquals(882, NotificationBitmapUtils.resolveStyledImageMaxHeightPx(588))
+        // 180dp on a 2x screen
+        assertEquals(540, NotificationBitmapUtils.resolveStyledImageMaxHeightPx(360))
+        assertEquals(0, NotificationBitmapUtils.resolveStyledImageMaxHeightPx(0))
+    }
+
+    @Test
+    fun `should shrink a source taller than the max height and keep its aspect ratio`() {
+        // Given
+        val source = sourceBitmap(2000, 1000)
+
+        // When
+        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
+            source, style(radius = 10f, borderWidth = 10f, borderColor = borderColor), maxHeightPx = 882
+        )
+        bitmapsToRecycle.add(result)
+
+        // Then
+        assertNotSame(source, result)
+        assertEquals(882, result.height)
+        assertEquals(1764, result.width)
+    }
+
+    @Test
+    fun `should keep the source size when it is not taller than the max height`() {
+        // Given
+        listOf(900 to 600, 882 to 882, 300 to 100).forEach { (w, h) ->
+            val source = sourceBitmap(w, h)
+
+            // When
+            val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
+                source, style(radius = 10f), maxHeightPx = 882
+            )
+            bitmapsToRecycle.add(result)
+
+            // Then
+            assertEquals("width for ${w}x$h", w, result.width)
+            assertEquals("height for ${w}x$h", h, result.height)
+        }
+    }
+
+    @Test
+    fun `should not shrink when no max height is given`() {
+        // Given
+        val source = sourceBitmap(2000, 1000)
+
+        // When
+        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(source, style(radius = 10f))
+        bitmapsToRecycle.add(result)
+
+        // Then
+        assertEquals(2000, result.width)
+        assertEquals(1000, result.height)
+    }
+
+    @Test
+    fun `should leave the source untouched after shrinking`() {
+        // Given
+        val source = sourceBitmap(2000, 1000)
+
+        // When
+        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
+            source, style(radius = 10f), maxHeightPx = 500
+        )
+        bitmapsToRecycle.add(result)
+
+        // Then
+        assertEquals(2000, source.width)
+        assertEquals(1000, source.height)
+        assertTrue(!source.isRecycled)
+    }
+
+    @Test
+    fun `should not shrink the source when styling is inactive`() {
+        // Given
+        val source = sourceBitmap(2000, 1000)
+
+        // Then
+        assertSame(source, NotificationBitmapUtils.applyRoundedBorderToBitmap(source, style(), maxHeightPx = 500))
+    }
+
+    @Test
+    fun `should shrink a portrait source by its height too`() {
+        // Given
+        val source = sourceBitmap(600, 1200)
+
+        // When
+        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
+            source, style(radius = 10f), maxHeightPx = 600
+        )
+        bitmapsToRecycle.add(result)
+
+        // Then
+        assertEquals(600, result.height)
+        assertEquals(300, result.width)
+    }
 }

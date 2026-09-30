@@ -741,6 +741,39 @@ class TemplateMediaManagerTest {
     }
 
     @Test
+    fun `getStyledImageBitmap should shrink the styled copy to the max height`() {
+        // Given
+        val url = "https://example.com/large.png"
+        val raw = Bitmap.createBitmap(2000, 1000, Bitmap.Config.ARGB_8888)
+        every { mockTemplateRepository.getBitmap(url) } returns
+                DownloadedBitmap(raw, DownloadedBitmap.Status.SUCCESS, 1L, null)
+
+        // When
+        val styled = templateMediaManager.getStyledImageBitmap(
+            url, ImageBorderData(cornerRadiusPercent = 20f), maxHeightPx = 500
+        )
+
+        // Then
+        assertNotNull(styled)
+        assertEquals(500, styled!!.height)
+        assertEquals(1000, styled.width)
+        assertEquals(1000, raw.height)
+        assertSame(raw, templateMediaManager.getImageBitmap(url))
+    }
+
+    @Test
+    fun `getStyledImageBitmap should not shrink the raw bitmap when styling is inactive`() {
+        // Given
+        val url = "https://example.com/large.png"
+        val raw = Bitmap.createBitmap(2000, 1000, Bitmap.Config.ARGB_8888)
+        every { mockTemplateRepository.getBitmap(url) } returns
+                DownloadedBitmap(raw, DownloadedBitmap.Status.SUCCESS, 1L, null)
+
+        // Then
+        assertSame(raw, templateMediaManager.getStyledImageBitmap(url, ImageBorderData(), maxHeightPx = 500))
+    }
+
+    @Test
     fun `getStyledImageBitmap should return null when the image cannot be fetched`() {
         // Given
         val url = "https://example.com/missing.png"
