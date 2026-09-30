@@ -145,8 +145,11 @@ internal open class ContentView(
         val isGifLoaded = setCustomContentViewGIF(
             gifUrl, altText, scaleType, gifFrames, layoutId, imageBorderData
         )
-        return if (isGifLoaded) true
-        else setCustomContentViewBigImage(bigImageUrl, scaleType, altText, imageBorderData)
+        return if (isGifLoaded) {
+            true
+        } else {
+            setCustomContentViewBigImage(bigImageUrl, scaleType, altText, imageBorderData)
+        }
     }
 
     fun setCustomContentViewBigImage(
@@ -210,8 +213,14 @@ internal open class ContentView(
             // GIF frames are decoded fresh on every call, so the original can be recycled.
             val processedFrame = if (border != null) {
                 NotificationBitmapUtils.applyRoundedBorderToBitmap(frame, border)
-                    .also { if (it !== frame) frame.recycle() }
-            } else frame
+                    .also { styled ->
+                        if (styled !== frame) {
+                            frame.recycle()
+                        }
+                    }
+            } else {
+                frame
+            }
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
             frameRemoteViews.setImageViewBitmap(imageViewId, processedFrame)
             frameRemoteViews.setViewVisibility(imageViewId, View.VISIBLE)
@@ -242,7 +251,9 @@ internal open class ContentView(
         scaleType: PTScaleType,
         frameId: Int = R.id.big_image_frame
     ) {
-        if (border == null || !border.isActive || !scaleType.usesNativeImageStyling()) return
+        if (border == null || !border.isActive || !scaleType.usesNativeImageStyling()) {
+            return
+        }
         applyNativeImageStylingS(remoteViews, imageViewId, border, frameId)
     }
 
@@ -257,10 +268,11 @@ internal open class ContentView(
         val radiusPx = NotificationBitmapUtils.resolveCornerRadiusPx(
             referencePx, border.cornerRadiusPercent
         )
-        val borderPx =
-            if (border.hasBorder) NotificationBitmapUtils.resolveBorderWidthPx(
-                referencePx, border.borderWidthValue
-            ) else 0f
+        val borderPx = if (border.hasBorder) {
+            NotificationBitmapUtils.resolveBorderWidthPx(referencePx, border.borderWidthValue)
+        } else {
+            0f
+        }
         val borderColor = border.borderColor
 
         PTLog.debug(

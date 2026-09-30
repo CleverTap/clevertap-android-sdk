@@ -203,7 +203,9 @@ internal class ManualCarouselContentView(
             extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
             extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
 
-            if (deepLinkList.isNotEmpty()) extras.putString(Constants.DEEP_LINK_KEY, deepLinkList[0])
+            if (deepLinkList.isNotEmpty()) {
+                extras.putString(Constants.DEEP_LINK_KEY, deepLinkList[0])
+            }
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
             remoteView.setOnClickPendingIntent(
                 R.id.rightArrowPos0,

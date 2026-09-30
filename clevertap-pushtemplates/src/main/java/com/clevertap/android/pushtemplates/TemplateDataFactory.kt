@@ -371,7 +371,9 @@ internal object TemplateDataFactory {
     }
 
     private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
-        if (!useNativeImageStyling) return ImageBorderData()
+        if (!useNativeImageStyling) {
+            return ImageBorderData()
+        }
         return ImageBorderData(
             cornerRadiusPercent = extras.getStylingPercent(PT_IMG_CORNER_RADIUS),
             borderWidthValue = extras.getStylingPercent(PT_IMG_BORDER_WIDTH),

@@ -57,8 +57,13 @@ internal fun PTScaleType.usesNativeImageStyling(): Boolean =
 /**
  * Styling to bake into the bitmap, or null when the views draw it.
  */
-internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? =
-    if (this != null && !scaleType.usesNativeImageStyling()) this else null
+internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? {
+    return if (this != null && !scaleType.usesNativeImageStyling()) {
+        this
+    } else {
+        null
+    }
+}
 
 internal data class MediaData(
     val bigImage: ImageData,

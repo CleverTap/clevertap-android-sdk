@@ -129,10 +129,15 @@ internal object NotificationBitmapUtils {
     fun applyRoundedBorderToBitmap(source: Bitmap, border: ImageBorderData): Bitmap {
         val width = source.width
         val height = source.height
-        if (width <= 0 || height <= 0 || !border.isActive) return source
+        if (width <= 0 || height <= 0 || !border.isActive) {
+            return source
+        }
 
-        val strokeWidth =
-            if (border.hasBorder) resolveBorderWidthPx(height, border.borderWidthValue) else 0f
+        val strokeWidth = if (border.hasBorder) {
+            resolveBorderWidthPx(height, border.borderWidthValue)
+        } else {
+            0f
+        }
         // Keep the radius within half the shorter side for portrait images.
         val safeRadius = resolveCornerRadiusPx(height, border.cornerRadiusPercent)
             .coerceAtMost(minOf(width, height) / 2f)

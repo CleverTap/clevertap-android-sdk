@@ -120,11 +120,15 @@ internal class TemplateMediaManager(
     fun getStyledImageBitmap(imageUrl: String?, border: ImageBorderData?): Bitmap? {
         val url = imageUrl ?: return null
         val rawBitmap = getImageBitmap(url) ?: return null
-        if (border == null || !border.isActive) return rawBitmap
+        if (border == null || !border.isActive) {
+            return rawBitmap
+        }
 
         val key = url to border
         val cached = styledBitmapCache[key]
-        if (cached != null && !cached.isRecycled) return cached
+        if (cached != null && !cached.isRecycled) {
+            return cached
+        }
 
         return NotificationBitmapUtils.applyRoundedBorderToBitmap(rawBitmap, border)
             .also { styledBitmapCache[key] = it }
