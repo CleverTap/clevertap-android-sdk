@@ -230,21 +230,21 @@ internal open class ContentView(
         remoteViews: RemoteViews,
         imageViewId: Int,
         border: ImageBorderData?,
-        scaleType: PTScaleType,
-        frameId: Int = R.id.big_image_frame
+        scaleType: PTScaleType
     ) {
         if (border == null || !border.isActive || !scaleType.usesNativeImageStyling()) {
             return
         }
-        applyNativeImageStylingS(remoteViews, imageViewId, border, frameId)
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            applyNativeImageStylingS(remoteViews, imageViewId, border)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
     private fun applyNativeImageStylingS(
         remoteViews: RemoteViews,
         imageViewId: Int,
-        border: ImageBorderData,
-        frameId: Int
+        border: ImageBorderData
     ) {
         val referencePx = context.resources.getDimension(imageStyleReferenceDimen).toInt()
         val radiusPx = NotificationBitmapUtils.resolveCornerRadiusPx(
@@ -263,8 +263,8 @@ internal open class ContentView(
         )
 
         if (borderPx > 0f && borderColor != null) {
-            remoteViews.setInt(frameId, "setBackgroundColor", borderColor)
-            remoteViews.setViewOutlinePreferredRadius(frameId, radiusPx, TypedValue.COMPLEX_UNIT_PX)
+            remoteViews.setInt(R.id.big_image_frame, "setBackgroundColor", borderColor)
+            remoteViews.setViewOutlinePreferredRadius(R.id.big_image_frame, radiusPx, TypedValue.COMPLEX_UNIT_PX)
             for (side in intArrayOf(
                 RemoteViews.MARGIN_LEFT, RemoteViews.MARGIN_TOP,
                 RemoteViews.MARGIN_RIGHT, RemoteViews.MARGIN_BOTTOM

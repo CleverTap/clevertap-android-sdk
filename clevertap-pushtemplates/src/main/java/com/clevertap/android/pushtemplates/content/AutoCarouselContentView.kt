@@ -41,8 +41,7 @@ internal class AutoCarouselContentView(
     }
 
     private fun setViewFlipper() {
-        val scaleType =
-            data.carouselData.scaleType
+        val scaleType = data.carouselData.scaleType
         val imageViewId = when (scaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image

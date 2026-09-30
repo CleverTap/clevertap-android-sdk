@@ -375,13 +375,13 @@ internal object TemplateDataFactory {
             return ImageBorderData()
         }
         return ImageBorderData(
-            cornerRadiusPercent = extras.getStylingPercent(PT_IMG_CORNER_RADIUS),
-            borderWidthValue = extras.getStylingPercent(PT_IMG_BORDER_WIDTH),
+            cornerRadiusPercent = extras.getStylingValue(PT_IMG_CORNER_RADIUS),
+            borderWidthValue = extras.getStylingValue(PT_IMG_BORDER_WIDTH),
             borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) }
         )
     }
 
-    private fun Bundle.getStylingPercent(key: String): Float =
+    private fun Bundle.getStylingValue(key: String): Float =
         getString(key)?.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f
 
     private fun createBaseContent(extras: Bundle, colorMap: Map<String, String>): BaseContent {

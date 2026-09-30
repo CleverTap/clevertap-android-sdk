@@ -176,14 +176,15 @@ internal object NotificationBitmapUtils {
             )
         }
 
+        // Keep the stroke and radius within half the shorter side for portrait images.
+        val halfShortSide = minOf(width, height) / 2f
         val strokeWidth = if (border.hasBorder) {
-            resolveBorderWidthPx(height, border.borderWidthValue)
+            resolveBorderWidthPx(height, border.borderWidthValue).coerceAtMost(halfShortSide)
         } else {
             0f
         }
-        // Keep the radius within half the shorter side for portrait images.
         val safeRadius = resolveCornerRadiusPx(height, border.cornerRadiusPercent)
-            .coerceAtMost(minOf(width, height) / 2f)
+            .coerceAtMost(halfShortSide)
 
         PTLog.debug(
             "Image styling on ${width}x$height bitmap: corner radius " +

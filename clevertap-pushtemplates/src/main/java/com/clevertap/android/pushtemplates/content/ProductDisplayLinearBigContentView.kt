@@ -124,14 +124,13 @@ internal open class ProductDisplayLinearBigContentView(
             val altText = imageData.altText
 
             loadImageURLIntoRemoteView(
-                smallImageLayoutIds[imageCounter], imageUrl, remoteView, altText, null
+                smallImageLayoutIds[imageCounter], imageUrl, remoteView, altText
             )
 
             val tempRemoteView =
                 RemoteViews(context.packageName, R.layout.image_view_dynamic_relative)
-            val fallback = loadImageURLIntoRemoteView(
-                imageViewId, imageUrl, tempRemoteView, altText, null
-            )
+            val fallback =
+                loadImageURLIntoRemoteView(imageViewId, imageUrl, tempRemoteView, altText)
 
             if (!fallback) {
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)

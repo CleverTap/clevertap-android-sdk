@@ -535,6 +535,24 @@ class NotificationBitmapUtilsTest {
         assertEquals(1, result.height)
     }
 
+    @Test
+    fun `should cap the border at half the width of a narrow image`() {
+        // Given a 40x600 source, a width of 100 resolves to 60px from the height alone,
+        // which is wider than the image. The stroke must stop at half the shorter side.
+        val source = sourceBitmap(40, 600)
+
+        // When
+        val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
+            source, style(radius = 10f, borderWidth = 100f, borderColor = borderColor)
+        )
+        bitmapsToRecycle.add(result)
+
+        // Then
+        assertNotSame(source, result)
+        assertEquals(40, result.width)
+        assertEquals(600, result.height)
+    }
+
     // Styled image downscaling tests
 
     @Test

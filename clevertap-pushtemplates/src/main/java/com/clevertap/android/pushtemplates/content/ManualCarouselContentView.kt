@@ -31,8 +31,7 @@ internal class ManualCarouselContentView(
         val baseContent = data.carouselData.baseContent
         setupBaseContent(baseContent, renderer)
 
-        val scaleType =
-            data.carouselData.scaleType
+        val scaleType = data.carouselData.scaleType
         val deepLinkList = baseContent.deepLinkList
 
         remoteView.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)

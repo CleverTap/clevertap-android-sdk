@@ -2471,6 +2471,7 @@ class TemplateDataFactoryTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
     fun `createImageBorderData should be inactive when no border keys are present`() {
         // Given
         setupBasicMockBundle()
