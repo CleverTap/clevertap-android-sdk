@@ -15,7 +15,9 @@ import com.clevertap.android.sdk.Constants
 internal class IconsStyle(private val data: IconsTemplateData, renderer: TemplateRenderer, private var extras: Bundle) : Style(data.baseContent, renderer) {
 
     lateinit var iconsSmallContentView: IconsContentView
+        private set
     lateinit var iconsBigContentView: IconsContentView
+        private set
 
     /**
      * Stacked group summaries show this title. Use pt_title, else pt_msg, never nt.
