@@ -161,21 +161,18 @@ internal object NotificationBitmapUtils {
 
         val strokeColor = border.borderColor
         if (strokeWidth > 0f && strokeColor != null) {
-            // Filled as a ring so the outer edge follows the corner radius.
-            val ring = Path().apply {
-                fillType = Path.FillType.EVEN_ODD
-                addRoundRect(
-                    RectF(0f, 0f, width.toFloat(), height.toFloat()),
-                    safeRadius, safeRadius, Path.Direction.CW
-                )
-                val innerRadius = (safeRadius - strokeWidth).coerceAtLeast(0f)
-                addRoundRect(
-                    RectF(strokeWidth, strokeWidth, width - strokeWidth, height - strokeWidth),
-                    innerRadius, innerRadius, Path.Direction.CW
-                )
+            // The stroke is centred on the rect, so inset by half its width to keep it inside.
+            val halfStroke = strokeWidth / 2f
+            val borderRadius = (safeRadius - halfStroke).coerceAtLeast(0f)
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                this.strokeWidth = strokeWidth
+                color = strokeColor
             }
-            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = strokeColor }
-            canvas.drawPath(ring, borderPaint)
+            canvas.drawRoundRect(
+                RectF(halfStroke, halfStroke, width - halfStroke, height - halfStroke),
+                borderRadius, borderRadius, borderPaint
+            )
         }
 
         return output
