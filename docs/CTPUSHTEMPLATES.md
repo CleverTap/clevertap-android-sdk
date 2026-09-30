@@ -285,8 +285,8 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Image corner radius, `0`-`50`. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
-pt_img_border_width | Optional | Image border width, `0`-`100`. Android 12 and above
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
 pt_img_border_clr | Optional | Image border color in HEX
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
@@ -316,8 +316,8 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Image corner radius, `0`-`50`. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
-pt_img_border_width | Optional | Image border width, `0`-`100`. Android 12 and above
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
 pt_img_border_clr | Optional | Image border color in HEX
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -349,8 +349,8 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Image corner radius, `0`-`50`. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
-pt_img_border_width | Optional | Image border width, `0`-`100`. Android 12 and above
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
 pt_img_border_clr | Optional | Image border color in HEX
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
@@ -374,8 +374,8 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Image corner radius, `0`-`50`. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
-pt_img_border_width | Optional | Image border width, `0`-`100`. Android 12 and above
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
 pt_img_border_clr | Optional | Image border color in HEX
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
@@ -478,8 +478,8 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
-pt_img_corner_radius | Optional | Image corner radius, `0`-`50`. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
-pt_img_border_width | Optional | Image border width, `0`-`100`. Android 12 and above
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
 pt_img_border_clr | Optional | Image border color in HEX
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_gif_alt | Optional | GIF to show when timer expires
@@ -630,13 +630,13 @@ Supported on the Basic, Auto Carousel, Manual Carousel, Rating, Timer and Image 
 
 Key | Description
 :---|:---
-`pt_img_corner_radius` | Corner radius as a percentage of the image's height, `0`-`50`. `50` is a fully rounded image. Defaults to `0`
-`pt_img_border_width` | Border width, `0`-`100`. `100` is a tenth of the image's height and any value above `0` draws a border of at least one pixel of the image. Defaults to `0`
+`pt_img_corner_radius` | Corner radius as a percentage of the image's height
+`pt_img_border_width` | Border width relative to the image's height
 `pt_img_border_clr` | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Supports the `_dark` suffix, see [Dark Mode](#dark-mode)
 
 A border needs both `pt_img_border_width` and `pt_img_border_clr`; either key alone draws nothing. Values outside the range are clamped to the nearest limit, and values that are not numbers are ignored.
 
-With `center_crop` the values are resolved against a fixed 196dp reference height (180dp for Vertical Image) and the border is drawn around the image, so a translucent colour shows the notification background. With `fit_center` they are resolved against the image's own height and the border is drawn over the image edge, so a translucent colour shows the image.
+With `center_crop` the values are resolved against a fixed reference height and the border is drawn around the image, so a translucent colour shows the notification background. With `fit_center` they are resolved against the image's own height and the border is drawn over the image edge, so a translucent colour shows the image.
 
 ## Android 12 Trampoline restrictions
 
