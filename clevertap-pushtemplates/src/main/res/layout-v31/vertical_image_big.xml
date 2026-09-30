@@ -13,6 +13,7 @@
         android:id="@+id/vertical_img_body"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingStart="@dimen/padding_horizontal"
         android:paddingEnd="@dimen/padding_horizontal">
 
         <!-- Left: Vertical/portrait product image -->
@@ -22,7 +23,9 @@
             android:layout_width="120dp"
             android:layout_height="180dp"
             android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true" />
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="@dimen/padding_micro"
+            android:layout_marginBottom="@dimen/padding_micro" />
 
         <!-- Top-right: title + message, anchored to top -->
         <LinearLayout

@@ -2,8 +2,10 @@ package com.clevertap.android.pushtemplates.media
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.clevertap.android.pushtemplates.ImageBorderData
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.pushtemplates.content.NotificationBitmapUtils
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import kotlin.system.measureTimeMillis
 
@@ -110,8 +112,23 @@ internal class TemplateMediaManager(
 
     }
 
+    /** Returns the image for [imageUrl] with [border] applied, or the plain image when there is no styling. */
+    fun getStyledImageBitmap(
+        imageUrl: String?,
+        border: ImageBorderData?,
+        maxHeightPx: Int = 0
+    ): Bitmap? {
+        val url = imageUrl ?: return null
+        val rawBitmap = getImageBitmap(url) ?: return null
+        if (border == null || !border.isActive) {
+            return rawBitmap
+        }
+
+        return NotificationBitmapUtils.applyRoundedBorderToBitmap(rawBitmap, border, maxHeightPx)
+    }
+
     /**
-     * Clears both bitmap and bytes caches. Useful for cleanup after template processing.
+     * Clears all caches. Useful for cleanup after template processing.
      */
     fun clearCaches() {
         bitmapCache.clear()

@@ -686,4 +686,102 @@ class TemplateMediaManagerTest {
         verify { spyTemplateMediaManager.getImageBitmap(invalidIconUrl) }
         verify { Utils.getAppIcon(mockContext) }
     }
+
+    private fun stubSuccessfulDownload(url: String): Bitmap {
+        val bitmap = Bitmap.createBitmap(120, 60, Bitmap.Config.ARGB_8888)
+        every { mockTemplateRepository.getBitmap(url) } returns
+                DownloadedBitmap(bitmap, DownloadedBitmap.Status.SUCCESS, 1L, null)
+        return bitmap
+    }
+
+    @Test
+    fun `getStyledImageBitmap should return the raw bitmap when styling is inactive`() {
+        // Given
+        val url = "https://example.com/image.png"
+        val raw = stubSuccessfulDownload(url)
+
+        // Then
+        assertSame(raw, templateMediaManager.getStyledImageBitmap(url, null))
+        assertSame(raw, templateMediaManager.getStyledImageBitmap(url, ImageBorderData()))
+        assertSame(
+            raw,
+            templateMediaManager.getStyledImageBitmap(url, ImageBorderData(borderWidthValue = 5f))
+        )
+    }
+
+    @Test
+    fun `getStyledImageBitmap should style a copy and keep the download cached`() {
+        // Given
+        val url = "https://example.com/image.png"
+        val raw = stubSuccessfulDownload(url)
+        val style = ImageBorderData(cornerRadiusPercent = 20f)
+
+        // When
+        val styled = templateMediaManager.getStyledImageBitmap(url, style)
+
+        // Then
+        assertNotNull(styled)
+        assertNotSame(raw, styled)
+        assertSame(raw, templateMediaManager.getImageBitmap(url))
+        verify(exactly = 1) { mockTemplateRepository.getBitmap(url) }
+    }
+
+    @Test
+    fun `getStyledImageBitmap should composite separately for a different style`() {
+        // Given
+        val url = "https://example.com/image.png"
+        stubSuccessfulDownload(url)
+
+        // When
+        val rounded = templateMediaManager.getStyledImageBitmap(url, ImageBorderData(cornerRadiusPercent = 20f))
+        val moreRounded = templateMediaManager.getStyledImageBitmap(url, ImageBorderData(cornerRadiusPercent = 40f))
+
+        // Then
+        assertNotSame(rounded, moreRounded)
+    }
+
+    @Test
+    fun `getStyledImageBitmap should shrink the styled copy to the max height`() {
+        // Given
+        val url = "https://example.com/large.png"
+        val raw = Bitmap.createBitmap(2000, 1000, Bitmap.Config.ARGB_8888)
+        every { mockTemplateRepository.getBitmap(url) } returns
+                DownloadedBitmap(raw, DownloadedBitmap.Status.SUCCESS, 1L, null)
+
+        // When
+        val styled = templateMediaManager.getStyledImageBitmap(
+            url, ImageBorderData(cornerRadiusPercent = 20f), maxHeightPx = 500
+        )
+
+        // Then
+        assertNotNull(styled)
+        assertEquals(500, styled!!.height)
+        assertEquals(1000, styled.width)
+        assertEquals(1000, raw.height)
+        assertSame(raw, templateMediaManager.getImageBitmap(url))
+    }
+
+    @Test
+    fun `getStyledImageBitmap should not shrink the raw bitmap when styling is inactive`() {
+        // Given
+        val url = "https://example.com/large.png"
+        val raw = Bitmap.createBitmap(2000, 1000, Bitmap.Config.ARGB_8888)
+        every { mockTemplateRepository.getBitmap(url) } returns
+                DownloadedBitmap(raw, DownloadedBitmap.Status.SUCCESS, 1L, null)
+
+        // Then
+        assertSame(raw, templateMediaManager.getStyledImageBitmap(url, ImageBorderData(), maxHeightPx = 500))
+    }
+
+    @Test
+    fun `getStyledImageBitmap should return null when the image cannot be fetched`() {
+        // Given
+        val url = "https://example.com/missing.png"
+        every { mockTemplateRepository.getBitmap(url) } returns
+                DownloadedBitmap(null, DownloadedBitmap.Status.DOWNLOAD_FAILED, 1L, null)
+
+        // Then
+        assertNull(templateMediaManager.getStyledImageBitmap(url, ImageBorderData(cornerRadiusPercent = 20f)))
+        assertNull(templateMediaManager.getStyledImageBitmap(null, ImageBorderData(cornerRadiusPercent = 20f)))
+    }
 }

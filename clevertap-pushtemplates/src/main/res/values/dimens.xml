@@ -30,6 +30,10 @@
 
     <dimen name="large_icon">36dp</dimen>
 
+    <!-- Image heights the image styling is resolved against -->
+    <dimen name="pt_image_style_reference">196dp</dimen>
+    <dimen name="pt_image_style_reference_vertical">180dp</dimen>
+
     <dimen name="five_cta_icon_margin">4dp</dimen>
     <dimen name="five_cta_padding">6dp</dimen>
 

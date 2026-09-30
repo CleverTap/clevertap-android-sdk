@@ -226,6 +226,11 @@ public class PTConstants {
     public static final float PT_BTN_BORDER_RADIUS_DEFAULT = 4f;
     public static final float PT_BTN_BORDER_WIDTH_DEFAULT = 1f;
 
+    // Image border configuration (applies to the main notification image across templates)
+    public static final String PT_IMG_BORDER_CLR = "pt_img_border_clr";
+    public static final String PT_IMG_CORNER_RADIUS = "pt_img_corner_radius";
+    public static final String PT_IMG_BORDER_WIDTH = "pt_img_border_width";
+
     // Vertical Image Template - Collapsed button configuration
     public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
     public static final String PT_BTN_BORDER_CLR_COLLAPSED = "pt_btn_border_clr_collapsed";
@@ -256,6 +261,7 @@ public class PTConstants {
             PT_BTN_BORDER_CLR_COLLAPSED,
             PT_BTN_TEXT_CLR_COLLAPSED,
             PT_BTN_GRAD_CLR1_COLLAPSED,
-            PT_BTN_GRAD_CLR2_COLLAPSED);
+            PT_BTN_GRAD_CLR2_COLLAPSED,
+            PT_IMG_BORDER_CLR);
 
 }
