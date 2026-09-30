@@ -636,6 +636,8 @@ Key | Description
 
 A border needs both `pt_img_border_width` and `pt_img_border_clr`; either key alone draws nothing. Values outside the range are clamped to the nearest limit, and values that are not numbers are ignored.
 
+With `center_crop` the values are resolved against a fixed 196dp reference height (180dp for Vertical Image) and the border is drawn around the image, so a translucent colour shows the notification background. With `fit_center` they are resolved against the image's own height and the border is drawn over the image edge, so a translucent colour shows the image.
+
 ## Android 12 Trampoline restrictions
 
 With Android 12, the Rating and Product Display template push notifications do not get dismissed once the deeplink is opened.
