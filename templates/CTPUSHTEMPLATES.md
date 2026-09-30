@@ -636,7 +636,7 @@ Key | Description
 
 A border needs both `pt_img_border_width` and `pt_img_border_clr`; either key alone draws nothing. Values outside the range are clamped to the nearest limit, and values that are not numbers are ignored.
 
-With `center_crop` the values are resolved against a fixed reference height and the border is drawn around the image, so a translucent colour shows the notification background. With `fit_center` they are resolved against the image's own height and the border is drawn over the image edge, so a translucent colour shows the image.
+With `center_crop` the border is drawn around the image. With `fit_center` it is drawn over the image edge.
 
 ## Android 12 Trampoline restrictions
 

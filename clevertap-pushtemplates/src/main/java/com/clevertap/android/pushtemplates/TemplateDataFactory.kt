@@ -228,8 +228,7 @@ internal object TemplateDataFactory {
         return FiveIconsTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
-            // No image styling here: the Five Icons assets are transparent 1:1 glyphs, where a
-            // rectangular corner clip is a no-op and a border frames each glyph individually.
+            // No image styling on this template.
         )
     }
 
@@ -250,8 +249,7 @@ internal object TemplateDataFactory {
             displayActionTextColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR],
             isLinear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
                 ?.equals("true", ignoreCase = true) ?: false,
-            // No image styling on Product Catalog, on either variant - product's decision. The
-            // styling keys are read for other templates but never reach this one.
+            // No image styling on this template.
         )
     }
 

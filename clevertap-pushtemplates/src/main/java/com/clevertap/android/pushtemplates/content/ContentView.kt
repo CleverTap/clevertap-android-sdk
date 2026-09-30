@@ -141,7 +141,7 @@ internal open class ContentView(
         gifFrames: Int,
         imageBorderData: ImageBorderData? = null
     ): Boolean {
-        // GIFs are shown as-is; the corner radius and border only apply to static images.
+        // GIFs are not styled.
         val isGifLoaded = setCustomContentViewGIF(gifUrl, altText, scaleType, gifFrames, layoutId)
         return if (isGifLoaded) {
             true

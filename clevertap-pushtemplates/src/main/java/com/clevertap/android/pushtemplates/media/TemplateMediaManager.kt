@@ -112,11 +112,7 @@ internal class TemplateMediaManager(
 
     }
 
-    /**
-     * Returns the image for [imageUrl] with [border] baked in, no taller than [maxHeightPx]
-     * when that is positive. Each view asks for a styled image once per render, so only the
-     * download is cached.
-     */
+    /** Returns the image for [imageUrl] with [border] applied, or the plain image when there is no styling. */
     fun getStyledImageBitmap(
         imageUrl: String?,
         border: ImageBorderData?,

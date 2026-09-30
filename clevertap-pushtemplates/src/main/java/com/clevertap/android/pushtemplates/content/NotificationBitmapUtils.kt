@@ -129,24 +129,17 @@ internal object NotificationBitmapUtils {
 
     private const val PERCENT_DIVISOR = 100f
 
-    /** Smallest border that is a whole pixel on both the bitmap and the view path. */
+    /** Smallest border width in px. */
     internal const val MIN_BORDER_WIDTH_PX = 1f
 
-    /**
-     * The style reference is a little under the real image height, so the styled copy keeps
-     * some extra rows above it before it is considered oversized.
-     */
+    /** Styled bitmaps may be this much taller than the style reference. */
     internal const val STYLED_IMAGE_HEIGHT_HEADROOM = 1.5f
 
-    /** Tallest styled bitmap worth handing to the view, given the template's style reference. */
+    /** Height cap for styled bitmaps. */
     internal fun resolveStyledImageMaxHeightPx(referencePx: Int): Int =
         (referencePx * STYLED_IMAGE_HEIGHT_HEADROOM).toInt()
 
-    /**
-     * Rounds and borders [source] into a new bitmap. When [maxHeightPx] is positive and the
-     * source is taller, the copy is drawn at that height so the styled bitmap never carries
-     * more pixels than the view can show. The source itself is left untouched.
-     */
+    /** Returns a copy of [source] with the corner radius and border applied. */
     fun applyRoundedBorderToBitmap(
         source: Bitmap,
         border: ImageBorderData,
@@ -235,11 +228,7 @@ internal object NotificationBitmapUtils {
     internal fun resolveCornerRadiusPx(reference: Int, cornerRadiusPercent: Float): Float =
         reference * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / PERCENT_DIVISOR
 
-    /**
-     * Border width in px: `reference * value / 1000`, never below [MIN_BORDER_WIDTH_PX] once a
-     * border is requested. Small values resolve to a fraction of a pixel, which the stroke renders
-     * as a faint smear and the view margin truncates to nothing.
-     */
+    /** Border width in px, at least [MIN_BORDER_WIDTH_PX] when a border is requested. */
     internal fun resolveBorderWidthPx(reference: Int, borderWidthValue: Float): Float {
         if (borderWidthValue <= 0f) {
             return 0f
