@@ -632,7 +632,9 @@ Key | Description
 :---|:---
 `pt_img_corner_radius` | Corner radius as a percentage of the image's height, `0`-`50`. `50` is a fully rounded image. Defaults to `0`
 `pt_img_border_width` | Border width, `0`-`100`. `100` is a tenth of the image's height and any value above `0` draws a border of at least one pixel of the image. Defaults to `0`
-`pt_img_border_clr` | Border color in HEX, `#RRGGBB` or `#AARRGGBB`
+`pt_img_border_clr` | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Supports the `_dark` suffix, see [Dark Mode](#dark-mode)
+
+A border needs both `pt_img_border_width` and `pt_img_border_clr`; either key alone draws nothing. Values outside the range are clamped to the nearest limit, and values that are not numbers are ignored.
 
 ## Android 12 Trampoline restrictions
 
