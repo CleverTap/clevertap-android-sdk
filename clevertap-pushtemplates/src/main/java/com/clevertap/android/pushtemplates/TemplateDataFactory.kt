@@ -72,6 +72,9 @@ import com.clevertap.android.pushtemplates.PTConstants.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.PTConstants.TEXT_ONLY
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_RADIUS
 import com.clevertap.android.pushtemplates.PTConstants.PT_CHRONO_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.PT_IMG_CORNER_RADIUS
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Constants.WZRK_COLOR
@@ -181,7 +184,7 @@ internal object TemplateDataFactory {
     ): BasicTemplateData {
         return BasicTemplateData(
             baseContent = createBaseContent(extras, colorMap),
-            mediaData = createMediaData(extras, defaultAltText),
+            mediaData = createMediaData(extras, defaultAltText, createImageBorderData(extras, colorMap)),
             actions = Utils.getActionKeys(extras)
         )
     }
@@ -218,7 +221,7 @@ internal object TemplateDataFactory {
 
         return RatingTemplateData(
             baseContent = createBaseContent(extras, colorMap),
-            mediaData = createMediaData(extras, defaultAltText),
+            mediaData = createMediaData(extras, defaultAltText, createImageBorderData(extras, colorMap)),
             defaultDeepLink = defaultDeepLink
         )
     }
@@ -231,6 +234,7 @@ internal object TemplateDataFactory {
         return FiveIconsTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
+            // No image styling on this template.
         )
     }
 
@@ -267,7 +271,8 @@ internal object TemplateDataFactory {
             displayActionColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_COLOUR],
             displayActionTextColor = colorMap[PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR],
             isLinear = extras.getString(PT_PRODUCT_DISPLAY_LINEAR)
-                ?.equals("true", ignoreCase = true) ?: false
+                ?.equals("true", ignoreCase = true) ?: false,
+            // No image styling on this template.
         )
     }
 
@@ -291,7 +296,7 @@ internal object TemplateDataFactory {
         colorMap: Map<String, String>,
         defaultAltText: String
     ): TimerTemplateData {
-        val mediaData = createMediaData(extras, defaultAltText)
+        val mediaData = createMediaData(extras, defaultAltText, createImageBorderData(extras, colorMap))
         val timerEnd = Utils.getTimerEnd(extras, System.currentTimeMillis())
         val timerThreshold = Utils.getTimerThreshold(extras)
         val dismissAfter = TimerTemplateHandler.getDismissAfterMs(timerEnd, timerThreshold)
@@ -349,7 +354,7 @@ internal object TemplateDataFactory {
         colorMap: Map<String, String>,
         defaultAltText: String
     ): VerticalImageTemplateData {
-        val mediaData = createMediaData(extras, defaultAltText)
+        val mediaData = createMediaData(extras, defaultAltText, createImageBorderData(extras, colorMap))
         return VerticalImageTemplateData(
             baseContent = createBaseContent(extras, colorMap),
             mediaData = mediaData,
@@ -386,6 +391,20 @@ internal object TemplateDataFactory {
         )
     }
 
+    private fun createImageBorderData(extras: Bundle, colorMap: Map<String, String>): ImageBorderData {
+        if (!useNativeImageStyling) {
+            return ImageBorderData()
+        }
+        return ImageBorderData(
+            cornerRadiusPercent = extras.getStylingValue(PT_IMG_CORNER_RADIUS),
+            borderWidthValue = extras.getStylingValue(PT_IMG_BORDER_WIDTH),
+            borderColor = colorMap[PT_IMG_BORDER_CLR]?.let { Utils.getColourOrNull(it) }
+        )
+    }
+
+    private fun Bundle.getStylingValue(key: String): Float =
+        getString(key)?.toFloatOrNull()?.takeIf { it.isFinite() } ?: 0f
+
     private fun createBaseContent(extras: Bundle, colorMap: Map<String, String>): BaseContent {
         return BaseContent(
             textData = createBaseTextData(extras),
@@ -421,7 +440,11 @@ internal object TemplateDataFactory {
         )
     }
 
-    private fun createMediaData(extras: Bundle, defaultAltText: String): MediaData {
+    private fun createMediaData(
+        extras: Bundle,
+        defaultAltText: String,
+        imageBorderData: ImageBorderData = ImageBorderData()
+    ): MediaData {
         val bigImage = getStringWithFallback(extras, PT_BIG_IMG, Constants.WZRK_BIG_PICTURE)
         val gif = extras.getString(PT_GIF)
 
@@ -434,7 +457,8 @@ internal object TemplateDataFactory {
                 url = gif,
                 numberOfFrames = extras.getString(PT_GIF_FRAMES)?.toIntOrNull() ?: 10
             ),
-            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
+            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE)),
+            imageBorderData = imageBorderData
         )
     }
 
@@ -504,7 +528,8 @@ internal object TemplateDataFactory {
             baseContent = createBaseContent(extras, colorMap),
             actions = Utils.getActionKeys(extras),
             imageList = Utils.getImageDataListFromExtras(extras, defaultAltText),
-            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE))
+            scaleType = PTScaleType.fromString(extras.getString(PT_SCALE_TYPE)),
+            imageBorderData = createImageBorderData(extras, colorMap)
         )
     }
 
@@ -542,7 +567,8 @@ internal object TemplateDataFactory {
                     PT_SCALE_TYPE_ALT,
                     defaultMediaData.scaleType.name
                 )
-            )
+            ),
+            imageBorderData = defaultMediaData.imageBorderData
         )
     }
 

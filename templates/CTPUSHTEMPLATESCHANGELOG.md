@@ -1,4 +1,13 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.6.0 (Unreleased)
+
+#### New Features
+* **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border width (`pt_img_border_width`), and border color (`pt_img_border_clr`) for static images in the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Timer`, and `Image with CTA` templates. Available on Android 12 (API 31) and above.
+
+#### Bug Fixes
+* Fixes the `Manual Carousel` template not moving to the next image in a campaign that has no deep links configured.
+* Fixes the `Image with CTA` template layout so the image is no longer flush against the notification edge.
+
 ### Version 2.5.0 (July 28, 2026)
 
 #### New Features

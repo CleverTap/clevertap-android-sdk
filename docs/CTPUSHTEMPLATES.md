@@ -303,6 +303,9 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
 pt_title_clr | Optional | Title Color in HEX
@@ -331,6 +334,9 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
@@ -361,6 +367,9 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
@@ -383,6 +392,9 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_default_dl | Required  | Default Deep Link for Push Notification
@@ -514,6 +526,9 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_gif_alt | Optional | GIF to show when timer expires
 pt_gif_frames_alt | Optional | Number of frames to extract from the alternate GIF
@@ -657,6 +672,19 @@ Templates support **custom color definitions** that adapt to both themes for vis
 To use the Image scaling feature, ensure you are using Push Templates SDK version 2.1.0 and above.
 Android supports various image scaling options to control how images appear in push notifications. CleverTap optimizes image rendering to maintain visual consistency across devices while leveraging Android native scaling behavior. 
 To handle scaling in a Push template, you must add the key `pt_scale_type` key and the value is set as `fit_center` or `center_crop` based on the requirement. Refer [here](https://developer.clevertap.com/docs/android-push-templates#image-scaling) for more details
+
+## Image Border and Rounded Corners
+Supported on the Basic, Auto Carousel, Manual Carousel, Rating, Timer and Image with CTA templates on Android 12 (API 31) and above. Applies to static images only; GIFs are shown without the corner radius or border.
+
+Key | Description
+:---|:---
+`pt_img_corner_radius` | Corner radius as a percentage of the image's height
+`pt_img_border_width` | Border width relative to the image's height
+`pt_img_border_clr` | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Supports the `_dark` suffix, see [Dark Mode](#dark-mode)
+
+A border needs both `pt_img_border_width` and `pt_img_border_clr`; either key alone draws nothing. Values outside the range are clamped to the nearest limit, and values that are not numbers are ignored.
+
+With `center_crop` the border is drawn around the image. With `fit_center` it is drawn over the image edge.
 
 ## Android 12 Trampoline restrictions
 

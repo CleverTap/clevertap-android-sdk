@@ -23,7 +23,8 @@ internal class TimerBigContentView(
             data.mediaData.bigImage.url,
             data.mediaData.scaleType,
             data.mediaData.bigImage.altText,
-            data.mediaData.gif.numberOfFrames
+            data.mediaData.gif.numberOfFrames,
+            data.mediaData.imageBorderData
         )
     }
 }

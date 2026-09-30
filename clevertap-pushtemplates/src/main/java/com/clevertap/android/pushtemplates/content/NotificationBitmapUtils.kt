@@ -1,14 +1,18 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.graphics.Bitmap
+import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import androidx.core.graphics.createBitmap
+import com.clevertap.android.pushtemplates.ImageBorderData
+import com.clevertap.android.pushtemplates.PTLog
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -114,5 +118,122 @@ internal object NotificationBitmapUtils {
         }
     }
 
+    /** Chronometer/button backgrounds fall back to this when the payload omits a border width. */
     private const val BORDER_STROKE_RATIO = 0.10f
+
+    internal const val MAX_CORNER_RADIUS_PERCENT = 50f
+
+    internal const val MAX_BORDER_WIDTH_VALUE = 100f
+
+    internal const val BORDER_WIDTH_DIVISOR = 1000f
+
+    private const val PERCENT_DIVISOR = 100f
+
+    /** Smallest border width in px. */
+    internal const val MIN_BORDER_WIDTH_PX = 1f
+
+    /** Styled bitmaps may be this much taller than the style reference. */
+    internal const val STYLED_IMAGE_HEIGHT_HEADROOM = 1.5f
+
+    /** Height cap for styled bitmaps. */
+    internal fun resolveStyledImageMaxHeightPx(referencePx: Int): Int =
+        (referencePx * STYLED_IMAGE_HEIGHT_HEADROOM).toInt()
+
+    /** Returns a copy of [source] with the corner radius and border applied. */
+    fun applyRoundedBorderToBitmap(
+        source: Bitmap,
+        border: ImageBorderData,
+        maxHeightPx: Int = 0
+    ): Bitmap {
+        val sourceWidth = source.width
+        val sourceHeight = source.height
+        if (sourceWidth <= 0 || sourceHeight <= 0 || !border.isActive) {
+            return source
+        }
+
+        val scale = if (maxHeightPx in 1 until sourceHeight) {
+            maxHeightPx / sourceHeight.toFloat()
+        } else {
+            1f
+        }
+        val width = (sourceWidth * scale).toInt().coerceAtLeast(1)
+        val height = (sourceHeight * scale).toInt().coerceAtLeast(1)
+
+        logStyledImageScale(source, maxHeightPx, scale, width, height)
+
+        // Keep the stroke and radius within half the shorter side for portrait images.
+        val halfShortSide = minOf(width, height) / 2f
+        val strokeWidth = if (border.hasBorder) {
+            resolveBorderWidthPx(height, border.borderWidthValue).coerceAtMost(halfShortSide)
+        } else {
+            0f
+        }
+        val safeRadius = resolveCornerRadiusPx(height, border.cornerRadiusPercent)
+            .coerceAtMost(halfShortSide)
+
+        PTLog.debug(
+            "Image styling on ${width}x$height bitmap: corner radius " +
+                    "${border.cornerRadiusPercent}% -> ${safeRadius}px, border width " +
+                    "${border.borderWidthValue} -> ${strokeWidth}px"
+        )
+
+        val output = createBitmap(width, height)
+        val canvas = Canvas(output)
+
+        val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            shader = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+                if (scale != 1f) {
+                    setLocalMatrix(Matrix().apply { setScale(scale, scale) })
+                }
+            }
+        }
+        canvas.drawRoundRect(
+            RectF(0f, 0f, width.toFloat(), height.toFloat()),
+            safeRadius, safeRadius, imagePaint
+        )
+
+        val strokeColor = border.borderColor
+        if (strokeWidth > 0f && strokeColor != null) {
+            // The stroke is centred on the rect, so inset by half its width to keep it inside.
+            val halfStroke = strokeWidth / 2f
+            val borderRadius = (safeRadius - halfStroke).coerceAtLeast(0f)
+            val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                this.strokeWidth = strokeWidth
+                color = strokeColor
+            }
+            canvas.drawRoundRect(
+                RectF(halfStroke, halfStroke, width - halfStroke, height - halfStroke),
+                borderRadius, borderRadius, borderPaint
+            )
+        }
+
+        return output
+    }
+
+    private fun logStyledImageScale(source: Bitmap, maxHeightPx: Int, scale: Float, width: Int, height: Int) {
+        if (scale != 1f) {
+            PTLog.debug(
+                "Styled image is taller than the ${maxHeightPx}px cap, drawing the copy at " +
+                        "${width}x$height instead of ${source.width}x${source.height} (scale $scale)"
+            )
+        } else if (maxHeightPx > 0) {
+            PTLog.verbose(
+                "Styled image ${source.width}x${source.height} is within the ${maxHeightPx}px cap, " +
+                        "drawing the copy at full size"
+            )
+        }
+    }
+
+    internal fun resolveCornerRadiusPx(reference: Int, cornerRadiusPercent: Float): Float =
+        reference * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / PERCENT_DIVISOR
+
+    /** Border width in px, at least [MIN_BORDER_WIDTH_PX] when a border is requested. */
+    internal fun resolveBorderWidthPx(reference: Int, borderWidthValue: Float): Float {
+        if (borderWidthValue <= 0f) {
+            return 0f
+        }
+        val px = reference * borderWidthValue.coerceAtMost(MAX_BORDER_WIDTH_VALUE) / BORDER_WIDTH_DIVISOR
+        return px.coerceAtLeast(MIN_BORDER_WIDTH_PX)
+    }
 }
