@@ -324,6 +324,20 @@ class NotificationBitmapUtilsTest {
     }
 
     @Test
+    fun `resolveBorderWidthPx should stay zero when no border is requested`() {
+        assertEquals(0f, NotificationBitmapUtils.resolveBorderWidthPx(1000, 0f))
+    }
+
+    @Test
+    fun `resolveBorderWidthPx should never drop below one pixel once a border is requested`() {
+        // 600 * 1 / 1000 = 0.6px would render as a faint smear, so it is lifted to a whole pixel.
+        assertEquals(1f, NotificationBitmapUtils.resolveBorderWidthPx(600, 1f))
+        assertEquals(1f, NotificationBitmapUtils.resolveBorderWidthPx(600, 0.5f))
+        // Anything already at or above a pixel is left alone.
+        assertEquals(1.2f, NotificationBitmapUtils.resolveBorderWidthPx(600, 2f), 0.0001f)
+    }
+
+    @Test
     fun `a fully rounded radius still leaves room for a capped border stroke`() {
         // Given
         val reference = 200

@@ -631,7 +631,7 @@ Supported on the Basic, Auto Carousel, Manual Carousel, Rating, Timer and Image 
 Key | Description
 :---|:---
 `pt_img_corner_radius` | Corner radius as a percentage of the image's height, `0`-`50`. `50` is a fully rounded image. Defaults to `0`
-`pt_img_border_width` | Border width, `0`-`100`. `100` is a tenth of the image's height. Defaults to `0`
+`pt_img_border_width` | Border width, `0`-`100`. `100` is a tenth of the image's height and any value above `0` draws a border of at least one pixel of the image. Defaults to `0`
 `pt_img_border_clr` | Border color in HEX, `#RRGGBB` or `#AARRGGBB`
 
 ## Android 12 Trampoline restrictions

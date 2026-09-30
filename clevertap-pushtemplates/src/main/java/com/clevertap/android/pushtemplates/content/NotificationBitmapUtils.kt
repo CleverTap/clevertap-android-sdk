@@ -126,6 +126,9 @@ internal object NotificationBitmapUtils {
 
     internal const val BORDER_WIDTH_DIVISOR = 1000f
 
+    /** Smallest border that is a whole pixel on both the bitmap and the view path. */
+    internal const val MIN_BORDER_WIDTH_PX = 1f
+
     fun applyRoundedBorderToBitmap(source: Bitmap, border: ImageBorderData): Bitmap {
         val width = source.width
         val height = source.height
@@ -181,7 +184,16 @@ internal object NotificationBitmapUtils {
     internal fun resolveCornerRadiusPx(reference: Int, cornerRadiusPercent: Float): Float =
         reference * cornerRadiusPercent.coerceIn(0f, MAX_CORNER_RADIUS_PERCENT) / 100f
 
-    /** Border width in px: `reference * value / 1000`. */
-    internal fun resolveBorderWidthPx(reference: Int, borderWidthValue: Float): Float =
-        reference * borderWidthValue.coerceIn(0f, MAX_BORDER_WIDTH_VALUE) / BORDER_WIDTH_DIVISOR
+    /**
+     * Border width in px: `reference * value / 1000`, never below [MIN_BORDER_WIDTH_PX] once a
+     * border is requested. Small values resolve to a fraction of a pixel, which the stroke renders
+     * as a faint smear and the view margin truncates to nothing.
+     */
+    internal fun resolveBorderWidthPx(reference: Int, borderWidthValue: Float): Float {
+        if (borderWidthValue <= 0f) {
+            return 0f
+        }
+        val px = reference * borderWidthValue.coerceAtMost(MAX_BORDER_WIDTH_VALUE) / BORDER_WIDTH_DIVISOR
+        return px.coerceAtLeast(MIN_BORDER_WIDTH_PX)
+    }
 }
