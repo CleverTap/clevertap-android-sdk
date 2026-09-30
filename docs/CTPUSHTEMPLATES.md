@@ -167,7 +167,9 @@ Icons template is a push notification that shows a row of up to 5 icons, with an
 
 The collapsed notification shows only the icons. The expanded notification shows the text and the icons, with `pt_msg_summary` in the message line when set.
 
-The SDK does not dismiss the notification on an icon tap. Dismiss it in the app with the `dismissNotification` snippet from the Input Box template below, on all Android versions. By default an icon tap dismisses the notification; set `pt_dismiss_on_click` to `false` to keep it.
+Icon taps open the deep link in the app. The SDK does not dismiss the notification on its own.
+
+To dismiss it on tap, add the `dismissNotification` snippet from the Input Box template to your Activity. Only the snippet code is needed; the Input Box note about `false` and Android 12 does not apply here. With the snippet in place, an icon tap dismisses the notification by default. Send `pt_dismiss_on_click` as `false` to keep it open.
 
 If the payload does not contain enough valid icon/deeplink data, or if 3 or more icon images are not retrieved at render time, the library falls back to a basic notification using the available title and message content.
 
