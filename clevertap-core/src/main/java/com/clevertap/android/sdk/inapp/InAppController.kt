@@ -783,6 +783,14 @@ internal class InAppController(
         appLaunchArbitrator.onContentFetchComplete()
     }
 
+    /**
+     * Discards any open app-launch arbitration window WITHOUT showing its buffered winner. Called on
+     * user switch so the previous user's held app-launch in-app is never shown to the new user.
+     */
+    fun abandonAppLaunchArbitration() {
+        appLaunchArbitrator.abandon()
+    }
+
     fun onAppLaunchServerSideInactionInAppsResponse(
         appLaunchServerSideInactionInApps: List<JSONObject>,
         userLocation: Location?

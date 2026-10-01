@@ -178,6 +178,13 @@ internal class AppLaunchInAppArbitrator(
     // signal ever arrives. No-op if completion already tore it down.
     private fun forceTeardown(reason: String) = teardown(reason)
 
+    /**
+     * Discard the window entirely WITHOUT showing anything — the buffered winner is dropped, not
+     * displayed. Used on user switch (onUserLogin): the buffered app-launch in-app belongs to the
+     * previous user and must never be shown to the new one. Idempotent.
+     */
+    fun abandon() = teardown("user switch")
+
     // Resets to the no-window state. Idempotent under [lock].
     private fun teardown(reason: String) = synchronized(lock) {
         if (phase == null) return // already torn down
