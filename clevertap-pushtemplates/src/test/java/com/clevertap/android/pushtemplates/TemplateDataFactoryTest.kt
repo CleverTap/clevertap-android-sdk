@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates
 import android.os.Build
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants.*
+import com.clevertap.android.pushtemplates.content.NotificationBitmapUtils
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
 import io.mockk.*
@@ -231,6 +232,85 @@ class TemplateDataFactoryTest {
         assertEquals(imageList, fiveIconsData.imageList)
         assertEquals(deepLinkList, fiveIconsData.baseContent.deepLinkList)
         assertEquals(SAMPLE_TITLE, fiveIconsData.baseContent.textData.title)
+    }
+
+    @Test
+    fun `createTemplateData should not fall back to nt-nm for ICONS icon text`() {
+        // Given - pt_title/pt_msg unset, nt/nm set
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TITLE) } returns null
+        every { mockBundle.getString(PT_MSG) } returns null
+        every { mockBundle.getString(PT_MSG_SUMMARY) } returns null
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then - no icon text
+        val iconsData = result as IconsTemplateData
+        assertNull(iconsData.iconTextData.title)
+        assertNull(iconsData.iconTextData.message)
+        assertNull(iconsData.iconTextData.messageSummary)
+        // but baseContent keeps the nt/nm fallback
+        assertEquals(SAMPLE_TITLE, iconsData.baseContent.textData.title)
+        assertEquals(SAMPLE_MESSAGE, iconsData.baseContent.textData.message)
+        assertEquals(SAMPLE_SUMMARY, iconsData.baseContent.textData.messageSummary)
+    }
+
+    @Test
+    fun `createTemplateData should treat empty pt text keys as absent for ICONS icon text`() {
+        // Given - empty pt text keys
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_TITLE) } returns ""
+        every { mockBundle.getString(PT_MSG) } returns ""
+        every { mockBundle.getString(PT_MSG_SUMMARY) } returns ""
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then - treated as absent
+        val iconsData = result as IconsTemplateData
+        assertNull(iconsData.iconTextData.title)
+        assertNull(iconsData.iconTextData.message)
+        assertNull(iconsData.iconTextData.messageSummary)
+    }
+
+    @Test
+    fun `createTemplateData should use pt_title pt_msg and pt_msg_summary for ICONS icon text`() {
+        // Given
+        setupBasicMockBundle()
+        every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
+        every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf("dl1")
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        )
+
+        // Then
+        val iconsData = result as IconsTemplateData
+        assertEquals(SAMPLE_TITLE, iconsData.iconTextData.title)
+        assertEquals(SAMPLE_MESSAGE, iconsData.iconTextData.message)
+        assertEquals(SAMPLE_SUMMARY, iconsData.iconTextData.messageSummary)
     }
 
     @Test
@@ -2431,5 +2511,397 @@ class TemplateDataFactoryTest {
         val collapsedButtonData = result.collapsedButtonData ?: error("collapsedButtonData should not be null")
         assertEquals(PT_BTN_BORDER_RADIUS_DEFAULT, collapsedButtonData.borderRadius)
         assertEquals(PT_BTN_BORDER_WIDTH_DEFAULT, collapsedButtonData.borderWidth)
+    }
+
+    private fun stubBorderColor(color: String?) {
+        every { Utils.createColorMap(any(), any()) } returns mapOf(
+            PT_TITLE_COLOR to SAMPLE_COLOR,
+            PT_MSG_COLOR to SAMPLE_COLOR,
+            PT_BG to SAMPLE_COLOR,
+            PT_IMG_BORDER_CLR to color
+        )
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should parse corner radius border width and colour`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "12"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "6"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertTrue(border.isActive)
+        assertEquals(android.graphics.Color.RED, border.borderColor)
+        assertEquals(12f, border.cornerRadiusPercent)
+        assertEquals(6f, border.borderWidthValue)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should be inactive when no border keys are present`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns null
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertFalse(border.isActive)
+        assertNull(border.borderColor)
+        assertEquals(0f, border.cornerRadiusPercent)
+        assertEquals(0f, border.borderWidthValue)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should stay inactive when the colour cannot be parsed`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor("not-a-colour")
+        every { Utils.getColourOrNull("not-a-colour") } returns null
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns null
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertNull(border.borderColor)
+        assertFalse(border.isActive)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should default corner radius to zero for a non numeric value`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "abc"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "xyz"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertEquals(0f, border.cornerRadiusPercent)
+        assertEquals(0f, border.borderWidthValue)
+        assertFalse(border.isActive)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should be active with only a corner radius`() {
+        // Given
+        setupBasicMockBundle()
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "20"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        val border = result.mediaData.imageBorderData
+        assertTrue(border.isActive)
+        assertEquals(20f, border.cornerRadiusPercent)
+        assertNull(border.borderColor)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should use the dark mode colour when the device is in dark mode`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor("#00FF00")
+        every { Utils.getColourOrNull("#00FF00") } returns android.graphics.Color.GREEN
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "8"
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = true,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        assertEquals(android.graphics.Color.GREEN, result.mediaData.imageBorderData.borderColor)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should reach templates that build their own media data`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "15"
+
+        // When
+        val carousel = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.AUTO_CAROUSEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as AutoCarouselTemplateData
+
+        // Then
+        assertEquals(15f, carousel.carouselData.imageBorderData.cornerRadiusPercent)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `product catalog should not carry any image styling`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "15"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "8"
+
+        // When / Then
+        listOf("true", "false").forEach { linear ->
+            every { mockBundle.getString(PT_PRODUCT_DISPLAY_LINEAR) } returns linear
+            val product = TemplateDataFactory.createTemplateData(
+                templateType = TemplateType.PRODUCT_DISPLAY,
+                extras = mockBundle,
+                isDarkMode = false,
+                defaultAltText = defaultAltText,
+                notificationIdsProvider = notificationIdsProvider
+            ) as ProductTemplateData
+            assertEquals("linear=$linear", linear == "true", product.isLinear)
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `border needs both a width and a colour`() {
+        // Given / Then
+        val widthOnly = ImageBorderData(borderWidthValue = 6f, borderColor = null)
+        assertFalse("a width with no colour must not draw", widthOnly.hasBorder)
+        assertFalse(widthOnly.isActive)
+
+        val colourOnly = ImageBorderData(borderWidthValue = 0f, borderColor = android.graphics.Color.RED)
+        assertFalse("a colour with no width must not draw", colourOnly.hasBorder)
+        assertFalse(colourOnly.isActive)
+
+        val pair = ImageBorderData(borderWidthValue = 6f, borderColor = android.graphics.Color.RED)
+        assertTrue(pair.hasBorder)
+        assertTrue(pair.isActive)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `a corner radius activates styling on its own`() {
+        // Given
+        val radiusOnly = ImageBorderData(cornerRadiusPercent = 10f)
+
+        // Then
+        assertTrue(radiusOnly.isActive)
+        assertFalse(radiusOnly.hasBorder)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should default the border width to zero rather than inventing one`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns null
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        assertEquals(0f, result.mediaData.imageBorderData.borderWidthValue)
+        assertFalse(result.mediaData.imageBorderData.hasBorder)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `createImageBorderData should ignore non finite sizes`() {
+        // Given
+        listOf("abc", "12px", "", "NaN", "Infinity", "-Infinity").forEach { raw ->
+            setupBasicMockBundle()
+            every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns raw
+            every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns raw
+
+            // When
+            val result = TemplateDataFactory.createTemplateData(
+                templateType = TemplateType.BASIC,
+                extras = mockBundle,
+                isDarkMode = false,
+                defaultAltText = defaultAltText,
+                notificationIdsProvider = notificationIdsProvider
+            ) as BasicTemplateData
+
+            // Then
+            val border = result.mediaData.imageBorderData
+            assertEquals("radius for '$raw'", 0f, border.cornerRadiusPercent)
+            assertEquals("width for '$raw'", 0f, border.borderWidthValue)
+            assertFalse("'$raw' must not activate styling", border.isActive)
+        }
+    }
+
+    @Test
+    fun `five icons template should not carry any image styling`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "15"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "8"
+
+        // When
+        val fiveIcons = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.FIVE_ICONS,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as FiveIconsTemplateData
+
+        // Then
+        assertTrue(
+            "FiveIconsTemplateData must not expose image styling",
+            fiveIcons::class.java.declaredFields.none { it.name.contains("imageBorder") }
+        )
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S]) // image styling is an API 31+ feature
+    fun `zero bezel should ignore the image styling keys on both expanded and collapsed media`() {
+        // Given
+        setupBasicMockBundle()
+        stubBorderColor(SAMPLE_COLOR)
+        every { Utils.getColourOrNull(SAMPLE_COLOR) } returns android.graphics.Color.RED
+        every { mockBundle.getString(PT_IMG_CORNER_RADIUS) } returns "18"
+        every { mockBundle.getString(PT_IMG_BORDER_WIDTH) } returns "5"
+        every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns SAMPLE_IMAGE_URL
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.ZERO_BEZEL,
+            extras = mockBundle,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as ZeroBezelTemplateData
+
+        // Then
+        assertEquals(ImageBorderData(), result.mediaData.imageBorderData)
+        assertEquals(ImageBorderData(), result.collapsedMediaData.imageBorderData)
+    }
+
+    @Test
+    fun `below API 31 the image styling keys are ignored and the scale type is untouched`() {
+        // Given
+        val extras = Bundle().apply {
+            putString(PT_ID, "pt_basic")
+            putString(PT_TITLE, "t"); putString(PT_MSG, "m")
+            putString(PT_IMG_CORNER_RADIUS, "20")
+            putString(PT_IMG_BORDER_WIDTH, "5")
+            putString(PT_IMG_BORDER_CLR, "#FF0000")
+            putString(PT_SCALE_TYPE, "center_crop")
+        }
+
+        // When
+        val result = TemplateDataFactory.createTemplateData(
+            templateType = TemplateType.BASIC,
+            extras = extras,
+            isDarkMode = false,
+            defaultAltText = defaultAltText,
+            notificationIdsProvider = notificationIdsProvider
+        ) as BasicTemplateData
+
+        // Then
+        assertFalse(result.mediaData.imageBorderData.isActive)
+        assertEquals(PTScaleType.CENTER_CROP, result.mediaData.scaleType)
+        assertFalse(PTScaleType.CENTER_CROP.usesNativeImageStyling())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S])
+    fun `on API 31 CENTER_CROP styling moves to the views while FIT_CENTER bakes`() {
+        // Given
+        val active = ImageBorderData(cornerRadiusPercent = 10f)
+
+        // Then
+        assertTrue(PTScaleType.CENTER_CROP.usesNativeImageStyling())
+        assertNull(active.bakedInto(PTScaleType.CENTER_CROP))
+        assertFalse(PTScaleType.FIT_CENTER.usesNativeImageStyling())
+        assertEquals(active, active.bakedInto(PTScaleType.FIT_CENTER))
+        assertNull(null.bakedInto(PTScaleType.FIT_CENTER))
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S])
+    fun `baked sizes resolve against the picture's height, not its shortest side`() {
+        // Given
+        val portraitHeight = 300
+        val landscapeHeight = 200
+
+        // Then
+        assertEquals(
+            30f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 10f)
+        )
+        assertEquals(
+            20f, NotificationBitmapUtils.resolveCornerRadiusPx(landscapeHeight, 10f)
+        )
+        assertEquals(
+            portraitHeight * 0.5f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 90f)
+        )
+        assertEquals(
+            portraitHeight * 0.1f, NotificationBitmapUtils.resolveBorderWidthPx(portraitHeight, 400f)
+        )
     }
 }

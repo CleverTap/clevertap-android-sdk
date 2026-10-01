@@ -31,10 +31,45 @@ internal data class BaseTextData(
     val subtitle: String? = null,
 )
 
+internal data class ImageBorderData(
+    val cornerRadiusPercent: Float = 0f,
+    val borderWidthValue: Float = 0f,
+    val borderColor: Int? = null,
+) {
+
+    val hasBorder: Boolean get() = borderWidthValue > 0f && borderColor != null
+
+    val isActive: Boolean get() = cornerRadiusPercent > 0f || hasBorder
+}
+
+/**
+ * Image styling needs the RemoteViews outline and margin setters added in API 31.
+ */
+internal val useNativeImageStyling: Boolean
+    get() = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+
+/**
+ * CENTER_CROP images are styled by the views, FIT_CENTER images by baking into the bitmap.
+ */
+internal fun PTScaleType.usesNativeImageStyling(): Boolean =
+    useNativeImageStyling && this == PTScaleType.CENTER_CROP
+
+/**
+ * Styling to bake into the bitmap, or null when the views draw it or the OS is below API 31.
+ */
+internal fun ImageBorderData?.bakedInto(scaleType: PTScaleType): ImageBorderData? {
+    return if (this != null && useNativeImageStyling && !scaleType.usesNativeImageStyling()) {
+        this
+    } else {
+        null
+    }
+}
+
 internal data class MediaData(
     val bigImage: ImageData,
     val gif: GifData,
     val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
+    val imageBorderData: ImageBorderData = ImageBorderData(),
 )
 
 internal data class IconData(
@@ -66,6 +101,7 @@ internal data class CarouselData(
     val actions: JSONArray? = null,
     val imageList: ArrayList<ImageData>,
     val scaleType: PTScaleType = PTScaleType.CENTER_CROP,
+    val imageBorderData: ImageBorderData = ImageBorderData(),
 )
 
 internal data class BasicTemplateData(
@@ -79,6 +115,16 @@ internal data class FiveIconsTemplateData(
     override val templateType: TemplateType = TemplateType.FIVE_ICONS,
     val baseContent: BaseContent,
     val imageList: ArrayList<ImageData>,
+) : TemplateData()
+
+internal data class IconsTemplateData(
+    override val templateType: TemplateType = TemplateType.ICONS,
+    val baseContent: BaseContent,
+    val imageList: ArrayList<ImageData>,
+    /**
+     * pt_* text only, no nt/nm fallback. baseContent keeps the fallback for the basic template.
+     */
+    val iconTextData: BaseTextData,
 ) : TemplateData()
 
 internal data class ManualCarouselTemplateData(
