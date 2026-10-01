@@ -329,6 +329,13 @@ carries the rules. Unlike in-app there is **no single-winner selection** — eve
 `DisplayUnitListener`. Units with no inline rules (simple campaigns) pass through untouched. CG-suppressed
 stubs are excluded from this filter and acked separately via `recordCgSuppressed`.
 
+**Global cap on App-Launched — SDK-enforced.** For regular per-event delivery the server trims to the
+remaining global budget using the reported `ndmp`. App-Launched is server-ships-all / SDK-decides, so the
+SDK enforces the account global caps itself: after the `whenLimits` filter, `DisplayUnitResponse` trims the
+surviving batch to `NdFCManager.globalCapRemaining()` = `min(ndmp − shownToday, ndmc − sessionTotal)`,
+consuming units in (server-sorted) order. Units exempt via `efc`/`excludeGlobalFCaps` bypass the trim. The
+budget base is the *viewed* count (`shownToday`/session-total), matching the server's `ndmp` semantics.
+
 ### 7.3 App-Launched vs regular-event dispatch (server-side, for SDK context)
 - **App-Launched:** union of app-launched + no-trigger ND targets, sorted priority DESC then ti ASC.
   Journey wins alone (→ `adUnit_notifs`); otherwise campaign lock-in delivers one-or-more campaigns

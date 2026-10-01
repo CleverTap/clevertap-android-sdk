@@ -54,6 +54,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
         ndStore = mockk(relaxed = true)
         ndImpressionStore = mockk(relaxed = true)
         ndFCManager = mockk(relaxed = true)
+        every { ndFCManager.globalCapRemaining() } returns Int.MAX_VALUE // uncapped by default; tests override
         ndTriggerManager = mockk(relaxed = true)
         ndEvaluationManager = mockk(relaxed = true)
         cache = mockk(relaxed = true)
@@ -153,6 +154,49 @@ class DisplayUnitResponseTest : BaseTestCase() {
         verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
         assertEquals(1, slot.captured.size)                     // only the survivor is delivered
         assertEquals("70001_20260810", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `app-launched batch is trimmed to the remaining global cap`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70001,"wzrk_id":"70001_x","type":"simple"},
+                {"ti":70002,"wzrk_id":"70002_x","type":"simple"},
+                {"ti":70003,"wzrk_id":"70003_x","type":"simple"}
+            ]}"""
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers { firstArg() } // all pass whenLimits
+        every { ndFCManager.globalCapRemaining() } returns 1 // only 1 left under the global cap (e.g. 5 cap, 4 shown)
+
+        response.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size) // trimmed to the remaining budget, in server order
+        assertEquals("70001_x", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `app-launched units exempt via excludeGlobalFCaps bypass the global-cap trim`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70001,"wzrk_id":"70001_x","type":"simple"},
+                {"ti":70002,"wzrk_id":"70002_x","type":"simple","excludeGlobalFCaps":1}
+            ]}"""
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers { firstArg() }
+        every { ndFCManager.globalCapRemaining() } returns 0 // no global budget left
+        // 70002 is fcap-managed (carries excludeGlobalFCaps) so it also hits NdFcapGate.canShow; in prod an
+        // exempt unit returns true there, so mirror that (the relaxed mock would otherwise return false).
+        every { ndFCManager.canShow(any(), any(), any(), any(), any(), any()) } returns true
+
+        response.processResponse(json, "", context)
+
+        // 70001 dropped (no budget), but 70002 delivers because it's exempt from global caps.
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)
+        assertEquals("70002_x", slot.captured[0].unitID)
     }
 
     @Test

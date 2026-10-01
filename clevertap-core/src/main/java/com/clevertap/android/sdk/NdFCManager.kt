@@ -137,6 +137,19 @@ class NdFCManager internal constructor(
     val shownTodayCount: Int
         get() = countsStore?.shownToday ?: 0
 
+    /**
+     * Remaining account-level global budget: the lower of the daily (`ndmp` − shownToday) and session
+     * (`ndmc` − session-total) headroom, floored at 0. Used by the App-Launched content-in-advance path —
+     * where the SDK (not the server) decides how many units to surface — to trim a batch to the remaining
+     * global allowance. Returns [Int.MAX_VALUE] (no cap) before the store is ready.
+     */
+    fun globalCapRemaining(): Int {
+        val store = countsStore ?: return Int.MAX_VALUE
+        val dailyRemaining = store.maxPerDay - store.shownToday
+        val sessionRemaining = store.maxPerSession - impressionManager.perSessionTotal()
+        return maxOf(0, minOf(dailyRemaining, sessionRemaining))
+    }
+
     /** The `ndtlc` array: `[[targetId, todayCount, lifetimeCount], ...]`, or null on failure. */
     fun getNdCounts(): JSONArray? {
         return try {

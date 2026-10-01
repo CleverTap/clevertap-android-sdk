@@ -77,6 +77,26 @@ class NdFCManagerTest : BaseTestCase() {
         assertEquals(2, entry.getInt(2)) // lifetime
     }
 
+    @Test
+    fun `globalCapRemaining is the lower of daily and session headroom`() {
+        val fc = create()
+        fc.updateLimits(10, 3) // ndmp=10 daily, ndmc=3 session; impressionManager.perSessionTotal()->0
+        assertEquals(3, fc.globalCapRemaining()) // min(10-0, 3-0) = 3, session binds
+
+        fc.didShow("70001")
+        fc.didShow("70001") // shownToday=2
+        assertEquals(3, fc.globalCapRemaining()) // min(10-2=8, 3-0=3) = 3, session still binds
+    }
+
+    @Test
+    fun `globalCapRemaining lets the daily cap bind and floors at zero`() {
+        val fc = create()
+        fc.updateLimits(2, 100) // daily 2 binds
+        fc.didShow("a")
+        fc.didShow("b") // shownToday=2
+        assertEquals(0, fc.globalCapRemaining()) // min(2-2=0, 100-0) = 0
+    }
+
     private fun create(deviceId: String = "deviceId"): NdFCManager {
         // Real counts store (its own prefs file); only the registry locator is mocked to hand it back —
         // the manager exercises the real counting logic, matching how NdStoreProvider supplies it in prod.

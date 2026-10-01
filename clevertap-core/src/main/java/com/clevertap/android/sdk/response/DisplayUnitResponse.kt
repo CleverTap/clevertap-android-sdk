@@ -228,12 +228,38 @@ internal class DisplayUnitResponse(
             nonSuppressed.add(entry)
         }
         val evaluator = ndEvaluationManager ?: return nonSuppressed // preview path: no caps to apply
-        return try {
+        val withinWhenLimits = try {
             evaluator.retainAppLaunchedWithinLimits(nonSuppressed)
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND whenLimits filter failed; dropping App-Launched units", t)
             emptyList() // fail-closed: don't let un-cap-checked units through
         }
+        return trimToGlobalCap(withinWhenLimits)
+    }
+
+    /**
+     * Trims the App-Launched batch to the remaining account-level global budget (`ndmp` daily + `ndmc`
+     * session). App-Launched is server-ships-all / SDK-decides, so — unlike regular events, where the
+     * server trims using the reported `ndmp` — the SDK enforces the global cap here. Units are consumed in
+     * server order (already priority-sorted); those exempt via `efc`/`excludeGlobalFCaps` bypass the budget.
+     */
+    private fun trimToGlobalCap(units: List<JSONObject>): List<JSONObject> {
+        val ndFCManager = controllerManager.ndFCManager ?: return units
+        var remaining = ndFCManager.globalCapRemaining()
+        val kept = ArrayList<JSONObject>(units.size)
+        for (unit in units) {
+            val exempt = unit.optInt(Constants.KEY_EFC, -1) == 1 ||
+                unit.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1
+            when {
+                exempt -> kept.add(unit)
+                remaining > 0 -> { kept.add(unit); remaining-- }
+                else -> logger.verbose(
+                    config.accountId,
+                    "${Constants.FEATURE_DISPLAY_UNIT}App-Launched ND unit dropped: global cap reached",
+                )
+            }
+        }
+        return kept
     }
 
     private fun parseDisplayUnitsFromJson(messages: JSONArray): List<CleverTapDisplayUnit> {
