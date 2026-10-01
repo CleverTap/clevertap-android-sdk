@@ -15,7 +15,8 @@ import java.lang.ref.WeakReference
 class TriggerManager(
     context: Context,
     private val accountId: String,
-    private val deviceInfo: DeviceInfo
+    private val deviceInfo: DeviceInfo,
+    private val namespace: String = Constants.KEY_TRIGGERS_PER_INAPP
 ) {
     companion object {
         const val PREF_PREFIX = "__triggers"
@@ -84,7 +85,7 @@ class TriggerManager(
      * @return The SharedPreferences instance, or null if the context reference is null.
      */
     fun sharedPrefs(): SharedPreferences? {
-        val prefName = "${Constants.KEY_TRIGGERS_PER_INAPP}:${deviceInfo.deviceID}:$accountId"
+        val prefName = "$namespace:${deviceInfo.deviceID}:$accountId"
         val context = contextRef.get() ?: return null
         return StorageHelper.getPreferences(context, prefName)
     }

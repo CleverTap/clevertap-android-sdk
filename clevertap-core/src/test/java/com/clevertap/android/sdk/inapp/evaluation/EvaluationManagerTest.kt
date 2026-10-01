@@ -1610,8 +1610,8 @@ class EvaluationManagerTest : BaseTestCase() {
             put(Constants.INAPP_SS_EVAL_META, JSONArray().put(1).put(2).put(3))
             put(
                 Constants.INAPP_SUPPRESSED_META,
-                JSONArray().put(mapOf(Constants.NOTIFICATION_ID_TAG to "id1"))
-                    .put(mapOf(Constants.NOTIFICATION_ID_TAG to "id2"))
+                JSONArray().put(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "id1"))
+                    .put(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "id2"))
             )
         }
 
@@ -1646,8 +1646,8 @@ class EvaluationManagerTest : BaseTestCase() {
             put(Constants.INAPP_SS_EVAL_META, JSONArray().put(1).put(2).put(3))
             put(
                 Constants.INAPP_SUPPRESSED_META,
-                JSONArray().put(mapOf(Constants.NOTIFICATION_ID_TAG to "id1"))
-                    .put(mapOf(Constants.NOTIFICATION_ID_TAG to "id2"))
+                JSONArray().put(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "id1"))
+                    .put(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "id2"))
             )
         }
 
@@ -1723,15 +1723,16 @@ class EvaluationManagerTest : BaseTestCase() {
     }
 
     @Test
-    fun `onSentHeaders removes sent suppressedClientSideInApps for ENDPOINT_A1 when key in header json is different but id is same for PROFILE event`() {
+    fun `onSentHeaders does not remove suppressedClientSideInApps when the sent id is under a non-wzrk_id key for PROFILE event`() {
         // Arrange
         val endpointId = EndpointId.ENDPOINT_A1
 
-        // Create a JSONObject with the desired structure
+        // The sent entry carries the id under a key other than wzrk_id; exact-match must NOT remove it.
+        // (A real header always keys the id under wzrk_id — this guards against loose substring matching.)
         val header = JSONObject().apply {
             put(
                 Constants.INAPP_SUPPRESSED_META,
-                JSONArray().put(mapOf("key" to "112322222_646464646"))// key is not wzrk_id but value matches
+                JSONArray().put(JSONObject().put("key", "112322222_646464646"))
             )
         }
 
@@ -1742,19 +1743,21 @@ class EvaluationManagerTest : BaseTestCase() {
         // Assert
 
         val resultList = evaluationManager.suppressedClientSideInApps
-        assertEquals(0, resultList.size)
+        assertEquals(1, resultList.size)
+        assertEquals("112322222_646464646", resultList[0][Constants.NOTIFICATION_ID_TAG])
     }
 
     @Test
-    fun `onSentHeaders removes sent suppressedClientSideInApps for ENDPOINT_A1 when key in header json is different but id is same for RAISED event`() {
+    fun `onSentHeaders does not remove suppressedClientSideInApps when the sent id is under a non-wzrk_id key for RAISED event`() {
         // Arrange
         val endpointId = EndpointId.ENDPOINT_A1
 
-        // Create a JSONObject with the desired structure
+        // The sent entry carries the id under a key other than wzrk_id; exact-match must NOT remove it.
+        // (A real header always keys the id under wzrk_id — this guards against loose substring matching.)
         val header = JSONObject().apply {
             put(
                 Constants.INAPP_SUPPRESSED_META,
-                JSONArray().put(mapOf("key" to "112322222_646464646"))// key is not wzrk_id but value matches
+                JSONArray().put(JSONObject().put("key", "112322222_646464646"))
             )
         }
 
@@ -1765,7 +1768,8 @@ class EvaluationManagerTest : BaseTestCase() {
         // Assert
 
         val resultList = evaluationManager.suppressedClientSideInApps
-        assertEquals(0, resultList.size)
+        assertEquals(1, resultList.size)
+        assertEquals("112322222_646464646", resultList[0][Constants.NOTIFICATION_ID_TAG])
     }
 
     @Test

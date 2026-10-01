@@ -8,6 +8,7 @@ package com.clevertap.android.sdk.inapp.store.preference
  * @property impressionStore An instance of [ImpressionStore] for tracking impressions of In-App messages.
  * @property legacyInAppStore An instance of [LegacyInAppStore] for storing legacy In-App messages.
  * @property inAppAssetsStore An instance of [InAppAssetsStore] for handling In-App assets storage.
+ * @property ndStoreProvider Lazily supplies the Native Display stores once the device id is available.
  *
  * @constructor Creates a StoreRegistry with optional instances of different stores.
  */
@@ -16,5 +17,19 @@ internal data class StoreRegistry(
     var impressionStore: ImpressionStore? = null,
     val legacyInAppStore: LegacyInAppStore,
     val inAppAssetsStore: InAppAssetsStore,
-    val filesStore: FileStore
-)
+    val filesStore: FileStore,
+    var ndStoreProvider: NdStoreProvider? = null,
+) {
+
+    /** Native Display SS metadata store — lazily created once the device id resolves, else null. */
+    val ndStore: NdStore?
+        get() = ndStoreProvider?.ndStore
+
+    /** Native Display impression store — lazily created once the device id resolves, else null. */
+    val ndImpressionStore: ImpressionStore?
+        get() = ndStoreProvider?.ndImpressionStore
+
+    /** Native Display counter-cap store — lazily created once the device id resolves, else null. */
+    val ndCountsStore: NdCountsStore?
+        get() = ndStoreProvider?.ndCountsStore
+}

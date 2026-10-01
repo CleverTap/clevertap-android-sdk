@@ -351,6 +351,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (cache != null) {
                 CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
+                    // The viewed event is the ND impression hook. Count every shown unit (like in-app,
+                    // which calls didShow unconditionally) so ndtlc/ndmp stay accurate.
+                    NdFCManager ndFCManager = controllerManager.getNdFCManager();
+                    if (ndFCManager != null) {
+                        // Key on the stable campaign id (ti), not unitID (= wzrk_id, which rotates daily);
+                        // the evaluator's whenLimits are keyed by ti. Mirrors in-app's InAppFCManager, which
+                        // records by inapp.getId() (ti). didShow no-ops on a null/empty id.
+                        String ndCampaignId = displayUnit.getJsonObject().optString(Constants.INAPP_ID_IN_PAYLOAD);
+                        ndFCManager.didShow(ndCampaignId);
+                    }
+
                     JSONObject eventExtras = displayUnit.getWZRKFields();
                     if (eventExtras != null) {
                         event.put("evtData", eventExtras);
