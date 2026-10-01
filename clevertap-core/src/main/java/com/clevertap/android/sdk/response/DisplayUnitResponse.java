@@ -38,6 +38,11 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         this.controllerManager = controllerManager;
     }
 
+    @Override
+    public boolean runsDuringUserSwitch() {
+        return false; // display units are reset for the new user after the switch
+    }
+
     //Logic for the processing of Display Unit response
 
     @Override

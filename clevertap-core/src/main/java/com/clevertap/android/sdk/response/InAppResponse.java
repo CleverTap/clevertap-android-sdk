@@ -144,92 +144,103 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 controllerManager.getInAppController().openAppLaunchArbitrationWindowIfNeeded(response);
             }
 
-            // Legacy SS in-apps (inapp_notifs -> NORMAL/DELAYED in-app campaigns WITHOUT advance display rules)
-            DurationPartitionedInApps.ImmediateAndDelayed partitionedLegacyInApps = res.getPartitionedLegacyInApps();
-            if (partitionedLegacyInApps.hasImmediateInApps()) {
-                displayInApp(partitionedLegacyInApps.getImmediateInApps());
-            }
-            if (partitionedLegacyInApps.hasDelayedInApps()) {
-                scheduleDelayedLegacyInApps(partitionedLegacyInApps.getDelayedInApps());
-            }
-
-            // Legacy SS in-apps meta (inapp_notifs_meta -> IN-ACTION in-app campaigns WITHOUT advance display rules)
-            DurationPartitionedInApps.InActionOnly partitionedLegacyMetaInApps = res.getPartitionedLegacyMetaInApps();
-            if (partitionedLegacyMetaInApps.hasInActionInApps()) {
-                // Schedule in-action timers
-                controllerManager.getInAppController()
-                        .scheduleInActionInApps(partitionedLegacyMetaInApps.getInActionInApps());
-            }
-
-            // App launch SS in-apps (inapp_notifs_applaunched -> NORMAL/DELAYED in-app campaigns WITH/WITHOUT advance display rules on app launched event)
-            DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
-            if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
-                controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
-                        partitionedAppLaunchServerSideInApps.getImmediateInApps(),
-                        coreMetaData.getLocationFromUser());
-            }
-            if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {
-                controllerManager.getInAppController().onAppLaunchServerSideDelayedInAppsResponse(
-                        partitionedAppLaunchServerSideInApps.getDelayedInApps(),
-                        coreMetaData.getLocationFromUser()
-                );
-            }
-
-            // App launch SS in-apps meta (inapp_notifs_applaunched_meta -> IN-ACTION in-app campaigns WITH/WITHOUT advance display rules on app launched event)
-            DurationPartitionedInApps.InActionOnly partitionedAppLaunchServerSideMetaInApps = res.getPartitionedAppLaunchServerSideMetaInApps();
-            if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
-                // Schedule in-action from App Launch SS meta
-                controllerManager.getInAppController()
-                        .onAppLaunchServerSideInactionInAppsResponse(partitionedAppLaunchServerSideMetaInApps.getInActionInApps(),
-                                coreMetaData.getLocationFromUser());
-            }
-
-            // CS in-apps (inapp_notifs_cs)
-            // Guard: storeClientSideInApps is a full replace of a persisted store. A content-fetch
-            // response carries only a partial (or empty) set, so applying it here would wipe the
-            // client-side campaigns delivered by /a1. Only /a1 is authoritative for CS in-apps.
-            if (responseSource != CTResponseSource.CONTENT_FETCH) {
-                DurationPartitionedInApps.ImmediateAndDelayed partitionedClientSideInApps = res.getPartitionedClientSideInApps();
-                if (partitionedClientSideInApps.hasImmediateInApps()) {
-                    inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
-                }
-                if (partitionedClientSideInApps.hasDelayedInApps()) {
-                    inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
-                }
-            } else {
-                logger.verbose(config.getAccountId(),
-                        "Ignoring inapp_notifs_cs from a content fetch response to protect the client-side store");
-            }
-
-            // SS in-apps (inapp_notifs_ss -> IN-ACTION + NORMAL in-app campaigns WITH advance display rules )
-            DurationPartitionedInApps.UnknownAndInAction partitionedServerSideInAppsMeta = res.getPartitionedServerSideInAppsMeta();
-            // delayAfterTrigger only comes within inapp_notifs(Legacy SS, with in-app content)
-            if (partitionedServerSideInAppsMeta.hasUnknownDurationInApps())
-            {
-                inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.getUnknownDurationInApps());
-            }
-            if (partitionedServerSideInAppsMeta.hasInActionInApps())
-            {
-                inAppStore.storeServerSideInActionMetaData(partitionedServerSideInAppsMeta.getInActionInApps());
-            }
-
-            List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
-
-            FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory
-                    .createFileResourcesRepo(context, logger, storeRegistry);
-            if (!preloadAssetsMeta.isEmpty()) {
-                assetRepo.preloadFilesAndCache(preloadAssetsMeta);
-            }
-
-            if (isFullResponse) {
-                logger.verbose(config.getAccountId(), "Handling cache eviction");
-                assetRepo.cleanupStaleFiles(res.getPreloadAssets());
-            } else {
-                logger.verbose(config.getAccountId(), "Ignoring cache eviction");
-            }
+            handleLegacyInApps(res);
+            handleAppLaunchInApps(res);
+            handleClientSideInApps(res, inAppStore);
+            handleServerSideInAppsMeta(res, inAppStore);
+            preloadAssetsAndEvictStaleFiles(res, context);
 
         } catch (Throwable t) {
             Logger.v("InAppManager: Failed to parse response", t);
+        }
+    }
+
+    // Legacy SS in-apps: inapp_notifs (NORMAL/DELAYED) + inapp_notifs_meta (IN-ACTION),
+    // campaigns WITHOUT advance display rules.
+    private void handleLegacyInApps(InAppResponseAdapter res) {
+        DurationPartitionedInApps.ImmediateAndDelayed partitionedLegacyInApps = res.getPartitionedLegacyInApps();
+        if (partitionedLegacyInApps.hasImmediateInApps()) {
+            displayInApp(partitionedLegacyInApps.getImmediateInApps());
+        }
+        if (partitionedLegacyInApps.hasDelayedInApps()) {
+            scheduleDelayedLegacyInApps(partitionedLegacyInApps.getDelayedInApps());
+        }
+
+        DurationPartitionedInApps.InActionOnly partitionedLegacyMetaInApps = res.getPartitionedLegacyMetaInApps();
+        if (partitionedLegacyMetaInApps.hasInActionInApps()) {
+            controllerManager.getInAppController()
+                    .scheduleInActionInApps(partitionedLegacyMetaInApps.getInActionInApps());
+        }
+    }
+
+    // App-launch SS in-apps: inapp_notifs_applaunched (NORMAL/DELAYED) + inapp_notifs_applaunched_meta
+    // (IN-ACTION), evaluated against the App Launched event.
+    private void handleAppLaunchInApps(InAppResponseAdapter res) {
+        DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
+        if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
+            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
+                    partitionedAppLaunchServerSideInApps.getImmediateInApps(),
+                    coreMetaData.getLocationFromUser());
+        }
+        if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {
+            controllerManager.getInAppController().onAppLaunchServerSideDelayedInAppsResponse(
+                    partitionedAppLaunchServerSideInApps.getDelayedInApps(),
+                    coreMetaData.getLocationFromUser()
+            );
+        }
+
+        DurationPartitionedInApps.InActionOnly partitionedAppLaunchServerSideMetaInApps = res.getPartitionedAppLaunchServerSideMetaInApps();
+        if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
+            controllerManager.getInAppController()
+                    .onAppLaunchServerSideInactionInAppsResponse(partitionedAppLaunchServerSideMetaInApps.getInActionInApps(),
+                            coreMetaData.getLocationFromUser());
+        }
+    }
+
+    // CS in-apps (inapp_notifs_cs). Guard: storeClientSideInApps is a full replace of a persisted
+    // store. A content-fetch response carries only a partial (or empty) set, so applying it here
+    // would wipe the client-side campaigns delivered by /a1. Only /a1 is authoritative for CS in-apps.
+    private void handleClientSideInApps(InAppResponseAdapter res, InAppStore inAppStore) {
+        if (responseSource == CTResponseSource.CONTENT_FETCH) {
+            logger.verbose(config.getAccountId(),
+                    "Ignoring inapp_notifs_cs from a content fetch response to protect the client-side store");
+            return;
+        }
+        DurationPartitionedInApps.ImmediateAndDelayed partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+        if (partitionedClientSideInApps.hasImmediateInApps()) {
+            inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
+        }
+        if (partitionedClientSideInApps.hasDelayedInApps()) {
+            inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
+        }
+    }
+
+    // SS in-apps metadata (inapp_notifs_ss -> IN-ACTION + NORMAL campaigns WITH advance display rules).
+    private void handleServerSideInAppsMeta(InAppResponseAdapter res, InAppStore inAppStore) {
+        DurationPartitionedInApps.UnknownAndInAction partitionedServerSideInAppsMeta = res.getPartitionedServerSideInAppsMeta();
+        // delayAfterTrigger only comes within inapp_notifs (Legacy SS, with in-app content)
+        if (partitionedServerSideInAppsMeta.hasUnknownDurationInApps()) {
+            inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.getUnknownDurationInApps());
+        }
+        if (partitionedServerSideInAppsMeta.hasInActionInApps()) {
+            inAppStore.storeServerSideInActionMetaData(partitionedServerSideInAppsMeta.getInActionInApps());
+        }
+    }
+
+    private void preloadAssetsAndEvictStaleFiles(InAppResponseAdapter res, Context context) {
+        List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
+
+        FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory
+                .createFileResourcesRepo(context, logger, storeRegistry);
+        if (!preloadAssetsMeta.isEmpty()) {
+            assetRepo.preloadFilesAndCache(preloadAssetsMeta);
+        }
+
+        if (isFullResponse) {
+            logger.verbose(config.getAccountId(), "Handling cache eviction");
+            assetRepo.cleanupStaleFiles(res.getPreloadAssets());
+        } else {
+            logger.verbose(config.getAccountId(), "Ignoring cache eviction");
         }
     }
 
