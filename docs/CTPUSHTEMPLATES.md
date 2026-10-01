@@ -476,6 +476,7 @@ Five Icons Template Keys | Required | Description
 pt_id | Required  | Value - `pt_five_icons`
 pt_title | Optional | Title rendered above icons
 pt_msg | Optional | Message rendered above icons
+pt_msg_summary | Optional | Message line when Notification is expanded
 pt_img1 | Required  | Icon One
 pt_img1_alt_text | Optional | Alt Text for Icon One
 pt_img2 | Required  | Icon Two
