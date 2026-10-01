@@ -161,7 +161,9 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 ## Icons Template
 
-Icons template is a push notification that shows a row of up to 5 icons, with an optional title and message in the expanded view. It helps users go directly to the functionality of their choice with a button click.
+Icons template is a push notification that shows a row of 3 to 5 icons, with an optional title and message in the expanded view. It helps users go directly to the functionality of their choice with a button click.
+
+`pt_img1`, `pt_img2` and `pt_img3` with their deep links are required. `pt_img4` and `pt_img5` are optional, so the row can have 3, 4 or 5 icons.
 
 `pt_title`, `pt_msg` and `pt_msg_summary` are optional. `nt` and `nm` are not used as a fallback, so a payload without `pt_title` and `pt_msg` shows only icons. In a stacked group summary, `pt_msg` is used as the title when `pt_title` is not set.
 
@@ -176,6 +178,23 @@ If the payload does not contain enough valid icon/deeplink data, or if 3 or more
 The CTA associated with each icon is captured in the `Notification Clicked` event under the `wzrk_c2a` property.
 
 If the user clicks anywhere outside the icon CTAs, the default notification click action launches the activity intent.
+
+(Collapsed and expanded example)
+
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_collapsed.png" width="412" height="182">
+
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_expanded.png" width="412" height="243">
+
+### Difference between Five Icons and Icons Template
+
+Both templates take the same icon and deep link keys, are validated the same way and fall back to the Basic Template the same way. Use `pt_icons` when the collapsed notification should show only icons, or when an icon tap should dismiss the notification. `pt_five_icons` is unchanged, so existing campaigns keep rendering as before.
+
+ | Five Icons Template (`pt_five_icons`) | Icons Template (`pt_icons`)
+  ---:|:---|:---
+Collapsed notification | Title and message with a shorter icon row | Icons only
+Expanded notification | Title and message above the icons | Title and message above the icons, only when `pt_title`, `pt_msg` or `pt_msg_summary` is set
+Title, message and summary | `pt_title`, `pt_msg` and `pt_msg_summary`, falling back to `nt`, `nm` and `wzrk_nms` | `pt_title`, `pt_msg` and `pt_msg_summary` only, no fallback
+Dismiss on icon tap | Not supported | Supported with the `dismissNotification` snippet, `pt_dismiss_on_click` set to `false` keeps it open
 
 ## Timer Template
 
