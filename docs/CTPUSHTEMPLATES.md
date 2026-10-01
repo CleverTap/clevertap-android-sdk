@@ -656,7 +656,7 @@ The following are the image specifications and guidelines for the Push Templates
 | **Basic**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 500 KB                                      |
 | **Auto Carousel**   | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
 | **Manual Carousel** | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
-| **Five Icon**       | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                      | 50 KB                                       |
+| **Five Icon / Icons** | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                    | 50 KB                                       |
 | **Text over Image** | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **2:1**                                                                                      | 500 KB                                      |
 | **Timer**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 326 KB                                      |
 
@@ -668,7 +668,7 @@ Ensure images for the following templates meet the specified size guidelines:
 |:---------------------------|:-----------------------|
 | Auto Carousel Template     | 400 x 300 px           |
 | Manual Carousel Template   | 240 x 180 px           |
-| Five Icon Template         | 300 x 300 px           |
+| Five Icon / Icons Template | 300 x 300 px           |
 | Product Catalogue Template | 225 x 225 px           |
 
 - For Text over Image Template, ensure the text is center-aligned within the image for devices running OS version 12 and above.
