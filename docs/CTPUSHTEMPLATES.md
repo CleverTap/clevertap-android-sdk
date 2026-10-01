@@ -189,7 +189,7 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 Both templates take the same icon and deep link keys, are validated the same way and fall back to the Basic Template the same way. Use `pt_icons` when the collapsed notification should show only icons, or when an icon tap should dismiss the notification. `pt_five_icons` keeps its existing behaviour.
 
- | Five Icons Template (`pt_five_icons`) | Icons Template (`pt_icons`)
+Behaviour | Five Icons Template (`pt_five_icons`) | Icons Template (`pt_icons`)
   ---:|:---|:---
 Collapsed notification | Title and message with a shorter icon row | Icons only
 Expanded notification | Title and message above the icons | Title and message above the icons, only when `pt_title`, `pt_msg` or `pt_msg_summary` is set
