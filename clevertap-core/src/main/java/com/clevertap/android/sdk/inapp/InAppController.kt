@@ -110,17 +110,12 @@ internal class InAppController(
         const val LOCAL_INAPP_COUNT = "local_in_app_count"
         const val IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest"
 
-        // UX bound for the app-launch content-fetch arbitration window: show the /a1 winner by now.
-        // Correctness comes from the closed-suppressing phase inside AppLaunchInAppArbitrator, not
-        // from this timeout.
-        // Hard constant, not SDK-configurable — matches iOS (SDK-6093,
-        // CLTAP_INAPP_ARBITRATION_TIMEOUT_SECONDS = 3.0).
+        // UX bound: show the /a1 winner by now. Hard 3s constant (matches iOS); correctness comes
+        // from the closed-suppressing phase, not this timeout.
         private const val APP_LAUNCH_ARBITRATION_TIMEOUT_MS = 3_000L
 
-        // Hard backstop: the arbitration window self-tears-down by this bound even if the content-fetch
-        // completion signal is never delivered (cancelled coroutine, aborted decorator loop, etc.), so
-        // it can never permanently suppress app-launch in-apps. Comfortably beyond the content-fetch
-        // request timeout, so no /content is still in flight when it fires.
+        // Hard backstop: the window self-tears-down by this bound even if completion is never
+        // delivered, and comfortably beyond the content-fetch request timeout.
         private const val APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS = 15_000L
 
         private val pendingNotifications =
@@ -154,8 +149,7 @@ internal class InAppController(
     private val logger = config.logger
     private val defaultLogTag = config.accountId
 
-    // App-launch × content-fetch in-app arbitration (SDK-6141). Holds the /a1 winner until the
-    // /content winner is known (or the timeout fires), then shows exactly one.
+    // Holds the /a1 app-launch winner until the /content winner is known, then shows exactly one.
     private val appLaunchArbitrator = AppLaunchInAppArbitrator(
         logger = logger,
         logTag = defaultLogTag,
@@ -694,14 +688,12 @@ internal class InAppController(
                 appLaunchServerSideInApps, appLaunchedProperties, userLocation
             )
 
-        // Option 2 fast path: if the window carries synthetic content candidates and the /a1 winner
-        // already tops the merged sort, show it now and skip the wait. Dormant without priority.
+        // Option 2 fast path: show the /a1 winner now when waiting can't change the outcome.
         if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, appLaunchedProperties, userLocation)) {
             return
         }
 
-        // Option 1: shown immediately when no window is open (today's behaviour), otherwise buffered
-        // (OPEN) or dropped (CLOSED). Applies to both the /a1 and /content winners.
+        // Option 1: no window -> show now; OPEN -> buffer; CLOSED -> drop.
         val toShow = appLaunchArbitrator.routeWinners(serverSideInAppsToDisplayImmediate)
         if (toShow.isNotEmpty()) {
             addInAppNotificationsToQueue(toShow)
@@ -709,11 +701,10 @@ internal class InAppController(
     }
 
     /**
-     * Option 2 prediction. Returns true (and shows [a1Winner] immediately, closing the window) when
-     * waiting for the `/content` reply cannot change the outcome — i.e. no synthetic content
-     * candidate qualifies, or the `/a1` winner tops the merged sort. Returns false to fall back to
-     * Option 1 (wait). No-op unless the window was opened WITH synthetic candidates, which needs the
-     * backend to send `priority` per item — so this is dormant today.
+     * Option 2 prediction. Returns true (and shows [a1Winner] now, closing the window) when waiting
+     * for `/content` cannot change the outcome — no synthetic candidate qualifies, or the `/a1`
+     * winner tops the merged sort. Returns false to fall back to Option 1 (wait). Dormant unless the
+     * window was opened with synthetic candidates (requires per-item `priority`).
      */
     private fun tryAppLaunchFastPath(
         a1Winner: List<JSONObject>,
@@ -742,18 +733,16 @@ internal class InAppController(
 
     /**
      * Opens an app-launch arbitration window when this `/a1` response carries a `content_fetch` that
-     * can produce an app-launch in-app — so the winner evaluated afterwards is held and merged with
-     * the `/content` winner instead of shown twice. When every such item also carries `priority`,
-     * the window is opened WITH synthetic candidates enabling the Option 2 fast path (all-or-nothing:
-     * a partial set could mispredict, so it falls back to Option 1). Called from [InAppResponse] on
-     * `/a1` only.
+     * can produce an app-launch in-app, so the winner is held and merged with the `/content` winner
+     * instead of shown twice. When every such item carries `priority`, the window opens with
+     * synthetic candidates enabling the Option 2 fast path (all-or-nothing). Called on `/a1` only.
      */
     fun openAppLaunchArbitrationWindowIfNeeded(response: JSONObject) {
         val items = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?: return
         val appLaunchItems = ContentFetchItem.listFrom(items).filter { isAppLaunchInAppItem(it) }
-        if (appLaunchItems.isEmpty()) return // S1/S2: no in-app app-launch content fetch
+        if (appLaunchItems.isEmpty()) return // no in-app app-launch content fetch
 
-        // Option 2: build synthetic candidates, all-or-nothing (every item must carry priority).
+        // All-or-nothing: enable Option 2 only when every item carries priority.
         val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
         val syntheticCandidates = if (synthetics.all { it != null }) {
             synthetics.filterNotNull()
@@ -763,11 +752,8 @@ internal class InAppController(
         appLaunchArbitrator.openWindow(syntheticCandidates)
     }
 
-    // S1 (responseKey is the app-launch in-app key) + S2 (eventName == "App Launched").
-    // Conservative: when the wire omits a field we still treat it as a match (wait) rather than risk
-    // showing two; we only skip an item explicitly for a different channel or event.
-    // Wire keys match iOS (SDK-6093) and are treated as optional there too; the conservative
-    // "open when a field is absent" behaviour below is intentional and aligned across platforms.
+    // Matches an app-launch in-app content-fetch by response key or event name. Conservative: a
+    // missing field counts as a match (wait) rather than risk showing two; aligned with iOS.
     private fun isAppLaunchInAppItem(item: ContentFetchItem): Boolean {
         val responseKeyMatches =
             item.responseKey == null || item.responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY

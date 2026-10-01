@@ -59,8 +59,7 @@ internal class ContentFetchResponse(
             return
         }
 
-        // Typed, addressable view of the directive. Only used for diagnostics today; arbitration
-        // gating (eventName / responseKey) consumes it in SDK-6141.
+        // Typed, addressable view of the directive, for diagnostics.
         val items = ContentFetchItem.listFrom(contentFetchArray)
         logger.verbose(config.accountId,
                        "Found ${items.size} content fetch items, responseKeys=${items.map { it.responseKey }}")

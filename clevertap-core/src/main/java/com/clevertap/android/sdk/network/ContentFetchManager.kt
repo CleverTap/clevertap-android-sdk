@@ -42,7 +42,7 @@ internal class ContentFetchManager(
     var clevertapResponseHandler: ClevertapResponseHandler? = null
 
     // Fired once when a content-fetch batch settles (success/error/timeout/cancellation). Drives the
-    // app-launch arbitration window close (SDK-6141). Wired in CleverTapFactory.
+    // app-launch arbitration window close. Wired in CleverTapFactory.
     var onFetchBatchComplete: (() -> Unit)? = null
 
     var parentJob = SupervisorJob()
@@ -67,13 +67,10 @@ internal class ContentFetchManager(
                 logger.verbose(TAG, "Unexpected error during content fetch", e)
             } finally {
                 // Exactly-once settled signal — must never be skipped, or the arbitration window
-                // would stay in its suppressing phase for the rest of the session.
-                // Android sends all content_fetch items in ONE /content request per /a1 (single
-                // batch), so "close on first completion" = close on the only batch. iOS (SDK-6093)
-                // tracks per-batch completion by token for its concurrent batches; not needed here
-                // unless Android moves to multiple batches per launch.
-                // SDK safety: a throwing callback here (runs in a finally) would escape the coroutine
-                // and crash the host app — contain it.
+                // would stay in its suppressing phase for the rest of the session. Android sends all
+                // content_fetch items in ONE /content request per /a1, so "close on first completion"
+                // = close on the only batch (unlike iOS, which tracks per-batch for concurrent
+                // batches). A throwing callback here (in a finally) would crash the host app; contain it.
                 try {
                     onFetchBatchComplete?.invoke()
                 } catch (t: Throwable) {

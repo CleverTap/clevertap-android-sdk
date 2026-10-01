@@ -366,16 +366,12 @@ internal class EvaluationManager(
     )
 
     /**
-     * Non-mutating twin of [evaluate], for Option-2 arbitration prediction (SDK-6144).
+     * Non-mutating twin of [evaluate], for Option 2 arbitration prediction.
      *
-     * Runs the same eligibility gates as [evaluate] but with the trigger "punch" suppressed
-     * (`recordTrigger = {}`) and limits matched against a virtual count (live + 1) via
-     * [OffsetTriggerCounter] — so the result equals what the real [evaluate] will produce when the
-     * `/content` winner actually arrives, while mutating nothing. Sorting/selection is left to the
-     * caller (via [sortByPriority]).
-     *
-     * Dormant in practice: synthetic candidates only exist once the backend sends `priority` per
-     * `content_fetch` item (see [com.clevertap.android.sdk.network.ContentFetchItem.syntheticInAppPayload]).
+     * Runs the same eligibility gates but suppresses the trigger "punch" (`recordTrigger = {}`) and
+     * matches limits against a virtual count (live + 1) via [OffsetTriggerCounter] — so the result
+     * equals what [evaluate] will produce once the `/content` winner arrives, while mutating nothing.
+     * Sorting/selection is left to the caller. Dormant unless the backend sends per-item `priority`.
      */
     internal fun evaluateDryRun(
         event: EventAdapter,

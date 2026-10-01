@@ -19,8 +19,8 @@ internal class LimitsMatcher(
 
     /**
      * A view of this matcher that counts triggers via [counter] instead of the live store, reusing
-     * the same [ImpressionManager]. Used by the non-mutating dry-run evaluation (SDK-6143) to match
-     * limits against a virtual trigger count without incrementing.
+     * the same [ImpressionManager]. Used by the non-mutating dry-run evaluation to match limits
+     * against a virtual trigger count without incrementing.
      */
     fun withTriggerCounter(counter: TriggerCounting): LimitsMatcher = LimitsMatcher(manager, counter)
 

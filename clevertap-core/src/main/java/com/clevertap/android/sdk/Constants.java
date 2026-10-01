@@ -293,8 +293,8 @@ public interface Constants {
 
     String INAPP_PRIORITY = "priority";
 
-    // SDK-internal tag marking a synthetic in-app payload built from a content_fetch item for
-    // Option-2 dry-run prediction. Never sent or received on the wire.
+    // Internal tag marking a synthetic in-app payload built from a content_fetch item for Option 2
+    // dry-run prediction. Never sent or received on the wire.
     String INAPP_SYNTHETIC_CANDIDATE = "__ct_synthetic_candidate";
 
     String CLTAP_PROP_CAMPAIGN_ID = "Campaign id";
