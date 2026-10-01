@@ -187,7 +187,7 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 ### Difference between Five Icons and Icons Template
 
-Both templates take the same icon and deep link keys, are validated the same way and fall back to the Basic Template the same way. Use `pt_icons` when the collapsed notification should show only icons, or when an icon tap should dismiss the notification. `pt_five_icons` is unchanged, so existing campaigns keep rendering as before.
+Both templates take the same icon and deep link keys, are validated the same way and fall back to the Basic Template the same way. Use `pt_icons` when the collapsed notification should show only icons, or when an icon tap should dismiss the notification. `pt_five_icons` keeps its existing behaviour.
 
  | Five Icons Template (`pt_five_icons`) | Icons Template (`pt_icons`)
   ---:|:---|:---
