@@ -1,7 +1,8 @@
 ## CleverTap Push Templates SDK CHANGE LOG
-### Version 2.6.0 (Unreleased)
+### Version 2.6.0 (October 1, 2026)
 
 #### New Features
+* **Icons Template:** Adds a new `Icons` template (`pt_icons`) that shows a row of up to 5 icons, with an optional title and message in the expanded view. The collapsed view shows only the icons.
 * **Image Border and Rounded Corners:** Adds configurable corner radius (`pt_img_corner_radius`), border width (`pt_img_border_width`), and border color (`pt_img_border_clr`) for static images in the `Basic`, `Auto Carousel`, `Manual Carousel`, `Rating`, `Timer`, and `Image with CTA` templates. Available on Android 12 (API 31) and above.
 
 #### Bug Fixes

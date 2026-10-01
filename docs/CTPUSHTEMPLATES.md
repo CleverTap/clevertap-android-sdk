@@ -20,7 +20,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:2.5.0"
+implementation "com.clevertap.android:push-templates:2.6.0"
 implementation "com.clevertap.android:clevertap-android-sdk:8.4.1" // 4.4.0 and above
 ```
 
@@ -161,7 +161,9 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 ## Icons Template
 
-Icons template is a push notification that shows a row of up to 5 icons, with an optional title and message in the expanded view. It helps users go directly to the functionality of their choice with a button click.
+Icons template is a push notification that shows a row of 3 to 5 icons, with an optional title and message in the expanded view. It helps users go directly to the functionality of their choice with a button click.
+
+`pt_img1`, `pt_img2` and `pt_img3` with their deep links are required. `pt_img4` and `pt_img5` are optional, so the row can have 3, 4 or 5 icons.
 
 `pt_title`, `pt_msg` and `pt_msg_summary` are optional. `nt` and `nm` are not used as a fallback, so a payload without `pt_title` and `pt_msg` shows only icons. In a stacked group summary, `pt_msg` is used as the title when `pt_title` is not set.
 
@@ -176,6 +178,23 @@ If the payload does not contain enough valid icon/deeplink data, or if 3 or more
 The CTA associated with each icon is captured in the `Notification Clicked` event under the `wzrk_c2a` property.
 
 If the user clicks anywhere outside the icon CTAs, the default notification click action launches the activity intent.
+
+(Collapsed and expanded example)
+
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_collapsed.png" alt="Icons Collapsed" width="412" height="182">
+
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_expanded.png" alt="Icons Expanded" width="412" height="243">
+
+### Difference between Five Icons and Icons Template
+
+Both templates take the same icon and deep link keys, are validated the same way and fall back to the Basic Template the same way. Use `pt_icons` when the collapsed notification should show only icons, or when an icon tap should dismiss the notification. `pt_five_icons` keeps its existing behaviour.
+
+Behaviour | Five Icons Template (`pt_five_icons`) | Icons Template (`pt_icons`)
+  ---:|:---|:---
+Collapsed notification | Title and message with a shorter icon row | Icons only
+Expanded notification | Title and message above the icons | Title and message above the icons, only when `pt_title`, `pt_msg` or `pt_msg_summary` is set
+Title, message and summary | `pt_title`, `pt_msg` and `pt_msg_summary`, falling back to `nt`, `nm` and `wzrk_nms` | `pt_title`, `pt_msg` and `pt_msg_summary` only, no fallback
+Dismiss on icon tap | Not supported | Supported with the `dismissNotification` snippet, `pt_dismiss_on_click` set to `false` keeps it open
 
 ## Timer Template
 
@@ -457,6 +476,7 @@ Five Icons Template Keys | Required | Description
 pt_id | Required  | Value - `pt_five_icons`
 pt_title | Optional | Title rendered above icons
 pt_msg | Optional | Message rendered above icons
+pt_msg_summary | Optional | Message line when Notification is expanded
 pt_img1 | Required  | Icon One
 pt_img1_alt_text | Optional | Alt Text for Icon One
 pt_img2 | Required  | Icon Two
@@ -636,7 +656,7 @@ The following are the image specifications and guidelines for the Push Templates
 | **Basic**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 500 KB                                      |
 | **Auto Carousel**   | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
 | **Manual Carousel** | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
-| **Five Icon**       | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                      | 50 KB                                       |
+| **Five Icon / Icons** | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                    | 50 KB                                       |
 | **Text over Image** | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **2:1**                                                                                      | 500 KB                                      |
 | **Timer**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 326 KB                                      |
 
@@ -648,7 +668,7 @@ Ensure images for the following templates meet the specified size guidelines:
 |:---------------------------|:-----------------------|
 | Auto Carousel Template     | 400 x 300 px           |
 | Manual Carousel Template   | 240 x 180 px           |
-| Five Icon Template         | 300 x 300 px           |
+| Five Icon / Icons Template | 300 x 300 px           |
 | Product Catalogue Template | 225 x 225 px           |
 
 - For Text over Image Template, ensure the text is center-aligned within the image for devices running OS version 12 and above.
