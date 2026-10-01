@@ -181,9 +181,9 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 (Collapsed and expanded example)
 
-<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_collapsed.png" width="412" height="182">
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_collapsed.png" alt="Icons Collapsed" width="412" height="182">
 
-<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_expanded.png" width="412" height="243">
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_expanded.png" alt="Icons Expanded" width="412" height="243">
 
 ### Difference between Five Icons and Icons Template
 
