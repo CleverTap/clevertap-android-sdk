@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.network
 
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData
+import com.clevertap.android.sdk.inapp.data.InAppDelayConstants
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
@@ -63,8 +65,11 @@ class ContentFetchItemTest {
         val raw = JSONObject()
             .put(Constants.CONTENT_FETCH_ITEM_TARGET_ID, 1787567474L)
             .put(Constants.INAPP_PRIORITY, 90)
+            .put(Constants.INAPP_SUPPRESSED, false)
+            .put(InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER, 5)
             .put(Constants.INAPP_WHEN_TRIGGERS, whenTriggers)
             .put(Constants.INAPP_FC_LIMITS, fcLimits)
+            .put(CustomTemplateInAppData.KEY_TEMPLATE_NAME, "my-template")
 
         val payload = ContentFetchItem.from(raw).syntheticInAppPayload()!!
 
@@ -72,6 +77,10 @@ class ContentFetchItemTest {
         assertEquals(90, payload.optInt(Constants.INAPP_PRIORITY))
         assertTrue(payload.has(Constants.INAPP_WHEN_TRIGGERS))
         assertTrue(payload.has(Constants.INAPP_FC_LIMITS))
+        // Full iOS-parity selection-rule set (SDK-6093): suppressed, delayAfterTrigger, templateName.
+        assertTrue(payload.has(Constants.INAPP_SUPPRESSED))
+        assertEquals(5, payload.optInt(InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER))
+        assertEquals("my-template", payload.optString(CustomTemplateInAppData.KEY_TEMPLATE_NAME))
         assertTrue(payload.optBoolean(Constants.INAPP_SYNTHETIC_CANDIDATE))
         // No display-time keys leak into the synthetic payload.
         assertTrue(!payload.has("efc") && !payload.has("mdc") && !payload.has("tdc"))

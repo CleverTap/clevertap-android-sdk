@@ -113,7 +113,8 @@ internal class InAppController(
         // UX bound for the app-launch content-fetch arbitration window: show the /a1 winner by now.
         // Correctness comes from the closed-suppressing phase inside AppLaunchInAppArbitrator, not
         // from this timeout.
-        // TODO(SDK-6141 review): SDK-configurable vs hard constant (iOS Q1).
+        // Hard constant, not SDK-configurable — matches iOS (SDK-6093,
+        // CLTAP_INAPP_ARBITRATION_TIMEOUT_SECONDS = 3.0).
         private const val APP_LAUNCH_ARBITRATION_TIMEOUT_MS = 3_000L
 
         // Hard backstop: the arbitration window self-tears-down by this bound even if the content-fetch
@@ -765,8 +766,8 @@ internal class InAppController(
     // S1 (responseKey is the app-launch in-app key) + S2 (eventName == "App Launched").
     // Conservative: when the wire omits a field we still treat it as a match (wait) rather than risk
     // showing two; we only skip an item explicitly for a different channel or event.
-    // TODO(SDK-6141 review): confirm responseKey/eventName are present on Android's /content
-    // directive (verified on iOS). If always absent, this reduces to "any content_fetch present".
+    // Wire keys match iOS (SDK-6093) and are treated as optional there too; the conservative
+    // "open when a field is absent" behaviour below is intentional and aligned across platforms.
     private fun isAppLaunchInAppItem(item: ContentFetchItem): Boolean {
         val responseKeyMatches =
             item.responseKey == null || item.responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY

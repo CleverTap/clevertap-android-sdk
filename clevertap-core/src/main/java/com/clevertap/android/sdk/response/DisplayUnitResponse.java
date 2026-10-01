@@ -130,8 +130,9 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      * Units with an empty unitID are skipped, matching
      * {@link com.clevertap.android.sdk.displayunits.CTDisplayUnitController#updateDisplayUnits}.
      *
-     * TODO(SDK-6142 review): the sentinel unitID "0_0" (substituted when a payload has no wzrk_id)
-     * collapses several such units to the last one seen — same limitation as the default cache.
+     * Note: the sentinel unitID "0_0" (substituted when a payload has no wzrk_id) collapses several
+     * such units to the last one seen — same limitation as the default cache, and identical to iOS
+     * (SDK-6093), where it is likewise an accepted edge for malformed payloads.
      */
     @NonNull
     private ArrayList<CleverTapDisplayUnit> mergeByUnitId(

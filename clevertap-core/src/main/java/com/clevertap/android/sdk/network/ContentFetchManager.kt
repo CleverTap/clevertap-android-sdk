@@ -68,9 +68,10 @@ internal class ContentFetchManager(
             } finally {
                 // Exactly-once settled signal — must never be skipped, or the arbitration window
                 // would stay in its suppressing phase for the rest of the session.
-                // TODO(SDK-6141 review): with several concurrent batches this fires per batch and the
-                // window closes on the first. Fine for the single-batch app-launch case; revisit for
-                // multi-batch (iOS Q4).
+                // Android sends all content_fetch items in ONE /content request per /a1 (single
+                // batch), so "close on first completion" = close on the only batch. iOS (SDK-6093)
+                // tracks per-batch completion by token for its concurrent batches; not needed here
+                // unless Android moves to multiple batches per launch.
                 // SDK safety: a throwing callback here (runs in a finally) would escape the coroutine
                 // and crash the host app — contain it.
                 try {
