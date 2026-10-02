@@ -86,7 +86,9 @@ internal class AppLaunchInAppArbitrator(
      * Move to the suppressing phase; the timer is left running so the backstop still tears down.
      */
     fun closeForFastPath(shown: JSONObject) = synchronized(lock) {
-        if (phase != Phase.OPEN) return
+        if (phase != Phase.OPEN) {
+            return
+        }
         phase = Phase.CLOSED
         shownWinner = shown
         logger.verbose(logTag, "[Arbitration] fast path: /a1 winner shown immediately, window closed")
@@ -134,7 +136,9 @@ internal class AppLaunchInAppArbitrator(
 
     // Resets to the no-window state. Idempotent under [lock].
     private fun teardown(reason: String) = synchronized(lock) {
-        if (phase == null) return // already torn down
+        if (phase == null) {
+            return // already torn down
+        }
         timeoutJob?.cancel()
         timeoutJob = null
         phase = null
@@ -146,7 +150,9 @@ internal class AppLaunchInAppArbitrator(
 
     private fun closeAndShow(reason: String) {
         val winner: JSONObject? = synchronized(lock) {
-            if (phase != Phase.OPEN) return
+            if (phase != Phase.OPEN) {
+                return
+            }
             phase = Phase.CLOSED
             val selected = sortByPriority(buffered).firstOrNull()
             shownWinner = selected

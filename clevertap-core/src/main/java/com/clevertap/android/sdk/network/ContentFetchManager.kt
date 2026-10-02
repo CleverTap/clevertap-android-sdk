@@ -148,7 +148,11 @@ internal class ContentFetchManager(
             }
 
             clevertapResponseHandler?.handleResponse(
-                false, bodyJson, bodyString, isUserSwitching, CTResponseSource.CONTENT_FETCH
+                isFullResponse = false,
+                bodyJson = bodyJson,
+                bodyString = bodyString,
+                isUserSwitching = isUserSwitching,
+                source = CTResponseSource.CONTENT_FETCH
             )
             return true
         } else {

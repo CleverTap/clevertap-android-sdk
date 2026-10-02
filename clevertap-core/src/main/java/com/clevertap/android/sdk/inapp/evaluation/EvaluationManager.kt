@@ -377,7 +377,9 @@ internal class EvaluationManager(
         event: EventAdapter,
         syntheticCandidates: List<JSONObject>
     ): List<JSONObject> {
-        if (syntheticCandidates.isEmpty()) return emptyList()
+        if (syntheticCandidates.isEmpty()) {
+            return emptyList()
+        }
         return collectEligibleInApps(
             event = event,
             inappNotifs = syntheticCandidates,

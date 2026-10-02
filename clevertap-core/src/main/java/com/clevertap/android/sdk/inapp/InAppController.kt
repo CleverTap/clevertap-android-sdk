@@ -712,10 +712,18 @@ internal class InAppController(
         userLocation: Location?
     ): Boolean {
         val synthetics = appLaunchArbitrator.syntheticCandidates() ?: return false // no window
-        if (synthetics.isEmpty()) return false // Option 1 (no priority): must wait
-        if (a1Winner.isEmpty()) return false   // nothing to show now; wait for content
+        if (synthetics.isEmpty()) {
+            return false // Option 1 (no priority): must wait
+        }
+        if (a1Winner.isEmpty()) {
+            return false // nothing to show now; wait for content
+        }
 
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, appLaunchedProperties, userLocation = userLocation)
+        val event = EventAdapter(
+            eventName = Constants.APP_LAUNCHED_EVENT,
+            eventProperties = appLaunchedProperties,
+            userLocation = userLocation
+        )
         val eligibleContent = evaluationManager.evaluateDryRun(event, synthetics)
 
         val a1WinnerTops = if (eligibleContent.isEmpty()) {
@@ -724,7 +732,9 @@ internal class InAppController(
             val top = evaluationManager.sortByPriority(a1Winner + eligibleContent).firstOrNull()
             top != null && !top.optBoolean(Constants.INAPP_SYNTHETIC_CANDIDATE, false)
         }
-        if (!a1WinnerTops) return false // a content candidate could win -> fall back to Option 1
+        if (!a1WinnerTops) {
+            return false // a content candidate could win -> fall back to Option 1
+        }
 
         appLaunchArbitrator.closeForFastPath(a1Winner.first())
         addInAppNotificationsToQueue(a1Winner)
@@ -740,7 +750,9 @@ internal class InAppController(
     fun openAppLaunchArbitrationWindowIfNeeded(response: JSONObject) {
         val items = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?: return
         val appLaunchItems = ContentFetchItem.listFrom(items).filter { isAppLaunchInAppItem(it) }
-        if (appLaunchItems.isEmpty()) return // no in-app app-launch content fetch
+        if (appLaunchItems.isEmpty()) {
+            return // no in-app app-launch content fetch
+        }
 
         // All-or-nothing: enable Option 2 only when every item carries priority.
         val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
