@@ -1,0 +1,9 @@
+{
+  "pt_id": "pt_basic",
+  "pt_title": "Basic template",
+  "pt_msg": "Collapsed message",
+  "pt_msg_summary": "Expanded message line, visible when the notification is opened",
+  "pt_big_img": "https://picsum.photos/id/1011/1024/512",
+  "pt_ico": "https://picsum.photos/id/1025/200/200",
+  "pt_dl1": "ctdemo://com.clevertap.demo/HomeScreenActivity"
+}
