@@ -13,25 +13,28 @@ internal class ClevertapResponseHandler(
         bodyJson: JSONObject?,
         bodyString: String,
         isUserSwitching: Boolean
+    ) = handleResponse(isFullResponse, bodyJson, bodyString, isUserSwitching, source = CTResponseSource.A1)
+
+    fun handleResponse(
+        isFullResponse: Boolean,
+        bodyJson: JSONObject?,
+        bodyString: String,
+        isUserSwitching: Boolean,
+        source: CTResponseSource
     ) {
-        if (isUserSwitching) {
-            responses
-                .filterNot { decorator ->
-                    decorator is InboxResponse || decorator is DisplayUnitResponse || decorator is FetchVariablesResponse
-                }
-                .forEach { decorator ->
-                    decorator.isFullResponse = isFullResponse
-                    if (decorator is InAppResponse) {
-                        decorator.processResponse(bodyJson, bodyString, context, true)
-                    } else {
-                        decorator.processResponse(bodyJson, bodyString, context)
-                    }
-                }
-        } else {
-            responses.forEach { decorator ->
+        responses
+            .filter { decorator -> !isUserSwitching || decorator.runsDuringUserSwitch() }
+            .forEach { decorator ->
                 decorator.isFullResponse = isFullResponse
-                decorator.processResponse(bodyJson, bodyString, context)
+                decorator.responseSource = source
+                // TODO(refactor): InAppResponse still needs isUserSwitching passed explicitly. Fold
+                //  isFullResponse/responseSource/isUserSwitching into an immutable ResponseContext
+                //  param so this concrete-type special-case and the field mutation above both go away.
+                if (isUserSwitching && decorator is InAppResponse) {
+                    decorator.processResponse(bodyJson, bodyString, context, true)
+                } else {
+                    decorator.processResponse(bodyJson, bodyString, context)
+                }
             }
-        }
     }
 }

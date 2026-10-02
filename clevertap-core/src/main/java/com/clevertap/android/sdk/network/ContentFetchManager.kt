@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.response.CTResponseSource
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.Clock
@@ -40,6 +41,10 @@ internal class ContentFetchManager(
 
     var clevertapResponseHandler: ClevertapResponseHandler? = null
 
+    // Fired once when a content-fetch batch settles (success/error/timeout/cancellation). Drives the
+    // app-launch arbitration window close. Wired in CleverTapFactory.
+    var onFetchBatchComplete: (() -> Unit)? = null
+
     var parentJob = SupervisorJob()
 
     private var scope = CoroutineScope(
@@ -60,6 +65,17 @@ internal class ContentFetchManager(
                 logger.verbose(TAG, "Fetch job was cancelled.")
             } catch (e: Exception) {
                 logger.verbose(TAG, "Unexpected error during content fetch", e)
+            } finally {
+                // Exactly-once settled signal — must never be skipped, or the arbitration window
+                // would stay in its suppressing phase for the rest of the session. Android sends all
+                // content_fetch items in ONE /content request per /a1, so "close on first completion"
+                // = close on the only batch (unlike iOS, which tracks per-batch for concurrent
+                // batches). A throwing callback here (in a finally) would crash the host app; contain it.
+                try {
+                    onFetchBatchComplete?.invoke()
+                } catch (t: Throwable) {
+                    logger.verbose(TAG, "Error in content fetch completion callback", t)
+                }
             }
         }
     }
@@ -131,7 +147,13 @@ internal class ContentFetchManager(
                 return true
             }
 
-            clevertapResponseHandler?.handleResponse(false, bodyJson, bodyString, isUserSwitching)
+            clevertapResponseHandler?.handleResponse(
+                isFullResponse = false,
+                bodyJson = bodyJson,
+                bodyString = bodyString,
+                isUserSwitching = isUserSwitching,
+                source = CTResponseSource.CONTENT_FETCH
+            )
             return true
         } else {
             when (response.code) {
