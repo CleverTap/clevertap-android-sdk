@@ -25,11 +25,19 @@ internal data class ContentFetchItem(
      * key in [SELECTION_RULE_KEYS]. No display-time keys — they don't discriminate candidates.
      */
     fun syntheticInAppPayload(): JSONObject? {
-        if (targetId == null || raw.opt(Constants.INAPP_PRIORITY) == null) return null
+        if (targetId == null) {
+            return null
+        }
+        // Treat an explicit JSON null or a non-numeric priority as missing — a bad value would
+        // otherwise build a synthetic that sortByPriority reads back as the default priority (1).
+        raw.opt(Constants.INAPP_PRIORITY)
+            ?.takeUnless { it === JSONObject.NULL }
+            ?.takeIf { it is Number || (it is String && it.toIntOrNull() != null) }
+            ?: return null
         return JSONObject().apply {
             put(Constants.INAPP_ID_IN_PAYLOAD, targetId) // ti <- tgtId
             for (key in SELECTION_RULE_KEYS) {
-                raw.opt(key)?.let { put(key, it) }
+                raw.opt(key)?.takeUnless { it === JSONObject.NULL }?.let { put(key, it) }
             }
         }
     }
@@ -51,7 +59,10 @@ internal data class ContentFetchItem(
             eventName = item.optNullableString(Constants.CONTENT_FETCH_ITEM_EVENT_NAME),
             responseKey = item.optNullableString(Constants.CONTENT_FETCH_ITEM_RESPONSE_KEY),
             // tgtId is numeric while ti may be numeric or string — normalize to String for comparison.
-            targetId = item.opt(Constants.CONTENT_FETCH_ITEM_TARGET_ID)?.toString(),
+            // An explicit JSON null stays absent rather than becoming the string "null".
+            targetId = item.opt(Constants.CONTENT_FETCH_ITEM_TARGET_ID)
+                ?.takeUnless { it === JSONObject.NULL }
+                ?.toString(),
             raw = item
         )
 

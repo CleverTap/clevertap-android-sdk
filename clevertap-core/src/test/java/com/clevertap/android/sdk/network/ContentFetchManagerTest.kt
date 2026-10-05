@@ -207,7 +207,9 @@ class ContentFetchManagerTest {
 
         // Assert - Should not crash and should log the error
         verify { mockCtApi.sendContentFetch(any()) }
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
     }
 
     @Test
@@ -261,7 +263,9 @@ class ContentFetchManagerTest {
 
         advanceUntilIdle()
 
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
     }
 
     @Test
@@ -281,7 +285,9 @@ class ContentFetchManagerTest {
         advanceUntilIdle()
 
         verify { mockCtApi.sendContentFetch(any()) }
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
     }
 
     @Test
@@ -302,7 +308,9 @@ class ContentFetchManagerTest {
 
         // Assert
         verify { mockCtApi.sendContentFetch(any()) }
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
     }
 
     // Helper methods

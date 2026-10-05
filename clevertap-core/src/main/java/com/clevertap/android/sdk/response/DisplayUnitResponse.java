@@ -113,6 +113,12 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         // public API change (mirrors iOS).
         final ArrayList<CleverTapDisplayUnit> unitsToApply;
         if (responseSource == CTResponseSource.CONTENT_FETCH) {
+            // A content fetch that brought no mergeable unit (all empty/duplicate unitIDs) would
+            // leave the merged set identical to the current cache — re-publishing the unchanged /a1
+            // set to listeners. Skip entirely so we notify only when a unit was actually received.
+            if (!hasMergeableUnit(parsedUnits)) {
+                return;
+            }
             unitsToApply = mergeByUnitId(cache.getAllDisplayUnits(), parsedUnits);
         } else {
             unitsToApply = parsedUnits;
@@ -152,6 +158,16 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             }
         }
         return new ArrayList<>(merged.values());
+    }
+
+    // True if at least one unit carries a usable unitID, i.e. would actually merge into the cache.
+    private boolean hasMergeableUnit(@NonNull ArrayList<CleverTapDisplayUnit> units) {
+        for (CleverTapDisplayUnit unit : units) {
+            if (unit != null && !TextUtils.isEmpty(unit.getUnitID())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

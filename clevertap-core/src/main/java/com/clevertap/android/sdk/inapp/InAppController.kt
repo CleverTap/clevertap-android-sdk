@@ -116,8 +116,11 @@ internal class InAppController(
         private const val APP_LAUNCH_ARBITRATION_TIMEOUT_MS = 3_000L
 
         // Hard backstop: the window self-tears-down by this bound even if completion is never
-        // delivered, and comfortably beyond the content-fetch request timeout.
-        private const val APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS = 15_000L
+        // delivered. Must sit beyond the content-fetch request's own worst case — connect (10s) +
+        // read (10s) = 20s per UrlConnectionHttpClient — so a slow-but-successful /content always
+        // fires completion and tears the window down normally before this fires. Tearing down
+        // earlier would reset to passthrough and let a late /content show a second app-launch in-app.
+        private const val APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS = 25_000L
 
         private val pendingNotifications =
             Collections.synchronizedList(ArrayList<CTInAppNotification>())
