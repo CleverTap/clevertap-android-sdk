@@ -10,7 +10,7 @@ package com.clevertap.android.sdk.response
  *   acting twice on a single logical launch — e.g. the recursion guard (do not fetch again) and the
  *   client-side in-app store guard (do not overwrite a persisted store from a partial response).
  *
- * Set per response on the decorator by [ClevertapResponseHandler] before each processResponse call.
+ * Carried per response in [ResponseContext], threaded through processResponse by [ClevertapResponseHandler].
  */
 internal enum class CTResponseSource {
     A1,

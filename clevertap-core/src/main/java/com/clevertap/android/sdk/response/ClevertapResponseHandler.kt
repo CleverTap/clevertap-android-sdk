@@ -22,19 +22,13 @@ internal class ClevertapResponseHandler(
         isUserSwitching: Boolean,
         source: CTResponseSource
     ) {
+        // Request-scoped flags travel as an immutable argument, not shared mutable decorator fields —
+        // so concurrent /a1 and /content processing can't race on them.
+        val responseContext = ResponseContext(isFullResponse, isUserSwitching, source)
         responses
             .filter { decorator -> !isUserSwitching || decorator.runsDuringUserSwitch() }
             .forEach { decorator ->
-                decorator.responseSource = source
-                // InAppResponse is the only consumer of isFullResponse, so it's passed as a call
-                // argument rather than a shared field. TODO(refactor): responseSource still rides a
-                // shared mutable field (read by InAppResponse/ContentFetchResponse/DisplayUnitResponse);
-                // fold it + isUserSwitching into an immutable ResponseContext to remove it too.
-                if (decorator is InAppResponse) {
-                    decorator.processResponse(bodyJson, bodyString, context, isUserSwitching, isFullResponse)
-                } else {
-                    decorator.processResponse(bodyJson, bodyString, context)
-                }
+                decorator.processResponse(bodyJson, bodyString, context, responseContext)
             }
     }
 }

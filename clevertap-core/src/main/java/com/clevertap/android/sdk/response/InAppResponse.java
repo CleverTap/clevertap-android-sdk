@@ -70,16 +70,18 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final String stringBody,
             final Context context
     ) {
-        processResponse(response, stringBody, context, false, false);
+        processResponse(response, stringBody, context, ResponseContext.DEFAULT);
     }
 
+    @Override
     public void processResponse(
             final JSONObject response,
             final String stringBody,
             final Context context,
-            final boolean isUserSwitching,
-            final boolean isFullResponse
+            final ResponseContext responseContext
     ) {
+        final boolean isUserSwitching = responseContext.isUserSwitching();
+        final boolean isFullResponse = responseContext.isFullResponse();
         try {
 
             if (config.isAnalyticsOnly()) {
@@ -142,14 +144,14 @@ public class InAppResponse extends CleverTapResponseDecorator {
             // winner rather than shown twice. Content-fetch responses never open a window, and never
             // feed their directive into the Option 2 fast path (so appLaunchContentFetch stays null).
             JSONArray appLaunchContentFetch = null;
-            if (responseSource != CTResponseSource.CONTENT_FETCH) {
+            if (responseContext.getSource() != CTResponseSource.CONTENT_FETCH) {
                 controllerManager.getInAppController().openAppLaunchArbitrationWindowIfNeeded(response);
                 appLaunchContentFetch = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY);
             }
 
             handleLegacyInApps(res);
             handleAppLaunchInApps(res, appLaunchContentFetch);
-            handleClientSideInApps(res, inAppStore);
+            handleClientSideInApps(res, inAppStore, responseContext.getSource());
             handleServerSideInAppsMeta(res, inAppStore);
             preloadAssetsAndEvictStaleFiles(res, context, isFullResponse);
 
@@ -204,8 +206,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
     // CS in-apps (inapp_notifs_cs). Guard: storeClientSideInApps is a full replace of a persisted
     // store. A content-fetch response carries only a partial (or empty) set, so applying it here
     // would wipe the client-side campaigns delivered by /a1. Only /a1 is authoritative for CS in-apps.
-    private void handleClientSideInApps(InAppResponseAdapter res, InAppStore inAppStore) {
-        if (responseSource == CTResponseSource.CONTENT_FETCH) {
+    private void handleClientSideInApps(InAppResponseAdapter res, InAppStore inAppStore, CTResponseSource source) {
+        if (source == CTResponseSource.CONTENT_FETCH) {
             logger.verbose(config.getAccountId(),
                     "Ignoring inapp_notifs_cs from a content fetch response to protect the client-side store");
             return;

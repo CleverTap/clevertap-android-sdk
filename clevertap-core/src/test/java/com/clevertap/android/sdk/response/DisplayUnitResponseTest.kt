@@ -47,8 +47,10 @@ class DisplayUnitResponseTest {
         )
 
     private fun process(source: CTResponseSource, body: JSONObject) {
-        response.responseSource = source
-        response.processResponse(body, "", context)
+        response.processResponse(
+            body, "", context,
+            ResponseContext(isFullResponse = false, isUserSwitching = false, source = source)
+        )
     }
 
     private fun cachedIds(): Set<String> =

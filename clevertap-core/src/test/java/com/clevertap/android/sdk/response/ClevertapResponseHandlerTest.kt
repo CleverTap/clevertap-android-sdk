@@ -61,11 +61,10 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, false, true) }
-        listOf(mockInboxResponse, mockDisplayUnitResponse, mockFetchVariablesResponse, mockGenericResponse)
-            .forEach { response ->
-                verify { response.processResponse(mockBodyJson, bodyString, mockContext) }
-            }
+        val ctx = ResponseContext(isFullResponse = true, isUserSwitching = false, source = CTResponseSource.A1)
+        responses.forEach { response ->
+            verify { response.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        }
     }
 
     @Test
@@ -89,15 +88,15 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses are not processed
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses are processed
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true, false) }
-
-        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
     }
 
     @Test
@@ -115,7 +114,12 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true, true) }
+        verify {
+            mockInAppResponse.processResponse(
+                mockBodyJson, bodyString, mockContext,
+                ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+            )
+        }
     }
 
     @Test
@@ -133,7 +137,12 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify {
+            mockGenericResponse.processResponse(
+                mockBodyJson, bodyString, mockContext,
+                ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+            )
+        }
     }
 
 
@@ -163,17 +172,16 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true, false) }
-
-        verify { mockOtherResponse1.processResponse(mockBodyJson, bodyString, mockContext) }
-
-        verify { mockOtherResponse2.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockOtherResponse1.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockOtherResponse2.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
     }
 
 

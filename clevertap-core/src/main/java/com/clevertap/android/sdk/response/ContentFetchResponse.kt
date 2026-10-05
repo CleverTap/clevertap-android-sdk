@@ -17,12 +17,21 @@ internal class ContentFetchResponse(
     private val logger: Logger = config.logger
 
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
+        processResponse(jsonBody, stringBody, context, ResponseContext.DEFAULT)
+    }
+
+    override fun processResponse(
+        jsonBody: JSONObject?,
+        stringBody: String?,
+        context: Context,
+        responseContext: ResponseContext
+    ) {
         logger.verbose(config.accountId, "Processing Content Fetch response...")
 
         // Recursion guard: a /content response is re-fed through this same decorator chain. A
         // content_fetch nested inside it would trigger another fetch, unbounded. Only /a1 may open
         // a fetch.
-        if (responseSource == CTResponseSource.CONTENT_FETCH) {
+        if (responseContext.source == CTResponseSource.CONTENT_FETCH) {
             logger.verbose(config.accountId,
                            "Ignoring content_fetch from a content fetch response (recursion guard)")
             return

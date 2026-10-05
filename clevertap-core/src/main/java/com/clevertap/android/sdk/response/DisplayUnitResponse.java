@@ -47,6 +47,12 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+        processResponse(response, stringBody, context, ResponseContext.DEFAULT);
+    }
+
+    @Override
+    public void processResponse(final JSONObject response, final String stringBody, final Context context,
+            final ResponseContext responseContext) {
 
         logger.verbose(config.getAccountId(), "Processing Display Unit items...");
 
@@ -73,7 +79,8 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             logger
                     .verbose(config.getAccountId(),
                             Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
-            parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY));
+            parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY),
+                    responseContext.getSource());
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
         }
@@ -89,7 +96,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      *
      * @param messages - Json array of Display Unit items
      */
-    private void parseDisplayUnits(JSONArray messages) {
+    private void parseDisplayUnits(JSONArray messages, CTResponseSource source) {
         if (messages == null || messages.length() == 0) {
             logger.verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is null or empty");
@@ -112,7 +119,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         // before the cache, so it also holds for a host-supplied DisplayUnitCache and needs no
         // public API change (mirrors iOS).
         final ArrayList<CleverTapDisplayUnit> unitsToApply;
-        if (responseSource == CTResponseSource.CONTENT_FETCH) {
+        if (source == CTResponseSource.CONTENT_FETCH) {
             // A content fetch that brought no mergeable unit (all empty/duplicate unitIDs) would
             // leave the merged set identical to the current cache — re-publishing the unchanged /a1
             // set to listeners. Skip entirely so we notify only when a unit was actually received.
