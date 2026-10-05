@@ -60,15 +60,17 @@ public class CTDisplayUnitController implements DisplayUnitCache {
     }
 
     /**
-     * Replaces the old Display Units with the supplied list.
+     * Upserts the supplied Display Units into the cache, keyed by unitID: a unit with a known unitID
+     * replaces the existing one, a new unitID is added, and units not in this list are left in place.
+     * This does NOT clear the cache, so a partial response (e.g. a /content subset) adds to rather
+     * than wipes the units delivered by /a1. Call {@link #reset()} explicitly to clear.
      *
-     * @param displayUnits parsed display units; may be {@code null} or empty.
+     * @param displayUnits parsed display units; may be {@code null} or empty (then a no-op).
      */
     @Override
     public synchronized void updateDisplayUnits(@Nullable List<CleverTapDisplayUnit> displayUnits) {
-        reset();
         if (displayUnits == null || displayUnits.isEmpty()) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Empty Display Units list, cache cleared");
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Empty Display Units list, nothing to update");
             return;
         }
         for (CleverTapDisplayUnit unit : displayUnits) {
