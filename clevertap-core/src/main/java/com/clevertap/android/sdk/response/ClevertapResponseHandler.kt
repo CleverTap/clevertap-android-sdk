@@ -25,13 +25,13 @@ internal class ClevertapResponseHandler(
         responses
             .filter { decorator -> !isUserSwitching || decorator.runsDuringUserSwitch() }
             .forEach { decorator ->
-                decorator.isFullResponse = isFullResponse
                 decorator.responseSource = source
-                // TODO(refactor): InAppResponse still needs isUserSwitching passed explicitly. Fold
-                //  isFullResponse/responseSource/isUserSwitching into an immutable ResponseContext
-                //  param so this concrete-type special-case and the field mutation above both go away.
-                if (isUserSwitching && decorator is InAppResponse) {
-                    decorator.processResponse(bodyJson, bodyString, context, true)
+                // InAppResponse is the only consumer of isFullResponse, so it's passed as a call
+                // argument rather than a shared field. TODO(refactor): responseSource still rides a
+                // shared mutable field (read by InAppResponse/ContentFetchResponse/DisplayUnitResponse);
+                // fold it + isUserSwitching into an immutable ResponseContext to remove it too.
+                if (decorator is InAppResponse) {
+                    decorator.processResponse(bodyJson, bodyString, context, isUserSwitching, isFullResponse)
                 } else {
                     decorator.processResponse(bodyJson, bodyString, context)
                 }

@@ -70,14 +70,15 @@ public class InAppResponse extends CleverTapResponseDecorator {
             final String stringBody,
             final Context context
     ) {
-        processResponse(response, stringBody, context, false);
+        processResponse(response, stringBody, context, false, false);
     }
 
     public void processResponse(
             final JSONObject response,
             final String stringBody,
             final Context context,
-            final boolean isUserSwitching
+            final boolean isUserSwitching,
+            final boolean isFullResponse
     ) {
         try {
 
@@ -150,7 +151,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             handleAppLaunchInApps(res, appLaunchContentFetch);
             handleClientSideInApps(res, inAppStore);
             handleServerSideInAppsMeta(res, inAppStore);
-            preloadAssetsAndEvictStaleFiles(res, context);
+            preloadAssetsAndEvictStaleFiles(res, context, isFullResponse);
 
         } catch (Throwable t) {
             Logger.v("InAppManager: Failed to parse response", t);
@@ -230,7 +231,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
     }
 
-    private void preloadAssetsAndEvictStaleFiles(InAppResponseAdapter res, Context context) {
+    private void preloadAssetsAndEvictStaleFiles(InAppResponseAdapter res, Context context, boolean isFullResponse) {
         List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
 
         FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory

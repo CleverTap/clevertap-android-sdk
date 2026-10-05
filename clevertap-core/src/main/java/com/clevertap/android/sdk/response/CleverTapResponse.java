@@ -10,11 +10,10 @@ import org.json.JSONObject;
  */
 public abstract class CleverTapResponse {
 
-    public boolean isFullResponse = false; // todo this is volatile, could not fix using current infra
-
     // Which endpoint this response came from. Set per-response by ClevertapResponseHandler before
-    // each processResponse call (same mechanism as isFullResponse). Defaults to A1 so any path that
-    // invokes processResponse directly behaves as an /a1 response.
+    // each processResponse call. Defaults to A1 so any path that invokes processResponse directly
+    // behaves as an /a1 response. TODO: still a shared mutable field (read by InAppResponse,
+    // ContentFetchResponse, DisplayUnitResponse) — fold into an immutable ResponseContext param.
     public CTResponseSource responseSource = CTResponseSource.A1;
 
     /**

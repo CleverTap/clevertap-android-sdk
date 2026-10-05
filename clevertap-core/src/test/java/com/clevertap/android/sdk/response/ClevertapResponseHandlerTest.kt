@@ -61,9 +61,11 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        responses.forEach { response ->
-            verify { response.processResponse(mockBodyJson, bodyString, mockContext) }
-        }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, false, true) }
+        listOf(mockInboxResponse, mockDisplayUnitResponse, mockFetchVariablesResponse, mockGenericResponse)
+            .forEach { response ->
+                verify { response.processResponse(mockBodyJson, bodyString, mockContext) }
+            }
     }
 
     @Test
@@ -93,7 +95,7 @@ class ClevertapResponseHandlerTest {
         verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
 
         // Verify included responses are processed
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true, false) }
 
         verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext) }
     }
@@ -113,7 +115,7 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true, true) }
     }
 
     @Test
@@ -167,7 +169,7 @@ class ClevertapResponseHandlerTest {
         verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
 
         // Verify included responses
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true, false) }
 
         verify { mockOtherResponse1.processResponse(mockBodyJson, bodyString, mockContext) }
 
