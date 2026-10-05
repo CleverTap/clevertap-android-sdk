@@ -28,7 +28,6 @@ internal data class ContentFetchItem(
         if (targetId == null || raw.opt(Constants.INAPP_PRIORITY) == null) return null
         return JSONObject().apply {
             put(Constants.INAPP_ID_IN_PAYLOAD, targetId) // ti <- tgtId
-            put(Constants.INAPP_SYNTHETIC_CANDIDATE, true)
             for (key in SELECTION_RULE_KEYS) {
                 raw.opt(key)?.let { put(key, it) }
             }

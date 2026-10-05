@@ -138,13 +138,16 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
             // If this /a1 carries a content_fetch that can yield an app-launch in-app, open an
             // arbitration window so the app-launch winner below is held and merged with the /content
-            // winner rather than shown twice. Content-fetch responses never open a window.
+            // winner rather than shown twice. Content-fetch responses never open a window, and never
+            // feed their directive into the Option 2 fast path (so appLaunchContentFetch stays null).
+            JSONArray appLaunchContentFetch = null;
             if (responseSource != CTResponseSource.CONTENT_FETCH) {
                 controllerManager.getInAppController().openAppLaunchArbitrationWindowIfNeeded(response);
+                appLaunchContentFetch = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY);
             }
 
             handleLegacyInApps(res);
-            handleAppLaunchInApps(res);
+            handleAppLaunchInApps(res, appLaunchContentFetch);
             handleClientSideInApps(res, inAppStore);
             handleServerSideInAppsMeta(res, inAppStore);
             preloadAssetsAndEvictStaleFiles(res, context);
@@ -174,11 +177,12 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     // App-launch SS in-apps: inapp_notifs_applaunched (NORMAL/DELAYED) + inapp_notifs_applaunched_meta
     // (IN-ACTION), evaluated against the App Launched event.
-    private void handleAppLaunchInApps(InAppResponseAdapter res) {
+    private void handleAppLaunchInApps(InAppResponseAdapter res, JSONArray appLaunchContentFetch) {
         DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
         if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
             controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
                     partitionedAppLaunchServerSideInApps.getImmediateInApps(),
+                    appLaunchContentFetch,
                     coreMetaData.getLocationFromUser());
         }
         if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {

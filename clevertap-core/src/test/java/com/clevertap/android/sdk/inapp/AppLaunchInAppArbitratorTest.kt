@@ -11,8 +11,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @ExperimentalCoroutinesApi
@@ -115,20 +113,16 @@ class AppLaunchInAppArbitratorTest {
 
     @Test
     fun `hard backstop tears down the window even if completion never arrives`() {
-        arbitrator.openWindow(listOf(inApp("200", 1)))
+        arbitrator.openWindow()
         arbitrator.routeWinners(listOf(inApp("100", 1))) // /a1 buffered
 
         // No onContentFetchComplete() ever — simulate a skipped completion signal.
         scheduler.advanceUntilIdle() // runs show-timeout (3s) then the hard backstop (15s)
 
         assertEquals(1, shown.size) // /a1 winner shown by the show-timeout
-        // Window has self-healed: no synthetics, and a subsequent winner is shown normally (not dropped).
-        assertNull(arbitrator.syntheticCandidates())
+        // Window has self-healed: a subsequent winner is passed through, not dropped.
         val next = listOf(inApp("300", 1))
         assertEquals(next, arbitrator.routeWinners(next)) // phase == null again → passthrough
-        // And a fresh window can open (not permanently stuck).
-        arbitrator.openWindow(listOf(inApp("400", 1)))
-        assertEquals(1, arbitrator.syntheticCandidates()?.size)
     }
 
     @Test
@@ -144,11 +138,9 @@ class AppLaunchInAppArbitratorTest {
 
     @Test
     fun `fast path close suppresses a later content winner without arbitrator showing`() {
-        arbitrator.openWindow(listOf(inApp("200", 1))) // opened with synthetics (Option 2)
-        assertNotNull(arbitrator.syntheticCandidates())
+        arbitrator.openWindow()
 
         arbitrator.closeForFastPath(inApp("100", 1)) // caller shows the /a1 winner itself
-        assertNull(arbitrator.syntheticCandidates())  // window closed
 
         assertTrue(arbitrator.routeWinners(listOf(inApp("200", 1))).isEmpty()) // content dropped
         assertTrue(shown.isEmpty()) // fast path shows via the caller, not the arbitrator
@@ -157,30 +149,25 @@ class AppLaunchInAppArbitratorTest {
     }
 
     @Test
-    fun `syntheticCandidates is exposed only while a window with synthetics is open`() {
-        assertNull(arbitrator.syntheticCandidates()) // no window
-        arbitrator.openWindow() // Option 1 (no synthetics)
-        assertEquals(0, arbitrator.syntheticCandidates()?.size)
-        arbitrator.onContentFetchComplete()
-        assertNull(arbitrator.syntheticCandidates())
-    }
-
-    @Test
     fun `second openWindow is a no-op - first window survives`() {
-        arbitrator.openWindow(listOf(inApp("200", 1)))
-        arbitrator.openWindow() // ignored
-        assertEquals(1, arbitrator.syntheticCandidates()?.size)
+        arbitrator.openWindow()
+        arbitrator.routeWinners(listOf(inApp("100", 1))) // buffered by the first window
+        arbitrator.openWindow() // ignored — must NOT reset the buffer
+
+        arbitrator.onContentFetchComplete() // shows the winner the first window buffered
+
+        assertEquals(1, shown.size)
+        assertEquals("100", shown[0].optString("ti"))
     }
 
     @Test
     fun `abandon drops the buffered winner without showing and self-heals`() {
-        arbitrator.openWindow(listOf(inApp("200", 1)))
+        arbitrator.openWindow()
         arbitrator.routeWinners(listOf(inApp("100", 1))) // /a1 winner buffered
 
         arbitrator.abandon()
 
         assertTrue(shown.isEmpty())                  // nothing shown
-        assertNull(arbitrator.syntheticCandidates()) // window discarded
         val next = listOf(inApp("300", 1))
         assertEquals(next, arbitrator.routeWinners(next)) // passthrough again (phase == null)
     }
@@ -215,7 +202,6 @@ class AppLaunchInAppArbitratorTest {
         scheduler.advanceUntilIdle()
 
         // No propagation, and the window self-healed rather than sticking.
-        assertNull(throwingArbitrator.syntheticCandidates())
         val next = listOf(inApp("300", 1))
         assertEquals(next, throwingArbitrator.routeWinners(next))
     }

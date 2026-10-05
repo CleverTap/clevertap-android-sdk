@@ -62,6 +62,7 @@ import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
 import kotlinx.coroutines.runBlocking
+import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -680,6 +681,7 @@ internal class InAppController(
 
     fun onAppLaunchServerSideInAppsResponse(
         appLaunchServerSideInApps: List<JSONObject>,
+        contentFetch: JSONArray?,
         userLocation: Location?
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
@@ -689,7 +691,7 @@ internal class InAppController(
             )
 
         // Option 2 fast path: show the /a1 winner now when waiting can't change the outcome.
-        if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, appLaunchedProperties, userLocation)) {
+        if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, contentFetch, appLaunchedProperties, userLocation)) {
             return
         }
 
@@ -703,17 +705,20 @@ internal class InAppController(
     /**
      * Option 2 prediction. Returns true (and shows [a1Winner] now, closing the window) when waiting
      * for `/content` cannot change the outcome — no synthetic candidate qualifies, or the `/a1`
-     * winner tops the merged sort. Returns false to fall back to Option 1 (wait). Dormant unless the
-     * window was opened with synthetic candidates (requires per-item `priority`).
+     * winner tops the merged sort. Returns false to fall back to Option 1 (wait). The synthetics are
+     * derived on the spot from this same `/a1` response's [contentFetch]; non-empty synthetics imply
+     * a window was opened (both key off the same directive), so Option 2 is dormant unless every
+     * app-launch content_fetch item carries `priority`.
      */
     private fun tryAppLaunchFastPath(
         a1Winner: List<JSONObject>,
+        contentFetch: JSONArray?,
         appLaunchedProperties: Map<String, Any>,
         userLocation: Location?
     ): Boolean {
-        val synthetics = appLaunchArbitrator.syntheticCandidates() ?: return false // no window
+        val synthetics = appLaunchSynthetics(contentFetch)
         if (synthetics.isEmpty()) {
-            return false // Option 1 (no priority): must wait
+            return false // Option 1 (no priority / no content fetch): wait or show now via routeWinners
         }
         if (a1Winner.isEmpty()) {
             return false // nothing to show now; wait for content
@@ -729,8 +734,11 @@ internal class InAppController(
         val a1WinnerTops = if (eligibleContent.isEmpty()) {
             true // no content candidate can qualify -> waiting cannot change the outcome
         } else {
+            // Merge the /a1 winner with the predicted content and ask, by reference identity, whether
+            // the top came from the /a1 set. a1Winner and eligibleContent are distinct instances and
+            // sortByPriority preserves references, so this needs no marker on the JSON.
             val top = evaluationManager.sortByPriority(a1Winner + eligibleContent).firstOrNull()
-            top != null && !top.optBoolean(Constants.INAPP_SYNTHETIC_CANDIDATE, false)
+            top != null && a1Winner.any { it === top }
         }
         if (!a1WinnerTops) {
             return false // a content candidate could win -> fall back to Option 1
@@ -744,24 +752,29 @@ internal class InAppController(
     /**
      * Opens an app-launch arbitration window when this `/a1` response carries a `content_fetch` that
      * can produce an app-launch in-app, so the winner is held and merged with the `/content` winner
-     * instead of shown twice. When every such item carries `priority`, the window opens with
-     * synthetic candidates enabling the Option 2 fast path (all-or-nothing). Called on `/a1` only.
+     * instead of shown twice. Called on `/a1` only.
      */
     fun openAppLaunchArbitrationWindowIfNeeded(response: JSONObject) {
         val items = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?: return
-        val appLaunchItems = ContentFetchItem.listFrom(items).filter { isAppLaunchInAppItem(it) }
-        if (appLaunchItems.isEmpty()) {
-            return // no in-app app-launch content fetch
+        val hasAppLaunchItem = ContentFetchItem.listFrom(items).any { isAppLaunchInAppItem(it) }
+        if (hasAppLaunchItem) {
+            appLaunchArbitrator.openWindow()
         }
+    }
 
-        // All-or-nothing: enable Option 2 only when every item carries priority.
-        val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
-        val syntheticCandidates = if (synthetics.all { it != null }) {
-            synthetics.filterNotNull()
-        } else {
-            emptyList() // partial priority -> Option 1 wait
+    // Synthetic selection-rule candidates for the app-launch content_fetch items on a `/a1` response,
+    // used by the Option 2 fast path. All-or-nothing: empty unless every app-launch item carries
+    // `priority` (otherwise fall back to Option 1 / wait). Derived from the response, never stored.
+    private fun appLaunchSynthetics(contentFetch: JSONArray?): List<JSONObject> {
+        if (contentFetch == null) {
+            return emptyList()
         }
-        appLaunchArbitrator.openWindow(syntheticCandidates)
+        val appLaunchItems = ContentFetchItem.listFrom(contentFetch).filter { isAppLaunchInAppItem(it) }
+        if (appLaunchItems.isEmpty()) {
+            return emptyList()
+        }
+        val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
+        return if (synthetics.all { it != null }) synthetics.filterNotNull() else emptyList()
     }
 
     // Matches an app-launch in-app content-fetch by response key or event name. Conservative: a

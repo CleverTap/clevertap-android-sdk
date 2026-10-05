@@ -81,7 +81,6 @@ class ContentFetchItemTest {
         assertTrue(payload.has(Constants.INAPP_SUPPRESSED))
         assertEquals(5, payload.optInt(InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER))
         assertEquals("my-template", payload.optString(CustomTemplateInAppData.KEY_TEMPLATE_NAME))
-        assertTrue(payload.optBoolean(Constants.INAPP_SYNTHETIC_CANDIDATE))
         // No display-time keys leak into the synthetic payload.
         assertTrue(!payload.has("efc") && !payload.has("mdc") && !payload.has("tdc"))
     }

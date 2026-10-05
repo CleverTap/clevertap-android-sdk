@@ -42,20 +42,17 @@ internal class AppLaunchInAppArbitrator(
     private var timeoutJob: Job? = null
     private val buffered = mutableListOf<JSONObject>()
 
-    // Option 2 state: content candidates predicted against at /a1 time (empty = Option 1), and the
-    // winner displayed (for the mispredict diagnostic).
-    private var synthetics: List<JSONObject> = emptyList()
+    // The winner shown (for the mispredict diagnostic).
     private var shownWinner: JSONObject? = null
 
     /** Open a window and arm the timer. No-op if one is already open (the first window survives). */
-    fun openWindow(syntheticCandidates: List<JSONObject> = emptyList()) = synchronized(lock) {
+    fun openWindow() = synchronized(lock) {
         if (phase != null) {
             logger.verbose(logTag, "[Arbitration] window already open, ignoring")
             return
         }
         phase = Phase.OPEN
         buffered.clear()
-        synthetics = syntheticCandidates
         shownWinner = null
         // Lifecycle timer on the arbiter's own (never-cancelled) scope: show the /a1 winner at the
         // timeout, then self-heal at the hard backstop even if completion never fires.
@@ -73,12 +70,7 @@ internal class AppLaunchInAppArbitrator(
                 forceTeardown("lifecycle failure")
             }
         }
-        logger.verbose(logTag, "[Arbitration] window opened (synthetics=${syntheticCandidates.size})")
-    }
-
-    /** Synthetic candidates of the OPEN window (Option 2), or null when none / no window. */
-    fun syntheticCandidates(): List<JSONObject>? = synchronized(lock) {
-        if (phase == Phase.OPEN) synthetics else null
+        logger.verbose(logTag, "[Arbitration] window opened")
     }
 
     /**
@@ -143,7 +135,6 @@ internal class AppLaunchInAppArbitrator(
         timeoutJob = null
         phase = null
         buffered.clear()
-        synthetics = emptyList()
         shownWinner = null
         logger.verbose(logTag, "[Arbitration] window torn down ($reason)")
     }
