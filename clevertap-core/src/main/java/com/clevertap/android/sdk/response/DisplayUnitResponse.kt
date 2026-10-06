@@ -20,12 +20,14 @@ import org.json.JSONObject
  *
  * Handles the whole channel in one pass, in order, so there is no cross-processor ordering dependency
  * (the meta must land before the content gate reads ceilings):
- * 1. ND fcap **meta** — `ndmc`/`ndmp` ceilings, `adUnit_stale` GC, `adUnit_notifs_ss` rule bundle, and
- *    CG-suppression acks from `adUnit_notifs_applaunched` stubs. Ingested on **every** response,
- *    including a user switch (ceilings/rules are per-account and should stay current).
- * 2. ND **content** — `adUnit_notifs` + non-stub `adUnit_notifs_applaunched`, merged, frequency-cap
- *    gated, written to the cache once, and delivered via the callback. **Skipped on a user switch**
- *    (matches the legacy behavior of not surfacing display units to the just-switched-in user).
+ * 1. ND fcap **meta** — `ndmc`/`ndmp` ceilings and `adUnit_stale` GC run on **every** response (per-account,
+ *    kept current even across a user switch); the per-user `adUnit_notifs_ss` rule bundle is skipped on a
+ *    user switch.
+ * 2. ND **content** — `adUnit_notifs` + non-stub `adUnit_notifs_applaunched`, merged, frequency-cap gated,
+ *    written to the cache once, and delivered via the callback. The App-Launched CG-suppression acks are
+ *    raised here too (at the would-have-shown moment — a stub still within its whenLimits), so they share
+ *    the eligibility check with real content. **Skipped on a user switch** (matches the legacy behavior of
+ *    not surfacing display units — or attributing the outgoing user's CG arm — to the just-switched-in user).
  *
  * The ND dependencies are nullable: the send-test / push-preview path (see the content-only secondary
  * constructor) carries a single display unit and no ND meta, so meta ingestion is skipped there.
@@ -90,7 +92,6 @@ internal class DisplayUnitResponse(
     private fun ingestNdMeta(response: JSONObject, context: Context, isUserSwitching: Boolean) {
         // Content-only (send-test/preview) path has no ND stores wired — skip meta entirely.
         val stores = storeRegistry ?: return
-        val evalManager = ndEvaluationManager ?: return
         try {
             val ndFCManager = controllerManager.ndFCManager
 
@@ -126,22 +127,11 @@ internal class DisplayUnitResponse(
                     )
                 }
             }
-
-            // Ack CG-suppressed App-Launched stubs (the real content is delivered below). App-Launched
-            // path only — regular-event CG is server-decided.
-            ackCgSuppressedStubs(response, evalManager)
+            // Note: App-Launched CG-suppression acks are raised in the content pass (deliverContent →
+            // appLaunchedWithinWhenLimits), gated on the same whenLimits as real content so the CG arm is
+            // counted only when the campaign would actually have shown.
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to process ND meta", t)
-        }
-    }
-
-    private fun ackCgSuppressedStubs(response: JSONObject, evalManager: NdEvaluationManager) {
-        val appLaunched = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY) ?: return
-        for (i in 0 until appLaunched.length()) {
-            val entry = appLaunched.optJSONObject(i)
-            if (entry != null && entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
-                evalManager.recordCgSuppressed(entry)
-            }
         }
     }
 
@@ -182,8 +172,8 @@ internal class DisplayUnitResponse(
      * Parses Display Units from both `adUnit_notifs` and (non-CG-suppressed) `adUnit_notifs_applaunched`,
      * merges them, applies the ND frequency-cap gate, and writes the cache once —
      * `CTDisplayUnitController.updateDisplayUnits` replaces (not merges) the cache, so two writes for
-     * one response would wipe each other. CG stubs
-     * (`suppressed:true`) are skipped here; they are acked in [ackCgSuppressedStubs].
+     * one response would wipe each other. CG stubs (`suppressed:true`) are not delivered; they are split
+     * out and acked within [appLaunchedWithinWhenLimits] once they pass the same whenLimits as real content.
      */
     private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?) {
         val parsed = ArrayList<CleverTapDisplayUnit>()
@@ -214,22 +204,42 @@ internal class DisplayUnitResponse(
     }
 
     /**
-     * Returns the non-suppressed App-Launched units still within their advanced `whenLimits`. Suppressed
-     * CG stubs are dropped here (acked separately in [ackCgSuppressedStubs]). Guarded and **fail-closed**:
-     * if a malformed rule makes the filter throw, drop the App-Launched units (they can't be cap-checked, so
-     * they must not bypass caps) — but the throw is contained here so regular `adUnit_notifs` content still
-     * delivers. The evaluator is absent only on the send-test/preview path, which has no ND caps to apply.
+     * Processes the App-Launched batch: splits CG-suppression stubs from deliverable content, applies the
+     * advanced `whenLimits` to both, acks the eligible stubs, and returns the content still within cap.
+     *
+     * CG acks fire at the **would-have-shown** moment — a stub is acked only if it is still within its
+     * `whenLimits` (mirrors in-app, which records CG suppression for *eligible* in-apps, not on receipt).
+     * There is deliberately **no** global-budget gate on the acks: a CG stub renders nothing, so it neither
+     * consumes nor competes for the daily/session budget.
+     *
+     * Deliverable content additionally goes through [trimToGlobalCap]. Guarded and **fail-closed**: if a
+     * malformed rule makes a filter throw, drop that set (it can't be cap-checked, so it must not bypass
+     * caps) — but the throws are contained here so regular `adUnit_notifs` content still delivers. The
+     * evaluator is absent only on the send-test/preview path, which has no ND caps/acks to apply.
      */
     private fun appLaunchedWithinWhenLimits(appLaunched: JSONArray): List<JSONObject> {
-        val nonSuppressed = ArrayList<JSONObject>()
+        val content = ArrayList<JSONObject>()
+        val cgStubs = ArrayList<JSONObject>()
         for (i in 0 until appLaunched.length()) {
             val entry = appLaunched.optJSONObject(i) ?: continue
-            if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) continue
-            nonSuppressed.add(entry)
+            if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) cgStubs.add(entry) else content.add(entry)
         }
-        val evaluator = ndEvaluationManager ?: return nonSuppressed // preview path: no caps to apply
+        val evaluator = ndEvaluationManager ?: return content // preview path: no caps/acks to apply
+
+        // Ack CG stubs that are still within their whenLimits (would have shown).
+        if (cgStubs.isNotEmpty()) {
+            val eligibleStubs = try {
+                evaluator.retainAppLaunchedWithinLimits(cgStubs)
+            } catch (t: Throwable) {
+                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG stub whenLimits filter failed; skipping acks", t)
+                emptyList()
+            }
+            eligibleStubs.forEach { evaluator.recordCgSuppressed(it) }
+        }
+
+        // Deliverable content: whenLimits + remaining global-budget trim.
         val withinWhenLimits = try {
-            evaluator.retainAppLaunchedWithinLimits(nonSuppressed)
+            evaluator.retainAppLaunchedWithinLimits(content)
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND whenLimits filter failed; dropping App-Launched units", t)
             emptyList() // fail-closed: don't let un-cap-checked units through

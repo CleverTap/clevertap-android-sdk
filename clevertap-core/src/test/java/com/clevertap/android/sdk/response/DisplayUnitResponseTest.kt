@@ -100,18 +100,36 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     @Test
-    fun `acks CG-suppressed app-launched stubs`() {
+    fun `acks CG-suppressed app-launched stubs that are within whenLimits`() {
         val json = JSONObject(
             """{"adUnit_notifs_applaunched":[
                 {"ti":70003,"wzrk_id":"70003_20260810","suppressed":true,"wzrk_cgId":0},
                 {"ti":70004,"wzrk_id":"70004_20260810","type":"simple"}
             ]}"""
         )
+        // Stub is eligible (passes whenLimits) -> acked at the would-have-shown moment.
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers { firstArg() }
+
         response.processResponse(json, "", context)
 
         val slot = slot<JSONObject>()
         verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(capture(slot)) }
         assertEquals("70003_20260810", slot.captured.optString("wzrk_id"))
+    }
+
+    @Test
+    fun `a CG stub outside its whenLimits is not acked`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}
+            ]}"""
+        )
+        // whenLimits drops the stub -> the campaign would not have shown -> the CG arm must not be counted.
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } returns emptyList()
+
+        response.processResponse(json, "", context)
+
+        verify(exactly = 0) { ndEvaluationManager.recordCgSuppressed(any()) }
     }
 
     @Test
@@ -200,23 +218,30 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     @Test
-    fun `does not deliver app-launched suppressed stubs to the whenLimits filter`() {
+    fun `CG stubs and content are run through whenLimits in separate groups, stubs acked not delivered`() {
         val json = JSONObject(
             """{"adUnit_notifs_applaunched":[
                 {"ti":70003,"wzrk_id":"70003_20260810","suppressed":true,"wzrk_cgId":0},
                 {"ti":70004,"wzrk_id":"70004_20260810","type":"simple"}
             ]}"""
         )
-        val slot = slot<List<JSONObject>>()
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(capture(slot)) } answers { firstArg() }
+        val groups = mutableListOf<List<JSONObject>>()
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(capture(groups)) } answers { firstArg() }
 
         response.processResponse(json, "", context)
 
-        // Only the non-suppressed unit reaches the filter; the CG stub is excluded (acked separately).
-        verify(exactly = 1) { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) }
-        verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(any()) } // the CG stub is still acked
-        assertEquals(1, slot.captured.size)
-        assertEquals("70004", slot.captured[0].optString("ti"))
+        // Both the CG-stub group and the content group go through the same whenLimits filter, separately.
+        verify(exactly = 2) { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) }
+        val stubGroup = groups.first { grp -> grp.any { it.optBoolean("suppressed") } }
+        val contentGroup = groups.first { grp -> grp.none { it.optBoolean("suppressed") } }
+        assertEquals("70003", stubGroup.single().optString("ti"))
+        assertEquals("70004", contentGroup.single().optString("ti"))
+        // The CG stub is acked (not delivered); only the content unit is delivered.
+        verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(any()) }
+        val delivered = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(delivered)) }
+        assertEquals(1, delivered.captured.size)
+        assertEquals("70004_20260810", delivered.captured[0].unitID)
     }
 
     @Test
