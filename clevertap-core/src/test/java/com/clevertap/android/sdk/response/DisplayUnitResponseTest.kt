@@ -188,7 +188,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
         every { ndFCManager.globalCapRemaining() } returns 0 // no global budget left
         // 70002 is fcap-managed (carries excludeGlobalFCaps) so it also hits NdFcapGate.canShow; in prod an
         // exempt unit returns true there, so mirror that (the relaxed mock would otherwise return false).
-        every { ndFCManager.canShow(any(), any(), any(), any(), any(), any()) } returns true
+        every { ndFCManager.canShow(any(), any(), any(), any()) } returns true
 
         response.processResponse(json, "", context)
 
@@ -285,7 +285,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
         // Content-only constructor -> storeRegistry null -> the fcap gate must be skipped so a marketer's
         // preview always renders, even if canShow would deny.
         val preview = DisplayUnitResponse(config, callbackManager, controllerManager)
-        every { ndFCManager.canShow(any(), any(), any(), any(), any(), any()) } returns false
+        every { ndFCManager.canShow(any(), any(), any(), any()) } returns false
         val json = JSONObject("""{"adUnit_notifs":[{"wzrk_id":"p1","ti":70001,"type":"simple","tlc":1}]}""")
 
         preview.processResponse(json, "", context)

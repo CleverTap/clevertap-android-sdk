@@ -14,15 +14,16 @@ import java.util.Locale
 /**
  * Frequency-cap policy for the Native Display (ND / Display Units) channel.
  *
- * This is the ND sibling of [InAppFCManager] and enforces the counter-based caps at the point a unit
- * would be surfaced to the host app:
- * - per-target lifetime (`tlc`) and daily (`tdc`) counts,
- * - per-target and global session caps (`mdc` / `ndmc`),
- * - global daily cap (shown-today vs the account ceiling).
+ * This is the ND sibling of [InAppFCManager]. It owns the ND counter state (per-target today/lifetime
+ * counts → `ndtlc`, global shown-today → `ndmp`, session impressions) and the daily-rollover trigger;
+ * all persistence lives in [NdCountsStore].
  *
- * It holds only the cap *policy* and the daily-rollover trigger; all persistence lives in
- * [NdCountsStore]. The advanced `frequencyLimits`/`occurrenceLimits` (whenLimits) are evaluated
- * separately by the ND `LimitsMatcher`; their result is passed in as `frequencyLimitsMaxedOut`.
+ * At delivery, [canShow] enforces **session caps only** (per-target `mdc` and the account `ndmc`). The
+ * per-target daily/lifetime caps (`tdc`/`tlc`) and the global daily ceiling are the server's job on
+ * regular events (V2); the App-Launched remaining-budget trim uses [globalCapRemaining] instead — so
+ * re-applying any of them in [canShow] would double-cap. The advanced `frequencyLimits`/`occurrenceLimits`
+ * (whenLimits) are evaluated separately by the ND `LimitsMatcher`; their result is passed into [canShow]
+ * as `frequencyLimitsMaxedOut`.
  *
  * The API is model-light (primitives) so it stays decoupled from the ND content/target model, which is
  * parsed elsewhere.
@@ -42,8 +43,6 @@ class NdFCManager internal constructor(
         get() = storeRegistry.ndCountsStore
 
     companion object {
-
-        private const val UNCAPPED = -1
 
         private const val SESSION_CAP_DEFAULT = 1000
 
@@ -71,20 +70,17 @@ class NdFCManager internal constructor(
     }
 
     /**
-     * Whether the given ND target can currently be surfaced under all counter caps.
+     * Whether the given ND target can currently be surfaced under the **session** caps — the only counter
+     * caps the SDK owns at delivery (daily/lifetime are server-owned on V2; see the class doc).
      *
      * @param id ND target id (`ti`).
-     * @param excludeFromCaps `efc == 1` — exempt from all caps.
-     * @param totalLifetimeCount `tlc`; [UNCAPPED] means uncapped.
-     * @param totalDailyCount `tdc`; [UNCAPPED] means uncapped.
+     * @param excludeFromCaps `efc == 1` || `excludeGlobalFCaps == 1` — exempt from caps.
      * @param maxPerSession `mdc`; negative means the per-target session default.
      * @param frequencyLimitsMaxedOut Result of the ND whenLimits (advanced) re-check by LimitsMatcher.
      */
     fun canShow(
         id: String?,
         excludeFromCaps: Boolean,
-        totalLifetimeCount: Int,
-        totalDailyCount: Int,
         maxPerSession: Int,
         frequencyLimitsMaxedOut: Boolean,
     ): Boolean {
@@ -93,11 +89,9 @@ class NdFCManager internal constructor(
                 id.isNullOrEmpty() -> true
                 // Re-check advanced whenLimits (without Nth triggers), mirrors in-app canShow.
                 frequencyLimitsMaxedOut -> false
-                // Exclude from all counter caps?
+                // Exclude from caps?
                 excludeFromCaps -> true
-                else -> !hasSessionCapacityMaxedOut(id, maxPerSession) &&
-                    !hasLifetimeCapacityMaxedOut(id, totalLifetimeCount) &&
-                    !hasDailyCapacityMaxedOut(id, totalDailyCount)
+                else -> !hasSessionCapacityMaxedOut(id, maxPerSession)
             }
         } catch (t: Throwable) {
             false
@@ -205,21 +199,6 @@ class NdFCManager internal constructor(
             it.maxPerDay = perDay
             it.maxPerSession = perSession
         }
-    }
-
-    private fun hasDailyCapacityMaxedOut(id: String, totalDailyCount: Int): Boolean {
-        val store = countsStore ?: return false // store not ready -> not capped
-        // 1. Global daily cap.
-        if (store.shownToday >= store.maxPerDay) {
-            return true
-        }
-        // 2. Per-target daily cap.
-        return totalDailyCount != UNCAPPED && store.counts(id).today >= totalDailyCount
-    }
-
-    private fun hasLifetimeCapacityMaxedOut(id: String, totalLifetimeCount: Int): Boolean {
-        val store = countsStore ?: return false // store not ready -> not capped
-        return totalLifetimeCount != UNCAPPED && store.counts(id).lifetime >= totalLifetimeCount
     }
 
     private fun hasSessionCapacityMaxedOut(id: String, maxPerSession: Int): Boolean {

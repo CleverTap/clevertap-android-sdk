@@ -10,9 +10,13 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
  * before they are handed to the host — the ND analog of in-app's pre-display cap gate.
  *
  * Only units carrying an fcap marker (`efc`/`tlc`/`tdc`/`mdc`/`excludeGlobalFCaps`) are gated; unmarked
- * units pass through unchanged so existing non-fcap display units are never affected. Advanced
- * `frequencyLimits`/`occurrenceLimits` were already applied during evaluation (the server only ships
- * content for `adUnit_eval`-voted campaigns), so the delivery-time re-check here covers counter caps only.
+ * units (e.g. journeys, which the server leaves undecorated) pass through unchanged.
+ *
+ * The gate enforces **session caps only** — the account `ndmc` and per-target `mdc`. On regular events the
+ * server already enforced the global daily ceiling and the per-target `tdc`/`tlc`, and the App-Launched
+ * path trims the global budget separately (`trimToGlobalCap`); re-applying any of those here would
+ * double-cap. Advanced `frequencyLimits`/`occurrenceLimits` were already applied during evaluation (the
+ * server only ships content for `adUnit_eval`-voted campaigns), so they are not re-checked here either.
  */
 internal object NdFcapGate {
 
@@ -40,9 +44,7 @@ internal object NdFcapGate {
             val canShow = ndFCManager.canShow(
                 campaignId,
                 excludeFromCaps,
-                json.optInt(Constants.KEY_TLC, UNCAPPED),
-                json.optInt(Constants.KEY_TDC, UNCAPPED),
-                json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED),
+                json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED), // mdc = per-target session cap
                 false, // advanced whenLimits already applied at evaluation time
             )
             if (!canShow) {

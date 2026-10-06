@@ -27,39 +27,39 @@ class NdFCManagerTest : BaseTestCase() {
     @Test
     fun `canShow returns true for empty id`() {
         val fc = create()
-        assertTrue(fc.canShow("", false, -1, -1, -1, false))
+        assertTrue(fc.canShow("", false, -1, false))
     }
 
     @Test
     fun `canShow returns false when frequency limits are maxed`() {
         val fc = create()
-        assertFalse(fc.canShow("70001", false, -1, -1, -1, true))
+        assertFalse(fc.canShow("70001", false, -1, true))
     }
 
     @Test
-    fun `canShow allows an uncapped target`() {
-        val fc = create()
-        fc.updateLimits(10, 10) // don't let global defaults (1) interfere
-        assertTrue(fc.canShow("70001", false, -1, -1, -1, false))
-    }
-
-    @Test
-    fun `excludeFromCaps bypasses counter caps`() {
+    fun `canShow allows a target within session caps`() {
         val fc = create()
         fc.updateLimits(10, 10)
-        fc.didShow("70001", true) // today/lifetime = 1
-        // per-target daily cap of 1 would deny, but excludeFromCaps short-circuits
-        assertFalse(fc.canShow("70001", false, -1, 1, -1, false))
-        assertTrue(fc.canShow("70001", true, -1, 1, -1, false))
+        assertTrue(fc.canShow("70001", false, -1, false))
     }
 
     @Test
-    fun `per-target daily cap denies once reached`() {
+    fun `excludeFromCaps bypasses the session cap`() {
         val fc = create()
         fc.updateLimits(10, 10)
-        fc.didShow("70001", true) // today = 1
-        assertFalse(fc.canShow("70001", false, -1, 1, -1, false)) // 1 >= 1
-        assertTrue(fc.canShow("70001", false, -1, 2, -1, false))  // 1 < 2
+        every { impressionManager.perSession("70001") } returns 5 // per-target session already spent
+        // per-target session cap of 1 would deny, but excludeFromCaps short-circuits
+        assertFalse(fc.canShow("70001", false, 1, false))
+        assertTrue(fc.canShow("70001", true, 1, false))
+    }
+
+    @Test
+    fun `per-target session cap denies once reached`() {
+        val fc = create()
+        fc.updateLimits(10, 10)
+        every { impressionManager.perSession("70001") } returns 1
+        assertFalse(fc.canShow("70001", false, 1, false)) // 1 >= 1
+        assertTrue(fc.canShow("70001", false, 2, false))  // 1 < 2
     }
 
     @Test

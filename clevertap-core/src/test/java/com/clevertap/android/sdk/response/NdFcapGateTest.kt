@@ -38,27 +38,29 @@ class NdFcapGateTest {
     @Test
     fun `fcap-marked unit is delivered when canShow allows, gated on the stable ti`() {
         val ndfc = mockk<NdFCManager>()
-        every { ndfc.canShow(any(), any(), any(), any(), any(), any()) } returns true
+        every { ndfc.canShow(any(), any(), any(), any()) } returns true
+        // Carries a legacy marker (tlc) so it is fcap-managed and reaches the session gate, though the
+        // session-only canShow no longer reads tlc/tdc (those are server-owned on V2).
         val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001").put(Constants.KEY_TLC, 5)
 
         val out = NdFcapGate.filter(arrayListOf(unit(json)), ndfc, logger, "acc")
 
         assertEquals(1, out.size)
-        // Must gate on the campaign ti ("70001"), NOT the wzrk_id ("70001_20250101").
-        verify(exactly = 1) { ndfc.canShow("70001", false, 5, -1, -1, false) }
+        // Must gate on the campaign ti ("70001"), NOT the wzrk_id ("70001_20250101"); mdc=-1 (no mdc key).
+        verify(exactly = 1) { ndfc.canShow("70001", false, -1, false) }
         confirmVerified(ndfc)
     }
 
     @Test
     fun `fcap-marked unit is dropped when canShow denies`() {
         val ndfc = mockk<NdFCManager>()
-        every { ndfc.canShow(any(), any(), any(), any(), any(), any()) } returns false
+        every { ndfc.canShow(any(), any(), any(), any()) } returns false
         val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70002").put(Constants.KEY_TDC, 1)
 
         val out = NdFcapGate.filter(arrayListOf(unit(json, wzrkId = "70002_20250101")), ndfc, logger, "acc")
 
         assertEquals(0, out.size)
-        verify(exactly = 1) { ndfc.canShow("70002", false, -1, 1, -1, false) }
+        verify(exactly = 1) { ndfc.canShow("70002", false, -1, false) }
         confirmVerified(ndfc)
     }
 
