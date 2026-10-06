@@ -175,7 +175,7 @@ object ProgressLiveUpdateDemo {
             Variant.INDETERMINATE -> {
                 // No segments/points + indeterminate flag -> spinner-style bar (unknown progress).
                 b.putString("pt_chip_type", "text")
-                b.putString("pt_chip_text", step.status)
+                b.putString("pt_chip_text", step.eta)
                 b.putString("pt_progress_indeterminate", "true")
             }
         }
