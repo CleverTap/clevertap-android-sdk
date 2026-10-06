@@ -32,10 +32,12 @@ private typealias PointData = ProgressPayloadParser.PointData
  *   tracker icon, status chip, and promotion (`setRequestPromotedOngoing`). Invoked via reflection
  *   (see [buildNative]) so the SDK needs no build-time dependency on androidx.core 1.17.0.
  *   This is a base style with NO custom RemoteViews, which is what makes promotion possible.
- * - **Below API 36:** a custom-RemoteViews fallback that mimics the same look — tracker icon,
- *   title/message, and a dots-and-connectors progress row (points as dots, segments as weighted
- *   colored connectors). Not promotable (promotion is a 16+ OS feature), but kept ongoing so it
- *   behaves like a live update.
+ * - **Below API 36:** a custom-RemoteViews fallback for the EXPANDED view that mimics the same look —
+ *   tracker icon, title/message, and a dots-and-connectors progress row (points as dots, segments as
+ *   weighted colored connectors). The COLLAPSED view is left to the system's standard template
+ *   (small icon, title, time, message), matching what Android 16 shows for a collapsed
+ *   ProgressStyle. Not promotable (promotion is a 16+ OS feature), but kept ongoing so it behaves
+ *   like a live update.
  *
  * Both tiers read the same `pt_progress_*` contract. On the native tier the track total is the sum
  * of the segment lengths (there is no separate max), so `pt_progress` and point positions must be on
@@ -237,13 +239,13 @@ internal class ProgressStyle(
         // Determinate max: pt_progress_max, else the summed segment lengths, else 100.
         val progressMax = data.progressMax ?: segments.sumOf { it.length }.takeIf { it > 0 } ?: 100
 
-        val big = fallbackView(context, R.layout.pt_progress_fallback, expanded = true, segmented, indeterminate,
-            title, message, chipText, trackerIcon, startIcon, endIcon, segments, points, progress, progressMax)
-        val small = fallbackView(context, R.layout.pt_progress_fallback_collapsed, expanded = false, segmented,
-            indeterminate, title, message, chipText, trackerIcon, null, null, segments, points, progress, progressMax)
+        val big = fallbackView(context, segmented, indeterminate, title, message, chipText, trackerIcon,
+            startIcon, endIcon, segments, points, progress, progressMax)
 
-        nb.setCustomContentView(small)
-            .setCustomBigContentView(big)
+        // Only the expanded view is custom. No custom content view is set, so the collapsed view is
+        // the system's standard template (small icon, title, time, message) on every API level —
+        // the same fields Android 16 shows for a collapsed native ProgressStyle.
+        nb.setCustomBigContentView(big)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setOngoing(!ended) // sticky like a live update while active; swipeable once ended
         return nb
@@ -251,8 +253,6 @@ internal class ProgressStyle(
 
     private fun fallbackView(
         context: Context,
-        layoutId: Int,
-        expanded: Boolean,
         segmented: Boolean,
         indeterminate: Boolean,
         title: String,
@@ -266,7 +266,7 @@ internal class ProgressStyle(
         progress: Int,
         progressMax: Int
     ): RemoteViews {
-        val rv = RemoteViews(context.packageName, layoutId)
+        val rv = RemoteViews(context.packageName, R.layout.pt_progress_fallback)
         rv.setTextViewText(R.id.pt_title, Html.fromHtml(title))
         rv.setTextViewText(R.id.pt_message, message)
 
@@ -282,15 +282,13 @@ internal class ProgressStyle(
         if (segmented) {
             // Milestones: show the dots/connectors row, hide the plain bar.
             rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
-            if (expanded) {
-                startIcon?.let {
-                    rv.setImageViewBitmap(R.id.pt_start_icon, it)
-                    rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
-                }
-                endIcon?.let {
-                    rv.setImageViewBitmap(R.id.pt_end_icon, it)
-                    rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
-                }
+            startIcon?.let {
+                rv.setImageViewBitmap(R.id.pt_start_icon, it)
+                rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
+            }
+            endIcon?.let {
+                rv.setImageViewBitmap(R.id.pt_end_icon, it)
+                rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
             }
             rv.removeAllViews(R.id.pt_progress_container)
             // TalkBack: the dots (pt_progress_point) and connectors (pt_progress_segment) are
@@ -308,7 +306,7 @@ internal class ProgressStyle(
                 points.forEachIndexed { i, p ->
                     val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
                     dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
-                    if (expanded && !p.title.isNullOrEmpty()) {
+                    if (!p.title.isNullOrEmpty()) {
                         dot.setTextViewText(R.id.pt_point_title, p.title)
                         dot.setViewVisibility(R.id.pt_point_title, android.view.View.VISIBLE)
                     }
@@ -322,7 +320,7 @@ internal class ProgressStyle(
             }
         } else {
             // Plain bar: hide the segmented row/container, show the bar (indeterminate or determinate).
-            rv.setViewVisibility(R.id.pt_segmented_row, android.view.View.GONE) // expanded only; no-op on collapsed
+            rv.setViewVisibility(R.id.pt_segmented_row, android.view.View.GONE)
             rv.setViewVisibility(R.id.pt_progress_container, android.view.View.GONE)
             rv.setViewVisibility(R.id.pt_bar, android.view.View.VISIBLE)
             if (indeterminate) {

@@ -10,6 +10,7 @@ import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +56,25 @@ class ProgressStyleTest {
 
         assertEquals(nb, result)
         assertNotNull(result.build())
+    }
+
+    @Test
+    fun `fallback leaves the collapsed view to the system template and sets only a custom expanded view`() {
+        val data = ProgressTemplateData(
+            title = "Order #1", progress = 40, progressMax = 100, indeterminate = false,
+            segments = listOf(ProgressPayloadParser.SegmentData(1, null)),
+            points = listOf(ProgressPayloadParser.PointData(0, null, "Start"))
+        )
+        val nb = newBuilder()
+
+        val result = ProgressStyle(data, renderer).builderFromStyle(context, Bundle(), 1, nb)
+
+        // No custom collapsed view -> the system's standard template (icon, title, time, message),
+        // the same fields Android 16 shows for a collapsed native ProgressStyle.
+        assertNull(result.contentView)
+        assertNotNull(result.bigContentView)
+        assertEquals("Order #1", result.build().extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString())
+        assertEquals("Out for delivery", result.build().extras.getCharSequence(NotificationCompat.EXTRA_TEXT).toString())
     }
 
     @Test
