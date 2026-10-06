@@ -11,17 +11,17 @@ Two render modes:
 
 | Mode | What renders | How the sample triggers it |
 |------|--------------|----------------------------|
-| **Mode B — SDK renders** | SDK's `pt_progress` Push Template (`ProgressStyle`) | Rows 1–7 (`ProgressLiveUpdateDemo`) |
-| **Mode A — client renders** | App's `ICleverTapNotificationFactory` (`CustomNotificationFactory`) | Row 8 (`CustomLiveUpdateDemo`) |
+| **Mode B — SDK renders** | SDK's `pt_progress` Push Template (`ProgressStyle`) | Rows 19-0 … 19-8 (`ProgressLiveUpdateDemo`) |
+| **Mode A — client renders** | App's `ICleverTapNotificationFactory` (`CustomNotificationFactory`) | Row 19-9 (`CustomLiveUpdateDemo`) |
 
 Two rendering tiers (chosen automatically by the OS version — **not** a menu option):
 
 | Tier | Android | Presentation |
 |------|---------|--------------|
-| **Native** | **16+ (API 36, "Baklava")** | `Notification.ProgressStyle` — always-expanded, status-bar **chip**, promotable |
-| **Fallback** | **< 16 (API 23–34)** | Segmented **RemoteViews** (dots + connectors) via `DecoratedCustomViewStyle` |
+| **Native** | **16+ (API 36, "Baklava")** | `Notification.ProgressStyle` — status-bar **chip**, promotable; always expanded while promoted |
+| **Fallback** | **< 16 (API 23–35)** | Custom expanded view (**RemoteViews**: dots + connectors or a plain bar) via `DecoratedCustomViewStyle`; the **collapsed view is the system's standard template** |
 
-> **Every test case below must be run on BOTH tiers** — one device/emulator on **Android 16+** and one on **Android 13/14 (or any < 16)**. Expected results are given per tier where they differ.
+> **Every test case below must be run on BOTH tiers** — one device/emulator on **Android 16+** and one on **Android 15 or lower**. Expected results are given per tier where they differ.
 
 **Demo mechanics:** each row runs a 4-step order sequence — *Placed → Cooking → On way → Delivered* — one step every **6 s** (~18 s total). All steps update the **same notification in place** (fixed id `778899` for Mode B; `wzrk_activityId` for Mode A). The final "Delivered" step sends `wzrk_la_event=end` → clears ongoing + enables auto-cancel.
 
@@ -34,7 +34,7 @@ Two rendering tiers (chosen automatically by the OS version — **not** a menu o
 | P1 | Sample app installed from this branch; a valid CleverTap account id/token configured. |
 | P2 | **Notification permission granted** (Android 13+ runtime `POST_NOTIFICATIONS`). |
 | P3 | On Android 16+: **"Live Updates / promoted notifications" enabled** for the app in system settings (the app declares `POST_PROMOTED_NOTIFICATIONS`). |
-| P4 | Two test devices: **(A)** Android 16+ ; **(B)** Android 13/14 (or 11) for the fallback tier. |
+| P4 | Test devices: **(A)** Android 16+ ; **(B)** Android 12–15 and **(C)** Android 7–11 for the fallback tier (7–11 have a different collapsed header). |
 | P5 | Mode A factory is registered at startup (`MyApplication` → `setNotificationFactory(CustomNotificationFactory())`). No action needed; just don't remove it. |
 | P6 | Channel "Live Updates" (`live_updates_channel`) is created by the demos on first run; it must **not** be blocked by the user (except in the negative test that explicitly blocks it). |
 | P7 | For analytics verification: access to the CleverTap dashboard (Events) for this account to confirm funnel events. |
@@ -68,9 +68,9 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 
 ### TC-B01 — Baseline order tracker (Row 19-0)
 - **Steps:** tap "Progress: Order Tracker". Watch 4 steps.
-- **Result-16+:** native ProgressStyle notification, always expanded; a **status-bar chip** shows the ETA; a segmented track with 4 dots; dots/segments recolor green as steps complete; the active dot is orange; the content title "Order #A1234" and body update each step; tracker icon visible. Notification updates **in place** (no stacking).
-- **Result-<16:** custom RemoteViews notification; segmented row of dots + connectors; **milestone labels** (Placed/Cooking/On way/Delivered) under the dots in the expanded view; progress recolors per step; updates in place.
-- **Terminal:** after "Delivered" the notification is **no longer ongoing** and can be **swiped away**.
+- **Result-16+:** native ProgressStyle notification, always expanded while promoted; with the shade **closed**, a **status-bar chip** shows the ETA (`50 min` → `40 min` → `12 min`); a segmented track with 4 dots; dots/segments recolor green as steps complete; the active dot is orange; the content title "Order #A1234" and body update each step; the tracker icon rides the bar. Notification updates **in place** (no stacking).
+- **Result-<16:** expanded: custom RemoteViews card; segmented row of dots + connectors; **milestone labels** (Placed/Cooking/On way/Delivered) under the dots; tracker icon next to the title; ETA chip text next to the title (never cuts the title); progress recolors per step; updates in place.
+- **Terminal:** after "Delivered" the notification is **no longer ongoing** and can be **swiped away**; the chip is gone on both tiers.
 
 ### TC-B02 — Actions + deep link (Row 19-1)
 - **Steps:** tap "Progress: Actions + Deep Link". Observe buttons; tap "Track order"; restart and tap "Support"; restart and tap the notification body.
@@ -79,22 +79,22 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 
 ### TC-B03 — Countdown chip + promotion (Row 19-2)
 - **Steps:** tap "Progress: Countdown Chip + Promoted".
-- **Result-16+:** the status-bar **chip counts down** (live timer) toward the ETA; notification is **promoted** (elevated/among live updates).
-- **Result-<16:** no status-bar chip (fallback has none); the notification still renders the tracker; timer behavior not applicable to the fallback chip.
+- **Result-16+:** the status-bar **chip counts down** (live timer) toward the ETA, and the card header shows the same running timer; notification is **promoted** (elevated/among live updates).
+- **Result-<16:** no status-bar chip (fallback has none); the **notification header shows the running countdown** instead of the post time (collapsed and expanded). On Android 6 the timer counts up (no count-down chronometer on API 23).
 
 ### TC-B04 — Non-promoted (Row 19-3)
 - **Steps:** tap "Progress: No Promotion". Compare against TC-B01/TC-B03.
-- **Result-16+:** same tracker content but **not promoted** — **no status-bar chip**; appears as an ordinary ongoing notification. This is the promoted-vs-non-promoted A/B.
+- **Result-16+:** same tracker content but **not promoted** — **no status-bar chip**, not on the lock screen; appears as an ordinary ongoing notification that **can be collapsed** (collapsed = icon, title, time, message). This is the promoted-vs-non-promoted A/B.
 - **Result-<16:** visually same as baseline fallback (promotion is a 16+-only concept).
 
 ### TC-B05 — Start/End icons + styled-by-progress (Row 19-4)
 - **Steps:** tap "Progress: Start/End Icons".
 - **Result-16+:** native track shows a **start icon** and **end icon** at the track ends; `styled_by_progress` tints the track by progress.
-- **Result-<16:** expanded fallback shows the **start/end icons** flanking the segmented row.
+- **Result-<16:** expanded fallback shows the **start icon (store)** and **end icon (house)** flanking the segmented row; tracker next to the title.
 
 ### TC-B06 — Plain determinate bar (Row 19-5)
 - **Steps:** tap "Progress: Plain Bar – determinate".
-- **Result-16+ & <16:** a **single determinate progress bar** (no dots/segments) that fills 0→100 across the 4 steps. Chip shows ETA on 16+.
+- **Result-16+ & <16:** a **single determinate progress bar** (no dots/segments) that fills 0→100 across the 4 steps. No start/end icons. ETA chip: status bar on 16+, inside the card on <16.
 
 ### TC-B06B — Plain bar + start/end icons (Row 19-6)
 - **Steps:** tap "Progress: Plain Bar + Start/End Icons".
@@ -102,7 +102,7 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 
 ### TC-B07 — Indeterminate bar (Row 19-7)
 - **Steps:** tap "Progress: Indeterminate Bar".
-- **Result-16+ & <16:** a **spinner-style indeterminate bar** (animated, no fixed fill); status text updates each step; the bar never shows a determinate fill.
+- **Result-16+ & <16:** an **animated indeterminate bar** (no fixed fill); status text updates each step; the bar never shows a determinate fill and does not jump between steps. The **tracker icon is hidden** on both tiers.
 
 ### TC-B07B — Indeterminate bar + start/end icons (Row 19-8)
 - **Steps:** tap "Progress: Indeterminate Bar + Start/End Icons".
@@ -117,6 +117,10 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 ### TC-B10 — Tap does NOT cancel an ongoing tracker (regression)
 - **Steps:** on **Android 12+**, start Row 19-0; before "Delivered", **tap the notification body**.
 - **Result:** the app opens, but the **ongoing tracker is NOT dismissed**; the next step still updates the same notification. (Guards the `NotificationUtils` action-scope fix.)
+
+### TC-B11 — Collapsed view (all Mode B rows)
+- **Steps:** run any row; collapse the notification (on 16+ use Row 19-3 "No Promotion", or wait for "Delivered" — a promoted card cannot be collapsed).
+- **Result (all versions):** the collapsed view is the system's standard notification — **small icon, title, time, message** — with no bar, tracker, chip or buttons. Android 7–11 also show the app name in the header. Nothing is cut off and it follows the system light/dark theme.
 
 ---
 
@@ -185,6 +189,19 @@ Some require a modified payload (not a menu row) — marked **[code]**. Menu-run
 - **Setup:** a host build shipping androidx.core **< 1.17.0** on an Android 16+ device.
 - **Result:** the native path degrades to the RemoteViews fallback (no crash) — the 16+ APIs are reflective and R8-kept.
 
+### TC-N08 — Chip text with a non-text chip type **[code]**
+- **Setup:** send `pt_chip_type: "none"` (then `"countdown"`, then no `pt_chip_type`) together with `pt_chip_text: "12 min"`.
+- **Result:** the chip text is **not** shown on either tier — `pt_chip_text` is used only for `pt_chip_type=text`.
+
+### TC-N09 — Long chip text **[code]**
+- **Setup:** `pt_chip_type: "text"`, `pt_chip_text: "Out for delivery"`.
+- **Result-16+:** the status-bar chip shows the **icon only** (text too long for 96dp).
+- **Result-<16:** the chip is capped at 96dp and ellipsized; the **title is never cut**.
+
+### TC-N10 — Countdown past zero **[code]**
+- **Setup:** `pt_chip_type: "countdown"`, `pt_countdown: "true"`, `pt_when` = now + 10 s; send no further update.
+- **Result (both tiers):** the timer counts down to 0:00 and then **continues into negative time** (`−0:01`…). Expected platform behavior — the backend must send the next update or `end` before zero. On 16+ the status-bar chip hides once the countdown is no longer positive.
+
 ---
 
 ## 7. Analytics verification checklist
@@ -204,19 +221,25 @@ For each mode, confirm on the dashboard:
 
 ## 8. Device/tier sign-off grid
 
-Run the full section 3–5 on each device and tick:
+Run sections 3–6 on each device and tick:
 
-| Case | Android 16+ (native) | Android 13/14 (fallback) | Android 10/11 (fallback) |
+| Case | Android 16+ (native) | Android 12–15 (fallback) | Android 7–11 (fallback) |
 |------|:---:|:---:|:---:|
-| TC-B01 … TC-B10 | ☐ | ☐ | ☐ |
+| TC-B01 … TC-B11 | ☐ | ☐ | ☐ |
 | TC-A01 … TC-A03 | ☐ | ☐ | ☐ |
 | TC-I01 … TC-I03 | ☐ | ☐ | ☐ |
 | TC-N02 (buttons < 31) | n/a | n/a | ☐ |
+| TC-N08 … TC-N10 | ☐ | ☐ | ☐ |
 
 ---
 
 ## 9. Known limitations to note (not bugs)
 
 - **Milestone labels (point titles)** show only on the pre-16 fallback; native 16+ points have no text.
-- **Countdown chip** and **promotion** are 16+-only; on the fallback tier there is no status-bar chip.
+- **Native 16+ renders only the first 4 points**; the fallback draws all of them.
+- **Status-bar chip, promotion and lock-screen placement** are 16+-only. On the fallback a text chip shows inside the card and a timer/countdown shows in the header.
+- **Promoted 16+ cards are always expanded**; a collapsed view exists only when not promoted.
+- **Tracker icon** rides the bar on 16+ but sits next to the title on the fallback (RemoteViews cannot position it along the bar).
+- **`pt_styled_by_progress`** has no effect on the fallback.
+- **A countdown keeps counting into negative time** after zero on both tiers until the next update arrives.
 - **Mode A** is fully client-drawn — its exact look is defined by `CustomNotificationFactory`, not the SDK; it demonstrates one representative configuration (promoted + ETA chip).

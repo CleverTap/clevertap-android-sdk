@@ -96,26 +96,61 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
 | `pt_small_icon_clr` | Accent color | `#RRGGBB` |
 | `pt_progress` | Current progress on the track scale | See scale rule above |
 | `pt_progress_max` | Max | Used by the **pre-16 fallback** only; ignored by native |
-| `pt_styled_by_progress` | Tint bar by progress | 16+ native |
-| `pt_progress_indeterminate` | Spinner bar | Honored **only** when there are no segments/points |
+| `pt_styled_by_progress` | Tint bar by progress | 16+ native only |
+| `pt_progress_indeterminate` | Animated bar with no fixed fill | Both tiers. Honored **only** when there are no segments/points. The tracker icon is hidden in this mode (both tiers) |
 | `pt_progress_segments` | `[{length, color?}]` | Weighted connectors; lengths define the track total |
-| `pt_progress_points` | `[{position, color?, title?}]` | Milestone dots on the same scale |
-| `pt_progress_tracker_icon` / `_start_icon` / `_end_icon` | Image URLs | Square-cropped |
-| `pt_chip_type` | `text` \| `timer` \| `countdown` \| `none` | Status-bar chip (16+) |
-| `pt_chip_text` | Chip text | For `pt_chip_type=text` |
-| `pt_when` + `pt_countdown` | Chip epoch-millis + count-down flag | For `pt_chip_type=timer`/`countdown` |
+| `pt_progress_points` | `[{position, color?, title?}]` | Milestone dots on the same scale. Native 16+ renders **only the first 4 points**; keep it to 4 so both tiers match. `title` shows on the pre-16 fallback only |
+| `pt_progress_tracker_icon` | Image URL | Square-cropped. 16+: rides the bar at the progress position. <16: fixed next to the title. Hidden for an indeterminate bar |
+| `pt_progress_start_icon` / `_end_icon` | Image URLs | Square-cropped. Shown at both ends of the bar for every bar type (milestone, plain, indeterminate), on both tiers |
+| `pt_chip_type` | `text` \| `timer` \| `countdown` \| `none` | See *Chip* below |
+| `pt_chip_text` | Chip text | Only for `pt_chip_type=text`. Keep it **≤ 7 characters** (e.g. `12 min`) |
+| `pt_when` + `pt_countdown` | Epoch-millis + count-down flag | For `pt_chip_type=timer`/`countdown`. See *Timer / countdown* below |
 | `pt_promote` | Request promoted ongoing | `"false"` to opt out; 16+ only, and only a *request* |
 | `wzrk_dl` | Tap deep link | |
 | `wzrk_acts` | Up to 3 buttons `{id, l, dl, ac}` | `ac` = auto-cancel |
 
+## Chip
+
+| | Android 16+ (native) | Android 6–15 (fallback) |
+|---|---|---|
+| `text` | Status-bar chip (`setShortCriticalText`), never inside the card. Max width **96dp**: under 7 characters shows in full; if less than half the text fits, the chip shows the icon only | Shown inside the expanded card, next to the title. Capped at **96dp**, one line, ellipsized |
+| `timer` / `countdown` | Running timer in the status-bar chip **and** in the card header | Running timer in the notification header (there is no status-bar chip) |
+| After `end` | No chip (the update is no longer ongoing/promoted) | No chip |
+
+The status-bar chip only appears while the notification is **promoted** and **not in view** (shade
+closed). With the shade open, look at the card instead.
+
+## Timer / countdown
+
+- `pt_when` is the epoch-millis the timer counts **to** (countdown, `pt_countdown: "true"`) or **from**
+  (timer). For a countdown it must be in the future.
+- **A countdown does not stop at zero.** Android keeps counting into negative time (`−0:01`, `−0:02`…)
+  until the notification is posted again. The backend must send the next `update` (with a new
+  `pt_when`) or the `end` event **before** the countdown reaches zero.
+- Android 16's status-bar chip hides itself once the countdown is no longer positive, but the card
+  header can still show negative time.
+- Android 6 (API 23) has no count-down chronometer, so a countdown counts up there.
+
+## Collapsed vs expanded
+
+- **Android 16+, promoted** (`update` events, `pt_promote` not `"false"`, Live Updates allowed by the
+  user): the card is **always expanded** and cannot be collapsed (platform rule).
+- **Android 16+, not promoted** (`end` event, `pt_promote: "false"`, user turned Live Updates off)
+  and **Android 6–15**: the collapsed view is the system's standard template — **small icon, title,
+  time, message**. No bar, tracker, chip or buttons; those show only when expanded. Android 7–11 also
+  show the app name in the header.
+
 ## Notes
 
 - **Either/or — indicator:** send segments/points for the milestone tracker, **or** omit both for a
-  plain bar (optionally `pt_progress_indeterminate: "true"` for a spinner). Not both.
+  plain bar (optionally `pt_progress_indeterminate: "true"` for an animated indeterminate bar). Not both.
 - **Either/or — chip:** `text` uses `pt_chip_text`; `timer`/`countdown` use `pt_when` (+ `pt_countdown`).
 - **String values on the wire:** FCM data messages are string maps. `pt_progress_segments`,
   `pt_progress_points` and `wzrk_acts` may be sent as real JSON arrays inside `data` (the SDK
   compact-stringifies them during surfacing) or pre-stringified — both work.
 - **Version behavior:** native promoted `ProgressStyle` needs **Android 16 (API 36) + androidx.core
-  ≥ 1.17.0**. On API 23–35 (or 16 with older core) it renders the ongoing RemoteViews fallback (no
-  status-bar chip / promotion).
+  ≥ 1.17.0**. On API 23–35 (or 16 with older core) it renders the ongoing fallback: a custom
+  expanded view (RemoteViews) and the system's standard collapsed view. There is no promotion,
+  status-bar chip or lock-screen placement on the fallback (16+ OS features).
+- **Not supported on native 16+:** point titles (no platform API). **Fallback-only gaps:** no
+  `pt_styled_by_progress`, and the tracker cannot ride the bar.
