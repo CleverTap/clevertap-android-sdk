@@ -231,7 +231,9 @@ internal class ProgressStyle(
         trackerIcon: Bitmap?,
         ended: Boolean
     ): NotificationCompat.Builder {
-        val chipText = extras.getString(PTConstants.PT_CHIP_TEXT)
+        // On Android 16 the chip lives in the status bar and goes away once the live update ends
+        // (no longer ongoing/promoted), so drop it from the fallback card on the end event too.
+        val chipText = if (ended) null else extras.getString(PTConstants.PT_CHIP_TEXT)
         val startIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
         val endIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
 
