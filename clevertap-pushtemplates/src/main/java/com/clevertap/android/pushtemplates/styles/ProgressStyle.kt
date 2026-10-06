@@ -41,7 +41,8 @@ private typealias PointData = ProgressPayloadParser.PointData
  *
  * Both tiers read the same `pt_progress_*` contract. On the native tier the track total is the sum
  * of the segment lengths (there is no separate max), so `pt_progress` and point positions must be on
- * that scale; `pt_progress_max` and `pt_progress_indeterminate` apply to the fallback tier only.
+ * that scale; `pt_progress_max` applies to the fallback tier only. `pt_progress_indeterminate` applies
+ * to both tiers, and only when there are no segments/points.
  */
 internal class ProgressStyle(
     private val data: ProgressTemplateData,
@@ -147,9 +148,13 @@ internal class ProgressStyle(
         psClass.getMethod("setStyledByProgress", Boolean::class.javaPrimitiveType)
             .invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
         // Native ProgressStyle has no max: the track total is the sum of segment lengths, so pt_progress
-        // must be on that scale. pt_progress_max and pt_progress_indeterminate are fallback-only here.
+        // must be on that scale. pt_progress_max is fallback-only here.
         psClass.getMethod("setProgress", Int::class.javaPrimitiveType)
             .invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
+        // Same either/or rule as the fallback: indeterminate only applies to a plain bar, never to a
+        // milestone (segments/points) indicator.
+        psClass.getMethod("setProgressIndeterminate", Boolean::class.javaPrimitiveType)
+            .invoke(progressStyle, data.indeterminate && !data.isSegmented)
 
         if (segments.isNotEmpty()) {
             val segClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle\$Segment")
