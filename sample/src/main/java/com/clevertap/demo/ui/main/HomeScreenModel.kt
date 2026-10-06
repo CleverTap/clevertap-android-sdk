@@ -147,6 +147,7 @@ object HomeScreenModel {
                 "Progress: No Promotion (local demo)",
                 "Progress: Start/End Icons (local demo)",
                 "Progress: Plain Bar - determinate (local demo)",
+                "Progress: Plain Bar + Start/End Icons (local demo)",
                 "Progress: Indeterminate Bar (local demo)",
                 "Custom Live Update - Mode A factory (local demo)"
             ),

@@ -53,8 +53,9 @@ Two rendering tiers (chosen automatically by the OS version — **not** a menu o
 | 19-3 | Progress: No Promotion | Segmented | Text | **Non-promoted** | Tracker | – | Yes |
 | 19-4 | Progress: Start/End Icons | Segmented | Text | Promoted | Tracker + **Start/End** + styled-by-progress | – | Yes |
 | 19-5 | Progress: Plain Bar – determinate | **Plain determinate bar** | Text | Promoted | Tracker | – | n/a |
-| 19-6 | Progress: Indeterminate Bar | **Indeterminate bar** | Text | Promoted | Tracker | – | n/a |
-| 19-7 | Custom Live Update – Mode A factory | Segmented (client) | Text (ETA, 16+) | Promoted while active | – | – | n/a |
+| 19-6 | Progress: Plain Bar + Start/End Icons | **Plain determinate bar** | Text | Promoted | Tracker + **Start/End** | – | n/a |
+| 19-7 | Progress: Indeterminate Bar | **Indeterminate bar** | Text | Promoted | Tracker | – | n/a |
+| 19-8 | Custom Live Update – Mode A factory | Segmented (client) | Text (ETA, 16+) | Promoted while active | – | – | n/a |
 
 \* Milestone labels (point titles: *Placed / Cooking / On way / Delivered*) render only in the **pre-16 expanded fallback**; they are a no-op on native 16+ (native points carry no text).
 
@@ -94,7 +95,11 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 - **Steps:** tap "Progress: Plain Bar – determinate".
 - **Result-16+ & <16:** a **single determinate progress bar** (no dots/segments) that fills 0→100 across the 4 steps. Chip shows ETA on 16+.
 
-### TC-B07 — Indeterminate bar (Row 19-6)
+### TC-B06B — Plain bar + start/end icons (Row 19-6)
+- **Steps:** tap "Progress: Plain Bar + Start/End Icons".
+- **Result-16+ & <16:** the plain determinate bar has the **start icon (store)** on its left and the **end icon (house)** on its right. On 16+ the tracker rides the bar; on <16 the tracker sits next to the title.
+
+### TC-B07 — Indeterminate bar (Row 19-7)
 - **Steps:** tap "Progress: Indeterminate Bar".
 - **Result-16+ & <16:** a **spinner-style indeterminate bar** (animated, no fixed fill); status text updates each step; the bar never shows a determinate fill.
 
@@ -112,7 +117,7 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 
 ## 4. Functional test cases — Mode A (custom factory)
 
-### TC-A01 — Mode A order tracker (Row 19-7)
+### TC-A01 — Mode A order tracker (Row 19-8)
 - **Steps:** tap "Custom Live Update – Mode A factory".
 - **Result-16+:** a **client-built** native `ProgressStyle` notification (green done / gray pending segments computed from progress); **chip** shows the ETA (`setShortCriticalText`); **promoted** while active; updates in place on the same `wzrk_activityId`.
 - **Result-<16:** the factory's **classic determinate progress-bar** notification (sub-text = status); updates in place.
