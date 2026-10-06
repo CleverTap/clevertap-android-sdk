@@ -304,17 +304,20 @@ internal class ProgressStyle(
             rv.setViewVisibility(R.id.pt_tracker, android.view.View.VISIBLE)
         }
 
+        // Start/end icons sit on both sides of the indicator for both the milestone and the plain
+        // bar, as on Android 16.
+        startIcon?.let {
+            rv.setImageViewBitmap(R.id.pt_start_icon, it)
+            rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
+        }
+        endIcon?.let {
+            rv.setImageViewBitmap(R.id.pt_end_icon, it)
+            rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
+        }
+
         if (segmented) {
-            // Milestones: show the dots/connectors row, hide the plain bar.
+            // Milestones: show the dots/connectors, hide the plain bar.
             rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
-            startIcon?.let {
-                rv.setImageViewBitmap(R.id.pt_start_icon, it)
-                rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
-            }
-            endIcon?.let {
-                rv.setImageViewBitmap(R.id.pt_end_icon, it)
-                rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
-            }
             rv.removeAllViews(R.id.pt_progress_container)
             // TalkBack: the dots (pt_progress_point) and connectors (pt_progress_segment) are
             // importantForAccessibility="no", so describe the whole track on the container instead.
@@ -344,8 +347,7 @@ internal class ProgressStyle(
                 segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
             }
         } else {
-            // Plain bar: hide the segmented row/container, show the bar (indeterminate or determinate).
-            rv.setViewVisibility(R.id.pt_segmented_row, android.view.View.GONE)
+            // Plain bar: hide the dots/connectors, show the bar (indeterminate or determinate).
             rv.setViewVisibility(R.id.pt_progress_container, android.view.View.GONE)
             rv.setViewVisibility(R.id.pt_bar, android.view.View.VISIBLE)
             if (indeterminate) {

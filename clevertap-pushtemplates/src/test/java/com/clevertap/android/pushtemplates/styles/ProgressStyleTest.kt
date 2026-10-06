@@ -177,6 +177,30 @@ class ProgressStyleTest {
     }
 
     @Test
+    fun `fallback shows start and end icons beside both the plain bar and the milestone bar`() {
+        val media = mockk<com.clevertap.android.pushtemplates.media.TemplateMediaManager>()
+        every { media.getNotificationBitmap(any(), any(), any()) } returns
+            android.graphics.Bitmap.createBitmap(8, 8, android.graphics.Bitmap.Config.ARGB_8888)
+        every { renderer.templateMediaManager } returns media
+        val extras = Bundle().apply {
+            putString("pt_progress_start_icon", "https://example.com/start.png")
+            putString("pt_progress_end_icon", "https://example.com/end.png")
+        }
+        val milestone = ProgressTemplateData(
+            title = "Order #1", progress = 1, progressMax = null, indeterminate = false,
+            segments = listOf(ProgressPayloadParser.SegmentData(1, null), ProgressPayloadParser.SegmentData(1, null)),
+            points = emptyList()
+        )
+
+        for (data in listOf(plainBarData(), milestone)) {
+            val nb = ProgressStyle(data, renderer).builderFromStyle(context, extras, 1, newBuilder())
+            val view = nb.bigContentView!!.apply(context, android.widget.FrameLayout(context))
+            assertEquals(android.view.View.VISIBLE, view.findViewById<android.view.View>(com.clevertap.android.pushtemplates.R.id.pt_start_icon).visibility)
+            assertEquals(android.view.View.VISIBLE, view.findViewById<android.view.View>(com.clevertap.android.pushtemplates.R.id.pt_end_icon).visibility)
+        }
+    }
+
+    @Test
     fun `fallback hides chip text after the live update ends`() {
         val extras = Bundle().apply {
             putString("pt_chip_type", "text")
