@@ -143,6 +143,11 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      * Units with an empty unitID are skipped, matching
      * {@link com.clevertap.android.sdk.displayunits.CTDisplayUnitController#updateDisplayUnits}.
      *
+     * In practice this is always a union/append: /a1 and /content never return display units with
+     * the same unitID, so the replace-in-place path does not trigger with real backend data. The
+     * by-unitID keying is kept to dedupe within a single payload and to stay correct should that
+     * contract ever change.
+     *
      * Note: the sentinel unitID "0_0" (substituted when a payload has no wzrk_id) collapses several
      * such units to the last one seen — same limitation as the default cache and iOS, an accepted
      * edge for malformed payloads.
