@@ -66,8 +66,9 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- SEGMENTED indicator: start icon + dots/connectors row + end icon (shown when segments/points
-         are present; hidden in favour of pt_bar otherwise) -->
+    <!-- Progress row: start icon + indicator + end icon. The indicator is EITHER the segmented
+         dots/connectors (pt_progress_container, when segments/points are present) OR the plain bar
+         (pt_bar); the start/end icons sit on both sides in either case, like Android 16. -->
     <LinearLayout
         android:id="@+id/pt_segmented_row"
         android:layout_width="match_parent"
@@ -93,6 +94,19 @@
             android:gravity="top"
             android:orientation="horizontal" />
 
+        <!-- PLAIN bar (mutually exclusive with pt_progress_container): determinate (pt_progress/max)
+             or indeterminate (pt_progress_indeterminate). Hidden when the segmented indicator is used. -->
+        <ProgressBar
+            android:id="@+id/pt_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical"
+            android:max="100"
+            android:progress="0"
+            android:visibility="gone" />
+
         <ImageView
             android:id="@+id/pt_end_icon"
             android:layout_width="16dp"
@@ -102,16 +116,4 @@
             android:visibility="gone"
             android:contentDescription="@string/pt_progress_end_cd" />
     </LinearLayout>
-
-    <!-- PLAIN bar (mutually exclusive with pt_segmented_row): determinate (pt_progress/max) or
-         indeterminate (pt_progress_indeterminate). Hidden when the segmented indicator is used. -->
-    <ProgressBar
-        android:id="@+id/pt_bar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:max="100"
-        android:progress="0"
-        android:visibility="gone" />
 </LinearLayout>
