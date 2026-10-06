@@ -209,12 +209,20 @@ internal class ProgressStyle(
                     .invoke(nb, it)
             }
 
-            "timer", "countdown" -> extras.getString(PTConstants.PT_WHEN)?.toLongOrNull()?.let { whenMs ->
-                nb.setWhen(whenMs).setUsesChronometer(true)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    nb.setChronometerCountDown(boolean(extras, PTConstants.PT_COUNTDOWN, def = false))
-                }
-            }
+            "timer", "countdown" -> applyChronometer(extras, nb)
+        }
+    }
+
+    /**
+     * Timer / countdown chip: a running chronometer from `pt_when`. Uses only baseline builder APIs,
+     * so both tiers share it — on 16+ it drives the status-bar chip and the header, below 16 the
+     * header of the system-drawn notification.
+     */
+    private fun applyChronometer(extras: Bundle, nb: NotificationCompat.Builder) {
+        val whenMs = extras.getString(PTConstants.PT_WHEN)?.toLongOrNull() ?: return
+        nb.setWhen(whenMs).setUsesChronometer(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            nb.setChronometerCountDown(boolean(extras, PTConstants.PT_COUNTDOWN, def = false))
         }
     }
 
@@ -252,6 +260,12 @@ internal class ProgressStyle(
         // Only the expanded view is custom. No custom content view is set, so the collapsed view is
         // the system's standard template (small icon, title, time, message) on every API level —
         // the same fields Android 16 shows for a collapsed native ProgressStyle.
+        // Timer / countdown chip: there is no status-bar chip below 16, so show the running time in
+        // the notification header (Android 16 shows it there too, besides the chip).
+        when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
+            "timer", "countdown" -> applyChronometer(extras, nb)
+        }
+
         nb.setCustomBigContentView(big)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setOngoing(!ended) // sticky like a live update while active; swipeable once ended
