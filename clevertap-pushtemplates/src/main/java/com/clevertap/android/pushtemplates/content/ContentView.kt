@@ -9,11 +9,16 @@ import android.text.Html
 import android.text.TextUtils
 import android.view.View
 import android.widget.RemoteViews
+import android.util.TypedValue
+import androidx.annotation.RequiresApi
+import com.clevertap.android.pushtemplates.ImageBorderData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.Utils
+import com.clevertap.android.pushtemplates.bakedInto
+import com.clevertap.android.pushtemplates.usesNativeImageStyling
 import com.clevertap.android.pushtemplates.isNotNullAndEmpty
 import com.clevertap.android.pushtemplates.media.GifResult
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager
@@ -133,33 +138,24 @@ internal open class ContentView(
         bigImageUrl: String?,
         scaleType: PTScaleType,
         altText: String,
-        gifFrames: Int
+        gifFrames: Int,
+        imageBorderData: ImageBorderData? = null
     ): Boolean {
-        val isGifLoaded = setCustomContentViewGIF(
-            gifUrl,
-            altText,
-            scaleType,
-            gifFrames,
-            layoutId
-        )
-
+        // GIFs are not styled.
+        val isGifLoaded = setCustomContentViewGIF(gifUrl, altText, scaleType, gifFrames, layoutId)
         return if (isGifLoaded) {
             true
         } else {
-            setCustomContentViewBigImage(
-                imageUrl = bigImageUrl,
-                scaleType = scaleType,
-                altText = altText
-            )
+            setCustomContentViewBigImage(bigImageUrl, scaleType, altText, imageBorderData)
         }
     }
 
     fun setCustomContentViewBigImage(
         imageUrl: String?,
         scaleType: PTScaleType,
-        altText: String
+        altText: String,
+        imageBorderData: ImageBorderData? = null
     ): Boolean {
-
         if (imageUrl.isNullOrBlank()) return false
 
         val imageViewId = when (scaleType) {
@@ -167,10 +163,13 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        val loaded = !loadImageURLIntoRemoteView(imageViewId, imageUrl, remoteView, altText)
+        val loaded = !loadImageURLIntoRemoteView(
+            imageViewId, imageUrl, remoteView, altText, imageBorderData.bakedInto(scaleType)
+        )
 
         if (loaded) {
             remoteView.setViewVisibility(imageViewId, View.VISIBLE)
+            applyNativeImageStyling(remoteView, imageViewId, imageBorderData, scaleType)
             remoteView.setViewVisibility(R.id.big_image_configurable, View.VISIBLE)
         } else {
             remoteView.setViewVisibility(R.id.big_media_configurable, View.GONE)
@@ -178,7 +177,13 @@ internal open class ContentView(
         return loaded
     }
 
-    fun setCustomContentViewGIF(gifUrl: String?, altText: String, scaleType: PTScaleType, numberOfFrames: Int, layoutId: Int): Boolean {
+    fun setCustomContentViewGIF(
+        gifUrl: String?,
+        altText: String,
+        scaleType: PTScaleType,
+        numberOfFrames: Int,
+        layoutId: Int
+    ): Boolean {
         val gifResult = templateMediaManager.getGifFrames(gifUrl, numberOfFrames)
 
         if (gifResult is GifResult.Error) {
@@ -188,7 +193,6 @@ internal open class ContentView(
 
         val (frames, duration) = gifResult as GifResult.Success
 
-        // Calculate timing for frame flipping
         val extractedFramesSize = frames.size
         val flipInterval = duration / extractedFramesSize
         PTLog.debug("Total duration: " + duration + "ms")
@@ -199,7 +203,6 @@ internal open class ContentView(
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
 
-        // Add each frame to the ViewFlipper
         for (frame in frames) {
             val frameRemoteViews = RemoteViews(context.getPackageName(), layoutId)
             frameRemoteViews.setImageViewBitmap(imageViewId, frame)
@@ -217,31 +220,81 @@ internal open class ContentView(
         return true
     }
 
-    fun loadImageURLIntoRemoteView(
-        imageViewID: Int, imageUrl: String?,
-        remoteViews: RemoteViews
-    ): Boolean {
-        return loadImageURLIntoRemoteView(imageViewID, imageUrl, remoteViews, null)
+    protected open val imageStyleReferenceDimen: Int
+        get() = R.dimen.pt_image_style_reference
+
+    /**
+     * Draws the corner radius and border with the views for CENTER_CROP images on API 31+.
+     */
+    fun applyNativeImageStyling(
+        remoteViews: RemoteViews,
+        imageViewId: Int,
+        border: ImageBorderData?,
+        scaleType: PTScaleType
+    ) {
+        if (border == null || !border.isActive || !scaleType.usesNativeImageStyling()) {
+            return
+        }
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            applyNativeImageStylingS(remoteViews, imageViewId, border)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun applyNativeImageStylingS(
+        remoteViews: RemoteViews,
+        imageViewId: Int,
+        border: ImageBorderData
+    ) {
+        val referencePx = context.resources.getDimension(imageStyleReferenceDimen).toInt()
+        val radiusPx = NotificationBitmapUtils.resolveCornerRadiusPx(
+            referencePx, border.cornerRadiusPercent
+        )
+        val borderPx = if (border.hasBorder) {
+            NotificationBitmapUtils.resolveBorderWidthPx(referencePx, border.borderWidthValue)
+        } else {
+            0f
+        }
+        val borderColor = border.borderColor
+
+        PTLog.debug(
+            "Native image styling: corner radius ${border.cornerRadiusPercent}% -> ${radiusPx}px, " +
+                    "border width ${border.borderWidthValue} -> ${borderPx}px"
+        )
+
+        if (borderPx > 0f && borderColor != null) {
+            remoteViews.setInt(R.id.big_image_frame, "setBackgroundColor", borderColor)
+            remoteViews.setViewOutlinePreferredRadius(R.id.big_image_frame, radiusPx, TypedValue.COMPLEX_UNIT_PX)
+            for (side in intArrayOf(
+                RemoteViews.MARGIN_LEFT, RemoteViews.MARGIN_TOP,
+                RemoteViews.MARGIN_RIGHT, RemoteViews.MARGIN_BOTTOM
+            )) {
+                remoteViews.setViewLayoutMargin(imageViewId, side, borderPx, TypedValue.COMPLEX_UNIT_PX)
+            }
+        }
+        val innerRadius = (radiusPx - borderPx).coerceAtLeast(0f)
+        remoteViews.setViewOutlinePreferredRadius(imageViewId, innerRadius, TypedValue.COMPLEX_UNIT_PX)
     }
 
     /**
      * Loads an image URL into a RemoteView.
-     * 
-     * @param imageViewID The ID of the ImageView in the RemoteView
-     * @param imageUrl The URL of the image to load (nullable)
-     * @param remoteViews The RemoteViews to load the image into
-     * @param altText Alternative text for accessibility (nullable)
-     * @return true if fallback is needed (image loading failed), false if image was loaded successfully
-     * 
+     *
+     * @return true when the image could not be loaded and the view should fall back, false when it was set.
+     *
      * INVARIANT: When this method returns false, the imageUrl parameter is guaranteed to be non-null,
      * non-blank, and start with "https". This invariant is enforced by getImageBitmap validation.
      */
     fun loadImageURLIntoRemoteView(
-        imageViewID: Int, imageUrl: String?,
-        remoteViews: RemoteViews, altText: String?
+        imageViewID: Int,
+        imageUrl: String?,
+        remoteViews: RemoteViews,
+        altText: String? = null,
+        imageBorderData: ImageBorderData? = null
     ): Boolean {
-        val image = templateMediaManager.getImageBitmap(imageUrl)
-
+        val referencePx = context.resources.getDimension(imageStyleReferenceDimen).toInt()
+        val image = templateMediaManager.getStyledImageBitmap(
+            imageUrl, imageBorderData, NotificationBitmapUtils.resolveStyledImageMaxHeightPx(referencePx)
+        )
         if (image != null) {
             remoteViews.setImageViewBitmap(imageViewID, image)
             if (!TextUtils.isEmpty(altText)) {

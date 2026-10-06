@@ -9,6 +9,7 @@ import com.clevertap.android.pushtemplates.ManualCarouselTemplateData
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
+import com.clevertap.android.pushtemplates.bakedInto
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
@@ -54,7 +55,9 @@ internal class ManualCarouselContentView(
             val fallback = loadImageURLIntoRemoteView(
                 imageViewId,
                 imageUrl,
-                tempRemoteView
+                tempRemoteView,
+                altText = null,
+                imageBorderData = data.carouselData.imageBorderData.bakedInto(scaleType)
             )
 
             if (!fallback) {
@@ -64,6 +67,7 @@ internal class ManualCarouselContentView(
                 }
 
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
+                applyNativeImageStyling(tempRemoteView, imageViewId, data.carouselData.imageBorderData, scaleType)
                 val centerRemoteView = tempRemoteView.clone()
                 val rightRemoteView = tempRemoteView.clone()
                 val leftRemoteView = tempRemoteView.clone()
@@ -198,7 +202,9 @@ internal class ManualCarouselContentView(
             extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
             extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
 
-            extras.putString(Constants.DEEP_LINK_KEY, deepLinkList[0])
+            if (deepLinkList.isNotEmpty()) {
+                extras.putString(Constants.DEEP_LINK_KEY, deepLinkList[0])
+            }
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
             remoteView.setOnClickPendingIntent(
                 R.id.rightArrowPos0,
