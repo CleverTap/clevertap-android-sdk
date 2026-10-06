@@ -49,6 +49,9 @@ object ProgressLiveUpdateDemo {
         /** No segments/points -> a plain DETERMINATE bar filled from pt_progress (0..100). */
         PLAIN_BAR,
 
+        /** Plain determinate bar + start/end icons on both sides of the bar. */
+        PLAIN_BAR_ICONS,
+
         /** No segments/points + pt_progress_indeterminate=true -> a spinner-style INDETERMINATE bar. */
         INDETERMINATE
     }
@@ -62,8 +65,9 @@ object ProgressLiveUpdateDemo {
     private const val COLOR_PENDING = "#48484A"
 
     private const val TRACKER_ICON = "https://imgur.com/6DavQwg.jpg"
-    private const val START_ICON = "https://imgur.com/6DavQwg.jpg"
-    private const val END_ICON = "https://imgur.com/6DavQwg.jpg"
+    // Distinct start (store) and end (house) images so each icon is easy to tell apart on device.
+    private const val START_ICON = "https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/72x72/1f3ea.png"
+    private const val END_ICON = "https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/72x72/1f3e0.png"
 
     private data class Step(
         val status: String,
@@ -118,7 +122,7 @@ object ProgressLiveUpdateDemo {
             putString("pt_progress_tracker_icon", TRACKER_ICON)
             // Milestone variants carry segments/points (segmented indicator); the bar variants omit
             // them so the SDK renders a plain determinate / indeterminate bar instead (either/or).
-            if (variant != Variant.PLAIN_BAR && variant != Variant.INDETERMINATE) {
+            if (variant != Variant.PLAIN_BAR && variant != Variant.PLAIN_BAR_ICONS && variant != Variant.INDETERMINATE) {
                 putString("pt_progress_segments", segmentsJson(step.index))
                 putString("pt_progress_points", pointsJson(step.index))
             }
@@ -170,6 +174,14 @@ object ProgressLiveUpdateDemo {
                 // No segments/points (see render) -> plain determinate bar filled from pt_progress.
                 b.putString("pt_chip_type", "text")
                 b.putString("pt_chip_text", step.eta)
+            }
+
+            Variant.PLAIN_BAR_ICONS -> {
+                // Plain determinate bar (no segments/points) with start/end icons beside it.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_progress_start_icon", START_ICON)
+                b.putString("pt_progress_end_icon", END_ICON)
             }
 
             Variant.INDETERMINATE -> {
