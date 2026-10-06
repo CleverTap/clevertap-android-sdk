@@ -118,7 +118,8 @@ class HomeScreenFragment : Fragment() {
                 "19-5" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.PLAIN_BAR) // plain determinate bar (no segments)
                 "19-6" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.PLAIN_BAR_ICONS) // plain bar + start/end icons
                 "19-7" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.INDETERMINATE) // indeterminate bar
-                "19-8" -> com.clevertap.demo.CustomLiveUpdateDemo.start(context) // custom-factory (Mode A) Live Update demo
+                "19-8" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.INDETERMINATE_ICONS) // indeterminate bar + start/end icons
+                "19-9" -> com.clevertap.demo.CustomLiveUpdateDemo.start(context) // custom-factory (Mode A) Live Update demo
             }
         }
 
