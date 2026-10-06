@@ -70,14 +70,11 @@ class CTDisplayUnitControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun test_updateDisplayUnits_emptyListIsNoOp_keepsPreviousUnits() {
+    fun test_updateDisplayUnits_replacesPreviousCache() {
         ctDisplayUnitController.updateDisplayUnits(mockDisplayUnits(1))
         Assert.assertNotNull(ctDisplayUnitController.allDisplayUnits)
 
-        // updateDisplayUnits now upserts (no reset), so an empty list is a no-op rather than a
-        // wipe — previously delivered units are kept. Use reset() to clear.
         ctDisplayUnitController.updateDisplayUnits(emptyList())
-        Assert.assertNotNull(ctDisplayUnitController.allDisplayUnits)
-        Assert.assertTrue(ctDisplayUnitController.allDisplayUnits!!.isNotEmpty())
+        Assert.assertNull(ctDisplayUnitController.allDisplayUnits)
     }
 }
