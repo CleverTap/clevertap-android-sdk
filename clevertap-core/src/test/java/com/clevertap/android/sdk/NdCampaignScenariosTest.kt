@@ -258,8 +258,9 @@ class NdCampaignScenariosTest : BaseTestCase() {
     fun `pushDisplayUnitViewedEventForID records the impression under ti so whenLimits see it`() {
         assertEquals(0, impressionManager.getImpressions(sadas).size)
 
-        // Real public path: pushViewed(wzrk_id) -> cache lookup -> didShow(ti) -> record.
-        // The delivered content carries NO fcap keys (see contentUnit); counting must still happen.
+        // Real public path: pushViewed(wzrk_id) -> cache lookup -> didShow(ti, countsTowardCaps) -> record.
+        // Delivered content is decorated with isNdFcapEnabled (§9); the session impression is recorded
+        // regardless of the counting gate.
         analytics.pushDisplayUnitViewedEventForID(wzrkId(sadas))
 
         // Recorded under the bare ti (NOT the wzrk_id), which is the key the evaluator's whenLimits read.
@@ -296,6 +297,22 @@ class NdCampaignScenariosTest : BaseTestCase() {
         val row = (0 until ndtlc.length()).map { ndtlc.getJSONArray(it) }.first { it.getString(0) == sadas }
         assertEquals(1, row.getInt(1), "today")
         assertEquals(1, row.getInt(2), "lifetime")
+    }
+
+    @Test
+    fun `an exempt viewed show records a session impression but does not count toward ndmp or ndtlc`() {
+        // Re-deliver sadas as an exempt unit (excludeGlobalFCaps). The accumulating cache overwrites by unitID.
+        cache.updateDisplayUnits(listOf(contentUnit(sadas, excludeGlobalFCaps = true)))
+        assertEquals(0, ndFCManager.shownTodayCount)
+        assertEquals(0, impressionManager.getImpressions(sadas).size)
+
+        analytics.pushDisplayUnitViewedEventForID(wzrkId(sadas))
+
+        // Session impression recorded (session caps / advanced frequencyLimits are always SDK-owned)...
+        assertEquals(1, impressionManager.getImpressions(sadas).size)
+        // ...but an exempt unit must not spend a global/per-target slot the server caps against.
+        assertEquals(0, ndFCManager.shownTodayCount)
+        assertEquals(0, ndFCManager.getNdCounts()!!.length())
     }
 
     @Test
@@ -336,15 +353,18 @@ class NdCampaignScenariosTest : BaseTestCase() {
     private fun wzrkId(ti: String) = "${ti}_20250101"
 
     /**
-     * A delivered content unit (host-visible) in the real wire shape (contract §5.3): wzrk_id + ti + type,
-     * and NO fcap keys — those ship separately in adUnit_notifs_ss. Counting must not depend on inline
-     * fcap keys (the delivered payload never carries them).
+     * A delivered content unit (host-visible) in the real wire shape: wzrk_id + ti + type, decorated with
+     * the ND fcap fields (refined contract §9 — `appendAdvancedFcapFields` is the single shared decorator,
+     * so delivered entries carry `isNdFcapEnabled`/`excludeGlobalFCaps`). `isNdFcapEnabled=true` and no
+     * `excludeGlobalFCaps` => the unit counts toward `ndmp`/`ndtlc` when viewed.
      */
-    private fun contentUnit(ti: String): CleverTapDisplayUnit {
+    private fun contentUnit(ti: String, isNdFcapEnabled: Boolean = true, excludeGlobalFCaps: Boolean = false): CleverTapDisplayUnit {
         val json = JSONObject()
             .put(Constants.NOTIFICATION_ID_TAG, wzrkId(ti)) // unitID = wzrk_id
             .put(Constants.INAPP_ID_IN_PAYLOAD, ti) // stable campaign id the fcaps key on
             .put(Constants.KEY_TYPE, "simple")
+            .put(Constants.KEY_IS_ND_FCAP_ENABLED, isNdFcapEnabled)
+            .put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, if (excludeGlobalFCaps) 1 else -1)
         return CleverTapDisplayUnit.toDisplayUnit(json)
     }
 

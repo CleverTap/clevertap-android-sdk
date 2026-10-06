@@ -351,15 +351,23 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (cache != null) {
                 CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
-                    // The viewed event is the ND impression hook. Count every shown unit (like in-app,
-                    // which calls didShow unconditionally) so ndtlc/ndmp stay accurate.
+                    // The viewed event is the ND impression hook.
                     NdFCManager ndFCManager = controllerManager.getNdFCManager();
                     if (ndFCManager != null) {
+                        JSONObject unitJson = displayUnit.getJsonObject();
                         // Key on the stable campaign id (ti), not unitID (= wzrk_id, which rotates daily);
                         // the evaluator's whenLimits are keyed by ti. Mirrors in-app's InAppFCManager, which
                         // records by inapp.getId() (ti). didShow no-ops on a null/empty id.
-                        String ndCampaignId = displayUnit.getJsonObject().optString(Constants.INAPP_ID_IN_PAYLOAD);
-                        ndFCManager.didShow(ndCampaignId);
+                        String ndCampaignId = unitJson.optString(Constants.INAPP_ID_IN_PAYLOAD);
+                        // Count toward the global ndmp/ndtlc budget only for units inside the ND fcap regime
+                        // and not globally excluded. Exempt units (flag off/absent, or excludeGlobalFCaps)
+                        // still record a session impression inside didShow, but must not spend a global slot —
+                        // the server caps against these counts and would otherwise starve ceiling-bound
+                        // campaigns. Decode defensively: the flag may arrive as a boolean or a positive int.
+                        boolean ndFcapEnabled = unitJson.optBoolean(Constants.KEY_IS_ND_FCAP_ENABLED, false)
+                                || unitJson.optInt(Constants.KEY_IS_ND_FCAP_ENABLED, 0) > 0;
+                        boolean excludeGlobal = unitJson.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1;
+                        ndFCManager.didShow(ndCampaignId, ndFcapEnabled && !excludeGlobal);
                     }
 
                     JSONObject eventExtras = displayUnit.getWZRKFields();

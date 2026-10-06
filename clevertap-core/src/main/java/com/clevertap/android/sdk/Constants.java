@@ -248,6 +248,9 @@ public interface Constants {
 
     String KEY_EFC = "efc";
     String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";
+    // ND opt-in flag (ONC-418). Absent/false => campaign is outside the ND fcap regime; true => honor the
+    // fcap fields present. Gates whether a shown ND unit counts toward the global ndmp/ndtlc budget.
+    String KEY_IS_ND_FCAP_ENABLED = "isNdFcapEnabled";
     String KEY_TLC = "tlc";
     String KEY_TDC = "tdc";
     String KEY_KV = "kv";

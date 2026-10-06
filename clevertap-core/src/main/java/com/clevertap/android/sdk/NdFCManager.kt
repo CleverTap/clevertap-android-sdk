@@ -50,7 +50,6 @@ class NdFCManager internal constructor(
         /**
          * Whether an ND unit/target carries any frequency-cap configuration. Used by [NdFcapGate] to decide
          * which units to counter-cap at delivery; unmarked (legacy) units pass through the gate unchanged.
-         * (Impression counting is NOT gated on this — every viewed unit is counted, mirroring in-app.)
          */
         @JvmStatic
         fun isFcapManaged(json: JSONObject?): Boolean =
@@ -115,10 +114,24 @@ class NdFCManager internal constructor(
     }
 
     /**
-     * Records a surfaced ND impression: bumps the per-target today/lifetime counts, the global
-     * shown-today counter, and the in-memory session impression state.
+     * Records a surfaced ND impression.
+     *
+     * The in-memory session impression is **always** recorded — session caps (account `ndmc` and per-target)
+     * are SDK-owned for every ND unit, and advanced `frequencyLimits` need the impression history regardless
+     * of the global budget.
+     *
+     * The persisted counters that the SDK reports to the server ([NdCountsStore.increment] → `ndtlc`, and
+     * `shownToday` → `ndmp`) are bumped **only when the unit counts toward the global budget**
+     * ([countsTowardCaps]). This diverges from in-app (which counts unconditionally): the ND server reads
+     * `ndmp`/`ndtlc` straight from the request as the cap basis and itself increments only on
+     * `DELIVER_COUNTED` — so an exempt unit (ND fcap regime off, or `excludeGlobalFCaps`) must not spend a
+     * slot, or it would starve ceiling-bound campaigns. Journeys (flag absent) also fall outside, by design
+     * of the agnostic flag gate.
+     *
+     * @param countsTowardCaps `isNdFcapEnabled == true && excludeGlobalFCaps != 1` — computed at the call
+     *   site from the unit payload.
      */
-    fun didShow(id: String?) {
+    fun didShow(id: String?, countsTowardCaps: Boolean) {
         if (id.isNullOrEmpty()) {
             return
         }
@@ -126,9 +139,11 @@ class NdFCManager internal constructor(
         // SharedPreferences, so concurrent viewed events on a pool would lose counts and undercount ndtlc/ndmp.
         executors.postAsyncSafelyTask<Unit>().execute("recordNdImpressionsAndCounts") {
             impressionManager.recordImpression(id)
-            countsStore?.let {
-                it.increment(id)
-                it.shownToday += 1
+            if (countsTowardCaps) {
+                countsStore?.let {
+                    it.increment(id)
+                    it.shownToday += 1
+                }
             }
         }
     }

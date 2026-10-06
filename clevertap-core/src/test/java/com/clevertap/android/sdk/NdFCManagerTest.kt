@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -46,7 +47,7 @@ class NdFCManagerTest : BaseTestCase() {
     fun `excludeFromCaps bypasses counter caps`() {
         val fc = create()
         fc.updateLimits(10, 10)
-        fc.didShow("70001") // today/lifetime = 1
+        fc.didShow("70001", true) // today/lifetime = 1
         // per-target daily cap of 1 would deny, but excludeFromCaps short-circuits
         assertFalse(fc.canShow("70001", false, -1, 1, -1, false))
         assertTrue(fc.canShow("70001", true, -1, 1, -1, false))
@@ -56,7 +57,7 @@ class NdFCManagerTest : BaseTestCase() {
     fun `per-target daily cap denies once reached`() {
         val fc = create()
         fc.updateLimits(10, 10)
-        fc.didShow("70001") // today = 1
+        fc.didShow("70001", true) // today = 1
         assertFalse(fc.canShow("70001", false, -1, 1, -1, false)) // 1 >= 1
         assertTrue(fc.canShow("70001", false, -1, 2, -1, false))  // 1 < 2
     }
@@ -65,8 +66,8 @@ class NdFCManagerTest : BaseTestCase() {
     fun `didShow increments ndtlc counters and shown-today`() {
         val fc = create()
         fc.updateLimits(10, 10)
-        fc.didShow("70001")
-        fc.didShow("70001")
+        fc.didShow("70001", true)
+        fc.didShow("70001", true)
 
         assertEquals(2, fc.shownTodayCount)
         val counts = fc.getNdCounts()!!
@@ -78,13 +79,26 @@ class NdFCManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun `didShow with countsTowardCaps false records session impression but not ndmp or ndtlc`() {
+        val fc = create()
+        fc.updateLimits(10, 10)
+        fc.didShow("70001", false) // exempt: flag off/absent or excludeGlobalFCaps
+
+        // Session impression still recorded (session caps + advanced frequencyLimits are always SDK-owned).
+        verify { impressionManager.recordImpression("70001") }
+        // ...but the server-reported global/per-target counters are NOT bumped for an exempt unit.
+        assertEquals(0, fc.shownTodayCount)
+        assertEquals(0, fc.getNdCounts()!!.length())
+    }
+
+    @Test
     fun `globalCapRemaining is the lower of daily and session headroom`() {
         val fc = create()
         fc.updateLimits(10, 3) // ndmp=10 daily, ndmc=3 session; impressionManager.perSessionTotal()->0
         assertEquals(3, fc.globalCapRemaining()) // min(10-0, 3-0) = 3, session binds
 
-        fc.didShow("70001")
-        fc.didShow("70001") // shownToday=2
+        fc.didShow("70001", true)
+        fc.didShow("70001", true) // shownToday=2
         assertEquals(3, fc.globalCapRemaining()) // min(10-2=8, 3-0=3) = 3, session still binds
     }
 
@@ -92,8 +106,8 @@ class NdFCManagerTest : BaseTestCase() {
     fun `globalCapRemaining lets the daily cap bind and floors at zero`() {
         val fc = create()
         fc.updateLimits(2, 100) // daily 2 binds
-        fc.didShow("a")
-        fc.didShow("b") // shownToday=2
+        fc.didShow("a", true)
+        fc.didShow("b", true) // shownToday=2
         assertEquals(0, fc.globalCapRemaining()) // min(2-2=0, 100-0) = 0
     }
 
