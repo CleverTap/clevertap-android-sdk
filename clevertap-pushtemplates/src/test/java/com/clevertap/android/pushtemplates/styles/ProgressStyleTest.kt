@@ -153,6 +153,39 @@ class ProgressStyleTest {
         }
     }
 
+    private fun chipVisibility(extras: Bundle): Int {
+        val nb = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, extras, 1, newBuilder())
+        val view = nb.bigContentView!!.apply(context, android.widget.FrameLayout(context))
+        return view.findViewById<android.view.View>(com.clevertap.android.pushtemplates.R.id.pt_chip).visibility
+    }
+
+    @Test
+    fun `fallback shows chip text only for chip type text`() {
+        val text = Bundle().apply {
+            putString("pt_chip_type", "text")
+            putString("pt_chip_text", "12 min")
+        }
+        assertEquals(android.view.View.VISIBLE, chipVisibility(text))
+
+        for (type in listOf("none", "timer", "countdown", null)) {
+            val extras = Bundle().apply {
+                type?.let { putString("pt_chip_type", it) }
+                putString("pt_chip_text", "12 min")
+            }
+            assertEquals("type=$type", android.view.View.GONE, chipVisibility(extras))
+        }
+    }
+
+    @Test
+    fun `fallback hides chip text after the live update ends`() {
+        val extras = Bundle().apply {
+            putString("pt_chip_type", "text")
+            putString("pt_chip_text", "0 min")
+            putString("wzrk_la_event", "end")
+        }
+        assertEquals(android.view.View.GONE, chipVisibility(extras))
+    }
+
     @Test
     fun `plain indeterminate bar fallback builds a notification without crashing`() {
         val data = ProgressTemplateData(
