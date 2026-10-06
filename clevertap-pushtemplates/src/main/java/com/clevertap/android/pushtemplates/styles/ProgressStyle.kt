@@ -279,7 +279,9 @@ internal class ProgressStyle(
             rv.setTextViewText(R.id.pt_chip, chipText)
             rv.setViewVisibility(R.id.pt_chip, android.view.View.VISIBLE)
         }
-        if (trackerIcon != null) {
+        // Android 16 hides the tracker on an indeterminate bar (there is no position to put it at),
+        // so hide it here too to match.
+        if (trackerIcon != null && !indeterminate) {
             rv.setImageViewBitmap(R.id.pt_tracker, trackerIcon)
             rv.setViewVisibility(R.id.pt_tracker, android.view.View.VISIBLE)
         }
