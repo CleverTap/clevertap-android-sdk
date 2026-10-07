@@ -385,11 +385,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             event.put("evtData", eventExtraData);
-            try {
-                coreMetaData.setWzrkParams(filterWzrkFields(eventExtraData));
-            } catch (Throwable t) {
-                // no-op
-            }
             baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
                     getFlattenedEventProperties(eventExtraData));
         } catch (Throwable t) {

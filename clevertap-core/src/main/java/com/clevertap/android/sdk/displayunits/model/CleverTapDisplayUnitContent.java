@@ -367,7 +367,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
             Object value = metaDataObject.opt(key);
             // Nested objects and arrays cannot be written to a Parcel, and the unit is
             // Parcelable, so keeping one would crash the host app on the next parcel.
-            if (value == null || value instanceof JSONObject || value instanceof JSONArray) {
+            if (value == null || value == JSONObject.NULL || value instanceof JSONObject || value instanceof JSONArray) {
                 Logger.d(Constants.FEATURE_DISPLAY_UNIT,
                         "Skipping non-primitive metadata value for key: " + key);
                 continue;
