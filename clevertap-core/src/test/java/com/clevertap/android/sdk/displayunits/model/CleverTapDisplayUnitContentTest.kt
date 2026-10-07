@@ -295,6 +295,24 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
     }
 
+    /**
+     * An explicit "key": null comes back from opt() as the JSONObject.NULL sentinel, which
+     * is not Parcel-writable either, so it must be dropped too.
+     */
+    @Test
+    fun test_toContent_jsonNullMetadataValue_isSkippedAndParcels() {
+        val metadata = serverMetadata().put("wzrk_null", JSONObject.NULL)
+        val content = CleverTapDisplayUnitContent.toContent(contentJson(metadata, null))
+        Assert.assertFalse(content.metaData!!.containsKey("wzrk_null"))
+        Assert.assertEquals("1907971814", content.metaData!!["wzrk_element_id"])
+
+        val parcel = Parcel.obtain()
+        content.writeToParcel(parcel, 0)
+        parcel.setDataPosition(0)
+        val fromParcel = CleverTapDisplayUnitContent.CREATOR.createFromParcel(parcel)
+        Assert.assertEquals("1907971814", fromParcel.metaData!!["wzrk_element_id"])
+    }
+
     /** The getter must hand back a copy, or a caller edits the item's stored attribution. */
     @Test
     fun test_getMetaData_returnsCopy_callerCannotMutateStoredAttribution() {

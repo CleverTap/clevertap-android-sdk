@@ -961,6 +961,26 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun `pushDisplayUnitElementViewedEventForID does not block a later click from setting wzrkParams`() {
+        val displayController = mockk<CTDisplayUnitController>()
+        every { displayController.getDisplayUnitForID(any()) } returns
+                CleverTapDisplayUnit.toDisplayUnit(JSONObject().put("wzrk_id", "1234"))
+        every { coreState.controllerManager.displayUnitCache } returns displayController
+        mockCleanEventName(Constants.NOTIFICATION_CLICKED_EVENT_NAME)
+        mockCleanEventName(Constants.NOTIFICATION_VIEWED_EVENT_NAME)
+
+        analyticsManagerSUT.pushDisplayUnitElementViewedEventForID(
+            "id", hashMapOf<String, Any>("wzrk_element_id" to "slide0_auto_viewed")
+        )
+        analyticsManagerSUT.pushDisplayUnitElementClickedEventForID(
+            "id", hashMapOf<String, Any>("wzrk_element_id" to "slide2_clicked")
+        )
+        // setWzrkParams is first-write-wins per session, so a view that set it would
+        // lock wzrk_ref to the viewed slide and drop the real click.
+        assertEquals("slide2_clicked", coreState.coreMetaData.wzrkParams.optString("wzrk_element_id"))
+    }
+
+    @Test
     fun `pushDisplayUnitElementClickedEventForID displayController is null`() {
         every { coreState.controllerManager.displayUnitCache } returns null
         analyticsManagerSUT.pushDisplayUnitElementClickedEventForID("id", HashMap())
