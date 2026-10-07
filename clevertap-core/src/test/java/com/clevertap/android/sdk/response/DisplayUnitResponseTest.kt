@@ -4,6 +4,8 @@ import android.content.Context
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache
@@ -41,6 +43,8 @@ class DisplayUnitResponseTest : BaseTestCase() {
     private lateinit var ndFCManager: NdFCManager
     private lateinit var cache: DisplayUnitCache
     private lateinit var context: Context
+    private lateinit var deviceInfo: DeviceInfo
+    private lateinit var coreMetaData: CoreMetaData
     private lateinit var response: DisplayUnitResponse
 
     override fun setUp() {
@@ -68,8 +72,13 @@ class DisplayUnitResponseTest : BaseTestCase() {
         every { controllerManager.ndFCManager } returns ndFCManager
         every { controllerManager.getOrCreateDisplayUnitCache() } returns cache
 
+        deviceInfo = mockk(relaxed = true)
+        every { deviceInfo.appLaunchedFields } returns JSONObject() // App Launched event props (empty is fine)
+        coreMetaData = mockk(relaxed = true)
+
         response = DisplayUnitResponse(
-            config, callbackManager, controllerManager, storeRegistry, ndTriggerManager, ndEvaluationManager
+            config, callbackManager, controllerManager, storeRegistry, ndTriggerManager, ndEvaluationManager,
+            deviceInfo, coreMetaData
         )
     }
 
@@ -108,7 +117,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
             ]}"""
         )
         // Stub is eligible (passes whenLimits) -> acked at the would-have-shown moment.
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers { firstArg() }
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
 
         response.processResponse(json, "", context)
 
@@ -125,7 +134,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
             ]}"""
         )
         // whenLimits drops the stub -> the campaign would not have shown -> the CG arm must not be counted.
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } returns emptyList()
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } returns emptyList()
 
         response.processResponse(json, "", context)
 
@@ -161,14 +170,14 @@ class DisplayUnitResponseTest : BaseTestCase() {
             ]}"""
         )
         // whenLimits filter keeps 70001, drops 70002 (over cap).
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers {
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers {
             firstArg<List<JSONObject>>().filter { it.optString("ti") == "70001" }
         }
 
         response.processResponse(json, "", context)
 
         val slot = slot<ArrayList<CleverTapDisplayUnit>>()
-        verify(exactly = 1) { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } // filter runs
+        verify(exactly = 1) { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } // filter runs
         verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
         assertEquals(1, slot.captured.size)                     // only the survivor is delivered
         assertEquals("70001_20260810", slot.captured[0].unitID)
@@ -183,7 +192,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
                 {"ti":70003,"wzrk_id":"70003_x","type":"simple"}
             ]}"""
         )
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers { firstArg() } // all pass whenLimits
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() } // all pass whenLimits
         every { ndFCManager.globalCapRemaining() } returns 1 // only 1 left under the global cap (e.g. 5 cap, 4 shown)
 
         response.processResponse(json, "", context)
@@ -202,7 +211,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
                 {"ti":70002,"wzrk_id":"70002_x","type":"simple","excludeGlobalFCaps":1}
             ]}"""
         )
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } answers { firstArg() }
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
         every { ndFCManager.globalCapRemaining() } returns 0 // no global budget left
         // 70002 is fcap-managed (carries excludeGlobalFCaps) so it also hits NdFcapGate.canShow; in prod an
         // exempt unit returns true there, so mirror that (the relaxed mock would otherwise return false).
@@ -226,12 +235,12 @@ class DisplayUnitResponseTest : BaseTestCase() {
             ]}"""
         )
         val groups = mutableListOf<List<JSONObject>>()
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(capture(groups)) } answers { firstArg() }
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(capture(groups), any(), any()) } answers { firstArg() }
 
         response.processResponse(json, "", context)
 
         // Both the CG-stub group and the content group go through the same whenLimits filter, separately.
-        verify(exactly = 2) { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) }
+        verify(exactly = 2) { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) }
         val stubGroup = groups.first { grp -> grp.any { it.optBoolean("suppressed") } }
         val contentGroup = groups.first { grp -> grp.none { it.optBoolean("suppressed") } }
         assertEquals("70003", stubGroup.single().optString("ti"))
@@ -253,7 +262,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
                 "adUnit_notifs_applaunched":[{"ti":70001,"wzrk_id":"70001_20260810","type":"simple"}]
             }""",
         )
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } throws RuntimeException("divide by zero")
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } throws RuntimeException("divide by zero")
 
         response.processResponse(json, "", context)
 
@@ -270,7 +279,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
         val json = JSONObject(
             """{"adUnit_notifs_applaunched":[{"ti":70001,"wzrk_id":"70001_20260810","type":"simple"}]}""",
         )
-        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any()) } returns emptyList()
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } returns emptyList()
 
         response.processResponse(json, "", context)
 

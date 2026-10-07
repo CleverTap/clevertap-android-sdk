@@ -162,7 +162,7 @@ class NdEvaluationManagerTest {
         val within = appLaunchedUnitWithRule("70001")
         val overCap = appLaunchedUnitWithRule("70002")
 
-        val kept = manager.retainAppLaunchedWithinLimits(listOf(within, overCap))
+        val kept = manager.retainAppLaunchedWithinLimits(listOf(within, overCap), emptyMap(), null)
 
         assertEquals(listOf(within), kept)
         // Trigger is counted for BOTH — occurrence limits advance even when the unit is ultimately dropped.
@@ -174,14 +174,49 @@ class NdEvaluationManagerTest {
     }
 
     @Test
-    fun `retainAppLaunchedWithinLimits passes units with no inline rules through untouched`() {
-        // A simple campaign: full content payload, but no frequencyLimits/occurrenceLimits inline.
+    fun `retainAppLaunchedWithinLimits keeps a unit with no inline rules but still counts the trigger`() {
+        // A simple campaign: no whenTriggers (trivially qualifies on launch) and no whenLimits. It is kept,
+        // and the occurrence counter still advances — mirrors in-app, which increments on every trigger match.
         val simple = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "88888")
 
-        val kept = manager.retainAppLaunchedWithinLimits(listOf(simple))
+        val kept = manager.retainAppLaunchedWithinLimits(listOf(simple), emptyMap(), null)
 
         assertEquals(listOf(simple), kept)
-        confirmVerified(ndTriggersManager, ndLimitsMatcher) // no inline rules -> evaluator untouched
+        verify(exactly = 1) { ndTriggersManager.increment("88888") }
+        confirmVerified(ndTriggersManager, ndLimitsMatcher) // no whenLimits -> matcher untouched
+    }
+
+    @Test
+    fun `retainAppLaunchedWithinLimits drops a unit whose whenTriggers do not match (eg firstTimeOnly)`() {
+        val unit = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+            .put(Constants.INAPP_WHEN_TRIGGERS, JSONArray().put(JSONObject().put("eventName", "App Launched")))
+        every { triggersMatcher.matchEvent(any(), any()) } returns false // trigger condition not satisfied
+
+        val kept = manager.retainAppLaunchedWithinLimits(listOf(unit), emptyMap(), null)
+
+        assertTrue(kept.isEmpty())
+        verify(exactly = 1) { triggersMatcher.matchEvent(any(), any()) }
+        verify(exactly = 0) { ndTriggersManager.increment(any()) }           // no match -> no occurrence count
+        confirmVerified(ndTriggersManager, ndLimitsMatcher)                  // whenLimits never reached
+    }
+
+    @Test
+    fun `retainAppLaunchedWithinLimits honors whenTriggers then whenLimits when both present`() {
+        val unit = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+            .put(Constants.INAPP_WHEN_TRIGGERS, JSONArray().put(JSONObject().put("eventName", "App Launched")))
+            .put(Constants.INAPP_FC_LIMITS, JSONArray().put(JSONObject().put("type", "session").put("limit", 1)))
+        every { triggersMatcher.matchEvent(any(), any()) } returns true
+        every { ndLimitsMatcher.matchWhenLimits(any(), "70001") } returns true
+
+        val kept = manager.retainAppLaunchedWithinLimits(listOf(unit), emptyMap(), null)
+
+        assertEquals(listOf(unit), kept)
+        verify(exactly = 1) { triggersMatcher.matchEvent(any(), any()) }
+        verify(exactly = 1) { ndTriggersManager.increment("70001") }
+        verify(exactly = 1) { ndLimitsMatcher.matchWhenLimits(any(), "70001") }
+        confirmVerified(ndTriggersManager, ndLimitsMatcher)
     }
 
     @Test
@@ -191,7 +226,7 @@ class NdEvaluationManagerTest {
         val unit = appLaunchedUnitWithRule("70001")
         every { ndLimitsMatcher.matchWhenLimits(any(), "70001") } returns true
 
-        manager.retainAppLaunchedWithinLimits(listOf(unit))
+        manager.retainAppLaunchedWithinLimits(listOf(unit), emptyMap(), null)
 
         verify(exactly = 0) { ndStore.readServerSideNdMetaData() }
     }

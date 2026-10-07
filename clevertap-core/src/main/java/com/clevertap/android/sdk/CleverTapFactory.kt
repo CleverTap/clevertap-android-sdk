@@ -441,6 +441,8 @@ internal object CleverTapFactory {
                 storeRegistry = storeRegistry,
                 ndTriggerManager = ndTriggersManager,
                 ndEvaluationManager = ndEvaluationManager,
+                deviceInfo = deviceInfo,
+                coreMetaData = coreMetaData,
             ),
             FeatureFlagResponse(config, controllerManager),
             ProductConfigResponse(config, coreMetaData, controllerManager),

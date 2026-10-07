@@ -6,12 +6,15 @@ import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
 import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.variables.JsonUtil
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -39,6 +42,10 @@ internal class DisplayUnitResponse(
     private val storeRegistry: StoreRegistry?,
     private val ndTriggerManager: TriggerManager?,
     private val ndEvaluationManager: NdEvaluationManager?,
+    // For the App-Launched trigger match: the `App Launched` event properties + location, mirroring in-app.
+    // Nullable because the content-only preview path doesn't evaluate (ndEvaluationManager is null there).
+    private val deviceInfo: DeviceInfo?,
+    private val coreMetaData: CoreMetaData?,
 ) : CleverTapResponseDecorator() {
 
     /** Content-only constructor for the send-test / push-preview path (no ND fcap meta). */
@@ -46,7 +53,7 @@ internal class DisplayUnitResponse(
         config: CleverTapInstanceConfig,
         callbackManager: BaseCallbackManager,
         controllerManager: ControllerManager,
-    ) : this(config, callbackManager, controllerManager, null, null, null)
+    ) : this(config, callbackManager, controllerManager, null, null, null, null, null)
 
     private val logger = config.logger
 
@@ -226,25 +233,31 @@ internal class DisplayUnitResponse(
         }
         val evaluator = ndEvaluationManager ?: return content // preview path: no caps/acks to apply
 
-        // Ack CG stubs that are still within their whenLimits (would have shown).
+        // The `App Launched` event the batch is evaluated against — properties + location sourced exactly as
+        // in-app does (InAppController.onAppLaunchServerSideInAppsResponse): appLaunchedFields + user location.
+        val eventProperties: Map<String, Any> =
+            deviceInfo?.appLaunchedFields?.let { JsonUtil.mapFromJson<Any>(it) } ?: emptyMap()
+        val userLocation = coreMetaData?.locationFromUser
+
+        // Ack CG stubs that are still eligible — within their whenTriggers + whenLimits (would have shown).
         if (cgStubs.isNotEmpty()) {
             val eligibleStubs = try {
-                evaluator.retainAppLaunchedWithinLimits(cgStubs)
+                evaluator.retainAppLaunchedWithinLimits(cgStubs, eventProperties, userLocation)
             } catch (t: Throwable) {
-                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG stub whenLimits filter failed; skipping acks", t)
+                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG stub eligibility filter failed; skipping acks", t)
                 emptyList()
             }
             eligibleStubs.forEach { evaluator.recordCgSuppressed(it) }
         }
 
-        // Deliverable content: whenLimits + remaining global-budget trim.
-        val withinWhenLimits = try {
-            evaluator.retainAppLaunchedWithinLimits(content)
+        // Deliverable content: whenTriggers + whenLimits + remaining global-budget trim.
+        val eligible = try {
+            evaluator.retainAppLaunchedWithinLimits(content, eventProperties, userLocation)
         } catch (t: Throwable) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND whenLimits filter failed; dropping App-Launched units", t)
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched eligibility filter failed; dropping units", t)
             emptyList() // fail-closed: don't let un-cap-checked units through
         }
-        return trimToGlobalCap(withinWhenLimits)
+        return trimToGlobalCap(eligible)
     }
 
     /**

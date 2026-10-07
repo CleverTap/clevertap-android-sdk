@@ -116,23 +116,50 @@ internal class NdEvaluationManager(
     }
 
     /**
-     * Filters App-Launched content-in-advance by its advanced `whenLimits`, returning the units still
-     * within cap (order preserved). App-Launched content is never voted, so this is where its limits are
-     * applied. Rules are read inline from each payload (App-Launched campaigns are excluded from
-     * `adUnit_notifs_ss`); a unit with no inline rules passes through. All survivors are returned — no
-     * single-winner selection. Suppressed CG stubs are excluded upstream (acked via [recordCgSuppressed]).
+     * Filters App-Launched content-in-advance by its advanced `whenTriggers` **and** `whenLimits`, returning
+     * the units still eligible (order preserved). App-Launched content is never voted, so this is where both
+     * its triggers and limits are applied — mirroring in-app's SS App-Launched flow
+     * ([EvaluationManager.executeServerSideAppLaunchEvaluationFlow] → `evaluate`): build the `App Launched`
+     * event, match `whenTriggers` (so `firstTimeOnly` / property / geo conditions are honored), then — on a
+     * match — increment the occurrence counter and check `whenLimits`.
+     *
+     * Rules are read inline from each payload (App-Launched campaigns are excluded from `adUnit_notifs_ss`).
+     * A unit with no inline `whenTriggers` trivially qualifies (the launch itself is the trigger) — ND-only,
+     * since in-app campaigns always carry triggers. All survivors are returned — no single-winner selection.
+     * Suppressed CG stubs are excluded upstream (acked via [recordCgSuppressed]).
+     *
+     * @param eventProperties the `App Launched` event properties (`deviceInfo.appLaunchedFields`), as in-app.
+     * @param userLocation the user location for geo-triggers, as in-app.
      */
     @WorkerThread
-    fun retainAppLaunchedWithinLimits(content: List<JSONObject>): List<JSONObject> {
+    fun retainAppLaunchedWithinLimits(
+        content: List<JSONObject>,
+        eventProperties: Map<String, Any>,
+        userLocation: Location?,
+    ): List<JSONObject> {
         if (content.isEmpty()) return content
+
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
 
         return content.filter { unit ->
             val ti = unit.optString(Constants.INAPP_ID_IN_PAYLOAD)
+            if (ti.isEmpty()) return@filter true // no id -> can't cap -> pass
+
+            // Match whenTriggers against the App Launched event. Empty triggers trivially qualify; a unit WITH
+            // triggers must match (honoring firstTimeOnly / property / geo), exactly like in-app's evaluate().
+            val whenTriggers = EvalRules.whenTriggers(unit)
+            if (whenTriggers.isNotEmpty() && !triggersMatcher.matchEvent(whenTriggers, event)) {
+                config.logger.verbose(config.accountId, "App-Launched ND $ti dropped: whenTriggers did not match")
+                return@filter false
+            }
+
+            // Qualified -> advance the occurrence counter (needed for onEvery/onExactly), as in-app does on a
+            // trigger match, then check whenLimits.
+            ndTriggersManager.increment(ti)
             val whenLimits = EvalRules.whenLimits(unit) // inline rules, mirroring in-app's getWhenLimits(inApp)
-            if (ti.isEmpty() || whenLimits.isEmpty()) {
-                true // simple / non-advanced campaign — no inline rules to enforce
+            if (whenLimits.isEmpty()) {
+                true // no whenLimits to enforce
             } else {
-                ndTriggersManager.increment(ti)
                 ndLimitsMatcher.matchWhenLimits(whenLimits, ti).also { within ->
                     if (!within) config.logger.verbose(config.accountId, "App-Launched ND $ti suppressed by whenLimits")
                 }

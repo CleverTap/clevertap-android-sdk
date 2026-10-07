@@ -185,10 +185,10 @@ class NdCampaignScenariosTest : BaseTestCase() {
         // arithmetic is exercised for real (not mocked). Rules ride INLINE on the payload (§5.2), not the
         // ss-bundle. onEvery 2: keep only when the (post-increment) count % 2 == 0.
         val units = listOf(appLaunchedUnit(footer4, occ = jarr(occ("onEvery", 2))))
-        assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 1 -> dropped")
-        assertEquals(1, manager.retainAppLaunchedWithinLimits(units).size, "trigger 2 -> kept")
-        assertTrue(manager.retainAppLaunchedWithinLimits(units).isEmpty(), "trigger 3 -> dropped")
-        assertEquals(1, manager.retainAppLaunchedWithinLimits(units).size, "trigger 4 -> kept")
+        assertTrue(manager.retainAppLaunchedWithinLimits(units, emptyMap(), null).isEmpty(), "trigger 1 -> dropped")
+        assertEquals(1, manager.retainAppLaunchedWithinLimits(units, emptyMap(), null).size, "trigger 2 -> kept")
+        assertTrue(manager.retainAppLaunchedWithinLimits(units, emptyMap(), null).isEmpty(), "trigger 3 -> dropped")
+        assertEquals(1, manager.retainAppLaunchedWithinLimits(units, emptyMap(), null).size, "trigger 4 -> kept")
     }
 
     @Test
