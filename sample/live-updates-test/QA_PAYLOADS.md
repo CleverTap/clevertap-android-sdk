@@ -9,7 +9,7 @@ into the sample app and it goes through the same path as a real FCM push.
 2. Copy one payload, tap **Paste**, then **Send**.
 3. Open the notification shade (close it again to see the Android 16 status-bar chip).
 
-From a computer instead (the whole JSON in single quotes):
+From a computer instead, with a debug build of the sample app (the whole JSON in single quotes):
 
 ```
 adb shell am start -n com.clevertap.demo/.LiveUpdatePayloadActivity --es payload '<json>' --ez send true
