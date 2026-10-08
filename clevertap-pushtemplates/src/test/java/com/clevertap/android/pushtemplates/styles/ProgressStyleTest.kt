@@ -201,6 +201,29 @@ class ProgressStyleTest {
     }
 
     @Test
+    fun `large icon is set on the builder for the system to draw, without cropping`() {
+        val media = mockk<com.clevertap.android.pushtemplates.media.TemplateMediaManager>()
+        // A wide 8x4 icon: it must reach the system as is (the progress icons are square-cropped).
+        every { media.getNotificationBitmap(any(), any(), any()) } returns
+            android.graphics.Bitmap.createBitmap(8, 4, android.graphics.Bitmap.Config.ARGB_8888)
+        every { renderer.templateMediaManager } returns media
+        val withIcon = plainBarData().copy(largeIcon = "https://example.com/logo.png")
+
+        val icon = ProgressStyle(withIcon, renderer).builderFromStyle(context, Bundle(), 1, newBuilder()).build().getLargeIcon()
+
+        assertNotNull(icon)
+        val drawable = icon!!.loadDrawable(context)!!
+        assertEquals(2 * drawable.intrinsicHeight, drawable.intrinsicWidth)
+    }
+
+    @Test
+    fun `no large icon when pt_ico is not sent`() {
+        val n = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertNull(n.getLargeIcon())
+    }
+
+    @Test
     fun `fallback hides chip text after the live update ends`() {
         val extras = Bundle().apply {
             putString("pt_chip_type", "text")
