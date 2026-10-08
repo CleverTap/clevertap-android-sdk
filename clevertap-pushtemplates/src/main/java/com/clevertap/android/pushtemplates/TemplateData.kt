@@ -216,6 +216,8 @@ internal data class ProgressTemplateData(
     val points: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData>,
     /** Large icon URL (`pt_ico`, as in the other templates); the system draws it, on both tiers. */
     val largeIcon: String? = null,
+    /** Auto-dismiss delay in ms (`pt_dismiss`, in seconds, as in the other templates); null = never. */
+    val dismissAfter: Long? = null,
 ) : TemplateData() {
 
     /**
