@@ -218,6 +218,8 @@ internal data class ProgressTemplateData(
     val largeIcon: String? = null,
     /** Auto-dismiss delay in ms (`pt_dismiss`, in seconds, as in the other templates); null = never. */
     val dismissAfter: Long? = null,
+    /** Header sub text (`pt_subtitle`, else `wzrk_st`, as in the other templates); the system draws it. */
+    val subtitle: String? = null,
 ) : TemplateData() {
 
     /**

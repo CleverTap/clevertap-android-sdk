@@ -183,7 +183,8 @@ internal object TemplateDataFactory {
             largeIcon = extras.getString(PT_NOTIF_ICON)?.takeIf { it.isNotBlank() },
             // Seconds, like the other templates. Zero, negative or too large for ms is ignored.
             dismissAfter = extras.getString(PT_DISMISS)?.toLongOrNull()
-                ?.takeIf { it in 1..(Long.MAX_VALUE / ONE_SECOND_LONG) }?.let { it * ONE_SECOND_LONG }
+                ?.takeIf { it in 1..(Long.MAX_VALUE / ONE_SECOND_LONG) }?.let { it * ONE_SECOND_LONG },
+            subtitle = getStringWithFallback(extras, PT_SUBTITLE, Constants.WZRK_SUBTITLE)?.takeIf { it.isNotBlank() }
         )
     }
 
