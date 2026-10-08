@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -40,6 +41,8 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.pushnotification.fcm.CTFcmMessageHandler
 import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONObject
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * QA tool: paste a full Live Update push payload (wrapper + `data`, as in
@@ -47,9 +50,10 @@ import org.json.JSONObject
  *
  * The payload goes through the same path as a real FCM push: it is turned into a [RemoteMessage]
  * (every value a string, `data` as a JSON string, like FCM delivers it) and handed to
- * [CTFcmMessageHandler.createNotification], exactly as [MyFcmMessageListenerService] does. So the
- * Live Update routing (`wzrk_la`), the `data` surfacing, in-place updates by `wzrk_activityId` and
- * the start/update/end lifecycle all run as in production.
+ * [CTFcmMessageHandler.createNotification] on a background thread, as FCM delivers a push off the
+ * main thread. That matters: the SDK downloads icons synchronously while it renders, which fails on
+ * the main thread. So the Live Update routing (`wzrk_la`), the `data` surfacing, icon downloads,
+ * in-place updates by `wzrk_activityId` and the start/update/end lifecycle all run as in production.
  *
  * Timer/countdown payloads need a real time in `pt_when`, so `{{now}}`, `{{now+600}}` or `{{now-300}}`
  * (seconds from now) are replaced with the current epoch milliseconds before sending. This is a QA
@@ -60,6 +64,8 @@ import org.json.JSONObject
  *
  * Can also be started from a computer, for example:
  * `adb shell am start -n com.clevertap.demo/.LiveUpdatePayloadActivity --es payload '<json>' --ez send true`
+ * The activity is exported for that, so `send` from an intent works only in debuggable builds; other
+ * apps cannot make a release build post notifications. The payload is still filled in either way.
  */
 class LiveUpdatePayloadActivity : ComponentActivity() {
 
@@ -68,6 +74,9 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
         const val EXTRA_SEND = "send"
         private const val KEY_ACCOUNT_ID = "wzrk_acct_id"
         private const val KEY_CHANNEL_ID = "wzrk_cid"
+        private const val STATE_PAYLOAD = "payload"
+        private const val STATE_STATUS = "status"
+        private const val SENDING = "Sending…"
         private val NOW_TOKEN = Regex("""\{\{now([+-]\d+)?\}\}""")
 
         /** Replaces each `{{now±seconds}}` with that time in epoch milliseconds. */
@@ -79,6 +88,13 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
          * objects/arrays (the Live Update `data` object, `wzrk_acts`, …) become JSON strings and
          * numbers/booleans become their text. JSON null is left out.
          */
+        /**
+         * One background thread for every send, shared by all instances: pushes run off the main
+         * thread like FCM's, and in the order QA sends them (for example start, then update, then end),
+         * even across a rotation.
+         */
+        private val sender: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
+
         private fun toFcmData(json: String): MutableMap<String, String> {
             val obj = JSONObject(json.trim())
             val out = LinkedHashMap<String, String>()
@@ -97,8 +113,13 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Only on a fresh start: a rotation must not send the adb payload a second time.
-        if (savedInstanceState == null) handleIntent(intent)
+        if (savedInstanceState == null) {
+            handleIntent(intent)
+        } else {
+            // Recreated (rotation, dark mode switch): keep what QA pasted; never re-send the adb payload.
+            payload = savedInstanceState.getString(STATE_PAYLOAD).orEmpty()
+            status = savedInstanceState.getString(STATE_STATUS).orEmpty().takeIf { it != SENDING }.orEmpty()
+        }
 
         setContent {
             MaterialTheme {
@@ -120,6 +141,12 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_PAYLOAD, payload)
+        outState.putString(STATE_STATUS, status)
+    }
+
     // Started again while open (for example a second adb command): take the new payload too.
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -129,7 +156,8 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent) {
         val extra = intent.getStringExtra(EXTRA_PAYLOAD) ?: return
         payload = extra
-        status = if (intent.getBooleanExtra(EXTRA_SEND, false)) send(extra) else ""
+        val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        status = if (debuggable && intent.getBooleanExtra(EXTRA_SEND, false)) send(extra) else ""
     }
 
     @Composable
@@ -166,26 +194,34 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
         }
     }
 
-    /** Sends [payload] through the FCM path and returns a short result for the screen. */
+    /**
+     * Checks the JSON right away, then hands the push to the SDK on [sender]. Returns the status to
+     * show now; the final result replaces it when the SDK is done.
+     */
     private fun send(payload: String): String {
         val data = try {
             toFcmData(fillTimes(payload))
         } catch (t: Throwable) {
             return "Not sent: the JSON is not valid (${t.message})"
         }
-        // Without an account id the SDK finds no CleverTap instance and drops the push.
-        val accountId = data[KEY_ACCOUNT_ID]
-        if (accountId.isNullOrBlank() || accountId.startsWith("<")) {
-            CleverTapAPI.getDefaultInstance(applicationContext)?.accountId?.let { data[KEY_ACCOUNT_ID] = it }
-        }
-        data[KEY_CHANNEL_ID]?.let { ensureChannel(applicationContext, it) }
+        val appContext = applicationContext
+        sender.execute {
+            // Without an account id the SDK finds no CleverTap instance and drops the push.
+            val accountId = data[KEY_ACCOUNT_ID]
+            if (accountId.isNullOrBlank() || accountId.startsWith("<")) {
+                CleverTapAPI.getDefaultInstance(appContext)?.accountId?.let { data[KEY_ACCOUNT_ID] = it }
+            }
+            data[KEY_CHANNEL_ID]?.let { ensureChannel(appContext, it) }
 
-        val message = RemoteMessage.Builder("qa@fcm.googleapis.com").setData(data).build()
-        return if (fcmHandler.createNotification(applicationContext, message)) {
-            "Sent to the SDK (${data.size} keys). Check the notification shade."
-        } else {
-            "Not sent: the SDK did not treat it as a CleverTap push (is \"wzrk_pn\": \"true\" there?)"
+            val message = RemoteMessage.Builder("qa@fcm.googleapis.com").setData(data).build()
+            val result = if (fcmHandler.createNotification(appContext, message)) {
+                "Sent to the SDK (${data.size} keys). Check the notification shade."
+            } else {
+                "Not sent: the SDK did not treat it as a CleverTap push (is \"wzrk_pn\": \"true\" there?)"
+            }
+            runOnUiThread { if (!isDestroyed) status = result }
         }
+        return SENDING
     }
 
     /** The payload's channel must exist or Android drops the notification; create it like the demos do. */
