@@ -66,6 +66,7 @@ internal object ProgressTrackRenderer {
     private const val TRACKER_DP = 20f // native tracker height
     private const val TITLE_SP = 9f
     private const val TITLE_GAP_DP = 3f
+    private const val TITLE_SPACING_DP = 6f // min space between neighbouring titles
     private const val FADED_OPACITY = 0.5f // native NotificationProgressBar.FADED_OPACITY
     private const val MIN_CONTRAST = 3.0 // native ProgressStyle.sanitizeProgressColor
     private const val DARK_BG_LUMINANCE = 0.17912878474 // native Notification.Builder.isColorDark
@@ -218,25 +219,70 @@ internal object ProgressTrackRenderer {
             paint.color = Color.BLACK // opaque so the bitmap is drawn at full alpha
             canvas.drawBitmap(tracker, null, l.tracker, paint)
         }
-        drawTitles(canvas, l, titlePaint)
+        drawTitles(canvas, l, titlePaint, TITLE_SPACING_DP * spec.density)
         return bitmap
     }
 
+    /** Horizontal room a title may use: [left, right] on the bitmap. */
+    data class TitleSlot(val left: Float, val right: Float)
+
     /**
-     * Centers each title under its dot, ellipsized to the distance to its nearest neighbour. Titles
-     * at the ends may shift inward to stay on-canvas.
+     * Gives each title a slot so neighbours never overlap and keep [gap] between them. [centers]
+     * (the dots, sorted) and [widths] (each title's natural width) line up by index.
+     *
+     * Each title starts centered under its dot (kept on-canvas). Where two collide they first slide
+     * apart, each still reaching its own dot; if that is not enough they are trimmed (ellipsized
+     * later), again only as far as each still reaches its dot; dots closer than [gap] split at the
+     * midpoint. So "Placed" at 0 and "Cooking" at 10% shift apart instead of drawing over each other.
      */
-    private fun drawTitles(canvas: Canvas, l: Layout, paint: TextPaint) {
-        val sorted = l.dots.sortedBy { it.cx }
-        sorted.forEachIndexed { i, dot ->
-            val title = dot.title ?: return@forEachIndexed
-            val leftGap = if (i == 0) Float.MAX_VALUE else dot.cx - sorted[i - 1].cx
-            val rightGap = if (i == sorted.lastIndex) Float.MAX_VALUE else sorted[i + 1].cx - dot.cx
-            val maxWidth = minOf(leftGap, rightGap, l.width.toFloat()).coerceAtLeast(0f)
-            val text = TextUtils.ellipsize(title, paint, maxWidth, TextUtils.TruncateAt.END).toString()
+    fun titleSlots(centers: List<Float>, widths: List<Float>, canvasWidth: Float, gap: Float): List<TitleSlot> {
+        val n = centers.size
+        val left = FloatArray(n)
+        val right = FloatArray(n)
+        for (i in 0 until n) {
+            val w = widths[i].coerceIn(0f, canvasWidth)
+            left[i] = (centers[i] - w / 2).coerceIn(0f, canvasWidth - w)
+            right[i] = left[i] + w
+        }
+        for (i in 0 until n - 1) {
+            val j = i + 1
+            var overflow = right[i] + gap - left[j]
+            if (overflow <= 0) continue
+
+            // 1. Slide apart: the left title not past its own left neighbour, neither past its dot.
+            val floor = if (i == 0) 0f else right[i - 1] + gap
+            val slideLeft = minOf(overflow, (left[i] - maxOf(floor, centers[i] - (right[i] - left[i]))).coerceAtLeast(0f))
+            left[i] -= slideLeft; right[i] -= slideLeft; overflow -= slideLeft
+            val slideRight = minOf(overflow, (minOf(centers[j], canvasWidth - (right[j] - left[j])) - left[j]).coerceAtLeast(0f))
+            left[j] += slideRight; right[j] += slideRight; overflow -= slideRight
+            if (overflow <= 0) continue
+
+            // 2. Trim the facing ends, sharing the overflow, each only down to its own dot.
+            val capLeft = (right[i] - maxOf(centers[i], left[i])).coerceAtLeast(0f)
+            val capRight = (centers[j] - left[j]).coerceAtLeast(0f)
+            val trimRight = minOf(capRight, overflow - minOf(capLeft, overflow / 2))
+            val trimLeft = minOf(capLeft, overflow - trimRight)
+            right[i] -= trimLeft; left[j] += trimRight; overflow -= trimLeft + trimRight
+            if (overflow <= 0) continue
+
+            // 3. Dots closer than the gap itself: split at the midpoint.
+            val mid = (centers[i] + centers[j]) / 2
+            right[i] = minOf(right[i], mid - gap / 2)
+            left[j] = maxOf(left[j], mid + gap / 2)
+        }
+        return (0 until n).map { TitleSlot(left[it], maxOf(left[it], right[it])) }
+    }
+
+    /** Draws each title in its [titleSlots] slot, ellipsized to fit, as centered on its dot as the slot allows. */
+    private fun drawTitles(canvas: Canvas, l: Layout, paint: TextPaint, gap: Float) {
+        val titled = l.dots.filter { it.title != null }.sortedBy { it.cx }
+        val slots = titleSlots(titled.map { it.cx }, titled.map { paint.measureText(it.title) }, l.width.toFloat(), gap)
+        titled.forEachIndexed { i, dot ->
+            val slot = slots[i]
+            val text = TextUtils.ellipsize(dot.title, paint, slot.right - slot.left, TextUtils.TruncateAt.END).toString()
             if (text.isEmpty()) return@forEachIndexed
             val w = paint.measureText(text)
-            val x = (dot.cx - w / 2).coerceIn(0f, (l.width - w).coerceAtLeast(0f))
+            val x = (dot.cx - w / 2).coerceIn(slot.left, maxOf(slot.left, slot.right - w))
             canvas.drawText(text, x, l.titleBaseline, paint)
         }
     }
