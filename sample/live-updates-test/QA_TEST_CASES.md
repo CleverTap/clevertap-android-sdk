@@ -90,6 +90,7 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 - **Steps:** tap "Progress: Countdown Chip + Promoted".
 - **Result-16+:** the status-bar **chip counts down** (live timer) toward the ETA, and the card header shows the same running timer; notification is **promoted** (elevated/among live updates).
 - **Result-<16:** no status-bar chip (fallback has none); the **notification header shows the running countdown** instead of the post time (collapsed and expanded). On Android 6 the timer counts up (no count-down chronometer on API 23).
+- **Both tiers, last step ("Delivered", `end`):** the countdown stops; the header shows `now` instead of `0:00` or minus time (see TC-N15).
 
 ### TC-B04 — Non-promoted (Row 19-3)
 - **Steps:** tap "Progress: No Promotion". Compare against TC-B01/TC-B03.
