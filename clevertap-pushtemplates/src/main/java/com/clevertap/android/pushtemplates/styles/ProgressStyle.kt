@@ -33,9 +33,9 @@ private typealias PointData = ProgressPayloadParser.PointData
  *   (see [buildNative]) so the SDK needs no build-time dependency on androidx.core 1.17.0.
  *   This is a base style with NO custom RemoteViews, which is what makes promotion possible.
  * - **Below API 36:** a custom-RemoteViews fallback for the EXPANDED view that mimics the same look —
- *   tracker icon, title/message, and a progress row: a bitmap-drawn milestone track (segment widths
- *   follow their length, points sit at their position) or a plain bar. The COLLAPSED view is left
- *   to the system's standard template
+ *   title/message and a progress row: a bitmap-drawn milestone track (segment widths follow their
+ *   length, points sit at their position, the tracker rides it at the progress) or a plain bar with
+ *   the tracker beside the title. The COLLAPSED view is left to the system's standard template
  *   (small icon, title, time, message), matching what Android 16 shows for a collapsed
  *   ProgressStyle. Not promotable (promotion is a 16+ OS feature), but kept ongoing so it behaves
  *   like a live update.
@@ -247,8 +247,10 @@ internal class ProgressStyle(
         // Determinate max: pt_progress_max, else the summed segment lengths, else 100.
         val progressMax = data.progressMax ?: segments.sumOf { it.length }.takeIf { it > 0 } ?: 100
 
+        val styledByProgress = boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false)
+
         val big = fallbackView(context, segmented, indeterminate, title, message, chipText, trackerIcon,
-            startIcon, endIcon, segments, points, progress, progressMax)
+            startIcon, endIcon, segments, points, progress, progressMax, styledByProgress)
 
         // Only the expanded view is custom. No custom content view is set, so the collapsed view is
         // the system's standard template (small icon, title, time, message) on every API level —
@@ -278,7 +280,8 @@ internal class ProgressStyle(
         segments: List<SegmentData>,
         points: List<PointData>,
         progress: Int,
-        progressMax: Int
+        progressMax: Int,
+        styledByProgress: Boolean
     ): RemoteViews {
         val rv = RemoteViews(context.packageName, R.layout.pt_progress_fallback)
         rv.setTextViewText(R.id.pt_title, Html.fromHtml(title))
@@ -289,8 +292,9 @@ internal class ProgressStyle(
             rv.setViewVisibility(R.id.pt_chip, android.view.View.VISIBLE)
         }
         // Android 16 hides the tracker on an indeterminate bar (there is no position to put it at),
-        // so hide it here too to match.
-        if (trackerIcon != null && !indeterminate) {
+        // so hide it here too to match. On the milestone track the tracker is drawn on the track at
+        // the progress position instead (see below), so it is not shown up here as well.
+        if (trackerIcon != null && !indeterminate && !segmented) {
             rv.setImageViewBitmap(R.id.pt_tracker, trackerIcon)
             rv.setViewVisibility(R.id.pt_tracker, android.view.View.VISIBLE)
         }
@@ -309,11 +313,13 @@ internal class ProgressStyle(
         if (segmented) {
             // Milestones: show the bitmap-drawn track, hide the plain bar. Same scale as native 16+:
             // the total is the sum of the segment lengths (pt_progress_max only when there are none).
+            // Progress shows as on native: the tracker at the progress, and (pt_styled_by_progress)
+            // everything ahead of it faded.
             rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
             val total = ProgressTrackRenderer.total(segments, progressMax)
             val track = ProgressTrackRenderer.render(
                 trackSpec(context, hasStartIcon = startIcon != null, hasEndIcon = endIcon != null),
-                segments, points, total
+                segments, points, total, progress, styledByProgress, trackerIcon
             )
             rv.setImageViewBitmap(R.id.pt_progress_track, track)
             rv.setViewVisibility(R.id.pt_progress_track, android.view.View.VISIBLE)
