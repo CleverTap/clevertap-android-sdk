@@ -86,9 +86,12 @@ internal class ProgressStyle(
         // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
         // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
         // consumer, we catch the class/method absence and degrade to the RemoteViews fallback.
-        val nativeOk = Build.VERSION.SDK_INT >= API_PROGRESS_STYLE &&
-            runCatching { buildNative(context, extras, nb, segments, points, trackerIcon, ended) }
-                .onFailure { PTLog.verbose("pt_progress: native ProgressStyle unavailable (androidx.core < 1.17.0?), using fallback", it) }
+        // The 1.17.0 APIs are looked up once per process (NativeProgressApi); null means unavailable,
+        // which is logged once there, so this check costs nothing on later renders.
+        val api = if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) NativeProgressApi.methods else null
+        val nativeOk = api != null &&
+            runCatching { buildNative(api, context, extras, nb, segments, points, trackerIcon, ended) }
+                .onFailure { PTLog.verbose("pt_progress: native ProgressStyle failed, using fallback", it) }
                 .isSuccess
         if (!nativeOk) {
             buildFallback(context, extras, nb, title, message, segments, points, trackerIcon, ended)
@@ -127,13 +130,13 @@ internal class ProgressStyle(
     // NotificationCompat.ProgressStyle + the promotion/chip builder methods only exist in
     // androidx.core 1.17.0. We invoke them REFLECTIVELY so this SDK compiles WITHOUT a build-time
     // dependency on 1.17.0 (no compileOnly / resolutionStrategy force needed): the host app supplies
-    // whatever androidx.core it ships. If that runtime core is < 1.17.0 the reflected class/methods
-    // are absent -> the first Class.forName throws -> builderFromStyle's runCatching falls back to
-    // the RemoteViews path. The literal class/method names below track androidx.core 1.17.0.
-    // Everything already present in the baseline core (IconCompat, setStyle/Style, setWhen/chronometer)
-    // is called directly and type-safely.
+    // whatever androidx.core it ships. The reflected handles are looked up once and cached in
+    // NativeProgressApi; if that runtime core is < 1.17.0 they are absent and builderFromStyle uses
+    // the RemoteViews path. Everything already present in the baseline core (IconCompat,
+    // setStyle/Style, setWhen/chronometer) is called directly and type-safely.
 
     private fun buildNative(
+        api: NativeProgressApi.Methods,
         context: Context,
         extras: Bundle,
         nb: NotificationCompat.Builder,
@@ -142,71 +145,53 @@ internal class ProgressStyle(
         trackerIcon: Bitmap?,
         ended: Boolean
     ): NotificationCompat.Builder {
-        val psClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle")
-        val progressStyle = psClass.getConstructor().newInstance()
+        // A new ProgressStyle (and Segment/Point) per notification; only the reflective handles are cached.
+        val progressStyle = api.styleCtor.newInstance()
 
-        psClass.getMethod("setStyledByProgress", Boolean::class.javaPrimitiveType)
-            .invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
+        api.setStyledByProgress.invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
         // Native ProgressStyle has no max: the track total is the sum of segment lengths, so pt_progress
         // must be on that scale. pt_progress_max is fallback-only here.
-        psClass.getMethod("setProgress", Int::class.javaPrimitiveType)
-            .invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
+        api.setProgress.invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
         // Same either/or rule as the fallback: indeterminate only applies to a plain bar, never to a
         // milestone (segments/points) indicator.
-        psClass.getMethod("setProgressIndeterminate", Boolean::class.javaPrimitiveType)
-            .invoke(progressStyle, data.indeterminate && !data.isSegmented)
+        api.setProgressIndeterminate.invoke(progressStyle, data.indeterminate && !data.isSegmented)
 
         if (segments.isNotEmpty()) {
-            val segClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle\$Segment")
-            val segCtor = segClass.getConstructor(Int::class.javaPrimitiveType)
-            val segSetColor = segClass.getMethod("setColor", Int::class.javaPrimitiveType)
             val segList = segments.map { seg ->
-                segCtor.newInstance(seg.length).also { s -> seg.color?.let { segSetColor.invoke(s, it) } }
+                api.segmentCtor.newInstance(seg.length).also { s -> seg.color?.let { api.segmentSetColor.invoke(s, it) } }
             }
-            psClass.getMethod("setProgressSegments", List::class.java).invoke(progressStyle, segList)
+            api.setProgressSegments.invoke(progressStyle, segList)
         }
         if (points.isNotEmpty()) {
-            val ptClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle\$Point")
-            val ptCtor = ptClass.getConstructor(Int::class.javaPrimitiveType)
-            val ptSetColor = ptClass.getMethod("setColor", Int::class.javaPrimitiveType)
             val ptList = points.map { pt ->
-                ptCtor.newInstance(pt.position).also { p -> pt.color?.let { ptSetColor.invoke(p, it) } }
+                api.pointCtor.newInstance(pt.position).also { p -> pt.color?.let { api.pointSetColor.invoke(p, it) } }
             }
-            psClass.getMethod("setProgressPoints", List::class.java).invoke(progressStyle, ptList)
+            api.setProgressPoints.invoke(progressStyle, ptList)
         }
 
-        trackerIcon?.let {
-            psClass.getMethod("setProgressTrackerIcon", IconCompat::class.java)
-                .invoke(progressStyle, IconCompat.createWithBitmap(it))
-        }
+        trackerIcon?.let { api.setProgressTrackerIcon.invoke(progressStyle, IconCompat.createWithBitmap(it)) }
         bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))?.let {
-            psClass.getMethod("setProgressStartIcon", IconCompat::class.java)
-                .invoke(progressStyle, IconCompat.createWithBitmap(it))
+            api.setProgressStartIcon.invoke(progressStyle, IconCompat.createWithBitmap(it))
         }
         bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))?.let {
-            psClass.getMethod("setProgressEndIcon", IconCompat::class.java)
-                .invoke(progressStyle, IconCompat.createWithBitmap(it))
+            api.setProgressEndIcon.invoke(progressStyle, IconCompat.createWithBitmap(it))
         }
 
         // setStyle(Style) exists in the baseline core; ProgressStyle is-a Style at runtime.
         nb.setStyle(progressStyle as NotificationCompat.Style)
-        applyNativeChip(extras, nb)
+        applyNativeChip(api, extras, nb)
 
         if (!ended && !"false".equals(extras.getString(PTConstants.PT_PROMOTE), ignoreCase = true)) {
-            NotificationCompat.Builder::class.java
-                .getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
-                .invoke(nb, true)
+            api.setRequestPromotedOngoing.invoke(nb, true)
         }
         return nb
     }
 
-    private fun applyNativeChip(extras: Bundle, nb: NotificationCompat.Builder) {
+    private fun applyNativeChip(api: NativeProgressApi.Methods, extras: Bundle, nb: NotificationCompat.Builder) {
         when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
+            // setShortCriticalText is androidx.core 1.17.0-only -> reflected (same tier as ProgressStyle).
             "text" -> extras.getString(PTConstants.PT_CHIP_TEXT)?.takeIf { it.isNotEmpty() }?.let {
-                // setShortCriticalText is androidx.core 1.17.0-only -> reflect (same tier as ProgressStyle).
-                NotificationCompat.Builder::class.java
-                    .getMethod("setShortCriticalText", String::class.java)
-                    .invoke(nb, it)
+                api.setShortCriticalText.invoke(nb, it)
             }
 
             "timer", "countdown" -> applyChronometer(extras, nb)
