@@ -63,6 +63,8 @@ internal class ProgressStyle(
         private const val TRACK_SIDE_MARGINS_DP = 60f // shade margins + card padding, both sides
         private const val TRACK_ICON_DP = 22f // a start/end icon (16dp) + its 6dp gap
         private const val MAX_TRACK_WIDTH_PX = 1080 // keeps the bitmap well under the RemoteViews limits
+        // A countdown with less than this left (or already past) is not started, see applyChronometer.
+        private const val COUNTDOWN_MIN_REMAINING_MS = 10_000L
     }
 
     fun builderFromStyle(
@@ -202,7 +204,7 @@ internal class ProgressStyle(
 
         // setStyle(Style) exists in the baseline core; ProgressStyle is-a Style at runtime.
         nb.setStyle(progressStyle as NotificationCompat.Style)
-        applyNativeChip(api, extras, nb)
+        applyNativeChip(api, extras, nb, ended)
 
         if (!ended && !"false".equals(extras.getString(PTConstants.PT_PROMOTE), ignoreCase = true)) {
             api.setRequestPromotedOngoing.invoke(nb, true)
@@ -210,14 +212,19 @@ internal class ProgressStyle(
         return nb
     }
 
-    private fun applyNativeChip(api: NativeProgressApi.Methods, extras: Bundle, nb: NotificationCompat.Builder) {
+    private fun applyNativeChip(
+        api: NativeProgressApi.Methods,
+        extras: Bundle,
+        nb: NotificationCompat.Builder,
+        ended: Boolean
+    ) {
         when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
             // setShortCriticalText is androidx.core 1.17.0-only -> reflected (same tier as ProgressStyle).
             "text" -> extras.getString(PTConstants.PT_CHIP_TEXT)?.takeIf { it.isNotEmpty() }?.let {
                 api.setShortCriticalText.invoke(nb, it)
             }
 
-            "timer", "countdown" -> applyChronometer(extras, nb)
+            "timer", "countdown" -> applyChronometer(extras, nb, ended)
         }
     }
 
@@ -225,12 +232,22 @@ internal class ProgressStyle(
      * Timer / countdown chip: a running chronometer from `pt_when`. Uses only baseline builder APIs,
      * so both tiers share it — on 16+ it drives the status-bar chip and the header, below 16 the
      * header of the system-drawn notification.
+     *
+     * Not started in two cases, so the card never shows a time running into minus (Android has no way
+     * to stop a chronometer at zero):
+     * - on the end event: the live update is over, so like the text chip the running time goes and
+     *   the header shows the post time ("now", "4m") instead;
+     * - for a countdown that is already past `pt_when` or has under 10 s left, e.g. a push delivered
+     *   late. A timer counting up is left alone: its `pt_when` is in the past on purpose.
      */
-    private fun applyChronometer(extras: Bundle, nb: NotificationCompat.Builder) {
+    private fun applyChronometer(extras: Bundle, nb: NotificationCompat.Builder, ended: Boolean) {
+        if (ended) return
         val whenMs = extras.getString(PTConstants.PT_WHEN)?.toLongOrNull() ?: return
+        val countDown = boolean(extras, PTConstants.PT_COUNTDOWN, def = false)
+        if (countDown && whenMs - System.currentTimeMillis() < COUNTDOWN_MIN_REMAINING_MS) return
         nb.setWhen(whenMs).setUsesChronometer(true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            nb.setChronometerCountDown(boolean(extras, PTConstants.PT_COUNTDOWN, def = false))
+            nb.setChronometerCountDown(countDown)
         }
     }
 
@@ -276,7 +293,7 @@ internal class ProgressStyle(
         // Timer / countdown chip: there is no status-bar chip below 16, so show the running time in
         // the notification header (Android 16 shows it there too, besides the chip).
         when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
-            "timer", "countdown" -> applyChronometer(extras, nb)
+            "timer", "countdown" -> applyChronometer(extras, nb, ended)
         }
 
         nb.setCustomBigContentView(big)
