@@ -27,6 +27,7 @@ over any registered notification factory).
     "pt_id": "pt_progress",
     "pt_title": "Order #A1234",
     "pt_msg": "Out for delivery",
+    "pt_subtitle": "Burger Palace",
     "pt_small_icon_clr": "#FF9500",
     "pt_ico": "https://i.imgur.com/6DavQwg.jpg",
 
@@ -94,6 +95,7 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
 |---|---|---|
 | `pt_id` | `"pt_progress"` | Selects the progress template; wins over a factory |
 | `pt_title`, `pt_msg` | Title / body | `nt` / `nm` accepted as fallbacks |
+| `pt_subtitle` | Sub text in the header | Optional, same key as the other templates (`wzrk_st` is used when it is missing). Shown by the **system** next to the app name (`App · Burger Palace · 5m`), collapsed and expanded, on **every** Android version and both tiers. Android 6 shows it as an extra text line instead of in the header (that is how Android 6 shows sub text). Blank values are ignored |
 | `pt_small_icon_clr` | Accent color | `#RRGGBB` (`pt_small_icon_clr_dark` for dark mode; `wzrk_color` as fallback). Below Android 12 it is also the default color of segments/points that have no `color` (see *Colors*) |
 | `pt_ico` | Large icon URL | Optional, same key as the other templates. Set on the notification and drawn by the **system** in its own slot on the right, in the collapsed and the expanded view, on both tiers (native ProgressStyle on 16+; standard collapsed view and the expanded frame below 16). Not cropped |
 | `pt_progress` | Current progress on the track scale | See scale rule above |

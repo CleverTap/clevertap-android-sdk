@@ -99,6 +99,12 @@ internal class ProgressStyle(
         // no-op before Android 8, where the platform has no timeout.
         data.dismissAfter?.let { nb.setTimeoutAfter(it) }
 
+        // Sub text (pt_subtitle): set on every API level, unlike the other templates (Style sets it only
+        // on 12+ because below that they draw their own header with the subtitle). pt_progress never
+        // draws a header: it is always the system's (native style, standard collapsed view, decorated
+        // fallback), so the system shows the sub text in it on every version.
+        data.subtitle?.let { nb.setSubText(it) }
+
         // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
         // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
         // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
