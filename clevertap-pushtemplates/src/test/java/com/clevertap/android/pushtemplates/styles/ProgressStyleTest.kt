@@ -224,6 +224,32 @@ class ProgressStyleTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun `pt_dismiss sets the native timeout so Android removes the card`() {
+        val data = plainBarData().copy(dismissAfter = 3_600_000L)
+
+        val n = ProgressStyle(data, renderer).builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertEquals(3_600_000L, n.timeoutAfter)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun `no timeout when pt_dismiss is not sent`() {
+        val n = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertEquals(0L, n.timeoutAfter)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `pt_dismiss below Android 8 is ignored without crashing`() {
+        val data = plainBarData().copy(dismissAfter = 3_600_000L)
+
+        assertNotNull(ProgressStyle(data, renderer).builderFromStyle(context, Bundle(), 1, newBuilder()).build())
+    }
+
+    @Test
     fun `fallback hides chip text after the live update ends`() {
         val extras = Bundle().apply {
             putString("pt_chip_type", "text")

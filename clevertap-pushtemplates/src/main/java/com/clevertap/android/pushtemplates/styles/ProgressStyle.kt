@@ -94,6 +94,11 @@ internal class ProgressStyle(
         // scales it itself (Android 16 even keeps a wide icon's shape).
         data.largeIcon?.let { url -> loadBitmap(context, url)?.let { nb.setLargeIcon(it) } }
 
+        // Auto-dismiss (pt_dismiss): the native timeout, so Android itself removes the card after that
+        // long, even if the end push never arrives. Same builder on both tiers; androidx makes it a
+        // no-op before Android 8, where the platform has no timeout.
+        data.dismissAfter?.let { nb.setTimeoutAfter(it) }
+
         // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
         // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
         // won't have NotificationCompat.ProgressStyle. Rather than force that version on every

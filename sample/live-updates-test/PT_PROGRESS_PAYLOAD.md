@@ -108,6 +108,7 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
 | `pt_chip_text` | Chip text | Only for `pt_chip_type=text`. Keep it **≤ 7 characters** (e.g. `12 min`) |
 | `pt_when` + `pt_countdown` | Epoch-millis + count-down flag | For `pt_chip_type=timer`/`countdown`. See *Timer / countdown* below |
 | `pt_promote` | Request promoted ongoing | `"false"` to opt out; 16+ only, and only a *request* |
+| `pt_dismiss` | Auto-dismiss after this many **seconds** | Optional, same key as the other templates (e.g. `"3600"`). The SDK passes it to Android's own timeout (`setTimeoutAfter`), so Android removes the card after that time even if the `end` push never arrives. No app code needed. Android 8+ only (no-op on 6–7). Zero, negative or invalid values are ignored. See *Auto-dismiss* below |
 | `wzrk_dl` | Tap deep link | |
 | `wzrk_acts` | Up to 3 buttons `{id, l, dl, ac}` | `ac` = auto-cancel |
 
@@ -128,7 +129,8 @@ closed). With the shade open, look at the card instead.
   (timer). For a countdown it must be in the future.
 - **A countdown does not stop at zero.** Android keeps counting into negative time (`−0:01`, `−0:02`…)
   until the notification is posted again. The backend must send the next `update` (with a new
-  `pt_when`) or the `end` event **before** the countdown reaches zero.
+  `pt_when`) or the `end` event **before** the countdown reaches zero. `pt_dismiss` (see below) is a
+  safety net that removes the card later, but it does not stop the countdown at zero.
 - Android 16's status-bar chip hides itself once the countdown is no longer positive, but the card
   header can still show negative time.
 - Android 6 (API 23) has no count-down chronometer, so a countdown counts up there.
@@ -171,6 +173,20 @@ not at `0` and `100`.
   `#000000` on a dark card (both as a grey). The exact shade can differ slightly between tiers.
 - Below 16 the track is an image made when the push is posted. If the user switches the theme while
   the notification is visible, the text updates at once and the track on the next `update`.
+
+## Auto-dismiss (`pt_dismiss`)
+
+- Value in **seconds**, as a string. The SDK multiplies it by 1000 and calls
+  `NotificationCompat.Builder.setTimeoutAfter`, the platform's own timeout: Android removes the card.
+- **Android 8 – 16:** works on both tiers (native ProgressStyle and the fallback use the same builder).
+  **Android 6 – 7:** the platform has no timeout, so it is ignored there.
+- Send it with every `start` / `update`, longer than the longest expected gap until the next update
+  (for example the ETA plus a buffer). Send a short one with `end` (for example `"300"`) to clear the
+  finished card a few minutes later.
+- To check on a device (platform behaviour, not SDK code): the timer restarting on every update, an
+  ongoing / promoted card being removed, and whether the removal also raises the "Live Activity"
+  **Dismissed** event (Android may send the delete intent on a timeout too; the SDK cannot tell the two
+  apart).
 
 ## Collapsed vs expanded
 
