@@ -39,10 +39,11 @@ private typealias PointData = ProgressPayloadParser.PointData
  *   ProgressStyle. Not promotable (promotion is a 16+ OS feature), but kept ongoing so it behaves
  *   like a live update.
  *
- * Both tiers read the same `pt_progress_*` contract. On the native tier the track total is the sum
- * of the segment lengths (there is no separate max), so `pt_progress` and point positions must be on
- * that scale; `pt_progress_max` applies to the fallback tier only. `pt_progress_indeterminate` applies
- * to both tiers, and only when there are no segments/points.
+ * Both tiers read the same `pt_progress_*` contract and draw the same milestone track: the total is
+ * the sum of the segment lengths (100 when there are none; there is no separate max), so
+ * `pt_progress` and point positions must be on that scale, and native's limits (10 segments,
+ * 4 points, none at the ends) apply on both. `pt_progress_max` applies only to the plain bar below
+ * 16. `pt_progress_indeterminate` applies to both tiers, and only when there are no segments/points.
  */
 internal class ProgressStyle(
     private val data: ProgressTemplateData,
@@ -155,7 +156,7 @@ internal class ProgressStyle(
 
         api.setStyledByProgress.invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
         // Native ProgressStyle has no max: the track total is the sum of segment lengths, so pt_progress
-        // must be on that scale. pt_progress_max is fallback-only here.
+        // must be on that scale. pt_progress_max only applies to the plain bar below 16.
         api.setProgress.invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
         // Same either/or rule as the fallback: indeterminate only applies to a plain bar, never to a
         // milestone (segments/points) indicator.
@@ -243,8 +244,9 @@ internal class ProgressStyle(
         val segmented = data.isSegmented
         val indeterminate = data.indeterminate && !segmented
         val progress = data.progress ?: 0
-        // Determinate max: pt_progress_max, else the summed segment lengths, else 100.
-        val progressMax = data.progressMax ?: segments.sumOf { it.length }.takeIf { it > 0 } ?: 100
+        // Plain-bar max: pt_progress_max, else 100. (The milestone track takes its total from the
+        // segments instead; see ProgressTrackRenderer.nativeTrack.)
+        val progressMax = data.progressMax ?: 100
 
         val styledByProgress = boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false)
 
@@ -310,15 +312,15 @@ internal class ProgressStyle(
         }
 
         if (segmented) {
-            // Milestones: show the bitmap-drawn track, hide the plain bar. Same scale as native 16+:
-            // the total is the sum of the segment lengths (pt_progress_max only when there are none).
-            // Progress shows as on native: the tracker at the progress, and (pt_styled_by_progress)
-            // everything ahead of it faded.
+            // Milestones: show the bitmap-drawn track, hide the plain bar. Same track as native 16+:
+            // the total is the sum of the segment lengths (100 when there are none), with native's
+            // segment/point limits applied (see nativeTrack). Progress shows as on native: the
+            // tracker at the progress, and (pt_styled_by_progress) everything ahead of it faded.
             rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
-            val total = ProgressTrackRenderer.total(segments, progressMax)
+            val (trackSegments, trackPoints, total) = ProgressTrackRenderer.nativeTrack(segments, points)
             val track = ProgressTrackRenderer.render(
                 trackSpec(context, hasStartIcon = startIcon != null, hasEndIcon = endIcon != null),
-                segments, points, total, progress, styledByProgress, trackerIcon
+                trackSegments, trackPoints, total, progress, styledByProgress, trackerIcon
             )
             rv.setImageViewBitmap(R.id.pt_progress_track, track)
             rv.setViewVisibility(R.id.pt_progress_track, android.view.View.VISIBLE)

@@ -71,9 +71,45 @@ internal object ProgressTrackRenderer {
     private const val MIN_CONTRAST = 3.0 // native ProgressStyle.sanitizeProgressColor
     private const val DARK_BG_LUMINANCE = 0.17912878474 // native Notification.Builder.isColorDark
 
-    /** Track total, matching native ProgressStyle: the segment lengths' sum, else [fallbackTotal]. */
-    fun total(segments: List<ProgressPayloadParser.SegmentData>, fallbackTotal: Int): Int =
-        segments.sumOf { it.length.coerceAtLeast(0) }.takeIf { it > 0 } ?: fallbackTotal.coerceAtLeast(1)
+    private const val MAX_SEGMENTS = 10 // native MAX_PROGRESS_SEGMENT_LIMIT
+    private const val MAX_POINTS = 4 // native MAX_PROGRESS_POINT_LIMIT
+    private const val DEFAULT_TOTAL = 100 // native DEFAULT_PROGRESS_MAX
+
+    /** The segments and points actually drawn, and the track total they sit on. */
+    data class Track(
+        val segments: List<ProgressPayloadParser.SegmentData>,
+        val points: List<ProgressPayloadParser.PointData>,
+        val total: Int
+    )
+
+    /**
+     * Applies native ProgressStyle's rules (Notification.ProgressStyle.createProgressModel, API 36) so
+     * one payload draws the same track on every tier:
+     * - segments with length <= 0 are dropped; the total is the sum of the rest;
+     * - no segments (or a total that overflows) -> one default-colored segment of 100;
+     * - more than 10 segments -> one segment of the same total, keeping the color only when all
+     *   segments share it;
+     * - points at or before 0 or at or past the total are dropped, and only the first 4 are kept;
+     *   of points sharing a position the last one wins (native keys them by position).
+     */
+    fun nativeTrack(
+        segments: List<ProgressPayloadParser.SegmentData>,
+        points: List<ProgressPayloadParser.PointData>
+    ): Track {
+        val valid = segments.filter { it.length > 0 }
+        val sum = valid.sumOf { it.length.toLong() }
+        val (segs, total) = when {
+            valid.isEmpty() || sum > Int.MAX_VALUE ->
+                listOf(ProgressPayloadParser.SegmentData(DEFAULT_TOTAL, null)) to DEFAULT_TOTAL
+            valid.size > MAX_SEGMENTS -> {
+                val first = valid.first().color
+                listOf(ProgressPayloadParser.SegmentData(sum.toInt(), first.takeIf { valid.all { s -> s.color == first } })) to sum.toInt()
+            }
+            else -> valid to sum.toInt()
+        }
+        val kept = points.filter { it.position in 1 until total }.take(MAX_POINTS)
+        return Track(segs, kept.associateBy { it.position }.values.toList(), total)
+    }
 
     /** Native fade: same color at half its alpha. */
     fun faded(color: Int): Int =
@@ -233,7 +269,8 @@ internal object ProgressTrackRenderer {
      * Each title starts centered under its dot (kept on-canvas). Where two collide they first slide
      * apart, each still reaching its own dot; if that is not enough they are trimmed (ellipsized
      * later), again only as far as each still reaches its dot; dots closer than [gap] split at the
-     * midpoint. So "Placed" at 0 and "Cooking" at 10% shift apart instead of drawing over each other.
+     * midpoint. So two milestones close together (say at 40% and 45%) shift apart instead of drawing
+     * over each other.
      */
     fun titleSlots(centers: List<Float>, widths: List<Float>, canvasWidth: Float, gap: Float): List<TitleSlot> {
         val n = centers.size
