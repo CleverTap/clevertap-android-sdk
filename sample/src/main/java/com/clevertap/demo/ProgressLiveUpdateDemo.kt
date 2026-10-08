@@ -56,7 +56,34 @@ object ProgressLiveUpdateDemo {
         INDETERMINATE,
 
         /** Indeterminate bar + start/end icons on both sides of the bar. */
-        INDETERMINATE_ICONS
+        INDETERMINATE_ICONS,
+
+        /** Milestones with UNEQUAL segments (10 / 80 / 10): checks widths follow `length` on every tier. */
+        UNEQUAL_SEGMENTS,
+
+        /**
+         * Progress on the track: progress lands MID-segment (10 / 45 / 80 / 100) with styled-by-progress,
+         * so the split, the faded part ahead and the tracker moving along the track are all visible.
+         */
+        PROGRESS_ON_TRACK,
+
+        /** Same as [PROGRESS_ON_TRACK] without a tracker icon: the fade alone (with its small gap) shows progress. */
+        PROGRESS_NO_TRACKER,
+
+        /**
+         * Light/dark check: uncolored segments/points (theme accent) plus white and black payload colors,
+         * which must still be visible (contrast-adjusted) on both a light and a dark notification.
+         */
+        THEME_COLORS,
+
+        /**
+         * Edge points: milestones at 0 / 33 / 66 / 100, the two ends in pink. Native drops points at
+         * 0 and at the total, and so does the fallback, so only the middle two dots should show.
+         */
+        EDGE_POINTS,
+
+        /** Control for [EDGE_POINTS]: the pink ends moved to 5 / 95, so all 4 dots should show. */
+        EDGE_POINTS_CONTROL
     }
 
     private const val CHANNEL_ID = "live_updates_channel"
@@ -66,6 +93,7 @@ object ProgressLiveUpdateDemo {
     private const val COLOR_DONE = "#4CAF50"
     private const val COLOR_ACTIVE = "#FF9500"
     private const val COLOR_PENDING = "#48484A"
+    private const val COLOR_EDGE = "#E91E63" // EDGE_POINTS ends: pink, so a rendered end point stands out
 
     private const val TRACKER_ICON = "https://imgur.com/6DavQwg.jpg"
     // Distinct start (store) and end (house) images so each icon is easy to tell apart on device.
@@ -130,6 +158,7 @@ object ProgressLiveUpdateDemo {
                 putString("pt_progress_points", pointsJson(step.index))
             }
             applyVariant(this, variant, step)
+            if (variant == Variant.PROGRESS_NO_TRACKER) remove("pt_progress_tracker_icon")
         }
         ct.renderPushNotification(TemplateRenderer(context, b), context, b)
     }
@@ -202,8 +231,79 @@ object ProgressLiveUpdateDemo {
                 b.putString("pt_progress_start_icon", START_ICON)
                 b.putString("pt_progress_end_icon", END_ICON)
             }
+
+            Variant.UNEQUAL_SEGMENTS -> {
+                // Same tracker, but milestones at 0 / 10 / 90 / 100 -> segments of 10 / 80 / 10.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_progress", UNEQUAL_POSITIONS[step.index].toString())
+                b.putString("pt_progress_segments", segmentsJson(step.index, UNEQUAL_POSITIONS))
+                b.putString("pt_progress_points", pointsJson(step.index, UNEQUAL_POSITIONS))
+            }
+
+            Variant.PROGRESS_ON_TRACK, Variant.PROGRESS_NO_TRACKER -> {
+                // Fixed 3-color track; only pt_progress moves, so what changes on screen is purely the
+                // progress (tracker position / fade split), not the segment colors.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_styled_by_progress", "true")
+                b.putString("pt_progress", MID_SEGMENT_PROGRESS[step.index].toString())
+                b.putString("pt_progress_segments", JSONArray()
+                    .put(JSONObject().put("length", 33).put("color", "#2196F3"))
+                    .put(JSONObject().put("length", 33).put("color", COLOR_ACTIVE))
+                    .put(JSONObject().put("length", 34).put("color", COLOR_DONE))
+                    .toString())
+                b.putString("pt_progress_points", JSONArray()
+                    .put(JSONObject().put("position", 33).put("color", "#2196F3").put("title", "Cooking"))
+                    .put(JSONObject().put("position", 66).put("color", COLOR_ACTIVE).put("title", "On way"))
+                    .toString())
+            }
+
+            Variant.THEME_COLORS -> {
+                // Uncolored parts take the theme accent; white/black are the colors that vanish on a
+                // light/dark card unless the contrast fix kicks in. Toggle dark mode between runs.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_styled_by_progress", "true")
+                b.putString("pt_progress_segments", JSONArray()
+                    .put(JSONObject().put("length", 34))
+                    .put(JSONObject().put("length", 33).put("color", "#FFFFFF"))
+                    .put(JSONObject().put("length", 33).put("color", "#000000"))
+                    .toString())
+                b.putString("pt_progress_points", JSONArray()
+                    .put(JSONObject().put("position", 34).put("title", "Default"))
+                    .put(JSONObject().put("position", 67).put("color", "#FFFFFF").put("title", "White"))
+                    // 90, not 100: native (and the fallback) never draw a point at the very end.
+                    .put(JSONObject().put("position", 90).put("color", "#000000").put("title", "Black"))
+                    .toString())
+            }
+
+            Variant.EDGE_POINTS, Variant.EDGE_POINTS_CONTROL -> {
+                // Fixed track and progress; only the end points' positions differ between the two.
+                // Any pink dot on screen means an end point rendered.
+                val (first, last) = if (variant == Variant.EDGE_POINTS) 0 to 100 else 5 to 95
+                b.putString("pt_progress", "50")
+                b.putString("pt_styled_by_progress", "true")
+                b.putString("pt_progress_segments", JSONArray()
+                    .put(JSONObject().put("length", 33).put("color", COLOR_DONE))
+                    .put(JSONObject().put("length", 33).put("color", "#2196F3"))
+                    .put(JSONObject().put("length", 34).put("color", COLOR_ACTIVE))
+                    .toString())
+                b.putString("pt_progress_points", JSONArray()
+                    .put(JSONObject().put("position", first).put("color", COLOR_EDGE).put("title", "Placed"))
+                    .put(JSONObject().put("position", 33).put("color", COLOR_DONE).put("title", "Cooking"))
+                    .put(JSONObject().put("position", 66).put("color", "#2196F3").put("title", "On way"))
+                    .put(JSONObject().put("position", last).put("color", COLOR_EDGE).put("title", "Delivered"))
+                    .toString())
+            }
         }
     }
+
+    // pt_progress per step for PROGRESS_ON_TRACK: inside segment 1, inside segment 2, inside segment 3, done.
+    private val MID_SEGMENT_PROGRESS = listOf(10, 45, 80, 100)
+
+    // Milestone positions for UNEQUAL_SEGMENTS (same 0..100 scale, uneven gaps).
+    private val UNEQUAL_POSITIONS = listOf(0, 10, 90, 100)
 
     // Milestone position on a 0..100 track. Native ProgressStyle's total = sum of segment lengths,
     // so points, segments and pt_progress must all share one scale. 4 steps -> 0, 33, 66, 100.
@@ -233,17 +333,17 @@ object ProgressLiveUpdateDemo {
 
     // Connectors between the milestones, each spanning the gap between adjacent points so the
     // lengths sum to 100 (same scale as pt_progress). Done up to the current step, else pending.
-    private fun segmentsJson(step: Int): String {
+    private fun segmentsJson(step: Int, positions: List<Int> = steps.indices.map(::pointPosition)): String {
         val arr = JSONArray()
         for (i in 0 until steps.size - 1) {
-            val length = pointPosition(i + 1) - pointPosition(i)
+            val length = positions[i + 1] - positions[i]
             val color = if (i < step) COLOR_DONE else COLOR_PENDING
             arr.put(JSONObject().put("length", length).put("color", color))
         }
         return arr.toString()
     }
 
-    private fun pointsJson(step: Int): String {
+    private fun pointsJson(step: Int, positions: List<Int> = steps.indices.map(::pointPosition)): String {
         val arr = JSONArray()
         for (i in steps.indices) {
             val color = when {
@@ -255,7 +355,7 @@ object ProgressLiveUpdateDemo {
             // (native ProgressStyle points carry no text, so it's a no-op on 16+).
             arr.put(
                 JSONObject()
-                    .put("position", pointPosition(i))
+                    .put("position", positions[i])
                     .put("color", color)
                     .put("title", steps[i].label)
             )
