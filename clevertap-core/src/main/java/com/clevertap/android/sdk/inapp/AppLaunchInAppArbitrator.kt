@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp
 
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.utils.CtDefaultDispatchers
 import com.clevertap.android.sdk.utils.DispatcherProvider
@@ -106,7 +107,15 @@ internal class AppLaunchInAppArbitrator(
     // Logs when a dropped late winner would have outranked the one already shown (a misprediction).
     private fun logMispredictIfAny(dropped: List<JSONObject>) {
         val shown = shownWinner ?: return
-        val outranks = dropped.any { sortByPriority(listOf(shown, it)).firstOrNull() === it }
+        val shownId = shown.optString(Constants.NOTIFICATION_ID_TAG)
+        // A dropped late winner "outranks" the shown in-app if it sorts ahead of it. Compared by
+        // wzrk_id (the campaign's notification id) rather than reference identity, so this stays
+        // correct even if sortByPriority ever returns reordered or reconstructed instances.
+        val outranks = dropped.any { candidate ->
+            val topId = sortByPriority(listOf(shown, candidate)).firstOrNull()
+                ?.optString(Constants.NOTIFICATION_ID_TAG).orEmpty()
+            topId.isNotEmpty() && topId != shownId
+        }
         if (outranks) {
             logger.verbose(
                 logTag,
