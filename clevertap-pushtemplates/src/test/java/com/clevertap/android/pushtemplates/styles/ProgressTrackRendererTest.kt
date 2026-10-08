@@ -218,4 +218,44 @@ class ProgressTrackRendererTest {
         assertTrue(ColorUtils.calculateContrast(l.segments.single().color, Color.WHITE) >= 3.0)
         assertTrue(ColorUtils.calculateContrast(l.dots.single().color, Color.WHITE) >= 3.0)
     }
+
+    private fun assertNoOverlap(slots: List<ProgressTrackRenderer.TitleSlot>, width: Float, gap: Float) {
+        slots.forEach { assertTrue("$it off-canvas", it.left >= -0.01f && it.right <= width + 0.01f) }
+        slots.zipWithNext().forEach { (a, b) -> assertTrue("$a and $b too close", a.right + gap <= b.left + 0.01f) }
+    }
+
+    @Test
+    fun `well spaced titles stay centered under their dots`() {
+        val slots = ProgressTrackRenderer.titleSlots(listOf(50f, 150f, 250f), listOf(30f, 30f, 30f), 300f, 6f)
+
+        assertEquals(listOf(35f, 135f, 235f), slots.map { it.left })
+        assertEquals(listOf(65f, 165f, 265f), slots.map { it.right })
+    }
+
+    @Test
+    fun `close titles slide apart and keep reaching their dots`() {
+        // Unequal 10/80/10 demo: Placed @0, Cooking @10%, On way @90%, Delivered @100%.
+        val centers = listOf(7f, 36f, 268f, 293f)
+        val slots = ProgressTrackRenderer.titleSlots(centers, listOf(30f, 33f, 32f, 44f), 300f, 6f)
+
+        assertNoOverlap(slots, 300f, 6f)
+        assertEquals(30f, slots[0].right - slots[0].left, 0.01f) // "Placed" untouched
+        assertEquals(33f, slots[1].right - slots[1].left, 0.01f) // "Cooking" only shifted right
+        slots.zip(centers).forEach { (s, cx) -> assertTrue("$s misses $cx", s.left <= cx + 0.01f && cx <= s.right + 0.01f) }
+    }
+
+    @Test
+    fun `dots closer than the gap split at the midpoint`() {
+        val slots = ProgressTrackRenderer.titleSlots(listOf(100f, 102f), listOf(40f, 40f), 300f, 6f)
+
+        assertNoOverlap(slots, 300f, 6f)
+    }
+
+    @Test
+    fun `many crowded titles never overlap`() {
+        val centers = (0..9).map { 10f + it * 12f }
+        val slots = ProgressTrackRenderer.titleSlots(centers, List(10) { 40f }, 140f, 6f)
+
+        assertNoOverlap(slots, 140f, 6f)
+    }
 }
