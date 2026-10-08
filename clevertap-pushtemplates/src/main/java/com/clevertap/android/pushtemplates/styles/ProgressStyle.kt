@@ -33,8 +33,9 @@ private typealias PointData = ProgressPayloadParser.PointData
  *   (see [buildNative]) so the SDK needs no build-time dependency on androidx.core 1.17.0.
  *   This is a base style with NO custom RemoteViews, which is what makes promotion possible.
  * - **Below API 36:** a custom-RemoteViews fallback for the EXPANDED view that mimics the same look —
- *   tracker icon, title/message, and a dots-and-connectors progress row (points as dots, segments as
- *   weighted colored connectors). The COLLAPSED view is left to the system's standard template
+ *   tracker icon, title/message, and a progress row: a bitmap-drawn milestone track (segment widths
+ *   follow their length, points sit at their position) or a plain bar. The COLLAPSED view is left
+ *   to the system's standard template
  *   (small icon, title, time, message), matching what Android 16 shows for a collapsed
  *   ProgressStyle. Not promotable (promotion is a 16+ OS feature), but kept ongoing so it behaves
  *   like a live update.
@@ -57,6 +58,11 @@ internal class ProgressStyle(
         // supplies its own default, so these are never applied there.
         private val COLOR_INACTIVE = Utils.getColourOrNull("#48484A") ?: Color.GRAY   // inactive segment/track gray
         private val COLOR_POINT_DEFAULT = Utils.getColourOrNull("#FFFFFF") ?: Color.WHITE // uncolored milestone dot
+        private val COLOR_POINT_TITLE = Utils.getColourOrNull("#B0B0B5") ?: Color.LTGRAY // milestone title text
+        // Milestone track bitmap sizing (fallback only).
+        private const val TRACK_SIDE_MARGINS_DP = 60f // shade margins + card padding, both sides
+        private const val TRACK_ICON_DP = 22f // a start/end icon (16dp) + its 6dp gap
+        private const val MAX_TRACK_WIDTH_PX = 1080 // keeps the bitmap well under the RemoteViews limits
     }
 
     fun builderFromStyle(
@@ -232,7 +238,7 @@ internal class ProgressStyle(
         val startIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
         val endIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
 
-        // Either/or: milestones (dots + connectors) when segments/points are present, else a plain
+        // Either/or: milestones (the drawn track) when segments/points are present, else a plain
         // bar — indeterminate when flagged, else determinate. Never both. (Segmented ignores the
         // indeterminate flag; a milestone bar is inherently determinate.)
         val segmented = data.isSegmented
@@ -301,39 +307,21 @@ internal class ProgressStyle(
         }
 
         if (segmented) {
-            // Milestones: show the dots/connectors, hide the plain bar.
+            // Milestones: show the bitmap-drawn track, hide the plain bar. Same scale as native 16+:
+            // the total is the sum of the segment lengths (pt_progress_max only when there are none).
             rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
-            rv.removeAllViews(R.id.pt_progress_container)
-            // TalkBack: the dots (pt_progress_point) and connectors (pt_progress_segment) are
-            // importantForAccessibility="no", so describe the whole track on the container instead.
-            // In the segmented case progressMax is the summed segment length and progress is on that
-            // scale, so the same percent string as the plain bar applies.
-            if (progressMax > 0) {
-                val percent = progress.coerceIn(0, progressMax) * 100 / progressMax
-                rv.setContentDescription(
-                    R.id.pt_progress_container,
-                    context.getString(R.string.pt_progress_bar_cd, percent)
-                )
-            }
-            if (points.isNotEmpty()) {
-                points.forEachIndexed { i, p ->
-                    val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
-                    dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
-                    if (!p.title.isNullOrEmpty()) {
-                        dot.setTextViewText(R.id.pt_point_title, p.title)
-                        dot.setViewVisibility(R.id.pt_point_title, android.view.View.VISIBLE)
-                    }
-                    rv.addView(R.id.pt_progress_container, dot)
-                    if (i < segments.size) {
-                        rv.addView(R.id.pt_progress_container, segmentView(context, segments[i]))
-                    }
-                }
-            } else {
-                segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
-            }
+            val total = ProgressTrackRenderer.total(segments, progressMax)
+            val track = ProgressTrackRenderer.render(
+                trackSpec(context, hasStartIcon = startIcon != null, hasEndIcon = endIcon != null),
+                segments, points, total
+            )
+            rv.setImageViewBitmap(R.id.pt_progress_track, track)
+            rv.setViewVisibility(R.id.pt_progress_track, android.view.View.VISIBLE)
+            // TalkBack: the track is a picture, so describe it as a percent like the plain bar.
+            val percent = progress.coerceIn(0, total) * 100 / total
+            rv.setContentDescription(R.id.pt_progress_track, context.getString(R.string.pt_progress_bar_cd, percent))
         } else {
-            // Plain bar: hide the dots/connectors, show the bar (indeterminate or determinate).
-            rv.setViewVisibility(R.id.pt_progress_container, android.view.View.GONE)
+            // Plain bar: show the bar (indeterminate or determinate); the track stays hidden.
             rv.setViewVisibility(R.id.pt_bar, android.view.View.VISIBLE)
             if (indeterminate) {
                 rv.setProgressBar(R.id.pt_bar, 0, 0, true)
@@ -352,10 +340,24 @@ internal class ProgressStyle(
         return rv
     }
 
-    private fun segmentView(context: Context, seg: SegmentData): RemoteViews {
-        val v = RemoteViews(context.packageName, R.layout.pt_progress_segment)
-        v.setInt(R.id.pt_seg, "setBackgroundColor", seg.color ?: COLOR_INACTIVE)
-        return v
+    /**
+     * Bitmap width for the milestone track: roughly the width the track gets inside the expanded card
+     * (screen width minus the shade/card margins and any start/end icons), capped to keep the bitmap
+     * small. The ImageView scales it with fitCenter, so a small estimate error never distorts the dots.
+     */
+    private fun trackSpec(context: Context, hasStartIcon: Boolean, hasEndIcon: Boolean): ProgressTrackRenderer.Spec {
+        val dm = context.resources.displayMetrics
+        val iconsDp = (if (hasStartIcon) TRACK_ICON_DP else 0f) + (if (hasEndIcon) TRACK_ICON_DP else 0f)
+        val estimated = dm.widthPixels - ((TRACK_SIDE_MARGINS_DP + iconsDp) * dm.density).toInt()
+        @Suppress("DEPRECATION") // scaledDensity keeps the titles in step with the user's font size
+        return ProgressTrackRenderer.Spec(
+            widthPx = estimated.coerceIn(1, MAX_TRACK_WIDTH_PX),
+            density = dm.density,
+            scaledDensity = dm.scaledDensity,
+            trackColor = COLOR_INACTIVE,
+            pointColor = COLOR_POINT_DEFAULT,
+            titleColor = COLOR_POINT_TITLE
+        )
     }
 
     // --- media / helpers ---
