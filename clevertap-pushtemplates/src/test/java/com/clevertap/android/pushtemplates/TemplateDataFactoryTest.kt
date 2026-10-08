@@ -2512,4 +2512,31 @@ class TemplateDataFactoryTest {
             assertNull(d.largeIcon)
         }
     }
+
+    @Test
+    fun `createProgressTemplateData reads pt_dismiss in seconds as milliseconds`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+        every { mockBundle.getString(PTConstants.PT_DISMISS) } returns "3600"
+
+        val d = TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData
+
+        assertEquals(3_600_000L, d.dismissAfter)
+    }
+
+    @Test
+    fun `createProgressTemplateData ignores a missing, invalid, zero, negative or too large pt_dismiss`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+
+        for (value in listOf(null, "", "abc", "1.5", "0", "-5", Long.MAX_VALUE.toString())) {
+            every { mockBundle.getString(PTConstants.PT_DISMISS) } returns value
+            val d = TemplateDataFactory.createTemplateData(
+                TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+            ) as ProgressTemplateData
+            assertNull("pt_dismiss=$value", d.dismissAfter)
+        }
+    }
 }

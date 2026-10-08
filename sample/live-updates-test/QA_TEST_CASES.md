@@ -254,6 +254,12 @@ Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for eac
 - **Setup:** add `"pt_ico": "<image URL>"` to any milestone or plain-bar payload; run it once with `pt_promote` `"true"` and once with `"false"`.
 - **Result (both tiers):** the image shows on the **right** of the card, drawn by the system, in the collapsed view and in the expanded view (with the bar). Below 16 the expanded card's title, chip and track end before the icon (no overlap). Without `pt_ico` there is no large icon.
 
+### TC-N13 — Auto-dismiss (`pt_dismiss`) **[code]**
+- **Setup:** send an ongoing update with `"pt_dismiss": "60"` and send nothing after it. Then repeat, sending a second update (same `wzrk_activityId`, `"pt_dismiss": "60"`) after 40 s.
+- **Result (Android 8+, both tiers):** with no further push the card disappears about 60 s after the update, even though it is ongoing (and promoted on 16+). With the second update it disappears about 60 s after the **second** update (the timer restarts). Without `pt_dismiss` it never disappears on its own.
+- **Result (Android 6–7):** the card stays; the platform has no timeout.
+- **Also note:** whether a "Live Activity" **Dismissed** event is recorded when the card times out.
+
 ### TC-N10 — Countdown past zero **[code]**
 - **Setup:** `pt_chip_type: "countdown"`, `pt_countdown: "true"`, `pt_when` = now + 10 s; send no further update.
 - **Result (both tiers):** the timer counts down to 0:00 and then **continues into negative time** (`−0:01`…). Expected platform behavior — the backend must send the next update or `end` before zero. On 16+ the status-bar chip hides once the countdown is no longer positive.
@@ -285,7 +291,7 @@ Run sections 3–6 on each device and tick:
 | TC-A01 … TC-A03 | ☐ | ☐ | ☐ |
 | TC-I01 … TC-I03 | ☐ | ☐ | ☐ |
 | TC-N02 (buttons < 31) | n/a | n/a | ☐ |
-| TC-N08 … TC-N12 | ☐ | ☐ | ☐ |
+| TC-N08 … TC-N13 | ☐ | ☐ | ☐ |
 
 ---
 

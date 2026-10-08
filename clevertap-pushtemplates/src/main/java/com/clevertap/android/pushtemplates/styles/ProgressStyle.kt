@@ -94,6 +94,11 @@ internal class ProgressStyle(
         // scales it itself (Android 16 even keeps a wide icon's shape).
         data.largeIcon?.let { url -> loadBitmap(context, url)?.let { nb.setLargeIcon(it) } }
 
+        // Auto-dismiss (pt_dismiss): the native timeout, so Android itself removes the card after that
+        // long, even if the end push never arrives. Same builder on both tiers; androidx makes it a
+        // no-op before Android 8, where the platform has no timeout.
+        data.dismissAfter?.let { nb.setTimeoutAfter(it) }
+
         // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
         // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
         // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
@@ -331,7 +336,8 @@ internal class ProgressStyle(
             rv.setImageViewBitmap(R.id.pt_progress_track, track)
             rv.setViewVisibility(R.id.pt_progress_track, android.view.View.VISIBLE)
             // TalkBack: the track is a picture, so describe it as a percent like the plain bar.
-            val percent = progress.coerceIn(0, total) * 100 / total
+            // Long math: total can be up to Int.MAX_VALUE, so progress * 100 would overflow Int.
+            val percent = (progress.coerceIn(0, total).toLong() * 100 / total).toInt()
             rv.setContentDescription(R.id.pt_progress_track, context.getString(R.string.pt_progress_bar_cd, percent))
         } else {
             // Plain bar: show the bar (indeterminate or determinate); the track stays hidden.
