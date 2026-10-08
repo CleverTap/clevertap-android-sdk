@@ -126,6 +126,7 @@ class HomeScreenFragment : Fragment() {
                 "19-13" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.EDGE_POINTS) // points at 0/100: ends hidden on every tier
                 "19-14" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.EDGE_POINTS_CONTROL) // points at 5/95: all 4 dots
                 "19-15" -> com.clevertap.demo.CustomLiveUpdateDemo.start(context) // custom-factory (Mode A) Live Update demo
+                "19-16" -> startActivity(Intent(activity, com.clevertap.demo.LiveUpdatePayloadActivity::class.java)) // QA: paste a full payload, sent like a real FCM push
             }
         }
 
