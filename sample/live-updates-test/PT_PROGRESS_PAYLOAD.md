@@ -120,7 +120,7 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
 |---|---|---|
 | `text` | Status-bar chip (`setShortCriticalText`), never inside the card. Max width **96dp**: under 7 characters shows in full; if less than half the text fits, the chip shows the icon only | Shown inside the expanded card, next to the title. Capped at **96dp**, one line, ellipsized |
 | `timer` / `countdown` | Running timer in the status-bar chip **and** in the card header | Running timer in the notification header (there is no status-bar chip) |
-| After `end` | No chip (the update is no longer ongoing/promoted) | No chip |
+| After `end` | No chip (the update is no longer ongoing/promoted) and no running timer in the header | No chip and no running timer in the header |
 
 The status-bar chip only appears while the notification is **promoted** and **not in view** (shade
 closed). With the shade open, look at the card instead.
@@ -135,6 +135,14 @@ closed). With the shade open, look at the card instead.
   safety net that removes the card later, but it does not stop the countdown at zero.
 - Android 16's status-bar chip hides itself once the countdown is no longer positive, but the card
   header can still show negative time.
+- **On `end` the timer stops.** The `end` push may still carry `pt_chip_type: timer/countdown` and
+  `pt_when`, but no running timer is set, like the text chip. The header shows the post time instead
+  (`now`, then `1m`, `4m`…), so a finished card never counts on or into negative time. To show a final
+  duration, put it in the message (for example `"pt_msg": "Delivered in 28 min"`).
+- **A countdown that has already run out is not started.** If `pt_when` is in the past or less than
+  10 s away when the push arrives (for example a push delivered late), no countdown is set and the
+  header shows the post time, so the card does not open at `0:00` or in negative time. A timer
+  counting up is not affected: its `pt_when` is in the past on purpose.
 - Android 6 (API 23) has no count-down chronometer, so a countdown counts up there.
 
 ## Limits (same on both tiers)
@@ -185,10 +193,13 @@ not at `0` and `100`.
 - Send it with every `start` / `update`, longer than the longest expected gap until the next update
   (for example the ETA plus a buffer). Send a short one with `end` (for example `"300"`) to clear the
   finished card a few minutes later.
-- To check on a device (platform behaviour, not SDK code): the timer restarting on every update, an
-  ongoing / promoted card being removed, and whether the removal also raises the "Live Activity"
-  **Dismissed** event (Android may send the delete intent on a timeout too; the SDK cannot tell the two
-  apart).
+- Checked on Android 16 and Android 7 emulators: every new push for the same card restarts the timer,
+  and an ongoing card (promoted or not) is removed on time on Android 16. Android 7 keeps the card.
+- **A timeout counts as Dismissed.** Android sends the delete intent when it removes a card on a
+  timeout, the same as for a swipe, so every `pt_dismiss` expiry records a "Live Activity"
+  **Dismissed** event (seen on Android 16: `Recorded Live Activity event (Dismissed)` when the card
+  timed out). The SDK cannot tell a timeout from a swipe, so for analytics a Dismissed event does not
+  always mean the user swiped the card away.
 
 ## Collapsed vs expanded
 

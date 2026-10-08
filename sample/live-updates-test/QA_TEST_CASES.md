@@ -258,7 +258,7 @@ Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for eac
 - **Setup:** send an ongoing update with `"pt_dismiss": "60"` and send nothing after it. Then repeat, sending a second update (same `wzrk_activityId`, `"pt_dismiss": "60"`) after 40 s.
 - **Result (Android 8+, both tiers):** with no further push the card disappears about 60 s after the update, even though it is ongoing (and promoted on 16+). With the second update it disappears about 60 s after the **second** update (the timer restarts). Without `pt_dismiss` it never disappears on its own.
 - **Result (Android 6–7):** the card stays; the platform has no timeout.
-- **Also note:** whether a "Live Activity" **Dismissed** event is recorded when the card times out.
+- **Also check:** a "Live Activity" **Dismissed** event is recorded when the card times out (Android sends the delete intent on a timeout too, so this is expected).
 
 ### TC-N14 — Sub text (`pt_subtitle`) **[code]**
 - **Setup:** add `"pt_subtitle": "Burger Palace"` to any payload. Then send one with only `"wzrk_st": "Core subtitle"`, and one with both keys.
@@ -267,8 +267,14 @@ Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for eac
 - **Also check:** the sub text is shown only once (not also inside the card) below Android 12.
 
 ### TC-N10 — Countdown past zero **[code]**
-- **Setup:** `pt_chip_type: "countdown"`, `pt_countdown: "true"`, `pt_when` = now + 10 s; send no further update.
+- **Setup:** `pt_chip_type: "countdown"`, `pt_countdown: "true"`, `pt_when` = now + 30 s; send no further update. (Use more than 10 s: a countdown with under 10 s left is not started, see TC-N15.)
 - **Result (both tiers):** the timer counts down to 0:00 and then **continues into negative time** (`−0:01`…). Expected platform behavior — the backend must send the next update or `end` before zero. On 16+ the status-bar chip hides once the countdown is no longer positive.
+
+### TC-N15 — No running timer after `end` or for a countdown that already ran out **[code]**
+- **Setup A:** send an update with `pt_chip_type: "timer"` and `pt_when` = now − 5 min, then the `end` event (same `wzrk_activityId`) that still carries the same `pt_chip_type` and `pt_when`.
+- **Result A (both tiers):** while live, the header counts up (`05:00`…). After `end` the header shows `now` (then `1m`…), not a running timer. Same with a countdown: after `end` it never counts on or into negative time.
+- **Setup B:** send a countdown (`pt_countdown: "true"`) with `pt_when` = now − 30 s, then one with `pt_when` = now + 5 s.
+- **Result B (both tiers):** no countdown in either card (the header shows `now`); the card does not open at `0:00` or in negative time. With `pt_when` = now + 2 min the countdown runs as usual.
 
 ---
 
