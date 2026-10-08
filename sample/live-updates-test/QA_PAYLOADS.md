@@ -9,10 +9,12 @@ into the sample app and it goes through the same path as a real FCM push.
 2. Copy one payload, tap **Paste**, then **Send**.
 3. Open the notification shade (close it again to see the Android 16 status-bar chip).
 
-From a computer instead, with a debug build of the sample app (the whole JSON in single quotes):
+From a computer instead, with a debug build of the sample app: save one payload as `payload.json` and run the
+command below. Keep the double quotes around the whole `am` command: `adb shell` drops the inner
+quotes otherwise and the JSON arrives broken. Works for any payload without a `'`.
 
 ```
-adb shell am start -n com.clevertap.demo/.LiveUpdatePayloadActivity --es payload '<json>' --ez send true
+adb shell "am start -n com.clevertap.demo/.LiveUpdatePayloadActivity --es payload '$(cat payload.json)' --ez send true"
 ```
 
 Things the paste screen does for you (QA helpers only, a real backend sends real values):

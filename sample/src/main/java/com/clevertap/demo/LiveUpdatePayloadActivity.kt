@@ -63,7 +63,8 @@ import java.util.concurrent.Executors
  * app's own account id is filled in so QA does not have to edit every payload.
  *
  * Can also be started from a computer, for example:
- * `adb shell am start -n com.clevertap.demo/.LiveUpdatePayloadActivity --es payload '<json>' --ez send true`
+ * `adb shell "am start -n com.clevertap.demo/.LiveUpdatePayloadActivity --es payload '$(cat payload.json)' --ez send true"`
+ * (keep the double quotes: `adb shell` does not escape its arguments, so without them the JSON breaks).
  * The activity is exported for that, so `send` from an intent works only in debuggable builds; other
  * apps cannot make a release build post notifications. The payload is still filled in either way.
  */
@@ -84,17 +85,17 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
             NOW_TOKEN.replace(json) { m -> (nowMs + (m.groupValues[1].ifEmpty { "0" }.toLong() * 1000)).toString() }
 
         /**
-         * Turns a pasted payload into FCM data: FCM delivers a flat map of strings, so nested
-         * objects/arrays (the Live Update `data` object, `wzrk_acts`, …) become JSON strings and
-         * numbers/booleans become their text. JSON null is left out.
-         */
-        /**
          * One background thread for every send, shared by all instances: pushes run off the main
          * thread like FCM's, and in the order QA sends them (for example start, then update, then end),
          * even across a rotation.
          */
         private val sender: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
 
+        /**
+         * Turns a pasted payload into FCM data: FCM delivers a flat map of strings, so nested
+         * objects/arrays (the Live Update `data` object, `wzrk_acts`, …) become JSON strings and
+         * numbers/booleans become their text. JSON null is left out.
+         */
         private fun toFcmData(json: String): MutableMap<String, String> {
             val obj = JSONObject(json.trim())
             val out = LinkedHashMap<String, String>()
