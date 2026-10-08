@@ -110,7 +110,7 @@ internal class InAppController(
         const val LOCAL_INAPP_COUNT = "local_in_app_count"
         const val IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest"
 
-        // UX bound: show the /a1 winner by now. Hard 3s constant (matches iOS); correctness comes
+        // UX bound: show the /a1 winner by now. Hard 3s constant; correctness comes
         // from the closed-suppressing phase, not this timeout.
         private const val APP_LAUNCH_ARBITRATION_TIMEOUT_MS = 3_000L
 
@@ -775,7 +775,7 @@ internal class InAppController(
     }
 
     // Matches an app-launch in-app content-fetch by response key or event name. Conservative: a
-    // missing field counts as a match (wait) rather than risk showing two; aligned with iOS.
+    // missing field counts as a match (wait) rather than risk showing two.
     private fun isAppLaunchInAppItem(item: ContentFetchItem): Boolean {
         val responseKeyMatches =
             item.responseKey == null || item.responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY

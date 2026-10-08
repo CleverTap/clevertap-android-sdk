@@ -9,8 +9,8 @@ import org.json.JSONObject
 /**
  * Typed view over a single `content_fetch` directive item on an `/a1` response: the event it is for
  * ([eventName]), the channel key its `/content` reply arrives under ([responseKey]), and the campaign
- * it hydrates ([targetId]) — what arbitration gating keys off. All optional (matches iOS), so gating
- * stays conservative when a field is absent.
+ * it hydrates ([targetId]) — what arbitration gating keys off. All optional, so gating stays
+ * conservative when a field is absent.
  */
 internal data class ContentFetchItem(
     val eventName: String?,
@@ -44,7 +44,7 @@ internal data class ContentFetchItem(
 
     companion object {
 
-        // Keys that decide a winner during arbitration (copied if present); in lockstep with iOS.
+        // Keys that decide a winner during arbitration (copied if present).
         private val SELECTION_RULE_KEYS = listOf(
             Constants.INAPP_PRIORITY,
             Constants.INAPP_SUPPRESSED,

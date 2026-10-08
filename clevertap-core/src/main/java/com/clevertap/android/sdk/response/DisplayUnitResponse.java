@@ -91,8 +91,8 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      * notifies the callback only when at least one valid unit was received.
      *
      * A null or empty array is a no-op: the cache is not touched and the callback
-     * is not fired. This preserves the legacy pre-8.x contract and matches iOS
-     * parity — iOS guards on displayUnitJSON.count > 0 before doing anything.
+     * is not fired. This preserves the legacy pre-8.x contract (guard on count > 0
+     * before doing anything).
      *
      * @param messages - Json array of Display Unit items
      */
@@ -117,7 +117,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         // units delivered by /a1. When the source is a content fetch we merge by unitID into the
         // current set instead; /a1 stays authoritative and keeps REPLACE. The merge lives here,
         // before the cache, so it also holds for a host-supplied DisplayUnitCache and needs no
-        // public API change (mirrors iOS).
+        // public API change.
         final ArrayList<CleverTapDisplayUnit> unitsToApply;
         if (source == CTResponseSource.CONTENT_FETCH) {
             // A content fetch that brought no mergeable unit (all empty/duplicate unitIDs) would
@@ -149,7 +149,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
      * contract ever change.
      *
      * Note: the sentinel unitID "0_0" (substituted when a payload has no wzrk_id) collapses several
-     * such units to the last one seen — same limitation as the default cache and iOS, an accepted
+     * such units to the last one seen — same limitation as the default cache, an accepted
      * edge for malformed payloads.
      */
     @NonNull

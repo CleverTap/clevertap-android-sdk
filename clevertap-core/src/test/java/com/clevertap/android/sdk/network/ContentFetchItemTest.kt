@@ -77,7 +77,7 @@ class ContentFetchItemTest {
         assertEquals(90, payload.optInt(Constants.INAPP_PRIORITY))
         assertTrue(payload.has(Constants.INAPP_WHEN_TRIGGERS))
         assertTrue(payload.has(Constants.INAPP_FC_LIMITS))
-        // Full iOS-parity selection-rule set: suppressed, delayAfterTrigger, templateName.
+        // Full selection-rule set: suppressed, delayAfterTrigger, templateName.
         assertTrue(payload.has(Constants.INAPP_SUPPRESSED))
         assertEquals(5, payload.optInt(InAppDelayConstants.INAPP_DELAY_AFTER_TRIGGER))
         assertEquals("my-template", payload.optString(CustomTemplateInAppData.KEY_TEMPLATE_NAME))

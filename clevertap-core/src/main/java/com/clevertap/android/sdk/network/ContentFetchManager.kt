@@ -69,8 +69,8 @@ internal class ContentFetchManager(
                 // Exactly-once settled signal — must never be skipped, or the arbitration window
                 // would stay in its suppressing phase for the rest of the session. Android sends all
                 // content_fetch items in ONE /content request per /a1, so "close on first completion"
-                // = close on the only batch (unlike iOS, which tracks per-batch for concurrent
-                // batches). A throwing callback here (in a finally) would crash the host app; contain it.
+                // = close on the only batch. A throwing callback here (in a finally) would crash the
+                // host app; contain it.
                 try {
                     onFetchBatchComplete?.invoke()
                 } catch (t: Throwable) {
