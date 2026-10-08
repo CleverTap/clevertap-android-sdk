@@ -3,13 +3,13 @@
   Expanded fallback for the pt_progress template on Android < 16 (no OS ProgressStyle).
   Mimics the native look: tracker icon + title/message + a progress row (a bitmap-drawn milestone
   track with proportional segments and positioned points, or a plain bar).
+  No background or text colors of its own: like the native card it sits on the system notification
+  background and uses the notification text appearances, so it follows the light/dark theme.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/pt_progress_bg"
-    android:orientation="vertical"
-    android:padding="14dp">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,9 +38,7 @@
                 android:layout_height="wrap_content"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Title" />
 
             <TextView
                 android:id="@+id/pt_message"
@@ -48,8 +46,7 @@
                 android:layout_height="wrap_content"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:textColor="#B0B0B5"
-                android:textSize="13sp" />
+                android:textAppearance="@style/TextAppearance.Compat.Notification" />
         </LinearLayout>
 
         <TextView
@@ -60,9 +57,7 @@
             android:maxWidth="96dp"
             android:maxLines="1"
             android:ellipsize="end"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold"
+            android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
             android:visibility="gone" />
     </LinearLayout>
 

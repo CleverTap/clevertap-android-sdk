@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.text.TextPaint
 import android.text.TextUtils
+import androidx.core.graphics.ColorUtils
 
 /**
  * Draws the pre-16 milestone track (segments + points + point titles + progress) into a Bitmap.
@@ -21,6 +22,10 @@ import android.text.TextUtils
  * - when styled by progress, everything ahead of the progress is faded (half alpha, thinner
  *   segments), with a small gap at the progress position when there is no tracker to cover it.
  *
+ * Colors follow the native palette rules: a segment/point without its own color uses the theme
+ * accent ([Spec.defaultColor]), and every color is nudged lighter/darker until it has 3:1 contrast
+ * with the card background ([ensureContrast]), so payload colors stay visible in light and dark mode.
+ *
  * The geometry ([layout]) is a pure function so it can be unit-tested without real drawing.
  */
 internal object ProgressTrackRenderer {
@@ -29,9 +34,12 @@ internal object ProgressTrackRenderer {
         val widthPx: Int,
         val density: Float,
         val scaledDensity: Float,
-        val trackColor: Int,
-        val pointColor: Int,
-        val titleColor: Int
+        /** Theme accent, for segments/points without their own color (native: primary accent). */
+        val defaultColor: Int,
+        /** Point title text color (native: secondary text). */
+        val titleColor: Int,
+        /** The card background the track is drawn on, used for the contrast check. */
+        val backgroundColor: Int
     )
 
     data class SegmentRect(val left: Float, val right: Float, val color: Int, val faded: Boolean = false)
@@ -59,6 +67,8 @@ internal object ProgressTrackRenderer {
     private const val TITLE_SP = 9f
     private const val TITLE_GAP_DP = 3f
     private const val FADED_OPACITY = 0.5f // native NotificationProgressBar.FADED_OPACITY
+    private const val MIN_CONTRAST = 3.0 // native ProgressStyle.sanitizeProgressColor
+    private const val DARK_BG_LUMINANCE = 0.17912878474 // native Notification.Builder.isColorDark
 
     /** Track total, matching native ProgressStyle: the segment lengths' sum, else [fallbackTotal]. */
     fun total(segments: List<ProgressPayloadParser.SegmentData>, fallbackTotal: Int): Int =
@@ -67,6 +77,45 @@ internal object ProgressTrackRenderer {
     /** Native fade: same color at half its alpha. */
     fun faded(color: Int): Int =
         Color.argb((Color.alpha(color) * FADED_OPACITY + 0.5f).toInt(), Color.red(color), Color.green(color), Color.blue(color))
+
+    /**
+     * Native ProgressStyle.sanitizeProgressColor (Notification.Builder.ensureColorContrast, API 36):
+     * keeps the hue and moves only the lightness, just enough to reach 3:1 contrast with [bg]. Like
+     * native, a dark background (luminance <= 0.179) lightens the color in HSL; a light one darkens
+     * it in LAB. Each is a 15-step binary search, as in ContrastColorUtil.
+     */
+    fun ensureContrast(color: Int, bg: Int): Int {
+        val opaqueBg = ColorUtils.setAlphaComponent(bg, 255)
+        fun meets(c: Int) = ColorUtils.calculateContrast(c, opaqueBg) > MIN_CONTRAST
+        val opaque = ColorUtils.setAlphaComponent(color, 255)
+        if (ColorUtils.calculateContrast(opaque, opaqueBg) >= MIN_CONTRAST) return color
+
+        val adjusted = if (ColorUtils.calculateLuminance(opaqueBg) <= DARK_BG_LUMINANCE) {
+            // ContrastColorUtil.findContrastColorAgainstDark: raise the HSL lightness.
+            val hsl = FloatArray(3).also { ColorUtils.colorToHSL(opaque, it) }
+            var low = hsl[2]
+            var high = 1f
+            for (i in 0 until 15) {
+                if (high - low <= 0.00001f) break
+                hsl[2] = (low + high) / 2
+                if (meets(ColorUtils.HSLToColor(hsl))) high = hsl[2] else low = hsl[2]
+            }
+            hsl[2] = high
+            ColorUtils.HSLToColor(hsl)
+        } else {
+            // ContrastColorUtil.findContrastColor: lower the LAB lightness.
+            val lab = DoubleArray(3).also { ColorUtils.colorToLAB(opaque, it) }
+            var low = 0.0
+            var high = lab[0]
+            for (i in 0 until 15) {
+                if (high - low <= 0.00001) break
+                val l = (low + high) / 2
+                if (meets(ColorUtils.LABToColor(l, lab[1], lab[2]))) low = l else high = l
+            }
+            ColorUtils.LABToColor(low, lab[1], lab[2])
+        }
+        return ColorUtils.setAlphaComponent(adjusted, Color.alpha(color))
+    }
 
     fun layout(
         spec: Spec,
@@ -107,7 +156,7 @@ internal object ProgressTrackRenderer {
             val left = x(acc)
             acc += seg.length.coerceAtLeast(0)
             val right = x(acc)
-            val color = seg.color ?: spec.trackColor
+            val color = ensureContrast(seg.color ?: spec.defaultColor, spec.backgroundColor)
             when {
                 !fadeAhead || right <= progressX -> segmentRects.add(SegmentRect(left, right, color))
                 left >= progressX -> segmentRects.add(SegmentRect(left, right, faded(color), faded = true))
@@ -118,7 +167,7 @@ internal object ProgressTrackRenderer {
             }
         }
         val dots = points.map {
-            val color = it.color ?: spec.pointColor
+            val color = ensureContrast(it.color ?: spec.defaultColor, spec.backgroundColor)
             Dot(x(it.position), if (fadeAhead && it.position > clampedProgress) faded(color) else color,
                 it.title?.takeIf { t -> t.isNotEmpty() })
         }

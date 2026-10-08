@@ -2,7 +2,6 @@ package com.clevertap.android.pushtemplates.styles
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -53,12 +52,12 @@ internal class ProgressStyle(
     companion object {
         // Android 16 (Baklava) introduced Notification.ProgressStyle + promotion.
         private const val API_PROGRESS_STYLE = 36
-        // Fallback-only defaults: used by the pre-16 RemoteViews path when a segment/point in the
-        // payload omits its own color. On native 16+ colors come from the payload and the platform
-        // supplies its own default, so these are never applied there.
-        private val COLOR_INACTIVE = Utils.getColourOrNull("#48484A") ?: Color.GRAY   // inactive segment/track gray
-        private val COLOR_POINT_DEFAULT = Utils.getColourOrNull("#FFFFFF") ?: Color.WHITE // uncolored milestone dot
-        private val COLOR_POINT_TITLE = Utils.getColourOrNull("#B0B0B5") ?: Color.LTGRAY // milestone title text
+        // Fallback-only theme colors for the milestone track bitmap, below API 31 (no Material You
+        // system palette). The card text uses the system notification text appearances instead.
+        private const val COLOR_BG_LIGHT = 0xFFFFFFFF.toInt()
+        private const val COLOR_BG_DARK = 0xFF303030.toInt()
+        private const val COLOR_TITLE_LIGHT = 0x8A000000.toInt() // secondary text on light
+        private const val COLOR_TITLE_DARK = 0xB3FFFFFF.toInt() // secondary text on dark
         // Milestone track bitmap sizing (fallback only).
         private const val TRACK_SIDE_MARGINS_DP = 60f // shade margins + card padding, both sides
         private const val TRACK_ICON_DP = 22f // a start/end icon (16dp) + its 6dp gap
@@ -350,19 +349,36 @@ internal class ProgressStyle(
      * Bitmap width for the milestone track: roughly the width the track gets inside the expanded card
      * (screen width minus the shade/card margins and any start/end icons), capped to keep the bitmap
      * small. The ImageView scales it with fitCenter, so a small estimate error never distorts the dots.
+     *
+     * Colors follow the system light/dark theme like the native palette (Notification.Colors): on
+     * API 31+ the Material You system colors (primary accent, surface, on-surface-variant); below
+     * that, the notification color as the accent on a plain light/dark card. The bitmap is drawn
+     * once per post, so a theme switch shows on the next update.
      */
     private fun trackSpec(context: Context, hasStartIcon: Boolean, hasEndIcon: Boolean): ProgressTrackRenderer.Spec {
         val dm = context.resources.displayMetrics
         val iconsDp = (if (hasStartIcon) TRACK_ICON_DP else 0f) + (if (hasEndIcon) TRACK_ICON_DP else 0f)
         val estimated = dm.widthPixels - ((TRACK_SIDE_MARGINS_DP + iconsDp) * dm.density).toInt()
+        val dark = Utils.isDarkMode(context)
+        val (accent, background, titleColor) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Material 3 roles: primary = accent1 tone 40/80, surface container high ≈ neutral1
+            // tone 90/20, on-surface-variant = neutral2 tone 30/80.
+            fun c(id: Int) = context.getColor(id)
+            if (dark) Triple(c(android.R.color.system_accent1_200), c(android.R.color.system_neutral1_800), c(android.R.color.system_neutral2_200))
+            else Triple(c(android.R.color.system_accent1_600), c(android.R.color.system_neutral1_100), c(android.R.color.system_neutral2_700))
+        } else {
+            Triple(parseColor(renderer.smallIconColour),
+                if (dark) COLOR_BG_DARK else COLOR_BG_LIGHT,
+                if (dark) COLOR_TITLE_DARK else COLOR_TITLE_LIGHT)
+        }
         @Suppress("DEPRECATION") // scaledDensity keeps the titles in step with the user's font size
         return ProgressTrackRenderer.Spec(
             widthPx = estimated.coerceIn(1, MAX_TRACK_WIDTH_PX),
             density = dm.density,
             scaledDensity = dm.scaledDensity,
-            trackColor = COLOR_INACTIVE,
-            pointColor = COLOR_POINT_DEFAULT,
-            titleColor = COLOR_POINT_TITLE
+            defaultColor = accent,
+            titleColor = titleColor,
+            backgroundColor = background
         )
     }
 
