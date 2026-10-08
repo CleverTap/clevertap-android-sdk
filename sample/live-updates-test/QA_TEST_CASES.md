@@ -255,7 +255,7 @@ Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for eac
 - **Setup:** send an ongoing update with `"pt_dismiss": "60"` and send nothing after it. Then repeat, sending a second update (same `wzrk_activityId`, `"pt_dismiss": "60"`) after 40 s.
 - **Result (Android 8+, both tiers):** with no further push the card disappears about 60 s after the update, even though it is ongoing (and promoted on 16+). With the second update it disappears about 60 s after the **second** update (the timer restarts). Without `pt_dismiss` it never disappears on its own.
 - **Result (Android 6–7):** the card stays; the platform has no timeout.
-- **Also note:** whether a "Live Activity" **Dismissed** event is recorded when the card times out.
+- **Also check:** a "Live Activity" **Dismissed** event is recorded when the card times out (Android sends the delete intent on a timeout too, so this is expected).
 
 ### TC-N14 — Sub text (`pt_subtitle`) **[code]**
 - **Setup:** add `"pt_subtitle": "Burger Palace"` to any payload. Then send one with only `"wzrk_st": "Core subtitle"`, and one with both keys.
