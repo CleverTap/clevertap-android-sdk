@@ -2485,4 +2485,31 @@ class TemplateDataFactoryTest {
         assertTrue(d.indeterminate)
         assertFalse(d.isSegmented)
     }
+
+    @Test
+    fun `createProgressTemplateData reads the large icon from pt_ico`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+        every { mockBundle.getString(PTConstants.PT_NOTIF_ICON) } returns "https://example.com/logo.png"
+
+        val d = TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData
+
+        assertEquals("https://example.com/logo.png", d.largeIcon)
+    }
+
+    @Test
+    fun `createProgressTemplateData has no large icon when pt_ico is missing or blank`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+
+        for (value in listOf(null, "", "   ")) {
+            every { mockBundle.getString(PTConstants.PT_NOTIF_ICON) } returns value
+            val d = TemplateDataFactory.createTemplateData(
+                TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+            ) as ProgressTemplateData
+            assertNull(d.largeIcon)
+        }
+    }
 }

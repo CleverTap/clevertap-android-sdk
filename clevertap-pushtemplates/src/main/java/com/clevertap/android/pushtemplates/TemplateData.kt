@@ -214,6 +214,8 @@ internal data class ProgressTemplateData(
     val indeterminate: Boolean,
     val segments: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData>,
     val points: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData>,
+    /** Large icon URL (`pt_ico`, as in the other templates); the system draws it, on both tiers. */
+    val largeIcon: String? = null,
 ) : TemplateData() {
 
     /**
