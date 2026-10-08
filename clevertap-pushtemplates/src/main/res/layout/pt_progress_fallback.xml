@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Expanded fallback for the pt_progress template on Android < 16 (no OS ProgressStyle).
-  Mimics the native look: tracker icon + title/message + a dots-and-connectors progress row
-  (points added as dots, segments as weighted colored connectors, at runtime via addView).
+  Mimics the native look: tracker icon + title/message + a progress row (a bitmap-drawn milestone
+  track with proportional segments and positioned points, or a plain bar).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -66,9 +66,9 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Progress row: start icon + indicator + end icon. The indicator is EITHER the segmented
-         dots/connectors (pt_progress_container, when segments/points are present) OR the plain bar
-         (pt_bar); the start/end icons sit on both sides in either case, like Android 16. -->
+    <!-- Progress row: start icon + indicator + end icon. The indicator is EITHER the milestone track
+         (pt_progress_track, when segments/points are present) OR the plain bar (pt_bar); the start/end
+         icons sit on both sides in either case, like Android 16. -->
     <LinearLayout
         android:id="@+id/pt_segmented_row"
         android:layout_width="match_parent"
@@ -86,15 +86,18 @@
             android:visibility="gone"
             android:contentDescription="@string/pt_progress_start_cd" />
 
-        <LinearLayout
-            android:id="@+id/pt_progress_container"
+        <!-- Milestone track (segments + points + titles), drawn as a bitmap so segment widths and point
+             positions follow their length/position (RemoteViews cannot set layout_weight at runtime). -->
+        <ImageView
+            android:id="@+id/pt_progress_track"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="top"
-            android:orientation="horizontal" />
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
 
-        <!-- PLAIN bar (mutually exclusive with pt_progress_container): determinate (pt_progress/max)
+        <!-- PLAIN bar (mutually exclusive with pt_progress_track): determinate (pt_progress/max)
              or indeterminate (pt_progress_indeterminate). Hidden when the segmented indicator is used. -->
         <ProgressBar
             android:id="@+id/pt_bar"

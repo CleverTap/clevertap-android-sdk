@@ -217,7 +217,7 @@ internal data class ProgressTemplateData(
 ) : TemplateData() {
 
     /**
-     * The progress indicator is **segmented** (dots + connectors / native segments) when the payload
+     * The progress indicator is **segmented** (drawn milestone track / native segments) when the payload
      * carries segments or points; otherwise it is a **plain bar** — indeterminate when
      * [indeterminate] is set, else determinate from [progress] / [progressMax]. The two are mutually
      * exclusive (a client uses either milestones or a simple bar, never both).
