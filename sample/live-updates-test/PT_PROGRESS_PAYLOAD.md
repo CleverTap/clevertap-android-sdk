@@ -30,7 +30,6 @@ over any registered notification factory).
     "pt_small_icon_clr": "#FF9500",
 
     "pt_progress": "66",
-    "pt_progress_max": "100",
     "pt_styled_by_progress": "true",
     "pt_progress_indeterminate": "false",
 
@@ -40,10 +39,8 @@ over any registered notification factory).
       { "length": 34, "color": "#48484A" }
     ],
     "pt_progress_points": [
-      { "position": 0,   "color": "#4CAF50", "title": "Placed" },
-      { "position": 33,  "color": "#4CAF50", "title": "Preparing" },
-      { "position": 66,  "color": "#FF9500", "title": "Out for delivery" },
-      { "position": 100, "color": "#48484A", "title": "Delivered" }
+      { "position": 33, "color": "#4CAF50", "title": "Preparing" },
+      { "position": 66, "color": "#FF9500", "title": "On way" }
     ],
 
     "pt_progress_tracker_icon": "https://i.imgur.com/6DavQwg.jpg",
@@ -70,12 +67,15 @@ The native Android 16 `ProgressStyle` has **no separate max** — the **total tr
 the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on that path. So:
 
 - **`pt_progress` and every point `position` must be on the same scale as the segment-length sum.**
-  Above, segments sum to `100`, so `pt_progress: "66"` and points `0 / 33 / 66 / 100` all line up and
-  the tracker icon sits on the 3rd point.
+  Above, segments sum to `100`, so `pt_progress: "66"` and points `33 / 66` all line up and the
+  tracker icon sits on the "On way" point.
 - If segments summed to `3` (e.g. three `length: 1`) but `pt_progress` was `66`, the tracker would
   clamp to the **far right** — a common mistake.
 - With **no** `pt_progress_segments`, the track defaults to `0..100`, so a percentage `pt_progress`
-  works directly (plain-bar case).
+  works directly (plain-bar case, and points without segments).
+- The fallback below Android 16 draws the **same** milestone track as native: same total, same
+  limits (see *Limits*), so one payload looks the same on both tiers. `pt_progress_max` is **not** used by
+  the milestone track on either tier; it only sets the max of the **plain bar below Android 16**.
 
 ## Wrapper keys (top level)
 
@@ -93,14 +93,14 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
 |---|---|---|
 | `pt_id` | `"pt_progress"` | Selects the progress template; wins over a factory |
 | `pt_title`, `pt_msg` | Title / body | `nt` / `nm` accepted as fallbacks |
-| `pt_small_icon_clr` | Accent color | `#RRGGBB` |
+| `pt_small_icon_clr` | Accent color | `#RRGGBB` (`pt_small_icon_clr_dark` for dark mode; `wzrk_color` as fallback). Below Android 12 it is also the default color of segments/points that have no `color` (see *Colors*) |
 | `pt_progress` | Current progress on the track scale | See scale rule above |
-| `pt_progress_max` | Max | Used by the **pre-16 fallback** only; ignored by native |
-| `pt_styled_by_progress` | Tint bar by progress | 16+ native only |
+| `pt_progress_max` | Max of the plain bar | Used **only** by the plain determinate bar **below 16**. Ignored by native and by the milestone track on both tiers (its total = segment-length sum, else 100) |
+| `pt_styled_by_progress` | Fade everything ahead of the progress | Milestone track on both tiers: segments/points after `pt_progress` are drawn at half opacity and thinner. The SDK default is `false` (the platform's own default is `true`); when `false`, only the tracker shows the progress, as on native. Not applied to the plain bar below 16 |
 | `pt_progress_indeterminate` | Animated bar with no fixed fill | Both tiers. Honored **only** when there are no segments/points. The tracker icon is hidden in this mode (both tiers) |
-| `pt_progress_segments` | `[{length, color?}]` | Weighted connectors; lengths define the track total |
-| `pt_progress_points` | `[{position, color?, title?}]` | Milestone dots on the same scale. Native 16+ renders **only the first 4 points**; keep it to 4 so both tiers match. `title` shows on the pre-16 fallback only |
-| `pt_progress_tracker_icon` | Image URL | Square-cropped. 16+: rides the bar at the progress position. <16: fixed next to the title. Hidden for an indeterminate bar |
+| `pt_progress_segments` | `[{length, color?}]` | Drawn to scale: each segment's width follows its `length`; the lengths define the track total. **Max 10** (see *Limits*) |
+| `pt_progress_points` | `[{position, color?, title?}]` | Milestone dots at their `position`, on the same scale. **Max 4**, and points at `0` or at the end are **not shown** (see *Limits*). `title` shows on the pre-16 fallback only |
+| `pt_progress_tracker_icon` | Image URL | Square-cropped. Milestone track (both tiers): rides the track at the progress position. Plain bar below 16: fixed next to the title (a RemoteViews ProgressBar cannot carry an image). Hidden for an indeterminate bar |
 | `pt_progress_start_icon` / `_end_icon` | Image URLs | Square-cropped. Shown at both ends of the bar for every bar type (milestone, plain, indeterminate), on both tiers |
 | `pt_chip_type` | `text` \| `timer` \| `countdown` \| `none` | See *Chip* below |
 | `pt_chip_text` | Chip text | Only for `pt_chip_type=text`. Keep it **≤ 7 characters** (e.g. `12 min`) |
@@ -131,6 +131,45 @@ closed). With the shade open, look at the card instead.
   header can still show negative time.
 - Android 6 (API 23) has no count-down chronometer, so a countdown counts up there.
 
+## Limits (same on both tiers)
+
+These are Android 16's own rules (`Notification.ProgressStyle`, API 36). The pre-16 fallback applies
+the same rules, so a payload that breaks them still looks the same everywhere, just not as intended.
+
+| You send | What is shown |
+|---|---|
+| A segment with `length` ≤ 0 | That segment is dropped |
+| No segments (points only) | One full-width segment of length 100 in the default color |
+| 1–10 segments | All of them, each at its own width |
+| **More than 10 segments** | **One** segment of the same total. It keeps the color only if every segment had the same color; otherwise the default color |
+| A point at `position` ≤ 0 or ≥ the total | Dropped (no dots at the very start or end) |
+| **More than 4 points** | Only the **first 4** valid points |
+| Two points with the same `position` | The **last** one |
+| `pt_progress` below 0 or above the total | Clamped to the track |
+
+**Safe payload:** 1–10 segments and at most 4 points strictly inside the track. So for an order
+tracker, put the milestone dots *between* the start and the end (e.g. `33` and `66` on a 100 track),
+not at `0` and `100`.
+
+## Colors and light/dark mode
+
+- The card follows the **system theme** on both tiers: light background with dark text in light mode,
+  dark in dark mode. The fallback has no background or text colors of its own.
+- A segment/point **without** `color` uses the theme accent:
+
+  | Device | Default color |
+  |---|---|
+  | Android 16 | System primary color (from the wallpaper, Material You) |
+  | Android 12–15 | System accent color (`system_accent1_600` light / `_200` dark), close to Android 16 |
+  | Android 6–11 | `pt_small_icon_clr` (or `_dark` / `wzrk_color`), else grey `#A6A6A6` (no wallpaper colors on these versions) |
+
+  Send an explicit `color` if every device must show the same color.
+- **Contrast fix (both tiers):** every segment/point color is made lighter or darker (same hue) until
+  it has at least **3:1 contrast** with the card. So `#FFFFFF` still shows on a light card and
+  `#000000` on a dark card (both as a grey). The exact shade can differ slightly between tiers.
+- Below 16 the track is an image made when the push is posted. If the user switches the theme while
+  the notification is visible, the text updates at once and the track on the next `update`.
+
 ## Collapsed vs expanded
 
 - **Android 16+, promoted** (`update` events, `pt_promote` not `"false"`, Live Updates allowed by the
@@ -152,5 +191,9 @@ closed). With the shade open, look at the card instead.
   ≥ 1.17.0**. On API 23–35 (or 16 with older core) it renders the ongoing fallback: a custom
   expanded view (RemoteViews) and the system's standard collapsed view. There is no promotion,
   status-bar chip or lock-screen placement on the fallback (16+ OS features).
-- **Not supported on native 16+:** point titles (no platform API). **Fallback-only gaps:** no
-  `pt_styled_by_progress`, and the tracker cannot ride the bar.
+- **Point titles:** shown under the dots on the pre-16 fallback only (native points have no text).
+  Neighbouring titles keep a small gap and are shortened with `…` when there is no room.
+- **Remaining fallback gaps:** the plain bar below 16 is the system ProgressBar (no
+  `pt_styled_by_progress` fade, tracker next to the title, different height/color); the milestone
+  track uses thinner lines without the 4dp gaps between segments; tiny segments are not stretched to
+  the native 16dp minimum.

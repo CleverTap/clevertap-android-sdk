@@ -11,15 +11,15 @@ Two render modes:
 
 | Mode | What renders | How the sample triggers it |
 |------|--------------|----------------------------|
-| **Mode B — SDK renders** | SDK's `pt_progress` Push Template (`ProgressStyle`) | Rows 19-0 … 19-8 (`ProgressLiveUpdateDemo`) |
-| **Mode A — client renders** | App's `ICleverTapNotificationFactory` (`CustomNotificationFactory`) | Row 19-9 (`CustomLiveUpdateDemo`) |
+| **Mode B — SDK renders** | SDK's `pt_progress` Push Template (`ProgressStyle`) | Rows 19-0 … 19-14 (`ProgressLiveUpdateDemo`) |
+| **Mode A — client renders** | App's `ICleverTapNotificationFactory` (`CustomNotificationFactory`) | Row 19-15 (`CustomLiveUpdateDemo`) |
 
 Two rendering tiers (chosen automatically by the OS version — **not** a menu option):
 
 | Tier | Android | Presentation |
 |------|---------|--------------|
 | **Native** | **16+ (API 36, "Baklava")** | `Notification.ProgressStyle` — status-bar **chip**, promotable; always expanded while promoted |
-| **Fallback** | **< 16 (API 23–35)** | Custom expanded view (**RemoteViews**: dots + connectors or a plain bar) via `DecoratedCustomViewStyle`; the **collapsed view is the system's standard template** |
+| **Fallback** | **< 16 (API 23–35)** | Custom expanded view (**RemoteViews**: a milestone track drawn as an image with native's rules, or a plain bar) via `DecoratedCustomViewStyle`; follows the system light/dark theme; the **collapsed view is the system's standard template** |
 
 > **Every test case below must be run on BOTH tiers** — one device/emulator on **Android 16+** and one on **Android 15 or lower**. Expected results are given per tier where they differ.
 
@@ -56,9 +56,15 @@ Two rendering tiers (chosen automatically by the OS version — **not** a menu o
 | 19-6 | Progress: Plain Bar + Start/End Icons | **Plain determinate bar** | Text | Promoted | Tracker + **Start/End** | – | n/a |
 | 19-7 | Progress: Indeterminate Bar | **Indeterminate bar** | Text | Promoted | Tracker | – | n/a |
 | 19-8 | Progress: Indeterminate Bar + Start/End Icons | **Indeterminate bar** | Text | Promoted | **Start/End** (tracker hidden) | – | n/a |
-| 19-9 | Custom Live Update – Mode A factory | Segmented (client) | Text (ETA, 16+) | Promoted while active | – | – | n/a |
+| 19-9 | Progress: Unequal Segments 10/80/10 | Segmented, **unequal lengths** | Text | Promoted | Tracker | – | Yes |
+| 19-10 | Progress: On Track - tracker + styled by progress | Segmented, progress **mid-segment** | Text | Promoted | Tracker + **styled-by-progress** | – | Yes |
+| 19-11 | Progress: On Track - no tracker, fade only | Segmented, progress mid-segment | Text | Promoted | **No tracker** + styled-by-progress | – | Yes |
+| 19-12 | Progress: Light/Dark Colors - default, white, black | Segmented, **uncolored / white / black** | Text | Promoted | Tracker + styled-by-progress | – | Yes |
+| 19-13 | Progress: Edge Points 0/100 - ends hidden | Segmented, points at **0 / 33 / 66 / 100** | – | Promoted | Tracker + styled-by-progress | – | Yes (middle 2 only) |
+| 19-14 | Progress: Edge Points 5/95 - control, all 4 dots | Segmented, points at **5 / 33 / 66 / 95** | – | Promoted | Tracker + styled-by-progress | – | Yes (all 4) |
+| 19-15 | Custom Live Update – Mode A factory | Segmented (client) | Text (ETA, 16+) | Promoted while active | – | – | n/a |
 
-\* Milestone labels (point titles: *Placed / Cooking / On way / Delivered*) render only in the **pre-16 expanded fallback**; they are a no-op on native 16+ (native points carry no text).
+\* Milestone labels (point titles) render only in the **pre-16 expanded fallback**; they are a no-op on native 16+ (native points carry no text). Points at the very start or end of the track are **not drawn on either tier** (native rule), so rows 19-0 … 19-4 show only *Cooking* and *On way*, and row 19-9 only the points at 10 and 90.
 
 ---
 
@@ -68,8 +74,8 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 
 ### TC-B01 — Baseline order tracker (Row 19-0)
 - **Steps:** tap "Progress: Order Tracker". Watch 4 steps.
-- **Result-16+:** native ProgressStyle notification, always expanded while promoted; with the shade **closed**, a **status-bar chip** shows the ETA (`50 min` → `40 min` → `12 min`); a segmented track with 4 dots; dots/segments recolor green as steps complete; the active dot is orange; the content title "Order #A1234" and body update each step; the tracker icon rides the bar. Notification updates **in place** (no stacking).
-- **Result-<16:** expanded: custom RemoteViews card; segmented row of dots + connectors; **milestone labels** (Placed/Cooking/On way/Delivered) under the dots; tracker icon next to the title; ETA chip text next to the title (never cuts the title); progress recolors per step; updates in place.
+- **Result-16+:** native ProgressStyle notification, always expanded while promoted; with the shade **closed**, a **status-bar chip** shows the ETA (`50 min` → `40 min` → `12 min`); a segmented track with **2 dots** (33 and 66; the points at 0 and 100 are dropped by the platform); segments/dots recolor green as steps complete; the active dot is orange; the content title "Order #A1234" and body update each step; the tracker icon rides the track at the progress. Notification updates **in place** (no stacking).
+- **Result-<16:** expanded: custom RemoteViews card in the system theme; the **same track as 16+**: 3 segments, 2 dots at the same positions, **milestone labels** *Cooking* / *On way* under the dots (not overlapping); the **tracker rides the track** at the progress (not next to the title); ETA chip text next to the title (never cuts the title); progress recolors per step; updates in place.
 - **Terminal:** after "Delivered" the notification is **no longer ongoing** and can be **swiped away**; the chip is gone on both tiers.
 
 ### TC-B02 — Actions + deep link (Row 19-1)
@@ -89,8 +95,8 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 
 ### TC-B05 — Start/End icons + styled-by-progress (Row 19-4)
 - **Steps:** tap "Progress: Start/End Icons".
-- **Result-16+:** native track shows a **start icon** and **end icon** at the track ends; `styled_by_progress` tints the track by progress.
-- **Result-<16:** expanded fallback shows the **start icon (store)** and **end icon (house)** flanking the segmented row; tracker next to the title.
+- **Result-16+:** native track shows a **start icon** and **end icon** at the track ends; `styled_by_progress` fades everything ahead of the progress.
+- **Result-<16:** expanded fallback shows the **start icon (store)** and **end icon (house)** flanking the track; the tracker rides the track; everything ahead of the progress is **faded** (half opacity, thinner), like 16+.
 
 ### TC-B06 — Plain determinate bar (Row 19-5)
 - **Steps:** tap "Progress: Plain Bar – determinate".
@@ -107,6 +113,35 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 ### TC-B07B — Indeterminate bar + start/end icons (Row 19-8)
 - **Steps:** tap "Progress: Indeterminate Bar + Start/End Icons".
 - **Result-16+ & <16:** the animated indeterminate bar has the **start icon (store)** on its left and the **end icon (house)** on its right. The **tracker is hidden** on both (there is no progress position to place it at).
+
+### TC-B07C — Unequal segments (Row 19-9)
+- **Steps:** tap "Progress: Unequal Segments 10/80/10".
+- **Result-16+ & <16:** the 3 segments are drawn **10% / 80% / 10%** of the track width (not equal); dots at **10** and **90** (the points at 0 and 100 are not drawn); the tracker jumps 0 → 10 → 90 → 100. Below 16 the labels under the two dots never overlap.
+
+### TC-B07D — Progress on the track, with tracker (Row 19-10)
+- **Steps:** tap "Progress: On Track - tracker + styled by progress". Segments are fixed (blue / orange / green); only `pt_progress` moves: **10 → 45 → 80 → 100**.
+- **Result-16+ & <16:** the tracker sits **on the track** at the progress, inside a segment (not on a dot); everything **after** the tracker is faded (half opacity, thinner); dots after the progress are faded too; at 100 nothing is faded. Below 16 the tracker is **not** also shown next to the title.
+
+### TC-B07E — Progress on the track, no tracker (Row 19-11)
+- **Steps:** tap "Progress: On Track - no tracker, fade only".
+- **Result-16+ & <16:** no tracker; the progress is visible as the point where the track turns faded, with a **small gap** just before it.
+
+### TC-B07F — Light / dark colors (Row 19-12)
+- **Steps:** run the row in **light mode**, then switch the system to **dark mode** and run it again. (Android 10+; earlier versions have no system dark mode.)
+- **Result (both tiers, both modes):** the card background and text follow the system theme (no dark card in light mode below 16). The **uncolored** first segment and "Default" dot use the theme accent: wallpaper/accent color on Android 12+, grey on Android 7–11 (different from 16+; expected). The **white** segment/dot is still visible on a light card and the **black** one on a dark card (both shown as grey: contrast fix).
+- **Note (<16):** if the theme is switched while the notification is on screen, the text changes at once and the track on the next step.
+
+### TC-B07G — Edge points at 0 and 100 are not drawn (Row 19-13)
+- **Steps:** tap "Progress: Edge Points 0/100 - ends hidden". Fixed 3-color track (33 / 33 / 34), `pt_progress` stays at **50**. Points: **0** "Placed" (pink), **33** "Cooking", **66** "On way", **100** "Delivered" (pink).
+- **Result-16+:** only **2 dots**, at 33 and 66. **No pink dot** at either end of the track. No titles (native points have no text).
+- **Result-<16:** the same 2 dots, with only **"Cooking"** and **"On way"** under them. "Placed" and "Delivered" are not shown.
+- **Fail if:** a pink dot or the "Placed" / "Delivered" title shows on any tier (the fallback no longer matches native, `Notification.java` drops points at `<= 0` and `>= total`).
+
+### TC-B07H — Edge points control at 5 and 95 (Row 19-14)
+- **Steps:** tap "Progress: Edge Points 5/95 - control, all 4 dots". Same track and progress as TC-B07G; only the two pink points move to **5** and **95**.
+- **Result-16+:** **4 dots**: pink at 5, then 33, 66, pink at 95.
+- **Result-<16:** the same 4 dots with all 4 titles; "Placed" and "Delivered" do not overlap their neighbours.
+- **Why:** confirms that TC-B07G hides the ends only because of their position, not because of the color or title.
 
 ### TC-B08 — In-place update (all Mode B rows)
 - **Verify:** across all rows, the 4 steps replace **one** notification — the shade never accumulates 4 separate notifications for a single run.
@@ -126,7 +161,7 @@ For each case: **Result-16+** = native tier, **Result-<16** = fallback tier.
 
 ## 4. Functional test cases — Mode A (custom factory)
 
-### TC-A01 — Mode A order tracker (Row 19-9)
+### TC-A01 — Mode A order tracker (Row 19-15)
 - **Steps:** tap "Custom Live Update – Mode A factory".
 - **Result-16+:** a **client-built** native `ProgressStyle` notification (green done / gray pending segments computed from progress); **chip** shows the ETA (`setShortCriticalText`); **promoted** while active; updates in place on the same `wzrk_activityId`.
 - **Result-<16:** the factory's **classic determinate progress-bar** notification (sub-text = status); updates in place.
@@ -198,6 +233,20 @@ Some require a modified payload (not a menu row) — marked **[code]**. Menu-run
 - **Result-16+:** the status-bar chip shows the **icon only** (text too long for 96dp).
 - **Result-<16:** the chip is capped at 96dp and ellipsized; the **title is never cut**.
 
+### TC-N11 — Segment / point limits **[code]**
+Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for each case. Expected on **both tiers**:
+
+| Setup | Result |
+|---|---|
+| 11 segments, different colors | **One** full-width segment in the default color |
+| 11 segments, all `#FF0000` | **One** full-width red segment |
+| 10 segments | All 10, each at its own width |
+| 6 points at 10, 20, 30, 40, 50, 60 | Only the dots at **10, 20, 30, 40** |
+| Points at 0, 50, 100 | Only the dot at **50** |
+| Two points at 50 (red, then green) | One **green** dot |
+| Points only, no segments | A full default-colored track (total 100), dots at their positions |
+| A segment with `length: 0` | Dropped; the other segments fill the track |
+
 ### TC-N10 — Countdown past zero **[code]**
 - **Setup:** `pt_chip_type: "countdown"`, `pt_countdown: "true"`, `pt_when` = now + 10 s; send no further update.
 - **Result (both tiers):** the timer counts down to 0:00 and then **continues into negative time** (`−0:01`…). Expected platform behavior — the backend must send the next update or `end` before zero. On 16+ the status-bar chip hides once the countdown is no longer positive.
@@ -229,17 +278,19 @@ Run sections 3–6 on each device and tick:
 | TC-A01 … TC-A03 | ☐ | ☐ | ☐ |
 | TC-I01 … TC-I03 | ☐ | ☐ | ☐ |
 | TC-N02 (buttons < 31) | n/a | n/a | ☐ |
-| TC-N08 … TC-N10 | ☐ | ☐ | ☐ |
+| TC-N08 … TC-N11 | ☐ | ☐ | ☐ |
 
 ---
 
 ## 9. Known limitations to note (not bugs)
 
 - **Milestone labels (point titles)** show only on the pre-16 fallback; native 16+ points have no text.
-- **Native 16+ renders only the first 4 points**; the fallback draws all of them.
+- **Native limits apply on both tiers:** max 10 segments (more collapse into one), max 4 points, no points at the very start or end.
 - **Status-bar chip, promotion and lock-screen placement** are 16+-only. On the fallback a text chip shows inside the card and a timer/countdown shows in the header.
 - **Promoted 16+ cards are always expanded**; a collapsed view exists only when not promoted.
-- **Tracker icon** rides the bar on 16+ but sits next to the title on the fallback (RemoteViews cannot position it along the bar).
-- **`pt_styled_by_progress`** has no effect on the fallback.
+- **Tracker icon** rides the track on both tiers for the milestone track. For the **plain bar below 16** it still sits next to the title (a RemoteViews ProgressBar cannot carry an image).
+- **`pt_styled_by_progress`** works on the fallback milestone track, but not on the fallback plain bar.
+- **Default color** of an uncolored segment/point differs by version: wallpaper color on 16+ (and close on 12–15), small-icon color or grey on 7–11.
+- **Fallback track look:** thinner lines, no 4dp gaps between segments, round dots; tiny segments are not stretched to native's 16dp minimum.
 - **A countdown keeps counting into negative time** after zero on both tiers until the next update arrives.
 - **Mode A** is fully client-drawn — its exact look is defined by `CustomNotificationFactory`, not the SDK; it demonstrates one representative configuration (promoted + ETA chip).
