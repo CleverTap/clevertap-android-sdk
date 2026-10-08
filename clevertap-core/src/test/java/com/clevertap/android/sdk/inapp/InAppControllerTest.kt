@@ -752,7 +752,7 @@ class InAppControllerTest {
         } returns inApps.toList()
 
         val inAppController = createInAppController()
-        inAppController.onAppLaunchServerSideInAppsResponse(inApps.toList(), null, mockk())
+        inAppController.onAppLaunchServerSideInAppsResponse(inApps.toList(), emptyList(), mockk())
         verifyInAppsDisplayed(
             inAppController,
             CTInAppType.CTInAppTypeInterstitial.toString(),

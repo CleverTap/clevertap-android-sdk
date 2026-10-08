@@ -20,8 +20,10 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
+import com.clevertap.android.sdk.network.ContentFetchItem;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import java.util.Collections;
 import java.util.List;
 import kotlin.Pair;
 import org.json.JSONArray;
@@ -142,15 +144,15 @@ public class InAppResponse extends CleverTapResponseDecorator {
             // If this /a1 carries a content_fetch that can yield an app-launch in-app, open an
             // arbitration window so the app-launch winner below is held and merged with the /content
             // winner rather than shown twice. Content-fetch responses never open a window, and never
-            // feed their directive into the Option 2 fast path (so appLaunchContentFetch stays null).
-            JSONArray appLaunchContentFetch = null;
+            // feed their directive into the Option 2 fast path (so the list stays empty).
+            List<ContentFetchItem> contentFetchItems = Collections.emptyList();
             if (responseContext.getSource() != CTResponseSource.CONTENT_FETCH) {
-                controllerManager.getInAppController().openAppLaunchArbitrationWindowIfNeeded(response);
-                appLaunchContentFetch = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY);
+                contentFetchItems = res.getContentFetchItems();
+                controllerManager.getInAppController().openAppLaunchArbitrationWindowIfNeeded(contentFetchItems);
             }
 
             handleLegacyInApps(res);
-            handleAppLaunchInApps(res, appLaunchContentFetch);
+            handleAppLaunchInApps(res, contentFetchItems);
             handleClientSideInApps(res, inAppStore, responseContext.getSource());
             handleServerSideInAppsMeta(res, inAppStore);
             preloadAssetsAndEvictStaleFiles(res, context, isFullResponse);
@@ -180,12 +182,12 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     // App-launch SS in-apps: inapp_notifs_applaunched (NORMAL/DELAYED) + inapp_notifs_applaunched_meta
     // (IN-ACTION), evaluated against the App Launched event.
-    private void handleAppLaunchInApps(InAppResponseAdapter res, JSONArray appLaunchContentFetch) {
+    private void handleAppLaunchInApps(InAppResponseAdapter res, List<ContentFetchItem> contentFetchItems) {
         DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
         if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
             controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
                     partitionedAppLaunchServerSideInApps.getImmediateInApps(),
-                    appLaunchContentFetch,
+                    contentFetchItems,
                     coreMetaData.getLocationFromUser());
         }
         if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {

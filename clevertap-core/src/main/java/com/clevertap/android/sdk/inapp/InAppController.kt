@@ -62,7 +62,6 @@ import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.variables.JsonUtil
 import kotlinx.coroutines.runBlocking
-import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -684,7 +683,7 @@ internal class InAppController(
 
     fun onAppLaunchServerSideInAppsResponse(
         appLaunchServerSideInApps: List<JSONObject>,
-        contentFetch: JSONArray?,
+        contentFetchItems: List<ContentFetchItem>,
         userLocation: Location?
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
@@ -694,7 +693,7 @@ internal class InAppController(
             )
 
         // Option 2 fast path: show the /a1 winner now when waiting can't change the outcome.
-        if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, contentFetch, appLaunchedProperties, userLocation)) {
+        if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, contentFetchItems, appLaunchedProperties, userLocation)) {
             return
         }
 
@@ -709,17 +708,17 @@ internal class InAppController(
      * Option 2 prediction. Returns true (and shows [a1Winner] now, closing the window) when waiting
      * for `/content` cannot change the outcome — no synthetic candidate qualifies, or the `/a1`
      * winner tops the merged sort. Returns false to fall back to Option 1 (wait). The synthetics are
-     * derived on the spot from this same `/a1` response's [contentFetch]; non-empty synthetics imply
-     * a window was opened (both key off the same directive), so Option 2 is dormant unless every
+     * derived on the spot from this same `/a1` response's [contentFetchItems]; non-empty synthetics
+     * imply a window was opened (both key off the same directive), so Option 2 is dormant unless every
      * app-launch content_fetch item carries `priority`.
      */
     private fun tryAppLaunchFastPath(
         a1Winner: List<JSONObject>,
-        contentFetch: JSONArray?,
+        contentFetchItems: List<ContentFetchItem>,
         appLaunchedProperties: Map<String, Any>,
         userLocation: Location?
     ): Boolean {
-        val synthetics = appLaunchSynthetics(contentFetch)
+        val synthetics = appLaunchSynthetics(contentFetchItems)
         if (synthetics.isEmpty()) {
             return false // Option 1 (no priority / no content fetch): wait or show now via routeWinners
         }
@@ -757,22 +756,17 @@ internal class InAppController(
      * can produce an app-launch in-app, so the winner is held and merged with the `/content` winner
      * instead of shown twice. Called on `/a1` only.
      */
-    fun openAppLaunchArbitrationWindowIfNeeded(response: JSONObject) {
-        val items = response.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY) ?: return
-        val hasAppLaunchItem = ContentFetchItem.listFrom(items).any { isAppLaunchInAppItem(it) }
-        if (hasAppLaunchItem) {
+    fun openAppLaunchArbitrationWindowIfNeeded(contentFetchItems: List<ContentFetchItem>) {
+        if (contentFetchItems.any { isAppLaunchInAppItem(it) }) {
             appLaunchArbitrator.openWindow()
         }
     }
 
     // Synthetic selection-rule candidates for the app-launch content_fetch items on a `/a1` response,
     // used by the Option 2 fast path. All-or-nothing: empty unless every app-launch item carries
-    // `priority` (otherwise fall back to Option 1 / wait). Derived from the response, never stored.
-    private fun appLaunchSynthetics(contentFetch: JSONArray?): List<JSONObject> {
-        if (contentFetch == null) {
-            return emptyList()
-        }
-        val appLaunchItems = ContentFetchItem.listFrom(contentFetch).filter { isAppLaunchInAppItem(it) }
+    // `priority` (otherwise fall back to Option 1 / wait).
+    private fun appLaunchSynthetics(contentFetchItems: List<ContentFetchItem>): List<JSONObject> {
+        val appLaunchItems = contentFetchItems.filter { isAppLaunchInAppItem(it) }
         if (appLaunchItems.isEmpty()) {
             return emptyList()
         }
