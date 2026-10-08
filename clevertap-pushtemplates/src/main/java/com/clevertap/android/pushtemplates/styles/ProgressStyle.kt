@@ -336,7 +336,8 @@ internal class ProgressStyle(
             rv.setImageViewBitmap(R.id.pt_progress_track, track)
             rv.setViewVisibility(R.id.pt_progress_track, android.view.View.VISIBLE)
             // TalkBack: the track is a picture, so describe it as a percent like the plain bar.
-            val percent = progress.coerceIn(0, total) * 100 / total
+            // Long math: total can be up to Int.MAX_VALUE, so progress * 100 would overflow Int.
+            val percent = (progress.coerceIn(0, total).toLong() * 100 / total).toInt()
             rv.setContentDescription(R.id.pt_progress_track, context.getString(R.string.pt_progress_bar_cd, percent))
         } else {
             // Plain bar: show the bar (indeterminate or determinate); the track stays hidden.
