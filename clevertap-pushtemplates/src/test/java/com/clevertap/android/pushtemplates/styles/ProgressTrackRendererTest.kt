@@ -22,11 +22,16 @@ class ProgressTrackRendererTest {
         trackColor = Color.GRAY, pointColor = Color.WHITE, titleColor = Color.LTGRAY
     )
 
-    private fun layout(segments: List<SegmentData>, points: List<PointData> = emptyList()) =
-        ProgressTrackRenderer.layout(
-            spec, segments, points, ProgressTrackRenderer.total(segments, 100),
-            ProgressTrackRenderer.titlePaint(spec)
-        )
+    private fun layout(
+        segments: List<SegmentData>,
+        points: List<PointData> = emptyList(),
+        progress: Int = 0,
+        styledByProgress: Boolean = false,
+        hasTracker: Boolean = false
+    ) = ProgressTrackRenderer.layout(
+        spec, segments, points, ProgressTrackRenderer.total(segments, 100),
+        progress, styledByProgress, hasTracker, ProgressTrackRenderer.titlePaint(spec)
+    )
 
     @Test
     fun `segment widths follow their lengths`() {
@@ -88,10 +93,97 @@ class ProgressTrackRendererTest {
     @Test
     fun `render returns a bitmap of the computed size`() {
         val segments = listOf(SegmentData(10, null), SegmentData(90, null))
-        val bitmap = ProgressTrackRenderer.render(spec, segments, listOf(PointData(10, null, "Cooking")), 100)
+        val bitmap = ProgressTrackRenderer.render(
+            spec, segments, listOf(PointData(10, null, "Cooking")), 100, 0, false, null
+        )
 
         val l = layout(segments, listOf(PointData(10, null, "Cooking")))
         assertEquals(l.width, bitmap.width)
         assertEquals(l.height, bitmap.height)
+    }
+
+    @Test
+    fun `not styled by progress keeps every segment and point at full color`() {
+        val l = layout(
+            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.BLUE)),
+            listOf(PointData(75, Color.RED)), progress = 25
+        )
+
+        assertEquals(listOf(Color.GREEN, Color.BLUE), l.segments.map { it.color })
+        assertTrue(l.segments.none { it.faded })
+        assertEquals(Color.RED, l.dots.single().color)
+        assertEquals(57f, l.progressX, 0.01f) // still tracked, for the tracker
+    }
+
+    @Test
+    fun `styled by progress splits the segment at the progress and fades what is ahead`() {
+        val l = layout(
+            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.BLUE)),
+            listOf(PointData(25, Color.RED), PointData(75, Color.RED)),
+            progress = 40, styledByProgress = true
+        )
+
+        // progress 40 -> x 87; no tracker, so a 4px gap before the split.
+        assertEquals(
+            listOf(
+                ProgressTrackRenderer.SegmentRect(7f, 83f, Color.GREEN),
+                ProgressTrackRenderer.SegmentRect(87f, 107f, ProgressTrackRenderer.faded(Color.GREEN), faded = true),
+                ProgressTrackRenderer.SegmentRect(107f, 207f, ProgressTrackRenderer.faded(Color.BLUE), faded = true)
+            ),
+            l.segments
+        )
+        assertEquals(listOf(Color.RED, ProgressTrackRenderer.faded(Color.RED)), l.dots.map { it.color })
+    }
+
+    @Test
+    fun `progress on a segment boundary fades the next segment whole`() {
+        val l = layout(
+            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.BLUE)),
+            progress = 50, styledByProgress = true
+        )
+
+        assertEquals(listOf(false, true), l.segments.map { it.faded })
+        assertEquals(Color.GREEN, l.segments[0].color)
+    }
+
+    @Test
+    fun `complete progress fades nothing`() {
+        val l = layout(listOf(SegmentData(100, Color.GREEN)), listOf(PointData(50, Color.RED)),
+            progress = 100, styledByProgress = true)
+
+        assertTrue(l.segments.none { it.faded })
+        assertEquals(Color.RED, l.dots.single().color)
+    }
+
+    @Test
+    fun `tracker sits centered on the progress and removes the progress gap`() {
+        val l = layout(listOf(SegmentData(100, Color.GREEN)), progress = 50,
+            styledByProgress = true, hasTracker = true)
+
+        val tracker = l.tracker!!
+        assertEquals(107f, tracker.centerX(), 0.01f)
+        assertEquals(20f, tracker.width(), 0.01f)
+        assertEquals(l.trackY, tracker.centerY(), 0.01f)
+        assertEquals(107f, l.segments[0].right, 0.01f) // no gap: the tracker covers the split
+        assertEquals(20, l.height) // tracker (20) is taller than a dot (14)
+    }
+
+    @Test
+    fun `tracker stays on the canvas at both ends`() {
+        val atStart = layout(listOf(SegmentData(100, null)), progress = 0, hasTracker = true).tracker!!
+        val atEnd = layout(listOf(SegmentData(100, null)), progress = 100, hasTracker = true).tracker!!
+
+        assertEquals(0f, atStart.left, 0.01f)
+        assertEquals(214f, atEnd.right, 0.01f)
+    }
+
+    @Test
+    fun `no tracker means no tracker bounds`() {
+        assertEquals(null, layout(listOf(SegmentData(100, null)), progress = 50).tracker)
+    }
+
+    @Test
+    fun `faded color halves the alpha and keeps the rgb`() {
+        assertEquals(Color.argb(128, 0, 255, 0), ProgressTrackRenderer.faded(Color.GREEN))
     }
 }
