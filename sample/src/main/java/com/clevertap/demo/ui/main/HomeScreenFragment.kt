@@ -119,7 +119,13 @@ class HomeScreenFragment : Fragment() {
                 "19-6" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.PLAIN_BAR_ICONS) // plain bar + start/end icons
                 "19-7" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.INDETERMINATE) // indeterminate bar
                 "19-8" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.INDETERMINATE_ICONS) // indeterminate bar + start/end icons
-                "19-9" -> com.clevertap.demo.CustomLiveUpdateDemo.start(context) // custom-factory (Mode A) Live Update demo
+                "19-9" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.UNEQUAL_SEGMENTS) // unequal segments 10/80/10
+                "19-10" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.PROGRESS_ON_TRACK) // tracker on track + styled by progress
+                "19-11" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.PROGRESS_NO_TRACKER) // fade-only progress (no tracker)
+                "19-12" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.THEME_COLORS) // light/dark: default + white + black colors
+                "19-13" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.EDGE_POINTS) // points at 0/100: ends hidden on every tier
+                "19-14" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.EDGE_POINTS_CONTROL) // points at 5/95: all 4 dots
+                "19-15" -> com.clevertap.demo.CustomLiveUpdateDemo.start(context) // custom-factory (Mode A) Live Update demo
             }
         }
 
