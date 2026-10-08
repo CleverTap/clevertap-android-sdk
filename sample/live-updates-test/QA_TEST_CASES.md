@@ -41,6 +41,8 @@ Two rendering tiers (chosen automatically by the OS version — **not** a menu o
 
 **How to run a case:** open the app → scroll to **LIVE UPDATES** → tap the listed row → observe for ~20 s. Re-tap a row to restart (fresh ids each run).
 
+**Cases marked [code]** (and every other payload combination) can be run without code changes: tap **Paste Live Update payload (QA)** (row 19-16), paste a payload from [`QA_PAYLOADS.md`](QA_PAYLOADS.md) and tap **Send**. It goes through the same path as a real FCM push (`wzrk_la` routing, `data` surfacing, in-place updates by `wzrk_activityId`).
+
 ---
 
 ## 2. Coverage matrix (menu row → features)
@@ -63,6 +65,7 @@ Two rendering tiers (chosen automatically by the OS version — **not** a menu o
 | 19-13 | Progress: Edge Points 0/100 - ends hidden | Segmented, points at **0 / 33 / 66 / 100** | – | Promoted | Tracker + styled-by-progress | – | Yes (middle 2 only) |
 | 19-14 | Progress: Edge Points 5/95 - control, all 4 dots | Segmented, points at **5 / 33 / 66 / 95** | – | Promoted | Tracker + styled-by-progress | – | Yes (all 4) |
 | 19-15 | Custom Live Update – Mode A factory | Segmented (client) | Text (ETA, 16+) | Promoted while active | – | – | n/a |
+| 19-16 | Paste Live Update payload (QA) | Any (from the pasted payload) | Any | Any | Any | Any | Any |
 
 \* Milestone labels (point titles) render only in the **pre-16 expanded fallback**; they are a no-op on native 16+ (native points carry no text). Points at the very start or end of the track are **not drawn on either tier** (native rule), so rows 19-0 … 19-4 show only *Cooking* and *On way*, and row 19-9 only the points at 10 and 90.
 
@@ -234,7 +237,7 @@ Some require a modified payload (not a menu row) — marked **[code]**. Menu-run
 - **Result-<16:** the chip is capped at 96dp and ellipsized; the **title is never cut**.
 
 ### TC-N11 — Segment / point limits **[code]**
-Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for each case. Expected on **both tiers**:
+Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for each case; ready-made payloads are cases L1 to L8 in `QA_PAYLOADS.md`. Expected on **both tiers**:
 
 | Setup | Result |
 |---|---|
