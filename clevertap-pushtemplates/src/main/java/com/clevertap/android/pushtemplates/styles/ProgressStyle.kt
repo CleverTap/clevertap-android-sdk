@@ -88,6 +88,12 @@ internal class ProgressStyle(
             .setAutoCancel(ended)
             .setColor(parseColor(renderer.smallIconColour))
 
+        // Large icon (pt_ico): set on the builder, not drawn by us, so the system places it in its own
+        // slot on every tier: the native ProgressStyle on 16+, and the standard collapsed view and the
+        // DecoratedCustomViewStyle frame around the fallback below 16. Not square-cropped: the system
+        // scales it itself (Android 16 even keeps a wide icon's shape).
+        data.largeIcon?.let { url -> loadBitmap(context, url)?.let { nb.setLargeIcon(it) } }
+
         // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
         // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
         // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
@@ -386,10 +392,14 @@ internal class ProgressStyle(
 
     // --- media / helpers ---
 
-    private fun bitmap(context: Context, url: String?): Bitmap? {
+    /** A progress icon (tracker / start / end), square-cropped for its square slot. */
+    private fun bitmap(context: Context, url: String?): Bitmap? = loadBitmap(context, url)?.let { squareCrop(it) }
+
+    /** Downloads [url] as is; null when missing or when the download fails. */
+    private fun loadBitmap(context: Context, url: String?): Bitmap? {
         if (url.isNullOrEmpty()) return null
         return try {
-            renderer.templateMediaManager.getNotificationBitmap(url, false, context)?.let { squareCrop(it) }
+            renderer.templateMediaManager.getNotificationBitmap(url, false, context)
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to load icon $url", t)
             null

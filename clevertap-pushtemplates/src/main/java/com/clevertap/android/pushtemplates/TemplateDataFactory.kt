@@ -179,7 +179,8 @@ internal object TemplateDataFactory {
             progressMax = extras.getString(PTConstants.PT_PROGRESS_MAX)?.toIntOrNull(),
             indeterminate = "true".equals(extras.getString(PTConstants.PT_PROGRESS_INDETERMINATE), ignoreCase = true),
             segments = ProgressPayloadParser.parseSegments(extras.getString(PTConstants.PT_PROGRESS_SEGMENTS)),
-            points = ProgressPayloadParser.parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS))
+            points = ProgressPayloadParser.parsePoints(extras.getString(PTConstants.PT_PROGRESS_POINTS)),
+            largeIcon = extras.getString(PT_NOTIF_ICON)?.takeIf { it.isNotBlank() }
         )
     }
 

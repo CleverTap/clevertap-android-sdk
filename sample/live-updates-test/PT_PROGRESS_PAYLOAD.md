@@ -28,6 +28,7 @@ over any registered notification factory).
     "pt_title": "Order #A1234",
     "pt_msg": "Out for delivery",
     "pt_small_icon_clr": "#FF9500",
+    "pt_ico": "https://i.imgur.com/6DavQwg.jpg",
 
     "pt_progress": "66",
     "pt_styled_by_progress": "true",
@@ -94,6 +95,7 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
 | `pt_id` | `"pt_progress"` | Selects the progress template; wins over a factory |
 | `pt_title`, `pt_msg` | Title / body | `nt` / `nm` accepted as fallbacks |
 | `pt_small_icon_clr` | Accent color | `#RRGGBB` (`pt_small_icon_clr_dark` for dark mode; `wzrk_color` as fallback). Below Android 12 it is also the default color of segments/points that have no `color` (see *Colors*) |
+| `pt_ico` | Large icon URL | Optional, same key as the other templates. Set on the notification and drawn by the **system** in its own slot on the right, in the collapsed and the expanded view, on both tiers (native ProgressStyle on 16+; standard collapsed view and the expanded frame below 16). Not cropped |
 | `pt_progress` | Current progress on the track scale | See scale rule above |
 | `pt_progress_max` | Max of the plain bar | Used **only** by the plain determinate bar **below 16**. Ignored by native and by the milestone track on both tiers (its total = segment-length sum, else 100) |
 | `pt_styled_by_progress` | Fade everything ahead of the progress | Milestone track on both tiers: segments/points after `pt_progress` are drawn at half opacity and thinner. The SDK default is `false` (the platform's own default is `true`); when `false`, only the tracker shows the progress, as on native. Not applied to the plain bar below 16 |
