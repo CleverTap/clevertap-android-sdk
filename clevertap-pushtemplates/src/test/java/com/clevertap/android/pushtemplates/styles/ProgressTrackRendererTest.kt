@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates.styles
 
 import android.graphics.Color
+import androidx.core.graphics.ColorUtils
 import com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData
 import com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData
 import org.junit.Assert.assertEquals
@@ -17,9 +18,10 @@ import org.robolectric.RobolectricTestRunner
 class ProgressTrackRendererTest {
 
     // 1px per dp keeps the numbers easy to read: dot radius 7, usable track = width - 14.
+    // Black background: every color used below already has 3:1 contrast on it, so none is adjusted.
     private val spec = ProgressTrackRenderer.Spec(
         widthPx = 214, density = 1f, scaledDensity = 1f,
-        trackColor = Color.GRAY, pointColor = Color.WHITE, titleColor = Color.LTGRAY
+        defaultColor = Color.GRAY, titleColor = Color.LTGRAY, backgroundColor = Color.BLACK
     )
 
     private fun layout(
@@ -77,7 +79,7 @@ class ProgressTrackRendererTest {
         )
 
         assertEquals(listOf(Color.GREEN, Color.GRAY), l.segments.map { it.color })
-        assertEquals(listOf(Color.RED, Color.WHITE), l.dots.map { it.color })
+        assertEquals(listOf(Color.RED, Color.GRAY), l.dots.map { it.color }) // same theme accent as segments
     }
 
     @Test
@@ -105,11 +107,11 @@ class ProgressTrackRendererTest {
     @Test
     fun `not styled by progress keeps every segment and point at full color`() {
         val l = layout(
-            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.BLUE)),
+            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.CYAN)),
             listOf(PointData(75, Color.RED)), progress = 25
         )
 
-        assertEquals(listOf(Color.GREEN, Color.BLUE), l.segments.map { it.color })
+        assertEquals(listOf(Color.GREEN, Color.CYAN), l.segments.map { it.color })
         assertTrue(l.segments.none { it.faded })
         assertEquals(Color.RED, l.dots.single().color)
         assertEquals(57f, l.progressX, 0.01f) // still tracked, for the tracker
@@ -118,7 +120,7 @@ class ProgressTrackRendererTest {
     @Test
     fun `styled by progress splits the segment at the progress and fades what is ahead`() {
         val l = layout(
-            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.BLUE)),
+            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.CYAN)),
             listOf(PointData(25, Color.RED), PointData(75, Color.RED)),
             progress = 40, styledByProgress = true
         )
@@ -128,7 +130,7 @@ class ProgressTrackRendererTest {
             listOf(
                 ProgressTrackRenderer.SegmentRect(7f, 83f, Color.GREEN),
                 ProgressTrackRenderer.SegmentRect(87f, 107f, ProgressTrackRenderer.faded(Color.GREEN), faded = true),
-                ProgressTrackRenderer.SegmentRect(107f, 207f, ProgressTrackRenderer.faded(Color.BLUE), faded = true)
+                ProgressTrackRenderer.SegmentRect(107f, 207f, ProgressTrackRenderer.faded(Color.CYAN), faded = true)
             ),
             l.segments
         )
@@ -138,7 +140,7 @@ class ProgressTrackRendererTest {
     @Test
     fun `progress on a segment boundary fades the next segment whole`() {
         val l = layout(
-            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.BLUE)),
+            listOf(SegmentData(50, Color.GREEN), SegmentData(50, Color.CYAN)),
             progress = 50, styledByProgress = true
         )
 
@@ -185,5 +187,35 @@ class ProgressTrackRendererTest {
     @Test
     fun `faded color halves the alpha and keeps the rgb`() {
         assertEquals(Color.argb(128, 0, 255, 0), ProgressTrackRenderer.faded(Color.GREEN))
+    }
+
+    @Test
+    fun `a color with enough contrast is kept as is`() {
+        assertEquals(Color.WHITE, ProgressTrackRenderer.ensureContrast(Color.WHITE, Color.BLACK))
+        assertEquals(Color.BLACK, ProgressTrackRenderer.ensureContrast(Color.BLACK, Color.WHITE))
+    }
+
+    @Test
+    fun `a low-contrast color is darkened on a light card and lightened on a dark card`() {
+        val onLight = ProgressTrackRenderer.ensureContrast(Color.WHITE, Color.WHITE)
+        val onDark = ProgressTrackRenderer.ensureContrast(Color.rgb(0, 0, 80), Color.rgb(48, 48, 48))
+
+        assertTrue(ColorUtils.calculateContrast(onLight, Color.WHITE) >= 3.0)
+        assertTrue(ColorUtils.calculateLuminance(onLight) < ColorUtils.calculateLuminance(Color.WHITE))
+        assertTrue(ColorUtils.calculateContrast(onDark, Color.rgb(48, 48, 48)) >= 3.0)
+        assertTrue(ColorUtils.calculateLuminance(onDark) > ColorUtils.calculateLuminance(Color.rgb(0, 0, 80)))
+        assertTrue(Color.blue(onDark) > Color.red(onDark)) // still blue, just lighter
+    }
+
+    @Test
+    fun `payload colors are contrast-adjusted against the card`() {
+        val light = spec.copy(backgroundColor = Color.WHITE)
+        val l = ProgressTrackRenderer.layout(
+            light, listOf(SegmentData(100, Color.WHITE)), listOf(PointData(50, Color.WHITE)), 100,
+            0, false, false, ProgressTrackRenderer.titlePaint(light)
+        )
+
+        assertTrue(ColorUtils.calculateContrast(l.segments.single().color, Color.WHITE) >= 3.0)
+        assertTrue(ColorUtils.calculateContrast(l.dots.single().color, Color.WHITE) >= 3.0)
     }
 }
