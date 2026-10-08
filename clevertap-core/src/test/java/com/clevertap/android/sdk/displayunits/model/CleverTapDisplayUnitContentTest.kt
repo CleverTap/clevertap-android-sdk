@@ -260,20 +260,74 @@ class CleverTapDisplayUnitContentTest : BaseTestCase() {
         Assert.assertEquals("", content.actionUrl)
     }
 
+    /**
+     * The url pair does not depend on BE metadata: an item with an Android url but no
+     * `metadata` still carries the SDK-derived action and data, and nothing else. Matches iOS.
+     */
     @Test
-    fun test_toContent_noMetadata_metaDataIsNull() {
+    fun test_toContent_noMetadataWithAndroidUrl_metaDataHasOnlyDerivedPair() {
         val content = CleverTapDisplayUnitContent.toContent(
             contentJson(null, "https://www.android.com")
         )
+        Assert.assertEquals(
+            hashMapOf<String, Any>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
+            content.metaData
+        )
+    }
+
+    @Test
+    fun test_toContent_emptyMetadataWithAndroidUrl_metaDataHasOnlyDerivedPair() {
+        val content = CleverTapDisplayUnitContent.toContent(
+            contentJson(JSONObject(), "https://www.android.com")
+        )
+        Assert.assertEquals(
+            hashMapOf<String, Any>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
+            content.metaData
+        )
+    }
+
+    @Test
+    fun test_toContent_metadataWrongTypeWithAndroidUrl_metaDataHasOnlyDerivedPair() {
+        val json = contentJson(null, "https://www.android.com").put("metadata", "not-an-object")
+        val content = CleverTapDisplayUnitContent.toContent(json)
+        Assert.assertEquals(
+            hashMapOf<String, Any>("wzrk_action" to "url", "wzrk_data" to "https://www.android.com"),
+            content.metaData
+        )
+    }
+
+    /** With neither metadata nor a url there is nothing to attribute, so metaData stays null. */
+    @Test
+    fun test_toContent_noMetadataNoAndroidUrl_metaDataIsNull() {
+        val content = CleverTapDisplayUnitContent.toContent(contentJson(null, null))
         Assert.assertNull(content.metaData)
     }
 
     @Test
-    fun test_toContent_emptyMetadata_metaDataIsNull() {
-        val content = CleverTapDisplayUnitContent.toContent(
-            contentJson(JSONObject(), "https://www.android.com")
-        )
+    fun test_toContent_emptyMetadataNoAndroidUrl_metaDataIsNull() {
+        val content = CleverTapDisplayUnitContent.toContent(contentJson(JSONObject(), null))
         Assert.assertNull(content.metaData)
+    }
+
+    @Test
+    fun test_toContent_noMetadataWhitespaceOnlyAndroidUrl_metaDataIsNull() {
+        val content = CleverTapDisplayUnitContent.toContent(contentJson(null, "   "))
+        Assert.assertNull(content.metaData)
+    }
+
+    /** The derived pair alone must still survive parcelling. */
+    @Test
+    fun test_toContent_noMetadataWithAndroidUrl_survivesParcelling() {
+        val content = CleverTapDisplayUnitContent.toContent(
+            contentJson(null, "https://www.android.com")
+        )
+        val parcel = Parcel.obtain()
+        content.writeToParcel(parcel, 0)
+        parcel.setDataPosition(0)
+        val fromParcel = CleverTapDisplayUnitContent.CREATOR.createFromParcel(parcel)
+        parcel.recycle()
+        Assert.assertEquals("url", fromParcel.metaData!!["wzrk_action"])
+        Assert.assertEquals("https://www.android.com", fromParcel.metaData!!["wzrk_data"])
     }
 
     @Test

@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.json.JSONArray;
@@ -348,24 +349,25 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Builds per-item {@code wzrk_*} attribution by merging BE metadata with
-     * SDK-derived Android action/data. Returns {@code null} if no metadata exists.
+     * SDK-derived Android action/data. The url pair does not depend on BE metadata,
+     * so an item with a url but no (or empty, or non-object) metadata still carries
+     * it, matching iOS. Returns {@code null} only when there is nothing to attribute.
      *
      * @param contentObject raw {@code content[]} item
      * @param actionUrl resolved Android action URL
-     * @return attribution map, or {@code null}
+     * @return attribution map, or {@code null} if it would be empty
      */
     private static HashMap<String, Object> parseMetaData(JSONObject contentObject, String actionUrl) {
         JSONObject metaDataObject = contentObject.has(Constants.KEY_METADATA)
                 ? contentObject.optJSONObject(Constants.KEY_METADATA) : null;
-        if (metaDataObject == null || metaDataObject.length() == 0) {
-            return null;
-        }
         HashMap<String, Object> metaData = new HashMap<>();
-        Iterator<String> keys = metaDataObject.keys();
+        Iterator<String> keys = metaDataObject != null
+                ? metaDataObject.keys() : Collections.<String>emptyIterator();
         while (keys.hasNext()) {
             String key = keys.next();
             Object value = metaDataObject.opt(key);
-            // Nested objects and arrays cannot be written to a Parcel, and the unit is
+            // Nested objects, arrays and JSON nulls (opt returns the JSONObject.NULL
+            // sentinel, not null) cannot be written to a Parcel, and the unit is
             // Parcelable, so keeping one would crash the host app on the next parcel.
             if (value == null || value == JSONObject.NULL || value instanceof JSONObject || value instanceof JSONArray) {
                 Logger.d(Constants.FEATURE_DISPLAY_UNIT,
@@ -374,11 +376,14 @@ public class CleverTapDisplayUnitContent implements Parcelable {
             }
             metaData.put(key, value);
         }
+        // SDK-derived pair last, so it wins over anything the BE sent: only the SDK
+        // knows which platform's url actually ran. With no url there is nothing to
+        // derive and the BE's pair, if any, stays.
         String trimmedUrl = actionUrl != null ? actionUrl.trim() : "";
         if (!trimmedUrl.isEmpty()) {
             metaData.put(Constants.KEY_WZRK_ACTION, Constants.KEY_URL);
             metaData.put(Constants.KEY_WZRK_DATA, trimmedUrl);
         }
-        return metaData;
+        return metaData.isEmpty() ? null : metaData;
     }
 }
