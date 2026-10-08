@@ -250,6 +250,30 @@ class ProgressStyleTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `subtitle is set as the sub text below Android 12 too, since the header is the system's`() {
+        val n = ProgressStyle(plainBarData().copy(subtitle = "Burger Palace"), renderer)
+            .builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertEquals("Burger Palace", n.extras.getCharSequence(NotificationCompat.EXTRA_SUB_TEXT).toString())
+    }
+
+    @Test
+    fun `subtitle is set as the sub text on the default test SDK`() {
+        val n = ProgressStyle(plainBarData().copy(subtitle = "Burger Palace"), renderer)
+            .builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertEquals("Burger Palace", n.extras.getCharSequence(NotificationCompat.EXTRA_SUB_TEXT).toString())
+    }
+
+    @Test
+    fun `no sub text when pt_subtitle is not sent`() {
+        val n = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, Bundle(), 1, newBuilder()).build()
+
+        assertNull(n.extras.getCharSequence(NotificationCompat.EXTRA_SUB_TEXT))
+    }
+
+    @Test
     fun `fallback hides chip text after the live update ends`() {
         val extras = Bundle().apply {
             putString("pt_chip_type", "text")

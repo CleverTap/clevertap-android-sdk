@@ -2539,4 +2539,36 @@ class TemplateDataFactoryTest {
             assertNull("pt_dismiss=$value", d.dismissAfter)
         }
     }
+
+    @Test
+    fun `createProgressTemplateData reads the subtitle from pt_subtitle, else wzrk_st`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+
+        every { mockBundle.getString(PTConstants.PT_SUBTITLE) } returns "Burger Palace"
+        every { mockBundle.getString(Constants.WZRK_SUBTITLE) } returns "core subtitle"
+        assertEquals("Burger Palace", (TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData).subtitle)
+
+        every { mockBundle.getString(PTConstants.PT_SUBTITLE) } returns null
+        assertEquals("core subtitle", (TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData).subtitle)
+    }
+
+    @Test
+    fun `createProgressTemplateData has no subtitle when both keys are missing or blank`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+        every { mockBundle.getString(Constants.WZRK_SUBTITLE) } returns null
+
+        for (value in listOf(null, "", "   ")) {
+            every { mockBundle.getString(PTConstants.PT_SUBTITLE) } returns value
+            val d = TemplateDataFactory.createTemplateData(
+                TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+            ) as ProgressTemplateData
+            assertNull("pt_subtitle=$value", d.subtitle)
+        }
+    }
 }

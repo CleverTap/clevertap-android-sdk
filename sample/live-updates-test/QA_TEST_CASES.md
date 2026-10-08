@@ -257,6 +257,12 @@ Send a milestone payload (`pt_progress_segments` / `pt_progress_points`) for eac
 - **Result (Android 6–7):** the card stays; the platform has no timeout.
 - **Also note:** whether a "Live Activity" **Dismissed** event is recorded when the card times out.
 
+### TC-N14 — Sub text (`pt_subtitle`) **[code]**
+- **Setup:** add `"pt_subtitle": "Burger Palace"` to any payload. Then send one with only `"wzrk_st": "Core subtitle"`, and one with both keys.
+- **Result (Android 7 and newer, both tiers):** the header shows `App · Burger Palace · now`, in the collapsed and the expanded view. With only `wzrk_st` the header shows that text; with both, `pt_subtitle` wins. Without either (or with a blank value) there is no sub text.
+- **Result (Android 6):** the text shows as an extra line in the card instead of in the header.
+- **Also check:** the sub text is shown only once (not also inside the card) below Android 12.
+
 ### TC-N10 — Countdown past zero **[code]**
 - **Setup:** `pt_chip_type: "countdown"`, `pt_countdown: "true"`, `pt_when` = now + 10 s; send no further update.
 - **Result (both tiers):** the timer counts down to 0:00 and then **continues into negative time** (`−0:01`…). Expected platform behavior — the backend must send the next update or `end` before zero. On 16+ the status-bar chip hides once the countdown is no longer positive.
@@ -288,7 +294,7 @@ Run sections 3–6 on each device and tick:
 | TC-A01 … TC-A03 | ☐ | ☐ | ☐ |
 | TC-I01 … TC-I03 | ☐ | ☐ | ☐ |
 | TC-N02 (buttons < 31) | n/a | n/a | ☐ |
-| TC-N08 … TC-N13 | ☐ | ☐ | ☐ |
+| TC-N08 … TC-N14 | ☐ | ☐ | ☐ |
 
 ---
 
