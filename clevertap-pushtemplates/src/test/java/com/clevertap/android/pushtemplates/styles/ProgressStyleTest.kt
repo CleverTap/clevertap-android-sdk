@@ -153,6 +153,61 @@ class ProgressStyleTest {
         }
     }
 
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `no running timer or countdown after the live update ends`() {
+        val now = System.currentTimeMillis()
+        val endedTimer = Bundle().apply {
+            putString("pt_chip_type", "timer")
+            putString("pt_when", (now - 300_000L).toString())
+            putString("wzrk_la_event", "end")
+        }
+        val endedCountdown = Bundle().apply {
+            putString("pt_chip_type", "countdown")
+            putString("pt_when", (now + 240_000L).toString())
+            putString("pt_countdown", "true")
+            putString("wzrk_la_event", "end")
+        }
+
+        for (extras in listOf(endedTimer, endedCountdown)) {
+            val n = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, extras, 1, newBuilder()).build()
+            assertFalse(n.extras.getBoolean(NotificationCompat.EXTRA_SHOW_CHRONOMETER))
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `a countdown that is past or has under 10 seconds left is not started`() {
+        val now = System.currentTimeMillis()
+        for (whenMs in listOf(now - 60_000L, now + 5_000L)) {
+            val extras = Bundle().apply {
+                putString("pt_chip_type", "countdown")
+                putString("pt_when", whenMs.toString())
+                putString("pt_countdown", "true")
+            }
+            val n = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, extras, 1, newBuilder()).build()
+            assertFalse(n.extras.getBoolean(NotificationCompat.EXTRA_SHOW_CHRONOMETER))
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `a countdown with a minute left still runs`() {
+        val whenMs = System.currentTimeMillis() + 60_000L
+        val extras = Bundle().apply {
+            putString("pt_chip_type", "countdown")
+            putString("pt_when", whenMs.toString())
+            putString("pt_countdown", "true")
+            putString("wzrk_la_event", "update")
+        }
+
+        val n = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, extras, 1, newBuilder()).build()
+
+        assertEquals(whenMs, n.`when`)
+        assertTrue(n.extras.getBoolean(NotificationCompat.EXTRA_SHOW_CHRONOMETER))
+        assertTrue(n.extras.getBoolean(NotificationCompat.EXTRA_CHRONOMETER_COUNT_DOWN))
+    }
+
     private fun chipVisibility(extras: Bundle): Int {
         val nb = ProgressStyle(plainBarData(), renderer).builderFromStyle(context, extras, 1, newBuilder())
         val view = nb.bigContentView!!.apply(context, android.widget.FrameLayout(context))
