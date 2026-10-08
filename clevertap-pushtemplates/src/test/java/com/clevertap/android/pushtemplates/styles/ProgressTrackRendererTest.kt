@@ -31,7 +31,7 @@ class ProgressTrackRendererTest {
         styledByProgress: Boolean = false,
         hasTracker: Boolean = false
     ) = ProgressTrackRenderer.layout(
-        spec, segments, points, ProgressTrackRenderer.total(segments, 100),
+        spec, segments, points, ProgressTrackRenderer.nativeTrack(segments, emptyList()).total,
         progress, styledByProgress, hasTracker, ProgressTrackRenderer.titlePaint(spec)
     )
 
@@ -58,10 +58,46 @@ class ProgressTrackRendererTest {
     }
 
     @Test
-    fun `total is the segment-length sum like native, else the fallback total`() {
-        assertEquals(3, ProgressTrackRenderer.total(listOf(SegmentData(1, null), SegmentData(2, null)), 100))
-        assertEquals(100, ProgressTrackRenderer.total(emptyList(), 100))
-        assertEquals(1, ProgressTrackRenderer.total(emptyList(), -5)) // malformed max never divides by zero
+    fun `total is the valid segment-length sum like native, else 100`() {
+        val seg = { len: Int -> SegmentData(len, null) }
+        assertEquals(3, ProgressTrackRenderer.nativeTrack(listOf(seg(1), seg(2)), emptyList()).total)
+        assertEquals(3, ProgressTrackRenderer.nativeTrack(listOf(seg(1), seg(0), seg(-4), seg(2)), emptyList()).total)
+        val none = ProgressTrackRenderer.nativeTrack(emptyList(), emptyList())
+        assertEquals(100, none.total)
+        assertEquals(listOf(SegmentData(100, null)), none.segments) // native draws one default segment
+        assertEquals(100, ProgressTrackRenderer.nativeTrack(listOf(seg(Int.MAX_VALUE), seg(1)), emptyList()).total)
+    }
+
+    @Test
+    fun `up to 10 segments are kept as is`() {
+        val ten = (1..10).map { SegmentData(10, if (it % 2 == 0) Color.RED else Color.GREEN) }
+
+        assertEquals(ten, ProgressTrackRenderer.nativeTrack(ten, emptyList()).segments)
+    }
+
+    @Test
+    fun `more than 10 segments collapse into one like native`() {
+        val mixed = (1..11).map { SegmentData(10, if (it % 2 == 0) Color.RED else Color.GREEN) }
+        val sameColor = (1..11).map { SegmentData(10, Color.RED) }
+
+        assertEquals(listOf(SegmentData(110, null)), ProgressTrackRenderer.nativeTrack(mixed, emptyList()).segments)
+        assertEquals(listOf(SegmentData(110, Color.RED)), ProgressTrackRenderer.nativeTrack(sameColor, emptyList()).segments)
+    }
+
+    @Test
+    fun `points at the ends are dropped and only the first 4 kept`() {
+        val segments = listOf(SegmentData(100, null))
+        val points = listOf(0, 10, 100, 20, 30, 40, 50, 150, -5).map { PointData(it, null) }
+
+        assertEquals(listOf(10, 20, 30, 40), ProgressTrackRenderer.nativeTrack(segments, points).points.map { it.position })
+    }
+
+    @Test
+    fun `points sharing a position keep the last one like native`() {
+        val points = listOf(PointData(50, Color.RED, "A"), PointData(50, Color.GREEN, "B"))
+
+        assertEquals(listOf(PointData(50, Color.GREEN, "B")),
+            ProgressTrackRenderer.nativeTrack(listOf(SegmentData(100, null)), points).points)
     }
 
     @Test
