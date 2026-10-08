@@ -156,7 +156,8 @@ object HomeScreenModel {
                 "Progress: Light/Dark Colors - default, white, black (local demo)",
                 "Progress: Edge Points 0/100 - ends hidden (local demo)",
                 "Progress: Edge Points 5/95 - control, all 4 dots (local demo)",
-                "Custom Live Update - Mode A factory (local demo)"
+                "Custom Live Update - Mode A factory (local demo)",
+                "Paste Live Update payload (QA)"
             ),
         )
     }

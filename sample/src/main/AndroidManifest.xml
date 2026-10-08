@@ -180,6 +180,16 @@
             android:name=".ui.inbox.CustomInboxComposeActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
+
+        <!-- QA tool: paste a Live Update payload and send it like a real FCM push. Exported so QA can
+             also start it from a computer with adb (see LiveUpdatePayloadActivity). -->
+        <activity
+            android:name=".LiveUpdatePayloadActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:label="Live Update payload (QA)"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
     </application>
 
 </manifest>
