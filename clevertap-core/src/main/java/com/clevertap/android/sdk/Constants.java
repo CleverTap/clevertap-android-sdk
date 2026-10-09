@@ -105,6 +105,10 @@ public interface Constants {
     long INBOX_V2_THROTTLE_WINDOW_MS = 5L * 60L * 1000L;
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
+    // Fields on a single content_fetch directive item (self-describing; see ContentFetchItem).
+    String CONTENT_FETCH_ITEM_EVENT_NAME = "eventName";
+    String CONTENT_FETCH_ITEM_RESPONSE_KEY = "responseKey";
+    String CONTENT_FETCH_ITEM_TARGET_ID = "tgtId";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
     String REQUEST_VARIANTS_JSON_RESPONSE_KEY = "abVariantInfo";

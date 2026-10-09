@@ -47,6 +47,7 @@ import com.clevertap.android.sdk.inapp.delay.DelayedInAppResult
 import com.clevertap.android.sdk.inapp.delay.InActionResult
 import com.clevertap.android.sdk.inapp.delay.InAppScheduler
 import com.clevertap.android.sdk.inapp.evaluation.EvaluationManager
+import com.clevertap.android.sdk.inapp.evaluation.EventAdapter
 import com.clevertap.android.sdk.inapp.fragment.CTInAppBaseFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlFooterFragment
 import com.clevertap.android.sdk.inapp.fragment.CTInAppHtmlHeaderFragment
@@ -55,6 +56,7 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
+import com.clevertap.android.sdk.network.ContentFetchItem
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.utils.Clock
@@ -108,6 +110,17 @@ internal class InAppController(
         const val LOCAL_INAPP_COUNT = "local_in_app_count"
         const val IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest"
 
+        // UX bound: show the /a1 winner by now. Hard 3s constant; correctness comes
+        // from the closed-suppressing phase, not this timeout.
+        private const val APP_LAUNCH_ARBITRATION_TIMEOUT_MS = 3_000L
+
+        // Hard backstop: the window self-tears-down by this bound even if completion is never
+        // delivered. Must sit beyond the content-fetch request's own worst case — connect (10s) +
+        // read (10s) = 20s per UrlConnectionHttpClient — so a slow-but-successful /content always
+        // fires completion and tears the window down normally before this fires. Tearing down
+        // earlier would reset to passthrough and let a late /content show a second app-launch in-app.
+        private const val APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS = 25_000L
+
         private val pendingNotifications =
             Collections.synchronizedList(ArrayList<CTInAppNotification>())
 
@@ -138,6 +151,16 @@ internal class InAppController(
 
     private val logger = config.logger
     private val defaultLogTag = config.accountId
+
+    // Holds the /a1 app-launch winner until the /content winner is known, then shows exactly one.
+    private val appLaunchArbitrator = AppLaunchInAppArbitrator(
+        logger = logger,
+        logTag = defaultLogTag,
+        timeoutMs = APP_LAUNCH_ARBITRATION_TIMEOUT_MS,
+        hardTeardownMs = APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS,
+        sortByPriority = evaluationManager::sortByPriority,
+        showWinner = { winner -> addInAppNotificationsToQueue(listOf(winner)) }
+    )
 
     @Volatile
     private var inAppState = InAppState.RESUMED
@@ -660,6 +683,7 @@ internal class InAppController(
 
     fun onAppLaunchServerSideInAppsResponse(
         appLaunchServerSideInApps: List<JSONObject>,
+        contentFetchItems: List<ContentFetchItem>,
         userLocation: Location?
     ) {
         val appLaunchedProperties = JsonUtil.mapFromJson<Any>(deviceInfo.appLaunchedFields)
@@ -668,10 +692,102 @@ internal class InAppController(
                 appLaunchServerSideInApps, appLaunchedProperties, userLocation
             )
 
-        if (serverSideInAppsToDisplayImmediate.isNotEmpty()) {
-            addInAppNotificationsToQueue(serverSideInAppsToDisplayImmediate)
+        // Option 2 fast path: show the /a1 winner now when waiting can't change the outcome.
+        if (tryAppLaunchFastPath(serverSideInAppsToDisplayImmediate, contentFetchItems, appLaunchedProperties, userLocation)) {
+            return
         }
 
+        // Option 1: no window -> show now; OPEN -> buffer; CLOSED -> drop.
+        val toShow = appLaunchArbitrator.routeWinners(serverSideInAppsToDisplayImmediate)
+        if (toShow.isNotEmpty()) {
+            addInAppNotificationsToQueue(toShow)
+        }
+    }
+
+    /**
+     * Option 2 prediction. Returns true (and shows [a1Winner] now, closing the window) when waiting
+     * for `/content` cannot change the outcome — no synthetic candidate qualifies, or the `/a1`
+     * winner tops the merged sort. Returns false to fall back to Option 1 (wait). The synthetics are
+     * derived on the spot from this same `/a1` response's [contentFetchItems]; non-empty synthetics
+     * imply a window was opened (both key off the same directive), so Option 2 is dormant unless every
+     * app-launch content_fetch item carries `priority`.
+     */
+    private fun tryAppLaunchFastPath(
+        a1Winner: List<JSONObject>,
+        contentFetchItems: List<ContentFetchItem>,
+        appLaunchedProperties: Map<String, Any>,
+        userLocation: Location?
+    ): Boolean {
+        val synthetics = appLaunchSynthetics(contentFetchItems)
+        if (synthetics.isEmpty()) {
+            return false // Option 1 (no priority / no content fetch): wait or show now via routeWinners
+        }
+        if (a1Winner.isEmpty()) {
+            return false // nothing to show now; wait for content
+        }
+
+        val event = EventAdapter(
+            eventName = Constants.APP_LAUNCHED_EVENT,
+            eventProperties = appLaunchedProperties,
+            userLocation = userLocation
+        )
+        val eligibleContent = evaluationManager.evaluateDryRun(event, synthetics)
+
+        val a1WinnerTops = if (eligibleContent.isEmpty()) {
+            true // no content candidate can qualify -> waiting cannot change the outcome
+        } else {
+            // Merge the /a1 winner with the predicted content and ask, by reference identity, whether
+            // the top came from the /a1 set. a1Winner and eligibleContent are distinct instances and
+            // sortByPriority preserves references, so this needs no marker on the JSON.
+            val top = evaluationManager.sortByPriority(a1Winner + eligibleContent).firstOrNull()
+            top != null && a1Winner.any { it === top }
+        }
+        if (!a1WinnerTops) {
+            return false // a content candidate could win -> fall back to Option 1
+        }
+
+        appLaunchArbitrator.closeForFastPath(a1Winner.first())
+        addInAppNotificationsToQueue(a1Winner)
+        return true
+    }
+
+    /**
+     * Opens an app-launch arbitration window when this `/a1` response carries a `content_fetch` that
+     * can produce an app-launch in-app, so the winner is held and merged with the `/content` winner
+     * instead of shown twice. Called on `/a1` only.
+     */
+    fun openAppLaunchArbitrationWindowIfNeeded(contentFetchItems: List<ContentFetchItem>) {
+        if (contentFetchItems.any { it.isAppLaunchInApp() }) {
+            appLaunchArbitrator.openWindow()
+        }
+    }
+
+    // Synthetic selection-rule candidates for the app-launch content_fetch items on a `/a1` response,
+    // used by the Option 2 fast path. All-or-nothing: empty unless every app-launch item carries
+    // `priority` (otherwise fall back to Option 1 / wait).
+    private fun appLaunchSynthetics(contentFetchItems: List<ContentFetchItem>): List<JSONObject> {
+        val appLaunchItems = contentFetchItems.filter { it.isAppLaunchInApp() }
+        if (appLaunchItems.isEmpty()) {
+            return emptyList()
+        }
+        val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
+        return if (synthetics.all { it != null }) synthetics.filterNotNull() else emptyList()
+    }
+
+    /**
+     * Completion signal for the content-fetch batch (fired exactly once, on success/error/timeout/
+     * user-switch). Closes the window, shows the merged winner if not already shown, and tears down.
+     */
+    fun onAppLaunchContentFetchComplete() {
+        appLaunchArbitrator.onContentFetchComplete()
+    }
+
+    /**
+     * Discards any open app-launch arbitration window WITHOUT showing its buffered winner. Called on
+     * user switch so the previous user's held app-launch in-app is never shown to the new user.
+     */
+    fun abandonAppLaunchArbitration() {
+        appLaunchArbitrator.abandon()
     }
 
     fun onAppLaunchServerSideInactionInAppsResponse(
