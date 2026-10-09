@@ -45,8 +45,8 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * QA tool: paste a full Live Update push payload (wrapper + `data`, as in
- * `sample/live-updates-test/QA_PAYLOADS.md`) and send it to the SDK.
+ * QA tool: paste a full Live Update push payload (wrapper + `data`; keys in
+ * `sample/live-updates-test/PT_PROGRESS_PAYLOAD.md`) and send it to the SDK.
  *
  * The payload goes through the same path as a real FCM push: it is turned into a [RemoteMessage]
  * (every value a string, `data` as a JSON string, like FCM delivers it) and handed to
@@ -173,7 +173,7 @@ class LiveUpdatePayloadActivity : ComponentActivity() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                "Paste a full payload (wrapper + data) from QA_PAYLOADS.md and tap Send. It runs " +
+                "Paste a full Live Update payload (wrapper + data) and tap Send. It runs " +
                     "like a real FCM push. Same wzrk_activityId = the same card updates. Do not " +
                     "add a wzrk_pid you already sent: the SDK drops it as a duplicate.",
                 style = MaterialTheme.typography.bodySmall
