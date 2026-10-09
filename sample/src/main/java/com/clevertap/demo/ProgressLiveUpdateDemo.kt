@@ -1,0 +1,374 @@
+package com.clevertap.demo
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.sdk.CleverTapAPI
+import org.json.JSONArray
+import org.json.JSONObject
+
+/**
+ * Sample showcase for the **progress-centric Live Update** (`pt_progress`).
+ *
+ * Fires an order-tracking Live Update and advances it in place over a few seconds
+ * (Placed → Preparing → En Route → Delivered) — rendered locally through the CleverTap
+ * Push Template renderer, so it works out of the box without a dashboard campaign.
+ *
+ * On Android 16+ the SDK renders it as a native `Notification.ProgressStyle` (status-bar chip,
+ * always-expanded, optionally promoted); below 16 it renders the segmented RemoteViews fallback.
+ * Both are driven by the same `pt_progress_*` payload.
+ *
+ * [Variant] lets the sample menu exercise the different feature combinations (actions + deep link,
+ * countdown chip + promotion, indeterminate + no-promotion, start/end icons) so each can be
+ * eyeballed on device. They all share the same in-place stepping harness.
+ */
+object ProgressLiveUpdateDemo {
+
+    /** Which feature combination to demo. Each maps to a row under PUSH TEMPLATES. */
+    enum class Variant {
+        /** Segments + points + text chip. The baseline order tracker. */
+        DEFAULT,
+
+        /** Baseline + tap deep link (wzrk_dl) + two action buttons (wzrk_acts). */
+        ACTIONS,
+
+        /** Live countdown chip (chip_type=countdown + pt_when) and explicit promotion request. */
+        COUNTDOWN,
+
+        /** Same tracker, but promotion turned OFF (pt_promote=false) — no status-bar chip on 16+. */
+        NON_PROMOTED,
+
+        /** Adds start + end icons and styled-by-progress coloring. */
+        ICONS,
+
+        /** No segments/points -> a plain DETERMINATE bar filled from pt_progress (0..100). */
+        PLAIN_BAR,
+
+        /** Plain determinate bar + start/end icons on both sides of the bar. */
+        PLAIN_BAR_ICONS,
+
+        /** No segments/points + pt_progress_indeterminate=true -> a spinner-style INDETERMINATE bar. */
+        INDETERMINATE,
+
+        /** Indeterminate bar + start/end icons on both sides of the bar. */
+        INDETERMINATE_ICONS,
+
+        /** Milestones with UNEQUAL segments (10 / 80 / 10): checks widths follow `length` on every tier. */
+        UNEQUAL_SEGMENTS,
+
+        /**
+         * Progress on the track: progress lands MID-segment (10 / 45 / 80 / 100) with styled-by-progress,
+         * so the split, the faded part ahead and the tracker moving along the track are all visible.
+         */
+        PROGRESS_ON_TRACK,
+
+        /** Same as [PROGRESS_ON_TRACK] without a tracker icon: the fade alone (with its small gap) shows progress. */
+        PROGRESS_NO_TRACKER,
+
+        /**
+         * Light/dark check: uncolored segments/points (theme accent) plus white and black payload colors,
+         * which must still be visible (contrast-adjusted) on both a light and a dark notification.
+         */
+        THEME_COLORS,
+
+        /**
+         * Edge points: milestones at 0 / 33 / 66 / 100, the two ends in pink. Native drops points at
+         * 0 and at the total, and so does the fallback, so only the middle two dots should show.
+         */
+        EDGE_POINTS,
+
+        /** Control for [EDGE_POINTS]: the pink ends moved to 5 / 95, so all 4 dots should show. */
+        EDGE_POINTS_CONTROL
+    }
+
+    private const val CHANNEL_ID = "live_updates_channel"
+    private const val NOTIF_ID = 778899 // fixed id -> successive stages update in place
+    private const val STEP_GAP_MS = 6000L
+
+    private const val COLOR_DONE = "#4CAF50"
+    private const val COLOR_ACTIVE = "#FF9500"
+    private const val COLOR_PENDING = "#48484A"
+    private const val COLOR_EDGE = "#E91E63" // EDGE_POINTS ends: pink, so a rendered end point stands out
+
+    private const val TRACKER_ICON = "https://imgur.com/6DavQwg.jpg"
+    // Distinct start (store) and end (house) images so each icon is easy to tell apart on device.
+    private const val START_ICON = "https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/72x72/1f3ea.png"
+    private const val END_ICON = "https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/72x72/1f3e0.png"
+
+    private data class Step(
+        val status: String,
+        val eta: String,
+        val index: Int,
+        val label: String,
+        val event: String = "update"
+    )
+
+    private val steps = listOf(
+        Step("Order confirmed", "50 min", 0, "Placed", "start"),
+        Step("Preparing your order", "40 min", 1, "Cooking"),
+        Step("Out for delivery", "12 min", 2, "On way"),
+        Step("Delivered — enjoy!", "0 min", 3, "Delivered", "end")
+    )
+
+    /** Kicks off the timed, in-place progress sequence for [variant]. */
+    @JvmOverloads
+    fun start(context: Context, variant: Variant = Variant.DEFAULT) {
+        val ct = CleverTapAPI.getDefaultInstance(context) ?: return
+        ensureChannel(context)
+        val appContext = context.applicationContext
+        val runId = System.currentTimeMillis() // fresh ids each run so re-tapping always renders
+        val handler = Handler(Looper.getMainLooper())
+        steps.forEachIndexed { i, step ->
+            // renderPushNotification posts to the SDK's own worker executor, so no manual Thread needed.
+            handler.postDelayed({ render(appContext, ct, step, runId, variant) }, i * STEP_GAP_MS)
+        }
+    }
+
+    private fun render(context: Context, ct: CleverTapAPI, step: Step, runId: Long, variant: Variant) {
+        // Rendered as a pt_progress Push Template. A fixed notificationId makes successive
+        // stages replace the same notification (in place). We do NOT set wzrk_la here so this
+        // local demo always exercises the pt_progress renderer even if a notification factory
+        // is registered (a real BE campaign uses wzrk_la + a `data` object containing pt_id).
+        val b = Bundle().apply {
+            putString("wzrk_pn", "true")
+            putString("wzrk_id", "0_${runId}_${step.index}")
+            putString("wzrk_pid", "pid_${runId}_${step.index}")
+            putString("wzrk_cid", CHANNEL_ID)
+            putInt("notificationId", NOTIF_ID)
+            putString("pt_id", "pt_progress")
+            // Drives ProgressStyle's `ended` state (start/update/end). The terminal "end" step clears
+            // ongoing + enables auto-cancel so the finished tracker is swipeable — without it the
+            // "Delivered" notification stays ongoing and, since a tap no longer cancels it, sticks on
+            // API < 34 (ongoing notifications are undismissable before Android 14). Read straight from
+            // the extras by ProgressStyle, independent of wzrk_la.
+            putString("wzrk_la_event", step.event)
+            putString("nt", "Order #A1234")
+            putString("nm", step.status)
+            putString("pt_progress", progressPercent(step.index).toString())
+            putString("pt_progress_tracker_icon", TRACKER_ICON)
+            // Milestone variants carry segments/points (segmented indicator); the bar variants omit
+            // them so the SDK renders a plain determinate / indeterminate bar instead (either/or).
+            if (variant !in setOf(Variant.PLAIN_BAR, Variant.PLAIN_BAR_ICONS, Variant.INDETERMINATE, Variant.INDETERMINATE_ICONS)) {
+                putString("pt_progress_segments", segmentsJson(step.index))
+                putString("pt_progress_points", pointsJson(step.index))
+            }
+            applyVariant(this, variant, step)
+            if (variant == Variant.PROGRESS_NO_TRACKER) remove("pt_progress_tracker_icon")
+        }
+        ct.renderPushNotification(TemplateRenderer(context, b), context, b)
+    }
+
+    /** Layers the variant-specific keys onto the baseline payload. */
+    private fun applyVariant(b: Bundle, variant: Variant, step: Step) {
+        when (variant) {
+            Variant.DEFAULT -> {
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+            }
+
+            Variant.ACTIONS -> {
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("wzrk_dl", "https://clevertap.com") // tapping the notification opens this
+                b.putString("wzrk_acts", actionsJson())          // up to 3 buttons, each with its own dl
+            }
+
+            Variant.COUNTDOWN -> {
+                // A live-updating chip counting down to the ETA, plus an explicit promotion request.
+                b.putString("pt_chip_type", "countdown")
+                b.putString("pt_when", (System.currentTimeMillis() + etaMillis(step)).toString())
+                b.putString("pt_countdown", "true")
+                b.putString("pt_promote", "true")
+            }
+
+            Variant.NON_PROMOTED -> {
+                // Identical tracker with promotion off: on 16+ there's no status-bar chip, so you can
+                // compare the promoted vs non-promoted presentation of the same content.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_promote", "false")
+            }
+
+            Variant.ICONS -> {
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_progress_start_icon", START_ICON)
+                b.putString("pt_progress_end_icon", END_ICON)
+                b.putString("pt_styled_by_progress", "true")
+            }
+
+            Variant.PLAIN_BAR -> {
+                // No segments/points (see render) -> plain determinate bar filled from pt_progress.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+            }
+
+            Variant.PLAIN_BAR_ICONS -> {
+                // Plain determinate bar (no segments/points) with start/end icons beside it.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_progress_start_icon", START_ICON)
+                b.putString("pt_progress_end_icon", END_ICON)
+            }
+
+            Variant.INDETERMINATE -> {
+                // No segments/points + indeterminate flag -> spinner-style bar (unknown progress).
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_progress_indeterminate", "true")
+            }
+
+            Variant.INDETERMINATE_ICONS -> {
+                // Indeterminate bar (no segments/points) with start/end icons beside it.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_progress_indeterminate", "true")
+                b.putString("pt_progress_start_icon", START_ICON)
+                b.putString("pt_progress_end_icon", END_ICON)
+            }
+
+            Variant.UNEQUAL_SEGMENTS -> {
+                // Same tracker, but milestones at 0 / 10 / 90 / 100 -> segments of 10 / 80 / 10.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_progress", UNEQUAL_POSITIONS[step.index].toString())
+                b.putString("pt_progress_segments", segmentsJson(step.index, UNEQUAL_POSITIONS))
+                b.putString("pt_progress_points", pointsJson(step.index, UNEQUAL_POSITIONS))
+            }
+
+            Variant.PROGRESS_ON_TRACK, Variant.PROGRESS_NO_TRACKER -> {
+                // Fixed 3-color track; only pt_progress moves, so what changes on screen is purely the
+                // progress (tracker position / fade split), not the segment colors.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_styled_by_progress", "true")
+                b.putString("pt_progress", MID_SEGMENT_PROGRESS[step.index].toString())
+                b.putString("pt_progress_segments", JSONArray()
+                    .put(JSONObject().put("length", 33).put("color", "#2196F3"))
+                    .put(JSONObject().put("length", 33).put("color", COLOR_ACTIVE))
+                    .put(JSONObject().put("length", 34).put("color", COLOR_DONE))
+                    .toString())
+                b.putString("pt_progress_points", JSONArray()
+                    .put(JSONObject().put("position", 33).put("color", "#2196F3").put("title", "Cooking"))
+                    .put(JSONObject().put("position", 66).put("color", COLOR_ACTIVE).put("title", "On way"))
+                    .toString())
+            }
+
+            Variant.THEME_COLORS -> {
+                // Uncolored parts take the theme accent; white/black are the colors that vanish on a
+                // light/dark card unless the contrast fix kicks in. Toggle dark mode between runs.
+                b.putString("pt_chip_type", "text")
+                b.putString("pt_chip_text", step.eta)
+                b.putString("pt_styled_by_progress", "true")
+                b.putString("pt_progress_segments", JSONArray()
+                    .put(JSONObject().put("length", 34))
+                    .put(JSONObject().put("length", 33).put("color", "#FFFFFF"))
+                    .put(JSONObject().put("length", 33).put("color", "#000000"))
+                    .toString())
+                b.putString("pt_progress_points", JSONArray()
+                    .put(JSONObject().put("position", 34).put("title", "Default"))
+                    .put(JSONObject().put("position", 67).put("color", "#FFFFFF").put("title", "White"))
+                    // 90, not 100: native (and the fallback) never draw a point at the very end.
+                    .put(JSONObject().put("position", 90).put("color", "#000000").put("title", "Black"))
+                    .toString())
+            }
+
+            Variant.EDGE_POINTS, Variant.EDGE_POINTS_CONTROL -> {
+                // Fixed track and progress; only the end points' positions differ between the two.
+                // Any pink dot on screen means an end point rendered.
+                val (first, last) = if (variant == Variant.EDGE_POINTS) 0 to 100 else 5 to 95
+                b.putString("pt_progress", "50")
+                b.putString("pt_styled_by_progress", "true")
+                b.putString("pt_progress_segments", JSONArray()
+                    .put(JSONObject().put("length", 33).put("color", COLOR_DONE))
+                    .put(JSONObject().put("length", 33).put("color", "#2196F3"))
+                    .put(JSONObject().put("length", 34).put("color", COLOR_ACTIVE))
+                    .toString())
+                b.putString("pt_progress_points", JSONArray()
+                    .put(JSONObject().put("position", first).put("color", COLOR_EDGE).put("title", "Placed"))
+                    .put(JSONObject().put("position", 33).put("color", COLOR_DONE).put("title", "Cooking"))
+                    .put(JSONObject().put("position", 66).put("color", "#2196F3").put("title", "On way"))
+                    .put(JSONObject().put("position", last).put("color", COLOR_EDGE).put("title", "Delivered"))
+                    .toString())
+            }
+        }
+    }
+
+    // pt_progress per step for PROGRESS_ON_TRACK: inside segment 1, inside segment 2, inside segment 3, done.
+    private val MID_SEGMENT_PROGRESS = listOf(10, 45, 80, 100)
+
+    // Milestone positions for UNEQUAL_SEGMENTS (same 0..100 scale, uneven gaps).
+    private val UNEQUAL_POSITIONS = listOf(0, 10, 90, 100)
+
+    // Milestone position on a 0..100 track. Native ProgressStyle's total = sum of segment lengths,
+    // so points, segments and pt_progress must all share one scale. 4 steps -> 0, 33, 66, 100.
+    private fun pointPosition(step: Int): Int = (step * 100) / (steps.size - 1)
+
+    // pt_progress rides the same 0..100 scale as the segment total (see pointPosition).
+    private fun progressPercent(step: Int): Int = pointPosition(step)
+
+    private fun etaMillis(step: Step): Long =
+        (step.eta.filter { it.isDigit() }.toLongOrNull() ?: 0L) * 60_000L
+
+    // Two standard action buttons (wzrk_acts): keys id (required), l (label), dl (deep link), ac (auto-cancel).
+    private fun actionsJson(): String {
+        val arr = JSONArray()
+        arr.put(
+            JSONObject()
+                .put("id", "track").put("l", "Track order")
+                .put("dl", "https://clevertap.com/track").put("ac", false)
+        )
+        arr.put(
+            JSONObject()
+                .put("id", "support").put("l", "Support")
+                .put("dl", "https://clevertap.com/support").put("ac", true)
+        )
+        return arr.toString()
+    }
+
+    // Connectors between the milestones, each spanning the gap between adjacent points so the
+    // lengths sum to 100 (same scale as pt_progress). Done up to the current step, else pending.
+    private fun segmentsJson(step: Int, positions: List<Int> = steps.indices.map(::pointPosition)): String {
+        val arr = JSONArray()
+        for (i in 0 until steps.size - 1) {
+            val length = positions[i + 1] - positions[i]
+            val color = if (i < step) COLOR_DONE else COLOR_PENDING
+            arr.put(JSONObject().put("length", length).put("color", color))
+        }
+        return arr.toString()
+    }
+
+    private fun pointsJson(step: Int, positions: List<Int> = steps.indices.map(::pointPosition)): String {
+        val arr = JSONArray()
+        for (i in steps.indices) {
+            val color = when {
+                i < step -> COLOR_DONE
+                i == step -> COLOR_ACTIVE
+                else -> COLOR_PENDING
+            }
+            // `title` = milestone label; shown under each dot in the pre-16 expanded fallback
+            // (native ProgressStyle points carry no text, so it's a no-op on 16+).
+            arr.put(
+                JSONObject()
+                    .put("position", positions[i])
+                    .put("color", color)
+                    .put("title", steps[i].label)
+            )
+        }
+        return arr.toString()
+    }
+
+    private fun ensureChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "Live Updates", NotificationManager.IMPORTANCE_HIGH)
+            )
+        }
+    }
+}

@@ -182,6 +182,11 @@ internal class ValidatorFactory {
          * Only instantiates the validation checkers required for the specific template type.
          */
         fun getValidator(templateData: TemplateData): Validator? {
+            // Progress validation is field-based (title + a progress indicator), so it needs the data
+            // itself rather than the Checker-map framework used by the RemoteViews templates.
+            if (templateData is ProgressTemplateData) {
+                return ProgressTemplateValidator(templateData)
+            }
             val keys = buildCheckersForTemplateData(templateData)
             return createValidatorFromKeys(templateData.templateType, keys)
         }
@@ -228,6 +233,13 @@ internal class ValidatorFactory {
                 }
 
                 is FiveIconsTemplateData -> {
+                    builder
+                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
+                        .addImageListValidation(templateData.imageList, 3, key = PT_FIVE_IMAGE_LIST)
+                        .build()
+                }
+
+                is IconsTemplateData -> {
                     builder
                         .addDeepLinkValidation(templateData.baseContent.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
                         .addImageListValidation(templateData.imageList, 3, key = PT_FIVE_IMAGE_LIST)
@@ -323,6 +335,11 @@ internal class ValidatorFactory {
                     // No validation needed for cancel template
                     emptyMap()
                 }
+
+                is ProgressTemplateData -> {
+                    // No required content — the progress template always renders a bar.
+                    emptyMap()
+                }
             }
         }
 
@@ -336,7 +353,8 @@ internal class ValidatorFactory {
                     ContentValidator(keys)
                 )
                 TemplateType.RATING -> RatingTemplateValidator(ContentValidator(keys))
-                TemplateType.FIVE_ICONS -> FiveIconsTemplateValidator(keys)
+                // Shared with Five Icons: both templates need the same icon and deep link rules.
+                TemplateType.FIVE_ICONS, TemplateType.ICONS -> FiveIconsTemplateValidator(keys)
                 TemplateType.PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(
                     ContentValidator(keys)
                 )
@@ -344,6 +362,7 @@ internal class ValidatorFactory {
                 TemplateType.TIMER -> ContentValidator(keys)
                 TemplateType.INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
                 TemplateType.VERTICAL_IMAGE -> VerticalImageTemplateValidator(ContentValidator(keys))
+                // PROGRESS is handled in getValidator() (field-based ProgressTemplateValidator).
                 else -> null
             }
         }

@@ -3225,6 +3225,33 @@ class EvaluationManagerTest : BaseTestCase() {
         assertEquals(12345L, evaluationManager.evaluatedServerSideCampaignIds[1])
     }
 
+    @Test
+    fun `evaluateDryRun returns empty for no synthetic candidates`() {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
+        assertEquals(emptyList(), evaluationManager.evaluateDryRun(event, emptyList()))
+    }
+
+    @Test
+    fun `evaluateDryRun returns eligible candidates without recording a trigger`() {
+        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, emptyMap())
+        val synthetic = JSONObject()
+            .put(Constants.INAPP_ID_IN_PAYLOAD, "123")
+            .put(Constants.INAPP_PRIORITY, 10)
+
+        // Dry run matches limits against an offset view of the counter, not the live matcher.
+        val dryRunLimits = mockk<LimitsMatcher>()
+        every { limitsMatcher.withTriggerCounter(any()) } returns dryRunLimits
+        every { triggersMatcher.matchEvent(any(), any()) } returns true
+        every { dryRunLimits.matchWhenLimits(any(), any()) } returns true
+        every { dryRunLimits.shouldDiscard(any(), any()) } returns false
+
+        val result = evaluationManager.evaluateDryRun(event, listOf(synthetic))
+
+        assertEquals(listOf(synthetic), result)
+        // The dry run must NOT mutate the live trigger store.
+        verify(exactly = 0) { triggersManager.increment(any()) }
+    }
+
 
     class FakeClock : Clock {
 

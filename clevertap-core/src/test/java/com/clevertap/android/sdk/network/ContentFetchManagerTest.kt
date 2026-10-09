@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.network.api.CtApi
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Request
 import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.response.CTResponseSource
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.utils.configMock
 import io.mockk.*
@@ -151,7 +152,7 @@ class ContentFetchManagerTest {
 
         verify { mockQueueHeaderBuilder.buildHeader(null) }
         verify { mockCtApi.sendContentFetch(any()) }
-        verify { mockClevertapResponseHandler.handleResponse(false, any(), any(), any()) }
+        verify { mockClevertapResponseHandler.handleResponse(false, any(), any(), any(), CTResponseSource.CONTENT_FETCH) }
     }
 
     @Test
@@ -206,7 +207,9 @@ class ContentFetchManagerTest {
 
         // Assert - Should not crash and should log the error
         verify { mockCtApi.sendContentFetch(any()) }
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
     }
 
     @Test
@@ -236,7 +239,8 @@ class ContentFetchManagerTest {
                 false,
                 any(),
                 responseJson.toString(),
-                any()
+                any(),
+                CTResponseSource.CONTENT_FETCH
             )
         }
     }
@@ -259,7 +263,9 @@ class ContentFetchManagerTest {
 
         advanceUntilIdle()
 
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
     }
 
     @Test
@@ -279,7 +285,9 @@ class ContentFetchManagerTest {
         advanceUntilIdle()
 
         verify { mockCtApi.sendContentFetch(any()) }
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
     }
 
     @Test
@@ -300,7 +308,36 @@ class ContentFetchManagerTest {
 
         // Assert
         verify { mockCtApi.sendContentFetch(any()) }
-        verify(exactly = 0) { mockClevertapResponseHandler.handleResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            mockClevertapResponseHandler.handleResponse(any(), any(), any(), any(), any<CTResponseSource>())
+        }
+    }
+
+    @Test
+    fun `handleContentFetch fires onFetchBatchComplete when the batch owns the window`() = testScheduler.run {
+        every { mockQueueHeaderBuilder.buildHeader(null) } returns createMockHeader()
+        every { mockCtApi.sendContentFetch(any()) } returns createMockSuccessResponse()
+        var fired = false
+        contentFetchManager.onFetchBatchComplete = { fired = true }
+
+        contentFetchManager.handleContentFetch(createValidContentFetchItems(), "com.test.app", firesArbitrationComplete = true)
+        advanceUntilIdle()
+
+        assertTrue(fired)
+    }
+
+    @Test
+    fun `handleContentFetch does NOT fire onFetchBatchComplete for a non-owning batch`() = testScheduler.run {
+        every { mockQueueHeaderBuilder.buildHeader(null) } returns createMockHeader()
+        every { mockCtApi.sendContentFetch(any()) } returns createMockSuccessResponse()
+        var fired = false
+        contentFetchManager.onFetchBatchComplete = { fired = true }
+
+        // An unrelated (non app-launch) batch must not settle the arbitration window.
+        contentFetchManager.handleContentFetch(createValidContentFetchItems(), "com.test.app", firesArbitrationComplete = false)
+        advanceUntilIdle()
+
+        assertFalse(fired)
     }
 
     // Helper methods

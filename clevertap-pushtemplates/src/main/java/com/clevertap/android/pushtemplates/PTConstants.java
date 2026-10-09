@@ -48,6 +48,23 @@ public class PTConstants {
 
     public static final String PT_ID = "pt_id";
 
+    // --- Progress-centric template (pt_progress) — Android 16 Notification.ProgressStyle ---
+    public static final String PT_PROGRESS = "pt_progress";
+    public static final String PT_PROGRESS_MAX = "pt_progress_max";
+    public static final String PT_PROGRESS_INDETERMINATE = "pt_progress_indeterminate";
+    public static final String PT_STYLED_BY_PROGRESS = "pt_styled_by_progress";
+    public static final String PT_PROGRESS_SEGMENTS = "pt_progress_segments"; // JSON array
+    public static final String PT_PROGRESS_POINTS = "pt_progress_points";     // JSON array
+    public static final String PT_PROGRESS_TRACKER_ICON = "pt_progress_tracker_icon";
+    public static final String PT_PROGRESS_START_ICON = "pt_progress_start_icon";
+    public static final String PT_PROGRESS_END_ICON = "pt_progress_end_icon";
+    public static final String PT_CHIP_TYPE = "pt_chip_type"; // text | timer | countdown | none
+    public static final String PT_CHIP_TEXT = "pt_chip_text";
+    public static final String PT_WHEN = "pt_when";
+    public static final String PT_COUNTDOWN = "pt_countdown";
+    public static final String PT_PROMOTE = "pt_promote";
+    public static final String PT_LA_EVENT = "wzrk_la_event"; // update | end (from LA wrapper)
+
     public static final String PT_NOTIF_ICON = "pt_ico";
 
     public static final String PT_TITLE = "pt_title";
@@ -167,6 +184,9 @@ public class PTConstants {
 
     public static final String PT_ACTION_ID = "actionId";
 
+    // Same key core action buttons use, read by the app's dismiss handler on icon taps
+    public static final String PT_AUTO_CANCEL = "autoCancel";
+
     public static final String PT_RIGHT_SWIPE = "right_swipe";
 
     public static final String PT_MANUAL_CAROUSEL_FROM = "manual_carousel_from";
@@ -226,6 +246,11 @@ public class PTConstants {
     public static final float PT_BTN_BORDER_RADIUS_DEFAULT = 4f;
     public static final float PT_BTN_BORDER_WIDTH_DEFAULT = 1f;
 
+    // Image border configuration (applies to the main notification image across templates)
+    public static final String PT_IMG_BORDER_CLR = "pt_img_border_clr";
+    public static final String PT_IMG_CORNER_RADIUS = "pt_img_corner_radius";
+    public static final String PT_IMG_BORDER_WIDTH = "pt_img_border_width";
+
     // Vertical Image Template - Collapsed button configuration
     public static final String PT_BTN_CLR_COLLAPSED = "pt_btn_clr_collapsed";
     public static final String PT_BTN_BORDER_CLR_COLLAPSED = "pt_btn_border_clr_collapsed";
@@ -256,6 +281,7 @@ public class PTConstants {
             PT_BTN_BORDER_CLR_COLLAPSED,
             PT_BTN_TEXT_CLR_COLLAPSED,
             PT_BTN_GRAD_CLR1_COLLAPSED,
-            PT_BTN_GRAD_CLR2_COLLAPSED);
+            PT_BTN_GRAD_CLR2_COLLAPSED,
+            PT_IMG_BORDER_CLR);
 
 }

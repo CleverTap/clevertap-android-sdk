@@ -30,8 +30,19 @@
 
     <dimen name="large_icon">36dp</dimen>
 
+    <!-- Image heights the image styling is resolved against -->
+    <dimen name="pt_image_style_reference">196dp</dimen>
+    <dimen name="pt_image_style_reference_vertical">180dp</dimen>
+
     <dimen name="five_cta_icon_margin">4dp</dimen>
     <dimen name="five_cta_padding">6dp</dimen>
+
+    <dimen name="icons_icon_margin">4dp</dimen>
+    <dimen name="icons_padding">6dp</dimen>
+
+    <!-- icons_icon_row heights: full, and the 48dp Android 12+ collapsed view. -->
+    <dimen name="icons_icon_row_full">64dp</dimen>
+    <dimen name="icons_icon_row_compact">48dp</dimen>
 
     <dimen name="manual_carousel_arrow">30dp</dimen>
     <dimen name="manual_carousel_arrow_touch_target">48dp</dimen>

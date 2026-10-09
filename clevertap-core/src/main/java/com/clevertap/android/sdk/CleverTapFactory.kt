@@ -573,6 +573,11 @@ internal object CleverTapFactory {
             ndEvaluationManager = ndEvaluationManager,
         )
 
+        // Close the app-launch arbitration window when the content-fetch batch settles.
+        contentFetchManager.onFetchBatchComplete = {
+            controllerManager.inAppController?.onAppLaunchContentFetchComplete()
+        }
+
         val batchListener = CompositeBatchListener()
         val appLaunchListener = AppLaunchListener()
         appLaunchListener.addListener(inAppController.onAppLaunchEventSent)

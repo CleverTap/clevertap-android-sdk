@@ -40,6 +40,11 @@ public class FetchVariablesResponse extends CleverTapResponseDecorator {
     }
 
     @Override
+    public boolean runsDuringUserSwitch() {
+        return false; // variables are re-fetched for the new user after the switch
+    }
+
+    @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
         logI("Processing Variable response...");
         logD("processResponse() called with: response = [" + response + "], stringBody = [" + stringBody + "], context = [" + context + "]");

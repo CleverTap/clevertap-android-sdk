@@ -27,9 +27,11 @@ import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.pushtemplates.styles.AutoCarouselStyle
 import com.clevertap.android.pushtemplates.styles.BasicStyle
 import com.clevertap.android.pushtemplates.styles.FiveIconStyle
+import com.clevertap.android.pushtemplates.styles.IconsStyle
 import com.clevertap.android.pushtemplates.styles.InputBoxStyle
 import com.clevertap.android.pushtemplates.styles.ManualCarouselStyle
 import com.clevertap.android.pushtemplates.styles.ProductDisplayStyle
+import com.clevertap.android.pushtemplates.styles.ProgressStyle
 import com.clevertap.android.pushtemplates.styles.RatingStyle
 import com.clevertap.android.pushtemplates.styles.TimerStyle
 import com.clevertap.android.pushtemplates.styles.VerticalImageStyle
@@ -108,6 +110,7 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
             return null
         }
         val templateType = TemplateType.fromString(id)
+
         val altTextDefault = context.getString(R.string.pt_big_image_alt)
 
         val templateData = TemplateDataFactory.createTemplateData(
@@ -165,6 +168,36 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
                 }
             }
 
+            is IconsTemplateData -> {
+                val validator = ValidatorFactory.getValidator(templateData)
+                if (validator == null) {
+                    null
+                } else if (validator.validate()) {
+                    val iconsStyle = IconsStyle(templateData, this, extras)
+                    val iconsNotificationBuilder = iconsStyle.builderFromStyle(
+                        context,
+                        extras,
+                        notificationId,
+                        nb
+                    )
+
+                    /**
+                     * If most icon bitmaps fail to load, gracefully fall back to a basic
+                     * title/message notification instead of suppressing the notification.
+                     */
+                    if (iconsStyle.iconsSmallContentView.unloadedIconsCount > 2 ||
+                        iconsStyle.iconsBigContentView.unloadedIconsCount > 2) {
+                        PTLog.debug("More than 2 images were not retrieved in Icons Template Notification, reverting to basic template.")
+                        buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                    } else {
+                        iconsNotificationBuilder
+                    }
+                } else {
+                    PTLog.debug("Icons template validation failed, reverting to basic template.")
+                    buildBasicFallback(templateData.toBasicTemplateData(), context, extras, notificationId, nb)
+                }
+            }
+
             is ProductTemplateData -> templateData.buildIfValid {
                 ProductDisplayStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
             }
@@ -209,6 +242,14 @@ class TemplateRenderer(context: Context, private val extras: Bundle, internal va
 
             is VerticalImageTemplateData -> templateData.buildIfValid {
                 VerticalImageStyle(it, this, extras).builderFromStyle(context, extras, notificationId, nb)
+            }
+
+            is ProgressTemplateData -> templateData.buildIfValid {
+                // Progress-centric Live Update. Rendered by the specialized ProgressStyle (native
+                // NotificationCompat.ProgressStyle on 16+, segmented RemoteViews fallback below) — the
+                // one style that does NOT extend the RemoteViews-based Style base, because its native
+                // tier is a base style with no custom RemoteViews (which is what allows promotion).
+                ProgressStyle(it, this).builderFromStyle(context, extras, notificationId, nb)
             }
 
             is CancelTemplateData -> {

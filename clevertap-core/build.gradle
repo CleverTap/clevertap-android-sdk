@@ -36,6 +36,13 @@ android {
 }
 
 dependencies {
+    // androidx.core stays compileOnly: the SDK compiles against 1.17.0 (for the Android-16
+    // ProgressStyle / promotion APIs used by the opt-in progress-centric Live Update) but does
+    // NOT force a version on consumers. Apps that don't use that feature keep their own core
+    // version; apps that do add `androidx.core:core:1.17.0+` themselves (see TAN §15). The
+    // progress renderer guards the native path at runtime so an older core at runtime degrades
+    // to the RemoteViews fallback instead of crashing — so no published version constraint is
+    // needed (a forcing `constraints { implementation(core) }` block would bump every consumer).
     compileOnly(libs.firebase.messaging)
 
     // For Media

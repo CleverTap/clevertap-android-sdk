@@ -58,16 +58,20 @@ internal class DisplayUnitResponse(
 
     private val logger = config.logger
 
+    // ND meta (account ceilings + dead-target GC) must stay current even across a user switch, so this
+    // processor runs during a switch; the per-user ss-bundle and the content/CG path are skipped internally.
+    override fun runsDuringUserSwitch(): Boolean = true
+
     override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
-        processResponse(jsonBody, stringBody, context, isUserSwitching = false)
+        processResponse(jsonBody, stringBody, context, ResponseContext.DEFAULT)
     }
 
     @WorkerThread
-    fun processResponse(
+    override fun processResponse(
         response: JSONObject?,
         stringBody: String?,
         context: Context,
-        isUserSwitching: Boolean,
+        responseContext: ResponseContext,
     ) {
         if (config.isAnalyticsOnly) {
             logger.verbose(
@@ -84,14 +88,22 @@ internal class DisplayUnitResponse(
             return
         }
 
-        // 1. ND fcap meta. Account-level ceilings + dead-target GC run always; the per-user ss-bundle and
-        //    CG acks are skipped on a user switch (mirrors InAppResponse, which stores the SS bundle only
-        //    after its isUserSwitching return) so the outgoing user's rules never land in the new user's prefs.
-        ingestNdMeta(response, context, isUserSwitching)
+        val isUserSwitching = responseContext.isUserSwitching
+        val source = responseContext.source
 
-        // 2. ND content — skipped on a user switch.
+        // 1. ND fcap meta — from /a1 only. A /content re-feed is a partial content response, so it must not
+        //    overwrite the ceilings / ss-bundle / stale GC (the ND analog of the in-app store guard for
+        //    CONTENT_FETCH). On /a1: account-level ceilings + dead-target GC run on every response incl. a
+        //    user switch; the per-user ss-bundle is skipped on a switch so the outgoing user's rules don't
+        //    land in the new user's prefs.
+        if (source != CTResponseSource.CONTENT_FETCH) {
+            ingestNdMeta(response, context, isUserSwitching)
+        }
+
+        // 2. ND content — skipped on a user switch. On a /content re-feed the (cap-filtered) units are MERGED
+        //    into the cache rather than replacing it, so /content never wipes the /a1 set.
         if (!isUserSwitching) {
-            deliverContent(response)
+            deliverContent(response, source)
         }
     }
 
@@ -161,7 +173,7 @@ internal class DisplayUnitResponse(
 
     // ---- ND content ------------------------------------------------------------------------------
 
-    private fun deliverContent(response: JSONObject) {
+    private fun deliverContent(response: JSONObject, source: CTResponseSource) {
         val notifs = response.optJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY)
         val appLaunched = response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY)
         val hasNotifs = notifs != null && notifs.length() > 0
@@ -170,7 +182,7 @@ internal class DisplayUnitResponse(
             return
         }
         try {
-            parseDisplayUnits(notifs, appLaunched)
+            parseDisplayUnits(notifs, appLaunched, source)
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to parse content", t)
         }
@@ -183,7 +195,7 @@ internal class DisplayUnitResponse(
      * one response would wipe each other. CG stubs (`suppressed:true`) are not delivered; they are split
      * out and acked within [appLaunchedWithinWhenLimits] once they pass the same whenLimits as real content.
      */
-    private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?) {
+    private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?, source: CTResponseSource) {
         val parsed = ArrayList<CleverTapDisplayUnit>()
         notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it)) }
         // App-Launched content is filtered by whenLimits here (it carries no adUnit_eval vote). This also acks
@@ -207,16 +219,31 @@ internal class DisplayUnitResponse(
             return
         }
 
-        val displayUnits = ArrayList(
-            // Never cap-gate the send-test / push-preview path (content-only constructor, no ND stores) —
-            // a marketer's preview must always render.
+        // Frequency-cap gate FIRST — caps are applied to the new content before any content-fetch merge.
+        // Never cap-gate the send-test / push-preview path (content-only constructor, no ND stores).
+        val gated = ArrayList(
             if (storeRegistry == null) parsed
             else NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
         )
-        // Replaces (not merges); writing an empty list resets a cache whose content was fully cap-filtered.
-        cache.updateDisplayUnits(displayUnits)
-        if (displayUnits.isNotEmpty()) {
-            callbackManager.notifyDisplayUnitsLoaded(displayUnits)
+
+        // A /content re-feed carries only the personalized subset of display units. The cache is a REPLACE,
+        // so applying the subset as-is would wipe the units delivered by /a1. Merge the (already cap-filtered)
+        // subset by unitID into the current set instead; /a1 stays authoritative and keeps REPLACE. Skip
+        // entirely if nothing mergeable arrived, so we don't re-publish the unchanged /a1 set.
+        if (source == CTResponseSource.CONTENT_FETCH) {
+            if (!hasMergeableUnit(gated)) {
+                return
+            }
+            val merged = mergeByUnitId(cache.allDisplayUnits, gated)
+            cache.updateDisplayUnits(merged)
+            callbackManager.notifyDisplayUnitsLoaded(merged)
+            return
+        }
+
+        // /a1: authoritative REPLACE. Writing an empty list resets a cache whose content was fully cap-filtered.
+        cache.updateDisplayUnits(gated)
+        if (gated.isNotEmpty()) {
+            callbackManager.notifyDisplayUnitsLoaded(gated)
         } else {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared")
         }
@@ -231,6 +258,26 @@ internal class DisplayUnitResponse(
         }
         return false
     }
+
+    /**
+     * Merges [incoming] units into [existing] keyed by unitID: an existing unitID is replaced in place
+     * (position preserved), a new one is appended; empty unitIDs are skipped (matches the cache). In practice
+     * /a1 and /content never return the same unitID, so this is a union/append — the keying just dedupes
+     * within a payload and stays correct should that contract ever change.
+     */
+    private fun mergeByUnitId(
+        existing: List<CleverTapDisplayUnit>?,
+        incoming: List<CleverTapDisplayUnit>,
+    ): ArrayList<CleverTapDisplayUnit> {
+        val merged = LinkedHashMap<String, CleverTapDisplayUnit>()
+        existing?.forEach { unit -> unit.unitID?.takeIf { it.isNotEmpty() }?.let { merged[it] = unit } }
+        incoming.forEach { unit -> unit.unitID?.takeIf { it.isNotEmpty() }?.let { merged[it] = unit } }
+        return ArrayList(merged.values)
+    }
+
+    /** True if at least one unit carries a usable unitID, i.e. would actually merge into the cache. */
+    private fun hasMergeableUnit(units: List<CleverTapDisplayUnit>): Boolean =
+        units.any { !it.unitID.isNullOrEmpty() }
 
     /**
      * Processes the App-Launched batch: splits CG-suppression stubs from deliverable content, applies the

@@ -13,27 +13,22 @@ internal class ClevertapResponseHandler(
         bodyJson: JSONObject?,
         bodyString: String,
         isUserSwitching: Boolean
+    ) = handleResponse(isFullResponse, bodyJson, bodyString, isUserSwitching, source = CTResponseSource.A1)
+
+    fun handleResponse(
+        isFullResponse: Boolean,
+        bodyJson: JSONObject?,
+        bodyString: String,
+        isUserSwitching: Boolean,
+        source: CTResponseSource
     ) {
-        if (isUserSwitching) {
-            responses
-                .filterNot { decorator ->
-                    decorator is InboxResponse || decorator is FetchVariablesResponse
-                }
-                .forEach { decorator ->
-                    decorator.isFullResponse = isFullResponse
-                    // DisplayUnitResponse and InAppResponse handle the user-switch flag internally
-                    // (ND ingests meta but skips content) rather than being filtered out wholesale.
-                    when (decorator) {
-                        is InAppResponse -> decorator.processResponse(bodyJson, bodyString, context, true)
-                        is DisplayUnitResponse -> decorator.processResponse(bodyJson, bodyString, context, true)
-                        else -> decorator.processResponse(bodyJson, bodyString, context)
-                    }
-                }
-        } else {
-            responses.forEach { decorator ->
-                decorator.isFullResponse = isFullResponse
-                decorator.processResponse(bodyJson, bodyString, context)
+        // Request-scoped flags travel as an immutable argument, not shared mutable decorator fields —
+        // so concurrent /a1 and /content processing can't race on them.
+        val responseContext = ResponseContext(isFullResponse, isUserSwitching, source)
+        responses
+            .filter { decorator -> !isUserSwitching || decorator.runsDuringUserSwitch() }
+            .forEach { decorator ->
+                decorator.processResponse(bodyJson, bodyString, context, responseContext)
             }
-        }
     }
 }

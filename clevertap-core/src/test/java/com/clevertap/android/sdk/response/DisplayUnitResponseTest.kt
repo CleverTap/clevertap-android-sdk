@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.NdFCManager
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -20,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -350,7 +352,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
     fun `on user switch ingests meta but skips content delivery`() {
         val json = JSONObject("""{"ndmc":1,"ndmp":10,"adUnit_notifs":[{"wzrk_id":"u1","type":"simple"}]}""")
 
-        response.processResponse(json, "", context, true)
+        response.processResponse(json, "", context, ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1))
 
         verify { ndFCManager.updateLimits(10, 1) }               // meta ingested
         verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) } // content skipped
@@ -364,7 +366,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
                 "adUnit_notifs_applaunched":[{"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}]}""",
         )
 
-        response.processResponse(json, "", context, true)
+        response.processResponse(json, "", context, ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1))
 
         verify { ndFCManager.updateLimits(10, 1) }                        // per-account: kept
         verify(exactly = 0) { ndStore.storeServerSideNdMetaData(any()) }  // per-user bundle: skipped
@@ -384,5 +386,66 @@ class DisplayUnitResponseTest : BaseTestCase() {
         val slot = slot<ArrayList<CleverTapDisplayUnit>>()
         verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
         assertEquals(1, slot.captured.size) // delivered despite canShow=false
+    }
+
+    // ---- content-fetch: /a1 REPLACE vs /content merge-by-unitID (develop sync) ----
+    // These use a REAL CTDisplayUnitController so the merge/replace outcome is asserted end to end. The
+    // units are non-regime (no isNdFcapEnabled), so the fcap gate passes them through; caps are applied
+    // before the merge regardless.
+
+    private fun cfUnit(id: String): JSONObject =
+        JSONObject().put("wzrk_id", id).put("type", "simple")
+
+    private fun adUnitBody(vararg units: JSONObject): JSONObject =
+        JSONObject().put("adUnit_notifs", JSONArray().apply { units.forEach { put(it) } })
+
+    private fun process(realCache: CTDisplayUnitController, source: CTResponseSource, body: JSONObject) {
+        every { controllerManager.getOrCreateDisplayUnitCache() } returns realCache
+        response.processResponse(
+            body, "", context,
+            ResponseContext(isFullResponse = false, isUserSwitching = false, source = source),
+        )
+    }
+
+    private fun CTDisplayUnitController.ids(): Set<String> =
+        allDisplayUnits.orEmpty().map { it.unitID }.toSet()
+
+    @Test
+    fun `a1 response replaces the display-unit cache`() {
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1"), cfUnit("u2")))
+        assertEquals(setOf("u1", "u2"), c.ids())
+
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u3")))
+        assertEquals(setOf("u3"), c.ids()) // REPLACE: u1/u2 gone
+    }
+
+    @Test
+    fun `content fetch merges by unitID and does not wipe a1 units`() {
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1"), cfUnit("u2")))
+
+        // Partial personalized subset from /content: updates u2, adds u3, must keep u1.
+        process(c, CTResponseSource.CONTENT_FETCH, adUnitBody(cfUnit("u2"), cfUnit("u3")))
+        assertEquals(setOf("u1", "u2", "u3"), c.ids())
+    }
+
+    @Test
+    fun `content fetch callback delivers the full merged set`() {
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1")))
+        process(c, CTResponseSource.CONTENT_FETCH, adUnitBody(cfUnit("u2")))
+
+        // The content callback carries both units, not just the personalized one.
+        verify { callbackManager.notifyDisplayUnitsLoaded(match { it.size == 2 }) }
+    }
+
+    @Test
+    fun `empty content fetch does not touch the cache`() {
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1"), cfUnit("u2")))
+
+        process(c, CTResponseSource.CONTENT_FETCH, adUnitBody()) // empty array -> no-op, cache untouched
+        assertEquals(setOf("u1", "u2"), c.ids()) // unchanged, not wiped
     }
 }

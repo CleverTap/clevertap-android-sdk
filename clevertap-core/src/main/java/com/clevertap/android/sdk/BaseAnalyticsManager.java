@@ -29,6 +29,9 @@ public abstract class BaseAnalyticsManager {
     public abstract void pushDisplayUnitElementClickedEventForID(
             String unitID, HashMap<String, Object> additionalProperties);
 
+    public abstract void pushDisplayUnitElementViewedEventForID(
+            String unitID, HashMap<String, Object> additionalProperties);
+
     public abstract void pushDisplayUnitViewedEventForID(String unitID);
 
     @SuppressWarnings({"unused"})

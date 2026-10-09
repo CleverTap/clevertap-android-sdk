@@ -124,6 +124,10 @@ public interface Constants {
     long INBOX_V2_THROTTLE_WINDOW_MS = 5L * 60L * 1000L;
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
+    // Fields on a single content_fetch directive item (self-describing; see ContentFetchItem).
+    String CONTENT_FETCH_ITEM_EVENT_NAME = "eventName";
+    String CONTENT_FETCH_ITEM_RESPONSE_KEY = "responseKey";
+    String CONTENT_FETCH_ITEM_TARGET_ID = "tgtId";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
     String REQUEST_VARIANTS_JSON_RESPONSE_KEY = "abVariantInfo";
@@ -284,7 +288,6 @@ public interface Constants {
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
-    String EXTRAS_FROM = "extras_from";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";
     String NOTIF_ICON = "ico";
@@ -305,6 +308,41 @@ public interface Constants {
     String WZRK_SUBTITLE = "wzrk_st";
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_DISMISS = "wzrk_dismiss";
+
+    // --- Live Activities / Live Updates ---
+    // Mirrors the iOS Live Activity contract (CLTAP_LIVE_ACTIVITY_* / kCTLA*).
+    // On Android there is no ActivityKit token concept — live updates are ordinary
+    // FCM data pushes routed to an ICleverTapNotificationFactory. These keys mark such
+    // pushes and carry the backend-assigned identity used for in-place updates + attribution.
+    /** Marker present on a Live Activity (live update) push. Value is "true". */
+    String WZRK_LIVE_ACTIVITY = "wzrk_la";
+    /** Backend-assigned stable activity id. The SDK derives the in-place notification id from it, and
+     *  because it is {@code wzrk_}-prefixed it also flows into the lifecycle event {@code evtData}
+     *  automatically (serves both routing and attribution). */
+    String WZRK_LIVE_ACTIVITY_ID = "wzrk_activityId";
+    /** Single nested payload object carried by a Live Update push. Holds the render content for BOTH
+     *  modes: if it contains a {@code pt_id} the SDK renders it (Mode B, e.g. {@code {"pt_id":"pt_progress", ...}});
+     *  otherwise it is the client factory's custom data (Mode A). Not {@code wzrk_}-prefixed on purpose
+     *  so the render blob never leaks into analytics evtData. */
+    String WZRK_LIVE_ACTIVITY_DATA = "data";
+    /** Lifecycle event carried by the push, sent by BE, mapped 1:1 to the analytics state:
+     *  {@link #WZRK_LIVE_ACTIVITY_EVENT_START} → Started, {@link #WZRK_LIVE_ACTIVITY_EVENT_UPDATE} →
+     *  Updated, {@link #WZRK_LIVE_ACTIVITY_EVENT_END} → Ended. Anything else defaults to Updated. */
+    String WZRK_LIVE_ACTIVITY_EVENT = "wzrk_la_event";
+    String WZRK_LIVE_ACTIVITY_EVENT_START = "start";
+    String WZRK_LIVE_ACTIVITY_EVENT_UPDATE = "update";
+    String WZRK_LIVE_ACTIVITY_EVENT_END = "end";
+    /** Single event name raised for every Live Activity lifecycle transition (mirrors iOS kCTLAEventName). */
+    String LIVE_ACTIVITY_EVENT_NAME = "Live Activity";
+    /** evtData field holding the lifecycle state. */
+    String LIVE_ACTIVITY_STATE_KEY = "state";
+    String LIVE_ACTIVITY_STATE_STARTED = "Started";
+    String LIVE_ACTIVITY_STATE_UPDATED = "Updated";
+    String LIVE_ACTIVITY_STATE_ENDED = "Ended";
+    String LIVE_ACTIVITY_STATE_DISMISSED = "Dismissed";
+    // Note: a missing Live Update channel now falls back to the shared push fallback channel
+    // (FCM_FALLBACK_NOTIFICATION_CHANNEL_ID via CTXtensions.getOrCreateChannel), not a bespoke one.
+
     String WZRK_STICKY = "wzrk_sticky";
     String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";
     String WZRK_SOUND = "wzrk_sound";
@@ -361,6 +399,7 @@ public interface Constants {
     String KEY_ORIENTATION = "orientation";
     String KEY_WZRK_PARAMS = "wzrkParams";
     String KEY_CONTENT = "content";
+    String KEY_METADATA = "metadata";
     String KEY_CUSTOM_KV = "custom_kv";
     String KEY_BORDER = "border";
     String KEY_RADIUS = "radius";

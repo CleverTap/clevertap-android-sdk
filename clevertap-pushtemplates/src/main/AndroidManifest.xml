@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      NOTE: the Android 16+ promoted-notification permission POST_PROMOTED_NOTIFICATIONS is
+      intentionally NOT declared here. Promoted Live Updates are an opt-in feature, so the SDK does
+      not force this permission onto every consuming app. Apps that use the progress-centric Live
+      Update add it to their own manifest:
+        <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    -->
+
     <application>
         <receiver
             android:name="com.clevertap.android.pushtemplates.PTPushNotificationReceiver"

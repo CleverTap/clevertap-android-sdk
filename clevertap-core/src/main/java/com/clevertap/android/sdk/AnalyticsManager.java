@@ -339,6 +339,61 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         return out;
     }
 
+    /**
+     * Raises a Native Display element view event.
+     *
+     * Viewed analog of {@link #pushDisplayUnitElementClickedEventForID(String, HashMap)} —
+     * records that a single child element of a unit came on screen (e.g. one carousel
+     * slide) instead of the whole unit.
+     *
+     * Caller's additionalProperties are merged verbatim first; the cached unit's
+     * wzrk_* fields are then layered on top, so server-controlled attribution wins.
+     */
+    @Override
+    public void pushDisplayUnitElementViewedEventForID(
+            String unitID,
+            HashMap<String, Object> additionalProperties) {
+        JSONObject event = new JSONObject();
+        try {
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+
+            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            if (cache == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no display-unit cache installed");
+                return;
+            }
+            CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
+            if (displayUnit == null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no unit found for id: " + unitID);
+                return;
+            }
+
+            JSONObject eventExtraData = new JSONObject();
+            mergeAdditionalProperties(eventExtraData, additionalProperties);
+            JSONObject cachedWzrkFields = displayUnit.getWZRKFields();
+            if (cachedWzrkFields != null) {
+                Iterator<String> it = cachedWzrkFields.keys();
+                while (it.hasNext()) {
+                    String k = it.next();
+                    try {
+                        eventExtraData.put(k, cachedWzrkFields.get(k));
+                    } catch (JSONException ignored) {
+                    }
+                }
+            }
+
+            event.put("evtData", eventExtraData);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
+                    getFlattenedEventProperties(eventExtraData));
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT
+                            + "Failed to push Display Unit element viewed event" + t);
+        }
+    }
+
     @Override
     public void pushDisplayUnitViewedEventForID(String unitID) {
         JSONObject event = new JSONObject();
@@ -720,6 +775,42 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         } catch (JSONException e) {
             config.getLogger().debug("Failed to recording Notification Viewed " + e);
+        }
+    }
+
+    /**
+     * Raises the single "Live Activity" lifecycle event (mirrors iOS' Live Activity event).
+     * The wzrk_* keys from the push become the event data, plus a {@code state} field
+     * ("Started"/"Updated"/"Ended"/"Dismissed"). Routed through the Notification Viewed
+     * pipeline so it is attributed exactly like a push impression.
+     *
+     * @param extras the Live Activity push payload.
+     * @param state  one of {@link Constants#LIVE_ACTIVITY_STATE_STARTED},
+     *               {@link Constants#LIVE_ACTIVITY_STATE_UPDATED},
+     *               {@link Constants#LIVE_ACTIVITY_STATE_ENDED},
+     *               {@link Constants#LIVE_ACTIVITY_STATE_DISMISSED}.
+     *
+     * <p>Must be called on a worker thread — it queues the event synchronously via
+     * {@code baseEventQueueManager.queueEvent(...)} ({@link WorkerThread}), mirroring
+     * {@link #pushNotificationViewedEvent(Bundle)}. Render-path callers are already on a worker;
+     * the dismiss path (main-thread receiver) dispatches via {@code postAsyncSafelyTask}.</p>
+     */
+    @WorkerThread
+    public void raiseLiveActivityLifecycleEvent(Bundle extras, String state) {
+        if (extras == null || extras.isEmpty()) {
+            return;
+        }
+        try {
+            JSONObject notif = wzrkBundleToJson(extras);
+            JSONObject event = AnalyticsManagerBundler.liveActivityEventJson(notif, state);
+            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
+            // Log only the state + the (non-sensitive) in-place activity id, not the whole payload —
+            // the bundle can carry title/message/deep-link PII that shouldn't hit Logcat (CWE-532).
+            config.getLogger().debug(config.getAccountId(),
+                    "Recorded Live Activity event (" + state + ") for activityId: "
+                            + extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID));
+        } catch (JSONException e) {
+            config.getLogger().debug("Failed to record Live Activity event " + e);
         }
     }
 

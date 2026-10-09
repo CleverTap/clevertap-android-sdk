@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import com.clevertap.android.sdk.inapp.ImpressionManager
+import com.clevertap.android.sdk.inapp.TriggerCounting
 import com.clevertap.android.sdk.inapp.TriggerManager
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
@@ -263,5 +264,21 @@ class LimitsMatcherTest : BaseTestCase() {
         val jsonLimit = LimitAdapter(JSONObject(mapOf("type" to "onExactly", "limit" to 2)))
         val result = limitsMatcher.matchWhenLimits(listOf(jsonLimit), "campaign123")
         assertTrue(result)
+    }
+
+    @Test
+    fun `withTriggerCounter uses the supplied counter instead of the live trigger manager`() {
+        val onExactly3 = listOf(LimitAdapter(JSONObject(mapOf("type" to "onExactly", "limit" to 3))))
+        every { triggerManager.getTriggers("c1") } returns 5 // live count
+
+        // Live matcher: onExactly(3) vs live count 5 -> not met.
+        assertFalse(limitsMatcher.matchWhenLimits(onExactly3, "c1"))
+
+        // A view whose counter reports 3 -> onExactly(3) is met, without consulting the live manager.
+        val counter = mockk<TriggerCounting>()
+        every { counter.getTriggers("c1") } returns 3
+        val view = limitsMatcher.withTriggerCounter(counter)
+
+        assertTrue(view.matchWhenLimits(onExactly3, "c1"))
     }
 }

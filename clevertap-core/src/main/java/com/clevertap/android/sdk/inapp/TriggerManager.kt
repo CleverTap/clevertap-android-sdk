@@ -17,7 +17,7 @@ class TriggerManager(
     private val accountId: String,
     private val deviceInfo: DeviceInfo,
     private val namespace: String = Constants.KEY_TRIGGERS_PER_INAPP
-) {
+) : TriggerCounting {
     companion object {
         const val PREF_PREFIX = "__triggers"
     }
@@ -30,7 +30,7 @@ class TriggerManager(
      * @param campaignId The identifier of the In-App campaign.
      * @return The trigger count for the specified campaign, or 0 if not found.
      */
-    fun getTriggers(campaignId: String): Int {
+    override fun getTriggers(campaignId: String): Int {
         val prefs = sharedPrefs() ?: return 0
         return read(prefs, getTriggersKey(campaignId))
     }

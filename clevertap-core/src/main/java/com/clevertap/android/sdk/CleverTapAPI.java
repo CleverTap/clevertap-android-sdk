@@ -64,6 +64,7 @@ import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
+import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -159,6 +160,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private static NotificationHandler sNotificationHandler;
 
     private static NotificationHandler sSignedCallNotificationHandler;
+
+    private static volatile ICleverTapNotificationFactory sNotificationFactory;
 
     private static final HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
 
@@ -269,6 +272,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * <p/>
      * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
+     *
+     * <p>This entry renders core push notifications and client-factory (Mode A) Live Updates. For
+     * SDK-rendered Push Templates — including the {@code pt_progress} (Mode B) Live Update — call
+     * {@code CTFcmMessageHandler().createNotification(context, remoteMessage)} instead, which routes
+     * through the template renderer.</p>
      *
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
      * Note: Starting from core v5.1.0, this method runs on the caller's thread. Make sure to call it
@@ -894,6 +902,49 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 break;
             }
         }
+    }
+
+    /**
+     * Raises the "Live Activity" lifecycle event with state {@code Dismissed} for the given push
+     * bundle. Call this from your own delete intent when you render a Live Activity with custom
+     * dismiss handling and want CleverTap to record the dismissal.
+     *
+     * <p>No-op unless {@code notification} is a CleverTap Live Activity push, so it can never raise a
+     * Dismissed event for a normal notification.
+     */
+    public static void handleLiveActivityDismissed(Context context, Bundle notification) {
+        if (notification == null) {
+            return;
+        }
+
+        if (!"true".equalsIgnoreCase(notification.getString(Constants.WZRK_LIVE_ACTIVITY))) {
+            Logger.v("handleLiveActivityDismissed called with a non Live Activity bundle; ignoring.");
+            return;
+        }
+
+        String _accountId = null;
+        try {
+            _accountId = notification.getString(Constants.WZRK_ACCT_ID_KEY);
+        } catch (Throwable t) {
+            // no-op
+        }
+
+        // Reuse the shared instance-resolution (default vs multi-instance) instead of re-implementing
+        // the instances.keySet() loop — same path handleNotificationClicked and friends use.
+        final CleverTapAPI instance = fromAccountId(context, _accountId);
+        if (instance == null) {
+            return;
+        }
+
+        // Dismissal is delivered on the BroadcastReceiver's main thread; raise the event on a worker
+        // so the analytics/DB queue work (raiseLiveActivityLifecycleEvent is @WorkerThread) never runs
+        // on the main thread.
+        Task<Void> task = instance.getCoreState().getExecutors().postAsyncSafelyTask();
+        task.execute("handleLiveActivityDismissed", () -> {
+            instance.getCoreState().getAnalyticsManager()
+                    .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
+            return null;
+        });
     }
 
     /**
@@ -2538,9 +2589,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * <p>{@code evtData} is assembled in two layers (later layers win on key collision):
      * <ol>
-     *   <li>Caller's {@code additionalProperties}, merged verbatim — should include
-     *       {@code wzrk_element_id} and other {@code wzrk_*} attribution fields injected
-     *       by the BE into the action's {@code metadata} object.</li>
+     *   <li>Caller's {@code additionalProperties}, merged verbatim — for a per-item event
+     *       pass {@link CleverTapDisplayUnit#getMetaDataForContent(int)}, which carries
+     *       that item's {@code wzrk_element_id} and {@code wzrk_index} from the
+     *       {@code metadata} object the BE attaches to each {@code content[]} item,
+     *       alongside {@code action}.</li>
      *   <li>Cached unit's {@code wzrk_*} fields layered on top — so server-controlled
      *       attribution always wins over same-named caller-supplied keys.</li>
      * </ol>
@@ -2555,6 +2608,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             String unitID,
             HashMap<String, Object> additionalProperties) {
         coreState.getAnalyticsManager().pushDisplayUnitElementClickedEventForID(
+                unitID, additionalProperties);
+    }
+    
+    /**
+     * Raises a Native Display element view event for the given unit and element.
+     * Merges caller properties with cached unit {@code wzrk_*} fields, with cached
+     * values taking precedence.
+     *
+     * @param unitID               the Display Unit ID
+     * @param additionalProperties per-element context, typically from
+     *                             {@link CleverTapDisplayUnit#getMetaDataForContent(int)}
+     */
+    @SuppressWarnings("unused")
+    public void pushDisplayUnitElementViewedEventForID(
+            String unitID,
+            HashMap<String, Object> additionalProperties) {
+        coreState.getAnalyticsManager().pushDisplayUnitElementViewedEventForID(
                 unitID, additionalProperties);
     }
 
@@ -2885,7 +2955,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Sets the listener to get the list of currently running Display Campaigns via callback
      *
-     * @param listener- {@link DisplayUnitListener}
+     * @param listener {@link DisplayUnitListener}
      */
     public void setDisplayUnitListener(DisplayUnitListener listener) {
         coreState.getCallbackManager().setDisplayUnitListener(listener);
@@ -3473,6 +3543,27 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static void setNotificationHandler(NotificationHandler notificationHandler) {
         sNotificationHandler = notificationHandler;
+    }
+
+    /**
+     * Sets a factory that lets the client fully build the notification for CleverTap
+     * <b>Live Activity</b> (live update) pushes — those carrying {@code wzrk_la}. When set, the SDK
+     * invokes {@link ICleverTapNotificationFactory#onCreateNotification} for such pushes instead of
+     * its built-in renderers; ordinary pushes are unaffected.
+     *
+     * <p>The client builds the {@link android.app.Notification}. The SDK still owns display, the
+     * notification channel (created if missing), the notification id (derived from
+     * {@code wzrk_activityId} for in-place updates), lifecycle/viewed analytics, and deduplication.</p>
+     *
+     * @param factory The factory implementation, or {@code null} to revert to default rendering.
+     */
+    public static void setNotificationFactory(@Nullable ICleverTapNotificationFactory factory) {
+        sNotificationFactory = factory;
+    }
+
+    @Nullable
+    public static ICleverTapNotificationFactory getNotificationFactory() {
+        return sNotificationFactory;
     }
 
     /** @noinspection unused*/

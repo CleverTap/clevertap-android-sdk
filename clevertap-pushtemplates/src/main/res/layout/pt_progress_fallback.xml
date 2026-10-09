@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Expanded fallback for the pt_progress template on Android < 16 (no OS ProgressStyle).
+  Mimics the native look: tracker icon + title/message + a progress row (a bitmap-drawn milestone
+  track with proportional segments and positioned points, or a plain bar).
+  No background or text colors of its own: like the native card it sits on the system notification
+  background and uses the notification text appearances, so it follows the light/dark theme.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/pt_tracker"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@string/pt_progress_tracker_cd" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/pt_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textAppearance="@style/TextAppearance.Compat.Notification.Title" />
+
+            <TextView
+                android:id="@+id/pt_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textAppearance="@style/TextAppearance.Compat.Notification" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/pt_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:maxWidth="96dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.Compat.Notification.Title"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Progress row: start icon + indicator + end icon. The indicator is EITHER the milestone track
+         (pt_progress_track, when segments/points are present) OR the plain bar (pt_bar); the start/end
+         icons sit on both sides in either case, like Android 16. -->
+    <LinearLayout
+        android:id="@+id/pt_segmented_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="top"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/pt_start_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginEnd="6dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@string/pt_progress_start_cd" />
+
+        <!-- Milestone track (segments + points + titles), drawn as a bitmap so segment widths and point
+             positions follow their length/position (RemoteViews cannot set layout_weight at runtime). -->
+        <ImageView
+            android:id="@+id/pt_progress_track"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <!-- PLAIN bar (mutually exclusive with pt_progress_track): determinate (pt_progress/max)
+             or indeterminate (pt_progress_indeterminate). Hidden when the segmented indicator is used. -->
+        <ProgressBar
+            android:id="@+id/pt_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical"
+            android:max="100"
+            android:progress="0"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/pt_end_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="6dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@string/pt_progress_end_cd" />
+    </LinearLayout>
+</LinearLayout>

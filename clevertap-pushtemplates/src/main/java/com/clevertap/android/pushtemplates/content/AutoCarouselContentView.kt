@@ -6,6 +6,7 @@ import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.AutoCarouselTemplateData
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTScaleType
+import com.clevertap.android.pushtemplates.bakedInto
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
@@ -40,7 +41,8 @@ internal class AutoCarouselContentView(
     }
 
     private fun setViewFlipper() {
-        val imageViewId = when (data.carouselData.scaleType) {
+        val scaleType = data.carouselData.scaleType
+        val imageViewId = when (scaleType) {
             PTScaleType.FIT_CENTER -> R.id.big_image_fitCenter
             PTScaleType.CENTER_CROP -> R.id.big_image
         }
@@ -56,11 +58,13 @@ internal class AutoCarouselContentView(
                 imageViewId,
                 imageUrl,
                 tempRemoteView,
-                altText
+                altText,
+                data.carouselData.imageBorderData.bakedInto(scaleType)
             )
 
             if (!fallback) {
                 tempRemoteView.setViewVisibility(imageViewId, View.VISIBLE)
+                applyNativeImageStyling(tempRemoteView, imageViewId, data.carouselData.imageBorderData, scaleType)
                 remoteView.addView(R.id.view_flipper, tempRemoteView)
                 numberOfImagesLoaded++
             } else {

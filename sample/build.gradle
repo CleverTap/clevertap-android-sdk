@@ -97,7 +97,7 @@ android {
 dependencies {
     def lifecycle_version = "2.8.4"
 
-    implementation ("androidx.core:core:1.13.0")
+    implementation ("androidx.core:core:1.17.0")
     implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation ("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
     implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.20")
@@ -181,12 +181,12 @@ dependencies {
 
     remoteImplementation("com.clevertap.android:clevertap-android-sdk:8.4.1")
     remoteImplementation("com.clevertap.android:clevertap-geofence-sdk:1.4.0")
-    remoteImplementation("com.clevertap.android:push-templates:2.5.0")
+    remoteImplementation("com.clevertap.android:push-templates:2.6.0")
     remoteImplementation("com.clevertap.android:clevertap-hms-sdk:1.5.1")
 
     stagingImplementation("com.clevertap.android:clevertap-android-sdk:8.4.1")
     stagingImplementation("com.clevertap.android:clevertap-geofence-sdk:1.4.0")
-    stagingImplementation("com.clevertap.android:push-templates:2.5.0")
+    stagingImplementation("com.clevertap.android:push-templates:2.6.0")
     stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.5.1")
 }
 
