@@ -149,21 +149,26 @@ internal class AppLaunchInAppArbitrator(
     }
 
     private fun closeAndShow(reason: String) {
-        val winner: JSONObject? = synchronized(lock) {
+        val winner: JSONObject = synchronized(lock) {
             if (phase != Phase.OPEN) {
                 return
             }
-            phase = Phase.CLOSED
             val selected = sortByPriority(buffered).firstOrNull()
+            if (selected == null) {
+                // Nothing to show yet — keep the window OPEN (do NOT move to CLOSED) so a winner
+                // that arrives later (e.g. a slow /content) is still shown instead of suppressed.
+                // CLOSED must only mean "one in-app was already shown".
+                logger.verbose(logTag, "[Arbitration] $reason with empty buffer; staying open")
+                return
+            }
+            phase = Phase.CLOSED
             shownWinner = selected
             logger.verbose(
                 logTag,
-                "[Arbitration] closing ($reason): ${buffered.size} buffered -> ${if (selected != null) "1 winner" else "nothing"}"
+                "[Arbitration] closing ($reason): showing 1 of ${buffered.size} buffered winner(s)"
             )
             selected
         }
-        if (winner != null) {
-            showWinner(winner)
-        }
+        showWinner(winner)
     }
 }

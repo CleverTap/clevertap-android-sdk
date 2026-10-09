@@ -9,6 +9,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -83,5 +84,29 @@ class ContentFetchItemTest {
         assertEquals("my-template", payload.optString(CustomTemplateInAppData.KEY_TEMPLATE_NAME))
         // No display-time keys leak into the synthetic payload.
         assertTrue(!payload.has("efc") && !payload.has("mdc") && !payload.has("tdc"))
+    }
+
+    @Test
+    fun `isAppLaunchInApp is true only for the app-launch in-app responseKey`() {
+        val item = ContentFetchItem.from(
+            JSONObject().put(Constants.CONTENT_FETCH_ITEM_RESPONSE_KEY, Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+        )
+        assertTrue(item.isAppLaunchInApp())
+    }
+
+    @Test
+    fun `isAppLaunchInApp treats other or missing responseKey as non app-launch`() {
+        // Different channel (e.g. inbox) -> not app-launch.
+        assertFalse(
+            ContentFetchItem.from(JSONObject().put(Constants.CONTENT_FETCH_ITEM_RESPONSE_KEY, "inbox_notifs"))
+                .isAppLaunchInApp()
+        )
+        // Missing responseKey -> ambiguous -> treated as NOT app-launch.
+        assertFalse(ContentFetchItem.from(JSONObject()).isAppLaunchInApp())
+        // eventName alone (no responseKey) is not enough.
+        assertFalse(
+            ContentFetchItem.from(JSONObject().put(Constants.CONTENT_FETCH_ITEM_EVENT_NAME, "App Launched"))
+                .isAppLaunchInApp()
+        )
     }
 }

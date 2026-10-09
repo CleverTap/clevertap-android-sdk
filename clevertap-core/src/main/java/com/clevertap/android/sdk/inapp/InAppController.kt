@@ -757,7 +757,7 @@ internal class InAppController(
      * instead of shown twice. Called on `/a1` only.
      */
     fun openAppLaunchArbitrationWindowIfNeeded(contentFetchItems: List<ContentFetchItem>) {
-        if (contentFetchItems.any { isAppLaunchInAppItem(it) }) {
+        if (contentFetchItems.any { it.isAppLaunchInApp() }) {
             appLaunchArbitrator.openWindow()
         }
     }
@@ -766,22 +766,12 @@ internal class InAppController(
     // used by the Option 2 fast path. All-or-nothing: empty unless every app-launch item carries
     // `priority` (otherwise fall back to Option 1 / wait).
     private fun appLaunchSynthetics(contentFetchItems: List<ContentFetchItem>): List<JSONObject> {
-        val appLaunchItems = contentFetchItems.filter { isAppLaunchInAppItem(it) }
+        val appLaunchItems = contentFetchItems.filter { it.isAppLaunchInApp() }
         if (appLaunchItems.isEmpty()) {
             return emptyList()
         }
         val synthetics = appLaunchItems.map { it.syntheticInAppPayload() }
         return if (synthetics.all { it != null }) synthetics.filterNotNull() else emptyList()
-    }
-
-    // Matches an app-launch in-app content-fetch by response key or event name. Conservative: a
-    // missing field counts as a match (wait) rather than risk showing two.
-    private fun isAppLaunchInAppItem(item: ContentFetchItem): Boolean {
-        val responseKeyMatches =
-            item.responseKey == null || item.responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY
-        val eventNameMatches =
-            item.eventName == null || item.eventName == Constants.APP_LAUNCHED_EVENT
-        return responseKeyMatches && eventNameMatches
     }
 
     /**

@@ -137,6 +137,28 @@ class AppLaunchInAppArbitratorTest {
     }
 
     @Test
+    fun `empty buffer at the show-timeout keeps the window open so a later winner still shows`() {
+        arbitrator.openWindow()
+        // No /a1 app-launch in-app to buffer (e.g. the winner only comes from /content).
+        fireShowTimeout() // 3s timer fires with an empty buffer
+
+        // A late /content winner arrives after the timeout; it must still be shown, not dropped.
+        arbitrator.routeWinners(listOf(inApp("300", 50)))
+        arbitrator.onContentFetchComplete()
+
+        assertEquals(1, shown.size)
+        assertEquals("300", shown[0].optString("ti"))
+    }
+
+    @Test
+    fun `empty buffer at the show-timeout shows nothing until a winner actually arrives`() {
+        arbitrator.openWindow()
+        fireShowTimeout() // empty buffer -> stays open, nothing shown yet
+
+        assertTrue(shown.isEmpty())
+    }
+
+    @Test
     fun `fast path close suppresses a later content winner without arbitrator showing`() {
         arbitrator.openWindow()
 

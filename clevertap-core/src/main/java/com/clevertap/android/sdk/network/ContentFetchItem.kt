@@ -20,6 +20,13 @@ internal data class ContentFetchItem(
 ) {
 
     /**
+     * True when this directive fetches an app-launch in-app — the only case the arbitration window
+     * cares about. Keyed strictly on [responseKey]; an absent/ambiguous key is treated as NOT an
+     * app-launch in-app (inbox / native-display / other-event fetches never touch the window).
+     */
+    fun isAppLaunchInApp(): Boolean = responseKey == Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY
+
+    /**
      * Selection-rule-only payload for Option-2 dry-run prediction (never the content). Null without
      * `priority` (so the fast path stays dormant); otherwise `ti` (from [targetId]) plus each present
      * key in [SELECTION_RULE_KEYS]. No display-time keys — they don't discriminate candidates.

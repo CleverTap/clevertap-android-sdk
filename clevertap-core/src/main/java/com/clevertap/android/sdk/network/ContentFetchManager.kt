@@ -52,7 +52,11 @@ internal class ContentFetchManager(
     )
     private val logger = config.logger
 
-    fun handleContentFetch(contentFetchItems: JSONArray, packageName: String) {
+    fun handleContentFetch(
+        contentFetchItems: JSONArray,
+        packageName: String,
+        firesArbitrationComplete: Boolean = false
+    ) {
         scope.launch {
             try {
                 val payload = getContentFetchPayload(contentFetchItems, packageName)
@@ -66,15 +70,18 @@ internal class ContentFetchManager(
             } catch (e: Exception) {
                 logger.verbose(TAG, "Unexpected error during content fetch", e)
             } finally {
-                // Exactly-once settled signal — must never be skipped, or the arbitration window
-                // would stay in its suppressing phase for the rest of the session. Android sends all
-                // content_fetch items in ONE /content request per /a1, so "close on first completion"
-                // = close on the only batch. A throwing callback here (in a finally) would crash the
-                // host app; contain it.
-                try {
-                    onFetchBatchComplete?.invoke()
-                } catch (t: Throwable) {
-                    logger.verbose(TAG, "Error in content fetch completion callback", t)
+                // Settle the app-launch arbitration window ONLY for the batch that owns it — the /a1
+                // whose content_fetch carries an app-launch in-app. Other batches (inbox / native
+                // display / other events) run concurrently under limitedParallelism and must NOT close
+                // the window: a non-owning fetch finishing first would show the /a1 winner early and
+                // then let the real /content winner double-show. A throwing callback here (in a
+                // finally) would crash the host app; contain it.
+                if (firesArbitrationComplete) {
+                    try {
+                        onFetchBatchComplete?.invoke()
+                    } catch (t: Throwable) {
+                        logger.verbose(TAG, "Error in content fetch completion callback", t)
+                    }
                 }
             }
         }

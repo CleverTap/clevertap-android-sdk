@@ -313,6 +313,33 @@ class ContentFetchManagerTest {
         }
     }
 
+    @Test
+    fun `handleContentFetch fires onFetchBatchComplete when the batch owns the window`() = testScheduler.run {
+        every { mockQueueHeaderBuilder.buildHeader(null) } returns createMockHeader()
+        every { mockCtApi.sendContentFetch(any()) } returns createMockSuccessResponse()
+        var fired = false
+        contentFetchManager.onFetchBatchComplete = { fired = true }
+
+        contentFetchManager.handleContentFetch(createValidContentFetchItems(), "com.test.app", firesArbitrationComplete = true)
+        advanceUntilIdle()
+
+        assertTrue(fired)
+    }
+
+    @Test
+    fun `handleContentFetch does NOT fire onFetchBatchComplete for a non-owning batch`() = testScheduler.run {
+        every { mockQueueHeaderBuilder.buildHeader(null) } returns createMockHeader()
+        every { mockCtApi.sendContentFetch(any()) } returns createMockSuccessResponse()
+        var fired = false
+        contentFetchManager.onFetchBatchComplete = { fired = true }
+
+        // An unrelated (non app-launch) batch must not settle the arbitration window.
+        contentFetchManager.handleContentFetch(createValidContentFetchItems(), "com.test.app", firesArbitrationComplete = false)
+        advanceUntilIdle()
+
+        assertFalse(fired)
+    }
+
     // Helper methods
     private fun createValidContentFetchItems(): JSONArray {
         return JSONArray().apply {

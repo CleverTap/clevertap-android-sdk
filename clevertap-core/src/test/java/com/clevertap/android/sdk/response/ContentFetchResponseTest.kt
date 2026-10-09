@@ -41,7 +41,7 @@ class ContentFetchResponseTest : BaseTestCase() {
         // Act
         contentFetchResponse.processResponse(jsonBody, null, mockContext)
 
-        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any()) }
+        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any(), any()) }
     }
 
     @Test
@@ -49,7 +49,7 @@ class ContentFetchResponseTest : BaseTestCase() {
         // Act
         contentFetchResponse.processResponse(null, "some string", mockContext)
 
-        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any()) }
+        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any(), any()) }
     }
 
     @Test
@@ -62,7 +62,7 @@ class ContentFetchResponseTest : BaseTestCase() {
         // Act
         contentFetchResponse.processResponse(jsonBody, null, mockContext)
 
-        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any()) }
+        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any(), any()) }
     }
 
     @Test
@@ -75,7 +75,7 @@ class ContentFetchResponseTest : BaseTestCase() {
         // Act
         contentFetchResponse.processResponse(jsonBody, null, mockContext)
 
-        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any()) }
+        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any(), any()) }
     }
 
 
@@ -86,10 +86,43 @@ class ContentFetchResponseTest : BaseTestCase() {
 
         // Act
         contentFetchResponse.processResponse(jsonBody, null, mockContext)
-        
-        verify { 
-            mockContentFetchManager.handleContentFetch(contentFetchArray, "com.test.package")
+
+        // These items have no app-launch responseKey, so the batch must NOT settle the window.
+        verify {
+            mockContentFetchManager.handleContentFetch(contentFetchArray, "com.test.package", false)
         }
+    }
+
+    @Test
+    fun `processResponse flags an app-launch in-app batch so it can settle the arbitration window`() {
+        val jsonBody = JSONObject().put(
+            Constants.CONTENT_FETCH_JSON_RESPONSE_KEY,
+            JSONArray().put(
+                JSONObject()
+                    .put("tgtId", "c1")
+                    .put(Constants.CONTENT_FETCH_ITEM_RESPONSE_KEY, Constants.INAPP_NOTIFS_APP_LAUNCHED_KEY)
+            )
+        )
+
+        contentFetchResponse.processResponse(jsonBody, null, mockContext)
+
+        verify { mockContentFetchManager.handleContentFetch(any(), "com.test.package", true) }
+    }
+
+    @Test
+    fun `processResponse does not flag a non app-launch batch to settle the window`() {
+        val jsonBody = JSONObject().put(
+            Constants.CONTENT_FETCH_JSON_RESPONSE_KEY,
+            JSONArray().put(
+                JSONObject()
+                    .put("tgtId", "c1")
+                    .put(Constants.CONTENT_FETCH_ITEM_RESPONSE_KEY, "inbox_notifs")
+            )
+        )
+
+        contentFetchResponse.processResponse(jsonBody, null, mockContext)
+
+        verify { mockContentFetchManager.handleContentFetch(any(), "com.test.package", false) }
     }
 
     @Test
@@ -103,7 +136,7 @@ class ContentFetchResponseTest : BaseTestCase() {
         contentFetchResponse.processResponse(jsonBody, null, mockContext)
 
         // Assert
-        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any()) }
+        verify(exactly = 0) { mockContentFetchManager.handleContentFetch(any(), any(), any()) }
     }
 
 

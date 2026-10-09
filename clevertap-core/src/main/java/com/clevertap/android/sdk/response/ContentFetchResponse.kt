@@ -68,11 +68,14 @@ internal class ContentFetchResponse(
             return
         }
 
-        // Typed, addressable view of the directive, for diagnostics.
+        // Typed, addressable view of the directive.
         val items = ContentFetchItem.listFrom(contentFetchArray)
         logger.verbose(config.accountId,
                        "Found ${items.size} content fetch items, responseKeys=${items.map { it.responseKey }}")
 
-        contentFetchManager.handleContentFetch(contentFetchArray, context.packageName)
+        // Only an app-launch-in-app batch may settle the arbitration window on completion; inbox /
+        // native-display / other-event fetches must not close a window they didn't open.
+        val firesArbitrationComplete = items.any { it.isAppLaunchInApp() }
+        contentFetchManager.handleContentFetch(contentFetchArray, context.packageName, firesArbitrationComplete)
     }
 }
