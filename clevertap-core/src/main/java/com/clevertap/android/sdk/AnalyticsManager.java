@@ -406,6 +406,22 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             if (cache != null) {
                 CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
+                    // The viewed event is the ND impression hook.
+                    NdFCManager ndFCManager = controllerManager.getNdFCManager();
+                    if (ndFCManager != null) {
+                        JSONObject unitJson = displayUnit.getJsonObject();
+                        // Key on the stable campaign id (ti), not unitID (= wzrk_id, which rotates daily);
+                        // the evaluator's whenLimits are keyed by ti. Mirrors in-app's InAppFCManager, which
+                        // records by inapp.getId() (ti). didShow no-ops on a null/empty id.
+                        String ndCampaignId = unitJson.optString(Constants.INAPP_ID_IN_PAYLOAD);
+                        // Count toward the global ndmp/ndtlc budget only for units inside the ND fcap regime
+                        // and not globally excluded (shared predicate — the gate and App-Launched trim read the
+                        // same NdFCManager helpers, so the three can never disagree). Exempt units still record
+                        // a session impression inside didShow, but must not spend a global slot — the server
+                        // caps against these counts and would otherwise starve ceiling-bound campaigns.
+                        ndFCManager.didShow(ndCampaignId, NdFCManager.countsTowardCaps(unitJson));
+                    }
+
                     JSONObject eventExtras = displayUnit.getWZRKFields();
                     if (eventExtras != null) {
                         event.put("evtData", eventExtras);

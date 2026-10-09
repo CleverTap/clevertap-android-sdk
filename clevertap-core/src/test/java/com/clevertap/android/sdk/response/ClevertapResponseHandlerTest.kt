@@ -36,7 +36,7 @@ class ClevertapResponseHandlerTest {
         every { mockInAppResponse.runsDuringUserSwitch() } returns true
         every { mockGenericResponse.runsDuringUserSwitch() } returns true
         every { mockInboxResponse.runsDuringUserSwitch() } returns false
-        every { mockDisplayUnitResponse.runsDuringUserSwitch() } returns false
+        every { mockDisplayUnitResponse.runsDuringUserSwitch() } returns true // ingests ND meta on a switch
         every { mockFetchVariablesResponse.runsDuringUserSwitch() } returns false
     }
 
@@ -68,7 +68,7 @@ class ClevertapResponseHandlerTest {
     }
 
     @Test
-    fun `handleResponse with isUserSwitching true excludes InboxResponse, DisplayUnitResponse, and FetchVariablesResponse`() {
+    fun `handleResponse with isUserSwitching true excludes InboxResponse and FetchVariablesResponse but runs DisplayUnitResponse`() {
         // Given
         val responses = listOf(
             mockInAppResponse,
@@ -91,7 +91,9 @@ class ClevertapResponseHandlerTest {
         val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses are not processed
         verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any(), any()) }
+        // DisplayUnitResponse runs on a user switch too — it ingests per-account ND meta while skipping
+        // per-user content internally (runsDuringUserSwitch = true).
+        verify { mockDisplayUnitResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
         verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses are processed
@@ -157,7 +159,7 @@ class ClevertapResponseHandlerTest {
             mockInAppResponse,
             mockInboxResponse,      // Should be excluded
             mockOtherResponse1,
-            mockDisplayUnitResponse, // Should be excluded
+            mockDisplayUnitResponse, // Runs on user switch (4-arg), like InAppResponse
             mockOtherResponse2,
             mockFetchVariablesResponse // Should be excluded
         )
@@ -175,7 +177,9 @@ class ClevertapResponseHandlerTest {
         val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses
         verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any(), any()) }
+        // DisplayUnitResponse runs on a user switch too — it ingests per-account ND meta while skipping
+        // per-user content internally (runsDuringUserSwitch = true).
+        verify { mockDisplayUnitResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
         verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses
@@ -186,7 +190,7 @@ class ClevertapResponseHandlerTest {
 
 
     @Test
-    fun `handleResponse with only excluded response types and isUserSwitching true processes nothing`() {
+    fun `handleResponse with isUserSwitching true skips Inbox and FetchVariables but still runs DisplayUnitResponse`() {
         // Given
         val responses = listOf(
             mockInboxResponse,
@@ -204,8 +208,11 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        val ctx = ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        // DisplayUnitResponse runs on a user switch too — it ingests per-account ND meta while skipping
+        // per-user content internally (runsDuringUserSwitch = true).
+        verify { mockDisplayUnitResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
     }
 }

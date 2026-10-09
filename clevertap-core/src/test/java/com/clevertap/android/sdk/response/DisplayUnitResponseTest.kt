@@ -2,94 +2,450 @@ package com.clevertap.android.sdk.response
 
 import android.content.Context
 import com.clevertap.android.sdk.BaseCallbackManager
-import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController
-import com.clevertap.android.sdk.displayunits.model.MockCleverTapDisplayUnit
-import com.clevertap.android.sdk.utils.configMock
+import com.clevertap.android.sdk.displayunits.DisplayUnitCache
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
+import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.evaluation.NdEvaluationManager
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
+import com.clevertap.android.sdk.inapp.store.preference.NdStore
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
-@RunWith(RobolectricTestRunner::class)
-class DisplayUnitResponseTest {
+/**
+ * Covers the single merged Display Units / ND processor: fcap meta ingestion
+ * (absorbed from the former AdUnitResponse) + content delivery + user-switch handling.
+ *
+ * Runs under Robolectric (via [BaseTestCase]) because the content path uses `android.text.TextUtils`.
+ */
+class DisplayUnitResponseTest : BaseTestCase() {
 
-    private val config = configMock().also { every { it.isAnalyticsOnly } returns false }
-    private val callbackManager = mockk<BaseCallbackManager>(relaxed = true)
-    private val controllerManager = mockk<ControllerManager>()
-    private val context = mockk<Context>(relaxed = true)
-
-    // A real cache so the merge/replace outcome can be asserted end to end.
-    private val cache = CTDisplayUnitController()
-
+    private lateinit var config: CleverTapInstanceConfig
+    private lateinit var callbackManager: BaseCallbackManager
+    private lateinit var controllerManager: ControllerManager
+    private lateinit var storeRegistry: StoreRegistry
+    private lateinit var ndTriggerManager: TriggerManager
+    private lateinit var ndEvaluationManager: NdEvaluationManager
+    private lateinit var ndStore: NdStore
+    private lateinit var ndImpressionStore: ImpressionStore
+    private lateinit var ndFCManager: NdFCManager
+    private lateinit var cache: DisplayUnitCache
+    private lateinit var context: Context
+    private lateinit var deviceInfo: DeviceInfo
+    private lateinit var coreMetaData: CoreMetaData
     private lateinit var response: DisplayUnitResponse
 
-    @Before
-    fun setUp() {
-        every { controllerManager.orCreateDisplayUnitCache } returns cache
-        response = DisplayUnitResponse(config, callbackManager, controllerManager)
+    override fun setUp() {
+        super.setUp()
+        config = mockk(relaxed = true)
+        every { config.isAnalyticsOnly } returns false
+        every { config.logger } returns mockk<Logger>(relaxed = true)
+        every { config.accountId } returns "acc"
+
+        callbackManager = mockk(relaxed = true)
+        ndStore = mockk(relaxed = true)
+        ndImpressionStore = mockk(relaxed = true)
+        ndFCManager = mockk(relaxed = true)
+        every { ndFCManager.globalCapRemaining() } returns Int.MAX_VALUE // uncapped by default; tests override
+        ndTriggerManager = mockk(relaxed = true)
+        ndEvaluationManager = mockk(relaxed = true)
+        cache = mockk(relaxed = true)
+        context = mockk(relaxed = true)
+
+        storeRegistry = mockk(relaxed = true)
+        every { storeRegistry.ndStore } returns ndStore
+        every { storeRegistry.ndImpressionStore } returns ndImpressionStore
+
+        controllerManager = mockk(relaxed = true)
+        every { controllerManager.ndFCManager } returns ndFCManager
+        every { controllerManager.getOrCreateDisplayUnitCache() } returns cache
+
+        deviceInfo = mockk(relaxed = true)
+        every { deviceInfo.appLaunchedFields } returns JSONObject() // App Launched event props (empty is fine)
+        coreMetaData = mockk(relaxed = true)
+
+        response = DisplayUnitResponse(
+            config, callbackManager, controllerManager, storeRegistry, ndTriggerManager, ndEvaluationManager,
+            deviceInfo, coreMetaData
+        )
     }
 
-    private fun unit(id: String): JSONObject =
-        MockCleverTapDisplayUnit().getAUnit().put(Constants.NOTIFICATION_ID_TAG, id)
-
-    private fun adUnitResponse(vararg units: JSONObject): JSONObject =
-        JSONObject().put(
-            Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY,
-            JSONArray().apply { units.forEach { put(it) } }
-        )
-
-    private fun process(source: CTResponseSource, body: JSONObject) {
-        response.processResponse(
-            body, "", context,
-            ResponseContext(isFullResponse = false, isUserSwitching = false, source = source)
-        )
-    }
-
-    private fun cachedIds(): Set<String> =
-        cache.allDisplayUnits.orEmpty().map { it.unitID }.toSet()
+    // ---- meta (absorbed from AdUnitResponse) ----
 
     @Test
-    fun `a1 response replaces the cache`() {
-        process(CTResponseSource.A1, adUnitResponse(unit("u1"), unit("u2")))
-        assertEquals(setOf("u1", "u2"), cachedIds())
+    fun `stores adUnit_notifs_ss metadata bundle`() {
+        response.processResponse(JSONObject("""{"adUnit_notifs_ss":[{"ti":70001},{"ti":70002}]}"""), "", context)
 
-        process(CTResponseSource.A1, adUnitResponse(unit("u3")))
-        assertEquals(setOf("u3"), cachedIds()) // REPLACE: u1/u2 gone
+        val slot = slot<List<JSONObject>>()
+        verify { ndStore.storeServerSideNdMetaData(capture(slot)) }
+        assertEquals(2, slot.captured.size)
+    }
+
+    @Test
+    fun `applies ndmc and ndmp ceilings`() {
+        response.processResponse(JSONObject("""{"ndmc":1,"ndmp":10}"""), "", context)
+        verify { ndFCManager.updateLimits(10, 1) }
+    }
+
+    @Test
+    fun `purges stale nd targets from all cap stores`() {
+        response.processResponse(JSONObject("""{"adUnit_stale":["70001","70002"]}"""), "", context)
+        verify { ndImpressionStore.clear("70001") }
+        verify { ndImpressionStore.clear("70002") }
+        verify { ndTriggerManager.removeTriggers("70001") }
+        verify { ndFCManager.processResponse(any()) }
+    }
+
+    @Test
+    fun `acks CG-suppressed app-launched stubs that are within whenLimits`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70003,"wzrk_id":"70003_20260810","suppressed":true,"wzrk_cgId":0},
+                {"ti":70004,"wzrk_id":"70004_20260810","type":"simple"}
+            ]}"""
+        )
+        // Stub is eligible (passes whenLimits) -> acked at the would-have-shown moment.
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+
+        response.processResponse(json, "", context)
+
+        val slot = slot<JSONObject>()
+        verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(capture(slot)) }
+        assertEquals("70003_20260810", slot.captured.optString("wzrk_id"))
+    }
+
+    @Test
+    fun `a CG stub outside its whenLimits is not acked`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}
+            ]}"""
+        )
+        // whenLimits drops the stub -> the campaign would not have shown -> the CG arm must not be counted.
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } returns emptyList()
+
+        response.processResponse(json, "", context)
+
+        verify(exactly = 0) { ndEvaluationManager.recordCgSuppressed(any()) }
+    }
+
+    @Test
+    fun `a CG-stub-only response acks but leaves the cache intact`() {
+        // No adUnit_notifs and every app-launched entry is a CG stub -> nothing deliverable. The stub is
+        // acked, but the cache must NOT be reset (would silently wipe units from an earlier delivery).
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}
+            ]}"""
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+
+        response.processResponse(json, "", context)
+
+        verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(any()) } // stub still acked
+        verify(exactly = 0) { cache.updateDisplayUnits(any()) }               // cache untouched
+        verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) }
+    }
+
+    @Test
+    fun `no-op for analytics-only`() {
+        every { config.isAnalyticsOnly } returns true
+        response.processResponse(JSONObject("""{"ndmc":1,"ndmp":10}"""), "", context)
+        verify(exactly = 0) { ndFCManager.updateLimits(any(), any()) }
+    }
+
+    // ---- content delivery + user switch ----
+
+    @Test
+    fun `delivers adUnit_notifs content to the host`() {
+        val json = JSONObject("""{"adUnit_notifs":[{"wzrk_id":"u1","type":"simple"}]}""")
+        response.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { cache.updateDisplayUnits(any()) }
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)
+    }
+
+    @Test
+    fun `filters app-launched content by whenLimits and delivers only survivors`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70001,"wzrk_id":"70001_20260810","type":"simple"},
+                {"ti":70002,"wzrk_id":"70002_20260810","type":"simple"}
+            ]}"""
+        )
+        // whenLimits filter keeps 70001, drops 70002 (over cap).
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers {
+            firstArg<List<JSONObject>>().filter { it.optString("ti") == "70001" }
+        }
+
+        response.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify(exactly = 1) { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } // filter runs
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)                     // only the survivor is delivered
+        assertEquals("70001_20260810", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `app-launched batch is trimmed to the remaining global cap`() {
+        // Regime units (isNdFcapEnabled) are subject to the budget; they also reach the session gate.
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70001,"wzrk_id":"70001_x","type":"simple","isNdFcapEnabled":true},
+                {"ti":70002,"wzrk_id":"70002_x","type":"simple","isNdFcapEnabled":true},
+                {"ti":70003,"wzrk_id":"70003_x","type":"simple","isNdFcapEnabled":true}
+            ]}"""
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() } // all pass whenLimits
+        every { ndFCManager.canShow(any(), any(), any(), any()) } returns true // pass the session gate
+        every { ndFCManager.globalCapRemaining() } returns 1 // only 1 left under the global cap (e.g. 5 cap, 4 shown)
+
+        response.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size) // trimmed to the remaining budget, in server order
+        assertEquals("70001_x", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `app-launched units exempt via excludeGlobalFCaps bypass the global-cap trim`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70001,"wzrk_id":"70001_x","type":"simple","isNdFcapEnabled":true},
+                {"ti":70002,"wzrk_id":"70002_x","type":"simple","isNdFcapEnabled":true,"excludeGlobalFCaps":1}
+            ]}"""
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+        every { ndFCManager.globalCapRemaining() } returns 0 // no global budget left
+        // 70002 is exempt (excludeGlobalFCaps) so it also hits NdFcapGate.canShow; in prod an exempt unit
+        // returns true there, so mirror that (the relaxed mock would otherwise return false).
+        every { ndFCManager.canShow(any(), any(), any(), any()) } returns true
+
+        response.processResponse(json, "", context)
+
+        // 70001 dropped (no budget), but 70002 delivers because it's exempt from global caps.
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)
+        assertEquals("70002_x", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `non-regime app-launched unit is kept despite zero budget`() {
+        // isNdFcapEnabled absent -> outside the regime -> never counts -> must not consume/lose a budget slot.
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[{"ti":70005,"wzrk_id":"70005_x","type":"simple"}]}""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+        every { ndFCManager.globalCapRemaining() } returns 0 // no budget left
+
+        response.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size) // non-regime -> budget-exempt -> still delivered
+        assertEquals("70005_x", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `a throwing CG ack does not drop the regular content parsed alongside it`() {
+        val json = JSONObject(
+            """{
+                "adUnit_notifs":[{"wzrk_id":"reg1","type":"simple"}],
+                "adUnit_notifs_applaunched":[{"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}]
+            }""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+        every { ndEvaluationManager.recordCgSuppressed(any()) } throws RuntimeException("prefs write failed")
+
+        response.processResponse(json, "", context)
+
+        // The CG ack blew up, but the regular adUnit_notifs unit still delivers (failure is contained).
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)
+        assertEquals("reg1", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `CG stubs and content are run through whenLimits in separate groups, stubs acked not delivered`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70003,"wzrk_id":"70003_20260810","suppressed":true,"wzrk_cgId":0},
+                {"ti":70004,"wzrk_id":"70004_20260810","type":"simple"}
+            ]}"""
+        )
+        val groups = mutableListOf<List<JSONObject>>()
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(capture(groups), any(), any()) } answers { firstArg() }
+
+        response.processResponse(json, "", context)
+
+        // Both the CG-stub group and the content group go through the same whenLimits filter, separately.
+        verify(exactly = 2) { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) }
+        val stubGroup = groups.first { grp -> grp.any { it.optBoolean("suppressed") } }
+        val contentGroup = groups.first { grp -> grp.none { it.optBoolean("suppressed") } }
+        assertEquals("70003", stubGroup.single().optString("ti"))
+        assertEquals("70004", contentGroup.single().optString("ti"))
+        // The CG stub is acked (not delivered); only the content unit is delivered.
+        verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(any()) }
+        val delivered = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(delivered)) }
+        assertEquals(1, delivered.captured.size)
+        assertEquals("70004_20260810", delivered.captured[0].unitID)
+    }
+
+    @Test
+    fun `a throwing app-launched whenLimits filter fails closed - drops app-launched, keeps regular content`() {
+        // A malformed advanced rule (e.g. onEvery limit=0 -> divide-by-zero) makes the filter throw.
+        val json = JSONObject(
+            """{
+                "adUnit_notifs":[{"wzrk_id":"reg1","type":"simple"}],
+                "adUnit_notifs_applaunched":[{"ti":70001,"wzrk_id":"70001_20260810","type":"simple"}]
+            }""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } throws RuntimeException("divide by zero")
+
+        response.processResponse(json, "", context)
+
+        // Fail-closed: the un-cap-checkable app-launched unit is dropped (must not bypass caps), but the
+        // throw is contained so the regular adUnit_notifs unit still delivers.
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)
+        assertEquals("reg1", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `clears the cache when the response carried content but the filter dropped everything`() {
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[{"ti":70001,"wzrk_id":"70001_20260810","type":"simple"}]}""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } returns emptyList()
+
+        response.processResponse(json, "", context)
+
+        // Content was present but nothing survived -> reset the cache (don't leave a suppressed unit
+        // renderable via getAllDisplayUnits); no callback fires.
+        verify(exactly = 1) { cache.updateDisplayUnits(match { it.isEmpty() }) }
+        verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) }
+    }
+
+    @Test
+    fun `on user switch ingests meta but skips content delivery`() {
+        val json = JSONObject("""{"ndmc":1,"ndmp":10,"adUnit_notifs":[{"wzrk_id":"u1","type":"simple"}]}""")
+
+        response.processResponse(json, "", context, ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1))
+
+        verify { ndFCManager.updateLimits(10, 1) }               // meta ingested
+        verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) } // content skipped
+    }
+
+    @Test
+    fun `on user switch persists per-account ceilings but NOT the per-user ss-bundle or CG acks`() {
+        val json = JSONObject(
+            """{"ndmc":1,"ndmp":10,
+                "adUnit_notifs_ss":[{"ti":70001}],
+                "adUnit_notifs_applaunched":[{"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}]}""",
+        )
+
+        response.processResponse(json, "", context, ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1))
+
+        verify { ndFCManager.updateLimits(10, 1) }                        // per-account: kept
+        verify(exactly = 0) { ndStore.storeServerSideNdMetaData(any()) }  // per-user bundle: skipped
+        verify(exactly = 0) { ndEvaluationManager.recordCgSuppressed(any()) } // per-user CG ack: skipped
+    }
+
+    @Test
+    fun `send-test preview path is never cap-gated`() {
+        // Content-only constructor -> storeRegistry null -> the fcap gate must be skipped so a marketer's
+        // preview always renders, even if canShow would deny.
+        val preview = DisplayUnitResponse(config, callbackManager, controllerManager)
+        every { ndFCManager.canShow(any(), any(), any(), any()) } returns false
+        val json = JSONObject("""{"adUnit_notifs":[{"wzrk_id":"p1","ti":70001,"type":"simple","tlc":1}]}""")
+
+        preview.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size) // delivered despite canShow=false
+    }
+
+    // ---- content-fetch: /a1 REPLACE vs /content merge-by-unitID (develop sync) ----
+    // These use a REAL CTDisplayUnitController so the merge/replace outcome is asserted end to end. The
+    // units are non-regime (no isNdFcapEnabled), so the fcap gate passes them through; caps are applied
+    // before the merge regardless.
+
+    private fun cfUnit(id: String): JSONObject =
+        JSONObject().put("wzrk_id", id).put("type", "simple")
+
+    private fun adUnitBody(vararg units: JSONObject): JSONObject =
+        JSONObject().put("adUnit_notifs", JSONArray().apply { units.forEach { put(it) } })
+
+    private fun process(realCache: CTDisplayUnitController, source: CTResponseSource, body: JSONObject) {
+        every { controllerManager.getOrCreateDisplayUnitCache() } returns realCache
+        response.processResponse(
+            body, "", context,
+            ResponseContext(isFullResponse = false, isUserSwitching = false, source = source),
+        )
+    }
+
+    private fun CTDisplayUnitController.ids(): Set<String> =
+        allDisplayUnits.orEmpty().map { it.unitID }.toSet()
+
+    @Test
+    fun `a1 response replaces the display-unit cache`() {
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1"), cfUnit("u2")))
+        assertEquals(setOf("u1", "u2"), c.ids())
+
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u3")))
+        assertEquals(setOf("u3"), c.ids()) // REPLACE: u1/u2 gone
     }
 
     @Test
     fun `content fetch merges by unitID and does not wipe a1 units`() {
-        process(CTResponseSource.A1, adUnitResponse(unit("u1"), unit("u2")))
-        assertEquals(2, cachedIds().size)
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1"), cfUnit("u2")))
 
         // Partial personalized subset from /content: updates u2, adds u3, must keep u1.
-        process(CTResponseSource.CONTENT_FETCH, adUnitResponse(unit("u2"), unit("u3")))
-        assertEquals(setOf("u1", "u2", "u3"), cachedIds())
+        process(c, CTResponseSource.CONTENT_FETCH, adUnitBody(cfUnit("u2"), cfUnit("u3")))
+        assertEquals(setOf("u1", "u2", "u3"), c.ids())
     }
 
     @Test
-    fun `content fetch callback delivers the full merged set, never a smaller one`() {
-        process(CTResponseSource.A1, adUnitResponse(unit("u1")))
-        process(CTResponseSource.CONTENT_FETCH, adUnitResponse(unit("u2")))
+    fun `content fetch callback delivers the full merged set`() {
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1")))
+        process(c, CTResponseSource.CONTENT_FETCH, adUnitBody(cfUnit("u2")))
 
-        // Second (content) callback carries both units, not just the personalized one.
+        // The content callback carries both units, not just the personalized one.
         verify { callbackManager.notifyDisplayUnitsLoaded(match { it.size == 2 }) }
     }
 
     @Test
-    fun `empty content fetch adUnit_notifs does not touch the cache`() {
-        process(CTResponseSource.A1, adUnitResponse(unit("u1"), unit("u2")))
-        assertEquals(2, cachedIds().size)
+    fun `empty content fetch does not touch the cache`() {
+        val c = CTDisplayUnitController()
+        process(c, CTResponseSource.A1, adUnitBody(cfUnit("u1"), cfUnit("u2")))
 
-        process(CTResponseSource.CONTENT_FETCH, adUnitResponse()) // empty array
-        assertEquals(setOf("u1", "u2"), cachedIds()) // unchanged, not wiped
+        process(c, CTResponseSource.CONTENT_FETCH, adUnitBody()) // empty array -> no-op, cache untouched
+        assertEquals(setOf("u1", "u2"), c.ids()) // unchanged, not wiped
     }
 }
