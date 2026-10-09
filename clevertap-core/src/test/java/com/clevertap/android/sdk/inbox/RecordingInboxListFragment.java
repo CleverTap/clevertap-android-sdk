@@ -9,15 +9,23 @@ import androidx.annotation.Nullable;
 
 /**
  * Real fragment (safe to attach through a FragmentManager, unlike a MockK spy)
- * that records {@link #refreshList()} invocations instead of executing them.
+ * that records {@link #refreshList()} and {@link #onPageSettled()} invocations instead of
+ * executing them.
  */
 public class RecordingInboxListFragment extends CTInboxListViewFragment {
 
     public int refreshListCalls = 0;
 
+    public int onPageSettledCalls = 0;
+
     @Override
     void refreshList() {
         refreshListCalls++;
+    }
+
+    @Override
+    void onPageSettled() {
+        onPageSettledCalls++;
     }
 
     @Nullable
