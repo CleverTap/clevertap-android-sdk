@@ -159,6 +159,43 @@ If the user clicks anywhere outside the icon CTAs, the default notification clic
 
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
 
+## Icons Template
+
+Icons template is a push notification that shows a row of 3 to 5 icons, with an optional title and message in the expanded view. It helps users go directly to the functionality of their choice with a button click.
+
+`pt_img1`, `pt_img2` and `pt_img3` with their deep links are required. `pt_img4` and `pt_img5` are optional, so the row can have 3, 4 or 5 icons.
+
+`pt_title`, `pt_msg` and `pt_msg_summary` are optional. `nt` and `nm` are not used as a fallback, so a payload without `pt_title` and `pt_msg` shows only icons. In a stacked group summary, `pt_msg` is used as the title when `pt_title` is not set.
+
+The collapsed notification shows only the icons. The expanded notification shows the text and the icons, with `pt_msg_summary` in the message line when set.
+
+Icon taps open the deep link in the app. The SDK does not dismiss the notification on its own.
+
+To dismiss it on tap, add the `dismissNotification` snippet from the Input Box template to your Activity. Only the snippet code is needed; the Input Box note about `false` and Android 12 does not apply here. With the snippet in place, an icon tap dismisses the notification by default. Send `pt_dismiss_on_click` as `false` to keep it open.
+
+If the payload does not contain enough valid icon/deeplink data, or if 3 or more icon images are not retrieved at render time, the library falls back to a basic notification using the available title and message content.
+
+The CTA associated with each icon is captured in the `Notification Clicked` event under the `wzrk_c2a` property.
+
+If the user clicks anywhere outside the icon CTAs, the default notification click action launches the activity intent.
+
+(Collapsed and expanded example)
+
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_collapsed.png" alt="Icons Collapsed" width="412" height="182">
+
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/icons_expanded.png" alt="Icons Expanded" width="412" height="243">
+
+### Difference between Five Icons and Icons Template
+
+Both templates take the same icon and deep link keys, are validated the same way and fall back to the Basic Template the same way. Use `pt_icons` when the collapsed notification should show only icons, or when an icon tap should dismiss the notification. `pt_five_icons` keeps its existing behaviour.
+
+Behaviour | Five Icons Template (`pt_five_icons`) | Icons Template (`pt_icons`)
+  ---:|:---|:---
+Collapsed notification | Title and message with a shorter icon row | Icons only
+Expanded notification | Title and message above the icons | Title and message above the icons, only when `pt_title`, `pt_msg` or `pt_msg_summary` is set
+Title, message and summary | `pt_title`, `pt_msg` and `pt_msg_summary`, falling back to `nt`, `nm` and `wzrk_nms` | `pt_title`, `pt_msg` and `pt_msg_summary` only, no fallback
+Dismiss on icon tap | Not supported | Supported with the `dismissNotification` snippet, `pt_dismiss_on_click` set to `false` keeps it open
+
 ## Timer Template
 
 This template features a live countdown timer. You can even choose to show different title, message, and background image after the timer expires.
@@ -285,6 +322,9 @@ pt_big_img_alt_text | Optional | Alt Text for Image
 pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_ico | Optional | Large Icon
 pt_dl1 | Optional | One Deep Link (minimum)
 pt_title_clr | Optional | Title Color in HEX
@@ -313,6 +353,9 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
@@ -343,6 +386,9 @@ pt_img3_alt_text | Optional | Alt Text for Image Three
 pt_img`n` | Optional | Image `N`
 pt_img`n`_alt_text | Optional | Alt Text for Image `N`
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_bg | Optional | Background Color in HEX
 pt_ico | Optional | Large Icon
 pt_title_clr | Optional | Title Color in HEX
@@ -365,6 +411,9 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_default_dl | Required  | Default Deep Link for Push Notification
@@ -427,6 +476,7 @@ Five Icons Template Keys | Required | Description
 pt_id | Required  | Value - `pt_five_icons`
 pt_title | Optional | Title rendered above icons
 pt_msg | Optional | Message rendered above icons
+pt_msg_summary | Optional | Message line when Notification is expanded
 pt_img1 | Required  | Icon One
 pt_img1_alt_text | Optional | Alt Text for Icon One
 pt_img2 | Required  | Icon Two
@@ -448,6 +498,36 @@ pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
 pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 pt_json | Optional | Above keys in JSON format
 
+### Icons Template
+
+Icons Template Keys | Required | Description
+  ---:|:---:|:--- 
+pt_id | Required  | Value - `pt_icons`
+pt_title | Optional | Title rendered above icons
+pt_msg | Optional | Message rendered above icons
+pt_msg_summary | Optional | Message line when Notification is expanded
+pt_img1 | Required  | Icon One
+pt_img1_alt_text | Optional | Alt Text for Icon One
+pt_img2 | Required  | Icon Two
+pt_img2_alt_text | Optional | Alt Text for Icon Two
+pt_img3 | Required  | Icon Three
+pt_img3_alt_text | Optional | Alt Text for Icon Three
+pt_img4 | Optional  | Icon Four
+pt_img4_alt_text | Optional | Alt Text for Icon Four
+pt_img5 | Optional  | Icon Five
+pt_img5_alt_text | Optional | Alt Text for Icon Five
+pt_dl1 | Required  | Deep Link for first icon
+pt_dl2 | Required  | Deep Link for second icon
+pt_dl3 | Required  | Deep Link for third icon
+pt_dl4 | Optional  | Deep Link for fourth icon
+pt_dl5 | Optional  | Deep Link for fifth icon
+pt_bg | Optional  | Background Color in HEX
+pt_small_icon_clr | Optional | Small Icon Color in HEX
+pt_sticky | Optional | Should the notification be sticky? ("true"/"false")
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
+pt_dismiss_on_click | Optional | Set to `false` to keep the notification after an icon tap
+pt_json | Optional | Above keys in JSON format
+
 ### Timer Template
 
 Timer Template Keys | Required | Description
@@ -466,6 +546,9 @@ pt_gif | Optional | GIF
 pt_gif_frames | Optional | Number of frames to extract from the GIF
 pt_big_img_alt_text | Optional | Alt Text for Image
 pt_scale_type | Optional | ScaleType for the big image in the ImageView ("center_crop"/"fit_center")
+pt_img_corner_radius | Optional | Image corner radius. Android 12 and above. See [Image Border and Rounded Corners](#image-border-and-rounded-corners)
+pt_img_border_width | Optional | Image border width. Android 12 and above
+pt_img_border_clr | Optional | Image border color in HEX
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_gif_alt | Optional | GIF to show when timer expires
 pt_gif_frames_alt | Optional | Number of frames to extract from the alternate GIF
@@ -573,7 +656,7 @@ The following are the image specifications and guidelines for the Push Templates
 | **Basic**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 500 KB                                      |
 | **Auto Carousel**   | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
 | **Manual Carousel** | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 86 KB                                       |
-| **Five Icon**       | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                      | 50 KB                                       |
+| **Five Icon / Icons** | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **1:1**                                                                                    | 50 KB                                       |
 | **Text over Image** | - OS version 12 and above: **1:1**<br>- OS version 11 and below: **2:1**                                                                                      | 500 KB                                      |
 | **Timer**           | - OS version 12 and above: **3:2**<br>- OS version 11 and below: **5:3**                                                                                      | 326 KB                                      |
 
@@ -585,7 +668,7 @@ Ensure images for the following templates meet the specified size guidelines:
 |:---------------------------|:-----------------------|
 | Auto Carousel Template     | 400 x 300 px           |
 | Manual Carousel Template   | 240 x 180 px           |
-| Five Icon Template         | 300 x 300 px           |
+| Five Icon / Icons Template | 300 x 300 px           |
 | Product Catalogue Template | 225 x 225 px           |
 
 - For Text over Image Template, ensure the text is center-aligned within the image for devices running OS version 12 and above.
@@ -609,6 +692,19 @@ Templates support **custom color definitions** that adapt to both themes for vis
 To use the Image scaling feature, ensure you are using Push Templates SDK version 2.1.0 and above.
 Android supports various image scaling options to control how images appear in push notifications. CleverTap optimizes image rendering to maintain visual consistency across devices while leveraging Android native scaling behavior. 
 To handle scaling in a Push template, you must add the key `pt_scale_type` key and the value is set as `fit_center` or `center_crop` based on the requirement. Refer [here](https://developer.clevertap.com/docs/android-push-templates#image-scaling) for more details
+
+## Image Border and Rounded Corners
+Supported on the Basic, Auto Carousel, Manual Carousel, Rating, Timer and Image with CTA templates on Android 12 (API 31) and above. Applies to static images only; GIFs are shown without the corner radius or border.
+
+Key | Description
+:---|:---
+`pt_img_corner_radius` | Corner radius as a percentage of the image's height
+`pt_img_border_width` | Border width relative to the image's height
+`pt_img_border_clr` | Border color in HEX, `#RRGGBB` or `#AARRGGBB`. Supports the `_dark` suffix, see [Dark Mode](#dark-mode)
+
+A border needs both `pt_img_border_width` and `pt_img_border_clr`; either key alone draws nothing. Values outside the range are clamped to the nearest limit, and values that are not numbers are ignored.
+
+With `center_crop` the border is drawn around the image. With `fit_center` it is drawn over the image edge.
 
 ## Android 12 Trampoline restrictions
 

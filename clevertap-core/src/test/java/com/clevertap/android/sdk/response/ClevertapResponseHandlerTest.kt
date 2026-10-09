@@ -31,6 +31,13 @@ class ClevertapResponseHandlerTest {
         mockFetchVariablesResponse = mockk(relaxed = true)
         mockGenericResponse = mockk(relaxed = true)
         mockBodyJson = mockk()
+
+        // Declare each processor's user-switch policy (the handler now filters on this, not on type).
+        every { mockInAppResponse.runsDuringUserSwitch() } returns true
+        every { mockGenericResponse.runsDuringUserSwitch() } returns true
+        every { mockInboxResponse.runsDuringUserSwitch() } returns false
+        every { mockDisplayUnitResponse.runsDuringUserSwitch() } returns false
+        every { mockFetchVariablesResponse.runsDuringUserSwitch() } returns false
     }
 
     @Test
@@ -54,8 +61,9 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = true, isUserSwitching = false, source = CTResponseSource.A1)
         responses.forEach { response ->
-            verify { response.processResponse(mockBodyJson, bodyString, mockContext) }
+            verify { response.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
         }
     }
 
@@ -80,15 +88,15 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses are not processed
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses are processed
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
-
-        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
     }
 
     @Test
@@ -106,7 +114,12 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
+        verify {
+            mockInAppResponse.processResponse(
+                mockBodyJson, bodyString, mockContext,
+                ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+            )
+        }
     }
 
     @Test
@@ -124,7 +137,12 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify {
+            mockGenericResponse.processResponse(
+                mockBodyJson, bodyString, mockContext,
+                ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+            )
+        }
     }
 
 
@@ -133,6 +151,8 @@ class ClevertapResponseHandlerTest {
         // Given
         val mockOtherResponse1 = mockk<CleverTapResponse>(relaxed = true)
         val mockOtherResponse2 = mockk<CleverTapResponse>(relaxed = true)
+        every { mockOtherResponse1.runsDuringUserSwitch() } returns true
+        every { mockOtherResponse2.runsDuringUserSwitch() } returns true
         val responses = listOf(
             mockInAppResponse,
             mockInboxResponse,      // Should be excluded
@@ -152,17 +172,16 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
-
-        verify { mockOtherResponse1.processResponse(mockBodyJson, bodyString, mockContext) }
-
-        verify { mockOtherResponse2.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockOtherResponse1.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockOtherResponse2.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
     }
 
 

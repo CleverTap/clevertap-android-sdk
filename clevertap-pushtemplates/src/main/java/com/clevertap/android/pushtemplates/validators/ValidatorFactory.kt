@@ -239,6 +239,13 @@ internal class ValidatorFactory {
                         .build()
                 }
 
+                is IconsTemplateData -> {
+                    builder
+                        .addDeepLinkValidation(templateData.baseContent.deepLinkList, 3, PT_FIVE_DEEPLINK_LIST)
+                        .addImageListValidation(templateData.imageList, 3, key = PT_FIVE_IMAGE_LIST)
+                        .build()
+                }
+
                 is ProductTemplateData -> {
                     val productBuilder = builder
                         .addBasicTextValidation(templateData.baseContent.textData)
@@ -346,7 +353,8 @@ internal class ValidatorFactory {
                     ContentValidator(keys)
                 )
                 TemplateType.RATING -> RatingTemplateValidator(ContentValidator(keys))
-                TemplateType.FIVE_ICONS -> FiveIconsTemplateValidator(keys)
+                // Shared with Five Icons: both templates need the same icon and deep link rules.
+                TemplateType.FIVE_ICONS, TemplateType.ICONS -> FiveIconsTemplateValidator(keys)
                 TemplateType.PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(
                     ContentValidator(keys)
                 )

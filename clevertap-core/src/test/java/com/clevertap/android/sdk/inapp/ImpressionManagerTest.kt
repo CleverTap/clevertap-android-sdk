@@ -8,11 +8,11 @@ import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore
 import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.utils.Clock
+import com.clevertap.android.sdk.utils.FakeClock
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.*
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -29,6 +29,8 @@ class ImpressionManagerTest : BaseTestCase() {
 
     private lateinit var impressionManager: ImpressionManager
 
+    private lateinit var storeRegistry: StoreRegistry
+
     override fun setUp() {
         super.setUp()
         clock = mockk(relaxed = true)
@@ -36,7 +38,7 @@ class ImpressionManagerTest : BaseTestCase() {
         val mockLegacyInAppStore: LegacyInAppStore = mockk()
         val mockInAppAssetsStore: InAppAssetsStore = mockk()
         val mockFileStore: FileStore = mockk()
-        val storeRegistry = StoreRegistry(
+        storeRegistry = StoreRegistry(
             legacyInAppStore = mockLegacyInAppStore,
             inAppAssetsStore = mockInAppAssetsStore,
             filesStore = mockFileStore
@@ -53,19 +55,6 @@ class ImpressionManagerTest : BaseTestCase() {
         )
 
         storeRegistry.impressionStore = impressionStore
-    }
-
-    class FakeClock : Clock {
-
-        override fun currentTimeMillis(): Long {
-            val seconds = 1000L
-            return seconds * 1000
-        }
-
-        override fun newDate(): Date {
-            val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-            return dateFormatter.parse("20230126")!!// January 26, 2023
-        }
     }
 
     @Test
@@ -240,6 +229,10 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         val campaignId = "campaign123"
         val currentTimestamp = System.currentTimeMillis() / 1000
+        // perDay now derives "now" from the injected Clock (SDK-6131); pin it to the single captured
+        // instant (not a fresh Date()) so the injected boundary and the reference timestamps below can't
+        // diverge across a local-midnight boundary.
+        every { clock.newDate() } returns Date(currentTimestamp * 1000)
 
         val referenceTimestamp = getSecondsSinceLastMidnight()
 
@@ -314,6 +307,10 @@ class ImpressionManagerTest : BaseTestCase() {
         // Arrange
         val campaignId = "campaign123"
         val currentTimestamp = System.currentTimeMillis() / 1000
+        // perWeek now derives "now" from the injected Clock (SDK-6131); pin it to the single captured
+        // instant (not a fresh Date()) so the injected boundary and the reference timestamps below can't
+        // diverge across a local-midnight boundary.
+        every { clock.newDate() } returns Date(currentTimestamp * 1000)
 
         val referenceTimestamp = getSecondsSinceFirstDayOfCurrentWeek()
 
@@ -627,6 +624,33 @@ class ImpressionManagerTest : BaseTestCase() {
         }.time.time
 
         return TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
+    }
+
+    @Test
+    fun `perDay and perWeek follow the injected clock`() {
+        // The point of SDK-6131: day/week windows now honour the injected Clock, so a FakeClock can
+        // drive them deterministically (previously perDay/perWeek read the real system Date()).
+        val fakeClock = FakeClock() // fixed instant; newDate() == Date(timeMillis), consistent w/ seconds
+        val im = ImpressionManager(storeRegistry = storeRegistry, clock = fakeClock)
+        val campaignId = "clock_driven"
+
+        // Two shows "today" (at the fake clock's instant).
+        im.recordImpression(campaignId)
+        im.recordImpression(campaignId)
+
+        assertEquals(2, im.perDay(campaignId, 1))
+        assertEquals(2, im.perWeek(campaignId, 1))
+
+        // Advance the injected clock past the day window — the shows must age out (proves it follows
+        // the Clock, not the real device date). perDay(id,1) counts since the start of "yesterday", so
+        // cross two calendar days to clear an impression stamped today.
+        fakeClock.advanceOneDay()
+        fakeClock.advanceOneDay()
+        assertEquals(0, im.perDay(campaignId, 1))
+
+        // ...and past the week window.
+        repeat(8) { fakeClock.advanceOneDay() }
+        assertEquals(0, im.perWeek(campaignId, 1))
     }
 
     private fun recordImpression(timestamp: Long, campaignId: String) {

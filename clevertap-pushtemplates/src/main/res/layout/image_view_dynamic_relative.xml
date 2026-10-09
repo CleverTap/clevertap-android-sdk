@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/big_image"
+    <!-- big_image_frame draws the border for CENTER_CROP images on Android 12+ -->
+    <FrameLayout
+        android:id="@+id/big_image_frame"
+        android:clipToOutline="true"
+        tools:targetApi="s"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:visibility="gone" />
+        android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/big_image_fitCenter"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="fitCenter"
-        android:visibility="gone" />
+        <ImageView
+            android:id="@+id/big_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
+            tools:targetApi="s"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/big_image_fitCenter"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

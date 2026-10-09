@@ -10,7 +10,15 @@ import org.json.JSONObject;
  */
 public abstract class CleverTapResponse {
 
-    public boolean isFullResponse = false; // todo this is volatile, could not fix using current infra
+    /**
+     * Whether this processor should run while a user switch is in progress. Defaults to {@code true};
+     * processors that must be skipped during a user switch override this to return {@code false}.
+     * Lets {@link ClevertapResponseHandler} decide inclusion polymorphically instead of checking
+     * concrete types.
+     */
+    public boolean runsDuringUserSwitch() {
+        return true;
+    }
 
     @WorkerThread
     public void processResponse(
@@ -19,5 +27,19 @@ public abstract class CleverTapResponse {
             final Context context
     ) {
         Log.i("CleverTapResponse", "Done processing response!");
+    }
+
+    /**
+     * Context-aware entry point. Decorators that need request-scoped flags (source / isFullResponse /
+     * isUserSwitching) override this; the default ignores the context and runs the plain overload.
+     */
+    @WorkerThread
+    public void processResponse(
+            final JSONObject jsonBody,
+            final String stringBody,
+            final Context context,
+            final ResponseContext responseContext
+    ) {
+        processResponse(jsonBody, stringBody, context);
     }
 }
