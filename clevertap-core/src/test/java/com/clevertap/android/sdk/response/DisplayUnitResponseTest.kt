@@ -142,6 +142,24 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     @Test
+    fun `a CG-stub-only response acks but leaves the cache intact`() {
+        // No adUnit_notifs and every app-launched entry is a CG stub -> nothing deliverable. The stub is
+        // acked, but the cache must NOT be reset (would silently wipe units from an earlier delivery).
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[
+                {"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}
+            ]}"""
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+
+        response.processResponse(json, "", context)
+
+        verify(exactly = 1) { ndEvaluationManager.recordCgSuppressed(any()) } // stub still acked
+        verify(exactly = 0) { cache.updateDisplayUnits(any()) }               // cache untouched
+        verify(exactly = 0) { callbackManager.notifyDisplayUnitsLoaded(any()) }
+    }
+
+    @Test
     fun `no-op for analytics-only`() {
         every { config.isAnalyticsOnly } returns true
         response.processResponse(JSONObject("""{"ndmc":1,"ndmp":10}"""), "", context)

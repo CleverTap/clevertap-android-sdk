@@ -186,8 +186,20 @@ internal class DisplayUnitResponse(
     private fun parseDisplayUnits(notifs: JSONArray?, appLaunched: JSONArray?) {
         val parsed = ArrayList<CleverTapDisplayUnit>()
         notifs?.let { parsed.addAll(parseDisplayUnitsFromJson(it)) }
-        // App-Launched content is filtered by whenLimits here (it carries no adUnit_eval vote).
+        // App-Launched content is filtered by whenLimits here (it carries no adUnit_eval vote). This also acks
+        // the CG-suppression stubs as a side effect, so acks happen even when the response is stub-only.
         appLaunched?.let { parsed.addAll(parseDisplayUnitsFromJson(JSONArray(appLaunchedWithinWhenLimits(it)))) }
+
+        // Only touch the cache when the response actually carried deliverable (non-stub) content. A response
+        // whose only ND payload is CG-suppression stubs is acked above but must NOT reset the cache — otherwise
+        // it would silently wipe units delivered earlier in the session (e.g. an App-Launched re-foreground for
+        // a control-group user), with no callback. A response that DID carry real content still resets even if
+        // everything was cap-filtered, so getAllDisplayUnits() can't keep serving a now-capped unit.
+        val hadDeliverableContent = (notifs != null && notifs.length() > 0) || hasNonSuppressed(appLaunched)
+        if (!hadDeliverableContent) {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}CG-stub-only response; cache left intact")
+            return
+        }
 
         val cache = controllerManager.orCreateDisplayUnitCache
         if (cache == null) {
@@ -201,14 +213,23 @@ internal class DisplayUnitResponse(
             if (storeRegistry == null) parsed
             else NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
         )
-        // Write even when empty: a fully-filtered response must reset the cache (updateDisplayUnits
-        // replaces, not merges) so getAllDisplayUnits() can't keep serving a now-suppressed unit.
+        // Replaces (not merges); writing an empty list resets a cache whose content was fully cap-filtered.
         cache.updateDisplayUnits(displayUnits)
         if (displayUnits.isNotEmpty()) {
             callbackManager.notifyDisplayUnitsLoaded(displayUnits)
         } else {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No Display Units survived; cache cleared")
         }
+    }
+
+    /** Whether [appLaunched] carries at least one deliverable (non-`suppressed`) entry. */
+    private fun hasNonSuppressed(appLaunched: JSONArray?): Boolean {
+        if (appLaunched == null) return false
+        for (i in 0 until appLaunched.length()) {
+            val entry = appLaunched.optJSONObject(i) ?: continue
+            if (!entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) return true
+        }
+        return false
     }
 
     /**
