@@ -25,8 +25,9 @@ class NdFcapGateTest {
     }
 
     @Test
-    fun `unmarked units pass through and the fcap manager is never touched`() {
+    fun `non-regime units pass through and the fcap manager is never touched`() {
         val ndfc = mockk<NdFCManager>()
+        // No isNdFcapEnabled -> not in the regime -> delivered uncapped, gate never consults the manager.
         val units = arrayListOf(unit(JSONObject().put(Constants.NOTIFICATION_ID_TAG, "u1")))
 
         val out = NdFcapGate.filter(units, ndfc, logger, "acc")
@@ -36,12 +37,25 @@ class NdFcapGateTest {
     }
 
     @Test
-    fun `fcap-marked unit is delivered when canShow allows, gated on the stable ti`() {
+    fun `non-regime unit is not gated even if it carries a stray cap field`() {
+        val ndfc = mockk<NdFCManager>()
+        // mdc present but isNdFcapEnabled absent -> gate keys on the regime, not field presence -> pass through.
+        val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70009").put(Constants.INAPP_MAX_DISPLAY_COUNT, 1)
+
+        val out = NdFcapGate.filter(arrayListOf(unit(json, wzrkId = "70009_20250101")), ndfc, logger, "acc")
+
+        assertEquals(1, out.size)
+        confirmVerified(ndfc) // non-regime -> manager never consulted
+    }
+
+    @Test
+    fun `regime unit is delivered when canShow allows, gated on the stable ti`() {
         val ndfc = mockk<NdFCManager>()
         every { ndfc.canShow(any(), any(), any(), any()) } returns true
-        // Carries a legacy marker (tlc) so it is fcap-managed and reaches the session gate, though the
-        // session-only canShow no longer reads tlc/tdc (those are server-owned on V2).
-        val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001").put(Constants.KEY_TLC, 5)
+        // In the regime (isNdFcapEnabled) -> reaches the session gate. No efc/excludeGlobalFCaps -> not exempt;
+        // the session-only canShow no longer reads tlc/tdc (server-owned on V2), tlc here is extra decoration.
+        val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001")
+            .put(Constants.KEY_IS_ND_FCAP_ENABLED, true).put(Constants.KEY_TLC, 5)
 
         val out = NdFcapGate.filter(arrayListOf(unit(json)), ndfc, logger, "acc")
 
@@ -52,10 +66,26 @@ class NdFcapGateTest {
     }
 
     @Test
-    fun `fcap-marked unit is dropped when canShow denies`() {
+    fun `regime unit with no legacy cap fields is still gated`() {
+        val ndfc = mockk<NdFCManager>()
+        every { ndfc.canShow(any(), any(), any(), any()) } returns true
+        // Only isNdFcapEnabled, no efc/tlc/tdc/mdc/excludeGlobalFCaps -> the old field-presence gate would have
+        // skipped it; the regime gate still session-checks it.
+        val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70001").put(Constants.KEY_IS_ND_FCAP_ENABLED, true)
+
+        val out = NdFcapGate.filter(arrayListOf(unit(json)), ndfc, logger, "acc")
+
+        assertEquals(1, out.size)
+        verify(exactly = 1) { ndfc.canShow("70001", false, -1, false) }
+        confirmVerified(ndfc)
+    }
+
+    @Test
+    fun `regime unit is dropped when canShow denies`() {
         val ndfc = mockk<NdFCManager>()
         every { ndfc.canShow(any(), any(), any(), any()) } returns false
-        val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70002").put(Constants.KEY_TDC, 1)
+        val json = JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, "70002")
+            .put(Constants.KEY_IS_ND_FCAP_ENABLED, true).put(Constants.KEY_TDC, 1)
 
         val out = NdFcapGate.filter(arrayListOf(unit(json, wzrkId = "70002_20250101")), ndfc, logger, "acc")
 

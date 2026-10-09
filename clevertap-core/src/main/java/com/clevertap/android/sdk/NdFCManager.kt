@@ -47,18 +47,39 @@ class NdFCManager internal constructor(
         private const val SESSION_CAP_DEFAULT = 1000
 
         /**
-         * Whether an ND unit/target carries any frequency-cap configuration. Used by [NdFcapGate] to decide
-         * which units to counter-cap at delivery; unmarked (legacy) units pass through the gate unchanged.
+         * Whether an ND unit is in the frequency-cap regime, i.e. `isNdFcapEnabled` is set. This is the single
+         * source of truth used by every cap site (delivery gate, counting, App-Launched budget trim) so they
+         * can never disagree. A non-regime unit (flag absent/false) is rendered uncapped and uncounted.
+         * Decodes defensively: the flag may arrive as a boolean or a positive int.
          */
         @JvmStatic
-        fun isFcapManaged(json: JSONObject?): Boolean =
+        fun inRegime(json: JSONObject?): Boolean =
             json != null && (
-                json.has(Constants.KEY_EFC) ||
-                    json.has(Constants.KEY_TLC) ||
-                    json.has(Constants.KEY_TDC) ||
-                    json.has(Constants.INAPP_MAX_DISPLAY_COUNT) ||
-                    json.has(Constants.KEY_EXCLUDE_GLOBAL_CAPS)
+                json.optBoolean(Constants.KEY_IS_ND_FCAP_ENABLED, false) ||
+                    json.optInt(Constants.KEY_IS_ND_FCAP_ENABLED, 0) > 0
                 )
+
+        /**
+         * Whether a unit is excluded from the counter caps (the ND analog of in-app's `isExcludeFromCaps`):
+         * legacy `efc` or advanced `excludeGlobalFCaps`. Such a unit is delivered without a cap check — but
+         * note `efc` still *counts* toward the budget (see [countsTowardCaps]); only `excludeGlobalFCaps` is
+         * fully exempt (`DELIVER_EXEMPT`).
+         */
+        @JvmStatic
+        fun isExcludeFromCaps(json: JSONObject?): Boolean =
+            json != null && (
+                json.optInt(Constants.KEY_EFC, -1) == 1 ||
+                    json.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1
+                )
+
+        /**
+         * Whether a shown unit counts toward the global `ndmp`/`ndtlc` budget: in the regime and not globally
+         * excluded. `efc` units DO count (server reports them `DELIVER_COUNTED`); only `excludeGlobalFCaps`
+         * (and non-regime) are uncounted.
+         */
+        @JvmStatic
+        fun countsTowardCaps(json: JSONObject?): Boolean =
+            inRegime(json) && json!!.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) != 1
     }
 
     private val ddMMyyyy = SimpleDateFormat("ddMMyyyy", Locale.US)

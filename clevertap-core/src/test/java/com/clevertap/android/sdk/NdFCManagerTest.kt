@@ -8,6 +8,7 @@ import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.json.JSONObject
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -109,6 +110,31 @@ class NdFCManagerTest : BaseTestCase() {
         fc.didShow("a", true)
         fc.didShow("b", true) // shownToday=2
         assertEquals(0, fc.globalCapRemaining()) // min(2-2=0, 100-0) = 0
+    }
+
+    @Test
+    fun `regime helpers follow the isNdFcapEnabled model`() {
+        // non-regime: flag absent/false -> not in regime, nothing counts
+        assertFalse(NdFCManager.inRegime(JSONObject()))
+        assertFalse(NdFCManager.countsTowardCaps(JSONObject()))
+
+        // regime accepts boolean OR positive int
+        assertTrue(NdFCManager.inRegime(JSONObject().put(Constants.KEY_IS_ND_FCAP_ENABLED, true)))
+        assertTrue(NdFCManager.inRegime(JSONObject().put(Constants.KEY_IS_ND_FCAP_ENABLED, 1)))
+
+        // regime + not globally excluded -> counts; efc also counts (DELIVER_COUNTED)
+        assertTrue(NdFCManager.countsTowardCaps(JSONObject().put(Constants.KEY_IS_ND_FCAP_ENABLED, true)))
+        assertTrue(
+            NdFCManager.countsTowardCaps(
+                JSONObject().put(Constants.KEY_IS_ND_FCAP_ENABLED, true).put(Constants.KEY_EFC, 1),
+            ),
+        )
+
+        // excludeGlobalFCaps -> excluded from counting, but still exclude-from-caps
+        val exempt = JSONObject().put(Constants.KEY_IS_ND_FCAP_ENABLED, true).put(Constants.KEY_EXCLUDE_GLOBAL_CAPS, 1)
+        assertFalse(NdFCManager.countsTowardCaps(exempt))
+        assertTrue(NdFCManager.isExcludeFromCaps(exempt))
+        assertTrue(NdFCManager.isExcludeFromCaps(JSONObject().put(Constants.KEY_EFC, 1)))
     }
 
     private fun create(deviceId: String = "deviceId"): NdFCManager {

@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ControllerManager
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.NdFCManager
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.TriggerManager
@@ -235,19 +236,25 @@ internal class DisplayUnitResponse(
 
         // The `App Launched` event the batch is evaluated against — properties + location sourced exactly as
         // in-app does (InAppController.onAppLaunchServerSideInAppsResponse): appLaunchedFields + user location.
-        val eventProperties: Map<String, Any> =
+        // Guarded: a malformed appLaunchedFields must not abort content delivery.
+        val eventProperties: Map<String, Any> = try {
             deviceInfo?.appLaunchedFields?.let { JsonUtil.mapFromJson<Any>(it) } ?: emptyMap()
-        val userLocation = coreMetaData?.locationFromUser
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to read App-Launched event props", t)
+            emptyMap()
+        }
+        val userLocation = try { coreMetaData?.locationFromUser } catch (t: Throwable) { null }
 
         // Ack CG stubs that are still eligible — within their whenTriggers + whenLimits (would have shown).
+        // Fully guarded (incl. recordCgSuppressed, which writes SharedPreferences): a bad CG stub must never
+        // drop the regular `adUnit_notifs` content parsed alongside it.
         if (cgStubs.isNotEmpty()) {
-            val eligibleStubs = try {
+            try {
                 evaluator.retainAppLaunchedWithinLimits(cgStubs, eventProperties, userLocation)
+                    .forEach { evaluator.recordCgSuppressed(it) }
             } catch (t: Throwable) {
-                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG stub eligibility filter failed; skipping acks", t)
-                emptyList()
+                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG ack failed; skipping acks", t)
             }
-            eligibleStubs.forEach { evaluator.recordCgSuppressed(it) }
         }
 
         // Deliverable content: whenTriggers + whenLimits + remaining global-budget trim.
@@ -264,15 +271,16 @@ internal class DisplayUnitResponse(
      * Trims the App-Launched batch to the remaining account-level global budget (`ndmp` daily + `ndmc`
      * session). App-Launched is server-ships-all / SDK-decides, so — unlike regular events, where the
      * server trims using the reported `ndmp` — the SDK enforces the global cap here. Units are consumed in
-     * server order (already priority-sorted); those exempt via `efc`/`excludeGlobalFCaps` bypass the budget.
+     * server order (already priority-sorted). Budget-exempt (always kept) = **non-regime** units (which never
+     * count) and [NdFCManager.isExcludeFromCaps] units (`efc`/`excludeGlobalFCaps`); everything else consumes
+     * a slot. (`efc` is kept as exclude-from-caps but still counts when viewed — see [NdFCManager.didShow].)
      */
     private fun trimToGlobalCap(units: List<JSONObject>): List<JSONObject> {
         val ndFCManager = controllerManager.ndFCManager ?: return units
         var remaining = ndFCManager.globalCapRemaining()
         val kept = ArrayList<JSONObject>(units.size)
         for (unit in units) {
-            val exempt = unit.optInt(Constants.KEY_EFC, -1) == 1 ||
-                unit.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, -1) == 1
+            val exempt = !NdFCManager.inRegime(unit) || NdFCManager.isExcludeFromCaps(unit)
             when {
                 exempt -> kept.add(unit)
                 remaining > 0 -> { kept.add(unit); remaining-- }

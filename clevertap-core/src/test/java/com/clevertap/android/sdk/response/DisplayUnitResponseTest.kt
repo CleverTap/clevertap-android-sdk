@@ -185,14 +185,16 @@ class DisplayUnitResponseTest : BaseTestCase() {
 
     @Test
     fun `app-launched batch is trimmed to the remaining global cap`() {
+        // Regime units (isNdFcapEnabled) are subject to the budget; they also reach the session gate.
         val json = JSONObject(
             """{"adUnit_notifs_applaunched":[
-                {"ti":70001,"wzrk_id":"70001_x","type":"simple"},
-                {"ti":70002,"wzrk_id":"70002_x","type":"simple"},
-                {"ti":70003,"wzrk_id":"70003_x","type":"simple"}
+                {"ti":70001,"wzrk_id":"70001_x","type":"simple","isNdFcapEnabled":true},
+                {"ti":70002,"wzrk_id":"70002_x","type":"simple","isNdFcapEnabled":true},
+                {"ti":70003,"wzrk_id":"70003_x","type":"simple","isNdFcapEnabled":true}
             ]}"""
         )
         every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() } // all pass whenLimits
+        every { ndFCManager.canShow(any(), any(), any(), any()) } returns true // pass the session gate
         every { ndFCManager.globalCapRemaining() } returns 1 // only 1 left under the global cap (e.g. 5 cap, 4 shown)
 
         response.processResponse(json, "", context)
@@ -207,14 +209,14 @@ class DisplayUnitResponseTest : BaseTestCase() {
     fun `app-launched units exempt via excludeGlobalFCaps bypass the global-cap trim`() {
         val json = JSONObject(
             """{"adUnit_notifs_applaunched":[
-                {"ti":70001,"wzrk_id":"70001_x","type":"simple"},
-                {"ti":70002,"wzrk_id":"70002_x","type":"simple","excludeGlobalFCaps":1}
+                {"ti":70001,"wzrk_id":"70001_x","type":"simple","isNdFcapEnabled":true},
+                {"ti":70002,"wzrk_id":"70002_x","type":"simple","isNdFcapEnabled":true,"excludeGlobalFCaps":1}
             ]}"""
         )
         every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
         every { ndFCManager.globalCapRemaining() } returns 0 // no global budget left
-        // 70002 is fcap-managed (carries excludeGlobalFCaps) so it also hits NdFcapGate.canShow; in prod an
-        // exempt unit returns true there, so mirror that (the relaxed mock would otherwise return false).
+        // 70002 is exempt (excludeGlobalFCaps) so it also hits NdFcapGate.canShow; in prod an exempt unit
+        // returns true there, so mirror that (the relaxed mock would otherwise return false).
         every { ndFCManager.canShow(any(), any(), any(), any()) } returns true
 
         response.processResponse(json, "", context)
@@ -224,6 +226,43 @@ class DisplayUnitResponseTest : BaseTestCase() {
         verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
         assertEquals(1, slot.captured.size)
         assertEquals("70002_x", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `non-regime app-launched unit is kept despite zero budget`() {
+        // isNdFcapEnabled absent -> outside the regime -> never counts -> must not consume/lose a budget slot.
+        val json = JSONObject(
+            """{"adUnit_notifs_applaunched":[{"ti":70005,"wzrk_id":"70005_x","type":"simple"}]}""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+        every { ndFCManager.globalCapRemaining() } returns 0 // no budget left
+
+        response.processResponse(json, "", context)
+
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size) // non-regime -> budget-exempt -> still delivered
+        assertEquals("70005_x", slot.captured[0].unitID)
+    }
+
+    @Test
+    fun `a throwing CG ack does not drop the regular content parsed alongside it`() {
+        val json = JSONObject(
+            """{
+                "adUnit_notifs":[{"wzrk_id":"reg1","type":"simple"}],
+                "adUnit_notifs_applaunched":[{"ti":70003,"wzrk_id":"70003_x","suppressed":true,"wzrk_cgId":0}]
+            }""",
+        )
+        every { ndEvaluationManager.retainAppLaunchedWithinLimits(any(), any(), any()) } answers { firstArg() }
+        every { ndEvaluationManager.recordCgSuppressed(any()) } throws RuntimeException("prefs write failed")
+
+        response.processResponse(json, "", context)
+
+        // The CG ack blew up, but the regular adUnit_notifs unit still delivers (failure is contained).
+        val slot = slot<ArrayList<CleverTapDisplayUnit>>()
+        verify { callbackManager.notifyDisplayUnitsLoaded(capture(slot)) }
+        assertEquals(1, slot.captured.size)
+        assertEquals("reg1", slot.captured[0].unitID)
     }
 
     @Test

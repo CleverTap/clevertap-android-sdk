@@ -31,19 +31,20 @@ internal object NdFcapGate {
         if (ndFCManager == null) {
             return units
         }
+        // Note: the session counter only advances on the later "viewed" event, so this per-unit check is
+        // best-effort when a single response carries multiple units (e.g. priority-flag-on multi-delivery);
+        // it relies on responses being small. App-Launched is already budget-trimmed before reaching here.
         return units.filter { unit ->
             val json = unit.jsonObject
-            if (json == null || !NdFCManager.isFcapManaged(json)) {
-                return@filter true // not fcap-managed -> deliver as before
+            if (json == null || !NdFCManager.inRegime(json)) {
+                return@filter true // non-regime (isNdFcapEnabled absent/false) -> deliver uncapped
             }
-            val excludeFromCaps = json.optInt(Constants.KEY_EFC, UNCAPPED) == 1 ||
-                json.optInt(Constants.KEY_EXCLUDE_GLOBAL_CAPS, UNCAPPED) == 1
             // Gate on the stable campaign id (ti), NOT unitID (= wzrk_id, ti_yyyyMMdd, rotates daily) —
             // must match how didShow records and how the evaluator keys whenLimits.
             val campaignId = json.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val canShow = ndFCManager.canShow(
                 campaignId,
-                excludeFromCaps,
+                NdFCManager.isExcludeFromCaps(json),
                 json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED), // mdc = per-target session cap
                 false, // advanced whenLimits already applied at evaluation time
             )
