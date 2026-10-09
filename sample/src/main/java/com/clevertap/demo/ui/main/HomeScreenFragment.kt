@@ -127,6 +127,7 @@ class HomeScreenFragment : Fragment() {
                 "19-14" -> com.clevertap.demo.ProgressLiveUpdateDemo.start(context, com.clevertap.demo.ProgressLiveUpdateDemo.Variant.EDGE_POINTS_CONTROL) // points at 5/95: all 4 dots
                 "19-15" -> com.clevertap.demo.CustomLiveUpdateDemo.start(context) // custom-factory (Mode A) Live Update demo
                 "19-16" -> startActivity(Intent(activity, com.clevertap.demo.LiveUpdatePayloadActivity::class.java)) // QA: paste a full payload, sent like a real FCM push
+                HomeScreenModel.localPushCommand -> openLocalPushTester()
             }
         }
 
@@ -193,6 +194,21 @@ class HomeScreenFragment : Fragment() {
             }
         }
         return map.ifEmpty { null }
+    }
+
+    /**
+     * LocalPushActivity lives in the debug source set, so `main` cannot name the class directly.
+     * Launching it by name keeps this compiling in every build type, and a build without it just
+     * says so.
+     */
+    private fun openLocalPushTester() {
+        val intent = Intent().setClassName(requireContext(), "com.clevertap.demo.LocalPushActivity")
+
+        if (intent.resolveActivity(requireContext().packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(requireContext(), "Local push tester is debug-only", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupListAdapter() {
