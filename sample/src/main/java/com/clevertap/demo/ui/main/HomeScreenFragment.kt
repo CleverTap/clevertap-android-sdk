@@ -109,6 +109,7 @@ class HomeScreenFragment : Fragment() {
 
                 "8-2" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
                 "3-16" -> startActivity(Intent(activity, CustomInboxComposeActivity::class.java)) // Launch Compose Inbox
+                HomeScreenModel.localPushCommand -> openLocalPushTester()
             }
         }
 
@@ -175,6 +176,21 @@ class HomeScreenFragment : Fragment() {
             }
         }
         return map.ifEmpty { null }
+    }
+
+    /**
+     * LocalPushActivity lives in the debug source set, so `main` cannot name the class directly.
+     * Launching it by name keeps this compiling in every build type, and a build without it just
+     * says so.
+     */
+    private fun openLocalPushTester() {
+        val intent = Intent().setClassName(requireContext(), "com.clevertap.demo.LocalPushActivity")
+
+        if (intent.resolveActivity(requireContext().packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(requireContext(), "Local push tester is debug-only", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupListAdapter() {
