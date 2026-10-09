@@ -12,7 +12,6 @@ import com.clevertap.android.pushtemplates.content.MANUAL_CAROUSEL_DISMISS_PENDI
 import com.clevertap.android.pushtemplates.content.ManualCarouselContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.pushtemplates.content.SmallContentView
-import com.clevertap.android.sdk.Constants
 
 internal class ManualCarouselStyle(
     private val data: ManualCarouselTemplateData,
@@ -41,18 +40,10 @@ internal class ManualCarouselStyle(
         extras: Bundle,
         notificationId: Int
     ): PendingIntent? {
-        val extrasFrom = extras.getString(Constants.EXTRAS_FROM)
-        return if (extrasFrom == null || extrasFrom != "PTReceiver") {
-            PendingIntentFactory.getPendingIntent(
-                context, notificationId, extras, true,
-                MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, data.carouselData.baseContent.deepLinkList.getOrNull(0)
-            )
-        } else {
-            PendingIntentFactory.getPendingIntent(
-                context, notificationId, extras, true,
-                MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, null
-            )
-        }
+        return PendingIntentFactory.getPendingIntent(
+            context, notificationId, extras, true,
+            MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, data.carouselData.baseContent.deepLinkList.getOrNull(0)
+        )
     }
 
     override fun makeDismissIntent(

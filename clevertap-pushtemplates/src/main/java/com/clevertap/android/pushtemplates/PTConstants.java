@@ -48,6 +48,23 @@ public class PTConstants {
 
     public static final String PT_ID = "pt_id";
 
+    // --- Progress-centric template (pt_progress) — Android 16 Notification.ProgressStyle ---
+    public static final String PT_PROGRESS = "pt_progress";
+    public static final String PT_PROGRESS_MAX = "pt_progress_max";
+    public static final String PT_PROGRESS_INDETERMINATE = "pt_progress_indeterminate";
+    public static final String PT_STYLED_BY_PROGRESS = "pt_styled_by_progress";
+    public static final String PT_PROGRESS_SEGMENTS = "pt_progress_segments"; // JSON array
+    public static final String PT_PROGRESS_POINTS = "pt_progress_points";     // JSON array
+    public static final String PT_PROGRESS_TRACKER_ICON = "pt_progress_tracker_icon";
+    public static final String PT_PROGRESS_START_ICON = "pt_progress_start_icon";
+    public static final String PT_PROGRESS_END_ICON = "pt_progress_end_icon";
+    public static final String PT_CHIP_TYPE = "pt_chip_type"; // text | timer | countdown | none
+    public static final String PT_CHIP_TEXT = "pt_chip_text";
+    public static final String PT_WHEN = "pt_when";
+    public static final String PT_COUNTDOWN = "pt_countdown";
+    public static final String PT_PROMOTE = "pt_promote";
+    public static final String PT_LA_EVENT = "wzrk_la_event"; // update | end (from LA wrapper)
+
     public static final String PT_NOTIF_ICON = "pt_ico";
 
     public static final String PT_TITLE = "pt_title";

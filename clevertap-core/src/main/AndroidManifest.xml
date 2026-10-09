@@ -39,5 +39,10 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".pushnotification.CTLiveActivityDismissReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
 </manifest>

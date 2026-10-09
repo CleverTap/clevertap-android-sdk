@@ -144,6 +144,28 @@ object HomeScreenModel {
                 "Opt Out - userOptOut: true (single param)",
                 "Opt Out - userOptOut: false (single param)"
             ),
+            // Live Update local demos (SDK-rendered pt_progress + the Mode A custom factory). Section
+            // index 19 -> click codes "19-N" are handled in HomeScreenFragment (they render locally,
+            // needing a Context).
+            "LIVE UPDATES" to listOf(
+                "Progress: Order Tracker (local demo)",
+                "Progress: Actions + Deep Link (local demo)",
+                "Progress: Countdown Chip + Promoted (local demo)",
+                "Progress: No Promotion (local demo)",
+                "Progress: Start/End Icons (local demo)",
+                "Progress: Plain Bar - determinate (local demo)",
+                "Progress: Plain Bar + Start/End Icons (local demo)",
+                "Progress: Indeterminate Bar (local demo)",
+                "Progress: Indeterminate Bar + Start/End Icons (local demo)",
+                "Progress: Unequal Segments 10/80/10 (local demo)",
+                "Progress: On Track - tracker + styled by progress (local demo)",
+                "Progress: On Track - no tracker, fade only (local demo)",
+                "Progress: Light/Dark Colors - default, white, black (local demo)",
+                "Progress: Edge Points 0/100 - ends hidden (local demo)",
+                "Progress: Edge Points 5/95 - control, all 4 dots (local demo)",
+                "Custom Live Update - Mode A factory (local demo)",
+                "Paste Live Update payload (QA)"
+            ),
         ) + localPushSection()
     }
 

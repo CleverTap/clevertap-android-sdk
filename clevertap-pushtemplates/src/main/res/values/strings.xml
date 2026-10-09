@@ -15,4 +15,9 @@
     <string name="pt_five_icon_3">Notification Icon 3</string>
     <string name="pt_five_icon_4">Notification Icon 4</string>
     <string name="pt_five_icon_5">Notification Icon 5</string>
+    <string name="pt_progress_tracker_cd">Progress tracker icon</string>
+    <string name="pt_progress_start_cd">Progress start icon</string>
+    <string name="pt_progress_end_cd">Progress end icon</string>
+    <string name="pt_progress_bar_cd">Progress: %1$d percent</string>
+    <string name="pt_progress_indeterminate_cd">In progress</string>
 </resources>
