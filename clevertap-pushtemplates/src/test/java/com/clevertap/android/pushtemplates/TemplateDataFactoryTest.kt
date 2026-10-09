@@ -2485,4 +2485,90 @@ class TemplateDataFactoryTest {
         assertTrue(d.indeterminate)
         assertFalse(d.isSegmented)
     }
+
+    @Test
+    fun `createProgressTemplateData reads the large icon from pt_ico`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+        every { mockBundle.getString(PTConstants.PT_NOTIF_ICON) } returns "https://example.com/logo.png"
+
+        val d = TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData
+
+        assertEquals("https://example.com/logo.png", d.largeIcon)
+    }
+
+    @Test
+    fun `createProgressTemplateData has no large icon when pt_ico is missing or blank`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+
+        for (value in listOf(null, "", "   ")) {
+            every { mockBundle.getString(PTConstants.PT_NOTIF_ICON) } returns value
+            val d = TemplateDataFactory.createTemplateData(
+                TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+            ) as ProgressTemplateData
+            assertNull(d.largeIcon)
+        }
+    }
+
+    @Test
+    fun `createProgressTemplateData reads pt_dismiss in seconds as milliseconds`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+        every { mockBundle.getString(PTConstants.PT_DISMISS) } returns "3600"
+
+        val d = TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData
+
+        assertEquals(3_600_000L, d.dismissAfter)
+    }
+
+    @Test
+    fun `createProgressTemplateData ignores a missing, invalid, zero, negative or too large pt_dismiss`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+
+        for (value in listOf(null, "", "abc", "1.5", "0", "-5", Long.MAX_VALUE.toString())) {
+            every { mockBundle.getString(PTConstants.PT_DISMISS) } returns value
+            val d = TemplateDataFactory.createTemplateData(
+                TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+            ) as ProgressTemplateData
+            assertNull("pt_dismiss=$value", d.dismissAfter)
+        }
+    }
+
+    @Test
+    fun `createProgressTemplateData reads the subtitle from pt_subtitle, else wzrk_st`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+
+        every { mockBundle.getString(PTConstants.PT_SUBTITLE) } returns "Burger Palace"
+        every { mockBundle.getString(Constants.WZRK_SUBTITLE) } returns "core subtitle"
+        assertEquals("Burger Palace", (TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData).subtitle)
+
+        every { mockBundle.getString(PTConstants.PT_SUBTITLE) } returns null
+        assertEquals("core subtitle", (TemplateDataFactory.createTemplateData(
+            TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+        ) as ProgressTemplateData).subtitle)
+    }
+
+    @Test
+    fun `createProgressTemplateData has no subtitle when both keys are missing or blank`() {
+        every { mockBundle.getString(PTConstants.PT_TITLE) } returns "Order"
+        every { mockBundle.getString(PTConstants.PT_PROGRESS) } returns "10"
+        every { mockBundle.getString(Constants.WZRK_SUBTITLE) } returns null
+
+        for (value in listOf(null, "", "   ")) {
+            every { mockBundle.getString(PTConstants.PT_SUBTITLE) } returns value
+            val d = TemplateDataFactory.createTemplateData(
+                TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
+            ) as ProgressTemplateData
+            assertNull("pt_subtitle=$value", d.subtitle)
+        }
+    }
 }

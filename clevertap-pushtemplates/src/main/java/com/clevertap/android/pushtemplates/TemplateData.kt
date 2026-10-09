@@ -214,10 +214,16 @@ internal data class ProgressTemplateData(
     val indeterminate: Boolean,
     val segments: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData>,
     val points: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData>,
+    /** Large icon URL (`pt_ico`, as in the other templates); the system draws it, on both tiers. */
+    val largeIcon: String? = null,
+    /** Auto-dismiss delay in ms (`pt_dismiss`, in seconds, as in the other templates); null = never. */
+    val dismissAfter: Long? = null,
+    /** Header sub text (`pt_subtitle`, else `wzrk_st`, as in the other templates); the system draws it. */
+    val subtitle: String? = null,
 ) : TemplateData() {
 
     /**
-     * The progress indicator is **segmented** (dots + connectors / native segments) when the payload
+     * The progress indicator is **segmented** (drawn milestone track / native segments) when the payload
      * carries segments or points; otherwise it is a **plain bar** — indeterminate when
      * [indeterminate] is set, else determinate from [progress] / [progressMax]. The two are mutually
      * exclusive (a client uses either milestones or a simple bar, never both).

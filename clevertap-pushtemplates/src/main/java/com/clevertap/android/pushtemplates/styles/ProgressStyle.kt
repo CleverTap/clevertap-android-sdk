@@ -2,7 +2,6 @@ package com.clevertap.android.pushtemplates.styles
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -32,14 +31,19 @@ private typealias PointData = ProgressPayloadParser.PointData
  *   tracker icon, status chip, and promotion (`setRequestPromotedOngoing`). Invoked via reflection
  *   (see [buildNative]) so the SDK needs no build-time dependency on androidx.core 1.17.0.
  *   This is a base style with NO custom RemoteViews, which is what makes promotion possible.
- * - **Below API 36:** a custom-RemoteViews fallback that mimics the same look — tracker icon,
- *   title/message, and a dots-and-connectors progress row (points as dots, segments as weighted
- *   colored connectors). Not promotable (promotion is a 16+ OS feature), but kept ongoing so it
- *   behaves like a live update.
+ * - **Below API 36:** a custom-RemoteViews fallback for the EXPANDED view that mimics the same look —
+ *   title/message and a progress row: a bitmap-drawn milestone track (segment widths follow their
+ *   length, points sit at their position, the tracker rides it at the progress) or a plain bar with
+ *   the tracker beside the title. The COLLAPSED view is left to the system's standard template
+ *   (small icon, title, time, message), matching what Android 16 shows for a collapsed
+ *   ProgressStyle. Not promotable (promotion is a 16+ OS feature), but kept ongoing so it behaves
+ *   like a live update.
  *
- * Both tiers read the same `pt_progress_*` contract. On the native tier the track total is the sum
- * of the segment lengths (there is no separate max), so `pt_progress` and point positions must be on
- * that scale; `pt_progress_max` and `pt_progress_indeterminate` apply to the fallback tier only.
+ * Both tiers read the same `pt_progress_*` contract and draw the same milestone track: the total is
+ * the sum of the segment lengths (100 when there are none; there is no separate max), so
+ * `pt_progress` and point positions must be on that scale, and native's limits (10 segments,
+ * 4 points, none at the ends) apply on both. `pt_progress_max` applies only to the plain bar below
+ * 16. `pt_progress_indeterminate` applies to both tiers, and only when there are no segments/points.
  */
 internal class ProgressStyle(
     private val data: ProgressTemplateData,
@@ -49,11 +53,18 @@ internal class ProgressStyle(
     companion object {
         // Android 16 (Baklava) introduced Notification.ProgressStyle + promotion.
         private const val API_PROGRESS_STYLE = 36
-        // Fallback-only defaults: used by the pre-16 RemoteViews path when a segment/point in the
-        // payload omits its own color. On native 16+ colors come from the payload and the platform
-        // supplies its own default, so these are never applied there.
-        private val COLOR_INACTIVE = Utils.getColourOrNull("#48484A") ?: Color.GRAY   // inactive segment/track gray
-        private val COLOR_POINT_DEFAULT = Utils.getColourOrNull("#FFFFFF") ?: Color.WHITE // uncolored milestone dot
+        // Fallback-only theme colors for the milestone track bitmap, below API 31 (no Material You
+        // system palette). The card text uses the system notification text appearances instead.
+        private const val COLOR_BG_LIGHT = 0xFFFFFFFF.toInt()
+        private const val COLOR_BG_DARK = 0xFF303030.toInt()
+        private const val COLOR_TITLE_LIGHT = 0x8A000000.toInt() // secondary text on light
+        private const val COLOR_TITLE_DARK = 0xB3FFFFFF.toInt() // secondary text on dark
+        // Milestone track bitmap sizing (fallback only).
+        private const val TRACK_SIDE_MARGINS_DP = 60f // shade margins + card padding, both sides
+        private const val TRACK_ICON_DP = 22f // a start/end icon (16dp) + its 6dp gap
+        private const val MAX_TRACK_WIDTH_PX = 1080 // keeps the bitmap well under the RemoteViews limits
+        // A countdown with less than this left (or already past) is not started, see applyChronometer.
+        private const val COUNTDOWN_MIN_REMAINING_MS = 10_000L
     }
 
     fun builderFromStyle(
@@ -79,13 +90,33 @@ internal class ProgressStyle(
             .setAutoCancel(ended)
             .setColor(parseColor(renderer.smallIconColour))
 
+        // Large icon (pt_ico): set on the builder, not drawn by us, so the system places it in its own
+        // slot on every tier: the native ProgressStyle on 16+, and the standard collapsed view and the
+        // DecoratedCustomViewStyle frame around the fallback below 16. Not square-cropped: the system
+        // scales it itself (Android 16 even keeps a wide icon's shape).
+        data.largeIcon?.let { url -> loadBitmap(context, url)?.let { nb.setLargeIcon(it) } }
+
+        // Auto-dismiss (pt_dismiss): the native timeout, so Android itself removes the card after that
+        // long, even if the end push never arrives. Same builder on both tiers; androidx makes it a
+        // no-op before Android 8, where the platform has no timeout.
+        data.dismissAfter?.let { nb.setTimeoutAfter(it) }
+
+        // Sub text (pt_subtitle): set on every API level, unlike the other templates (Style sets it only
+        // on 12+ because below that they draw their own header with the subtitle). pt_progress never
+        // draws a header: it is always the system's (native style, standard collapsed view, decorated
+        // fallback), so the system shows the sub text in it on every version.
+        data.subtitle?.let { nb.setSubText(it) }
+
         // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
         // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
         // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
         // consumer, we catch the class/method absence and degrade to the RemoteViews fallback.
-        val nativeOk = Build.VERSION.SDK_INT >= API_PROGRESS_STYLE &&
-            runCatching { buildNative(context, extras, nb, segments, points, trackerIcon, ended) }
-                .onFailure { PTLog.verbose("pt_progress: native ProgressStyle unavailable (androidx.core < 1.17.0?), using fallback", it) }
+        // The 1.17.0 APIs are looked up once per process (NativeProgressApi); null means unavailable,
+        // which is logged once there, so this check costs nothing on later renders.
+        val api = if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) NativeProgressApi.methods else null
+        val nativeOk = api != null &&
+            runCatching { buildNative(api, context, extras, nb, segments, points, trackerIcon, ended) }
+                .onFailure { PTLog.verbose("pt_progress: native ProgressStyle failed, using fallback", it) }
                 .isSuccess
         if (!nativeOk) {
             buildFallback(context, extras, nb, title, message, segments, points, trackerIcon, ended)
@@ -124,13 +155,13 @@ internal class ProgressStyle(
     // NotificationCompat.ProgressStyle + the promotion/chip builder methods only exist in
     // androidx.core 1.17.0. We invoke them REFLECTIVELY so this SDK compiles WITHOUT a build-time
     // dependency on 1.17.0 (no compileOnly / resolutionStrategy force needed): the host app supplies
-    // whatever androidx.core it ships. If that runtime core is < 1.17.0 the reflected class/methods
-    // are absent -> the first Class.forName throws -> builderFromStyle's runCatching falls back to
-    // the RemoteViews path. The literal class/method names below track androidx.core 1.17.0.
-    // Everything already present in the baseline core (IconCompat, setStyle/Style, setWhen/chronometer)
-    // is called directly and type-safely.
+    // whatever androidx.core it ships. The reflected handles are looked up once and cached in
+    // NativeProgressApi; if that runtime core is < 1.17.0 they are absent and builderFromStyle uses
+    // the RemoteViews path. Everything already present in the baseline core (IconCompat,
+    // setStyle/Style, setWhen/chronometer) is called directly and type-safely.
 
     private fun buildNative(
+        api: NativeProgressApi.Methods,
         context: Context,
         extras: Bundle,
         nb: NotificationCompat.Builder,
@@ -139,75 +170,84 @@ internal class ProgressStyle(
         trackerIcon: Bitmap?,
         ended: Boolean
     ): NotificationCompat.Builder {
-        val psClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle")
-        val progressStyle = psClass.getConstructor().newInstance()
+        // A new ProgressStyle (and Segment/Point) per notification; only the reflective handles are cached.
+        val progressStyle = api.styleCtor.newInstance()
 
-        psClass.getMethod("setStyledByProgress", Boolean::class.javaPrimitiveType)
-            .invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
+        api.setStyledByProgress.invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
         // Native ProgressStyle has no max: the track total is the sum of segment lengths, so pt_progress
-        // must be on that scale. pt_progress_max and pt_progress_indeterminate are fallback-only here.
-        psClass.getMethod("setProgress", Int::class.javaPrimitiveType)
-            .invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
+        // must be on that scale. pt_progress_max only applies to the plain bar below 16.
+        api.setProgress.invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
+        // Same either/or rule as the fallback: indeterminate only applies to a plain bar, never to a
+        // milestone (segments/points) indicator.
+        api.setProgressIndeterminate.invoke(progressStyle, data.indeterminate && !data.isSegmented)
 
         if (segments.isNotEmpty()) {
-            val segClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle\$Segment")
-            val segCtor = segClass.getConstructor(Int::class.javaPrimitiveType)
-            val segSetColor = segClass.getMethod("setColor", Int::class.javaPrimitiveType)
             val segList = segments.map { seg ->
-                segCtor.newInstance(seg.length).also { s -> seg.color?.let { segSetColor.invoke(s, it) } }
+                api.segmentCtor.newInstance(seg.length).also { s -> seg.color?.let { api.segmentSetColor.invoke(s, it) } }
             }
-            psClass.getMethod("setProgressSegments", List::class.java).invoke(progressStyle, segList)
+            api.setProgressSegments.invoke(progressStyle, segList)
         }
         if (points.isNotEmpty()) {
-            val ptClass = Class.forName("androidx.core.app.NotificationCompat\$ProgressStyle\$Point")
-            val ptCtor = ptClass.getConstructor(Int::class.javaPrimitiveType)
-            val ptSetColor = ptClass.getMethod("setColor", Int::class.javaPrimitiveType)
             val ptList = points.map { pt ->
-                ptCtor.newInstance(pt.position).also { p -> pt.color?.let { ptSetColor.invoke(p, it) } }
+                api.pointCtor.newInstance(pt.position).also { p -> pt.color?.let { api.pointSetColor.invoke(p, it) } }
             }
-            psClass.getMethod("setProgressPoints", List::class.java).invoke(progressStyle, ptList)
+            api.setProgressPoints.invoke(progressStyle, ptList)
         }
 
-        trackerIcon?.let {
-            psClass.getMethod("setProgressTrackerIcon", IconCompat::class.java)
-                .invoke(progressStyle, IconCompat.createWithBitmap(it))
-        }
+        trackerIcon?.let { api.setProgressTrackerIcon.invoke(progressStyle, IconCompat.createWithBitmap(it)) }
         bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))?.let {
-            psClass.getMethod("setProgressStartIcon", IconCompat::class.java)
-                .invoke(progressStyle, IconCompat.createWithBitmap(it))
+            api.setProgressStartIcon.invoke(progressStyle, IconCompat.createWithBitmap(it))
         }
         bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))?.let {
-            psClass.getMethod("setProgressEndIcon", IconCompat::class.java)
-                .invoke(progressStyle, IconCompat.createWithBitmap(it))
+            api.setProgressEndIcon.invoke(progressStyle, IconCompat.createWithBitmap(it))
         }
 
         // setStyle(Style) exists in the baseline core; ProgressStyle is-a Style at runtime.
         nb.setStyle(progressStyle as NotificationCompat.Style)
-        applyNativeChip(extras, nb)
+        applyNativeChip(api, extras, nb, ended)
 
         if (!ended && !"false".equals(extras.getString(PTConstants.PT_PROMOTE), ignoreCase = true)) {
-            NotificationCompat.Builder::class.java
-                .getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
-                .invoke(nb, true)
+            api.setRequestPromotedOngoing.invoke(nb, true)
         }
         return nb
     }
 
-    private fun applyNativeChip(extras: Bundle, nb: NotificationCompat.Builder) {
+    private fun applyNativeChip(
+        api: NativeProgressApi.Methods,
+        extras: Bundle,
+        nb: NotificationCompat.Builder,
+        ended: Boolean
+    ) {
         when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
+            // setShortCriticalText is androidx.core 1.17.0-only -> reflected (same tier as ProgressStyle).
             "text" -> extras.getString(PTConstants.PT_CHIP_TEXT)?.takeIf { it.isNotEmpty() }?.let {
-                // setShortCriticalText is androidx.core 1.17.0-only -> reflect (same tier as ProgressStyle).
-                NotificationCompat.Builder::class.java
-                    .getMethod("setShortCriticalText", String::class.java)
-                    .invoke(nb, it)
+                api.setShortCriticalText.invoke(nb, it)
             }
 
-            "timer", "countdown" -> extras.getString(PTConstants.PT_WHEN)?.toLongOrNull()?.let { whenMs ->
-                nb.setWhen(whenMs).setUsesChronometer(true)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    nb.setChronometerCountDown(boolean(extras, PTConstants.PT_COUNTDOWN, def = false))
-                }
-            }
+            "timer", "countdown" -> applyChronometer(extras, nb, ended)
+        }
+    }
+
+    /**
+     * Timer / countdown chip: a running chronometer from `pt_when`. Uses only baseline builder APIs,
+     * so both tiers share it — on 16+ it drives the status-bar chip and the header, below 16 the
+     * header of the system-drawn notification.
+     *
+     * Not started in two cases, so the card never shows a time running into minus (Android has no way
+     * to stop a chronometer at zero):
+     * - on the end event: the live update is over, so like the text chip the running time goes and
+     *   the header shows the post time ("now", "4m") instead;
+     * - for a countdown that is already past `pt_when` or has under 10 s left, e.g. a push delivered
+     *   late. A timer counting up is left alone: its `pt_when` is in the past on purpose.
+     */
+    private fun applyChronometer(extras: Bundle, nb: NotificationCompat.Builder, ended: Boolean) {
+        if (ended) return
+        val whenMs = extras.getString(PTConstants.PT_WHEN)?.toLongOrNull() ?: return
+        val countDown = boolean(extras, PTConstants.PT_COUNTDOWN, def = false)
+        if (countDown && whenMs - System.currentTimeMillis() < COUNTDOWN_MIN_REMAINING_MS) return
+        nb.setWhen(whenMs).setUsesChronometer(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            nb.setChronometerCountDown(countDown)
         }
     }
 
@@ -224,26 +264,39 @@ internal class ProgressStyle(
         trackerIcon: Bitmap?,
         ended: Boolean
     ): NotificationCompat.Builder {
-        val chipText = extras.getString(PTConstants.PT_CHIP_TEXT)
+        // On Android 16 the chip lives in the status bar and goes away once the live update ends
+        // (no longer ongoing/promoted), so drop it from the fallback card on the end event too.
+        // Like the native tier, pt_chip_text is only used for pt_chip_type=text.
+        val textChip = "text".equals(extras.getString(PTConstants.PT_CHIP_TYPE), ignoreCase = true)
+        val chipText = if (ended || !textChip) null else extras.getString(PTConstants.PT_CHIP_TEXT)
         val startIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_START_ICON))
         val endIcon = bitmap(context, extras.getString(PTConstants.PT_PROGRESS_END_ICON))
 
-        // Either/or: milestones (dots + connectors) when segments/points are present, else a plain
+        // Either/or: milestones (the drawn track) when segments/points are present, else a plain
         // bar — indeterminate when flagged, else determinate. Never both. (Segmented ignores the
         // indeterminate flag; a milestone bar is inherently determinate.)
         val segmented = data.isSegmented
         val indeterminate = data.indeterminate && !segmented
         val progress = data.progress ?: 0
-        // Determinate max: pt_progress_max, else the summed segment lengths, else 100.
-        val progressMax = data.progressMax ?: segments.sumOf { it.length }.takeIf { it > 0 } ?: 100
+        // Plain-bar max: pt_progress_max, else 100. (The milestone track takes its total from the
+        // segments instead; see ProgressTrackRenderer.nativeTrack.)
+        val progressMax = data.progressMax ?: 100
 
-        val big = fallbackView(context, R.layout.pt_progress_fallback, expanded = true, segmented, indeterminate,
-            title, message, chipText, trackerIcon, startIcon, endIcon, segments, points, progress, progressMax)
-        val small = fallbackView(context, R.layout.pt_progress_fallback_collapsed, expanded = false, segmented,
-            indeterminate, title, message, chipText, trackerIcon, null, null, segments, points, progress, progressMax)
+        val styledByProgress = boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false)
 
-        nb.setCustomContentView(small)
-            .setCustomBigContentView(big)
+        val big = fallbackView(context, segmented, indeterminate, title, message, chipText, trackerIcon,
+            startIcon, endIcon, segments, points, progress, progressMax, styledByProgress)
+
+        // Only the expanded view is custom. No custom content view is set, so the collapsed view is
+        // the system's standard template (small icon, title, time, message) on every API level —
+        // the same fields Android 16 shows for a collapsed native ProgressStyle.
+        // Timer / countdown chip: there is no status-bar chip below 16, so show the running time in
+        // the notification header (Android 16 shows it there too, besides the chip).
+        when (extras.getString(PTConstants.PT_CHIP_TYPE)?.lowercase()) {
+            "timer", "countdown" -> applyChronometer(extras, nb, ended)
+        }
+
+        nb.setCustomBigContentView(big)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setOngoing(!ended) // sticky like a live update while active; swipeable once ended
         return nb
@@ -251,8 +304,6 @@ internal class ProgressStyle(
 
     private fun fallbackView(
         context: Context,
-        layoutId: Int,
-        expanded: Boolean,
         segmented: Boolean,
         indeterminate: Boolean,
         title: String,
@@ -264,9 +315,10 @@ internal class ProgressStyle(
         segments: List<SegmentData>,
         points: List<PointData>,
         progress: Int,
-        progressMax: Int
+        progressMax: Int,
+        styledByProgress: Boolean
     ): RemoteViews {
-        val rv = RemoteViews(context.packageName, layoutId)
+        val rv = RemoteViews(context.packageName, R.layout.pt_progress_fallback)
         rv.setTextViewText(R.id.pt_title, Html.fromHtml(title))
         rv.setTextViewText(R.id.pt_message, message)
 
@@ -274,56 +326,44 @@ internal class ProgressStyle(
             rv.setTextViewText(R.id.pt_chip, chipText)
             rv.setViewVisibility(R.id.pt_chip, android.view.View.VISIBLE)
         }
-        if (trackerIcon != null) {
+        // Android 16 hides the tracker on an indeterminate bar (there is no position to put it at),
+        // so hide it here too to match. On the milestone track the tracker is drawn on the track at
+        // the progress position instead (see below), so it is not shown up here as well.
+        if (trackerIcon != null && !indeterminate && !segmented) {
             rv.setImageViewBitmap(R.id.pt_tracker, trackerIcon)
             rv.setViewVisibility(R.id.pt_tracker, android.view.View.VISIBLE)
         }
 
+        // Start/end icons sit on both sides of the indicator for both the milestone and the plain
+        // bar, as on Android 16.
+        startIcon?.let {
+            rv.setImageViewBitmap(R.id.pt_start_icon, it)
+            rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
+        }
+        endIcon?.let {
+            rv.setImageViewBitmap(R.id.pt_end_icon, it)
+            rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
+        }
+
         if (segmented) {
-            // Milestones: show the dots/connectors row, hide the plain bar.
+            // Milestones: show the bitmap-drawn track, hide the plain bar. Same track as native 16+:
+            // the total is the sum of the segment lengths (100 when there are none), with native's
+            // segment/point limits applied (see nativeTrack). Progress shows as on native: the
+            // tracker at the progress, and (pt_styled_by_progress) everything ahead of it faded.
             rv.setViewVisibility(R.id.pt_bar, android.view.View.GONE)
-            if (expanded) {
-                startIcon?.let {
-                    rv.setImageViewBitmap(R.id.pt_start_icon, it)
-                    rv.setViewVisibility(R.id.pt_start_icon, android.view.View.VISIBLE)
-                }
-                endIcon?.let {
-                    rv.setImageViewBitmap(R.id.pt_end_icon, it)
-                    rv.setViewVisibility(R.id.pt_end_icon, android.view.View.VISIBLE)
-                }
-            }
-            rv.removeAllViews(R.id.pt_progress_container)
-            // TalkBack: the dots (pt_progress_point) and connectors (pt_progress_segment) are
-            // importantForAccessibility="no", so describe the whole track on the container instead.
-            // In the segmented case progressMax is the summed segment length and progress is on that
-            // scale, so the same percent string as the plain bar applies.
-            if (progressMax > 0) {
-                val percent = progress.coerceIn(0, progressMax) * 100 / progressMax
-                rv.setContentDescription(
-                    R.id.pt_progress_container,
-                    context.getString(R.string.pt_progress_bar_cd, percent)
-                )
-            }
-            if (points.isNotEmpty()) {
-                points.forEachIndexed { i, p ->
-                    val dot = RemoteViews(context.packageName, R.layout.pt_progress_point)
-                    dot.setInt(R.id.pt_dot, "setColorFilter", p.color ?: COLOR_POINT_DEFAULT)
-                    if (expanded && !p.title.isNullOrEmpty()) {
-                        dot.setTextViewText(R.id.pt_point_title, p.title)
-                        dot.setViewVisibility(R.id.pt_point_title, android.view.View.VISIBLE)
-                    }
-                    rv.addView(R.id.pt_progress_container, dot)
-                    if (i < segments.size) {
-                        rv.addView(R.id.pt_progress_container, segmentView(context, segments[i]))
-                    }
-                }
-            } else {
-                segments.forEach { rv.addView(R.id.pt_progress_container, segmentView(context, it)) }
-            }
+            val (trackSegments, trackPoints, total) = ProgressTrackRenderer.nativeTrack(segments, points)
+            val track = ProgressTrackRenderer.render(
+                trackSpec(context, hasStartIcon = startIcon != null, hasEndIcon = endIcon != null),
+                trackSegments, trackPoints, total, progress, styledByProgress, trackerIcon
+            )
+            rv.setImageViewBitmap(R.id.pt_progress_track, track)
+            rv.setViewVisibility(R.id.pt_progress_track, android.view.View.VISIBLE)
+            // TalkBack: the track is a picture, so describe it as a percent like the plain bar.
+            // Long math: total can be up to Int.MAX_VALUE, so progress * 100 would overflow Int.
+            val percent = (progress.coerceIn(0, total).toLong() * 100 / total).toInt()
+            rv.setContentDescription(R.id.pt_progress_track, context.getString(R.string.pt_progress_bar_cd, percent))
         } else {
-            // Plain bar: hide the segmented row/container, show the bar (indeterminate or determinate).
-            rv.setViewVisibility(R.id.pt_segmented_row, android.view.View.GONE) // expanded only; no-op on collapsed
-            rv.setViewVisibility(R.id.pt_progress_container, android.view.View.GONE)
+            // Plain bar: show the bar (indeterminate or determinate); the track stays hidden.
             rv.setViewVisibility(R.id.pt_bar, android.view.View.VISIBLE)
             if (indeterminate) {
                 rv.setProgressBar(R.id.pt_bar, 0, 0, true)
@@ -342,18 +382,53 @@ internal class ProgressStyle(
         return rv
     }
 
-    private fun segmentView(context: Context, seg: SegmentData): RemoteViews {
-        val v = RemoteViews(context.packageName, R.layout.pt_progress_segment)
-        v.setInt(R.id.pt_seg, "setBackgroundColor", seg.color ?: COLOR_INACTIVE)
-        return v
+    /**
+     * Bitmap width for the milestone track: roughly the width the track gets inside the expanded card
+     * (screen width minus the shade/card margins and any start/end icons), capped to keep the bitmap
+     * small. The ImageView scales it with fitCenter, so a small estimate error never distorts the dots.
+     *
+     * Colors follow the system light/dark theme like the native palette (Notification.Colors): on
+     * API 31+ the Material You system colors (primary accent, surface, on-surface-variant); below
+     * that, the notification color as the accent on a plain light/dark card. The bitmap is drawn
+     * once per post, so a theme switch shows on the next update.
+     */
+    private fun trackSpec(context: Context, hasStartIcon: Boolean, hasEndIcon: Boolean): ProgressTrackRenderer.Spec {
+        val dm = context.resources.displayMetrics
+        val iconsDp = (if (hasStartIcon) TRACK_ICON_DP else 0f) + (if (hasEndIcon) TRACK_ICON_DP else 0f)
+        val estimated = dm.widthPixels - ((TRACK_SIDE_MARGINS_DP + iconsDp) * dm.density).toInt()
+        val dark = Utils.isDarkMode(context)
+        val (accent, background, titleColor) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Material 3 roles: primary = accent1 tone 40/80, surface container high ≈ neutral1
+            // tone 90/20, on-surface-variant = neutral2 tone 30/80.
+            fun c(id: Int) = context.getColor(id)
+            if (dark) Triple(c(android.R.color.system_accent1_200), c(android.R.color.system_neutral1_800), c(android.R.color.system_neutral2_200))
+            else Triple(c(android.R.color.system_accent1_600), c(android.R.color.system_neutral1_100), c(android.R.color.system_neutral2_700))
+        } else {
+            Triple(parseColor(renderer.smallIconColour),
+                if (dark) COLOR_BG_DARK else COLOR_BG_LIGHT,
+                if (dark) COLOR_TITLE_DARK else COLOR_TITLE_LIGHT)
+        }
+        @Suppress("DEPRECATION") // scaledDensity keeps the titles in step with the user's font size
+        return ProgressTrackRenderer.Spec(
+            widthPx = estimated.coerceIn(1, MAX_TRACK_WIDTH_PX),
+            density = dm.density,
+            scaledDensity = dm.scaledDensity,
+            defaultColor = accent,
+            titleColor = titleColor,
+            backgroundColor = background
+        )
     }
 
     // --- media / helpers ---
 
-    private fun bitmap(context: Context, url: String?): Bitmap? {
+    /** A progress icon (tracker / start / end), square-cropped for its square slot. */
+    private fun bitmap(context: Context, url: String?): Bitmap? = loadBitmap(context, url)?.let { squareCrop(it) }
+
+    /** Downloads [url] as is; null when missing or when the download fails. */
+    private fun loadBitmap(context: Context, url: String?): Bitmap? {
         if (url.isNullOrEmpty()) return null
         return try {
-            renderer.templateMediaManager.getNotificationBitmap(url, false, context)?.let { squareCrop(it) }
+            renderer.templateMediaManager.getNotificationBitmap(url, false, context)
         } catch (t: Throwable) {
             PTLog.verbose("pt_progress: failed to load icon $url", t)
             null
