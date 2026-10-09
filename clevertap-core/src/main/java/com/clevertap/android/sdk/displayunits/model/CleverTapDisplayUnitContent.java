@@ -3,8 +3,13 @@ package com.clevertap.android.sdk.displayunits.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -33,6 +38,12 @@ public class CleverTapDisplayUnitContent implements Parcelable {
     private String icon;
 
     private String media;
+    
+    /**
+     * Per-item {@code wzrk_*} attribution from BE metadata and SDK-derived
+     * Android action/data. {@code null} if no metadata was provided.
+     */
+    private HashMap<String, Object> metaData;
 
     private String message;
 
@@ -46,7 +57,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     private CleverTapDisplayUnitContent(String title, String titleColor, String message, String messageColor,
             String icon, String media, String contentType, String posterUrl,
-            String actionUrl, String error) {
+            String actionUrl, HashMap<String, Object> metaData, String error) {
         this.title = title;
         this.titleColor = titleColor;
         this.message = message;
@@ -56,10 +67,12 @@ public class CleverTapDisplayUnitContent implements Parcelable {
         this.contentType = contentType;
         this.posterUrl = posterUrl;
         this.actionUrl = actionUrl;
+        this.metaData = metaData;
         this.error = error;
     }
 
 
+    @SuppressWarnings("unchecked")
     private CleverTapDisplayUnitContent(Parcel in) {
         title = in.readString();
         titleColor = in.readString();
@@ -70,6 +83,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
         contentType = in.readString();
         posterUrl = in.readString();
         actionUrl = in.readString();
+        metaData = in.readByte() == 0x00 ? null : in.readHashMap(null);
         error = in.readString();
     }
 
@@ -127,6 +141,18 @@ public class CleverTapDisplayUnitContent implements Parcelable {
     @SuppressWarnings("unused")
     public String getMedia() {
         return media;
+    }
+
+    /**
+     * Getter for this item's {@code wzrk_*} attribution, or {@code null} if unavailable
+     *
+     * @return attribution map, or {@code null}
+     */
+    @Nullable
+    @SuppressWarnings("unused")
+    public HashMap<String, Object> getMetaData() {
+        // Defensive copy, same reason as CleverTapDisplayUnit#getMetaDataForContent(int).
+        return metaData != null ? new HashMap<>(metaData) : null;
     }
 
     /**
@@ -226,7 +252,8 @@ public class CleverTapDisplayUnitContent implements Parcelable {
     public String toString() {
         return "[" + " title:" + title + ", titleColor:" + titleColor + " message:" + message + ", messageColor:"
                 + messageColor + ", media:" + media + ", contentType:" + contentType + ", posterUrl:" + posterUrl
-                + ", actionUrl:" + actionUrl + ", icon:" + icon + ", error:" + error + " ]";
+                + ", actionUrl:" + actionUrl + ", icon:" + icon + ", metaData:" + metaData
+                + ", error:" + error + " ]";
     }
 
     @Override
@@ -240,6 +267,12 @@ public class CleverTapDisplayUnitContent implements Parcelable {
         dest.writeString(contentType);
         dest.writeString(posterUrl);
         dest.writeString(actionUrl);
+        if (metaData == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeMap(metaData);
+        }
         dest.writeString(error);
     }
 
@@ -291,21 +324,66 @@ public class CleverTapDisplayUnitContent implements Parcelable {
                     JSONObject androidObject = urlObject.has(Constants.KEY_ANDROID) ? urlObject
                             .getJSONObject(Constants.KEY_ANDROID) : null;
                     if (androidObject != null) {
-                        actionUrl = androidObject.has(Constants.KEY_TEXT) ? androidObject
-                                .getString(Constants.KEY_TEXT) : "";
+                        // opt + instanceof, not getString: getString coerces a number to
+                        // its digits and a JSON null to the literal "null", either of
+                        // which would then be reported as the tapped url.
+                        Object textValue = androidObject.opt(Constants.KEY_TEXT);
+                        actionUrl = textValue instanceof String ? (String) textValue : "";
                     }
                 }
             }
 
+            HashMap<String, Object> metaData = parseMetaData(contentObject, actionUrl);
+
             return new CleverTapDisplayUnitContent(title, titleColor, message, messageColor,
                     icon, media, contentType, posterUrl,
-                    actionUrl, null);
+                    actionUrl, metaData, null);
 
         } catch (Exception e) {
             Logger.d(Constants.FEATURE_DISPLAY_UNIT,
                     "Unable to init CleverTapDisplayUnitContent with JSON - " + e.getLocalizedMessage());
-            return new CleverTapDisplayUnitContent("", "", "", "", "", "", "", "", "",
+            return new CleverTapDisplayUnitContent("", "", "", "", "", "", "", "", "", null,
                     "Error Creating DisplayUnit Content from JSON : " + e.getLocalizedMessage());
         }
+    }
+
+    /**
+     * Builds per-item {@code wzrk_*} attribution by merging BE metadata with
+     * SDK-derived Android action/data. The url pair does not depend on BE metadata,
+     * so an item with a url but no (or empty, or non-object) metadata still carries
+     * it, matching iOS. Returns {@code null} only when there is nothing to attribute.
+     *
+     * @param contentObject raw {@code content[]} item
+     * @param actionUrl resolved Android action URL
+     * @return attribution map, or {@code null} if it would be empty
+     */
+    private static HashMap<String, Object> parseMetaData(JSONObject contentObject, String actionUrl) {
+        JSONObject metaDataObject = contentObject.has(Constants.KEY_METADATA)
+                ? contentObject.optJSONObject(Constants.KEY_METADATA) : null;
+        HashMap<String, Object> metaData = new HashMap<>();
+        Iterator<String> keys = metaDataObject != null
+                ? metaDataObject.keys() : Collections.<String>emptyIterator();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            Object value = metaDataObject.opt(key);
+            // Nested objects, arrays and JSON nulls (opt returns the JSONObject.NULL
+            // sentinel, not null) cannot be written to a Parcel, and the unit is
+            // Parcelable, so keeping one would crash the host app on the next parcel.
+            if (value == null || value == JSONObject.NULL || value instanceof JSONObject || value instanceof JSONArray) {
+                Logger.d(Constants.FEATURE_DISPLAY_UNIT,
+                        "Skipping non-primitive metadata value for key: " + key);
+                continue;
+            }
+            metaData.put(key, value);
+        }
+        // SDK-derived pair last, so it wins over anything the BE sent: only the SDK
+        // knows which platform's url actually ran. With no url there is nothing to
+        // derive and the BE's pair, if any, stays.
+        String trimmedUrl = actionUrl != null ? actionUrl.trim() : "";
+        if (!trimmedUrl.isEmpty()) {
+            metaData.put(Constants.KEY_WZRK_ACTION, Constants.KEY_URL);
+            metaData.put(Constants.KEY_WZRK_DATA, trimmedUrl);
+        }
+        return metaData.isEmpty() ? null : metaData;
     }
 }

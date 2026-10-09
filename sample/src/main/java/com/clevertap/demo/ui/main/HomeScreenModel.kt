@@ -53,7 +53,10 @@ object HomeScreenModel {
             ),
             "DISPLAY UNITS" to listOf(
                 "Get Display Unit For Id", "Get All Display Units",
-                "Notification Viewed event for Display Unit", "Notification Clicked event for Display Unit"
+                "Notification Viewed event for Display Unit", "Notification Clicked event for Display Unit",
+                "Log per-slide attribution for all Display Units",
+                "Element Viewed event for every slide",
+                "Element Clicked event for first slide"
             ),
             "PRODUCT CONFIGS" to listOf(
                 "Set Default Product Configs",

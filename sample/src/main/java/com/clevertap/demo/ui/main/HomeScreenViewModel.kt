@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.inapp.callbacks.FetchInAppsCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.ExampleVariables
 import com.clevertap.demo.MyApplication
+import com.clevertap.demo.logSlides
 import java.util.Date
 
 private const val TAG = "HomeScreenViewModel"
@@ -606,6 +607,9 @@ class HomeScreenViewModel(
             1 -> getAllDisplayUnits()
             2 -> raiseDisplayUnitViewedEvent()
             3 -> raiseDisplayUnitClickedEvent()
+            4 -> logDisplayUnitSlides()
+            5 -> raiseDisplayUnitElementViewedEvents()
+            6 -> raiseDisplayUnitElementClickedEvent()
         }
     }
 
@@ -640,6 +644,68 @@ class HomeScreenViewModel(
             cleverTapAPI.pushDisplayUnitClickedEventForID(id)
             printVar("Clicked Event - Display Unit ID", id)
         } ?: log("No display units found")
+    }
+
+    /**
+     * Split of clicks: dumps the per-slide wzrk_* attribution the SDK parsed, so the
+     * BE's `metadata` block and the SDK-derived wzrk_action / wzrk_data can be eyeballed
+     * against the payload. Filter logcat on the "ND" tag.
+     */
+    private fun logDisplayUnitSlides() {
+        logStep("DISPLAY UNITS", "Logging per-slide attribution")
+
+        val units = cleverTapAPI?.allDisplayUnits
+        if (units.isNullOrEmpty()) {
+            log("No display units found")
+            return
+        }
+        units.forEach { it.logSlides() }
+    }
+
+    /**
+     * Raises the element-level Viewed event once per slide. Views are naturally
+     * per-slide (each one coming on screen), so every slide of the unit is reported and
+     * each event carries that slide's own wzrk_element_id / wzrk_index.
+     */
+    private fun raiseDisplayUnitElementViewedEvents() {
+        logStep("DISPLAY UNITS", "Raising element viewed event for every slide")
+
+        val unit = cleverTapAPI?.allDisplayUnits?.firstOrNull()
+        val unitID = unit?.unitID
+        if (unit == null || unitID == null) {
+            log("No display units found")
+            return
+        }
+        val slideCount = unit.contents?.size ?: 0
+        if (slideCount == 0) {
+            log("Unit has no content items")
+            return
+        }
+        for (index in 0 until slideCount) {
+            val metaData = unit.getMetaDataForContent(index)
+            printVar("Element Viewed - unit $unitID slide $index", metaData)
+            cleverTapAPI.pushDisplayUnitElementViewedEventForID(unitID, metaData)
+        }
+    }
+
+    /**
+     * Raises the element-level Clicked event for the first slide only — a click is a
+     * single user action, unlike the view sweep above. Change the index here to test a
+     * different slide.
+     */
+    private fun raiseDisplayUnitElementClickedEvent() {
+        logStep("DISPLAY UNITS", "Raising element clicked event for the first slide")
+
+        val unit = cleverTapAPI?.allDisplayUnits?.firstOrNull()
+        val unitID = unit?.unitID
+        if (unit == null || unitID == null) {
+            log("No display units found")
+            return
+        }
+        val slideIndex = 0
+        val metaData = unit.getMetaDataForContent(slideIndex)
+        printVar("Element Clicked - unit $unitID slide $slideIndex", metaData)
+        cleverTapAPI.pushDisplayUnitElementClickedEventForID(unitID, metaData)
     }
 
     // ========== PRODUCT CONFIGS SECTION ==========
