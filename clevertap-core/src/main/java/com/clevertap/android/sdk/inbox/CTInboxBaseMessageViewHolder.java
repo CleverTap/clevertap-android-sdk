@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -20,11 +21,15 @@ import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.Utils;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,6 +39,9 @@ import kotlin.jvm.functions.Function3;
 
 @RestrictTo(Scope.LIBRARY)
 public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
+
+    /** 40% opacity turns the black ct_video_1 circle into the light grey iOS uses. */
+    private static final int VIDEO_PLACEHOLDER_ALPHA = 102;
 
     Context context;
 
@@ -208,6 +216,25 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     int getImageBackgroundColor() {
         return Color.TRANSPARENT;
+    }
+
+    /**
+     * Shows the video thumbnail for a message without a poster, fitted inside the media area.
+     * Set directly rather than through Glide, which rasterises the vector at its 32x18dp intrinsic
+     * size and lets the scale type blow that bitmap up into a blurry circle; set as a drawable,
+     * the vector redraws sharp at the view's size. The clear() cancels any request still pending
+     * from this recycled view's previous message.
+     */
+    void showVideoPlaceholder(ImageView imageView) {
+        Glide.with(imageView.getContext()).clear(imageView);
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        int drawableId = Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL);
+        Drawable icon = drawableId != -1 ? ContextCompat.getDrawable(context, drawableId) : null;
+        if (icon != null) {
+            // Muted grey rather than solid black, matching the iOS inbox placeholder.
+            icon.mutate().setAlpha(VIDEO_PLACEHOLDER_ALPHA);
+        }
+        imageView.setImageDrawable(icon);
     }
 
     CTInboxListViewFragment getParent() {
