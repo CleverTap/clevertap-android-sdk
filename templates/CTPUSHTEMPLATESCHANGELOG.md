@@ -11,7 +11,6 @@
 * Fixes the `Image with CTA` template layout so the image is no longer flush against the notification edge.
 * Fixes the `Custom Rating` submit button not opening its destination on Android 12 and above. A notification tap handled by a broadcast receiver may not start an activity on those versions, so the submit tap now goes through an invisible activity owned by the SDK, which records the rating and then opens the destination.
 * Fixes a two-position `Custom Rating` campaign being rejected by validation. `pt_rating_count=2` is the documented minimum scale, but the count check treated it as below the minimum and rendered a standard notification instead.
-* Fixes the corner radius and border width of the expanded image rendering about 11% smaller than requested. The dp-to-pixel conversion used the notification card's width where it should have used the narrower content width inside it.
 
 ### Version 2.5.0 (July 28, 2026)
 
