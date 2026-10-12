@@ -257,13 +257,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         } else {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.mediaImage.setVisibility(View.VISIBLE);
-                            this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            int drawableId = Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL);
-                            if (drawableId != -1) {
-                                Glide.with(this.mediaImage.getContext())
-                                        .load(drawableId)
-                                        .into(this.mediaImage);
-                            }
+                            showVideoPlaceholder(this.mediaImage);
                         }
                     } else if (content.mediaIsAudio()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
@@ -353,18 +347,8 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         } else {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.squareImage.setVisibility(View.VISIBLE);
-                            if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                                this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            } else {
-                                this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                            }
                             this.squareImage.setBackgroundColor(getImageBackgroundColor());
-                            int drawableId = Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL);
-                            if (drawableId != -1) {
-                                Glide.with(this.squareImage.getContext())
-                                        .load(drawableId)
-                                        .into(this.squareImage);
-                            }
+                            showVideoPlaceholder(this.squareImage);
                         }
                     } else if (content.mediaIsAudio()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
@@ -447,13 +431,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 }
                             } else {
                                 this.defaultImage.setVisibility(View.VISIBLE);
-                                this.defaultImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                                int drawableId = Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL);
-                                if (drawableId != -1) {
-                                    Glide.with(this.defaultImage.getContext())
-                                            .load(drawableId)
-                                            .into(this.defaultImage);
-                                }
+                                showVideoPlaceholder(this.defaultImage);
                             }
                         } else if (content.mediaIsAudio()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);
