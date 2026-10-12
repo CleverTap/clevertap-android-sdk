@@ -152,36 +152,40 @@ Notes:
 
 ## 5. Cap model & SDK enforcement matrix
 
-From the design TAN §7, the SDK's responsibilities (what the SDK must enforce locally):
+The SDK's responsibilities **as shipped**. The whole model keys off one flag, `isNdFcapEnabled` (the
+"regime"): a non-regime unit (flag absent/false) is rendered **uncapped and uncounted**. Three
+`NdFCManager` static helpers are the single source of truth, so the delivery gate, counting, and the
+App-Launched budget trim can never disagree:
+- `inRegime(json)` = `isNdFcapEnabled` (decoded as boolean **or** positive int),
+- `isExcludeFromCaps(json)` = `efc == 1 || excludeGlobalFCaps == 1`,
+- `countsTowardCaps(json)` = `inRegime && excludeGlobalFCaps != 1`.
 
-| Cap | Applies to | SDK enforces? | How on SDK |
-|---|---|---|---|
-| `isNdFcapEnabled == false` short-circuit | all | yes | skip ND eval entirely → deliver as today |
-| `efc == 1` **or** `excludeGlobalFCaps == 1` (exclude from caps) | basic campaigns + journeys | yes | short-circuit allow |
-| `tlc` once-per-user-for-campaign | basic campaigns + journeys | yes | lifetime counter (`ndtlc[…][2]`) |
-| `tdc` once-per-day | basic campaigns + journeys | yes | today counter (`ndtlc[…][1]`) + daily reset |
-| `mdc` once-per-session | basic campaigns + journeys | **yes (SDK-only)** | in-memory session count |
-| `frequencyLimits` (AND) | advanced campaigns | yes | `LimitsMatcher` over ND ImpressionStore |
-| `occurrenceLimits` (onEvery/onExactly) | advanced campaigns | yes | `LimitsMatcher` over ND TriggerManager |
-| ND global daily (`ndmp`, def 10) | all ND unless `efc`/`excludeGlobalFCaps` (both bypass all caps) | yes (canShow re-check) | global `ndstc` vs `ndmp` ceiling |
-| ND global session (`ndsm`/`ndmc`, def 1) | all ND | **yes (SDK-only)** | session render count vs `ndmc` |
+| Cap | Who enforces | Notes |
+|---|---|---|
+| `isNdFcapEnabled` false/absent | — (non-regime) | render as-is; no caps, no counting |
+| Per-target daily/lifetime (`efc`/`tdc`/`tlc`) | **Server** (legacy path, V2) | SDK does **not** re-check these at delivery |
+| Advanced `frequencyLimits`/`occurrenceLimits`/`whenTriggers` | **SDK** at eval (`adUnit_eval` vote) + App-Launched filter | not re-checked in the delivery gate |
+| Per-target session (`mdc`) + account session (`ndmc`) | **SDK** at delivery (`NdFcapGate`→`canShow`) | **the only counter cap the gate enforces** |
+| Account daily ceiling (`ndmp`) | **Server** (regular events) / **SDK** remaining-budget trim (App-Launched) | absent `ndmp` ⇒ **no daily ceiling** (unlimited) |
+| `efc == 1` or `excludeGlobalFCaps == 1` | bypass the delivery caps | exclude-from-caps — but `efc` still **counts** (see below) |
 
-Precedence (same as in-app): `isNdFcapEnabled==false` overrides all; then **either** `efc==1` **or**
-`excludeGlobalFCaps==1` short-circuits and bypasses **all** counter caps. This mirrors in-app exactly —
-`CTInAppNotification.isExcludeFromCaps` is set by `efc==1 || excludeGlobalFCaps==1`, and both `canShow`
-implementations return early on that single flag. So despite the name, `excludeGlobalFCaps` is **not**
-scoped to the global-daily cap in either channel; treating it as "bypass only global-daily" would make ND
-diverge from in-app. (If per-cap granularity is ever wanted, it must change in both channels together.)
+**Delivery gate is session-only.** `NdFcapGate` → `NdFCManager.canShow` enforces **session caps only**
+(per-target `mdc` + account `ndmc`); it no longer re-checks daily/lifetime/global-daily. On V2 the server
+already enforced those (per-target on the legacy path; the daily ceiling on regular events), and the
+App-Launched path trims the global budget separately — re-applying them at delivery would double-cap. The
+gate runs for **regime** units (keys on `inRegime`, not on the mere presence of a cap field); non-regime
+units pass through uncapped. `efc`/`excludeGlobalFCaps` short-circuit the gate to allow (exclude-from-caps).
 
-*Where each is enforced:* `frequencyLimits`/`occurrenceLimits` are enforced at **eval time** (the
-`adUnit_eval` vote) and are **not** re-checked at delivery; the counter caps (`efc`/`tlc`/`tdc`/`mdc`
-+ global) are re-checked at delivery in `canShow`. See §7.2 for why ND skips the delivery-time
-whenLimits re-check that in-app does.
+**Counting (`ndmp`/`ndtlc`).** The impression hook (`didShow`, driven by the viewed event) **always**
+records the in-memory session impression (session caps + advanced `frequencyLimits` are SDK-owned for
+every unit), but bumps the server-reported counters only when `countsTowardCaps` is true. So
+`excludeGlobalFCaps` and non-regime units do **not** count, while **`efc` units still count** (the server
+treats them `DELIVER_COUNTED`). The SDK is the source of truth for `ndmp`/`ndtlc` — the server reads them
+verbatim and never derives its own count, so inaccurate reporting directly over-/under-delivers.
 
-The elegant simplification: **the SDK does not need to classify campaigns.** Only advanced-rule,
-non-journey campaigns ever appear in `adUnit_notifs_ss` (the server's eligibility filter, design §6.7).
-So "evaluate everything in the metadata bundle and vote the eligible ones into `adUnit_eval`" is
-correct by construction — journeys and simple campaigns never reach the SDK evaluator.
+The elegant simplification still holds: **the SDK does not classify campaigns.** Only advanced-rule,
+non-journey campaigns ever appear in `adUnit_notifs_ss` (the server's eligibility filter), so "evaluate
+the bundle and vote the eligible into `adUnit_eval`" is correct by construction.
 
 ---
 
@@ -256,8 +260,17 @@ flowchart TD
     AL --> ACK[CG stub -> adUnit_suppressed ack]
     CACHE --> APP[[DisplayUnitListener -> host app renders]]
     APP --> VIEW[pushDisplayUnitViewedEventForID]
-    VIEW --> REC[ND recordImpression:<br/>ndtlc++ , ndstc++ , session++]
+    VIEW --> REC["didShow: session impression always;<br/>ndtlc + ndmp shownToday only if countsTowardCaps<br/>(isNdFcapEnabled and not excludeGlobalFCaps; efc counts)"]
 ```
+
+A `/content` round-trip (content-fetch arbitration) is re-fed through the **same** response chain with
+`ResponseContext.source == CONTENT_FETCH`. `DisplayUnitResponse` skips ND meta ingest on that source (a
+`/content` payload is partial and must not overwrite ceilings / ss-bundle / stale GC), applies the fcap
+gate to the fetched units, then **merges** them into the cache **by unitID** (`mergeByUnitId`) rather than
+the `/a1` REPLACE — so `/content` never wipes the `/a1` set — and skips the write entirely if nothing
+mergeable arrived. ND meta otherwise runs on every `/a1` response including a user switch
+(`runsDuringUserSwitch() == true`); only the per-user ss-bundle and the content/CG path are skipped on a
+switch.
 
 ### 7.2 The ND cap gate (mirrors in-app canShow, minus CS)
 
@@ -268,18 +281,16 @@ advanced `whenLimits` (`frequencyLimits`/`occurrenceLimits`) were already applie
 ```mermaid
 flowchart TD
     EV[event: whenTriggers + whenLimits applied at eval time -> adUnit_eval vote] -.server delivers content.-> A
-    A[unit about to be surfaced] --> M{isNdFcapEnabled / fcap-managed?}
-    M -- no --> ALLOW[allow - deliver as today]
-    M -- yes --> C{efc == 1?}
+    A[unit about to be surfaced] --> M{inRegime?<br/>isNdFcapEnabled}
+    M -- no --> ALLOW[allow - deliver uncapped]
+    M -- yes --> C{efc or excludeGlobalFCaps?}
     C -- yes --> ALLOW
-    C -- no --> D{session cap<br/>mdc + global ndmc}
+    C -- no --> D{session cap<br/>mdc + account ndmc}
     D -- maxed --> DENY[suppress]
-    D -- ok --> E{lifetime cap tlc}
-    E -- maxed --> DENY
-    E -- ok --> F{daily cap<br/>tdc + global ndmp/ndstc}
-    F -- maxed --> DENY
-    F -- ok --> ALLOW
+    D -- ok --> ALLOW
 ```
+
+*(Daily/lifetime are no longer in the gate — session-only; see below.)*
 
 **Divergence from in-app: no delivery-time whenLimits re-check for *voted* content (intentional).**
 This applies to the regular-event path only, where content was already `whenLimits`-filtered at vote time.
@@ -292,28 +303,29 @@ In-app evaluates `whenLimits` **twice** — once at eval, then again right befor
 showing, blacklisted/suspended activity, media still downloading), during which impressions can accrue
 — so it re-verifies the frequency limits at the last moment.
 
-ND deliberately does **not** meaningfully re-check caps at delivery — neither `whenLimits`
-(`NdFcapGate` passes `frequencyLimitsMaxedOut = false`) nor the counter caps. `NdFcapGate` still runs,
-but the delivered content payload carries no fcap keys (contract §5.3 — advanced rules live in
-`adUnit_notifs_ss`, legacy caps are server-side), so its `canShow` read resolves to "uncapped" and the
-gate is effectively pass-through for real content. This is the right shape for ND, not a gap, because:
+ND deliberately does **not** re-check `whenLimits` at delivery for *voted* content (`NdFcapGate` passes
+`frequencyLimitsMaxedOut = false`), and — on V2 — does **not** re-check per-target daily/lifetime or the
+global-daily cap either: **the delivery gate is session-only.** Delivered content *is* decorated with the
+fcap fields (contract §9 — `isNdFcapEnabled`/`excludeGlobalFCaps` ride each entry), so `NdFcapGate`
+actively **session-gates regime units** (it keys on `inRegime`, not on the presence of a cap field); it is
+not a pass-through. Daily/lifetime are left to the server because:
 
 1. **No on-device deferred display queue.** ND content is handed to the host as the response is
    processed — there's no `pendingNotifications`-style deferral, so the long eval→render gap that
    in-app's re-check guards essentially doesn't exist.
-2. **The SDK is callback-only — not in the render path.** Unlike in-app (which owns a main-thread
-   display flow: queue → activity lifecycle → media → modal show, and so re-checks at `canShow` right
-   before it renders), ND just delivers the list via `DisplayUnitListener` and is done. The host renders
-   and reports `viewed` whenever it chooses; a delivery-time re-check could not cover that timing anyway.
-3. **The server is the authority for ND caps.** LC gates advanced content on the `adUnit_eval` vote (the
-   vote *is* the `whenLimits` enforcement point) and enforces global/legacy counter caps from the
-   SDK-reported `ndtlc`/`ndmp`. The SDK's job is to keep those counters accurate (via `didShow`), not to
-   re-gate at delivery.
+2. **The SDK is callback-only — not in the render path.** ND just delivers the list via
+   `DisplayUnitListener`; the host renders and reports `viewed` whenever it chooses, so a delivery-time
+   daily/lifetime re-check couldn't cover that timing anyway.
+3. **The server is the authority for the global/legacy caps on V2.** LC gates advanced content on the
+   `adUnit_eval` vote (the vote *is* the `whenLimits` enforcement point), enforces the daily ceiling on
+   regular events, and enforces per-target `efc`/`tdc`/`tlc` on the legacy path — all from the SDK-reported
+   `ndtlc`/`ndmp`. The SDK's job is to keep those counters accurate (via `didShow`) and to own the
+   **session** caps, which the server never evaluates.
 
-The only window this leaves is a single flush round-trip between the vote and the content arriving; the
-counter caps (`tdc`/session/global-daily) cover the common same-day/same-session over-delivery within
-it. If strict in-app parity is ever required, the gate can look up the campaign's rules from `NdStore`
-by `ti` and call `ndLimitsMatcher.matchWhenLimits` before `canShow`.
+Session is the exception precisely because the server never does it, so it must be enforced at delivery
+regardless of version. (On V1 there is no server capping at all, but V1 ships no fcap config, so the regime
+gate naturally no-ops.) If strict in-app parity on daily/lifetime at delivery is ever wanted, the gate can
+look up the campaign's rules from `NdStore` by `ti` and re-check before `canShow`.
 
 **Exception — App-Launched content-in-advance IS `whenLimits`-filtered client-side (SDK-6138).**
 App-Launched ND content is shipped proactively in `adUnit_notifs_applaunched` **without** an `adUnit_eval`
