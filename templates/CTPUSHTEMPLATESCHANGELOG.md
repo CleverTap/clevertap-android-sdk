@@ -1,4 +1,13 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.7.0 (Unreleased)
+
+#### New Features
+* **Custom Rating Template:** Adds a new `pt_custom_rating` template alongside the existing `pt_rating` one. It supports a configurable `2`-`5` rating positions (`pt_rating_count`) drawn as icons or as text chips (`pt_rating_style`), per-position custom icons with their own selected artwork (`pt_rating_icon{n}` / `pt_rating_icon{n}_sel`) or labels (`pt_rating_label{n}`), optional colors for both states (`pt_rating_icon_clr`, `pt_rating_icon_sel_clr`, `pt_rating_label_clr`, `pt_rating_label_sel_clr`), and a submit button (`pt_rating_cta_label`, `pt_rating_cta_dl`, plus fill, border, text color and corner radius) so the rating is only reported once the user confirms. `pt_dl1`-`pt_dl5` act as per-position overrides of the submit destination. `Rating Submitted` carries the typed `rating_value`, `rating_scale` and `rating_style` properties in addition to `wzrk_c2a`. The classic `pt_rating` template is unchanged — its keys, rendering and events are untouched, and older SDKs receiving `pt_custom_rating` render a standard notification.
+
+#### Bug Fixes
+* Fixes the `Custom Rating` submit button not opening its destination on Android 12 and above. A notification tap handled by a broadcast receiver may not start an activity on those versions, so the submit tap now goes through an invisible activity owned by the SDK, which records the rating and then opens the destination.
+* Fixes a two-position `Custom Rating` campaign being rejected by validation. `pt_rating_count=2` is the documented minimum scale, but the count check treated it as below the minimum and rendered a standard notification instead.
+
 ### Version 2.6.0 (October 1, 2026)
 
 #### New Features

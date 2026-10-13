@@ -654,4 +654,62 @@ class NotificationBitmapUtilsTest {
         assertEquals(600, result.height)
         assertEquals(300, result.width)
     }
+
+    // scaleDownTo tests - the guard against a campaign asset blowing the notification's bitmap budget
+
+    private fun bitmap(w: Int, h: Int) =
+        Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also { bitmapsToRecycle.add(it) }
+
+    @Test
+    fun `scaleDownTo shrinks an oversized bitmap to the requested side`() {
+        val source = bitmap(1200, 1200)
+
+        val scaled = NotificationBitmapUtils.scaleDownTo(source, 126)
+        bitmapsToRecycle.add(scaled)
+
+        assertNotSame(source, scaled)
+        assertEquals(126, scaled.width)
+        assertEquals(126, scaled.height)
+    }
+
+    @Test
+    fun `scaleDownTo cuts the memory an oversized icon costs`() {
+        val source = bitmap(1200, 1200)
+
+        val scaled = NotificationBitmapUtils.scaleDownTo(source, 126)
+        bitmapsToRecycle.add(scaled)
+
+        // 1200x1200 is 5.76MB; five of those is past the budget the system strips at on its own.
+        assertTrue(
+            "expected a large reduction, went from ${source.allocationByteCount} to " +
+                    "${scaled.allocationByteCount}",
+            scaled.allocationByteCount < source.allocationByteCount / 50
+        )
+    }
+
+    @Test
+    fun `scaleDownTo leaves a bitmap that already fits completely alone`() {
+        val source = bitmap(64, 64)
+
+        assertSame(source, NotificationBitmapUtils.scaleDownTo(source, 126))
+    }
+
+    @Test
+    fun `scaleDownTo keeps the aspect ratio of a non-square asset`() {
+        val source = bitmap(1000, 500)
+
+        val scaled = NotificationBitmapUtils.scaleDownTo(source, 100)
+        bitmapsToRecycle.add(scaled)
+
+        assertEquals(100, scaled.width)
+        assertEquals(50, scaled.height)
+    }
+
+    @Test
+    fun `scaleDownTo does nothing when no budget is given`() {
+        val source = bitmap(1200, 1200)
+
+        assertSame(source, NotificationBitmapUtils.scaleDownTo(source, 0))
+        assertSame(source, NotificationBitmapUtils.scaleDownTo(source, -1))
+    }
 }

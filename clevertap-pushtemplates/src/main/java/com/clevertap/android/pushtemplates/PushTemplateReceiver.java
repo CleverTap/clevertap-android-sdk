@@ -15,8 +15,6 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -29,6 +27,8 @@ import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
 import androidx.core.app.RemoteInput;
+import com.clevertap.android.pushtemplates.content.CustomRatingContentView;
+import com.clevertap.android.pushtemplates.content.CustomRatingRenderResult;
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.pushtemplates.media.GifDecoderImpl;
 import com.clevertap.android.pushtemplates.media.TemplateMediaManager;
@@ -36,7 +36,6 @@ import com.clevertap.android.pushtemplates.media.TemplateRepository;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -151,6 +150,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                                     switch (templateType) {
                                         case RATING:
                                             handleRatingNotification(context, extras, intent);
+                                            break;
+                                        case CUSTOM_RATING:
+                                            handleCustomRatingNotification(context, extras);
                                             break;
                                         case FIVE_ICONS:
                                         case ICONS:
@@ -376,6 +378,89 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     }
 
+    /**
+     * Handles both taps on the pt_custom_rating template: selecting a position and submitting.
+     *
+     * Kept entirely separate from {@link #handleRatingNotification} — the Classic pt_rating template
+     * is frozen, so no code path is shared between the two.
+     */
+    private void handleCustomRatingNotification(Context context, Bundle extras) {
+        try {
+            int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
+            int selectedPosition = extras.getInt(PTConstants.PT_RATING_SELECTED_POSITION, 0);
+
+            // Submit taps carrying a selection go to PTRatingSubmitActivity, not here — a receiver
+            // may not open a screen after a notification tap on Android 12+. Only the "nothing
+            // selected yet" submit tap reaches this receiver, and it exists purely to swallow the
+            // tap so it does not fall through to the body-tap intent behind it (R-28).
+            if (extras.getBoolean(PTConstants.PT_RATING_SUBMIT, false)) {
+                PTLog.verbose("Custom rating submitted with no selection, ignoring");
+                return;
+            }
+
+            // Body tap: the standard content intent already handled it, nothing to re-render.
+            if (extras.getBoolean(PTConstants.DEFAULT_DL, false)) {
+                return;
+            }
+
+            if (selectedPosition < 1) {
+                PTLog.verbose("Custom rating tap carried no position, ignoring");
+                return;
+            }
+
+            Notification notification = Utils.getNotificationById(context, notificationId);
+            if (notification == null) {
+                PTLog.verbose("Custom rating notification is null, returning");
+                return;
+            }
+            if (notification.bigContentView == null) {
+                PTLog.verbose("Custom rating notification has no expanded view, returning");
+                return;
+            }
+
+            setSmallIcon(context);
+
+            // Build a NEW expanded view rather than writing over the posted one. RemoteViews only
+            // appends actions, so re-rendering into the view returned by getActiveNotifications()
+            // adds another five icon bitmaps on every tap until the platform strips the whole custom
+            // layout and the rating row silently disappears.
+            CustomRatingRenderResult rendered = CustomRatingContentView.buildForSelection(
+                    context, extras, notificationId, smallIcon, this.config, selectedPosition);
+            if (rendered == null) {
+                PTLog.verbose("Custom rating payload is no longer renderable, leaving the notification as is");
+                return;
+            }
+            RemoteViews bigContentView = rendered.remoteViews;
+            // Bitmaps are parcelled during notify(), so recycle only after the notification is posted.
+            java.util.List<Bitmap> ownedBitmaps = rendered.ownedBitmaps;
+
+            Builder notificationBuilder = new Builder(context, notification);
+            Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
+            PendingIntent dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
+
+            if (notificationManager != null) {
+                notificationBuilder.setSmallIcon(smallIcon)
+                        .setCustomContentView(notification.contentView)
+                        .setCustomBigContentView(bigContentView)
+                        .setContentTitle(pt_title)
+                        .setDeleteIntent(dIntent)
+                        // Selecting a position must not re-alert the user (FR-AND-03).
+                        .setOnlyAlertOnce(true)
+                        .setAutoCancel(true);
+
+                notificationManager.notify(notificationId, notificationBuilder.build());
+            }
+
+            for (Bitmap bitmap : ownedBitmaps) {
+                if (!bitmap.isRecycled()) {
+                    bitmap.recycle();
+                }
+            }
+        } catch (Throwable t) {
+            PTLog.verbose("Error rendering custom rating notification ", t);
+        }
+    }
+
     private void handleRatingNotification(Context context, Bundle extras, Intent intent) {
         try {
             int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
@@ -551,6 +636,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
         flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
         int[] requestCodes = intent.getIntArrayExtra(PTConstants.KEY_REQUEST_CODES);
+        if (requestCodes == null) return;
 
         for (int requestCode : requestCodes)
             PendingIntent.getBroadcast(context,
@@ -776,23 +862,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
 
     private void setSmallIcon(Context context) {
-        Bundle metaData;
-        try {
-            PackageManager pm = context.getPackageManager();
-            ApplicationInfo ai = pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-            metaData = ai.metaData;
-            String x = Utils._getManifestStringValueForKey(metaData, ManifestInfo.LABEL_NOTIFICATION_ICON);
-            if (x == null) {
-                throw new IllegalArgumentException();
-            }
-            smallIcon = context.getResources().getIdentifier(x, "drawable", context.getPackageName());
-            if (smallIcon == 0) {
-                throw new IllegalArgumentException();
-            }
-        } catch (Throwable t) {
-            smallIcon = Utils.getAppIconAsIntId(context);
-        }
-
+        smallIcon = Utils.getSmallIconResId(context);
     }
 
     private void setKeysFromDashboard(Bundle extras) {

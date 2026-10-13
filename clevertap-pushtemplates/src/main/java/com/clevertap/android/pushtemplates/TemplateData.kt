@@ -146,6 +146,127 @@ internal data class RatingTemplateData(
     val defaultDeepLink: String? = null,
 ) : TemplateData()
 
+/**
+ * How the rating positions are drawn. Sourced from the required pt_rating_style key; a missing or
+ * unrecognised value yields null so the renderer can fall back to Basic per R-22.
+ */
+internal enum class RatingStyleType(private val value: String) {
+    ICON("icon"), TEXT("text");
+
+    override fun toString(): String = value
+
+    companion object {
+
+        fun fromString(value: String?): RatingStyleType? = when (value?.lowercase()) {
+            "icon" -> ICON
+            "text" -> TEXT
+            else -> null
+        }
+    }
+}
+
+/**
+ * One rating position. Only the fields belonging to the configured [RatingStyleType] are populated:
+ * icon style fills [iconUrl] / [selectedIconUrl], text style fills [label].
+ *
+ * [deepLink] is the optional pt_dl{n} override. When set, submitting with this position selected
+ * opens it instead of the submit button's own destination.
+ */
+internal data class RatingPositionData(
+    val iconUrl: String? = null,
+    val selectedIconUrl: String? = null,
+    val label: String? = null,
+    val deepLink: String? = null,
+) {
+    /** A position the renderer can actually draw, given the template's style. */
+    fun isRenderable(style: RatingStyleType): Boolean = when (style) {
+        RatingStyleType.ICON -> !iconUrl.isNullOrBlank()
+        RatingStyleType.TEXT -> !label.isNullOrBlank()
+    }
+}
+
+/**
+ * Submit button configuration. [label] and [deepLink] are required by the payload contract; the
+ * renderer treats either being absent as an invalid payload.
+ */
+internal data class RatingCtaData(
+    val label: String? = null,
+    val deepLink: String? = null,
+    val backgroundColor: String? = null,
+    val borderColor: String? = null,
+    val textColor: String? = null,
+    val cornerRadiusDp: Int = PTConstants.PT_RATING_CTA_RADIUS_DEFAULT,
+    /** solid, gradient_linear or gradient_radial — the same three the action buttons offer. */
+    val style: ButtonStyle = ButtonStyle.SOLID,
+    val gradientColor1: String? = null,
+    val gradientColor2: String? = null,
+    val gradientDirection: Double = PTConstants.PT_BTN_GRAD_DIR_DEFAULT,
+)
+
+/**
+ * The pt_custom_rating template — configurable 2-5 positions, icon or text style, and a submit
+ * button that defers the rating event until the user confirms.
+ *
+ * Deliberately a separate type from [RatingTemplateData]: the Classic pt_rating template is frozen
+ * and must not share a rendering or intent path with this one.
+ */
+internal data class CustomRatingTemplateData(
+    override val templateType: TemplateType = TemplateType.CUSTOM_RATING,
+    val baseContent: BaseContent,
+    val mediaData: MediaData,
+    val defaultDeepLink: String? = null,
+    val ratingStyle: RatingStyleType? = null,
+    val ratingCount: Int = 0,
+    val positions: List<RatingPositionData> = emptyList(),
+    val iconColor: String? = null,
+    val selectedIconColor: String? = null,
+    val labelColor: String? = null,
+    val selectedLabelColor: String? = null,
+    val ctaData: RatingCtaData = RatingCtaData(),
+) : TemplateData() {
+
+    /**
+     * Positions the renderer can draw. A position whose asset failed to resolve is substituted with
+     * the built-in star pair rather than dropped, so this only counts positions with usable config.
+     */
+    val renderablePositionCount: Int
+        get() = ratingStyle?.let { style -> positions.count { it.isRenderable(style) } } ?: 0
+
+    /**
+     * True when the text style is configured but at least one position has no label. The row then
+     * falls back to the built-in stars rather than drawing a gap where a chip should be (R-23).
+     */
+    val hasIncompleteTextRow: Boolean
+        get() = ratingStyle == RatingStyleType.TEXT && renderablePositionCount < ratingCount
+
+    /**
+     * True when the payload configures a submit button, which is optional (FR-DSH-09). Both keys are
+     * needed for one: a button with no destination has nowhere to go, and one with no label is
+     * invisible. Without it the row submits on the position tap itself.
+     */
+    val hasSubmitButton: Boolean
+        get() = !ctaData.label.isNullOrBlank() && !ctaData.deepLink.isNullOrBlank()
+
+    /**
+     * True when every drawn position carries the same artwork, i.e. the row is one scale rather than
+     * a set of distinct choices.
+     *
+     * This is what decides whether a tap fills the positions before it. Five identical stars read as
+     * a scale, so filling 1..n is what a user expects; three distinct faces are alternatives, and
+     * filling sad+neutral+happy together would be meaningless. Text chips are always alternatives.
+     *
+     * A row with no artwork at all counts as uniform: every position falls back to the same built-in
+     * star pair (R-21), which is a scale too.
+     */
+    val usesUniformScale: Boolean
+        get() {
+            if (ratingStyle != RatingStyleType.ICON) return false
+            val drawn = positions.take(ratingCount)
+            if (drawn.size < ratingCount) return false
+            return drawn.distinctBy { it.iconUrl to it.selectedIconUrl }.size == 1
+        }
+}
+
 internal data class TimerTemplateData(
     override val templateType: TemplateType = TemplateType.TIMER,
     val baseContent: BaseContent,

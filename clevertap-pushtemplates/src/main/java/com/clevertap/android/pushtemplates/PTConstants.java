@@ -223,6 +223,77 @@ public class PTConstants {
 
     public static final String KEY_REQUEST_CODES = "requestCodes";
 
+    /*
+     * Custom Rating template (pt_custom_rating) keys.
+     *
+     * Separate from the Classic Rating template (pt_rating), whose keys and behaviour are frozen.
+     * Key names follow the payload contract in the Rating PRD (section 10.2).
+     */
+
+    // Required: "icon" or "text". Anything else renders the Basic template (R-22).
+    public static final String PT_RATING_STYLE = "pt_rating_style";
+
+    // Required: number of rating positions, 2-5. Must match the populated positions.
+    public static final String PT_RATING_COUNT = "pt_rating_count";
+
+    // Per position, 1..count. Icon style uses pt_rating_icon{n} for the unselected state and
+    // pt_rating_icon{n}_sel for the selected state. Text style uses pt_rating_label{n}.
+    public static final String PT_RATING_ICON_PREFIX = "pt_rating_icon";
+    public static final String PT_RATING_ICON_SELECTED_SUFFIX = "_sel";
+    public static final String PT_RATING_LABEL_PREFIX = "pt_rating_label";
+
+    // Tint applied to monochrome icon assets, and to the text chip background, unselected and
+    // selected. A chip needs four colours in all; the label's own two live in the keys below.
+    public static final String PT_RATING_ICON_CLR = "pt_rating_icon_clr";
+    public static final String PT_RATING_ICON_SEL_CLR = "pt_rating_icon_sel_clr";
+
+    // Text style only: the label colour inside the chip, unselected and selected. Absent, the label
+    // inherits the notification's message and title colours respectively.
+    public static final String PT_RATING_LABEL_CLR = "pt_rating_label_clr";
+    public static final String PT_RATING_LABEL_SEL_CLR = "pt_rating_label_sel_clr";
+
+    // Submit button.
+    public static final String PT_RATING_CTA_LABEL = "pt_rating_cta_label";
+    public static final String PT_RATING_CTA_DL = "pt_rating_cta_dl";
+    public static final String PT_RATING_CTA_BG_CLR = "pt_rating_cta_bg_clr";
+    public static final String PT_RATING_CTA_BORDER_CLR = "pt_rating_cta_border_clr";
+    public static final String PT_RATING_CTA_TXT_CLR = "pt_rating_cta_txt_clr";
+    public static final String PT_RATING_CTA_RADIUS = "pt_rating_cta_radius";
+
+    public static final int PT_RATING_COUNT_MIN = 2;
+    public static final int PT_RATING_COUNT_MAX = 5;
+    public static final int PT_RATING_CTA_RADIUS_DEFAULT = 8;
+    public static final int PT_RATING_RADIUS_MAX = 32;
+    public static final int PT_RATING_CTA_LABEL_MAX_LEN = 25;
+
+    /*
+     * Rating Submitted event properties (FR-EVT-01). wzrk_c2a carries the tapped position for
+     * continuity with the Classic template; these three are new and typed.
+     */
+    public static final String PT_RATING_CTA_STYLE = "pt_rating_cta_style";
+
+    public static final String PT_RATING_CTA_GRAD_CLR1 = "pt_rating_cta_grad_clr1";
+
+    public static final String PT_RATING_CTA_GRAD_CLR2 = "pt_rating_cta_grad_clr2";
+
+    public static final String PT_RATING_CTA_GRAD_DIR = "pt_rating_cta_grad_dir";
+
+    public static final String PT_RATING_EVENT_NAME = "Rating Submitted";
+    public static final String PT_RATING_EVENT_VALUE = "rating_value";
+    public static final String PT_RATING_EVENT_SCALE = "rating_scale";
+    public static final String PT_RATING_EVENT_STYLE = "rating_style";
+
+    /*
+     * Internal intent extras for the custom rating selection/submit flow. These are never part of
+     * the campaign payload.
+     */
+
+    // Marks a broadcast as the submit tap rather than a position tap.
+    public static final String PT_RATING_SUBMIT = "ptRatingSubmit";
+
+    // Selected position (1..count) carried between the position tap and the submit tap.
+    public static final String PT_RATING_SELECTED_POSITION = "ptRatingSelectedPosition";
+
     // Vertical Image Template Keys
     public static final String PT_TEXT1 = "pt_text1";
     public static final String PT_TEXT2 = "pt_text2";
@@ -282,6 +353,16 @@ public class PTConstants {
             PT_BTN_TEXT_CLR_COLLAPSED,
             PT_BTN_GRAD_CLR1_COLLAPSED,
             PT_BTN_GRAD_CLR2_COLLAPSED,
-            PT_IMG_BORDER_CLR);
+            PT_IMG_BORDER_CLR,
+            PT_RATING_ICON_CLR,
+            PT_RATING_ICON_SEL_CLR,
+            PT_RATING_LABEL_CLR,
+            PT_RATING_LABEL_SEL_CLR,
+            PT_RATING_CTA_BG_CLR,
+            PT_RATING_CTA_BORDER_CLR,
+            PT_RATING_CTA_TXT_CLR,
+            PT_RATING_CTA_GRAD_CLR1,
+            PT_RATING_CTA_GRAD_CLR2);
+
 
 }

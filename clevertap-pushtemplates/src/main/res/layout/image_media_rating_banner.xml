@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Media container for the pt_custom_rating template.
+
+  Identical to image_media_dynamic_linear apart from the height: an expanded notification is
+  documented as having as little as 252dp, and the rating row (64dp) plus the submit button (48dp)
+  plus the content block (56dp) already claim most of it. The media is therefore capped to a banner
+  so the submit button is never pushed below the fold - an unreachable button means a rating that is
+  never submitted.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/big_image_configurable"
+        layout="@layout/image_view_rating_banner"
+        android:visibility="gone" />
+
+    <ViewFlipper
+        android:id="@+id/view_flipper"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/custom_rating_media_height"
+        android:autoStart="true"
+        android:visibility="gone">
+    </ViewFlipper>
+</LinearLayout>

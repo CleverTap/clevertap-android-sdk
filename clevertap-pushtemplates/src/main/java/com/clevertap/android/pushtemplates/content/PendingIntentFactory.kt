@@ -40,6 +40,7 @@ const val INPUT_BOX_REPLY_PENDING_INTENT = 32
 const val VERTICAL_IMAGE_CONTENT_PENDING_INTENT = 33
 const val VERTICAL_IMAGE_BUTTON_PENDING_INTENT = 34
 const val PROGRESS_CONTENT_PENDING_INTENT = 35
+const val CUSTOM_RATING_CONTENT_PENDING_INTENT = 36
 
 internal object PendingIntentFactory {
 
@@ -127,7 +128,7 @@ internal object PendingIntentFactory {
             MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, ZERO_BEZEL_CONTENT_PENDING_INTENT,
             TIMER_CONTENT_PENDING_INTENT, PRODUCT_DISPLAY_CONTENT_PENDING_INTENT,
             INPUT_BOX_CONTENT_PENDING_INTENT, VERTICAL_IMAGE_CONTENT_PENDING_INTENT,
-            PROGRESS_CONTENT_PENDING_INTENT -> {
+            PROGRESS_CONTENT_PENDING_INTENT, CUSTOM_RATING_CONTENT_PENDING_INTENT -> {
                 return if (deepLink != null) {
                     extras.putString(Constants.DEEP_LINK_KEY, deepLink)
                     setPendingIntent(
@@ -256,6 +257,93 @@ internal object PendingIntentFactory {
             else -> throw IllegalArgumentException("invalid pendingIntentType")
         }
     }
+
+    /**
+     * Broadcast fired when a pt_custom_rating position is tapped.
+     *
+     * Deliberately a broadcast and not an activity intent: tapping a position only re-renders the
+     * notification with that position selected, and launching an activity from here would hit the
+     * Android 12+ notification trampoline ban (FR-AND-03).
+     *
+     * The request code is derived from the notification id and position so a second tap on the same
+     * position updates the existing PendingIntent instead of leaking a new one.
+     */
+    @JvmStatic
+    fun getCustomRatingPositionIntent(
+        context: Context,
+        notificationId: Int,
+        extras: Bundle,
+        position: Int,
+        config: CleverTapInstanceConfig?
+    ): PendingIntent {
+        val intent = Intent(context, PushTemplateReceiver::class.java).apply {
+            putExtras(extras)
+            putExtra(PTConstants.PT_RATING_SELECTED_POSITION, position)
+            putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+            putExtra("config", config)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            customRatingRequestCode(notificationId, position),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    /**
+     * Intent fired when the pt_custom_rating submit button is tapped.
+     *
+     * With a position selected this is an *activity* PendingIntent pointing at
+     * [PTRatingSubmitActivity]: submitting has to raise the event and then open the campaign's
+     * destination, and since Android 12 a broadcast receiver may not open a screen after a
+     * notification tap (FR-AND-04, R-34).
+     *
+     * With nothing selected there is nothing to open, so the tap goes to the receiver instead, which
+     * swallows it. That keeps the no-selection case a true no-op (R-28) rather than briefly opening
+     * a trampoline that closes the notification drawer for no reason.
+     *
+     * [requestCodeSlot] must be unique per PendingIntent on the same notification. The submit button
+     * is one intent and uses the default slot; a payload with no submit button attaches one of these
+     * to every position instead, and each has to pass its own position or they all collide on
+     * FLAG_UPDATE_CURRENT and end up submitting the same rating.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun getCustomRatingSubmitIntent(
+        context: Context,
+        notificationId: Int,
+        extras: Bundle,
+        selectedPosition: Int,
+        config: CleverTapInstanceConfig?,
+        requestCodeSlot: Int = SUBMIT_REQUEST_CODE_SLOT
+    ): PendingIntent {
+        val hasSelection = selectedPosition >= 1
+        val target = if (hasSelection) PTRatingSubmitActivity::class.java else PushTemplateReceiver::class.java
+        val intent = Intent(context, target).apply {
+            putExtras(extras)
+            putExtra(PTConstants.PT_RATING_SUBMIT, true)
+            putExtra(PTConstants.PT_RATING_SELECTED_POSITION, selectedPosition)
+            putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+            putExtra("config", config)
+            // Action buttons are not offered on this template and the blob is large enough to matter
+            // against the Binder transaction limit once icon urls are already in the bundle.
+            removeExtra(Constants.WZRK_ACTIONS)
+        }
+        val requestCode = customRatingRequestCode(notificationId, requestCodeSlot)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        return if (hasSelection) {
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION
+            PendingIntent.getActivity(context, requestCode, intent, flags)
+        } else {
+            PendingIntent.getBroadcast(context, requestCode, intent, flags)
+        }
+    }
+
+    private const val SUBMIT_REQUEST_CODE_SLOT = 0
+
+    /** Stable per (notification, slot) so re-renders reuse rather than accumulate PendingIntents. */
+    private fun customRatingRequestCode(notificationId: Int, slot: Int): Int =
+        notificationId * 31 + slot
 
     @JvmStatic
     fun getCtaLaunchPendingIntent(context: Context, extras: Bundle, dl: String, notificationId: Int): PendingIntent {

@@ -139,6 +139,56 @@ internal object NotificationBitmapUtils {
     internal fun resolveStyledImageMaxHeightPx(referencePx: Int): Int =
         (referencePx * STYLED_IMAGE_HEIGHT_HEADROOM).toInt()
 
+    /**
+     * [source] scaled down so neither side exceeds [maxSidePx], or [source] itself when it already
+     * fits. Aspect ratio is preserved.
+     *
+     * A notification's bitmaps are parcelled to the system at whatever resolution they were decoded
+     * at — the size of the view they land in changes nothing, because an ImageView scales at draw
+     * time and never shrinks what is stored. A 1200x1200 icon costs 5.76MB whether it is shown at
+     * 1200dp or at 20dp. The platform applies its own cap in `Notification.Builder.build()`, but that
+     * cap is sized for a full-width custom notification image, so an icon drawn at 20dp still arrives
+     * an order of magnitude larger than it needs to be. Past roughly 5MB of bitmaps the system drops
+     * the custom layout altogether and the template silently becomes a plain notification.
+     *
+     * Callers pass the size the bitmap is actually drawn at, so the cost is bounded by the layout
+     * rather than by whatever the campaign happened to upload.
+     *
+     * @return a new bitmap the caller owns, or [source] unchanged — compare by identity before
+     *         recycling, since recycling a cached source would corrupt every later render.
+     */
+    fun scaleDownTo(source: Bitmap, maxSidePx: Int): Bitmap {
+        val width = source.width
+        val height = source.height
+        if (maxSidePx <= 0 || width <= 0 || height <= 0) return source
+        if (width <= maxSidePx && height <= maxSidePx) return source
+
+        // The longest side lands exactly on the budget and the other is derived from it, so the
+        // result is predictable rather than a pixel short from float rounding.
+        val landscape = width >= height
+        val targetWidth: Int
+        val targetHeight: Int
+        if (landscape) {
+            targetWidth = maxSidePx
+            targetHeight = Math.round(height * (maxSidePx.toFloat() / width)).coerceAtLeast(1)
+        } else {
+            targetHeight = maxSidePx
+            targetWidth = Math.round(width * (maxSidePx.toFloat() / height)).coerceAtLeast(1)
+        }
+
+        return try {
+            Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true).also {
+                PTLog.verbose(
+                    "Scaled notification bitmap ${width}x$height -> ${targetWidth}x$targetHeight " +
+                            "(${source.allocationByteCount} -> ${it.allocationByteCount} bytes)"
+                )
+            }
+        } catch (t: Throwable) {
+            PTLog.debug("Could not scale a notification bitmap down, using it as it is: $t")
+            source
+        }
+    }
+
     /** Returns a copy of [source] with the corner radius and border applied. */
     fun applyRoundedBorderToBitmap(
         source: Bitmap,
