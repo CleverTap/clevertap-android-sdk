@@ -48,7 +48,7 @@ internal class ZeroBezelStyle(private val data: ZeroBezelTemplateData, renderer:
     ): PendingIntent? {
         return null
     }
-    
+
     override fun builderFromStyle(
         context: Context,
         extras: Bundle,

@@ -11,10 +11,10 @@ import com.clevertap.android.sdk.validation.eventdata.MultiValueDataValidationPi
 /**
  * Provides access to all validation pipelines.
  * Simplifies dependency injection by bundling related pipelines together.
- * 
+ *
  * All pipelines are lazily initialized and reused throughout the lifecycle.
  * Validation errors are automatically reported to the provided error reporter.
- * 
+ *
  * @param errorReporter Error reporter for pushing errors to stack.
  *                      All validation pipelines will automatically push their errors to this stack.
  * @param logger
@@ -29,21 +29,21 @@ class ValidationPipelineProvider(
     val eventNamePipeline: EventNameValidationPipeline by lazy {
         EventNameValidationPipeline(errorReporter, logger)
     }
-    
+
     /**
      * Pipeline for validating event data (properties).
      */
     val eventDataPipeline: EventDataValidationPipeline by lazy {
         EventDataValidationPipeline(errorReporter, logger)
     }
-    
+
     /**
      * Pipeline for validating regular property keys.
      */
     val propertyKeyPipeline: EventPropertyKeyValidationPipeline by lazy {
         EventPropertyKeyValidationPipeline(errorReporter, logger)
     }
-    
+
     /**
      * Pipeline for validating multi-value property keys.
      */

@@ -24,20 +24,20 @@ class EventNameValidationPipeline(
     private val errorReporter: ValidationResultStack,
     private val logger: ILogger
 ) : ValidationPipeline<String?, EventNameValidationResult> {
-    
+
     private val normalizer = EventNameNormalizer()
     private val validator = EventNameValidator()
-    
+
     override fun execute(input: String?, config: ValidationConfig): EventNameValidationResult {
         // Step 1: Normalize the input
         val normalizationResult = normalizer.normalize(input, config)
-        
+
         // Step 2: Validate the normalized result
         val validationOutcome = validator.validate(normalizationResult, config)
-        
+
         // Step 3: Auto-report validation errors
         errorReporter.pushValidationResult(validationOutcome.errors)
-        
+
         // Step 4: Log validation results
         logValidationOutcome(
             logger = logger,

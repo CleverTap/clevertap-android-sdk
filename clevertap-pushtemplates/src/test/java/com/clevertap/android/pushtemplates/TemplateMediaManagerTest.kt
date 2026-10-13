@@ -28,7 +28,7 @@ class TemplateMediaManagerTest {
         mockTemplateRepository = mockk<TemplateRepository>(relaxed = true)
         mockGifDecoder = mockk<GifDecoderImpl>(relaxed = true)
         mockContext = mockk<Context>(relaxed = true)
-        
+
         templateMediaManager = TemplateMediaManager(mockTemplateRepository, mockGifDecoder)
 
         // Mock static methods

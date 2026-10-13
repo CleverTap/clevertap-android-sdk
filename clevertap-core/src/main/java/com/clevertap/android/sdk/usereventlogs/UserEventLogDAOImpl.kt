@@ -63,11 +63,11 @@ internal class UserEventLogDAOImpl(
 
         return try {
             val query = """
-            UPDATE $tableName 
-            SET 
+            UPDATE $tableName
+            SET
                 ${Column.COUNT} = ${Column.COUNT} + 1,
                 ${Column.LAST_TS} = ?
-            WHERE ${Column.DEVICE_ID} = ? 
+            WHERE ${Column.DEVICE_ID} = ?
             AND ${Column.NORMALIZED_EVENT_NAME} = ?;
         """.trimIndent()
 
@@ -173,8 +173,8 @@ internal class UserEventLogDAOImpl(
 
         val query = """
             SELECT EXISTS(
-                SELECT 1 
-                FROM $tName 
+                SELECT 1
+                FROM $tName
                 WHERE $selection
             ) AS $resultColumn;
         """.trimIndent()
@@ -202,8 +202,8 @@ internal class UserEventLogDAOImpl(
 
         val query = """
             SELECT EXISTS(
-                SELECT 1 
-                FROM $tName 
+                SELECT 1
+                FROM $tName
                 WHERE $selection
                 ) AS $resultColumn;
         """.trimIndent()
@@ -309,12 +309,12 @@ internal class UserEventLogDAOImpl(
             WHERE (${Column.NORMALIZED_EVENT_NAME}, ${Column.DEVICE_ID}) IN (
                 SELECT ${Column.NORMALIZED_EVENT_NAME}, ${Column.DEVICE_ID}
                 FROM $tName
-                ORDER BY ${Column.LAST_TS} ASC 
+                ORDER BY ${Column.LAST_TS} ASC
                 LIMIT (
-                SELECT CASE 
+                SELECT CASE
                     WHEN COUNT(*) > ? THEN COUNT(*) - ?
                     ELSE 0
-                END 
+                END
                 FROM $tName
                 )
             );

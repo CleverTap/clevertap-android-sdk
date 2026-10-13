@@ -38,7 +38,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
     private String icon;
 
     private String media;
-    
+
     /**
      * Per-item {@code wzrk_*} attribution from BE metadata and SDK-derived
      * Android action/data. {@code null} if no metadata was provided.

@@ -51,9 +51,9 @@ fun OpenUrlConfirmDialog(
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Message
                     Text(
                         text = "Do you want to open the URL?",
@@ -61,9 +61,9 @@ fun OpenUrlConfirmDialog(
                         color = Color.Gray,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // URL Display
                     Card(
                         modifier = Modifier
@@ -84,9 +84,9 @@ fun OpenUrlConfirmDialog(
                                 .padding(12.dp)
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
-                    
+
                     // Buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -110,7 +110,7 @@ fun OpenUrlConfirmDialog(
                                 fontWeight = FontWeight.Medium
                             )
                         }
-                        
+
                         // Confirm/Yes Button
                         Button(
                             onClick = state.onConfirm,

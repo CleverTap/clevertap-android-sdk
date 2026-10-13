@@ -34,7 +34,7 @@ internal class BasicStyle(private val data: BasicTemplateData, renderer: Templat
     override fun makeDismissIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent? {
         return null
     }
-    
+
     override fun builderFromStyle(
         context: Context,
         extras: Bundle,

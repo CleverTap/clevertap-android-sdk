@@ -500,22 +500,22 @@ class IJRepoTest : BaseTestCase() {
     fun `clearIJ after setting I and J`() {
         // Test that after setting both I and J, calling clearIJ results in both getI
         // and getJ returning their default values (0L).
-        
+
         // Arrange
         val iValue = 7777L
         val jValue = 8888L
-        
+
         // Set both values
         ijRepo.setI(appCtx, iValue)
         ijRepo.setJ(appCtx, jValue)
-        
+
         // Act
         ijRepo.clearIJ(appCtx)
-        
+
         // Assert
         val retrievedIValue = ijRepo.getI(appCtx)
         val retrievedJValue = ijRepo.getJ(appCtx)
-        
+
         assertEquals(0L, retrievedIValue, "I value should be 0L after clearIJ")
         assertEquals(0L, retrievedJValue, "J value should be 0L after clearIJ")
     }
@@ -524,23 +524,23 @@ class IJRepoTest : BaseTestCase() {
     fun `clearIJ after setting only I`() {
         // Test that after setting only I, calling clearIJ results in both getI
         // and getJ returning their default values (0L).
-        
+
         // Arrange
         val iValue = 9999L
-        
+
         // Set only I value
         ijRepo.setI(appCtx, iValue)
-        
+
         // Make sure J is at default
         assertEquals(0L, ijRepo.getJ(appCtx), "J should be at default value before test")
-        
+
         // Act
         ijRepo.clearIJ(appCtx)
-        
+
         // Assert
         val retrievedIValue = ijRepo.getI(appCtx)
         val retrievedJValue = ijRepo.getJ(appCtx)
-        
+
         assertEquals(0L, retrievedIValue, "I value should be 0L after clearIJ")
         assertEquals(0L, retrievedJValue, "J value should remain 0L after clearIJ")
     }
@@ -549,23 +549,23 @@ class IJRepoTest : BaseTestCase() {
     fun `clearIJ after setting only J`() {
         // Test that after setting only J, calling clearIJ results in both getI
         // and getJ returning their default values (0L).
-        
+
         // Arrange
         val jValue = 9999L
-        
+
         // Set only J value
         ijRepo.setJ(appCtx, jValue)
-        
+
         // Make sure I is at default
         assertEquals(0L, ijRepo.getI(appCtx), "I should be at default value before test")
-        
+
         // Act
         ijRepo.clearIJ(appCtx)
-        
+
         // Assert
         val retrievedIValue = ijRepo.getI(appCtx)
         val retrievedJValue = ijRepo.getJ(appCtx)
-        
+
         assertEquals(0L, retrievedIValue, "I value should remain 0L after clearIJ")
         assertEquals(0L, retrievedJValue, "J value should be 0L after clearIJ")
     }
@@ -575,18 +575,18 @@ class IJRepoTest : BaseTestCase() {
         // Test that calling clearIJ when no values for 'I' or 'J' have been set
         // does not cause any errors and subsequent calls to getI and getJ still
         // return default values (0L).
-        
+
         // Verify both values start at default
         assertEquals(0L, ijRepo.getI(appCtx), "I should be at default value before test")
         assertEquals(0L, ijRepo.getJ(appCtx), "J should be at default value before test")
-        
+
         // Act - clear both values
         ijRepo.clearIJ(appCtx)
-        
+
         // Assert
         val retrievedIValue = ijRepo.getI(appCtx)
         val retrievedJValue = ijRepo.getJ(appCtx)
-        
+
         assertEquals(0L, retrievedIValue, "I value should remain 0L after clearIJ")
         assertEquals(0L, retrievedJValue, "J value should remain 0L after clearIJ")
     }
@@ -595,25 +595,25 @@ class IJRepoTest : BaseTestCase() {
     fun `clearIJ persists changes`() {
         // Verify that the changes made by clearIJ (removing I and J) are persisted
         // and reflected after an app restart.
-        
+
         // Arrange
         val iValue = 1234L
         val jValue = 5678L
-        
+
         // Set both values
         ijRepo.setI(appCtx, iValue)
         ijRepo.setJ(appCtx, jValue)
-        
+
         // Act - clear both values
         ijRepo.clearIJ(appCtx)
-        
+
         // Create a new IJRepo to simulate app restart
         val newIJRepo = IJRepo(cleverTapInstanceConfig)
-        
+
         // Assert
         val retrievedIValue = newIJRepo.getI(appCtx)
         val retrievedJValue = newIJRepo.getJ(appCtx)
-        
+
         assertEquals(0L, retrievedIValue, "I value should be 0L after clearIJ and app restart")
         assertEquals(0L, retrievedJValue, "J value should be 0L after clearIJ and app restart")
     }
@@ -621,31 +621,31 @@ class IJRepoTest : BaseTestCase() {
     @Test
     fun `Interactions between setI and setJ`() {
         // Verify that setting 'I' does not overwrite the value for 'J', and vice versa.
-        
+
         // Arrange
         val initialIValue = 111L
         val initialJValue = 222L
         val updatedIValue = 333L
         val updatedJValue = 444L
-        
+
         // Act - set both initial values
         ijRepo.setI(appCtx, initialIValue)
         ijRepo.setJ(appCtx, initialJValue)
-        
+
         // Verify both values were set
         assertEquals(initialIValue, ijRepo.getI(appCtx), "Initial I value should be set")
         assertEquals(initialJValue, ijRepo.getJ(appCtx), "Initial J value should be set")
-        
+
         // Update only I
         ijRepo.setI(appCtx, updatedIValue)
-        
+
         // Assert J remains unchanged
         assertEquals(updatedIValue, ijRepo.getI(appCtx), "I value should be updated")
         assertEquals(initialJValue, ijRepo.getJ(appCtx), "J value should remain unchanged when I is updated")
-        
+
         // Update only J
         ijRepo.setJ(appCtx, updatedJValue)
-        
+
         // Assert I remains unchanged
         assertEquals(updatedIValue, ijRepo.getI(appCtx), "I value should remain unchanged when J is updated")
         assertEquals(updatedJValue, ijRepo.getJ(appCtx), "J value should be updated")

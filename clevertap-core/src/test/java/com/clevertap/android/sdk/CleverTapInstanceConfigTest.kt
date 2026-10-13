@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class CleverTapInstanceConfigTest {
-    
+
     companion object {
         private const val ACCOUNT_ID = "accountId"
         private const val ACCOUNT_TOKEN = "accountToken"
@@ -31,7 +31,7 @@ class CleverTapInstanceConfigTest {
         );
     }
     private val manifestInfo = CleverTapFixtures.manifestInfo
-    
+
     @Test
     fun `test config push providers list from manifest`() {
         val config = CleverTapInstanceConfig.createInstanceWithManifest(

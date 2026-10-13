@@ -7,11 +7,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CTInboxStyleConfigTest:BaseTestCase() {
-    
+
     private lateinit var config: CTInboxStyleConfig
     override fun setUp() {
         super.setUp()
-        
+
         config = CTInboxStyleConfig()
     }
     @Test

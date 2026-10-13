@@ -13,11 +13,11 @@ data class OpenUrlConfirmDialogState(
 )
 
 class OpenUrlConfirmViewModel : ViewModel() {
-    
+
     // Dialog state
     var dialogState by mutableStateOf(OpenUrlConfirmDialogState())
         private set
-    
+
     /**
      * Show the URL confirmation dialog
      */
@@ -52,7 +52,7 @@ class OpenUrlConfirmViewModel : ViewModel() {
             onCancel = {}
         )
     }
-    
+
     /**
      * Force hide dialog (cleanup)
      */

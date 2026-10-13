@@ -38,9 +38,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Success)
     }
 
@@ -62,9 +62,9 @@ class EventDataValidatorTest {
         val config = ValidationConfig.Builder()
             .addDepthValidation(10)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.DEPTH_LIMIT_EXCEEDED.code })
     }
@@ -87,9 +87,9 @@ class EventDataValidatorTest {
         val config = ValidationConfig.Builder()
             .addArrayKeyCountValidation(3)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.ARRAY_KEY_COUNT_LIMIT_EXCEEDED.code })
     }
@@ -112,9 +112,9 @@ class EventDataValidatorTest {
         val config = ValidationConfig.Builder()
             .addObjectKeyCountValidation(5)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.OBJECT_KEY_COUNT_LIMIT_EXCEEDED.code })
     }
@@ -137,9 +137,9 @@ class EventDataValidatorTest {
         val config = ValidationConfig.Builder()
             .addArrayLengthValidation(100)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.ARRAY_LENGTH_LIMIT_EXCEEDED.code })
     }
@@ -162,9 +162,9 @@ class EventDataValidatorTest {
         val config = ValidationConfig.Builder()
             .addKVPairCountValidation(50)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.KV_PAIR_COUNT_LIMIT_EXCEEDED.code })
     }
@@ -191,9 +191,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.KEY_INVALID_CHARACTERS.code })
     }
@@ -222,9 +222,9 @@ class EventDataValidatorTest {
         val config = ValidationConfig.Builder()
             .addKeyLengthValidation(100)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.KEY_LENGTH_EXCEEDED.code })
     }
@@ -252,9 +252,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.VALUE_INVALID_CHARACTERS.code })
     }
@@ -284,9 +284,9 @@ class EventDataValidatorTest {
         val config = ValidationConfig.Builder()
             .addValueLengthValidation(500)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.VALUE_CHARS_LIMIT_EXCEEDED.code })
     }
@@ -309,9 +309,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.NULL_VALUE_REMOVED.code })
     }
@@ -334,9 +334,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.EMPTY_VALUE_REMOVED.code })
     }
@@ -359,9 +359,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.EMPTY_KEY.code })
     }
@@ -384,9 +384,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.PROP_VALUE_NOT_PRIMITIVE.code })
     }
@@ -409,9 +409,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.INVALID_PHONE.code })
     }
@@ -434,9 +434,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.INVALID_COUNTRY_CODE.code })
     }
@@ -459,9 +459,9 @@ class EventDataValidatorTest {
             )
         )
         val config = ValidationConfig.Builder().build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertTrue(outcome.errors.any { it.errorCode == ValidationError.RESTRICTED_MULTI_VALUE_KEY.code })
     }
@@ -493,9 +493,9 @@ class EventDataValidatorTest {
             .addDepthValidation(10)
             .addKVPairCountValidation(50)
             .build()
-        
+
         val outcome = validator.validate(input, config)
-        
+
         assertTrue(outcome is ValidationOutcome.Warning)
         assertEquals(4, outcome.errors.size)
     }

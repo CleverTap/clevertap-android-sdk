@@ -121,7 +121,7 @@ class PushNotificationDAOImplTest : BaseTestCase() {
     fun test_storePushNotificationId_when_called_should_storeWithCorrectTTL() {
         val ids = arrayOf("id1", "id2", "id3")
         ids.forEach { pushNotificationDAO.storePushNotificationId(it, TimeUnit.DAYS.toMillis(1)) }
-        
+
         val result = pushNotificationDAO.fetchPushNotificationIds()
         assertEquals(ids.size, result.size)
         result.forEach { id ->

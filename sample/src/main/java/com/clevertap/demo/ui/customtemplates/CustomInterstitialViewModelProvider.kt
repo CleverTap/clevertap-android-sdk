@@ -8,13 +8,13 @@ import com.clevertap.demo.ViewModelFactory
  * (e.g., in CleverTap template presenters)
  */
 object CustomTemplateManager {
-    
+
     private var viewModelInstance: CustomTemplateViewModel? = null
-    
+
     private val viewModelFactory by lazy {
         ViewModelFactory(MyApplication.ctInstance)
     }
-    
+
     /**
      * Get or create the singleton ViewModel instance using the main ViewModelFactory
      */

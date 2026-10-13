@@ -98,10 +98,10 @@ class HomeScreenViewModel(
 
     private fun recordSimpleEvent() {
         logStep("EVENTS", "Recording simple event without properties")
-        
+
         val eventName = "App Opened"
         printVar("Event Name", eventName)
-        
+
         cleverTapAPI?.pushEvent(eventName)
     }
 
@@ -196,10 +196,10 @@ class HomeScreenViewModel(
 
     private fun recordScreenEvent() {
         logStep("EVENTS", "Recording screen view event")
-        
+
         val screenName = "Product Details Screen"
         printVar("Screen Name", screenName)
-        
+
         cleverTapAPI?.recordScreen(screenName)
     }
 
@@ -241,7 +241,7 @@ class HomeScreenViewModel(
             put("Phone", "+16505551234")
             put("Gender", "M")
             put("DOB", Date())
-            
+
             // Custom properties
             put("Customer Type", "Premium")
             put("Account Created", Date())
@@ -249,7 +249,7 @@ class HomeScreenViewModel(
             put("Country", "USA")
             put("Language", "English")
             put("Timezone", "America/Los_Angeles")
-            
+
             // Boolean flags
             put("Email Verified", true)
             put("Phone Verified", true)
@@ -303,10 +303,10 @@ class HomeScreenViewModel(
 
     private fun removeSingleValueProperty() {
         logStep("PROFILE OPERATIONS", "Removing a single profile property")
-        
+
         val keyToRemove = "Temporary Flag"
         printVar("Removing Key", keyToRemove)
-        
+
         cleverTapAPI?.removeValueForKey(keyToRemove)
     }
 
@@ -342,21 +342,21 @@ class HomeScreenViewModel(
 
     private fun incrementLoyaltyPoints() {
         logStep("PROFILE OPERATIONS", "Incrementing loyalty points")
-        
+
         val pointsToAdd = 100
         printVar("Key", "Loyalty Points")
         printVar("Increment By", pointsToAdd)
-        
+
         cleverTapAPI?.incrementValue("Loyalty Points", pointsToAdd)
     }
 
     private fun decrementCartCount() {
         logStep("PROFILE OPERATIONS", "Decrementing cart count")
-        
+
         val decrementBy = 1
         printVar("Key", "Cart Items")
         printVar("Decrement By", decrementBy)
-        
+
         cleverTapAPI?.decrementValue("Cart Items", decrementBy)
     }
 

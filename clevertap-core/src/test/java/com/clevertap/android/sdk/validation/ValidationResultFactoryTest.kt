@@ -14,10 +14,10 @@ class ValidationResultFactoryTest : BaseTestCase() {
         testCases.forEach { testCase ->
             println("Testing: ${testCase.error.name}")
             val result = ValidationResultFactory.create(testCase.error, *testCase.values)
-            
+
             assertEquals(testCase.expectedCode, result.errorCode, "Error code mismatch for ${testCase.error.name}")
             assertEquals(testCase.expectedMessage, result.errorDesc, "Error message mismatch for ${testCase.error.name}")
-            
+
             println("Result: ${result.errorDesc}\n--\t--\t--\t--\t--\t--\t--\t--\t--\t--\t--\t--\t--\t--\t--\t--")
         }
     }
@@ -61,7 +61,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("Invalid@Event", "InvalidEvent"),
                 "Event name 'Invalid@Event' contains invalid characters. Cleaned to 'InvalidEvent'"
             ),
-            
+
             // Profile validation errors (512)
             ValidationTestCase(
                 ValidationError.INVALID_COUNTRY_CODE,
@@ -111,7 +111,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("payload123"),
                 "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: payload123"
             ),
-            
+
             // Event name restrictions (513)
             ValidationTestCase(
                 ValidationError.RESTRICTED_EVENT_NAME,
@@ -125,7 +125,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("App Launched"),
                 "App Launched is a discarded event name. Last event aborted."
             ),
-            
+
             // Custom ID errors (514)
             ValidationTestCase(
                 ValidationError.USE_CUSTOM_ID_FALLBACK,
@@ -151,7 +151,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("invalid_id", "fallback_id"),
                 "Attempted to set invalid custom CleverTap ID - invalid_id, falling back to default error CleverTap ID - fallback_id"
             ),
-            
+
             // Key validation errors (520)
             ValidationTestCase(
                 ValidationError.KEY_INVALID_CHARACTERS,
@@ -165,7 +165,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("VeryLongKeyName", "50", "VeryLongKeyNam"),
                 "Key 'VeryLongKeyName' exceeds the limit of 50 characters. Trimmed to 'VeryLongKeyNam'"
             ),
-            
+
             // Value validation errors (521)
             ValidationTestCase(
                 ValidationError.VALUE_CHARS_LIMIT_EXCEEDED,
@@ -179,7 +179,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("Value@123", "keyName", "Value123"),
                 "Value 'Value@123' for key 'keyName' contains invalid characters. Cleaned to 'Value123'"
             ),
-            
+
             // Charged event errors (522)
             ValidationTestCase(
                 ValidationError.CHARGED_EVENT_TOO_MANY_ITEMS,
@@ -187,7 +187,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf(),
                 "Charged event contained more than 50 items."
             ),
-            
+
             // Multi-value key errors (523)
             ValidationTestCase(
                 ValidationError.RESTRICTED_MULTI_VALUE_KEY,
@@ -195,7 +195,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("restrictedKey"),
                 "restrictedKey... is a restricted key for multi-value properties. Dropped."
             ),
-            
+
             // Profile identifier errors (531)
             ValidationTestCase(
                 ValidationError.PROFILE_IDENTIFIERS_MISMATCH,
@@ -203,7 +203,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf(),
                 "Profile Identifiers mismatch with the previously saved ones"
             ),
-            
+
             // Structural limit errors (540-544)
             ValidationTestCase(
                 ValidationError.DEPTH_LIMIT_EXCEEDED,
@@ -235,7 +235,7 @@ class ValidationResultFactoryTest : BaseTestCase() {
                 arrayOf("150", "100"),
                 "Event data exceeded maximum key-value pair count. Count: 150, Limit: 100"
             ),
-            
+
             // Data removal errors (545)
             ValidationTestCase(
                 ValidationError.NULL_VALUE_REMOVED,

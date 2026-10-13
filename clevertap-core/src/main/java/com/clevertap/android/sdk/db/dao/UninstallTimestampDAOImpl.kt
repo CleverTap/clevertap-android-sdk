@@ -22,12 +22,12 @@ internal class UninstallTimestampDAOImpl(
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return
         }
-        
+
         val tableName = UNINSTALL_TS.tableName
         val cv = ContentValues().apply {
             put(Column.CREATED_AT, clock.currentTimeMillis())
         }
-        
+
         try {
             dbHelper.writableDatabase.insert(tableName, null, cv)
         } catch (e: SQLiteException) {
@@ -40,10 +40,10 @@ internal class UninstallTimestampDAOImpl(
     override fun getLastUninstallTimestamp(): Long {
         val tName = UNINSTALL_TS.tableName
         var timestamp: Long = 0
-        
+
         try {
             dbHelper.readableDatabase.query(
-                tName, null, null, null, null, null, 
+                tName, null, null, null, null, null,
                 "${Column.CREATED_AT} DESC", "1"
             )?.use { cursor ->
                 if (cursor.moveToFirst()) {

@@ -22,7 +22,7 @@ class ContentFetchResponseTest : BaseTestCase() {
     fun setUpContentFetchManager() {
         mockContentFetchManager = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
-        
+
         // Setup mock context to return a package name
         every { mockContext.packageName } returns "com.test.package"
 
@@ -151,7 +151,7 @@ class ContentFetchResponseTest : BaseTestCase() {
                 put("title", "Test Content 2")
             })
         }
-        
+
         return JSONObject().apply {
             put(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY, contentFetchArray)
         }

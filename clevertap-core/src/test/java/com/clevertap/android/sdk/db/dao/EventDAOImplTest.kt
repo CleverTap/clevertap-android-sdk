@@ -59,20 +59,20 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_storeEvent_when_called_should_storeTheObjectInGivenTable() {
         val testTables = arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED)
-        
+
         testTables.forEach { table ->
             println("table:$table")
-            
+
             val result1 = eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
             val result2 = eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
             val result3 = eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
             val result4 = eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}4") }, table)
-            
+
             assertEquals(1, result1)
             assertEquals(2, result2)
             assertEquals(3, result3)
             assertEquals(4, result4)
-            
+
             val fetchedEvents = eventDAO.fetchEvents(table, 50)
             assertNotNull(fetchedEvents)
             assertEquals(4, fetchedEvents.data.length())
@@ -85,7 +85,7 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_fetchEvents_when_Called_should_ReturnAListOfEntriesAsJsonObject() {
         val testTables = arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED)
-        
+
         testTables.forEach { table ->
             println("table:$table")
 
@@ -109,10 +109,10 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_removeAllEvents_when_called_should_RemoveAllEntries() {
         val testTables = arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED)
-        
+
         testTables.forEach { table ->
             println("table:$table")
-            
+
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}1") }, table)
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}2") }, table)
             eventDAO.storeEvent(JSONObject().also { it.put("name", "${table.tableName}3") }, table)
@@ -135,7 +135,7 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_cleanupEventsFromLastId_when_called_should_removeAllEntriesWithIdLesserThanPassedId() {
         val testTables = arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED)
-        
+
         testTables.forEach { table ->
             println("table:$table")
 
@@ -357,10 +357,10 @@ class EventDAOImplTest : BaseTestCase() {
         // Mock to verify wrap calls
         val mockEncryptionHandler = spyk(DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.FULL_DATA))
         val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
-        
+
         // Update all events
         val updatedCount = testEventDAO.updateAllEvents(table)
-        
+
         // Verify all 3 rows were updated
         assertEquals(3, updatedCount)
         // Verify wrap was called 3 times (once per row)
@@ -370,7 +370,7 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_updateAllEvents_when_encryptionLevelFullData_andAlreadyEncrypted_should_skipAllRows() {
         val table = Table.EVENTS
-        
+
         // Insert encrypted data (already correct format)
         dbHelper.writableDatabase.insert(table.tableName, null, ContentValues().apply {
             put(Column.DATA, "<ct<encrypted_data_1>ct>")
@@ -380,14 +380,14 @@ class EventDAOImplTest : BaseTestCase() {
             put(Column.DATA, "<ct<encrypted_data_2>ct>")
             put(Column.CREATED_AT, testClock.currentTimeMillis())
         })
-        
+
         // Mock to verify wrap calls
         val mockEncryptionHandler = spyk(DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.FULL_DATA))
         val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
-        
+
         // Update all events
         val updatedCount = testEventDAO.updateAllEvents(table)
-        
+
         // Verify no rows were updated
         assertEquals(0, updatedCount)
         // Verify wrap was never called (all rows skipped)
@@ -397,7 +397,7 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_updateAllEvents_when_encryptionLevelFullData_withMixedData_should_encryptOnlyPlainRows() {
         val table = Table.EVENTS
-        
+
         // Insert mix: plain text and encrypted data
         dbHelper.writableDatabase.insert(table.tableName, null, ContentValues().apply {
             put(Column.DATA, "{\"name\":\"event1\"}")
@@ -411,14 +411,14 @@ class EventDAOImplTest : BaseTestCase() {
             put(Column.DATA, "{\"name\":\"event3\"}")
             put(Column.CREATED_AT, testClock.currentTimeMillis())
         })
-        
+
         // Mock to verify wrap calls
         val mockEncryptionHandler = spyk(DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.FULL_DATA))
         val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
-        
+
         // Update all events
         val updatedCount = testEventDAO.updateAllEvents(table)
-        
+
         // Verify only 2 rows were updated (the plain text ones)
         assertEquals(2, updatedCount)
         // Verify wrap was called 2 times (once per plain text row)
@@ -428,16 +428,16 @@ class EventDAOImplTest : BaseTestCase() {
     @Test
     fun test_updateAllEvents_when_noEventsExist_should_returnZero() {
         val table = Table.EVENTS
-        
+
         // Don't insert any events
-        
+
         // Mock to verify wrap calls
         val mockEncryptionHandler = spyk(dbEncryptionHandler)
         val testEventDAO = EventDAOImpl(dbHelper, instanceConfig.logger, mockEncryptionHandler, testClock)
-        
+
         // Update all events
         val updatedCount = testEventDAO.updateAllEvents(table)
-        
+
         // Verify no rows were updated
         assertEquals(0, updatedCount)
         // Verify wrap was never called

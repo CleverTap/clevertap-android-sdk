@@ -38,10 +38,10 @@ class TemplateDataFactoryTest {
     @Before
     fun setUp() {
         mockBundle = mockk<Bundle>(relaxed = true)
-        
+
         // Mock static methods
         mockkStatic(Utils::class)
-        
+
         // Default mock behaviors
         every { Utils.fromJson(any()) } returns mockBundle
         every { Utils.createColorMap(any(), any()) } returns mapOf(
@@ -54,7 +54,7 @@ class TemplateDataFactoryTest {
             PT_PRODUCT_DISPLAY_ACTION_COLOUR to SAMPLE_COLOR,
             PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR to SAMPLE_COLOR
         )
-        
+
         every { Utils.getActionKeys(any()) } returns JSONArray()
         every { Utils.getImageDataListFromExtras(any(), any()) } returns arrayListOf()
         every { Utils.getDeepLinkListFromExtras(any()) } returns arrayListOf()
@@ -119,7 +119,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is BasicTemplateData)
-        
+
         val basicData = result as BasicTemplateData
         assertEquals(TemplateType.BASIC, basicData.templateType)
         assertNotNull(basicData.baseContent)
@@ -144,7 +144,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is AutoCarouselTemplateData)
-        
+
         val carouselData = result as AutoCarouselTemplateData
         assertEquals(TemplateType.AUTO_CAROUSEL, carouselData.templateType)
         assertEquals(5000, carouselData.flipInterval)
@@ -170,7 +170,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is ManualCarouselTemplateData)
-        
+
         val manualCarouselData = result as ManualCarouselTemplateData
         assertEquals(TemplateType.MANUAL_CAROUSEL, manualCarouselData.templateType)
         assertEquals(carouselType, manualCarouselData.carouselType)
@@ -196,7 +196,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is RatingTemplateData)
-        
+
         val ratingData = result as RatingTemplateData
         assertEquals(TemplateType.RATING, ratingData.templateType)
         assertEquals(defaultDeepLink, ratingData.defaultDeepLink)
@@ -210,7 +210,7 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         val imageList = arrayListOf(ImageData("url1", "alt1"), ImageData("url2", "alt2"))
         val deepLinkList = arrayListOf("dl1", "dl2")
-        
+
         every { Utils.getImageDataListFromExtras(any(), any()) } returns imageList
         every { Utils.getDeepLinkListFromExtras(any()) } returns deepLinkList
 
@@ -226,7 +226,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is FiveIconsTemplateData)
-        
+
         val fiveIconsData = result as FiveIconsTemplateData
         assertEquals(TemplateType.FIVE_ICONS, fiveIconsData.templateType)
         assertEquals(imageList, fiveIconsData.imageList)
@@ -322,7 +322,7 @@ class TemplateDataFactoryTest {
         val smallTextList = arrayListOf("Small Text 1")
         val priceList = arrayListOf("$99.99")
         val displayAction = "Buy Now"
-        
+
         every { Utils.getImageDataListFromExtras(any(), any()) } returns imageList
         every { Utils.getBigTextFromExtras(any()) } returns bigTextList
         every { Utils.getSmallTextFromExtras(any()) } returns smallTextList
@@ -342,7 +342,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is ProductTemplateData)
-        
+
         val productData = result as ProductTemplateData
         assertEquals(TemplateType.PRODUCT_DISPLAY, productData.templateType)
         assertEquals(imageList, productData.imageList)
@@ -447,7 +447,7 @@ class TemplateDataFactoryTest {
         val timerEnd = 300
         val timerThreshold = 10
         val chronoColor = "#00FF00"
-        
+
         every { Utils.getTimerEnd(any(), any()) } returns timerEnd
         every { Utils.getTimerThreshold(any()) } returns timerThreshold
         every { Utils.createColorMap(any(), any()) } returns mapOf(
@@ -467,7 +467,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is TimerTemplateData)
-        
+
         val timerData = result as TimerTemplateData
         assertEquals(TemplateType.TIMER, timerData.templateType)
         assertEquals(11000L, timerData.baseContent.notificationBehavior.dismissAfter)
@@ -487,7 +487,7 @@ class TemplateDataFactoryTest {
         val inputFeedback = "Thank you!"
         val inputAutoOpen = "true"
         val dismissOnClick = "false"
-        
+
         every { mockBundle.getString(PT_INPUT_LABEL) } returns inputLabel
         every { mockBundle.getString(PT_INPUT_FEEDBACK) } returns inputFeedback
         every { mockBundle.getString(PT_INPUT_AUTO_OPEN) } returns inputAutoOpen
@@ -505,7 +505,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is InputBoxTemplateData)
-        
+
         val inputBoxData = result as InputBoxTemplateData
         assertEquals(TemplateType.INPUT_BOX, inputBoxData.templateType)
         assertEquals(inputLabel, inputBoxData.inputLabel)
@@ -534,7 +534,7 @@ class TemplateDataFactoryTest {
         // Then
         assertNotNull(result)
         assertTrue(result is CancelTemplateData)
-        
+
         val cancelData = result as CancelTemplateData
         assertEquals(TemplateType.CANCEL, cancelData.templateType)
         assertEquals(cancelNotifId, cancelData.cancelNotificationId)
@@ -572,7 +572,7 @@ class TemplateDataFactoryTest {
         // Given
         every { mockBundle.getString(PT_TITLE) } returns SAMPLE_TITLE
         every { mockBundle.getString(Constants.NOTIF_TITLE) } returns "Fallback Title"
-        
+
         setupBasicMockBundle()
 
         // When
@@ -774,7 +774,7 @@ class TemplateDataFactoryTest {
         val collapsedGif = "collapsed.gif"
         val collapsedFrames = "5"
         val collapsedAltText = "Collapsed Alt"
-        
+
         every { mockBundle.getString(PT_BIG_IMG_COLLAPSED) } returns collapsedImage
         every { mockBundle.getString(PT_GIF_COLLAPSED) } returns collapsedGif
         every { mockBundle.getString(PT_GIF_FRAMES_COLLAPSED) } returns collapsedFrames
@@ -822,7 +822,7 @@ class TemplateDataFactoryTest {
         // Then
         assertTrue(result is ZeroBezelTemplateData)
         val zeroBezelData = result as ZeroBezelTemplateData
-        
+
         // Should use default media data values
         assertEquals(zeroBezelData.mediaData.bigImage.url, zeroBezelData.collapsedMediaData.bigImage.url)
         assertEquals(zeroBezelData.mediaData.gif.url, zeroBezelData.collapsedMediaData.gif.url)
@@ -865,7 +865,7 @@ class TemplateDataFactoryTest {
         val terminalTitle = "Terminal Title"
         val terminalMessage = "Terminal Message"
         val terminalSummary = "Terminal Summary"
-        
+
         every { mockBundle.getString(PT_TITLE_ALT) } returns terminalTitle
         every { mockBundle.getString(PT_MSG_ALT) } returns terminalMessage
         every { mockBundle.getString(PT_MSG_SUMMARY_ALT) } returns terminalSummary
@@ -908,7 +908,7 @@ class TemplateDataFactoryTest {
         // Then
         assertTrue(result is TimerTemplateData)
         val timerData = result as TimerTemplateData
-        
+
         // Should use base content text data as default
         assertEquals(timerData.baseContent.textData.title, timerData.terminalTextData.title)
         assertEquals(timerData.baseContent.textData.message, timerData.terminalTextData.message)
@@ -1089,8 +1089,8 @@ class TemplateDataFactoryTest {
     @Test
     fun `getActions should return correct actions for ManualCarouselTemplateData`() {
         // Given
-        val actions = JSONArray().apply { 
-            put("manual_action1") 
+        val actions = JSONArray().apply {
+            put("manual_action1")
             put("manual_action2")
         }
         val carouselData = CarouselData(
@@ -1161,9 +1161,9 @@ class TemplateDataFactoryTest {
     @Test
     fun `getActions should return correct actions for InputBoxTemplateData`() {
         // Given
-        val actions = JSONArray().apply { 
+        val actions = JSONArray().apply {
             put("input_action1")
-            put("input_action2") 
+            put("input_action2")
         }
         val inputBoxData = InputBoxTemplateData(
             textData = BaseTextData(SAMPLE_TITLE, SAMPLE_MESSAGE),
@@ -1334,7 +1334,7 @@ class TemplateDataFactoryTest {
         val defaultBigImageUrl = "https://example.com/default_image.jpg"
         val defaultGifUrl = "https://example.com/default.gif"
         val defaultFrames = "10"
-        
+
         every { mockBundle.getString(PT_BIG_IMG) } returns defaultBigImageUrl
         every { mockBundle.getString(PT_GIF) } returns defaultGifUrl
         every { mockBundle.getString(PT_GIF_FRAMES) } returns defaultFrames
@@ -1474,7 +1474,7 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         val ptDefaultDl = "https://example.com/pt_default"
         val constantsDeepLink = "https://example.com/constants_deep_link"
-        
+
         every { mockBundle.getString(PT_DEFAULT_DL) } returns ptDefaultDl
         every { mockBundle.getString(Constants.DEEP_LINK_KEY) } returns constantsDeepLink
 
@@ -1498,7 +1498,7 @@ class TemplateDataFactoryTest {
         // Given
         setupBasicMockBundle()
         val constantsDeepLink = "https://example.com/constants_deep_link"
-        
+
         every { mockBundle.getString(PT_DEFAULT_DL) } returns null
         every { mockBundle.getString(Constants.DEEP_LINK_KEY) } returns constantsDeepLink
 
@@ -1545,7 +1545,7 @@ class TemplateDataFactoryTest {
         setupBasicMockBundle()
         val ptBigImg = "https://example.com/pt_big_img.jpg"
         val wzrkBigPicture = "https://example.com/wzrk_big_picture.jpg"
-        
+
         every { mockBundle.getString(PT_BIG_IMG) } returns ptBigImg
         every { mockBundle.getString(Constants.WZRK_BIG_PICTURE) } returns wzrkBigPicture
 
@@ -1569,7 +1569,7 @@ class TemplateDataFactoryTest {
         // Given
         setupBasicMockBundle()
         val wzrkBigPicture = "https://example.com/wzrk_big_picture.jpg"
-        
+
         every { mockBundle.getString(PT_BIG_IMG) } returns null
         every { mockBundle.getString(Constants.WZRK_BIG_PICTURE) } returns wzrkBigPicture
 
@@ -1615,13 +1615,13 @@ class TemplateDataFactoryTest {
         // Given
         val colorMap = mapOf(
             PT_TITLE_COLOR to "#FF0000",
-            PT_MSG_COLOR to "#00FF00", 
+            PT_MSG_COLOR to "#00FF00",
             PT_BG to "#0000FF",
             PT_META_CLR to "#FFFF00",
             PT_SMALL_ICON_COLOUR to "#FF00FF"
         )
         val defaultColor = "#AAAAAA"
-        
+
         every { Utils.createColorMap(any(), any()) } returns colorMap
         every { mockBundle.getString(Constants.WZRK_COLOR) } returns defaultColor
         setupBasicMockBundle()
@@ -1639,7 +1639,7 @@ class TemplateDataFactoryTest {
         assertTrue(result is BasicTemplateData)
         val basicData = result as BasicTemplateData
         val colorData = basicData.baseContent.colorData
-        
+
         assertEquals("#FF0000", colorData.titleColor)
         assertEquals("#00FF00", colorData.messageColor)
         assertEquals("#0000FF", colorData.backgroundColor)
@@ -1669,7 +1669,7 @@ class TemplateDataFactoryTest {
         assertTrue(result is BasicTemplateData)
         val basicData = result as BasicTemplateData
         val colorData = basicData.baseContent.colorData
-        
+
         assertNull(colorData.titleColor)
         assertNull(colorData.messageColor)
         assertNull(colorData.backgroundColor)

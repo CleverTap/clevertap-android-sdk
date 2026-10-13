@@ -50,7 +50,7 @@ internal class TimerStyle(private val data: TimerTemplateData, renderer: Templat
     ): PendingIntent? {
         return null
     }
-    
+
     override fun builderFromStyle(
         context: Context,
         extras: Bundle,

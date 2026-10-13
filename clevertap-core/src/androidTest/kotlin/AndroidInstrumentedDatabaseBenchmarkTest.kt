@@ -241,16 +241,16 @@ class AndroidInstrumentedDatabaseBenchmarkTest {
 
         // Complex analytical query similar to real analytics
         val query = """
-            SELECT 
+            SELECT
                 user_category,
                 session_id,
                 COUNT(*) as event_count,
                 AVG(event_value) as avg_value,
                 MAX(event_timestamp) as latest_event,
                 MIN(event_timestamp) as earliest_event
-            FROM device_benchmark_table 
-            WHERE event_value > ? 
-                AND event_name LIKE ? 
+            FROM device_benchmark_table
+            WHERE event_value > ?
+                AND event_name LIKE ?
                 AND event_timestamp > ?
             GROUP BY user_category, session_id
             HAVING COUNT(*) >= 2

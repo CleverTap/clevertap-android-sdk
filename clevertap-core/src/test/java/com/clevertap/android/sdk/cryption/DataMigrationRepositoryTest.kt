@@ -147,7 +147,7 @@ class DataMigrationRepositoryTest : BaseTestCase() {
         // Act
         dataMigrationRepository.saveCachedGuidJson(firstValue)
         val firstResult = dataMigrationRepository.cachedGuidString()
-        
+
         dataMigrationRepository.saveCachedGuidJson(secondValue)
         val secondResult = dataMigrationRepository.cachedGuidString()
 
@@ -186,7 +186,7 @@ class DataMigrationRepositoryTest : BaseTestCase() {
         // Arrange
         val guid = "test-guid-12345"
         dataMigrationRepository.saveCachedGuidJson(guid)
-        
+
         // Verify it was saved
         assertNotNull(dataMigrationRepository.cachedGuidString())
 

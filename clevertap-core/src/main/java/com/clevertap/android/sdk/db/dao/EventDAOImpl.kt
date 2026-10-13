@@ -32,7 +32,7 @@ internal class EventDAOImpl(
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return DB_OUT_OF_MEMORY_ERROR
         }
-        
+
         val tableName = table.tableName
         val cv = ContentValues().apply {
             put(Column.DATA, dbEncryptionHandler.wrapDbData(event.toString()))
