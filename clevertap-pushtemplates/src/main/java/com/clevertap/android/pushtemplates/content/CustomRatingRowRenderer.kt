@@ -115,15 +115,6 @@ internal object CustomRatingRowRenderer {
             PTLog.debug("${PTConstants.PT_RATING_STYLE} is missing or invalid, falling back to the basic template")
             return false
         }
-        if (style == RatingStyleType.TEXT) {
-            // Only the icon style ships. The text renderer below is left compiled and covered by its
-            // own tests so turning the style back on is a one-line change rather than a rewrite.
-            PTLog.debug(
-                "${PTConstants.PT_RATING_STYLE} is \"$style\", which is not supported, " +
-                        "falling back to the basic template"
-            )
-            return false
-        }
         if (data.ratingCount < PTConstants.PT_RATING_COUNT_MIN) {
             PTLog.debug("${PTConstants.PT_RATING_COUNT} is missing or below ${PTConstants.PT_RATING_COUNT_MIN}, falling back to the basic template")
             return false

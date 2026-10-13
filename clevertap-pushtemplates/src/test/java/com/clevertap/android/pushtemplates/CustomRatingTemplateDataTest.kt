@@ -310,9 +310,7 @@ class CustomRatingTemplateDataTest {
     }
 
     @Test
-    fun `a text row degrades to the basic template, because only the icon style ships`() {
-        // The payload still parses — the text renderer is kept compiled and tested — but the style
-        // is not offered, so the notification renders as basic (R-22).
+    fun `a text row with all labels is renderable`() {
         every { mockBundle.getString(PT_RATING_STYLE) } returns "text"
         every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
         for (position in 1..3) {
@@ -321,7 +319,7 @@ class CustomRatingTemplateDataTest {
 
         val data = parse()!!
         assertEquals(RatingStyleType.TEXT, data.ratingStyle)
-        assertFalse(CustomRatingRowRenderer.isRenderable(data))
+        assertTrue(CustomRatingRowRenderer.isRenderable(data))
     }
 
     @Test
@@ -365,5 +363,73 @@ class CustomRatingTemplateDataTest {
         assertEquals(TemplateType.CUSTOM_RATING, TemplateType.fromString("pt_custom_rating"))
         assertEquals(TemplateType.RATING, TemplateType.fromString("pt_rating"))
         assertEquals("pt_custom_rating", TemplateType.CUSTOM_RATING.toString())
+    }
+
+    // usesUniformScale
+
+    @Test
+    fun `all positions sharing the same artwork are a uniform scale`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "icon"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
+        for (position in 1..3) {
+            every { mockBundle.getString("$PT_RATING_ICON_PREFIX$position") } returns "https://cdn.example.com/star.png"
+            every { mockBundle.getString("$PT_RATING_ICON_PREFIX$position$PT_RATING_ICON_SELECTED_SUFFIX") } returns "https://cdn.example.com/star_sel.png"
+        }
+
+        assertTrue(parse()!!.usesUniformScale)
+    }
+
+    @Test
+    fun `distinct artwork per position is not a uniform scale`() {
+        givenIconStyle(count = 3)
+
+        assertFalse(parse()!!.usesUniformScale)
+    }
+
+    @Test
+    fun `text style is never a uniform scale`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "text"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
+        for (position in 1..3) {
+            every { mockBundle.getString("$PT_RATING_LABEL_PREFIX$position") } returns "L$position"
+        }
+
+        assertFalse(parse()!!.usesUniformScale)
+    }
+
+    @Test
+    fun `icon style with no artwork is uniform because every position falls back to the same built-in star pair`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "icon"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
+
+        assertTrue(parse()!!.usesUniformScale)
+    }
+
+    @Test
+    fun `unknown style is not a uniform scale`() {
+        every { mockBundle.getString(PT_RATING_STYLE) } returns "emoji"
+        every { mockBundle.getString(PT_RATING_COUNT) } returns "3"
+
+        assertFalse(parse()!!.usesUniformScale)
+    }
+
+    // defaultDeepLink
+
+    @Test
+    fun `body tap destination falls back to wzrk_dl when pt_default_dl is absent`() {
+        givenIconStyle(count = 3)
+        every { mockBundle.getString(PT_DEFAULT_DL) } returns null
+        every { mockBundle.getString(Constants.DEEP_LINK_KEY) } returns "myapp://fallback"
+
+        assertEquals("myapp://fallback", parse()!!.defaultDeepLink)
+    }
+
+    @Test
+    fun `body tap destination is null when neither pt_default_dl nor wzrk_dl is set`() {
+        givenIconStyle(count = 3)
+        every { mockBundle.getString(PT_DEFAULT_DL) } returns null
+        every { mockBundle.getString(Constants.DEEP_LINK_KEY) } returns null
+
+        assertNull(parse()!!.defaultDeepLink)
     }
 }

@@ -260,9 +260,6 @@ public class PTConstants {
     public static final String PT_RATING_CTA_TXT_CLR = "pt_rating_cta_txt_clr";
     public static final String PT_RATING_CTA_RADIUS = "pt_rating_cta_radius";
 
-    // Optional confirmation message. When present, submitting swaps the notification to a
-    // confirmation state instead of dismissing it.
-
     public static final int PT_RATING_COUNT_MIN = 2;
     public static final int PT_RATING_COUNT_MAX = 5;
     public static final int PT_RATING_CTA_RADIUS_DEFAULT = 8;
