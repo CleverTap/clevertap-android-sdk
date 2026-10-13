@@ -245,61 +245,84 @@ class ImpressionManagerTest : BaseTestCase() {
         val tenHoursFromMidnight = referenceTimestamp + TimeUnit.HOURS.toSeconds(10)
         val oneSecondAgo = currentTimestamp - 1
 
-        //Arrange
+        // Window rule: days=1 starts at TODAY 00:00, days=2 at yesterday 00:00,
+        // days=3 at the day before yesterday 00:00, days=4 one day further back.
+
+        //Arrange: impression just before the start of "3 days ago" -> only a 4-day window sees it
         recordImpression(twoDayBeforeMidnightMinus1s, campaignId)
         //Act and Assert
         every { clock.currentTimeSeconds() } returns currentTimestamp
-        assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(0, impressionManager.perDay(campaignId, 1))
         assertEquals(0, impressionManager.perDay(campaignId, 2))
-        assertEquals(1, impressionManager.perDay(campaignId, 3))
+        assertEquals(0, impressionManager.perDay(campaignId, 3))
+        assertEquals(1, impressionManager.perDay(campaignId, 4))
 
-        //Arrange
+        //Arrange: impression just after the start of "2 days ago" -> 3-day window sees it
         recordImpression(twoDaysBeforeMidnightOffset1s, campaignId)
         //Act and Assert
         every { clock.currentTimeSeconds() } returns currentTimestamp
-        assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(0, impressionManager.perDay(campaignId, 1))
-        assertEquals(1, impressionManager.perDay(campaignId, 2))
-        assertEquals(2, impressionManager.perDay(campaignId, 3))
+        assertEquals(0, impressionManager.perDay(campaignId, 2))
+        assertEquals(1, impressionManager.perDay(campaignId, 3))
+        assertEquals(2, impressionManager.perDay(campaignId, 4))
 
-        //Arrange
+        //Arrange: impression just before yesterday 00:00 -> still outside a 2-day window
         recordImpression(oneDayBeforeMidnightMinus1s, campaignId)
         //Act and Assert
         every { clock.currentTimeSeconds() } returns currentTimestamp
-        assertEquals(0, impressionManager.perDay(campaignId, 0))
         assertEquals(0, impressionManager.perDay(campaignId, 1))
-        assertEquals(2, impressionManager.perDay(campaignId, 2))
-        assertEquals(3, impressionManager.perDay(campaignId, 3))
+        assertEquals(0, impressionManager.perDay(campaignId, 2))
+        assertEquals(2, impressionManager.perDay(campaignId, 3))
+        assertEquals(3, impressionManager.perDay(campaignId, 4))
 
-        //Arrange
+        //Arrange: impression just after yesterday 00:00 -> 2-day window sees it, 1-day does not
         recordImpression(oneDayBeforeMidnightOffset1s, campaignId)
         //Act and Assert
         every { clock.currentTimeSeconds() } returns currentTimestamp
-        assertEquals(0, impressionManager.perDay(campaignId, 0))
-        assertEquals(1, impressionManager.perDay(campaignId, 1))
-        assertEquals(3, impressionManager.perDay(campaignId, 2))
-        assertEquals(4, impressionManager.perDay(campaignId, 3))
+        assertEquals(0, impressionManager.perDay(campaignId, 1))
+        assertEquals(1, impressionManager.perDay(campaignId, 2))
+        assertEquals(3, impressionManager.perDay(campaignId, 3))
+        assertEquals(4, impressionManager.perDay(campaignId, 4))
 
-        //Arrange
+        //Arrange: impression yesterday afternoon -> the SDK-6157 case: must NOT count for "1 day"
         recordImpression(tenHoursBeforeMidnight, campaignId)
         //Act and Assert
         every { clock.currentTimeSeconds() } returns currentTimestamp
-        assertEquals(0, impressionManager.perDay(campaignId, 0))
-        assertEquals(2, impressionManager.perDay(campaignId, 1))
-        assertEquals(4, impressionManager.perDay(campaignId, 2))
-        assertEquals(5, impressionManager.perDay(campaignId, 3))
+        assertEquals(0, impressionManager.perDay(campaignId, 1))
+        assertEquals(2, impressionManager.perDay(campaignId, 2))
+        assertEquals(4, impressionManager.perDay(campaignId, 3))
+        assertEquals(5, impressionManager.perDay(campaignId, 4))
 
-        //Arrange
+        //Arrange: one more yesterday, two today
         recordImpression(oneMinuteBeforeMidnight, campaignId)
         recordImpression(tenHoursFromMidnight, campaignId)
         recordImpression(oneSecondAgo, campaignId)
         //Act and Assert
         every { clock.currentTimeSeconds() } returns currentTimestamp
-        assertEquals(2, impressionManager.perDay(campaignId, 0))
-        assertEquals(5, impressionManager.perDay(campaignId, 1))
-        assertEquals(7, impressionManager.perDay(campaignId, 2))
-        assertEquals(8, impressionManager.perDay(campaignId, 3))
+        assertEquals(2, impressionManager.perDay(campaignId, 1))
+        assertEquals(5, impressionManager.perDay(campaignId, 2))
+        assertEquals(7, impressionManager.perDay(campaignId, 3))
+        assertEquals(8, impressionManager.perDay(campaignId, 4))
+    }
+
+    @Test
+    fun `perDay treats a days value below 1 as today only`() {
+        // A malformed payload (frequency = 0, or negative) must behave exactly like "1 day",
+        // never like an empty window (which would let a capped campaign show every time).
+        val campaignId = "campaign123"
+        val currentTimestamp = System.currentTimeMillis() / 1000
+        every { clock.newDate() } returns Date(currentTimestamp * 1000)
+        val midnight = getSecondsSinceLastMidnight()
+
+        recordImpression(midnight - TimeUnit.HOURS.toSeconds(10), campaignId) // yesterday afternoon
+        recordImpression(midnight + TimeUnit.HOURS.toSeconds(1), campaignId)  // today
+        recordImpression(currentTimestamp - 1, campaignId)                    // today
+
+        every { clock.currentTimeSeconds() } returns currentTimestamp
+        val today = impressionManager.perDay(campaignId, 1)
+        assertEquals(2, today)
+        assertEquals(today, impressionManager.perDay(campaignId, 0))
+        assertEquals(today, impressionManager.perDay(campaignId, -5))
     }
 
     @Test
@@ -323,6 +346,9 @@ class ImpressionManagerTest : BaseTestCase() {
         val tenHoursFromStartOfWeek = referenceTimestamp + TimeUnit.HOURS.toSeconds(10)
         val oneSecondAgo = currentTimestamp - 1
 
+        // Window rule (SDK-6157, same as iOS): weeks=1 starts at THIS week's first day, weeks=2 at last
+        // week's first day, weeks=3 two weeks back, weeks=4 three weeks back. weeks=0 behaves like 1.
+
         // Arrange
         recordImpression(twoWeeksBeforeStartOfWeekMinus1s, campaignId)
         // Act and Assert
@@ -330,7 +356,8 @@ class ImpressionManagerTest : BaseTestCase() {
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
         assertEquals(0, impressionManager.perWeek(campaignId, 2))
-        assertEquals(1, impressionManager.perWeek(campaignId, 3))
+        assertEquals(0, impressionManager.perWeek(campaignId, 3))
+        assertEquals(1, impressionManager.perWeek(campaignId, 4))
 
         // Arrange
         recordImpression(twoWeeksBeforeStartOfWeekOffset1s, campaignId)
@@ -338,8 +365,9 @@ class ImpressionManagerTest : BaseTestCase() {
         every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
-        assertEquals(1, impressionManager.perWeek(campaignId, 2))
-        assertEquals(2, impressionManager.perWeek(campaignId, 3))
+        assertEquals(0, impressionManager.perWeek(campaignId, 2))
+        assertEquals(1, impressionManager.perWeek(campaignId, 3))
+        assertEquals(2, impressionManager.perWeek(campaignId, 4))
 
         // Arrange
         recordImpression(oneWeekBeforeStartOfWeekMinus1s, campaignId)
@@ -347,8 +375,9 @@ class ImpressionManagerTest : BaseTestCase() {
         every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
-        assertEquals(2, impressionManager.perWeek(campaignId, 2))
-        assertEquals(3, impressionManager.perWeek(campaignId, 3))
+        assertEquals(0, impressionManager.perWeek(campaignId, 2))
+        assertEquals(2, impressionManager.perWeek(campaignId, 3))
+        assertEquals(3, impressionManager.perWeek(campaignId, 4))
 
         // Arrange
         recordImpression(oneWeekBeforeStartOfWeekOffset1s, campaignId)
@@ -356,8 +385,9 @@ class ImpressionManagerTest : BaseTestCase() {
         every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
-        assertEquals(3, impressionManager.perWeek(campaignId, 2))
-        assertEquals(4, impressionManager.perWeek(campaignId, 3))
+        assertEquals(1, impressionManager.perWeek(campaignId, 2))
+        assertEquals(3, impressionManager.perWeek(campaignId, 3))
+        assertEquals(4, impressionManager.perWeek(campaignId, 4))
 
         // Arrange
         recordImpression(tenHoursBeforeStartOfWeek, campaignId)
@@ -365,8 +395,9 @@ class ImpressionManagerTest : BaseTestCase() {
         every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(0, impressionManager.perWeek(campaignId, 0))
         assertEquals(0, impressionManager.perWeek(campaignId, 1))
-        assertEquals(4, impressionManager.perWeek(campaignId, 2))
-        assertEquals(5, impressionManager.perWeek(campaignId, 3))
+        assertEquals(2, impressionManager.perWeek(campaignId, 2))
+        assertEquals(4, impressionManager.perWeek(campaignId, 3))
+        assertEquals(5, impressionManager.perWeek(campaignId, 4))
 
         // Arrange
         recordImpression(oneMinuteBeforeStartOfWeek, campaignId)
@@ -376,8 +407,9 @@ class ImpressionManagerTest : BaseTestCase() {
         every { clock.currentTimeSeconds() } returns currentTimestamp
         assertEquals(2, impressionManager.perWeek(campaignId, 0))
         assertEquals(2, impressionManager.perWeek(campaignId, 1))
-        assertEquals(7, impressionManager.perWeek(campaignId, 2))
-        assertEquals(8, impressionManager.perWeek(campaignId, 3))
+        assertEquals(5, impressionManager.perWeek(campaignId, 2))
+        assertEquals(7, impressionManager.perWeek(campaignId, 3))
+        assertEquals(8, impressionManager.perWeek(campaignId, 4))
     }
 
     private fun getSecondsSinceFirstDayOfCurrentWeek(): Long {
@@ -642,9 +674,8 @@ class ImpressionManagerTest : BaseTestCase() {
         assertEquals(2, im.perWeek(campaignId, 1))
 
         // Advance the injected clock past the day window — the shows must age out (proves it follows
-        // the Clock, not the real device date). perDay(id,1) counts since the start of "yesterday", so
-        // cross two calendar days to clear an impression stamped today.
-        fakeClock.advanceOneDay()
+        // the Clock, not the real device date). perDay(id,1) counts since TODAY 00:00, so
+        // crossing one calendar day clears an impression stamped today.
         fakeClock.advanceOneDay()
         assertEquals(0, im.perDay(campaignId, 1))
 
