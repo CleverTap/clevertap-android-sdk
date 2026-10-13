@@ -313,26 +313,36 @@ internal class DisplayUnitResponse(
         }
         val userLocation = try { coreMetaData?.locationFromUser } catch (t: Throwable) { null }
 
-        // Ack CG stubs that are still eligible — within their whenTriggers + whenLimits (would have shown).
-        // Fully guarded (incl. recordCgSuppressed, which writes SharedPreferences): a bad CG stub must never
-        // drop the regular `adUnit_notifs` content parsed alongside it.
-        if (cgStubs.isNotEmpty()) {
+        // 1. Cap-filter content AND CG stubs by whenTriggers + whenLimits. Fail-closed on a malformed rule
+        //    (drop that set — it can't be cap-checked) but contained so regular `adUnit_notifs` still delivers.
+        val eligibleContent = if (content.isEmpty()) emptyList() else try {
+            evaluator.retainAppLaunchedWithinLimits(content, eventProperties, userLocation)
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed; dropping content", t)
+            emptyList()
+        }
+        val eligibleStubs = if (cgStubs.isEmpty()) emptyList() else try {
+            evaluator.retainAppLaunchedWithinLimits(cgStubs, eventProperties, userLocation)
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed for CG stubs", t)
+            emptyList()
+        }
+
+        // 2. Priority arbitration: deliver all ties at the top priority band; ack only the CG stubs that
+        //    would have shown (in the reached bands). Mirrors the server's priority-flag-ON behaviour.
+        val selection = evaluator.selectTopPriorityBand(eligibleContent, eligibleStubs)
+
+        // 3. Ack the would-have-shown CG stubs. Fully guarded (recordCgSuppressed writes SharedPreferences).
+        if (selection.cgAcks.isNotEmpty()) {
             try {
-                evaluator.retainAppLaunchedWithinLimits(cgStubs, eventProperties, userLocation)
-                    .forEach { evaluator.recordCgSuppressed(it) }
+                selection.cgAcks.forEach { evaluator.recordCgSuppressed(it) }
             } catch (t: Throwable) {
                 logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND CG ack failed; skipping acks", t)
             }
         }
 
-        // Deliverable content: whenTriggers + whenLimits + remaining global-budget trim.
-        val eligible = try {
-            evaluator.retainAppLaunchedWithinLimits(content, eventProperties, userLocation)
-        } catch (t: Throwable) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched eligibility filter failed; dropping units", t)
-            emptyList() // fail-closed: don't let un-cap-checked units through
-        }
-        return trimToGlobalCap(eligible)
+        // 4. Winners + remaining global-budget trim.
+        return trimToGlobalCap(selection.winners)
     }
 
     /**

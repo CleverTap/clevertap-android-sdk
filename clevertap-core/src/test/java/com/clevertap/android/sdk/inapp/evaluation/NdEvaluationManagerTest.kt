@@ -230,4 +230,57 @@ class NdEvaluationManagerTest {
 
         verify(exactly = 0) { ndStore.readServerSideNdMetaData() }
     }
+
+    // ---- selectTopPriorityBand: "all ties at the top priority band" (server priority-flag parity) ----
+
+    private fun pbUnit(ti: String, priority: Int, suppressed: Boolean = false) =
+        JSONObject().put(Constants.INAPP_ID_IN_PAYLOAD, ti).put(Constants.INAPP_PRIORITY, priority)
+            .apply { if (suppressed) put(Constants.INAPP_SUPPRESSED, true) }
+
+    private fun tis(units: List<JSONObject>) = units.map { it.optString(Constants.INAPP_ID_IN_PAYLOAD) }
+
+    @Test
+    fun `selectTopPriorityBand delivers only the highest priority band`() {
+        val content = listOf(pbUnit("p10", 10), pbUnit("p3", 3), pbUnit("p2", 2), pbUnit("p1", 1))
+        val sel = manager.selectTopPriorityBand(content, emptyList())
+        assertEquals(listOf("p10"), tis(sel.winners)) // the scratch_24 case: 4 in -> only prio 10 out
+        assertTrue(sel.cgAcks.isEmpty())
+    }
+
+    @Test
+    fun `selectTopPriorityBand delivers all ties at the top band`() {
+        val content = listOf(pbUnit("a", 10), pbUnit("b", 10), pbUnit("c", 5))
+        val sel = manager.selectTopPriorityBand(content, emptyList())
+        assertEquals(setOf("a", "b"), tis(sel.winners).toSet()) // both prio-10; prio-5 dropped
+    }
+
+    @Test
+    fun `selectTopPriorityBand falls through an all-stub top band and acks it`() {
+        val sel = manager.selectTopPriorityBand(
+            content = listOf(pbUnit("c5", 5)),
+            stubs = listOf(pbUnit("s10", 10, suppressed = true)),
+        )
+        assertEquals(listOf("c5"), tis(sel.winners))  // CG top band doesn't latch -> fall through to content
+        assertEquals(listOf("s10"), tis(sel.cgAcks))  // top stub would have shown -> acked
+    }
+
+    @Test
+    fun `selectTopPriorityBand acks only the delivering band stubs, not lower ones`() {
+        val sel = manager.selectTopPriorityBand(
+            content = listOf(pbUnit("c10", 10)),
+            stubs = listOf(pbUnit("s10", 10, suppressed = true), pbUnit("s3", 3, suppressed = true)),
+        )
+        assertEquals(listOf("c10"), tis(sel.winners))
+        assertEquals(listOf("s10"), tis(sel.cgAcks)) // s3 is below the delivering band -> not acked
+    }
+
+    @Test
+    fun `selectTopPriorityBand with only stubs delivers nothing and acks all`() {
+        val sel = manager.selectTopPriorityBand(
+            content = emptyList(),
+            stubs = listOf(pbUnit("s10", 10, suppressed = true), pbUnit("s5", 5, suppressed = true)),
+        )
+        assertTrue(sel.winners.isEmpty())
+        assertEquals(setOf("s10", "s5"), tis(sel.cgAcks).toSet()) // no delivery ever latches -> all acked
+    }
 }

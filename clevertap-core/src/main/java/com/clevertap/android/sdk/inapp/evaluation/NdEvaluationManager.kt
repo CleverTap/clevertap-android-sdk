@@ -125,8 +125,8 @@ internal class NdEvaluationManager(
      *
      * Rules are read inline from each payload (App-Launched campaigns are excluded from `adUnit_notifs_ss`).
      * A unit with no inline `whenTriggers` trivially qualifies (the launch itself is the trigger) — ND-only,
-     * since in-app campaigns always carry triggers. All survivors are returned — no single-winner selection.
-     * Suppressed CG stubs are excluded upstream (acked via [recordCgSuppressed]).
+     * since in-app campaigns always carry triggers. This returns **all** cap-survivors; the priority
+     * arbitration (deliver all ties at the top band) is applied separately by [selectTopPriorityBand].
      *
      * @param eventProperties the `App Launched` event properties (`deviceInfo.appLaunchedFields`), as in-app.
      * @param userLocation the user location for geo-triggers, as in-app.
@@ -166,6 +166,53 @@ internal class NdEvaluationManager(
             }
         }
     }
+
+    /**
+     * Priority arbitration for the App-Launched batch — "all ties at the top priority band" (mirrors the
+     * server's `rollout-native-display-priority` ON behaviour, as used on custom events).
+     *
+     * Input is the already cap-filtered (whenTriggers + whenLimits) deliverable [content] and CG [stubs].
+     * Sort all candidates priority DESC then `ti` ASC (ND ids are epoch timestamps → ties break oldest-first,
+     * same as [EvaluationManager.sortByPriority]) and walk bands top-down:
+     * - every CG stub in a band we reach is a would-have-shown control-group exposure → added to [cgAcks];
+     * - the first band that contains deliverable content wins: **all** its content is delivered (ties), and
+     *   the walk stops (the priority lock latches on an actual delivery, so lower bands are dropped);
+     * - a band with only stubs does not latch the lock → fall through to the next band (its stubs still ack).
+     *
+     * So a batch of 4 units at priorities 10/3/2/1 delivers only priority 10; two units tied at 10 deliver both.
+     */
+    fun selectTopPriorityBand(content: List<JSONObject>, stubs: List<JSONObject>): AppLaunchedSelection {
+        if (content.isEmpty() && stubs.isEmpty()) return AppLaunchedSelection(emptyList(), emptyList())
+
+        // Tag each candidate (true = CG stub) and sort by priority DESC, ti ASC.
+        val sorted = (content.map { it to false } + stubs.map { it to true })
+            .sortedWith(
+                compareByDescending<Pair<JSONObject, Boolean>> { it.first.optInt(Constants.INAPP_PRIORITY, 1) }
+                    .thenBy { it.first.optString(Constants.INAPP_ID_IN_PAYLOAD) },
+            )
+
+        val winners = ArrayList<JSONObject>()
+        val cgAcks = ArrayList<JSONObject>()
+        var i = 0
+        while (i < sorted.size) {
+            val bandPriority = sorted[i].first.optInt(Constants.INAPP_PRIORITY, 1)
+            val bandContent = ArrayList<JSONObject>()
+            while (i < sorted.size && sorted[i].first.optInt(Constants.INAPP_PRIORITY, 1) == bandPriority) {
+                val (unit, isStub) = sorted[i]
+                if (isStub) cgAcks.add(unit) else bandContent.add(unit)
+                i++
+            }
+            if (bandContent.isNotEmpty()) { // actual delivery -> lock latches; drop lower bands
+                winners.addAll(bandContent)
+                break
+            }
+            // all-stub band -> acked above, no delivery, fall through to the next band
+        }
+        return AppLaunchedSelection(winners, cgAcks)
+    }
+
+    /** Result of [selectTopPriorityBand]: content to deliver + CG stubs to ack. */
+    data class AppLaunchedSelection(val winners: List<JSONObject>, val cgAcks: List<JSONObject>)
 
     /**
      * Records a CG-suppressed App-Launched stub as an `adUnit_suppressed` ack, so the CG event fires at

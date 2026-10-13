@@ -337,9 +337,18 @@ per non-suppressed unit, read the advanced rules **inline from the unit's own pa
 (`EvalRules.whenLimits(unit)` — `frequencyLimits`/`occurrenceLimits`), increment the ND trigger, and keep
 the unit only if `matchWhenLimits` passes. Rules are read inline, **not** joined from `adUnit_notifs_ss` —
 App-Launched campaigns are deliberately excluded from that bundle (contract §5.2), so the full payload here
-carries the rules. Unlike in-app there is **no single-winner selection** — every survivor is delivered via
-`DisplayUnitListener`. Units with no inline rules (simple campaigns) pass through untouched. CG-suppressed
-stubs are excluded from this filter and acked separately via `recordCgSuppressed`.
+carries the rules. Units with no inline rules (simple campaigns) pass through the filter untouched.
+
+**Priority arbitration — all ties at the top band.** After the whenTriggers + whenLimits filter, the
+survivors go through `NdEvaluationManager.selectTopPriorityBand`, which mirrors the server's
+`rollout-native-display-priority`-ON behaviour (as on custom events): sort priority DESC then `ti` ASC and
+deliver **every** unit at the highest priority band that has deliverable content ("all ties at the top"),
+dropping everything below it. This is **not** in-app's single-winner (`Immediate` picks exactly one) — ND
+delivers the whole top band. CG stubs compete in the same sort: a stub in a reached band is a
+would-have-shown control-group exposure and is acked (`recordCgSuppressed`); an all-stub top band does not
+latch the delivery lock, so the walk falls through to the next band (its stubs still ack). So a batch of 4
+units at priorities 10/3/2/1 delivers only priority 10; two units tied at 10 deliver both. The regular-event
+path needs no SDK arbitration — the server selects there and delivers the winner(s) in `adUnit_notifs`.
 
 **Global cap on App-Launched — SDK-enforced.** For regular per-event delivery the server trims to the
 remaining global budget using the reported `ndmp`. App-Launched is server-ships-all / SDK-decides, so the

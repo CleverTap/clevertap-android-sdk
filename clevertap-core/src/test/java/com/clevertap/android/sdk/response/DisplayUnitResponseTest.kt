@@ -63,6 +63,11 @@ class DisplayUnitResponseTest : BaseTestCase() {
         every { ndFCManager.globalCapRemaining() } returns Int.MAX_VALUE // uncapped by default; tests override
         ndTriggerManager = mockk(relaxed = true)
         ndEvaluationManager = mockk(relaxed = true)
+        // Default selection = pass-through (winners = eligible content, acks = eligible stubs); the
+        // priority arbitration itself is unit-tested in NdEvaluationManagerTest.
+        every { ndEvaluationManager.selectTopPriorityBand(any(), any()) } answers {
+            NdEvaluationManager.AppLaunchedSelection(firstArg(), secondArg())
+        }
         cache = mockk(relaxed = true)
         context = mockk(relaxed = true)
 
