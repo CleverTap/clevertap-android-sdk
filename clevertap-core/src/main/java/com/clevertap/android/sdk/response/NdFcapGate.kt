@@ -43,10 +43,10 @@ internal object NdFcapGate {
             // must match how didShow records and how the evaluator keys whenLimits.
             val campaignId = json.optString(Constants.INAPP_ID_IN_PAYLOAD)
             val canShow = ndFCManager.canShow(
-                campaignId,
-                NdFCManager.isExcludeFromCaps(json),
-                json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED), // mdc = per-target session cap
-                false, // advanced whenLimits already applied at evaluation time
+                id = campaignId,
+                excludeFromCaps = NdFCManager.isExcludeFromCaps(json),
+                maxPerSession = json.optInt(Constants.INAPP_MAX_DISPLAY_COUNT, UNCAPPED), // mdc = per-target session cap
+                frequencyLimitsMaxedOut = false, // advanced whenLimits already applied at evaluation time
             )
             if (!canShow) {
                 logger.verbose(

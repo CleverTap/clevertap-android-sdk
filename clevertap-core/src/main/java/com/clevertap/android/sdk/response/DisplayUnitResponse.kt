@@ -97,13 +97,13 @@ internal class DisplayUnitResponse(
         //    user switch; the per-user ss-bundle is skipped on a switch so the outgoing user's rules don't
         //    land in the new user's prefs.
         if (source != CTResponseSource.CONTENT_FETCH) {
-            ingestNdMeta(response, context, isUserSwitching)
+            ingestNdMeta(response = response, context = context, isUserSwitching = isUserSwitching)
         }
 
         // 2. ND content — skipped on a user switch. On a /content re-feed the (cap-filtered) units are MERGED
         //    into the cache rather than replacing it, so /content never wipes the /a1 set.
         if (!isUserSwitching) {
-            deliverContent(response, source)
+            deliverContent(response = response, source = source)
         }
     }
 
@@ -120,18 +120,20 @@ internal class DisplayUnitResponse(
             if (response.has(Constants.ND_MAX_PER_SESSION_KEY) && ndFCManager != null) {
                 val perSession = response.optInt(Constants.ND_MAX_PER_SESSION_KEY, 1)
                 val perDay = response.optInt(Constants.ND_MAX_PER_DAY_KEY, Int.MAX_VALUE)
-                ndFCManager.updateLimits(perDay, perSession)
+                ndFCManager.updateLimits(perDay = perDay, perSession = perSession)
             }
 
             // Dead-target GC.
             response.optJSONArray(Constants.DISPLAY_UNIT_NOTIFS_STALE_KEY)?.let { staleIds ->
-                clearStaleNdCache(stores, staleIds)
+                clearStaleNdCache(stores = stores, staleIds = staleIds)
                 ndFCManager?.processResponse(staleIds)
             }
 
             // The ss-bundle and CG acks are per-user; skip them on a user switch so the outgoing user's
             // rules/acks aren't written into the just-switched-in user's stores (mirrors InAppResponse).
-            if (isUserSwitching) return
+            if (isUserSwitching) {
+                return
+            }
 
             // Advanced-rule metadata bundle for local evaluation. Full replace, including an empty array
             // (the bundle is always the complete current set, so [] means "clear").
@@ -182,7 +184,7 @@ internal class DisplayUnitResponse(
             return
         }
         try {
-            parseDisplayUnits(notifs, appLaunched, source)
+            parseDisplayUnits(notifs = notifs, appLaunched = appLaunched, source = source)
         } catch (t: Throwable) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}Failed to parse content", t)
         }
@@ -222,8 +224,16 @@ internal class DisplayUnitResponse(
         // Frequency-cap gate FIRST — caps are applied to the new content before any content-fetch merge.
         // Never cap-gate the send-test / push-preview path (content-only constructor, no ND stores).
         val gated = ArrayList(
-            if (storeRegistry == null) parsed
-            else NdFcapGate.filter(parsed, controllerManager.ndFCManager, logger, config.accountId),
+            if (storeRegistry == null) {
+                parsed
+            } else {
+                NdFcapGate.filter(
+                    units = parsed,
+                    ndFCManager = controllerManager.ndFCManager,
+                    logger = logger,
+                    accountId = config.accountId,
+                )
+            },
         )
 
         // A /content re-feed carries only the personalized subset of display units. The cache is a REPLACE,
@@ -234,7 +244,7 @@ internal class DisplayUnitResponse(
             if (!hasMergeableUnit(gated)) {
                 return
             }
-            val merged = mergeByUnitId(cache.allDisplayUnits, gated)
+            val merged = mergeByUnitId(existing = cache.allDisplayUnits, incoming = gated)
             cache.updateDisplayUnits(merged)
             callbackManager.notifyDisplayUnitsLoaded(merged)
             return
@@ -251,10 +261,14 @@ internal class DisplayUnitResponse(
 
     /** Whether [appLaunched] carries at least one deliverable (non-`suppressed`) entry. */
     private fun hasNonSuppressed(appLaunched: JSONArray?): Boolean {
-        if (appLaunched == null) return false
+        if (appLaunched == null) {
+            return false
+        }
         for (i in 0 until appLaunched.length()) {
             val entry = appLaunched.optJSONObject(i) ?: continue
-            if (!entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) return true
+            if (!entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
+                return true
+            }
         }
         return false
     }
@@ -298,7 +312,11 @@ internal class DisplayUnitResponse(
         val cgStubs = ArrayList<JSONObject>()
         for (i in 0 until appLaunched.length()) {
             val entry = appLaunched.optJSONObject(i) ?: continue
-            if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) cgStubs.add(entry) else content.add(entry)
+            if (entry.optBoolean(Constants.INAPP_SUPPRESSED, false)) {
+                cgStubs.add(entry)
+            } else {
+                content.add(entry)
+            }
         }
         val evaluator = ndEvaluationManager ?: return content // preview path: no caps/acks to apply
 
@@ -315,22 +333,30 @@ internal class DisplayUnitResponse(
 
         // 1. Cap-filter content AND CG stubs by whenTriggers + whenLimits. Fail-closed on a malformed rule
         //    (drop that set — it can't be cap-checked) but contained so regular `adUnit_notifs` still delivers.
-        val eligibleContent = if (content.isEmpty()) emptyList() else try {
-            evaluator.retainAppLaunchedWithinLimits(content, eventProperties, userLocation)
-        } catch (t: Throwable) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed; dropping content", t)
+        val eligibleContent = if (content.isEmpty()) {
             emptyList()
+        } else {
+            try {
+                evaluator.retainAppLaunchedWithinLimits(content = content, eventProperties = eventProperties, userLocation = userLocation)
+            } catch (t: Throwable) {
+                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed; dropping content", t)
+                emptyList()
+            }
         }
-        val eligibleStubs = if (cgStubs.isEmpty()) emptyList() else try {
-            evaluator.retainAppLaunchedWithinLimits(cgStubs, eventProperties, userLocation)
-        } catch (t: Throwable) {
-            logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed for CG stubs", t)
+        val eligibleStubs = if (cgStubs.isEmpty()) {
             emptyList()
+        } else {
+            try {
+                evaluator.retainAppLaunchedWithinLimits(content = cgStubs, eventProperties = eventProperties, userLocation = userLocation)
+            } catch (t: Throwable) {
+                logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}ND App-Launched whenLimits filter failed for CG stubs", t)
+                emptyList()
+            }
         }
 
         // 2. Priority arbitration: deliver all ties at the top priority band; ack only the CG stubs that
         //    would have shown (in the reached bands). Mirrors the server's priority-flag-ON behaviour.
-        val selection = evaluator.selectTopPriorityBand(eligibleContent, eligibleStubs)
+        val selection = evaluator.selectTopPriorityBand(content = eligibleContent, stubs = eligibleStubs)
 
         // 3. Ack the would-have-shown CG stubs. Fully guarded (recordCgSuppressed writes SharedPreferences).
         if (selection.cgAcks.isNotEmpty()) {

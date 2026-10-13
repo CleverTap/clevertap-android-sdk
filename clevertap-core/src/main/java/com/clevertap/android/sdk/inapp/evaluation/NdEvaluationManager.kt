@@ -87,20 +87,24 @@ internal class NdEvaluationManager(
     internal fun evaluate(events: List<EventAdapter>) {
         val ndStore = storeRegistry.ndStore ?: return
         val metadata = ndStore.readServerSideNdMetaData()
-        if (metadata.isEmpty()) return
+        if (metadata.isEmpty()) {
+            return
+        }
 
         var updated = false
         for (event in events) {
             for (inApp in metadata) {
-                if (!triggersMatcher.matchEvent(EvalRules.whenTriggers(inApp), event)) {
+                if (!triggersMatcher.matchEvent(whenTriggers = EvalRules.whenTriggers(inApp), event = event)) {
                     continue
                 }
                 val campaignId = inApp.optString(Constants.INAPP_ID_IN_PAYLOAD)
-                if (campaignId.isEmpty()) continue
+                if (campaignId.isEmpty()) {
+                    continue
+                }
 
                 ndTriggersManager.increment(campaignId)
 
-                if (ndLimitsMatcher.matchWhenLimits(EvalRules.whenLimits(inApp), campaignId)) {
+                if (ndLimitsMatcher.matchWhenLimits(whenLimits = EvalRules.whenLimits(inApp), campaignId = campaignId)) {
                     val ti = campaignId.toLongOrNull() ?: continue
                     // Append without a contains() guard: a re-vote while a prior send is in flight must
                     // not be dropped (onSentHeaders removes only what was sent). Server dedups.
@@ -137,18 +141,26 @@ internal class NdEvaluationManager(
         eventProperties: Map<String, Any>,
         userLocation: Location?,
     ): List<JSONObject> {
-        if (content.isEmpty()) return content
+        if (content.isEmpty()) {
+            return content
+        }
 
-        val event = EventAdapter(Constants.APP_LAUNCHED_EVENT, eventProperties, userLocation = userLocation)
+        val event = EventAdapter(
+            eventName = Constants.APP_LAUNCHED_EVENT,
+            eventProperties = eventProperties,
+            userLocation = userLocation,
+        )
 
         return content.filter { unit ->
             val ti = unit.optString(Constants.INAPP_ID_IN_PAYLOAD)
-            if (ti.isEmpty()) return@filter true // no id -> can't cap -> pass
+            if (ti.isEmpty()) {
+                return@filter true // no id -> can't cap -> pass
+            }
 
             // Match whenTriggers against the App Launched event. Empty triggers trivially qualify; a unit WITH
             // triggers must match (honoring firstTimeOnly / property / geo), exactly like in-app's evaluate().
             val whenTriggers = EvalRules.whenTriggers(unit)
-            if (whenTriggers.isNotEmpty() && !triggersMatcher.matchEvent(whenTriggers, event)) {
+            if (whenTriggers.isNotEmpty() && !triggersMatcher.matchEvent(whenTriggers = whenTriggers, event = event)) {
                 config.logger.verbose(config.accountId, "App-Launched ND $ti dropped: whenTriggers did not match")
                 return@filter false
             }
@@ -160,8 +172,10 @@ internal class NdEvaluationManager(
             if (whenLimits.isEmpty()) {
                 true // no whenLimits to enforce
             } else {
-                ndLimitsMatcher.matchWhenLimits(whenLimits, ti).also { within ->
-                    if (!within) config.logger.verbose(config.accountId, "App-Launched ND $ti suppressed by whenLimits")
+                ndLimitsMatcher.matchWhenLimits(whenLimits = whenLimits, campaignId = ti).also { within ->
+                    if (!within) {
+                        config.logger.verbose(config.accountId, "App-Launched ND $ti suppressed by whenLimits")
+                    }
                 }
             }
         }
@@ -182,7 +196,9 @@ internal class NdEvaluationManager(
      * So a batch of 4 units at priorities 10/3/2/1 delivers only priority 10; two units tied at 10 deliver both.
      */
     fun selectTopPriorityBand(content: List<JSONObject>, stubs: List<JSONObject>): AppLaunchedSelection {
-        if (content.isEmpty() && stubs.isEmpty()) return AppLaunchedSelection(emptyList(), emptyList())
+        if (content.isEmpty() && stubs.isEmpty()) {
+            return AppLaunchedSelection(winners = emptyList(), cgAcks = emptyList())
+        }
 
         // Tag each candidate (true = CG stub) and sort by priority DESC, ti ASC.
         val sorted = (content.map { it to false } + stubs.map { it to true })
@@ -199,7 +215,11 @@ internal class NdEvaluationManager(
             val bandContent = ArrayList<JSONObject>()
             while (i < sorted.size && sorted[i].first.optInt(Constants.INAPP_PRIORITY, 1) == bandPriority) {
                 val (unit, isStub) = sorted[i]
-                if (isStub) cgAcks.add(unit) else bandContent.add(unit)
+                if (isStub) {
+                    cgAcks.add(unit)
+                } else {
+                    bandContent.add(unit)
+                }
                 i++
             }
             if (bandContent.isNotEmpty()) { // actual delivery -> lock latches; drop lower bands
@@ -208,7 +228,7 @@ internal class NdEvaluationManager(
             }
             // all-stub band -> acked above, no delivery, fall through to the next band
         }
-        return AppLaunchedSelection(winners, cgAcks)
+        return AppLaunchedSelection(winners = winners, cgAcks = cgAcks)
     }
 
     /** Result of [selectTopPriorityBand]: content to deliver + CG stubs to ack. */
@@ -237,21 +257,25 @@ internal class NdEvaluationManager(
     }
 
     override fun onAttachHeaders(endpointId: EndpointId): JSONObject? {
-        if (endpointId != ENDPOINT_A1) return null
+        if (endpointId != ENDPOINT_A1) {
+            return null
+        }
         return HeaderVoteLists.attach(
-            Constants.ND_SS_EVAL_META,
-            Constants.ND_SUPPRESSED_META,
-            evaluatedNdCampaignIds,
-            suppressedNdCampaigns
+            evalMetaKey = Constants.ND_SS_EVAL_META,
+            suppressedMetaKey = Constants.ND_SUPPRESSED_META,
+            evalIds = evaluatedNdCampaignIds,
+            suppressed = suppressedNdCampaigns,
         )
     }
 
     override fun onSentHeaders(allHeaders: JSONObject, endpointId: EndpointId) {
-        if (endpointId != ENDPOINT_A1) return
-        if (HeaderVoteLists.removeSentEvalIds(allHeaders, Constants.ND_SS_EVAL_META, evaluatedNdCampaignIds)) {
+        if (endpointId != ENDPOINT_A1) {
+            return
+        }
+        if (HeaderVoteLists.removeSentEvalIds(sentHeader = allHeaders, evalMetaKey = Constants.ND_SS_EVAL_META, evalIds = evaluatedNdCampaignIds)) {
             saveEvaluatedNdIds()
         }
-        if (HeaderVoteLists.removeSentSuppressed(allHeaders, Constants.ND_SUPPRESSED_META, suppressedNdCampaigns)) {
+        if (HeaderVoteLists.removeSentSuppressed(sentHeader = allHeaders, suppressedMetaKey = Constants.ND_SUPPRESSED_META, suppressed = suppressedNdCampaigns)) {
             saveSuppressedNdIds()
         }
     }

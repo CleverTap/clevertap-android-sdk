@@ -224,7 +224,11 @@ class NdFCManager internal constructor(
 
     private fun hasSessionCapacityMaxedOut(id: String, maxPerSession: Int): Boolean {
         // 1. Per-target session cap (in-memory).
-        val perSession = if (maxPerSession >= 0) maxPerSession else SESSION_CAP_DEFAULT
+        val perSession = if (maxPerSession >= 0) {
+            maxPerSession
+        } else {
+            SESSION_CAP_DEFAULT
+        }
         if (impressionManager.perSession(id) >= perSession) {
             return true
         }
