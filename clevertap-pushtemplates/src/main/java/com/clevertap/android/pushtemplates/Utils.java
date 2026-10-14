@@ -180,7 +180,7 @@ public class Utils {
             String color = getDarkModeAdaptiveColor(extras, isDarkMode, key);
             colorMap.put(key, color);
         }
-        
+
         return colorMap;
     }
 

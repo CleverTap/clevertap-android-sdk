@@ -887,7 +887,7 @@ class CryptMigratorTest {
             "device2" to JSONObject(),
             "device3" to JSONObject()
         )
-        
+
         every { variablesRepo.loadDataFromCache() } returns null
         every { dataMigrationRepository.userProfilesInAccount() } returns deviceIds
         every { dataMigrationRepository.cachedGuidString() } returns null
@@ -944,12 +944,12 @@ class CryptMigratorTest {
         // AES_GCM format: <ct<encrypted_email>ct>
         val encryptedEmail = "<ct<encrypted_email>ct>"
         val decryptedEmail = "test@example.com"
-        
+
         val profileJSON = JSONObject().apply {
             put("Email", encryptedEmail)
             put("Custom", "no_encrypt")
         }
-        
+
         val expectedJSON = JSONObject().apply {
             put("Email", decryptedEmail)
             put("Custom", "no_encrypt")
@@ -981,14 +981,14 @@ class CryptMigratorTest {
         // AES_GCM format
         val encryptedEmail = "<ct<encrypted_email>ct>"
         val decryptedEmail = "test@example.com"
-        
+
         val profileJSON = JSONObject().apply {
             put("Email", encryptedEmail)
             put("CustomField1", "value1")
             put("CustomField2", 123)
             put("CustomField3", true)
         }
-        
+
         val expectedJSON = JSONObject().apply {
             put("Email", decryptedEmail)
             put("CustomField1", "value1")
@@ -1014,7 +1014,7 @@ class CryptMigratorTest {
 
         val jsonObjectSlot = slot<JSONObject>()
         verify { dataMigrationRepository.saveUserProfile(eq("device1"), capture(jsonObjectSlot)) }
-        
+
         // Verify all fields are preserved
         assertEquals("value1", jsonObjectSlot.captured.getString("CustomField1"))
         assertEquals(123, jsonObjectSlot.captured.getInt("CustomField2"))
@@ -1025,12 +1025,12 @@ class CryptMigratorTest {
     fun `migrateDBProfile should handle FULL_DATA to MEDIUM transition correctly`() {
         val plainEmail = "test@example.com"
         val encryptedEmail = "<ct<encrypted_email>ct>"
-        
+
         val profileJSON = JSONObject().apply {
             put("Email", plainEmail)
             put("Custom", "no_encrypt")
         }
-        
+
         val expectedJSON = JSONObject().apply {
             put("Email", encryptedEmail)
             put("Custom", "no_encrypt")
@@ -1060,7 +1060,7 @@ class CryptMigratorTest {
     @Test
     fun `migrateDBProfile should handle FULL_DATA to NONE transition correctly`() {
         val plainEmail = "test@example.com"
-        
+
         val profileJSON = JSONObject().apply {
             put("Email", plainEmail)
             put("Custom", "no_encrypt")
@@ -1082,7 +1082,7 @@ class CryptMigratorTest {
 
         val jsonObjectSlot = slot<JSONObject>()
         verify { dataMigrationRepository.saveUserProfile(eq("device1"), capture(jsonObjectSlot)) }
-        
+
         // Profile should remain plain text
         assertTrue(jsonObjectSlot.captured.getString("Email") == plainEmail)
         assertTrue(jsonObjectSlot.captured.getString("Custom") == "no_encrypt")
@@ -1097,14 +1097,14 @@ class CryptMigratorTest {
         val decryptedEmail = "test@example.com"
         val decryptedPhone = "+1234567890"
         val decryptedName = "John Doe"
-        
+
         val profileJSON = JSONObject().apply {
             put("Email", encryptedEmail)
             put("Phone", encryptedPhone)
             put("Name", encryptedName)
             put("Custom", "no_encrypt")
         }
-        
+
         val expectedJSON = JSONObject().apply {
             put("Email", decryptedEmail)
             put("Phone", decryptedPhone)

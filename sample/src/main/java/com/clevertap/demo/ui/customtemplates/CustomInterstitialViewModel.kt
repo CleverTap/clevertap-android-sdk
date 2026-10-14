@@ -15,13 +15,13 @@ data class CustomTemplateDialogState(
 )
 
 class CustomTemplateViewModel() : ViewModel() {
-    
+
     // Dialog state
     var dialogState by mutableStateOf(CustomTemplateDialogState())
         private set
-    
+
     private var autoCloseJob: Job? = null
-    
+
     /**
      * Show a custom template dialog with the provided configuration
      */
@@ -38,7 +38,7 @@ class CustomTemplateViewModel() : ViewModel() {
     ) {
         // Cancel any existing auto-close job
         autoCloseJob?.cancel()
-        
+
         val config = OverlayDialogConfig(
             title = title,
             message = message,
@@ -57,12 +57,12 @@ class CustomTemplateViewModel() : ViewModel() {
                 hideDialog()
             }
         )
-        
+
         dialogState = CustomTemplateDialogState(
             isVisible = true,
             config = config
         )
-        
+
         // Setup auto-close if specified (value > 0)
         if (autoCloseAfterSeconds > 0) {
             autoCloseJob = viewModelScope.launch {
@@ -80,14 +80,14 @@ class CustomTemplateViewModel() : ViewModel() {
             config = null
         )
     }
-    
+
 
     fun forceHideDialog() {
         autoCloseJob?.cancel()
         dialogState = CustomTemplateDialogState(isVisible = false, config = null)
     }
 
-    
+
     override fun onCleared() {
         super.onCleared()
         autoCloseJob?.cancel()

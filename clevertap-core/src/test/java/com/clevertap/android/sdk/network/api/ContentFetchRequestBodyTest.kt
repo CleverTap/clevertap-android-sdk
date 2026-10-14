@@ -20,7 +20,7 @@ class ContentFetchRequestBodyTest {
             put("id", "device_123")
             put("ts", 1234567890)
         }
-        
+
         val items = JSONArray().apply {
             put(JSONObject().apply {
                 put("type", "event")
@@ -81,7 +81,7 @@ class ContentFetchRequestBodyTest {
                     put("notificationClickedId", "notif_123")
                 })
             })
-            
+
             // Second content_fetch event
             put(JSONObject().apply {
                 put("type", "event")
@@ -125,17 +125,17 @@ class ContentFetchRequestBodyTest {
         // Assert - Should be able to parse back to JSONArray
         val parsedArray = JSONArray(result)
         assertEquals(2, parsedArray.length()) // Header + 1 item
-        
+
         // First element should be the header
         val parsedHeader = parsedArray.getJSONObject(0)
         assertEquals("meta", parsedHeader.getString("type"))
         assertEquals("__d2", parsedHeader.getString("g"))
-        
+
         // Second element should be from items
         val parsedItem = parsedArray.getJSONObject(1)
         assertEquals("event", parsedItem.getString("type"))
         assertEquals("content_fetch", parsedItem.getString("evtName"))
-        
+
         val evtData = parsedItem.getJSONObject("evtData")
         assertEquals("banner_target_123", evtData.getString("tgtId"))
     }
@@ -157,7 +157,7 @@ class ContentFetchRequestBodyTest {
             put("s", 1234567890) // session id
             put("pg", 1) // page number
         }
-        
+
         val items = JSONArray().apply {
             put(JSONObject().apply {
                 put("type", "event")
@@ -194,20 +194,20 @@ class ContentFetchRequestBodyTest {
         // Assert
         assertTrue(result.startsWith("["))
         assertTrue(result.endsWith("]"))
-        
+
         // Verify header content
         assertTrue(result.contains("\"g\":\"__d2\""))
         assertTrue(result.contains("\"type\":\"meta\""))
         assertTrue(result.contains("\"os\":\"Android\""))
         assertTrue(result.contains("\"model\":\"Galaxy S21\""))
-        
+
         // Verify event content
         assertTrue(result.contains("\"evtName\":\"content_fetch\""))
         assertTrue(result.contains("\"tgtId\":\"inbox_message_1\""))
         assertTrue(result.contains("\"messageKey\":\"weekly_newsletter\""))
         assertTrue(result.contains("\"firstName\":\"Jane\""))
         assertTrue(result.contains("\"source\":\"inbox_refresh\""))
-        
+
         // Verify it's still valid JSON
         val parsedArray = JSONArray(result)
         assertEquals(2, parsedArray.length())

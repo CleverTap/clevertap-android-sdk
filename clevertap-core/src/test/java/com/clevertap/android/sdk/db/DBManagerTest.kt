@@ -176,7 +176,7 @@ class DBManagerTest : BaseTestCase() {
         // Setup: Add 20 events and 15 profile events (total 35 < 50)
         val events = (1..20).map { JSONObject().put("name", "event$it").put("type", "event") }
         val profileEvents = (1..15).map { JSONObject().put("name", "profile$it").put("type", "profile") }
-        
+
         events.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
         profileEvents.forEach { dbAdapter.storeObject(it, Table.PROFILE_EVENTS) }
 
@@ -194,13 +194,13 @@ class DBManagerTest : BaseTestCase() {
         for (i in 0 until queueData.data!!.length()) {
             resultEvents.add(queueData.data!!.getJSONObject(i))
         }
-        
+
         val eventCount = resultEvents.count { it.getString("type") == "event" }
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
-        
+
         assertEquals(20, eventCount, "Should have all 20 events")
         assertEquals(15, profileCount, "Should have all 15 profile events")
-        
+
         // Verify IDs are properly tracked
         assertEquals(20, queueData.eventIds.size, "Should track 20 event IDs")
         assertEquals(15, queueData.profileEventIds.size, "Should track 15 profile event IDs")
@@ -211,7 +211,7 @@ class DBManagerTest : BaseTestCase() {
         // Setup: Add 30 events and 60 profile events
         val events = (1..30).map { JSONObject().put("name", "event$it").put("type", "event") }
         val profileEvents = (1..60).map { JSONObject().put("name", "profile$it").put("type", "profile") }
-        
+
         events.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
         profileEvents.forEach { dbAdapter.storeObject(it, Table.PROFILE_EVENTS) }
 
@@ -223,16 +223,16 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData.data)
         assertEquals(50, queueData.data.length()) // Should return exactly 50 events
         assertTrue(queueData.hasMore)
-        
+
         // Verify all 50 are from profile events table (priority)
         val resultEvents = mutableListOf<JSONObject>()
         for (i in 0 until queueData.data!!.length()) {
             resultEvents.add(queueData.data!!.getJSONObject(i))
         }
-        
+
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
         assertEquals(50, profileCount, "All 50 should be from profile events table due to priority")
-        
+
         // Verify IDs
         assertEquals(0, queueData.eventIds.size, "Should have no event IDs")
         assertEquals(50, queueData.profileEventIds.size, "Should track 50 profile event IDs")
@@ -243,7 +243,7 @@ class DBManagerTest : BaseTestCase() {
         // Setup: Add 40 events and 40 profile events
         val events = (1..40).map { JSONObject().put("name", "event$it").put("type", "event").put("index", it) }
         val profileEvents = (1..40).map { JSONObject().put("name", "profile$it").put("type", "profile").put("index", it) }
-        
+
         events.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
         profileEvents.forEach { dbAdapter.storeObject(it, Table.PROFILE_EVENTS) }
 
@@ -255,30 +255,30 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData.data)
         assertEquals(50, queueData.data.length()) // Should return exactly 50 events
         assertTrue(queueData.hasMore)
-        
+
         // Verify we got 40 profile events and 10 events
         val resultEvents = mutableListOf<JSONObject>()
         for (i in 0 until queueData.data.length()) {
             resultEvents.add(queueData.data.getJSONObject(i))
         }
-        
+
         val eventCount = resultEvents.count { it.getString("type") == "event" }
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
-        
+
         assertEquals(10, eventCount, "Should have 10 events to fill up to 50")
         assertEquals(40, profileCount, "Should have all 40 profile events")
-        
+
         // Verify IDs are properly tracked
         assertEquals(10, queueData.eventIds.size, "Should track 10 event IDs")
         assertEquals(40, queueData.profileEventIds.size, "Should track 40 profile event IDs")
-        
+
         // Verify order - profile events should come first due to priority
-        val firstFortyAreProfiles = (0..39).all { 
+        val firstFortyAreProfiles = (0..39).all {
             queueData.data.getJSONObject(it).getString("type") == "profile"
         }
         assertTrue(firstFortyAreProfiles, "First 40 items should be profile events")
-        
-        val lastTenAreEvents = (40..49).all { 
+
+        val lastTenAreEvents = (40..49).all {
             queueData.data.getJSONObject(it).getString("type") == "event"
         }
         assertTrue(lastTenAreEvents, "Last 10 items should be events")
@@ -313,16 +313,16 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData.data)
         assertEquals(30, queueData.data.length()) // Should return all 30 profile events
         assertFalse(queueData.hasMore)
-        
+
         // Verify all are profile events
         val resultEvents = mutableListOf<JSONObject>()
         for (i in 0 until queueData.data.length()) {
             resultEvents.add(queueData.data.getJSONObject(i))
         }
-        
+
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
         assertEquals(30, profileCount, "All should be profile events")
-        
+
         // Verify IDs
         assertEquals(0, queueData.eventIds.size, "Should have no event IDs")
         assertEquals(30, queueData.profileEventIds.size, "Should track 30 profile event IDs")
@@ -333,26 +333,26 @@ class DBManagerTest : BaseTestCase() {
         // Setup: Add events to both tables
         val events = (1..10).map { JSONObject().put("name", "event$it") }
         val profileEvents = (1..10).map { JSONObject().put("name", "profile$it") }
-        
+
         events.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
         profileEvents.forEach { dbAdapter.storeObject(it, Table.PROFILE_EVENTS) }
-        
+
         // Get the events with IDs
         val queueData = dbManager.getQueuedEvents(appCtx, 50, EventGroup.REGULAR)
         assertNotNull(queueData)
         assertEquals(20, queueData.data.length())
         assertFalse(queueData.hasMore)
-        
+
         // Test cleanup
         val success = dbManager.cleanupSentEvents(
             appCtx,
             queueData.eventIds,
             queueData.profileEventIds
         )
-        
+
         // Validate
         assertTrue(success, "Cleanup should be successful")
-        
+
         // Check that events are removed
         val remainingEvents = dbAdapter.fetchEvents(Table.EVENTS, Int.MAX_VALUE)
         assertNotNull(remainingEvents.data, "Events table should be empty after cleanup")
@@ -371,7 +371,7 @@ class DBManagerTest : BaseTestCase() {
             emptyList(),
             emptyList()
         )
-        
+
         // Validate
         assertTrue(success, "Cleanup with empty lists should return true")
     }
@@ -381,23 +381,23 @@ class DBManagerTest : BaseTestCase() {
         // Setup: Add 20 events to each table
         val events = (1..20).map { JSONObject().put("name", "event$it") }
         val profileEvents = (1..20).map { JSONObject().put("name", "profile$it") }
-        
+
         events.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
         profileEvents.forEach { dbAdapter.storeObject(it, Table.PROFILE_EVENTS) }
-        
+
         // Get first batch
         val firstBatch = dbManager.getQueuedEvents(appCtx, 50, EventGroup.REGULAR)
         assertNotNull(firstBatch)
         assertEquals(40, firstBatch.data.length()) // 20 + 20
         assertFalse(firstBatch.hasMore)
-        
+
         // Clean up first batch
         dbManager.cleanupSentEvents(
             appCtx,
             firstBatch.eventIds,
             firstBatch.profileEventIds
         )
-        
+
         // Validate - all should be cleaned since we fetched all 40
         val remainingEvents = dbAdapter.fetchEvents(Table.EVENTS, Int.MAX_VALUE)
         assertNotNull(remainingEvents.data, "All events should be removed")
@@ -411,19 +411,19 @@ class DBManagerTest : BaseTestCase() {
     @Test
     fun test_getQueuedEvents_for_PushNotificationViewed_should_UseCorrectTable() {
         // Setup: Add events to push notification viewed table
-        val pushEvents = (1..5).map { 
-            JSONObject().put("name", "push$it").put("type", "push_viewed") 
+        val pushEvents = (1..5).map {
+            JSONObject().put("name", "push$it").put("type", "push_viewed")
         }
         pushEvents.forEach { dbAdapter.storeObject(it, Table.PUSH_NOTIFICATION_VIEWED) }
-        
+
         // Also add regular events to ensure they're not mixed
         val regularEvents = (1..10).map { JSONObject().put("name", "event$it") }
         regularEvents.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
 
         // Test
         val queueData = dbManager.getQueuedEvents(
-            appCtx, 
-            50, 
+            appCtx,
+            50,
             EventGroup.PUSH_NOTIFICATION_VIEWED
         )
 
@@ -432,13 +432,13 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData.data)
         assertEquals(5, queueData.data.length()) // Should only get push notification events
         assertFalse(queueData.hasMore)
-        
+
         // Verify all are push notification events
         for (i in 0 until queueData.data.length()) {
             val event = queueData.data.getJSONObject(i)
             assertEquals("push_viewed", event.getString("type"))
         }
-        
+
         // IDs should be tracked in eventIds for consistency
         assertEquals(5, queueData.eventIds.size)
         assertEquals(0, queueData.profileEventIds.size)
@@ -449,7 +449,7 @@ class DBManagerTest : BaseTestCase() {
         // Setup: Add 25 events and 30 profile events (total 55, but limit is 50)
         val events = (1..25).map { JSONObject().put("name", "event$it").put("type", "event") }
         val profileEvents = (1..30).map { JSONObject().put("name", "profile$it").put("type", "profile") }
-        
+
         events.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
         profileEvents.forEach { dbAdapter.storeObject(it, Table.PROFILE_EVENTS) }
 
@@ -461,25 +461,25 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData.data)
         assertEquals(50, queueData.data.length()) // Should return exactly 50
         assertTrue(queueData.hasMore)
-        
+
         // Verify we get 30 profile events (all of them) and 20 regular events
         val resultEvents = mutableListOf<JSONObject>()
         for (i in 0 until queueData.data.length()) {
             resultEvents.add(queueData.data.getJSONObject(i))
         }
-        
+
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
         val eventCount = resultEvents.count { it.getString("type") == "event" }
-        
+
         assertEquals(30, profileCount, "Should have all 30 profile events")
         assertEquals(20, eventCount, "Should have 20 regular events to fill up to 50")
-        
+
         // Verify IDs
         assertEquals(20, queueData.eventIds.size)
         assertEquals(30, queueData.profileEventIds.size)
-        
+
         // Verify order - first 30 should be profile events
-        val firstThirtyAreProfiles = (0..29).all { 
+        val firstThirtyAreProfiles = (0..29).all {
             queueData.data.getJSONObject(it).getString("type") == "profile"
         }
         assertTrue(firstThirtyAreProfiles, "First 30 items should be profile events due to priority")
@@ -490,7 +490,7 @@ class DBManagerTest : BaseTestCase() {
         // Setup: Add some events and exactly 50 profile events
         val events = (1..20).map { JSONObject().put("name", "event$it").put("type", "event") }
         val profileEvents = (1..50).map { JSONObject().put("name", "profile$it").put("type", "profile") }
-        
+
         events.forEach { dbAdapter.storeObject(it, Table.EVENTS) }
         profileEvents.forEach { dbAdapter.storeObject(it, Table.PROFILE_EVENTS) }
 
@@ -502,16 +502,16 @@ class DBManagerTest : BaseTestCase() {
         assertNotNull(queueData.data)
         assertEquals(50, queueData.data.length()) // Should return exactly 50
         assertTrue(queueData.hasMore) // ensures that we will continue loop to fetch continued events to send
-        
+
         // Verify all are profile events (no regular events)
         val resultEvents = mutableListOf<JSONObject>()
         for (i in 0 until queueData.data.length()) {
             resultEvents.add(queueData.data.getJSONObject(i))
         }
-        
+
         val profileCount = resultEvents.count { it.getString("type") == "profile" }
         assertEquals(50, profileCount, "All 50 should be profile events")
-        
+
         // Verify IDs
         assertEquals(0, queueData.eventIds.size, "Should not fetch regular events")
         assertEquals(50, queueData.profileEventIds.size)

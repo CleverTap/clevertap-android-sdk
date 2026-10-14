@@ -26,10 +26,10 @@ internal class UserProfileDAOImpl(
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return DB_OUT_OF_MEMORY_ERROR
         }
-        
+
         val tableName = USER_PROFILES.tableName
         logger.verbose("Inserting or updating userProfile for accountID = $accountId + deviceID = $deviceId")
-        
+
         val cv = ContentValues().apply {
             val encryptedProfile = dbEncryptionHandler.wrapDbData(profile.toString())
             put(Column.DATA, encryptedProfile)
@@ -65,7 +65,7 @@ internal class UserProfileDAOImpl(
             )?.use { cursor ->
                 val dataIndex = cursor.getColumnIndex(Column.DATA)
                 val deviceIdIndex = cursor.getColumnIndex(Column.DEVICE_ID)
-                
+
                 while (cursor.moveToNext()) {
                     val profileString = cursor.getString(dataIndex)
                     val deviceIdString = cursor.getString(deviceIdIndex)

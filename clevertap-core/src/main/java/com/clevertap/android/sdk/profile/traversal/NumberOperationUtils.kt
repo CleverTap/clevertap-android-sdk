@@ -8,7 +8,7 @@ internal object NumberOperationUtils {
 
     /**
      * Adds two numbers, preserving type when possible.
-     * 
+     *
      * Type promotion rules (checked in order):
      * - Double: If either operand is Double, result is Double
      * - Float: If either operand is Float (and no Double), result is Float
@@ -30,7 +30,7 @@ internal object NumberOperationUtils {
 
     /**
      * Subtracts two numbers, preserving type when possible.
-     * 
+     *
      * Type promotion rules (checked in order):
      * - Double: If either operand is Double, result is Double
      * - Float: If either operand is Float (and no Double), result is Float

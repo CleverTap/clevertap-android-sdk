@@ -16,7 +16,7 @@ class ChargedEventItemsNormalizer : Normalizer<List<*>?, ChargedEventItemsNormal
 
     override fun normalize(input: List<*>?, config: ValidationConfig): ChargedEventItemsNormalizationResult {
         val items = input ?: emptyList<Any>()
-        
+
         return ChargedEventItemsNormalizationResult(
             itemsCount = items.size
         )

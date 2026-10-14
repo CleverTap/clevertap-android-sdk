@@ -27,7 +27,7 @@ class NetworkRepoTest : BaseTestCase() {
         // Create a real config instance - this will use actual SharedPreferences via Robolectric
         config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", accountRegion)
     }
-    
+
     private fun createNetworkRepo(clock: Clock = Clock.SYSTEM): NetworkRepo {
         return NetworkRepo(appCtx, config, clock = clock)
     }
@@ -159,7 +159,7 @@ class NetworkRepoTest : BaseTestCase() {
 
         // When
         networkRepo.setMuted(true)
-        
+
         // Then
         val expectedExpiry = testClock.currentTimeMillis() + 24 * 60 * 60 * 1000L
         assertEquals("getMuteExpiry should return now + 24h", expectedExpiry, networkRepo.getMuteExpiry())
@@ -171,7 +171,7 @@ class NetworkRepoTest : BaseTestCase() {
         // Given
         val testClock = TestClock()
         networkRepo = createNetworkRepo(testClock)
-        
+
         // First set muted to true
         networkRepo.setMuted(true)
         assertTrue("Should be muted initially", networkRepo.isMuted())
@@ -213,12 +213,12 @@ class NetworkRepoTest : BaseTestCase() {
         // Given
         val testClock = TestClock(1000000L * 1000)
         networkRepo = createNetworkRepo(testClock)
-        
+
         // When - Set muted
         networkRepo.setMuted(true)
         // Advance time by 12 hours (still within 24 hours)
         testClock.advanceTime(12 * 60 * 60 * 1000)
-        
+
         // Then
         assertTrue("Should be muted when set within last 24 hours", networkRepo.isMuted())
     }
@@ -228,11 +228,11 @@ class NetworkRepoTest : BaseTestCase() {
         // Given
         val testClock = TestClock(1000000L * 1000)
         networkRepo = createNetworkRepo(testClock)
-        
+
         // When - Set muted and advance time by more than 24 hours
         networkRepo.setMuted(true)
         testClock.advanceTime(25 * 60 * 60 * 1000) // 25 hours
-        
+
         // Then
         assertFalse("Should not be muted when set more than 24 hours ago", networkRepo.isMuted())
     }
@@ -242,11 +242,11 @@ class NetworkRepoTest : BaseTestCase() {
         // Given
         val testClock = TestClock(1000000L * 1000)
         networkRepo = createNetworkRepo(testClock)
-        
+
         // When - Set muted and advance time by just under 24 hours
         networkRepo.setMuted(true)
         testClock.advanceTime(23 * 60 * 60 * 1000 + 59 * 60 * 1000) // 23h 59m
-        
+
         // Then
         assertTrue("Should be muted when set just under 24 hours ago", networkRepo.isMuted())
     }
@@ -256,11 +256,11 @@ class NetworkRepoTest : BaseTestCase() {
         // Given
         val testClock = TestClock(1000000L * 1000)
         networkRepo = createNetworkRepo(testClock)
-        
+
         // When - Set muted and advance time by just over 24 hours
         networkRepo.setMuted(true)
         testClock.advanceTime(24 * 60 * 60 * 1000 + 60 * 1000) // 24h 1m
-        
+
         // Then
         assertFalse("Should not be muted when set just over 24 hours ago", networkRepo.isMuted())
     }
@@ -389,21 +389,21 @@ class NetworkRepoTest : BaseTestCase() {
         networkRepo = createNetworkRepo(testClock)
         val domain = "test.domain.com"
         val firstTs = 1234567890
-        
+
         // When - Set other values and mute status
         networkRepo.setDomain(domain)
         networkRepo.setFirstRequestTs(firstTs)
         networkRepo.setMuted(true)
-        
+
         // Then - All should be stored independently
         assertEquals("Domain should be stored independently", domain, networkRepo.getDomain())
         assertEquals("First request timestamp should be stored independently", firstTs, networkRepo.getFirstRequestTs())
         assertTrue("Should be muted", networkRepo.isMuted())
         assertTrue("Mute expiry should be non-zero", networkRepo.getMuteExpiry() > 0)
-        
+
         // When - Unmute
         networkRepo.unmute()
-        
+
         // Then - Other values should remain, mute should be cleared
         assertEquals("Domain should still be stored", domain, networkRepo.getDomain())
         assertEquals("First request timestamp should still be stored", firstTs, networkRepo.getFirstRequestTs())

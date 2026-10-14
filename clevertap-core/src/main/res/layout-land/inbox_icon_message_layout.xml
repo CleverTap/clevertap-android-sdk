@@ -98,7 +98,7 @@
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
                         android:contentDescription="@string/ct_inbox_icon_content_description"
-    
+
                         android:scaleType="fitCenter" />
 
                     <TextView
@@ -111,7 +111,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:maxLines="2"
-    
+
                         android:textColor="@android:color/black"
                         android:textSize="@dimen/ct_inbox_title_text_size"
                         android:textStyle="bold" />

@@ -26,16 +26,16 @@ internal class PushNotificationDAOImpl(
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return
         }
-        
+
         val tableName = PUSH_NOTIFICATIONS.tableName
         val expiresAt = if (ttlInSeconds > 0) ttlInSeconds else clock.currentTimeSeconds() + Constants.DEFAULT_PUSH_TTL_SECONDS
-        
+
         val cv = ContentValues().apply {
             put(Column.DATA, id)
             put(Column.CREATED_AT, expiresAt)
             put(Column.IS_READ, 0)
         }
-        
+
         try {
             dbHelper.writableDatabase.insert(tableName, null, cv)
             rtlDirtyFlag = true
@@ -51,13 +51,13 @@ internal class PushNotificationDAOImpl(
         if (!rtlDirtyFlag) {
             return emptyArray()
         }
-        
+
         val tName = PUSH_NOTIFICATIONS.tableName
         val pushIds: MutableList<String> = ArrayList()
 
         try {
             dbHelper.readableDatabase.query(
-                tName, null, "${Column.IS_READ} = 0", 
+                tName, null, "${Column.IS_READ} = 0",
                 null, null, null, null
             )?.use { cursor ->
                 while (cursor.moveToNext()) {
@@ -86,21 +86,21 @@ internal class PushNotificationDAOImpl(
     @WorkerThread
     override fun updatePushNotificationIds(ids: Array<String>) {
         if (ids.isEmpty()) return
-        
+
         if (!dbHelper.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
             return
         }
-        
+
         val tableName = PUSH_NOTIFICATIONS.tableName
         val cv = ContentValues().apply {
             put(Column.IS_READ, 1)
         }
         val idsTemplateGroup = getTemplateMarkersList(ids.size)
-        
+
         try {
             dbHelper.writableDatabase.update(
-                tableName, cv, 
+                tableName, cv,
                 "${Column.DATA} IN ($idsTemplateGroup)", ids
             )
             rtlDirtyFlag = false
@@ -115,7 +115,7 @@ internal class PushNotificationDAOImpl(
         // Push notifications store future epoch (currentTime + TTL)
         val time = clock.currentTimeSeconds()
         val tName = PUSH_NOTIFICATIONS.tableName
-        
+
         try {
             dbHelper.writableDatabase.delete(tName, "${Column.CREATED_AT} <= $time", null)
         } catch (e: SQLiteException) {
@@ -127,10 +127,10 @@ internal class PushNotificationDAOImpl(
     private fun fetchPushNotificationId(id: String): String {
         val tName = PUSH_NOTIFICATIONS.tableName
         var pushId = ""
-        
+
         try {
             dbHelper.readableDatabase.query(
-                tName, null, "${Column.DATA} = ?", arrayOf(id), 
+                tName, null, "${Column.DATA} = ?", arrayOf(id),
                 null, null, null
             )?.use { cursor ->
                 if (cursor.moveToFirst()) {

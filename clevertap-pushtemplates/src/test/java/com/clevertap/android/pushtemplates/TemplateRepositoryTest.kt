@@ -98,8 +98,8 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.gif"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             PTHttpBitmapLoader.getHttpBitmap(
                 PTHttpBitmapLoader.PTHttpBitmapOperation.DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT,
                 any()
@@ -111,9 +111,9 @@ class TemplateRepositoryTest {
 
         // Then
         assertEquals(expectedDownloadedBitmap, result)
-        
+
         // Verify PTHttpBitmapLoader was called with correct parameters
-        verify { 
+        verify {
             PTHttpBitmapLoader.getHttpBitmap(
                 PTHttpBitmapLoader.PTHttpBitmapOperation.DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT,
                 match { request ->
@@ -137,8 +137,8 @@ class TemplateRepositoryTest {
             "http://example.com/image.gif" // even http should work (validation happens elsewhere)
         )
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             PTHttpBitmapLoader.getHttpBitmap(
                 PTHttpBitmapLoader.PTHttpBitmapOperation.DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT,
                 any()
@@ -151,7 +151,7 @@ class TemplateRepositoryTest {
 
             // Then
             assertEquals(expectedDownloadedBitmap, result)
-            verify { 
+            verify {
                 PTHttpBitmapLoader.getHttpBitmap(
                     PTHttpBitmapLoader.PTHttpBitmapOperation.DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT,
                     match { request -> request.bitmapPath == url }
@@ -165,8 +165,8 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.gif"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             PTHttpBitmapLoader.getHttpBitmap(any(), any())
         } returns expectedDownloadedBitmap
 
@@ -174,7 +174,7 @@ class TemplateRepositoryTest {
         templateRepository.getBytes(url)
 
         // Then
-        verify { 
+        verify {
             PTHttpBitmapLoader.getHttpBitmap(
                 any(),
                 match { request -> request.downloadTimeLimitInMillis == 5000L }
@@ -187,8 +187,8 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.gif"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             PTHttpBitmapLoader.getHttpBitmap(any(), any())
         } returns expectedDownloadedBitmap
 
@@ -196,14 +196,14 @@ class TemplateRepositoryTest {
         templateRepository.getBytes(url)
 
         // Then
-        verify { 
+        verify {
             PTHttpBitmapLoader.getHttpBitmap(
                 any(),
                 match { request -> !request.fallbackToAppIcon }
             )
         }
     }
-    
+
 
     @Test
     fun `getBitmap should return NO_IMAGE status when url is empty string`() {
@@ -238,8 +238,8 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.jpg"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             HttpBitmapLoader.getHttpBitmap(
                 HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
                 any()
@@ -251,9 +251,9 @@ class TemplateRepositoryTest {
 
         // Then
         assertEquals(expectedDownloadedBitmap, result)
-        
+
         // Verify HttpBitmapLoader was called with correct parameters
-        verify { 
+        verify {
             HttpBitmapLoader.getHttpBitmap(
                 HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
                 match { request ->
@@ -276,8 +276,8 @@ class TemplateRepositoryTest {
             "http://example.com/image.jpeg" // even http should work
         )
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             HttpBitmapLoader.getHttpBitmap(
                 HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
                 any()
@@ -290,7 +290,7 @@ class TemplateRepositoryTest {
 
             // Then
             assertEquals(expectedDownloadedBitmap, result)
-            verify { 
+            verify {
                 HttpBitmapLoader.getHttpBitmap(
                     HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
                     match { request -> request.bitmapPath == url }
@@ -304,8 +304,8 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.jpg"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             HttpBitmapLoader.getHttpBitmap(any(), any())
         } returns expectedDownloadedBitmap
 
@@ -313,12 +313,12 @@ class TemplateRepositoryTest {
         templateRepository.getBitmap(url)
 
         // Then
-        verify { 
+        verify {
             HttpBitmapLoader.getHttpBitmap(
                 any(),
-                match { request -> 
-                    request.context == mockContext && 
-                    request.instanceConfig == null 
+                match { request ->
+                    request.context == mockContext &&
+                    request.instanceConfig == null
                 }
             )
         }
@@ -329,8 +329,8 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.jpg"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
-        every { 
+
+        every {
             HttpBitmapLoader.getHttpBitmap(any(), any())
         } returns expectedDownloadedBitmap
 
@@ -338,7 +338,7 @@ class TemplateRepositoryTest {
         templateRepository.getBitmap(url)
 
         // Then
-        verify { 
+        verify {
             HttpBitmapLoader.getHttpBitmap(
                 any(),
                 match { request -> !request.fallbackToAppIcon }
@@ -375,7 +375,7 @@ class TemplateRepositoryTest {
             // Then
             assertEquals(expectedDownloadedBitmap, result)
         }
-        
+
         // Verify that PTHttpBitmapLoader was never called for any blank URL
         verify(exactly = 0) { PTHttpBitmapLoader.getHttpBitmap(any(), any()) }
     }
@@ -393,7 +393,7 @@ class TemplateRepositoryTest {
             // Then
             assertEquals(expectedDownloadedBitmap, result)
         }
-        
+
         // Verify that HttpBitmapLoader was never called for any blank URL
         verify(exactly = 0) { HttpBitmapLoader.getHttpBitmap(any(), any()) }
     }
@@ -403,7 +403,7 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.jpg"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
+
         every { PTHttpBitmapLoader.getHttpBitmap(any(), any()) } returns expectedDownloadedBitmap
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns expectedDownloadedBitmap
 
@@ -413,18 +413,18 @@ class TemplateRepositoryTest {
 
         // Then
         // getBytes should use PTHttpBitmapLoader with DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT and config
-        verify { 
+        verify {
             PTHttpBitmapLoader.getHttpBitmap(
                 PTHttpBitmapLoader.PTHttpBitmapOperation.DOWNLOAD_GIF_BYTES_WITH_TIME_LIMIT,
-                match { request -> 
-                    request.instanceConfig == mockConfig && 
+                match { request ->
+                    request.instanceConfig == mockConfig &&
                     request.downloadTimeLimitInMillis == 5000L
                 }
             )
         }
-        
+
         // getBitmap should use HttpBitmapLoader with DOWNLOAD_ANY_BITMAP and null config
-        verify { 
+        verify {
             HttpBitmapLoader.getHttpBitmap(
                 HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
                 match { request -> request.instanceConfig == null }
@@ -444,7 +444,7 @@ class TemplateRepositoryTest {
             "https://example.com/image.jpg#fragment"
         )
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
+
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns expectedDownloadedBitmap
         every { PTHttpBitmapLoader.getHttpBitmap(any(), any()) } returns expectedDownloadedBitmap
 
@@ -464,7 +464,7 @@ class TemplateRepositoryTest {
         // Given
         val url = "https://example.com/image.jpg"
         val expectedDownloadedBitmap = mockk<DownloadedBitmap>()
-        
+
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns expectedDownloadedBitmap
 
         // When
@@ -473,7 +473,7 @@ class TemplateRepositoryTest {
 
         // Then
         // Should create separate request instances for each call
-        verify(exactly = 2) { 
+        verify(exactly = 2) {
             HttpBitmapLoader.getHttpBitmap(
                 HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_ANY_BITMAP,
                 any()

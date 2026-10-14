@@ -371,7 +371,7 @@ class DeleteOperationHandlerTest {
 
         val users = target.getJSONArray("users")
         assertEquals(2, users.length())
-        
+
         val user1 = users.getJSONObject(0)
         assertFalse(user1.has("name")) // Deleted
         assertTrue(user1.has("age")) // Not deleted

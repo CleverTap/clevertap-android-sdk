@@ -42,7 +42,7 @@ internal class AutoCarouselStyle(private val data: AutoCarouselTemplateData, ren
     ): PendingIntent? {
         return null
     }
-    
+
     override fun builderFromStyle(
         context: Context,
         extras: Bundle,

@@ -54,12 +54,12 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     private val customTemplateViewModel by viewModels<CustomTemplateViewModel> {
         ViewModelFactory(cleverTapDefaultInstance)
     }
-    
+
     // ViewModel for managing OpenURL confirm dialog state
     private val openUrlConfirmViewModel by viewModels<OpenUrlConfirmViewModel> {
         ViewModelFactory(cleverTapDefaultInstance)
     }
-    
+
     private lateinit var overlayComposeView: ComposeView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,12 +95,12 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             setContent {
                 val dialogState = customTemplateViewModel.dialogState
                 val openUrlDialogState = openUrlConfirmViewModel.dialogState
-                
+
                 OverlayScreen(
                     dialogConfig = dialogState.config,
                     showDialog = dialogState.isVisible,
                 )
-                
+
                 // Add the OpenURL confirm dialog
                 OpenUrlConfirmDialog(
                     state = openUrlDialogState
