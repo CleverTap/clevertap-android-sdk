@@ -236,10 +236,12 @@ class ImpressionManagerTest : BaseTestCase() {
 
         val referenceTimestamp = getSecondsSinceLastMidnight()
 
-        val twoDayBeforeMidnightMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(2) - 1
-        val twoDaysBeforeMidnightOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(2) + 1
-        val oneDayBeforeMidnightMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(1) - 1
-        val oneDayBeforeMidnightOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(1) + 1
+        // Boundaries are built with Calendar.add (calendar days), not fixed 24h blocks, so they stay on
+        // the real local midnight across a daylight-saving change (a 23h or 25h day).
+        val twoDayBeforeMidnightMinus1s = midnightDaysAgo(2) - 1
+        val twoDaysBeforeMidnightOffset1s = midnightDaysAgo(2) + 1
+        val oneDayBeforeMidnightMinus1s = midnightDaysAgo(1) - 1
+        val oneDayBeforeMidnightOffset1s = midnightDaysAgo(1) + 1
         val tenHoursBeforeMidnight = referenceTimestamp - TimeUnit.HOURS.toSeconds(10)
         val oneMinuteBeforeMidnight = referenceTimestamp - TimeUnit.MINUTES.toSeconds(1)
         val tenHoursFromMidnight = referenceTimestamp + TimeUnit.HOURS.toSeconds(10)
@@ -337,10 +339,12 @@ class ImpressionManagerTest : BaseTestCase() {
 
         val referenceTimestamp = getSecondsSinceFirstDayOfCurrentWeek()
 
-        val twoWeeksBeforeStartOfWeekMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(14) - 1
-        val twoWeeksBeforeStartOfWeekOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(14) + 1
-        val oneWeekBeforeStartOfWeekMinus1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(7) - 1
-        val oneWeekBeforeStartOfWeekOffset1s = referenceTimestamp - TimeUnit.DAYS.toSeconds(7) + 1
+        // Boundaries are built with Calendar.add (calendar weeks), not fixed 7x24h blocks, so they stay on
+        // the real start of week across a daylight-saving change (a 167h or 169h week).
+        val twoWeeksBeforeStartOfWeekMinus1s = startOfWeekWeeksAgo(2) - 1
+        val twoWeeksBeforeStartOfWeekOffset1s = startOfWeekWeeksAgo(2) + 1
+        val oneWeekBeforeStartOfWeekMinus1s = startOfWeekWeeksAgo(1) - 1
+        val oneWeekBeforeStartOfWeekOffset1s = startOfWeekWeeksAgo(1) + 1
         val tenHoursBeforeStartOfWeek = referenceTimestamp - TimeUnit.HOURS.toSeconds(10)
         val oneMinuteBeforeStartOfWeek = referenceTimestamp - TimeUnit.MINUTES.toSeconds(1)
         val tenHoursFromStartOfWeek = referenceTimestamp + TimeUnit.HOURS.toSeconds(10)
@@ -412,22 +416,29 @@ class ImpressionManagerTest : BaseTestCase() {
         assertEquals(8, impressionManager.perWeek(campaignId, 4))
     }
 
-    private fun getSecondsSinceFirstDayOfCurrentWeek(): Long {
-        // get today and clear time of day
-        val cal = Calendar.getInstance(Locale.US).apply {
-            val currentDate = Date()
-            // Set the calendar's time to the current date and time
-            time = currentDate
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        // get start of this week in milliseconds
-        cal[Calendar.DAY_OF_WEEK] = cal.firstDayOfWeek
-        return TimeUnit.MILLISECONDS.toSeconds(cal.time.time)
+    /** Today's local midnight as a Calendar, so callers can step back whole calendar days or weeks. */
+    private fun todayMidnight(): Calendar = Calendar.getInstance(Locale.US).apply {
+        time = Date()
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
     }
+
+    /** Seconds at local midnight [daysAgo] calendar days before today (0 = today's midnight). */
+    private fun midnightDaysAgo(daysAgo: Int): Long = TimeUnit.MILLISECONDS.toSeconds(
+        todayMidnight().apply { add(Calendar.DAY_OF_YEAR, -daysAgo) }.timeInMillis
+    )
+
+    /** Seconds at the first day of the week, [weeksAgo] calendar weeks before this week (0 = this week). */
+    private fun startOfWeekWeeksAgo(weeksAgo: Int): Long = TimeUnit.MILLISECONDS.toSeconds(
+        todayMidnight().apply {
+            set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
+            add(Calendar.WEEK_OF_YEAR, -weeksAgo)
+        }.timeInMillis
+    )
+
+    private fun getSecondsSinceFirstDayOfCurrentWeek(): Long = startOfWeekWeeksAgo(0)
 
     @Test
     fun testClearSessionData() {
@@ -644,19 +655,7 @@ class ImpressionManagerTest : BaseTestCase() {
         assertEquals(3, impressionManager.getImpressionCount(campaignId, 0))
     }
 
-    private fun getSecondsSinceLastMidnight(): Long {
-        val timeInMillis = Calendar.getInstance(Locale.US).apply {
-            val currentDate = Date()
-            // Set the calendar's time to the current date and time
-            time = currentDate
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time.time
-
-        return TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
-    }
+    private fun getSecondsSinceLastMidnight(): Long = midnightDaysAgo(0)
 
     @Test
     fun `perDay and perWeek follow the injected clock`() {
