@@ -18,4 +18,6 @@ public class HmsConstants {
     public static final String HCM_SCOPE = "HCM";
     public static final String APP_ID_KEY = "client/app_id";
     public static final int MIN_CT_ANDROID_SDK_VERSION = 30800;
+    // Name sent with BuildConfig.VERSION_CODE through CleverTapAPI.setCustomSdkVersion
+    public static final String HMS_SDK_NAME = "HMS";
 }
