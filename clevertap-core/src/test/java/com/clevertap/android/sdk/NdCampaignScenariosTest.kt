@@ -206,8 +206,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
         assertTrue(fire("Footer1", footer1))
         assertFalse(fire("Footer1", footer1), "4th within the day breaches 3/day")
 
-        // Cross two calendar days so today's shows fall outside perDay(id,1)'s "since yesterday 00:00" window.
-        clock.advanceOneDay()
+        // Cross one calendar day: perDay(id,1) counts since TODAY 00:00, so the cap resets at midnight.
         clock.advanceOneDay()
         assertTrue(fire("Footer1", footer1), "re-eligible on a new day")
     }

@@ -103,41 +103,62 @@ internal class ImpressionManager @JvmOverloads constructor(
     }
 
     /**
-     * Counts the impressions for a campaign within the last N days.
+     * Counts the impressions for a campaign over the last [days] calendar days, today included.
+     *
+     * The window always starts at a local midnight. `days = 1` means "today only", so the count
+     * resets at the next midnight. `days = 2` means "yesterday and today", and so on. This is the
+     * same rule the iOS SDK uses (`CTImpressionManager perDay:days:`) and the same rule the
+     * dashboard means by "up to N times in D days".
+     *
+     * Example: now is 24 Sep 10:00 and one impression was recorded on 23 Sep 15:00.
+     * - `days = 1` -> window starts 24 Sep 00:00 -> count is 0
+     * - `days = 2` -> window starts 23 Sep 00:00 -> count is 1
+     *
+     * A [days] value below 1 is not a real window. It is treated as 1 (today only), so a broken
+     * payload such as `frequency = 0` can never empty the window and let a capped campaign through.
      *
      * @param campaignId The identifier of the campaign.
-     * @param days       The time interval in days.
-     * @return The count of impressions within the specified time interval.
+     * @param days       The number of calendar days in the window, counting today as the first.
+     * @return The count of impressions within the window.
      */
     fun perDay(campaignId: String, days: Int): Int {
+        // Guard: a window below 1 day (e.g. frequency = 0 in a bad payload) is treated as "today only".
+        val windowDays = days.coerceAtLeast(1)
+
         val calendar =
             Calendar.getInstance(locale).apply {
-                val currentDate = clock.newDate()
                 // Set the calendar to "now" via the injected Clock (SYSTEM in prod; testable via FakeClock)
-                time = currentDate
+                time = clock.newDate()
                 set(Calendar.HOUR_OF_DAY, 0)
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
 
-        // Subtract the specified number of days from the current date
-        calendar.add(Calendar.DAY_OF_YEAR, -days)
+        // Today is the first day of the window, so step back one day fewer than the window size.
+        calendar.add(Calendar.DAY_OF_YEAR, -(windowDays - 1))
 
-        // Get the resulting date, which represents the start date for the calculation
-        val startOfWeek = calendar.time
-        val startingDayTimestamp = TimeUnit.MILLISECONDS.toSeconds(startOfWeek.time)
-
+        val startingDayTimestamp = TimeUnit.MILLISECONDS.toSeconds(calendar.timeInMillis)
         return getImpressionCount(campaignId, startingDayTimestamp)
     }
 
     /**
-     * Counts the impressions for a campaign within the last N weeks.
-     * It looks up in the current week if the value one is passed as week offset
+     * Counts the impressions for a campaign over the last [weeks] calendar weeks, this week included.
+     *
+     * The window always starts at the first day of a week (Monday or Sunday depending on [locale]).
+     * `weeks = 1` means "this week only", `weeks = 2` means "last week and this week", and so on.
+     * This is the same rule the iOS SDK uses (`CTImpressionManager perWeek:weeks:`).
+     *
+     * Example: today is Wednesday 23 Sep (week starts Monday 21 Sep), one impression on Friday 11 Sep.
+     * - `weeks = 1` -> window starts Mon 21 Sep -> count is 0
+     * - `weeks = 2` -> window starts Mon 14 Sep -> count is 0
+     * - `weeks = 3` -> window starts Mon 7 Sep  -> count is 1
+     *
+     * A [weeks] value below 2 (including 0 or negative) keeps the window at "this week only".
      *
      * @param campaignId The identifier of the campaign.
-     * @param weeks      The time interval in weeks.
-     * @return The count of impressions within the specified time interval.
+     * @param weeks      The number of calendar weeks in the window, counting this week as the first.
+     * @return The count of impressions within the window.
      */
     fun perWeek(
         campaignId: String, weeks: Int
@@ -163,9 +184,9 @@ internal class ImpressionManager @JvmOverloads constructor(
         // Move back number of days till start of week
         calendar.add(Calendar.DAY_OF_YEAR, -daysToSubtract)
 
-        // Move back the number of weeks
+        // This week is the first week of the window, so step back one week fewer than the window size.
         if (weeks > 1) {
-            calendar.add(Calendar.WEEK_OF_YEAR, -weeks)
+            calendar.add(Calendar.WEEK_OF_YEAR, -(weeks - 1))
         }
 
         val startingDayTimestamp = TimeUnit.MILLISECONDS.toSeconds(calendar.timeInMillis)
