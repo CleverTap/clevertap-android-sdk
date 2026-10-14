@@ -1,4 +1,42 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.5.0 (October 15, 2026)
+
+#### New Features
+* **Live Updates (Live Activities):** The SDK can now power CleverTap-driven Live Updates — a single,
+  continuously-updating notification that surfaces real-time information (for example a live score or a
+  delivery's progress) and is refreshed remotely without the user reopening the app. On Android these
+  are delivered as ordinary FCM pushes routed through an `ICleverTapNotificationFactory` (set via
+  `CleverTapAPI.setNotificationFactory`), so there is no token or activity-registration step. Each
+  update is keyed by `wzrk_activityId`, from which the SDK derives a deterministic notification id so
+  successive `update` and `end` pushes refresh the same notification in place. A single `Live Activity`
+  lifecycle event is raised with a `state` field (Started / Updated / Ended / Dismissed). See
+  [Live Activities](CTLIVEACTIVITIES.md). Pair with the Push Templates `pt_progress` template (v2.7.0)
+  for a ready-made progress-bar live update.
+* **Native Display Frequency Caps:** Adds frequency-cap support for Native Display (Display Units). A
+  campaign is only held back once your app has reported those impressions to the SDK. Supports
+  server-side and legacy caps — session, daily, per-day / per-week, and lifetime — with per-channel
+  state kept fully separate from In-App frequency caps.
+* **Native Display Split-Click and View Attribution:** Adds per-element and per-slide (carousel) click
+  and view attribution for Native Display units, aligned with iOS. The click action and data are
+  derived from the item URL, so attribution works even for items without explicit metadata.
+* **Recommendations Support in In-Apps and Native Display:** Adds support for In-Apps and Native
+  Display units personalized with recommendations that are fetched separately (via `/content`) before
+  they are shown, arbitrated correctly against the app-launch (`/a1`) response. The SDK threads the
+  response source through arbitration, merges Native Display units by `unitID` on content-fetch
+  responses (instead of replacing the set), and guards the persisted client-side In-App store against
+  partial content-fetch responses — so a recommendations campaign shows a single In-App on launch and
+  keeps the full set of delivered Display Units.
+
+#### Bug Fixes
+* **App Inbox Video Not Playing on Tab Switch:** Fixes App Inbox video not (re)playing when switching
+  to a tab that contains a video message. Playback now triggers when the pager becomes idle, instead of
+  mid-animation on `onResume`, with a retry after layout so a tab restored after rotation is also
+  covered. Also fixes a blurry video placeholder shown for messages without a poster.
+* **In-App Frequency Caps Reset One Period Late:** Fixes "N times in D days/weeks" In-App caps
+  resetting a day (or week) later than on iOS. The day/week window now starts at the first midnight,
+  matching iOS. Native Display shares the same impression manager, so its day and week caps are
+  corrected by the same change.
+
 ### Version 8.4.1 (August 7, 2026)
 
 #### New Features

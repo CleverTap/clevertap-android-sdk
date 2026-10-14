@@ -3,7 +3,9 @@
 This document explains how the CleverTap Android SDK (`clevertap-core`) handles in-app
 notifications end-to-end: the three in-app "families" (client-side, server-side, legacy),
 how frequency caps are evaluated, how staleness and request/response meta-headers work,
-and how in-apps are served to the SDK and rendered.
+how in-apps are served to the SDK and rendered, and how **App-Launch content-fetch
+arbitration** (recommendation-personalized in-apps) picks a single winner across the
+`/a1` and `/content` round-trips.
 
 All paths are relative to
 `clevertap-core/src/main/java/com/clevertap/android/sdk/`.
@@ -695,7 +697,101 @@ render.
 
 ---
 
-## 5. End-to-end flow (condensed)
+## 5. Content-fetch arbitration (App-Launch × recommendations)
+
+Some App-Launch in-apps (and Native Display units) are personalized with **recommendations** the
+server computes separately. The `/a1` reply carries the campaign "shell" plus a `content_fetch`
+directive telling the SDK to fetch the hydrated content from a second endpoint, `/content`. That
+reply is re-fed through the **same decorator chain** so it lands in the same stores.
+
+On App Launch this second round-trip needs arbitration: `/a1` may already select an app-launch
+in-app, and `/content` may yield another — so **two in-apps would show**, nondeterministically.
+Arbitration guarantees the App-Launch slot shows exactly one winner.
+
+### 5.1 Response source: `CTResponseSource`
+
+Every response is tagged with where it came from so the decorator chain can branch on it:
+
+- `response/CTResponseSource.kt` — enum `A1` | `CONTENT_FETCH`.
+- Carried per response in `response/ResponseContext.kt` (`isFullResponse`, `isUserSwitching`,
+  `source`) and threaded through `ClevertapResponseHandler.handleResponse(..., source)`.
+- `/a1` defaults to `A1`; `ContentFetchManager.handleContentFetchResponse` passes `CONTENT_FETCH`.
+  The value is immutable per response, so concurrent `/a1` and `/content` processing never race.
+
+### 5.2 The content-fetch round-trip
+
+1. The `/a1` body carries a `content_fetch` array. `inapp/data/InAppResponseAdapter.kt`
+   (`contentFetchItems`) parses it into typed items.
+2. `network/ContentFetchItem.kt` — each item has `eventName`, `responseKey`, `targetId` (wire key
+   `tgtId`), plus the raw directive. `isAppLaunchInApp()` ≙ `responseKey == inapp_notifs_applaunched`.
+3. `response/ContentFetchResponse.kt` — **on `/a1` only** — calls
+   `network/ContentFetchManager.kt` `handleContentFetch(...)`, which builds the `/content` request
+   (`CtApi.sendContentFetch`, a POST to `/content`) carrying the directive items + the queue header.
+4. The `/content` reply returns through `ContentFetchManager.handleContentFetchResponse` →
+   `ClevertapResponseHandler.handleResponse(..., source = CONTENT_FETCH)` → the same decorator chain,
+   now tagged `CONTENT_FETCH`.
+
+### 5.3 The three source guards
+
+Because the `/content` reply re-enters the full chain, three decorators branch on `source` to avoid
+corrupting authoritative `/a1` state:
+
+| Guard | Where | Rule |
+|---|---|---|
+| **Recursion** | `ContentFetchResponse.kt` | If `source == CONTENT_FETCH`, ignore any nested `content_fetch` — only `/a1` starts a fetch, so a `/content` reply can never trigger another (no unbounded loop). |
+| **CS-store** | `InAppResponse.java` (`handleClientSideInApps`) | If `source == CONTENT_FETCH`, skip `inapp_notifs_cs` entirely. CS uses full-replace; a partial `/content` subset would wipe the `/a1`-delivered CS campaigns. |
+| **ND merge** | `DisplayUnitResponse.kt` | Merge `adUnit_notifs` **by unitID** on `CONTENT_FETCH` instead of replacing — see the Native Display serving doc. |
+
+### 5.4 The arbitration window
+
+`inapp/AppLaunchInAppArbitrator.kt` is a small **OPEN → CLOSED → teardown** state machine;
+`inapp/InAppController.kt` is the single choke point that drives it.
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> OPEN: /a1 carries an app-launch content_fetch\n(openAppLaunchArbitrationWindowIfNeeded)
+    OPEN --> OPEN: /a1 or /content app-launch winner\nbuffered, not shown (routeWinners)
+    OPEN --> CLOSED: fetch batch complete OR 3s timeout\n→ sortByPriority → show one winner
+    OPEN --> IDLE: user switch → abandon()\n(tear down, show nothing)
+    OPEN --> CLOSED: 25s hard backstop → forceTeardown
+    CLOSED --> [*]: late arrivals dropped
+```
+
+- **Opens** from `/a1` when a `content_fetch` item is an app-launch item:
+  `InAppController.openAppLaunchArbitrationWindowIfNeeded(items)` (called from `InAppResponse`),
+  gated on `responseKey == inapp_notifs_applaunched` (and `eventName == "App Launched"`, a
+  conservative fallback when the fields are absent).
+- While **OPEN**, app-launch winners from **both** `/a1` and `/content` are buffered, not shown
+  (`routeWinners`); `InAppController.onAppLaunchServerSideInAppsResponse` routes them through the arbiter.
+- **Closes and shows one** winner — highest priority via `EvaluationManager.sortByPriority` — when
+  either the `/content` batch completes (`ContentFetchManager.onFetchBatchComplete` →
+  `InAppController.onAppLaunchContentFetchComplete`, the prompt path) **or** the **3 s** timeout fires
+  (`APP_LAUNCH_ARBITRATION_TIMEOUT_MS`). A **25 s** hard backstop
+  (`APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS`) force-tears-down the window, so a lost completion signal
+  can never leave it stuck and suppress app-launch in-apps for the rest of the session. Both timers
+  run on the arbiter's own never-cancelled coroutine scope.
+- **User switch**: `abandon()` (via `InAppController.abandonAppLaunchArbitration`, called in
+  `LoginController.asyncProfileSwitchUser` **before** `cancelAllResponseJobs`) tears the window down
+  without showing — the previous user's buffered in-app must never show to the new user.
+
+### 5.5 Fast path (dormant)
+
+If every app-launch `content_fetch` item carries a `priority`, the SDK can skip the wait: it builds
+synthetic candidates (`ContentFetchItem.syntheticInAppPayload()`, copying only the selection-rule
+keys — `priority`, `suppressed`, `delayAfterTrigger`, `whenTriggers`, `frequencyLimits`,
+`occurrenceLimits`, `templateName`), dry-runs them with the non-mutating
+`EvaluationManager.evaluateDryRun(...)`, and if the `/a1` winner already tops the merged order shows
+it immediately (`closeForFastPath`). This path (`InAppController.tryAppLaunchFastPath`) stays
+**dormant** until the backend sends per-item `priority`; until then the window always waits.
+
+Wiring lives in `CleverTapFactory.kt`: it instantiates `ContentFetchResponse`, shares the response
+handler with `ContentFetchManager`, and connects `onFetchBatchComplete` →
+`InAppController.onAppLaunchContentFetchComplete`.
+
+---
+
+## 6. End-to-end flow (condensed)
 
 ```
 Network response
@@ -732,9 +828,28 @@ Next request header
   └─ inapps_eval / inapps_suppressed                              (EvaluationManager.onAttachHeaders)
 ```
 
+Content-fetch arbitration (App Launch only) overlays the display step:
+
+```
+/a1 response (source = A1)
+  ├─ content_fetch[]  → ContentFetchManager.handleContentFetch → POST /content
+  ├─ inapp_notifs_applaunched → winner routed to AppLaunchInAppArbitrator (buffered)
+  └─ app-launch content_fetch item → InAppController.openAppLaunchArbitrationWindowIfNeeded → window OPEN
+
+/content response (source = CONTENT_FETCH)
+  ├─ recursion guard: ignore nested content_fetch
+  ├─ CS guard: skip inapp_notifs_cs (no full-replace)
+  ├─ ND: merge adUnit_notifs by unitID (no wipe)
+  └─ inapp_notifs_applaunched winner → buffered in arbitrator
+
+Close window (fetch batch complete | 3s timeout | 25s backstop)
+  └─ sortByPriority → show ONE winner → CLOSED (late arrivals dropped)
+     (user switch → abandon → show nothing)
+```
+
 ---
 
-## 6. Key file index
+## 7. Key file index
 
 | Concern | File |
 |---|---|
@@ -745,6 +860,9 @@ Next request header
 | Trigger matching + operators + value coercion | `inapp/evaluation/TriggersMatcher.kt`, `TriggerAdapter.kt`, `TriggerValue.kt`, `EventAdapter.kt` |
 | Eligibility, priority sort, suppression, TTL, header meta | `inapp/evaluation/EvaluationManager.kt` |
 | Response parsing / routing + duration partition | `response/InAppResponse.java`, `inapp/data/InAppResponseAdapter.kt`, `inapp/data/InAppDurationPartitioner*` |
+| Response source tagging (A1 / content-fetch) | `response/CTResponseSource.kt`, `response/ResponseContext.kt`, `response/ClevertapResponseHandler.kt` |
+| Content-fetch round-trip (`/content`) | `network/ContentFetchManager.kt`, `network/ContentFetchItem.kt`, `response/ContentFetchResponse.kt`, `network/CtApi.kt` (`sendContentFetch`) |
+| App-Launch arbitration window | `inapp/AppLaunchInAppArbitrator.kt`, `inapp/InAppController.kt` (`openAppLaunchArbitrationWindowIfNeeded`, `onAppLaunchContentFetchComplete`, `abandonAppLaunchArbitration`, `tryAppLaunchFastPath`) |
 | CS/SS storage, mode switching, TTL | `inapp/store/preference/InAppStore.kt`, `LegacyInAppStore.kt` |
 | Prefs file-name construction (namespaces) | `StorageHelper.kt`, `StoreProvider.kt` |
 | Request header assembly (imp/tlc, arp) | `network/QueueHeaderBuilder.kt` |
