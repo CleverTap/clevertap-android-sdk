@@ -18,6 +18,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -112,6 +113,21 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
         pushProviders._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
 
         verify(exactly = 1) { logger.debug(any(), match<String> { it.contains("Application.onCreate") }) }
+    }
+
+    @Test
+    fun `factory registered as a Kotlin lambda renders a Live Update without pt_id`() {
+        var called = false
+        CleverTapAPI.setNotificationFactory { _, _ -> called = true; null }
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
+            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_A1234")
+        }
+
+        pushProviders._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        assertTrue(called)
     }
 
     @Test
