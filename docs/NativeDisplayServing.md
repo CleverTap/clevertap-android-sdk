@@ -6,6 +6,9 @@ It explains how a display unit travels from the network response to the host app
 are enforced for Native Display, and how **content-fetch arbitration** (recommendation-personalized
 units) avoids wiping the delivered set.
 
+> This is an SDK internals reference. Wire keys, timings and class names described here can change
+> between releases. For integration, see [Native Display Frequency Caps](NativeDisplayFrequencyCaps.md).
+
 For the dashboard/integration view of frequency capping — what you can cap and the one API your app
 must call — see [Frequency Capping — In-App & Native Display](NativeDisplayFrequencyCaps.md).
 
@@ -30,7 +33,7 @@ flowchart TD
       direction TB
       META[ingestNdMeta<br/>A1 only: ceilings ndmc/ndmp, stale GC, SS rules] --> DELIVER[deliverContent]
       DELIVER --> PARSE[parseDisplayUnits<br/>adUnit_notifs + non-stub applaunched]
-      PARSE --> GATE[NdFcapGate.filter<br/>pass-through for real content]
+      PARSE --> GATE[NdFcapGate.filter<br/>session caps for in-regime units]
       GATE --> MERGE{source?}
       MERGE -->|A1| REPLACE[cache REPLACE]
       MERGE -->|CONTENT_FETCH| UNION[merge by unitID<br/>= append]
@@ -77,19 +80,19 @@ triggers, and metadata stores. It never shares files or in-memory state with in-
 |---|---|---|
 | Advanced `frequencyLimits` / `occurrenceLimits` / `whenTriggers` | **SDK at eval** (`adUnit_eval` vote) | the SDK evaluates `adUnit_notifs_ss` on events and votes eligible campaigns |
 | Per-target daily / lifetime (`efc` / `tdc` / `tlc`) | **Server** (legacy path) | SDK does not re-check at delivery |
-| Account daily ceiling (`ndmp`) | **Server** (regular events) / **SDK** budget trim (App-Launched) | absent ⇒ unlimited |
+| Account daily ceiling (`ndmp`) | **Server** (regular events) / **SDK** budget trim (App-Launched) | before the first cap-aware response: 1 per session, 10 per day; a response with `ndmc` but no `ndmp` makes the daily limit unlimited |
 | Session caps | **SDK** | the session-scoped part of the gate |
 
-**The delivery gate is pass-through for real content — by design.** `NdFcapGate.filter` runs inside
-`parseDisplayUnits`, but the delivered payload carries no frequency-cap keys (advanced rules live in
-`adUnit_notifs_ss`; legacy caps are server-side), so its `canShow` read resolves to "uncapped". This
-is intentional, not a gap: unlike in-app — which has an unpredictable eval→render gap and must
-re-verify caps at the last moment — ND is callback-only, so a delivery-time re-check buys nothing.
+**The delivery gate enforces session caps only.** `NdFcapGate.filter` runs inside
+`parseDisplayUnits` and, for in-regime units (`isNdFcapEnabled`), checks the session caps (account
+`ndmc`, per-target `mdc`) through `canShow`. Daily and lifetime caps are enforced server-side, and
+advanced rules live in `adUnit_notifs_ss`, so the gate does not re-check those at delivery.
 
 **Counting is what matters.** `NdFCManager.didShow`, driven by the app's viewed event, bumps the
 SDK-owned counters (`ndtlc` per-target, `ndmp` global). The server reads those verbatim and never
 derives its own count — so accurate impression reporting from the app is what makes caps work.
-`excludeGlobalFCaps` units are *not counted*; `efc` units still *count* but bypass the shared caps.
+No excluded unit is held back by the shared caps, but its views still use the session budget. `efc`
+units also count toward the daily and lifetime totals; `excludeGlobalFCaps` units do not.
 
 ND cap state lives in its own SharedPreferences namespaces: `nd_counts_per_target` (today+lifetime
 counts, global ceilings), `nd_impressions` (whenLimits time windows), `nd_triggers_per_target`
@@ -105,7 +108,7 @@ counts, global ceilings), `nd_impressions` (whenLimits time windows), `nd_trigge
 - `processResponse(..., responseContext)` reads `responseContext.source`.
 - **`ingestNdMeta` runs on `A1` only** (`source != CONTENT_FETCH`): account ceilings (`ndmc`/`ndmp`),
   dead-target GC from `adUnit_stale`, and the `adUnit_notifs_ss` rule bundle.
-- **`deliverContent` runs on both sources** (skipped only during a user switch): it parses
+- **`deliverContent` runs on both sources** (skipped only during a user switch, when the cache is reset without a callback): it parses
   `adUnit_notifs` plus non-stub `adUnit_notifs_applaunched`, cap-gates, and writes the cache.
 
 | Concern | In-app | Native Display |
@@ -118,7 +121,7 @@ counts, global ceilings), `nd_impressions` (whenLimits time windows), `nd_trigge
 | Global daily count/ceiling | `imp` | `ndmp` |
 | Session ceiling | `imc` | `ndmc` |
 | Eval vote / CG acks (req) | `inapps_eval` / `inapps_suppressed` | `adUnit_eval` / `adUnit_suppressed` |
-| SS meta-fetch trigger | `FETCH_TYPE_IN_APPS = 5` | `FETCH_TYPE_ND_META = 8` |
+| SS meta-fetch trigger | `FETCH_TYPE_IN_APPS = 5` | `FETCH_TYPE_ND_META = 8` (defined; the SDK does not send it yet) |
 
 All ND request-meta fields ride inside the same `type:"meta"` header entry as the in-app ones.
 
@@ -164,20 +167,17 @@ What is ND-specific is **how the content is merged into the cache**, in
   incoming = gated)` builds a `LinkedHashMap` keyed by `unitID` (existing first, then incoming),
   then writes the union and fires `notifyDisplayUnitsLoaded(merged)` with the **full** set.
 
-This fixes the wipe bug: before the fix, a `/content` response carrying only the personalized subset
-of units went through the same REPLACE path and shrank the set the host had already been given.
-
-> **In practice the merge is always an append.** The backend never returns a unit with the same
-> `unitID` on both `/a1` and `/content` for a single launch — the two sets are disjoint. So the
-> "replace an existing unitID in place" branch never fires with real data; the by-unitID keying is
-> kept only to de-dupe within one payload and to stay correct if that contract ever changes.
+The merge keeps the units already delivered by `/a1`; a plain replace would drop them, because
+`/content` carries only the personalized subset. A unit whose `unitID` is already in the set
+replaces the existing unit in place.
 
 Note there is **no arbitration window** for Native Display, unlike in-app. In-app has a single
 on-screen slot, so the `/a1` and `/content` winners must be arbitrated down to one
-(`AppLaunchInAppArbitrator`). Native Display is a *list* handed to the host — multiple units coexist
-naturally — so the only hazard was the cache wipe, which the merge resolves. The merge itself lives
-in the response (before the cache) rather than in `DisplayUnitCache`, because that interface is
-public and host-overridable, so this stays a no-public-API-change fix (matching iOS).
+(`AppLaunchInAppArbitrator`). Native Display is a *list* handed to the host, so several units can be shown
+together. At App Launched, though, only the highest-priority campaigns are delivered (campaigns tied
+at the top priority are delivered together); lower-priority ones are dropped, even if they target a
+different screen. The merge lives in the response handler, not in `DisplayUnitCache`, because that
+interface is public and apps can replace it.
 
 ---
 
@@ -189,7 +189,7 @@ public and host-overridable, so this stays a no-public-API-change fix (matching 
        ├─ ingestNdMeta            (ndmc/ndmp ceilings, adUnit_stale GC, adUnit_notifs_ss rules)
        └─ deliverContent → parseDisplayUnits
             ├─ merge adUnit_notifs + non-stub adUnit_notifs_applaunched
-            ├─ NdFcapGate.filter  (pass-through for real content)
+            ├─ NdFcapGate.filter  (session caps for in-regime units)
             └─ cache REPLACE → notifyDisplayUnitsLoaded(gated)
 
 content_fetch[] on /a1 (app-launch) → ContentFetchManager → POST /content

@@ -29,7 +29,7 @@ All caps are set **on the dashboard** when you build the campaign — there is n
 | **Occurrence limits** | Tie display to how often a triggering event happens (for example, show on every 3rd occurrence). |
 | **Global caps** | Account-wide limits across campaigns of the same channel (with a per-campaign option to opt out — see [below](#excluding-a-campaign-from-caps)). |
 
-There are also sensible account-level defaults (for example, one per session and up to ten per day) that apply when a campaign does not set its own limits.
+There are also account-level limits (by default, one per session and up to ten per day). These are one shared budget across all frequency-capped units, not a per-campaign default, and every unit you report as viewed uses the session budget.
 
 # In-App frequency capping
 
@@ -47,11 +47,16 @@ The typical flow:
 
 ```java
 // 1. Receive the units the SDK has deemed eligible to show.
-clevertapInstance.setDisplayUnitListener(units -> {
+//    The SDK holds the listener weakly, so keep a strong reference to it
+//    (here the Activity implements DisplayUnitListener).
+clevertapInstance.setDisplayUnitListener(this);
+
+@Override
+public void onDisplayUnitsLoaded(ArrayList<CleverTapDisplayUnit> units) {
     for (CleverTapDisplayUnit unit : units) {
         renderInYourUi(unit);            // your app draws it
     }
-});
+}
 
 // (You can also pull them on demand.)
 ArrayList<CleverTapDisplayUnit> units = clevertapInstance.getAllDisplayUnits();
@@ -60,7 +65,7 @@ CleverTapDisplayUnit unit = clevertapInstance.getDisplayUnitForId(unitID);
 
 ## Managing units across batches
 
-By default the SDK keeps only the **latest batch** of display units. Each response **replaces** the cache, so `onDisplayUnitsLoaded(...)` is invoked with the units from the most recent response only, and `getAllDisplayUnits()` / `getDisplayUnitForId(...)` return that same current set — not an accumulation of everything received during the session.
+By default the SDK keeps only the **current set** of display units. Each app-launch (`/a1`) response **replaces** the cache, while a recommendations (`/content`) response is **merged** into the current set by `unitID`. `onDisplayUnitsLoaded(...)` receives the full current set, and `getAllDisplayUnits()` / `getDisplayUnitForId(...)` return that same set.
 
 This is the right behaviour for most apps, where a screen just shows whichever units are currently active. But if you need to **manage all units together** — for example keep units from several responses on screen at once, or merge newly delivered units into a list you have already built — install your own cache with `setDisplayUnitCache(DisplayUnitCache)` and accumulate instead of replacing:
 
@@ -68,8 +73,10 @@ This is the right behaviour for most apps, where a screen just shows whichever u
 clevertapInstance.setDisplayUnitCache(new DisplayUnitCache() {
     @Override
     public void updateDisplayUnits(List<CleverTapDisplayUnit> units) {
-        // Merge/accumulate the new batch into your own collection,
-        // de-duplicating by unitID as you prefer, instead of replacing.
+        // Merge the new batch into your own collection:
+        // - de-duplicate by unitID (the SDK may pass units you already have)
+        // - treat an /a1 list, even an empty one, as the full current set
+        // - keep it thread-safe; the SDK calls it from a background thread
     }
 
     @Override
@@ -89,7 +96,9 @@ clevertapInstance.setDisplayUnitCache(new DisplayUnitCache() {
 });
 ```
 
-Once a custom cache is installed, `getAllDisplayUnits()` and `getDisplayUnitForId(...)` route through it, so the rest of your integration — including impression and click reporting — is unchanged. Pass `null` to revert to the default replace-on-each-response cache.
+Once a custom cache is installed, `getAllDisplayUnits()` and `getDisplayUnitForId(...)` route through it, so the rest of your integration — including impression and click reporting — is unchanged. Pass `null` to revert to the default cache.
+
+> When the user changes (`onUserLogin`), the SDK clears the display units without calling `onDisplayUnitsLoaded(...)`, so clear the units from your UI yourself.
 
 ## Reporting impressions (required)
 
@@ -99,7 +108,7 @@ When a unit actually appears on screen, report it. This is what advances the fre
 clevertapInstance.pushDisplayUnitViewedEventForID(unit.getUnitID());
 ```
 
-Call this once per genuine impression (for example when the unit scrolls into view), not on every layout pass.
+Call this once per genuine impression (for example when the unit scrolls into view), not on every layout pass. Every call counts, with no de-duplication. Per-slide views reported with `pushDisplayUnitElementViewedEventForID(...)` do not count toward caps, so also call `pushDisplayUnitViewedEventForID(...)` once for the unit.
 
 ## Reporting clicks
 
@@ -115,7 +124,7 @@ clevertapInstance.pushDisplayUnitElementClickedEventForID(unit.getUnitID(), addi
 
 # Excluding a campaign from caps
 
-A campaign can be marked to **ignore global/account caps** when you need it to always reach the user (for example a critical transactional message). This is a per-campaign setting on the dashboard. Note that such a campaign is still *counted* — it simply is not *held back* by the shared caps.
+A campaign can be marked to **ignore global/account caps** when you need it to always reach the user (for example a critical transactional message). This is a per-campaign setting on the dashboard. Such a campaign is never *held back* by the shared caps, but its views still use the session budget. Legacy `efc` campaigns also count toward the daily and lifetime totals; `excludeGlobalFCaps` campaigns do not.
 
 # When counters reset
 

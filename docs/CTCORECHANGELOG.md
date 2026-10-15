@@ -13,29 +13,40 @@
   [Live Activities](CTLIVEACTIVITIES.md). Pair with the Push Templates `pt_progress` template (v2.7.0)
   for a ready-made progress-bar live update.
 * **Native Display Frequency Caps:** Adds frequency-cap support for Native Display (Display Units). A
-  campaign is only held back once your app has reported those impressions to the SDK. Supports
-  server-side and legacy caps — session, daily, per-day / per-week, and lifetime — with per-channel
-  state kept fully separate from In-App frequency caps.
+  campaign is only held back once your app has reported those impressions with
+  `pushDisplayUnitViewedEventForID`. Supports server-side and legacy caps — session, daily,
+  per-day / per-week, and lifetime — with per-channel state kept fully separate from In-App frequency
+  caps. See [Native Display Frequency Caps](NativeDisplayFrequencyCaps.md).
 * **Native Display Split-Click and View Attribution:** Adds per-element and per-slide (carousel) click
   and view attribution for Native Display units, aligned with iOS. The click action and data are
   derived from the item URL, so attribution works even for items without explicit metadata.
-* **Recommendations Support in In-Apps and Native Display:** Adds support for In-Apps and Native
-  Display units personalized with recommendations that are fetched separately (via `/content`) before
-  they are shown, arbitrated correctly against the app-launch (`/a1`) response. The SDK threads the
-  response source through arbitration, merges Native Display units by `unitID` on content-fetch
-  responses (instead of replacing the set), and guards the persisted client-side In-App store against
-  partial content-fetch responses — so a recommendations campaign shows a single In-App on launch and
-  keeps the full set of delivered Display Units.
+
+#### API Changes
+
+* **New:** Adds the following public APIs:
+  * `CleverTapAPI.setNotificationFactory(ICleverTapNotificationFactory)` / `getNotificationFactory()`: Set or get the factory that builds Live Update notifications without a `pt_id`
+  * `ICleverTapNotificationFactory`: The interface to implement to build a Live Update notification yourself
+  * `CleverTapAPI.handleLiveActivityDismissed(Context, Bundle)`: Records the `Dismissed` event when your factory sets its own `deleteIntent`
+  * `pushDisplayUnitElementViewedEventForID(String, HashMap)` / `pushDisplayUnitElementClickedEventForID(String, HashMap)`: Record views and clicks on a single slide or element of a Native Display unit
+  * `CleverTapDisplayUnit.getMetaDataForContent(int)`: Returns the data to pass to the per-slide view and click APIs
+
+#### Behavior Changes
+* `pushDisplayUnitViewedEventForID` now counts toward Native Display frequency caps, so call it once
+  per real impression rather than on every bind or scroll.
+* The App-Launch In-App can now wait up to 3 seconds for personalized (recommendations) content
+  before it is shown.
 
 #### Bug Fixes
+* **App-Launch In-Apps with Recommendations:** Fixes App-Launch In-Apps personalized with
+  recommendations sometimes showing twice, and Native Display units being lost after a
+  recommendations fetch.
 * **App Inbox Video Not Playing on Tab Switch:** Fixes App Inbox video not (re)playing when switching
   to a tab that contains a video message. Playback now triggers when the pager becomes idle, instead of
   mid-animation on `onResume`, with a retry after layout so a tab restored after rotation is also
   covered. Also fixes a blurry video placeholder shown for messages without a poster.
 * **In-App Frequency Caps Reset One Period Late:** Fixes "N times in D days/weeks" In-App caps
   resetting a day (or week) later than on iOS. The day/week window now starts at the first midnight,
-  matching iOS. Native Display shares the same impression manager, so its day and week caps are
-  corrected by the same change.
+  matching iOS. This also fixes the same issue for Native Display day and week caps.
 
 ### Version 8.4.1 (August 7, 2026)
 

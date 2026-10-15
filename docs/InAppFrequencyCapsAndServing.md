@@ -7,6 +7,9 @@ how in-apps are served to the SDK and rendered, and how **App-Launch content-fet
 arbitration** (recommendation-personalized in-apps) picks a single winner across the
 `/a1` and `/content` round-trips.
 
+> This is an SDK internals reference. Wire keys, timings and class names described here can change
+> between releases.
+
 All paths are relative to
 `clevertap-core/src/main/java/com/clevertap/android/sdk/`.
 Line numbers are accurate as of this writing (branch `develop`) and may drift; treat them
@@ -706,7 +709,9 @@ reply is re-fed through the **same decorator chain** so it lands in the same sto
 
 On App Launch this second round-trip needs arbitration: `/a1` may already select an app-launch
 in-app, and `/content` may yield another — so **two in-apps would show**, nondeterministically.
-Arbitration guarantees the App-Launch slot shows exactly one winner.
+Arbitration makes sure that, in normal cases, only one **immediate** App-Launch in-app is shown.
+It does not apply when a `content_fetch` item has no `responseKey` (no window opens), or to delayed
+App-Launch in-apps.
 
 ### 5.1 Response source: `CTResponseSource`
 
@@ -752,19 +757,25 @@ stateDiagram-v2
     [*] --> IDLE
     IDLE --> OPEN: /a1 carries an app-launch content_fetch\n(openAppLaunchArbitrationWindowIfNeeded)
     OPEN --> OPEN: /a1 or /content app-launch winner\nbuffered, not shown (routeWinners)
-    OPEN --> CLOSED: fetch batch complete OR 3s timeout\n→ sortByPriority → show one winner
+    OPEN --> OPEN: 3s timeout with an empty buffer\n(keeps waiting)
+    OPEN --> CLOSED: 3s timeout with a buffered winner\n→ sortByPriority → show one winner
+    OPEN --> CLOSED: fast path (closeForFastPath)
+    OPEN --> IDLE: /content batch complete\n→ show top buffered winner (if any), teardown
+    OPEN --> IDLE: 25s hard backstop → forceTeardown\n(buffered winners discarded)
     OPEN --> IDLE: user switch → abandon()\n(tear down, show nothing)
-    OPEN --> CLOSED: 25s hard backstop → forceTeardown
-    CLOSED --> [*]: late arrivals dropped
+    CLOSED --> CLOSED: late winners dropped
+    CLOSED --> IDLE: /content batch complete or 25s backstop → teardown
+    IDLE --> IDLE: winners pass straight through (shown)
 ```
 
 - **Opens** from `/a1` when a `content_fetch` item is an app-launch item:
   `InAppController.openAppLaunchArbitrationWindowIfNeeded(items)` (called from `InAppResponse`),
-  gated on `responseKey == inapp_notifs_applaunched` (and `eventName == "App Launched"`, a
-  conservative fallback when the fields are absent).
+  gated strictly on `responseKey == inapp_notifs_applaunched`. If `responseKey` is missing, no
+  window opens and arbitration does not apply.
 - While **OPEN**, app-launch winners from **both** `/a1` and `/content` are buffered, not shown
   (`routeWinners`); `InAppController.onAppLaunchServerSideInAppsResponse` routes them through the arbiter.
-- **Closes and shows one** winner — highest priority via `EvaluationManager.sortByPriority` — when
+- **Closes and shows one** winner — highest priority via `EvaluationManager.sortByPriority`, among the
+  winners received before the window closes (later winners are dropped regardless of priority) — when
   either the `/content` batch completes (`ContentFetchManager.onFetchBatchComplete` →
   `InAppController.onAppLaunchContentFetchComplete`, the prompt path) **or** the **3 s** timeout fires
   (`APP_LAUNCH_ARBITRATION_TIMEOUT_MS`). A **25 s** hard backstop
@@ -861,7 +872,7 @@ Close window (fetch batch complete | 3s timeout | 25s backstop)
 | Eligibility, priority sort, suppression, TTL, header meta | `inapp/evaluation/EvaluationManager.kt` |
 | Response parsing / routing + duration partition | `response/InAppResponse.java`, `inapp/data/InAppResponseAdapter.kt`, `inapp/data/InAppDurationPartitioner*` |
 | Response source tagging (A1 / content-fetch) | `response/CTResponseSource.kt`, `response/ResponseContext.kt`, `response/ClevertapResponseHandler.kt` |
-| Content-fetch round-trip (`/content`) | `network/ContentFetchManager.kt`, `network/ContentFetchItem.kt`, `response/ContentFetchResponse.kt`, `network/CtApi.kt` (`sendContentFetch`) |
+| Content-fetch round-trip (`/content`) | `network/ContentFetchManager.kt`, `network/ContentFetchItem.kt`, `response/ContentFetchResponse.kt`, `network/api/CtApi.kt` (`sendContentFetch`) |
 | App-Launch arbitration window | `inapp/AppLaunchInAppArbitrator.kt`, `inapp/InAppController.kt` (`openAppLaunchArbitrationWindowIfNeeded`, `onAppLaunchContentFetchComplete`, `abandonAppLaunchArbitration`, `tryAppLaunchFastPath`) |
 | CS/SS storage, mode switching, TTL | `inapp/store/preference/InAppStore.kt`, `LegacyInAppStore.kt` |
 | Prefs file-name construction (namespaces) | `StorageHelper.kt`, `StoreProvider.kt` |

@@ -21,7 +21,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 
 ```groovy
 implementation "com.clevertap.android:push-templates:2.7.0"
-implementation "com.clevertap.android:clevertap-android-sdk:8.5.0" // 4.4.0 and above
+implementation "com.clevertap.android:clevertap-android-sdk:8.5.0" // 4.4.0 and above (8.5.0 and above for the Progress Template)
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -305,18 +305,18 @@ pt_input_auto_open | Required | fixed value - `true`
 
 ## Progress Template
 
-The Progress Template renders a progress-centric notification for [Live Updates / Live Activities](CTLIVEACTIVITIES.md) — a single, ongoing notification that is updated remotely to reflect real-time progress, such as a delivery, a ride, or a live score. It can also be sent as a one-off push.
+The Progress Template renders a progress-centric notification for [Live Updates / Live Activities](CTLIVEACTIVITIES.md) — a single, ongoing notification that is updated remotely to reflect real-time progress, such as a delivery, a ride, or a live score. It can also be sent as a one-off push; in that case set `pt_dismiss`, since without an `end` push the notification stays ongoing.
 
 It renders in two tiers depending on the OS version:
 
-- **Android 16 (API 36) and above:** a native `Notification.ProgressStyle`. This supports a segmented progress track, milestone points (with optional titles), a tracker icon that rides the track, start/end icons, a status-bar chip, and promotion to an ongoing "live" notification. This tier uses no custom `RemoteViews`, which is what lets Android promote it. Promotion requires the `android.permission.POST_PROMOTED_NOTIFICATIONS` permission in your app's manifest.
+- **Android 16 (API 36) and above:** a native `Notification.ProgressStyle`. This supports a segmented progress track, milestone points (point titles are not shown on this tier), a tracker icon that rides the track, start/end icons, a status-bar chip, and promotion to an ongoing "live" notification. This tier uses no custom `RemoteViews`, which is what lets Android promote it. Promotion requires the `android.permission.POST_PROMOTED_NOTIFICATIONS` permission in your app's manifest.
 - **Below Android 16:** a custom layout for the expanded view that mimics the same look — a segmented milestone track drawn from the same payload, or a plain progress bar. The collapsed view is the standard system notification. These are kept ongoing so they behave like a live update, but cannot be promoted (promotion is an Android 16 feature).
 
-The progress indicator is **segmented** when `pt_progress_segments` or `pt_progress_points` are supplied. In that case the track total is the sum of the segment lengths (100 when there are none), so `pt_progress` and each point `position` must be on that scale — `pt_progress_max` applies only to the plain bar below Android 16. When no segments or points are supplied, the indicator is a plain bar: indeterminate when `pt_progress_indeterminate` is `true`, otherwise determinate from `pt_progress` / `pt_progress_max`.
+The progress indicator is **segmented** when `pt_progress_segments` or `pt_progress_points` are supplied. In that case the track total is the sum of the segment lengths (100 when there are none), so `pt_progress` and each point `position` must be on that scale — `pt_progress_max` applies only to the plain bar. When no segments or points are supplied, the indicator is a plain bar: indeterminate when `pt_progress_indeterminate` is `true`, otherwise determinate from `pt_progress` / `pt_progress_max`.
 
 A status-bar chip is controlled by `pt_chip_type`: `text` shows `pt_chip_text`, while `timer` / `countdown` show a running chronometer from `pt_when` (set `pt_countdown` to `true` to count down). On the `end` event (sent through the Live Activities wrapper as `wzrk_la_event=end`) the notification stops being ongoing, the chip or chronometer is dropped, and it becomes dismissable.
 
-Native limits apply on both tiers: up to 10 segments and 4 points, with no point at the very start or end of the track.
+Native limits apply on both tiers: up to 10 segments and 4 points, with no point at the very start or end of the track. With more than 10 segments, the track is drawn as a single segment.
 
 ![Progress](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/progress.png)
 
@@ -656,25 +656,25 @@ Progress Template Keys | Required | Description
   ---:|:---:|:--- 
 pt_id | Required | Value - `pt_progress`
 pt_title | Required | Title
-pt_msg | Required | Message
+pt_msg | Required (except Live Updates) | Message. A Live Update (`wzrk_la`) can omit it
 pt_subtitle | Optional | Sub text shown in the notification header
 pt_progress | Required (any one) | Current progress. On the segmented track (and the Android 16 native style) this is on the segment-total scale; on the plain bar it is out of `pt_progress_max`
-pt_progress_max | Optional | Maximum for the plain progress bar below Android 16. Defaults to `100`. Ignored for the segmented track
+pt_progress_max | Optional | Maximum for the plain progress bar, on all Android versions. Defaults to `100`. Ignored for the segmented track
 pt_progress_indeterminate | Required (any one) | Set to `true` for an indeterminate (animating) bar. Only applies when there are no segments or points ("true"/"false")
-pt_progress_segments | Required (any one) | JSON array of segments, each `{ "length": Int, "color": "#RRGGBB" }`. Up to 10 segments
-pt_progress_points | Required (any one) | JSON array of milestone points, each `{ "position": Int, "color": "#RRGGBB", "title": String }`. Up to 4 points, none at the ends
+pt_progress_segments | Required (any one) | JSON array of segments, each `{ "length": Int, "color": "#RRGGBB" }`. Up to 10 segments; with more, the track is drawn as a single segment
+pt_progress_points | Required (any one) | JSON array of milestone points, each `{ "position": Int, "color": "#RRGGBB", "title": String }`. Up to 4 points, none at the ends. `title` is shown below Android 16 only
 pt_styled_by_progress | Optional | Set to `true` to fade the part of the track ahead of the current progress ("true"/"false")
-pt_progress_tracker_icon | Optional | Image URL for the tracker icon that rides the track at the current progress
-pt_progress_start_icon | Optional | Image URL for the icon at the start of the track
-pt_progress_end_icon | Optional | Image URL for the icon at the end of the track
+pt_progress_tracker_icon | Optional | Image URL (https only) for the tracker icon that rides the track at the current progress
+pt_progress_start_icon | Optional | Image URL (https only) for the icon at the start of the track
+pt_progress_end_icon | Optional | Image URL (https only) for the icon at the end of the track
 pt_chip_type | Optional | Status-bar chip type - `text`, `timer`, `countdown`, or `none`
 pt_chip_text | Optional | Chip text when `pt_chip_type` is `text`
 pt_when | Optional | Epoch time in milliseconds the chronometer counts from/to when `pt_chip_type` is `timer`/`countdown`
 pt_countdown | Optional | Set to `true` so the chronometer counts down to `pt_when` ("true"/"false")
 pt_promote | Optional | Set to `false` to opt out of ongoing-notification promotion on Android 16 ("true"/"false")
-pt_ico | Optional | Large icon image URL
+pt_ico | Optional | Large icon image URL (https only)
 pt_small_icon_clr | Optional | Small Icon Color in HEX
-pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds). The timer restarts on every push, so set it longer than the longest gap between updates
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds). The timer restarts on every push, so set it longer than the longest gap between updates. Android 8 and above
 wzrk_dl | Optional | Deep link opened when the notification is tapped
 wzrk_acts | Optional | Action buttons, in the standard Push Template actions format
 pt_json | Optional | Above keys in JSON format

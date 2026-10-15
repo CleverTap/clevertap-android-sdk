@@ -33,7 +33,7 @@ You control only what the notification looks like — either by letting the SDK 
 
 On Android, the natural counterpart to an iOS Live Activity is a **progress-centric notification** — a live, ongoing notification built around a progress indicator (a delivery advancing through stages, a countdown, a score).
 
-On **Android 16 (API 36) and above**, the SDK renders this as a **native, promoted live notification** with essentially no work on your side — you add one manifest permission (see [Requirements](#requirements)) and send the content in the campaign. It comes with a progress track, milestone points, a status-bar chip, and automatic promotion to an ongoing "live" notification; the SDK handles all of it.
+On **Android 16 (API 36) and above**, the SDK renders this as a **native, promoted live notification** with essentially no work on your side — you add one manifest permission and `androidx.core` 1.17.0 or above (see [Requirements](#requirements)) and send the content in the campaign. It comes with a progress track, milestone points, a status-bar chip, and automatic promotion to an ongoing "live" notification; the SDK handles all of it.
 
 On **earlier Android versions**, the SDK automatically falls back to a custom notification that mirrors the same look, so the very same campaign works across devices. The only difference is that it cannot be *promoted* (promotion is an Android 16 OS capability); it is still shown as an ongoing live update.
 
@@ -58,13 +58,13 @@ Because the dashboard builds the payload for you, sending one is a content exerc
 }
 ```
 
-Send the next update with a higher progress value, and a final `end` event when it is done — the same notification advances in place and then closes. The full list of content keys (segments, milestone points, tracker icon, chip, countdown, and so on) is in [Push Templates › Progress Template](CTPUSHTEMPLATES.md#progress-template).
+Send the next update with a higher progress value, and a final `end` event when it is done — the same notification advances in place and then closes. The full list of content keys (segments, milestone points, tracker icon, chip, countdown, and so on) is in [Push Templates › Progress Template](CTPUSHTEMPLATES.md#progress-template-1).
 
-To render the progress-centric notification, your app must include the Push Templates SDK — see [Push Templates](CTPUSHTEMPLATES.md) for the one-time setup.
+To render the progress-centric notification, your app must include the Push Templates SDK — see [Push Templates](CTPUSHTEMPLATES.md) for the one-time setup. If your app has its own `FirebaseMessagingService`, render CleverTap pushes with `CTFcmMessageHandler().createNotification(context, message)`; `CleverTapAPI.createNotification` does not render templates.
 
 ## Custom handling — build your own notification
 
-When you want a bespoke layout instead of the built-in progress notification, implement `ICleverTapNotificationFactory` and register it once (for example in your `Application.onCreate()`). When a live-update push arrives that isn't a built-in progress notification, the SDK calls your factory to build the `Notification`; ordinary pushes are unaffected.
+When you want a bespoke layout instead of the built-in progress notification, implement `ICleverTapNotificationFactory` and register it once in your `Application.onCreate()`, since a push can start the app without any Activity. When a live-update push arrives without a `pt_id`, the SDK calls your factory to build the `Notification`; a push with any `pt_id` is rendered by Push Templates instead, and ordinary pushes are unaffected.
 
 #### Kotlin
 ```kotlin
@@ -72,10 +72,11 @@ CleverTapAPI.setNotificationFactory(object : ICleverTapNotificationFactory {
     override fun onCreateNotification(context: Context, extras: Bundle): Notification? {
         // Build and return the Notification for this live update, or null to skip.
         // extras carries all CleverTap keys, including wzrk_activityId and the nested "data".
+        val ended = extras.getString("wzrk_la_event") == "end"
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_stat_live)
             .setContentTitle("Order on its way")
-            .setOngoing(true)
+            .setOngoing(!ended)
             .build()
     }
 })
@@ -85,15 +86,21 @@ CleverTapAPI.setNotificationFactory(object : ICleverTapNotificationFactory {
 ```java
 CleverTapAPI.setNotificationFactory((context, extras) -> {
     // Build and return the Notification, or null to skip.
+    boolean ended = "end".equals(extras.getString("wzrk_la_event"));
     return new NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_stat_live)
             .setContentTitle("Order on its way")
-            .setOngoing(true)
+            .setOngoing(!ended)
             .build();
 });
 ```
 
 You build the `Notification`; the SDK still owns display, notification-channel creation, the notification id (so your updates land in place), deduplication, and lifecycle analytics. Pass `null` to `setNotificationFactory` to revert to default rendering.
+
+- The SDK posts your `Notification` as is, so make it non-ongoing on the `end` push yourself (as above); otherwise the user can't swipe it away.
+- `onCreateNotification` runs on a background thread while the SDK renders pushes one at a time, so keep it fast and avoid network calls.
+- `context` may be the caller's context (for example your `FirebaseMessagingService`), so don't store it.
+- If you set your own `deleteIntent`, the SDK doesn't add its own, so call `CleverTapAPI.handleLiveActivityDismissed(context, extras)` from it to keep recording the `Dismissed` event.
 
 # Lifecycle and analytics
 
@@ -112,11 +119,12 @@ Each event is tied back to its campaign and activity automatically, so you get a
 
 # Ending and dismissing
 
-The campaign's final push ends the activity: the notification stops being ongoing, drops any status-bar chip or running timer, and becomes dismissable, and an `Ended` event is raised. If the user swipes the notification away first, a `Dismissed` event is raised, and the next update shows it again. For the progress-centric notification you can also set an auto-dismiss so Android removes the card after a set time even if the final push never arrives.
+The campaign's final push ends the activity: the notification stops being ongoing, drops any status-bar chip or running timer, and becomes dismissable, and an `Ended` event is raised. Whenever the user swipes the notification away, before or after the end, a `Dismissed` event is raised; before the end, the next update shows it again. For the progress-centric notification you can also set an auto-dismiss (`pt_dismiss`, Android 8 and above) so Android removes the card after a set time even if the final push never arrives.
 
 # Requirements
 
 - Live Updates are delivered over your existing FCM push setup — no extra registration is required.
 - To promote the progress-centric notification on Android 16 (API 36) and above, add `<uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />` to your app's `AndroidManifest.xml`.
 - The progress-centric notification requires the Push Templates SDK (see [Push Templates](CTPUSHTEMPLATES.md)).
+- The native Android 16 style requires `androidx.core:core` 1.17.0 or above in your app; with an older version the SDK uses the fallback layout on Android 16 too.
 - The native, promoted progress notification is available on Android 16 (API 36) and above; earlier versions use an automatic fallback that mirrors the look but is not promoted.
