@@ -312,7 +312,8 @@ public interface Constants {
     // --- Live Activities / Live Updates ---
     // Mirrors the iOS Live Activity contract (CLTAP_LIVE_ACTIVITY_* / kCTLA*).
     // On Android there is no ActivityKit token concept — live updates are ordinary
-    // FCM data pushes routed to an ICleverTapNotificationFactory. These keys mark such
+    // FCM data pushes, rendered by the SDK when `data` has a pt_id (Mode B), else routed to an
+    // ICleverTapNotificationFactory (Mode A). These keys mark such
     // pushes and carry the backend-assigned identity used for in-place updates + attribution.
     /** Marker present on a Live Activity (live update) push. Value is "true". */
     String WZRK_LIVE_ACTIVITY = "wzrk_la";
@@ -340,7 +341,7 @@ public interface Constants {
     String LIVE_ACTIVITY_STATE_UPDATED = "Updated";
     String LIVE_ACTIVITY_STATE_ENDED = "Ended";
     String LIVE_ACTIVITY_STATE_DISMISSED = "Dismissed";
-    // Note: a missing Live Update channel now falls back to the shared push fallback channel
+    // Note: a missing Live Update channel falls back to the shared push fallback channel
     // (FCM_FALLBACK_NOTIFICATION_CHANNEL_ID via CTXtensions.getOrCreateChannel), not a bespoke one.
 
     String WZRK_STICKY = "wzrk_sticky";

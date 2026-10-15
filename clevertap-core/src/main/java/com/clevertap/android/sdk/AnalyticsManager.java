@@ -784,16 +784,16 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      * ("Started"/"Updated"/"Ended"/"Dismissed"). Routed through the Notification Viewed
      * pipeline so it is attributed exactly like a push impression.
      *
+     * <p>Must be called on a worker thread — it queues the event synchronously via
+     * {@code baseEventQueueManager.queueEvent(...)} ({@link WorkerThread}), mirroring
+     * {@link #pushNotificationViewedEvent(Bundle)}. Render-path callers are already on a worker;
+     * the dismiss path (main-thread receiver) dispatches via {@code postAsyncSafelyTask}.</p>
+     *
      * @param extras the Live Activity push payload.
      * @param state  one of {@link Constants#LIVE_ACTIVITY_STATE_STARTED},
      *               {@link Constants#LIVE_ACTIVITY_STATE_UPDATED},
      *               {@link Constants#LIVE_ACTIVITY_STATE_ENDED},
      *               {@link Constants#LIVE_ACTIVITY_STATE_DISMISSED}.
-     *
-     * <p>Must be called on a worker thread — it queues the event synchronously via
-     * {@code baseEventQueueManager.queueEvent(...)} ({@link WorkerThread}), mirroring
-     * {@link #pushNotificationViewedEvent(Bundle)}. Render-path callers are already on a worker;
-     * the dismiss path (main-thread receiver) dispatches via {@code postAsyncSafelyTask}.</p>
      */
     @WorkerThread
     public void raiseLiveActivityLifecycleEvent(Bundle extras, String state) {

@@ -132,7 +132,8 @@ class PushProviders internal constructor(
                 }
             }
 
-            // Live Activity (live update) pushes are rendered by a client-supplied factory.
+            // Live Activity (live update) pushes: a client-supplied factory renders them unless the
+            // payload has a pt_id (see below).
             // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
             if (isLiveActivity) {
                 // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
