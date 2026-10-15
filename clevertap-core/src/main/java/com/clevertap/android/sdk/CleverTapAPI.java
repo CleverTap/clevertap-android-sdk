@@ -3550,8 +3550,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Sets a factory that lets the client fully build the notification for CleverTap
      * <b>Live Activity</b> (live update) pushes — those carrying {@code wzrk_la}. When set, the SDK
      * invokes {@link ICleverTapNotificationFactory#onCreateNotification} for such pushes instead of
-     * its built-in renderers; pushes with a {@code pt_id} are still rendered by Push Templates, and
-     * ordinary pushes are unaffected.
+     * its built-in renderers; pushes with a {@code pt_id} are still rendered by Push Templates (when
+     * delivered through {@code CTFcmMessageHandler}), and ordinary pushes are unaffected.
      *
      * <p>The client builds the {@link android.app.Notification}. The SDK still owns display, the
      * notification channel (created if missing), the notification id (derived from

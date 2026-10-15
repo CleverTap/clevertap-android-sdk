@@ -10,7 +10,7 @@ import com.clevertap.android.sdk.CleverTapAPI
  * (live update) push. Register via [CleverTapAPI.setNotificationFactory] in `Application.onCreate`
  * (a push can start the app without any Activity); the SDK then calls
  * [onCreateNotification] instead of its built-in renderers (pushes with a `pt_id` are still
- * rendered by Push Templates).
+ * rendered by Push Templates when delivered through `CTFcmMessageHandler`).
  *
  * The SDK still owns display, channel creation, the notification id (derived from `wzrk_activityId`
  * for in-place updates), and lifecycle/viewed analytics.
