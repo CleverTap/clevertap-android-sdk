@@ -1,480 +1,144 @@
-# Native Display Frequency Caps — Android SDK TAN
+# Frequency Capping — In-App & Native Display
 
-Android SDK Technical Approach Note for **Native Display (ND) Frequency Caps**
-(epic [SDK-6055](https://wizrocket.atlassian.net/browse/SDK-6055), TAN task
-[SDK-6056](https://wizrocket.atlassian.net/browse/SDK-6056)).
+Frequency capping lets you control **how often** a user sees a campaign — so a single In-App message or Native Display unit does not show too many times in a session, a day, or over the user's lifetime. You configure the limits on the CleverTap dashboard; the SDK and backend enforce them together.
 
-This document is the SDK-side companion to the cross-team design, written to mirror the structure
-of [`InAppFrequencyCapsAndServing.md`](./InAppFrequencyCapsAndServing.md). It will be published to
-Confluence (child of the *Native Display Fcaps* landing page) once reviewed.
+This guide explains frequency capping from an integration point of view: what you can configure, what the SDK does for you, and the one thing your app must do for Native Display caps to work. A high-level technical overview is at the [end](#how-it-works-high-level).
 
-**Source of truth for the contract/design (read these first):**
-- BE + SDK design TAN — *Fcaps in ND campaigns*: https://wizrocket.atlassian.net/wiki/spaces/EN/pages/6985482280
-- Wire contract — *FE ↔ BE ↔ SDK Contract*: https://wizrocket.atlassian.net/wiki/spaces/EN/pages/6986170380
-- Landing — *Native Display Fcaps*: https://wizrocket.atlassian.net/wiki/spaces/EN/pages/6972964894
+# Table of contents
 
-Paths are relative to `clevertap-core/src/main/java/com/clevertap/android/sdk/`.
+- [What you can cap](#what-you-can-cap)
+- [In-App frequency capping](#in-app-frequency-capping)
+- [Native Display frequency capping](#native-display-frequency-capping)
+  - [Managing units across batches](#managing-units-across-batches)
+  - [Reporting impressions (required)](#reporting-impressions-required)
+  - [Reporting clicks](#reporting-clicks)
+- [Excluding a campaign from caps](#excluding-a-campaign-from-caps)
+- [When counters reset](#when-counters-reset)
+- [How it works (high level)](#how-it-works-high-level)
 
----
+# What you can cap
 
-## 0. TL;DR (the decisions that shape the SDK work)
+All caps are set **on the dashboard** when you build the campaign — there is nothing to configure in code. The same cap types apply to both In-App and Native Display:
 
-- **ND on Android = the Display Units subsystem** (`displayunits/`, response key `adUnit_notifs`).
-  Today it is a thin parse-and-cache-and-callback path; **the host app renders the unit**, the SDK
-  does not. This is the single biggest structural difference from in-app.
-- **ND is SS + Legacy only — there is NO Client-Side (CS) mode, no in-action, no delivery-mode
-  switching.** We port the *server-side eval* and *legacy counter* halves of the in-app fcap system,
-  not the CS half.
-- **Fully separate per-channel state.** ND gets its own counters/impressions/triggers/metadata
-  stores. It never shares files or in-memory state with in-app. Wire: `ndtlc` (per-target counts),
-  `ndmp` (global daily count/ceiling), `ndmc` (session ceiling) — all separate from `tlc`/`imp`/`imc`.
-- **Two fcap models:** *advanced* (frequencyLimits + occurrenceLimits + excludeGlobalFCaps) for
-  standalone ND **campaigns**; *legacy* (`efc`/`tlc`/`tdc`/`mdc`) for ND **journey nodes**.
-- **The fcap/limit/trigger schema is identical to in-app.** `frequencyLimits`↔`AdvancedLimits.fCaps`,
-  `occurrenceLimits`↔`AdvancedLimits.triggers`. This is what makes engine reuse viable.
-- **Impression accounting is app-driven for ND** (`pushDisplayUnitViewedEventForID`), whereas in-app
-  is SDK-driven (`didShow`). The natural hook for ND `recordImpression` is the viewed-event path.
-- **The delivery mechanism (the `DisplayUnitListener` callback) is unchanged** — we keep giving units
-  to the client via the callback, but now the SDK **gates which units it hands over based on the
-  fcaps**, exactly as in-app gates display. Only *whether/when* the callback fires becomes cap-aware.
-- Gated behind LaunchDarkly `rollout-native-display-fcaps` + an SDK-version gate (LC returns V2 vs
-  V1). Old SDK ⇒ V1 ⇒ delivery unchanged.
+| Cap | Meaning |
+|---|---|
+| **Per session** | Show at most *N* times in a single app session. |
+| **Per day** | Show at most *N* times in a calendar day. |
+| **Total (lifetime)** | Show at most *N* times ever, for this user. |
+| **Advanced frequency limits** | More granular rules, for example "no more than 2 times in 7 days". |
+| **Occurrence limits** | Tie display to how often a triggering event happens (for example, show on every 3rd occurrence). |
+| **Global caps** | Account-wide limits across campaigns of the same channel (with a per-campaign option to opt out — see [below](#excluding-a-campaign-from-caps)). |
 
----
+There are also account-level limits (by default, one per session and up to ten per day). These are one shared budget across all frequency-capped units, not a per-campaign default, and every unit you report as viewed uses the session budget.
 
-## 1. What exists today on Android (baseline)
+# In-App frequency capping
 
-ND is delivered through **Display Units**, entirely separate from in-app:
+For In-App notifications, **frequency capping is fully automatic** — you do not write any code for it. The SDK renders In-Apps itself, so it counts every display and enforces the configured caps before showing the next one. Set the limits on the campaign and you are done.
 
-| Concern | Where | Notes |
-|---|---|---|
-| Response key | `Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs"` | already parsed today |
-| Response processor | `response/DisplayUnitResponse.java` → `parseDisplayUnits()` | in the `ClevertapResponseHandler` chain |
-| Model | `displayunits/model/CleverTapDisplayUnit.java` (`unitID`, `type` `CTDisplayUnitType`, `bgColor`, content array, custom KV) | not `CTInAppNotification` |
-| Cache | `displayunits/CTDisplayUnitController.java` (implements `DisplayUnitCache`) | `updateDisplayUnits` / `getAllDisplayUnits` / `getDisplayUnitForID` / `reset` |
-| Delivery to app | `DisplayUnitListener` callback | **host app renders** |
-| Viewed event | `AnalyticsManager.pushDisplayUnitViewedEventForID(unitID)` → `NOTIFICATION_VIEWED_EVENT_NAME` | app-driven |
-| Clicked event | `pushDisplayUnitClickedEventForID` / `pushDisplayUnitElementClickedEventForID` | app-driven |
+> If you suspend or discard In-Apps at runtime (for example with `suspendInAppNotifications()`), those are display controls, not caps — they are independent of the frequency limits above.
 
-**Consequences for fcaps:**
-- There is **no SDK render pipeline / display queue** to gate at (contrast in-app §4.3). Enforcement
-  and impression recording must attach to *delivery* and to the *viewed event*, not to a render step.
-- Today ND fires with only server-side priority-lock + CG suppression; **no per-campaign, per-user, or
-  global caps run**. This project introduces them.
+# Native Display frequency capping
 
----
+Native Display (Display Units) is different in one important way: **your app renders the unit, not the SDK.** The SDK hands you the display units through a listener, and your UI draws them wherever you want. Because the SDK never draws the unit itself, it cannot know a unit was actually shown unless **you tell it**.
 
-## 2. What's changing (the layer we add)
+So for Native Display there is one required step: **report an impression when a unit becomes visible.** Everything else (deciding which units are eligible, applying the caps) is handled by the SDK and backend.
 
-We add an ND fcap + SS-eval layer alongside the existing Display Units path:
+The typical flow:
 
-1. **ND evaluation** on the event stream (mirrors in-app SS): match triggers → count → check limits →
-   vote eligible advanced campaigns into `adUnit_eval` (reported in the request meta header).
-2. **ND metadata store** for the `adUnit_notifs_ss` bundle (advanced-rule campaigns, rules only).
-3. **ND counter/impression/trigger stores** — separate from in-app — powering both the SDK-side caps
-   and the request-meta counters (`ndtlc`, `ndmp`).
-4. **ND FC gate** (`canShow`-equivalent) applied when a unit would be surfaced, plus a global-daily
-   re-check; session cap against `ndmc`.
-5. **CG-suppression ack** (`adUnit_suppressed`) for the App-Launched content-in-advance path only.
-6. **Dead-target GC** honoring `adUnit_stale`.
-7. **Mid-session refresh** trigger `wzrk_fetch t=WZRK_FETCH_ND_META`.
+```java
+// 1. Receive the units the SDK has deemed eligible to show.
+//    The SDK holds the listener weakly, so keep a strong reference to it
+//    (here the Activity implements DisplayUnitListener).
+clevertapInstance.setDisplayUnitListener(this);
 
-The existing render/callback path (host renders the unit) is **unchanged**; content still arrives in
-`adUnit_notifs` (regular / journey winner) and now also `adUnit_notifs_applaunched` (App-Launched).
+@Override
+public void onDisplayUnitsLoaded(ArrayList<CleverTapDisplayUnit> units) {
+    for (CleverTapDisplayUnit unit : units) {
+        renderInYourUi(unit);            // your app draws it
+    }
+}
 
----
-
-## 3. Wire mapping (in-app → ND)
-
-| Concern | In-app (existing) | ND (new) | Direction |
-|---|---|---|---|
-| Campaign content | `inapp_notifs` | `adUnit_notifs` | resp |
-| App-launch content (+ CG stubs) | `inapp_notifs_applaunched` | `adUnit_notifs_applaunched` | resp |
-| SS metadata bundle (rules only) | `inapp_notifs_ss` | `adUnit_notifs_ss` | resp |
-| Stale ids (GC) | `inapp_stale` | `adUnit_stale` | resp |
-| Session ceiling | `imc` | `ndmc` | resp |
-| Daily ceiling | `imp` | `ndmp` | resp (overload) |
-| Per-target counts | `tlc` = `[[ti,today,life],…]` | `ndtlc` = `[[ti,today,life],…]` | req |
-| Global daily count | `imp` (pre-summed int) | `ndmp` (pre-summed int) | req (overload) |
-| Eval vote list | `inapps_eval` | `adUnit_eval` | req |
-| CG-suppressed acks | `inapps_suppressed` | `adUnit_suppressed` | req |
-| SS meta-fetch trigger | `FETCH_TYPE_IN_APPS = 5` | `FETCH_TYPE_ND_META = 8` (agreed with BE) | req |
-| Account defaults (session/day) | `ism`/`imp` = 1/10 | `ndsm`/`ndmp` = **1/10** | account |
-| Legacy campaign caps | `efc`/`tlc`/`tdc`/`mdc` | same keys | resp/config |
-
-`ndmp` **directional overload** (identical to in-app `imp`): request-side = the SDK's own daily ND
-render count; response-side = the account daily ceiling. Keep the two roles straight in the code.
-
-All ND request-meta fields ride inside the same `type:"meta"` header entry as the in-app fields
-(`QueueHeaderBuilder`), e.g.:
-
-```json
-{ "type":"meta",
-  "tlc":[["55001",3,12]], "imp":5, "inapps_eval":[55001], "inapps_suppressed":[],
-  "ndtlc":[["70001",1,4]], "ndmp":2, "adUnit_eval":[70001], "adUnit_suppressed":[] }
+// (You can also pull them on demand.)
+ArrayList<CleverTapDisplayUnit> units = clevertapInstance.getAllDisplayUnits();
+CleverTapDisplayUnit unit = clevertapInstance.getDisplayUnitForId(unitID);
 ```
 
----
+## Managing units across batches
 
-## 4. Storage layout (new ND stores)
+By default the SDK keeps only the **current set** of display units. Each app-launch (`/a1`) response **replaces** the cache, while a recommendations (`/content`) response is **merged** into the current set by `unitID`. `onDisplayUnitsLoaded(...)` receives the full current set, and `getAllDisplayUnits()` / `getDisplayUnitForId(...)` return that same set.
 
-Follow the exact in-app pattern (`StoreProvider.constructStorePreferenceName(type, deviceId,
-accountId)` → `StorageHelper` file `WizRocket_<namespace>`), with **new namespaces** so ND never
-collides with in-app:
+This is the right behaviour for most apps, where a screen just shows whichever units are currently active. But if you need to **manage all units together** — for example keep units from several responses on screen at once, or merge newly delivered units into a list you have already built — install your own cache with `setDisplayUnitCache(DisplayUnitCache)` and accumulate instead of replacing:
 
-Two different prefs-file mechanisms are in play (same split as in-app), so the counters and the
-impressions do **not** share a file:
-- `InAppFCManager`/`NdFCManager` use `StorageHelper.getPreferences`, which **prepends** the
-  `WizRocket_` tag → file `WizRocket_<namespace>`.
-- `ImpressionStore`/`TriggerManager`/`NdStore` go through `CTPreference`, which calls
-  `getSharedPreferences(name)` with **no** prefix → file `<namespace>` (no `WizRocket_`).
+```java
+clevertapInstance.setDisplayUnitCache(new DisplayUnitCache() {
+    @Override
+    public void updateDisplayUnits(List<CleverTapDisplayUnit> units) {
+        // The SDK passes a full set each time: on app launch the new set, and on a
+        // recommendations fetch your getAllDisplayUnits() plus the new units. So:
+        // - merge into your own collection, de-duplicating by unitID
+        // - decide yourself when to drop older units (an empty list means none were delivered)
+        // - keep it thread-safe; the SDK calls it from a background thread
+    }
 
-| State | Prefs file (Android xml name) | Key | Value | Mirror of |
-|---|---|---|---|---|
-| Per-target counters (today+lifetime) | `nd_counts_per_target:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix**) | `<ti>` | `"today,lifetime"` | `NdCountsStore` |
-| Impression timestamps (whenLimits windows) | `nd_impressions:<deviceId>:<accountId>` (**CTPreference — no `WizRocket_` prefix; a *different* file from the counters**) | `__impressions_<ti>` | unix-seconds CSV | `ImpressionStore` |
-| Trigger counts (onEvery/onExactly) | `nd_triggers_per_target:<deviceId>:<accountId>` (CTPreference) | `__triggers_<ti>` | int | `TriggerManager` |
-| Global ND counters + ceilings | **same `nd_counts_per_target` file** (CTPreference) | shown-today, day ceiling (`KEY_ND_MAX_PER_DAY`), session ceiling (`ND_MAX_PER_SESSION_KEY`), last-reset-date | ints / date | `NdCountsStore` |
-| Advanced metadata bundle | `adUnit:<deviceId>:<accountId>` (CTPreference) | `adUnit_notifs_ss` | JSON array (plaintext — SS only, no CS encryption) | `inapp_notifs_ss` in `InAppStore` |
-| Eval / suppressed pending report | `adUnit:…` (CTPreference) | `evaluated_nd_ss`, `suppressed_nd` | JSON arrays | `evaluated_ss` / `suppressed_ss` |
+    @Override
+    public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
+        // Return your combined set of units.
+    }
 
-Notes:
-- **No encrypted CS store** and **no delivery-mode/purge machinery** — ND has no CS mode.
-- The `__impressions_`-prefix skip in `NdFCManager.getNdCounts`/`init` is a harmless defensive guard;
-  because impressions live in a *different* file (see above), those keys never actually appear in the
-  counters file. (The earlier "impressions share the counters file" claim — and the same claim in the
-  in-app doc — was incorrect.)
-- New `STORE_TYPE_ND_*` constants in `StoreProvider` (mirrors `STORE_TYPE_IMPRESSION`, etc.).
-- New constants: `KEY_ND_COUNTS_PER_TARGET`, `KEY_ND_TRIGGERS_PER_TARGET`, `ND_MAX_PER_SESSION`
-  (`ndsm`/`ndmc`), `ND_MAX_PER_DAY` (`ndmp`), `ND_COUNTS_SHOWN_TODAY` (`ndstc`), plus the wire keys.
+    @Override
+    public CleverTapDisplayUnit getDisplayUnitForID(String unitID) {
+        // Look up a unit in your combined set.
+    }
 
----
-
-## 5. Cap model & SDK enforcement matrix
-
-The SDK's responsibilities **as shipped**. The whole model keys off one flag, `isNdFcapEnabled` (the
-"regime"): a non-regime unit (flag absent/false) is rendered **uncapped and uncounted**. Three
-`NdFCManager` static helpers are the single source of truth, so the delivery gate, counting, and the
-App-Launched budget trim can never disagree:
-- `inRegime(json)` = `isNdFcapEnabled` (decoded as boolean **or** positive int),
-- `isExcludeFromCaps(json)` = `efc == 1 || excludeGlobalFCaps == 1`,
-- `countsTowardCaps(json)` = `inRegime && excludeGlobalFCaps != 1`.
-
-| Cap | Who enforces | Notes |
-|---|---|---|
-| `isNdFcapEnabled` false/absent | — (non-regime) | render as-is; no caps, no counting |
-| Per-target daily/lifetime (`efc`/`tdc`/`tlc`) | **Server** (legacy path, V2) | SDK does **not** re-check these at delivery |
-| Advanced `frequencyLimits`/`occurrenceLimits`/`whenTriggers` | **SDK** at eval (`adUnit_eval` vote) + App-Launched filter | not re-checked in the delivery gate |
-| Per-target session (`mdc`) + account session (`ndmc`) | **SDK** at delivery (`NdFcapGate`→`canShow`) | **the only counter cap the gate enforces** |
-| Account daily ceiling (`ndmp`) | **Server** (regular events) / **SDK** remaining-budget trim (App-Launched) | absent `ndmp` ⇒ **no daily ceiling** (unlimited) |
-| `efc == 1` or `excludeGlobalFCaps == 1` | bypass the delivery caps | exclude-from-caps — but `efc` still **counts** (see below) |
-
-**Delivery gate is session-only.** `NdFcapGate` → `NdFCManager.canShow` enforces **session caps only**
-(per-target `mdc` + account `ndmc`); it no longer re-checks daily/lifetime/global-daily. On V2 the server
-already enforced those (per-target on the legacy path; the daily ceiling on regular events), and the
-App-Launched path trims the global budget separately — re-applying them at delivery would double-cap. The
-gate runs for **regime** units (keys on `inRegime`, not on the mere presence of a cap field); non-regime
-units pass through uncapped. `efc`/`excludeGlobalFCaps` short-circuit the gate to allow (exclude-from-caps).
-
-**Counting (`ndmp`/`ndtlc`).** The impression hook (`didShow`, driven by the viewed event) **always**
-records the in-memory session impression (session caps + advanced `frequencyLimits` are SDK-owned for
-every unit), but bumps the server-reported counters only when `countsTowardCaps` is true. So
-`excludeGlobalFCaps` and non-regime units do **not** count, while **`efc` units still count** (the server
-treats them `DELIVER_COUNTED`). The SDK is the source of truth for `ndmp`/`ndtlc` — the server reads them
-verbatim and never derives its own count, so inaccurate reporting directly over-/under-delivers.
-
-The elegant simplification still holds: **the SDK does not classify campaigns.** Only advanced-rule,
-non-journey campaigns ever appear in `adUnit_notifs_ss` (the server's eligibility filter), so "evaluate
-the bundle and vote the eligible into `adUnit_eval`" is correct by construction.
-
----
-
-## 6. Evaluation & the eval-header flow
-
-### 6.1 Where ND evaluation hooks in
-Same event stream as in-app (§0 of the in-app doc): on the per-account serial executor, right after
-the event is queued to DB, `initEventEvaluation` runs. We add an **ND evaluation sibling** invoked in
-the same place so ND sees the committed event. It reads the `adUnit_notifs_ss` bundle and, per event:
-1. `TriggersMatcher.matchEvent(whenTriggers, event)`  *(see open question Q1)*
-2. on match → ND `TriggerManager.increment(ti)`
-3. `LimitsMatcher.matchWhenLimits(whenLimits, ti)` over the **ND** impression/trigger stores
-4. eligible → add `ti` to `adUnit_eval`
-
-### 6.2 `adUnit_eval` — the vote list
-Advanced-rule campaigns the SDK deemed eligible on this event. The server delivers content
-(`adUnit_notifs`) only for campaigns present in `adUnit_eval` (design §6.4/§6.9). Simple campaigns and
-journey nodes are **not** voted (server evaluates them fully). May contain duplicates → server dedups.
-
-### 6.3 `adUnit_suppressed` — CG acks (App-Launched only)
-Server ships CG-suppressed campaigns as **stubs** (`suppressed:true` + `wzrk_cgId`) inline in
-`adUnit_notifs_applaunched`. The SDK acks each at its would-have-been-surfaced moment with the bare
-shape `{wzrk_id, wzrk_pivot, wzrk_cgId}` (identical to `inapps_suppressed`; reuse
-`SuppressionMetaConverter`).
-- **Only for the App-Launched content-in-advance path.** On regular events the server decides CG
-  itself and needs **no** SDK ack.
-
-### 6.4 Attach → send → remove lifecycle
-Reuse the in-app `NetworkHeadersListener` mechanism (attach only for `ENDPOINT_A1` `/a1`):
-`onAttachHeaders` adds `adUnit_eval`/`adUnit_suppressed` (+ `ndtlc`/`ndmp` counters via the header
-builder); `onSentHeaders` removes **exactly** the ids present in the sent header (so a concurrent ND
-eval isn't lost). Persist both lists (`adUnit_eval`/`adUnit_suppressed`) so pending reports survive
-process death.
-
-```mermaid
-sequenceDiagram
-    participant EV as ND Evaluator
-    participant ST as ND stores (adUnit_eval / adUnit_suppressed)
-    participant NM as NetworkManager
-    participant SRV as Server /a1
-
-    EV->>EV: event -> match triggers -> check ND limits
-    EV->>EV: eligible advanced campaign -> adUnit_eval.add(ti)
-    EV->>EV: App-Launched CG stub -> adUnit_suppressed.add({wzrk_id,pivot,cgId})
-    EV->>ST: persist
-    NM->>EV: onAttachHeaders(ENDPOINT_A1)
-    EV-->>NM: {adUnit_eval, adUnit_suppressed, ndtlc, ndmp}
-    NM->>SRV: POST /a1 (meta header + events)
-    SRV-->>NM: adUnit_notifs_ss / adUnit_notifs / adUnit_notifs_applaunched / adUnit_stale / ndmc / ndmp
-    NM->>EV: onSentHeaders -> remove exactly reported ids
-    EV->>ST: re-persist trimmed lists
+    @Override
+    public void reset() {
+        // Clear your collection.
+    }
+});
 ```
 
----
+Once a custom cache is installed, `getAllDisplayUnits()` and `getDisplayUnitForId(...)` route through it, so the rest of your integration — including impression and click reporting — is unchanged. Pass `null` to revert to the default cache.
 
-## 7. Flows & diagrams
+> When the user changes (`onUserLogin`), the SDK clears the display units without calling `onDisplayUnitsLoaded(...)`, so clear the units from your UI yourself.
 
-### 7.1 Response routing (new ND keys)
+## Reporting impressions (required)
 
-```mermaid
-flowchart TD
-    RESP[/a1 response/] --> CRH[ClevertapResponseHandler chain]
-    CRH --> NDR[DisplayUnitResponse]
-    NDR --> SS[adUnit_notifs_ss<br/>store metadata bundle]
-    NDR --> AL[adUnit_notifs_applaunched<br/>content + CG stubs]
-    NDR --> NF[adUnit_notifs<br/>winner content]
-    NDR --> STALE[adUnit_stale<br/>purge ND counters/impressions/triggers]
-    NDR --> CEIL[ndmc / ndmp<br/>update ND ceilings]
-    SS -.feeds next eval.-> EVAL[ND Evaluator]
-    AL --> CACHE[CTDisplayUnitController cache]
-    NF --> CACHE
-    AL --> ACK[CG stub -> adUnit_suppressed ack]
-    CACHE --> APP[[DisplayUnitListener -> host app renders]]
-    APP --> VIEW[pushDisplayUnitViewedEventForID]
-    VIEW --> REC["didShow: session impression always;<br/>ndtlc + ndmp shownToday only if countsTowardCaps<br/>(isNdFcapEnabled and not excludeGlobalFCaps; efc counts)"]
+When a unit actually appears on screen, report it. This is what advances the frequency counters — **without it, caps cannot work and a capped campaign may keep being served.**
+
+```java
+clevertapInstance.pushDisplayUnitViewedEventForID(unit.getUnitID());
 ```
 
-A `/content` round-trip (content-fetch arbitration) is re-fed through the **same** response chain with
-`ResponseContext.source == CONTENT_FETCH`. `DisplayUnitResponse` skips ND meta ingest on that source (a
-`/content` payload is partial and must not overwrite ceilings / ss-bundle / stale GC), applies the fcap
-gate to the fetched units, then **merges** them into the cache **by unitID** (`mergeByUnitId`) rather than
-the `/a1` REPLACE — so `/content` never wipes the `/a1` set — and skips the write entirely if nothing
-mergeable arrived. ND meta otherwise runs on every `/a1` response including a user switch
-(`runsDuringUserSwitch() == true`); only the per-user ss-bundle and the content/CG path are skipped on a
-switch.
+Call this once per genuine impression (for example when the unit scrolls into view), not on every layout pass. Every call counts, with no de-duplication. Per-slide views reported with `pushDisplayUnitElementViewedEventForID(...)` do not count toward caps, so also call `pushDisplayUnitViewedEventForID(...)` once for the unit.
 
-### 7.2 The ND cap gate (mirrors in-app canShow, minus CS)
+## Reporting clicks
 
-At delivery the gate (`NdFcapGate` → `NdFCManager.canShow`) enforces the **counter caps only**. The
-advanced `whenLimits` (`frequencyLimits`/`occurrenceLimits`) were already applied at eval time (the
-`adUnit_eval` vote), so `canShow` is called with `frequencyLimitsMaxedOut = false` — see the note below.
+Report taps so clicks are attributed. This does not affect capping but completes the analytics:
 
-```mermaid
-flowchart TD
-    EV[event: whenTriggers + whenLimits applied at eval time -> adUnit_eval vote] -.server delivers content.-> A
-    A[unit about to be surfaced] --> M{inRegime?<br/>isNdFcapEnabled}
-    M -- no --> ALLOW[allow - deliver uncapped]
-    M -- yes --> C{efc or excludeGlobalFCaps?}
-    C -- yes --> ALLOW
-    C -- no --> D{session cap<br/>mdc + account ndmc}
-    D -- maxed --> DENY[suppress]
-    D -- ok --> ALLOW
+```java
+// Whole-unit click
+clevertapInstance.pushDisplayUnitClickedEventForID(unit.getUnitID());
+
+// Element-level click (for example a specific button or carousel slide)
+clevertapInstance.pushDisplayUnitElementClickedEventForID(unit.getUnitID(), additionalProperties);
 ```
 
-*(Daily/lifetime are no longer in the gate — session-only; see below.)*
+# Excluding a campaign from caps
 
-**Divergence from in-app: no delivery-time whenLimits re-check for *voted* content (intentional).**
-This applies to the regular-event path only, where content was already `whenLimits`-filtered at vote time.
-The App-Launched content-in-advance path is the exception — it is never voted, so it *does* get a
-client-side `whenLimits` filter at delivery; see the App-Launched note at the end of this section (SDK-6138).
-In-app evaluates `whenLimits` **twice** — once at eval, then again right before render via
-`InAppFCManager.canShow`'s `matchWhenLimitsBeforeDisplay` step. That second check exists because in-app
-*eval and render are decoupled by an on-device queue*: a selected in-app can sit in
-`inAppQueue`/`pendingNotifications` for a long, unpredictable time (app backgrounded, another in-app
-showing, blacklisted/suspended activity, media still downloading), during which impressions can accrue
-— so it re-verifies the frequency limits at the last moment.
+A campaign can be marked to **ignore global/account caps** when you need it to always reach the user (for example a critical transactional message). This is a per-campaign setting on the dashboard. Such a campaign is never *held back* by the shared caps, but its views still use the session budget. Legacy `efc` campaigns also count toward the daily and lifetime totals; `excludeGlobalFCaps` campaigns do not.
 
-ND deliberately does **not** re-check `whenLimits` at delivery for *voted* content (`NdFcapGate` passes
-`frequencyLimitsMaxedOut = false`), and — on V2 — does **not** re-check per-target daily/lifetime or the
-global-daily cap either: **the delivery gate is session-only.** Delivered content *is* decorated with the
-fcap fields (contract §9 — `isNdFcapEnabled`/`excludeGlobalFCaps` ride each entry), so `NdFcapGate`
-actively **session-gates regime units** (it keys on `inRegime`, not on the presence of a cap field); it is
-not a pass-through. Daily/lifetime are left to the server because:
+# When counters reset
 
-1. **No on-device deferred display queue.** ND content is handed to the host as the response is
-   processed — there's no `pendingNotifications`-style deferral, so the long eval→render gap that
-   in-app's re-check guards essentially doesn't exist.
-2. **The SDK is callback-only — not in the render path.** ND just delivers the list via
-   `DisplayUnitListener`; the host renders and reports `viewed` whenever it chooses, so a delivery-time
-   daily/lifetime re-check couldn't cover that timing anyway.
-3. **The server is the authority for the global/legacy caps on V2.** LC gates advanced content on the
-   `adUnit_eval` vote (the vote *is* the `whenLimits` enforcement point), enforces the daily ceiling on
-   regular events, and enforces per-target `efc`/`tdc`/`tlc` on the legacy path — all from the SDK-reported
-   `ndtlc`/`ndmp`. The SDK's job is to keep those counters accurate (via `didShow`) and to own the
-   **session** caps, which the server never evaluates.
+- **Session caps** reset at the start of each new app session.
+- **Daily caps** reset at the first midnight (local time). This matches iOS — a "1 per day" campaign becomes eligible again at the next midnight.
+- **Total (lifetime) caps** never reset for a given user.
 
-Session is the exception precisely because the server never does it, so it must be enforced at delivery
-regardless of version. (On V1 there is no server capping at all, but V1 ships no fcap config, so the regime
-gate naturally no-ops.) If strict in-app parity on daily/lifetime at delivery is ever wanted, the gate can
-look up the campaign's rules from `NdStore` by `ti` and re-check before `canShow`.
+# How it works (high level)
 
-**Exception — App-Launched content-in-advance IS `whenLimits`-filtered client-side (SDK-6138).**
-App-Launched ND content is shipped proactively in `adUnit_notifs_applaunched` **without** an `adUnit_eval`
-vote (the online event path skips App-Launched, and the server can't know the device's live impression/
-trigger state — the same blind spot that makes in-app deliver *all* app-launched candidates for the SDK to
-filter). So the "already applied at vote time" argument above does **not** cover this content. For it,
-`NdEvaluationManager.retainAppLaunchedWithinLimits` mirrors in-app's `evaluateOnAppLaunchedServerSide`:
-per non-suppressed unit, read the advanced rules **inline from the unit's own payload**
-(`EvalRules.whenLimits(unit)` — `frequencyLimits`/`occurrenceLimits`), increment the ND trigger, and keep
-the unit only if `matchWhenLimits` passes. Rules are read inline, **not** joined from `adUnit_notifs_ss` —
-App-Launched campaigns are deliberately excluded from that bundle (contract §5.2), so the full payload here
-carries the rules. Units with no inline rules (simple campaigns) pass through the filter untouched.
+> This section is background only — none of it requires action on your side.
 
-**Priority arbitration — all ties at the top band.** After the whenTriggers + whenLimits filter, the
-survivors go through `NdEvaluationManager.selectTopPriorityBand`, which mirrors the server's
-`rollout-native-display-priority`-ON behaviour (as on custom events): sort priority DESC then `ti` ASC and
-deliver **every** unit at the highest priority band that has deliverable content ("all ties at the top"),
-dropping everything below it. This is **not** in-app's single-winner (`Immediate` picks exactly one) — ND
-delivers the whole top band. CG stubs compete in the same sort: a stub in a reached band is a
-would-have-shown control-group exposure and is acked (`recordCgSuppressed`); an all-stub top band does not
-latch the delivery lock, so the walk falls through to the next band (its stubs still ack). So a batch of 4
-units at priorities 10/3/2/1 delivers only priority 10; two units tied at 10 deliver both. The regular-event
-path needs no SDK arbitration — the server selects there and delivers the winner(s) in `adUnit_notifs`.
-
-**Global cap on App-Launched — SDK-enforced.** For regular per-event delivery the server trims to the
-remaining global budget using the reported `ndmp`. App-Launched is server-ships-all / SDK-decides, so the
-SDK enforces the account global caps itself: after the `whenLimits` filter, `DisplayUnitResponse` trims the
-surviving batch to `NdFCManager.globalCapRemaining()` = `min(ndmp − shownToday, ndmc − sessionTotal)`,
-consuming units in (server-sorted) order. Units exempt via `efc`/`excludeGlobalFCaps` bypass the trim. The
-budget base is the *viewed* count (`shownToday`/session-total), matching the server's `ndmp` semantics.
-
-### 7.3 App-Launched vs regular-event dispatch (server-side, for SDK context)
-- **App-Launched:** union of app-launched + no-trigger ND targets, sorted priority DESC then ti ASC.
-  Journey wins alone (→ `adUnit_notifs`); otherwise campaign lock-in delivers one-or-more campaigns
-  (real + CG stubs) under `adUnit_notifs_applaunched`. **SDK must ack CG stubs** via `adUnit_suppressed`.
-- **Regular event:** one target per event (server hard-stops after first delivery). Advanced-rule
-  campaigns gated on `adUnit_eval`; journeys + simple bypass. **No SDK CG ack** on this path.
-
----
-
-## 8. Reuse vs new — component plan
-
-**Reuse / generalize into a channel-agnostic core** (pure logic; parameterize the store + wire keys):
-- `inapp/evaluation/TriggersMatcher.kt`, `TriggerAdapter.kt`, `TriggerValue.kt`, `EventAdapter.kt`
-- `inapp/evaluation/LimitsMatcher.kt`, `LimitAdapter.kt`, `LimitType`
-- The `evaluate()` loop + `sortByPriority` from `EvaluationManager.kt` (extract the channel-specific
-  store reads/writes and header lists behind an interface)
-- `SuppressionMetaConverter` + the `{wzrk_id,wzrk_pivot,wzrk_cgId}` shape
-- The `NetworkHeadersListener` attach/remove mechanism
-- `ImpressionManager` / `ImpressionStore` / `TriggerManager` — reuse the classes, instantiate a
-  **second set** pointed at the ND namespaces
-
-**New, ND-specific (must not share state with in-app):**
-- `NdFCManager` (sibling of `InAppFCManager`): ND counters, global `ndstc`/`ndmp`/`ndmc`, daily reset,
-  `canShow`-equivalent, `didShow`-equivalent (driven by the viewed event), `ndtlc`/`ndmp` serializers.
-- `NdStore` (sibling of the SS half of `InAppStore`): metadata bundle + eval/suppressed lists.
-- `NdEvaluationManager` (or a generalized `EvaluationManager<Channel>`).
-- `DisplayUnitResponse` `CleverTapResponse` processor, wired into `CleverTapFactory` chain.
-- ND `NetworkHeadersListener` contributions (`adUnit_eval`/`adUnit_suppressed`/`ndtlc`/`ndmp`).
-- New constants incl. `FETCH_TYPE_ND_META` and the trigger for mid-session refresh.
-- **No new renderer** — reuse the existing Display Units delivery/callback path; hook impression
-  recording on `pushDisplayUnitViewedEventForID` and gating on delivery.
-
-**Recommendation:** invest in extracting a small channel-agnostic evaluation core now (the server side
-already mirrors in-app class-for-class). A thin `Channel` abstraction (store namespaces + wire-key set
-+ impression hook) lets in-app and ND — and later Web Inbox etc. — share one engine.
-
----
-
-## 9. Backward compatibility, flags, version gate
-
-- Per-campaign master switch `isNdFcapEnabled` (absent ⇒ uncapped).
-- LD flag `rollout-native-display-fcaps` (FE + LC). SDK-version gate: old SDK ⇒ LC returns **V1** ⇒
-  no metadata, no gate, delivery unchanged.
-- Response ceilings `ndmc`/`ndmp` are emitted regardless of V1/V2 ⇒ **SDK must ignore unknown response
-  keys** (already standard).
-- **Additive limit `type` values** — ND `LimitType`/operator parsing must skip unknown values
-  gracefully (verify the ported enums do).
-- Account defaults `ndsm=1`, `ndmp=10` when unset. No Mongo migration.
-- Old SDK never sends `ndtlc`/`ndmp`/`adUnit_eval`/`wzrk_fetch t=ND_META` — natural forward-compat.
-
----
-
-## 10. Open questions
-
-Resolved by the design TAN:
-- **Advanced vs simple vs journey classification (was Q4)** — RESOLVED. The SDK doesn't classify; it
-  only ever evaluates campaigns present in `adUnit_notifs_ss`, which by the server filter are
-  advanced-rule non-journey. Vote those into `adUnit_eval`.
-- **`adUnit_stale` scope (was Q5)** — RESOLVED. Dead-target GC purges ND counter/impression/trigger
-  state (mirrors `inapp_stale`); emitted whenever the SDK sent `ndtlc`.
-- **Content model (was Q3)** — largely RESOLVED. Content is the existing ND (Display Units) payload;
-  no new renderer. Confirm the `type` taxonomy if new ND types ship with this feature.
-- **Global daily/session ceilings, dead-target GC, mid-session refresh, dispatch rules** — RESOLVED in
-  design TAN §12.
-
-Also resolved:
-- **`whenTriggers` in `adUnit_notifs_ss` (was Q1)** — RESOLVED. `whenTriggers` **is** present, exactly
-  like in-app SS; it is simply not shown in the contract's §5.2 example. The evaluator matches events
-  against `whenTriggers` and evaluates `frequencyLimits`/`occurrenceLimits` the same way in-app does.
-
-Still to lock:
-1. **SDK impression-map size for ND** — mirror in-app's cap or ND-specific?
-3. **Mid-session refresh cadence** — when exactly does the SDK fire `wzrk_fetch t=ND_META`?
-   (e.g., bundle empty + advanced campaign delivered, or on a timer.)
-4. **Re-view / dedupe semantics** — the ND impression hook is the viewed event
-   (`pushDisplayUnitViewedEventForID`); confirm whether repeated views of the same unit should each
-   count, and how multiple units on one screen are handled.
-
----
-
-## 11. Phased implementation plan (SDK) — tickets & PRs
-
-Implemented as a stack of PRs (base `develop`), one per phase, each `SDK-<ticket>-nd-phaseN`.
-
-| Phase | Ticket | PR | Status | Scope |
-|---|---|---|---|---|
-| 1 Foundations | SDK-6057 | #1057 | ✅ done | constants + `StoreProvider` ND types + `NdStore` + `NdFCManager` + ND `ImpressionManager`/`TriggerManager` (daily-reset, serializers). |
-| 2 Response ingest | SDK-6058 | #1058 | ✅ done | `AdUnitResponse`: `adUnit_notifs_ss` → `NdStore`, `adUnit_stale` GC, `ndmc`/`ndmp` → `updateLimits`. |
-| 3 Header (counters) | SDK-6059 | #1060 | ✅ done | `QueueHeaderBuilder.addNdFC` → `ndtlc`/`ndmp`. |
-| 4 Evaluator | SDK-6060 | #1061 | ✅ done | `NdEvaluationManager` (evaluate → `adUnit_eval`); `NetworkHeadersListener` for `adUnit_eval`/`adUnit_suppressed` (moved here from Phase 3 — the evaluator owns the lists). |
-| 5 Cap gate + impressions | SDK-6061 | #1062 | ✅ done | `NdFcapGate` at delivery (fcap-marked units only); `didShow` on the viewed event. |
-| 6 CG acks | SDK-6062 | #1063 | ✅ done | `recordCgSuppressed`; `AdUnitResponse.processAppLaunched` (stubs → ack, content → gated delivery). |
-| 7 Refresh + gating | SDK-6063 | #1064 | ✅ done | `fetchNativeDisplayMeta()` (`wzrk_fetch t=ND_META`); gating-safety confirmed. |
-| 8 Tests + docs | SDK-6064 | #1065 | ✅ done | `NdStoreTest`, `NdEvaluationManagerTest`; this status table. |
-| 9 Review feedback | SDK-6065 | #1066 | ✅ done | Vision-review FIX set: async-path ND store init, `changeUser`, `optLong` reload (ND + in-app), no-dedup vote, guarded ND eval after in-app, single merged ND content write + AdUnitResponse-before-DisplayUnitResponse, fcap-managed-only impression recording, `@RestrictTo` on `fetchNativeDisplayMeta`, doc/store-file corrections, tests (`NdFCManagerTest`, `NdFcapGateTest`, `AdUnitResponseTest`, reload/no-dedup, `addNdFC`). |
-
-Notes on adjustments made during implementation:
-- `adUnit_eval`/`adUnit_suppressed` header attach landed in **Phase 4** (not 3) because the evaluator
-  owns the in-memory lists + attach/remove-exactly-sent lifecycle (mirrors in-app `EvaluationManager`).
-- The delivery gate (Phase 5) is applied **only to fcap-marked units** to avoid regressing existing
-  ungated display units; full global-cap activation depends on the feature/version gate.
-- The `adUnit_notifs_applaunched` content path landed with **Phase 6** (alongside CG acks), once the
-  cap gate existed, so ND content is never delivered ungated.
-
-Still to finalise before release: the mid-session refresh cadence, ND impression-map size, and
-viewed-event re-view/dedupe semantics. (`FETCH_TYPE_ND_META = 8` is now agreed with BE.)
-
----
-
-## 12. File index
-
-Existing (baseline / to touch):
-- `response/DisplayUnitResponse.java`, `displayunits/CTDisplayUnitController.java`,
-  `displayunits/model/CleverTapDisplayUnit.java`, `AnalyticsManager` (viewed/clicked),
-  `Constants.java` (`DISPLAY_UNIT_JSON_RESPONSE_KEY`), `CleverTapFactory.kt` (response chain).
-
-Reference implementation to mirror (in-app):
-- `InAppFCManager.java`, `inapp/store/preference/{InAppStore,ImpressionStore}.kt`,
-  `inapp/{ImpressionManager,TriggerManager}.kt`, `inapp/evaluation/*` (matchers, `EvaluationManager`),
-  `network/QueueHeaderBuilder.kt`, `StoreProvider.kt`, and this doc's companion
-  [`InAppFrequencyCapsAndServing.md`](./InAppFrequencyCapsAndServing.md).
+- **Two enforcement sides.** Some caps are enforced by the **backend** (per-target daily/lifetime limits and the account daily ceiling), and some by the **SDK** at the moment a unit would be shown (session caps and advanced frequency/occurrence rules). This split avoids double-counting while keeping decisions fast.
+- **Eligibility vs delivery.** The SDK continuously evaluates the event stream against each campaign's advanced rules and reports which campaigns are eligible; the backend then sends only eligible content. For Native Display, the SDK additionally gates *which* units it hands to your listener based on the session caps.
+- **Impression accounting.** In-App impressions are recorded by the SDK automatically; Native Display impressions are recorded from your `pushDisplayUnitViewedEventForID` call. The SDK is the source of truth for the counters it reports to the backend, which is why reporting Native Display impressions accurately matters.
+- **Separate state per channel.** Native Display keeps its own counters, impression windows, and metadata, entirely separate from In-App — the two never share state.
+- **Compatibility.** Native Display frequency caps are delivered to SDK versions that support them; older SDKs continue to receive display units exactly as before, uncapped by this layer.

@@ -13,12 +13,12 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 /**
- * Holds the `/a1` app-launch in-app winner, buffers the `/content` winner, and shows exactly one —
- * the higher priority of the two — so a single launch never shows two app-launch in-apps.
+ * Holds the `/a1` app-launch in-app winner, buffers the `/content` winner, and shows at most one —
+ * the higher priority of the two — so a normal launch doesn't show two app-launch in-apps.
  *
  * Three phases: no window (`phase == null`, shows immediately), OPEN (buffering), CLOSED
- * (suppressing — a winner has been shown, late responses dropped; this is what guarantees "exactly
- * one"). State transitions run under [lock]; [showWinner] is invoked outside it.
+ * (suppressing — a winner has been shown, late responses dropped; this is what keeps it to one).
+ * State transitions run under [lock]; [showWinner] is invoked outside it.
  *
  * Teardown self-heals and does not depend on the external completion signal: whichever fires first
  * between [onContentFetchComplete] and a hard [hardTeardownMs] backstop (on this arbiter's own

@@ -152,7 +152,7 @@ internal class InAppController(
     private val logger = config.logger
     private val defaultLogTag = config.accountId
 
-    // Holds the /a1 app-launch winner until the /content winner is known, then shows exactly one.
+    // Holds the /a1 app-launch winner until the /content winner is known, then shows at most one.
     private val appLaunchArbitrator = AppLaunchInAppArbitrator(
         logger = logger,
         logTag = defaultLogTag,
