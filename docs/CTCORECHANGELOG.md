@@ -29,6 +29,7 @@
   * `CleverTapAPI.handleLiveUpdateDismissed(Context, Bundle)`: Records the `Dismissed` event when your factory sets its own `deleteIntent`
   * `pushDisplayUnitElementViewedEventForID(String, HashMap)` / `pushDisplayUnitElementClickedEventForID(String, HashMap)`: Record views and clicks on a single slide or element of a Native Display unit
   * `CleverTapDisplayUnit.getMetaDataForContent(int)`: Returns the data to pass to the per-slide view and click APIs
+  * `CleverTapAPI.fetchNativeDisplayMeta()`: Requests fresh Native Display frequency-cap rules mid-session
 
 #### Behavior Changes
 * `pushDisplayUnitViewedEventForID` now counts toward Native Display frequency caps, so call it once

@@ -121,7 +121,7 @@ counts, global ceilings), `nd_impressions` (whenLimits time windows), `nd_trigge
 | Global daily count/ceiling | `imp` | `ndmp` |
 | Session ceiling | `imc` | `ndmc` |
 | Eval vote / CG acks (req) | `inapps_eval` / `inapps_suppressed` | `adUnit_eval` / `adUnit_suppressed` |
-| SS meta-fetch trigger | `FETCH_TYPE_IN_APPS = 5` | `FETCH_TYPE_ND_META = 8` (defined; the SDK does not send it yet) |
+| SS meta-fetch trigger | `FETCH_TYPE_IN_APPS = 5` | `FETCH_TYPE_ND_META = 8` (sent when the app calls `fetchNativeDisplayMeta()`) |
 
 All ND request-meta fields ride inside the same `type:"meta"` header entry as the in-app ones.
 
