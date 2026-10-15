@@ -674,7 +674,7 @@ pt_countdown | Optional | Set to `true` so the chronometer counts down to `pt_wh
 pt_promote | Optional | Set to `false` to opt out of ongoing-notification promotion on Android 16 ("true"/"false")
 pt_ico | Optional | Large icon image URL
 pt_small_icon_clr | Optional | Small Icon Color in HEX
-pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
+pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds). The timer restarts on every push, so set it longer than the longest gap between updates
 wzrk_dl | Optional | Deep link opened when the notification is tapped
 wzrk_acts | Optional | Action buttons, in the standard Push Template actions format
 pt_json | Optional | Above keys in JSON format

@@ -22,7 +22,7 @@ A Live Update runs as a short sequence of pushes — a start, any number of upda
 2. **CleverTap delivers it as an ordinary FCM push.** The SDK recognises the live-update marker on the push and takes over rendering — there is nothing to register and no token to manage (unlike iOS, Android has no push-to-start step).
 3. **The SDK shows the notification** and keeps it ongoing.
 4. **Each follow-up push refreshes the same notification in place.** Every push for the activity carries a stable id, so an update replaces the existing notification instead of stacking a new one.
-5. **An end push (or the user swiping it away) finishes it.** The notification becomes dismissable and the SDK stops treating it as live.
+5. **An end push finishes it.** The notification becomes dismissable and the SDK stops treating it as live.
 6. **Throughout, the SDK raises a `Live Activity` event** for each transition (Started / Updated / Ended / Dismissed), so the campaign's funnel is tracked automatically.
 
 You control only what the notification looks like — either by letting the SDK render the built-in [progress-centric notification](#the-progress-centric-notification-recommended), or by [building it yourself](#custom-handling--build-your-own-notification).
@@ -49,6 +49,7 @@ Because the dashboard builds the payload for you, sending one is a content exerc
     "pt_title": "Order on its way",
     "pt_msg": "Arriving in about 10 minutes",
     "pt_progress": "2",
+    "pt_styled_by_progress": "true",
     "pt_progress_segments": "[{\"length\":1},{\"length\":1},{\"length\":1}]",
     "pt_progress_points": "[{\"position\":1,\"title\":\"Packed\"},{\"position\":2,\"title\":\"Shipped\"}]",
     "pt_chip_type": "text",
@@ -103,7 +104,7 @@ Transition | `Live Activity` state
 Activity started | `Started`
 Activity updated | `Updated`
 Activity ended | `Ended`
-User swiped it away | `Dismissed`
+User swiped it away, or it was auto-dismissed (`pt_dismiss`) | `Dismissed`
 
 Each event is tied back to its campaign and activity automatically, so you get a complete funnel without extra instrumentation.
 
@@ -111,7 +112,7 @@ Each event is tied back to its campaign and activity automatically, so you get a
 
 # Ending and dismissing
 
-The campaign's final push ends the activity: the notification stops being ongoing, drops any status-bar chip or running timer, and becomes dismissable, and an `Ended` event is raised. If the user swipes the notification away first, a `Dismissed` event is raised instead. For the progress-centric notification you can also set an auto-dismiss so Android removes the card after a set time even if the final push never arrives.
+The campaign's final push ends the activity: the notification stops being ongoing, drops any status-bar chip or running timer, and becomes dismissable, and an `Ended` event is raised. If the user swipes the notification away first, a `Dismissed` event is raised, and the next update shows it again. For the progress-centric notification you can also set an auto-dismiss so Android removes the card after a set time even if the final push never arrives.
 
 # Requirements
 

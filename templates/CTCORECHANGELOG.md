@@ -5,8 +5,8 @@
 * **Live Updates (Live Activities):** The SDK can now power CleverTap-driven Live Updates — a single,
   continuously-updating notification that surfaces real-time information (for example a live score or a
   delivery's progress) and is refreshed remotely without the user reopening the app. On Android these
-  are delivered as ordinary FCM pushes routed through an `ICleverTapNotificationFactory` (set via
-  `CleverTapAPI.setNotificationFactory`), so there is no token or activity-registration step. Each
+  are delivered as ordinary FCM pushes, rendered by the Push Templates `pt_progress` template or a
+  custom `ICleverTapNotificationFactory`, so there is no token or activity-registration step. Each
   update is keyed by `wzrk_activityId`, from which the SDK derives a deterministic notification id so
   successive `update` and `end` pushes refresh the same notification in place. A single `Live Activity`
   lifecycle event is raised with a `state` field (Started / Updated / Ended / Dismissed). See
