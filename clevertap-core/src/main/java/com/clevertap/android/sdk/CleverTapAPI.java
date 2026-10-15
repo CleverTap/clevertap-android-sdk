@@ -3893,11 +3893,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Sends a {@code wzrk_fetch} event with {@code t = FETCH_TYPE_ND_META}; the server responds with
      * {@code adUnit_notifs_ss} (see {@link com.clevertap.android.sdk.response.DisplayUnitResponse}). Old
      * SDKs/servers ignore the unknown fetch type, so this is forward/backward compatible.
-     *
-     * Note: the exact refresh cadence (when the SDK fires this) is still to be finalised, so this stays
-     * SDK-internal ({@code LIBRARY_GROUP}) until then — not a customer-facing contract yet.
      */
-    @RestrictTo(Scope.LIBRARY_GROUP)
     public void fetchNativeDisplayMeta() {
         if (coreState.getConfig().isAnalyticsOnly()) {
             return;
