@@ -65,6 +65,22 @@ internal class ProgressStyle(
         private const val MAX_TRACK_WIDTH_PX = 1080 // keeps the bitmap well under the RemoteViews limits
         // A countdown with less than this left (or already past) is not started, see applyChronometer.
         private const val COUNTDOWN_MIN_REMAINING_MS = 10_000L
+
+        /**
+         * Native ProgressStyle has no setMax: the track total is the sum of the segment lengths (100
+         * with none). For a plain bar with pt_progress_max this returns that max, so one segment of
+         * that length puts native on the same scale as the plain bar below 16. Null keeps native's
+         * default 100. A milestone track takes its total from its segments on both tiers, so
+         * pt_progress_max is not applied there.
+         */
+        internal fun nativePlainBarMax(data: ProgressTemplateData): Int? =
+            if (data.isSegmented) null else data.progressMax?.takeIf { it > 0 }
+
+        /** pt_progress for native, clamped to the plain-bar max like the fallback bar. */
+        internal fun nativeProgress(data: ProgressTemplateData): Int {
+            val progress = data.progress ?: 0
+            return nativePlainBarMax(data)?.let { progress.coerceIn(0, it) } ?: progress
+        }
     }
 
     fun builderFromStyle(
@@ -175,8 +191,8 @@ internal class ProgressStyle(
 
         api.setStyledByProgress.invoke(progressStyle, boolean(extras, PTConstants.PT_STYLED_BY_PROGRESS, def = false))
         // Native ProgressStyle has no max: the track total is the sum of segment lengths, so pt_progress
-        // must be on that scale. pt_progress_max only applies to the plain bar below 16.
-        api.setProgress.invoke(progressStyle, extras.getString(PTConstants.PT_PROGRESS)?.toIntOrNull() ?: 0)
+        // must be on that scale. A plain bar's pt_progress_max is applied as one segment below.
+        api.setProgress.invoke(progressStyle, nativeProgress(data))
         // Same either/or rule as the fallback: indeterminate only applies to a plain bar, never to a
         // milestone (segments/points) indicator.
         api.setProgressIndeterminate.invoke(progressStyle, data.indeterminate && !data.isSegmented)
@@ -186,6 +202,12 @@ internal class ProgressStyle(
                 api.segmentCtor.newInstance(seg.length).also { s -> seg.color?.let { api.segmentSetColor.invoke(s, it) } }
             }
             api.setProgressSegments.invoke(progressStyle, segList)
+        } else {
+            // Plain bar with pt_progress_max: one segment of that length sets the native total, so
+            // "3 of 5" shows 60% here as it does on the bar below 16 (not 3 of the default 100).
+            nativePlainBarMax(data)?.let { max ->
+                api.setProgressSegments.invoke(progressStyle, listOf(api.segmentCtor.newInstance(max)))
+            }
         }
         if (points.isNotEmpty()) {
             val ptList = points.map { pt ->
