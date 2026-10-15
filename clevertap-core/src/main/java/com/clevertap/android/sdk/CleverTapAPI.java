@@ -64,9 +64,9 @@ import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
-import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory;
+import com.clevertap.android.sdk.pushnotification.ICleverTapLiveUpdateNotificationFactory;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
-import com.clevertap.android.sdk.pushnotification.LiveActivityRouter;
+import com.clevertap.android.sdk.pushnotification.LiveUpdateRouter;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushType;
@@ -162,7 +162,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sSignedCallNotificationHandler;
 
-    private static volatile ICleverTapNotificationFactory sNotificationFactory;
+    private static volatile ICleverTapLiveUpdateNotificationFactory sLiveUpdateNotificationFactory;
 
     private static final HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
 
@@ -907,19 +907,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Raises the "Live Activity" lifecycle event with state {@code Dismissed} for the given push
-     * bundle. Call this from your own delete intent when you render a Live Activity with custom
+     * bundle. Call this from your own delete intent when you render a Live Update with custom
      * dismiss handling and want CleverTap to record the dismissal.
      *
-     * <p>No-op unless {@code notification} is a CleverTap Live Activity push, so it can never raise a
+     * <p>No-op unless {@code notification} is a CleverTap Live Update push, so it can never raise a
      * Dismissed event for a normal notification.
      */
-    public static void handleLiveActivityDismissed(Context context, Bundle notification) {
+    public static void handleLiveUpdateDismissed(Context context, Bundle notification) {
         if (notification == null) {
             return;
         }
 
-        if (!LiveActivityRouter.isLiveActivity(notification)) {
-            Logger.v("handleLiveActivityDismissed called with a non Live Activity bundle; ignoring.");
+        if (!LiveUpdateRouter.isLiveUpdate(notification)) {
+            Logger.v("handleLiveUpdateDismissed called with a non Live Update bundle; ignoring.");
             return;
         }
 
@@ -938,12 +938,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         // Dismissal is delivered on the BroadcastReceiver's main thread; raise the event on a worker
-        // so the analytics/DB queue work (raiseLiveActivityLifecycleEvent is @WorkerThread) never runs
+        // so the analytics/DB queue work (raiseLiveUpdateLifecycleEvent is @WorkerThread) never runs
         // on the main thread.
         Task<Void> task = instance.getCoreState().getExecutors().postAsyncSafelyTask();
-        task.execute("handleLiveActivityDismissed", () -> {
+        task.execute("handleLiveUpdateDismissed", () -> {
             instance.getCoreState().getAnalyticsManager()
-                    .raiseLiveActivityLifecycleEvent(notification, Constants.LIVE_ACTIVITY_STATE_DISMISSED);
+                    .raiseLiveUpdateLifecycleEvent(notification, Constants.LIVE_UPDATE_STATE_DISMISSED);
             return null;
         });
     }
@@ -3548,8 +3548,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Sets a factory that lets the client fully build the notification for CleverTap
-     * <b>Live Activity</b> (live update) pushes — those carrying {@code wzrk_la}. When set, the SDK
-     * invokes {@link ICleverTapNotificationFactory#onCreateNotification} for such pushes instead of
+     * <b>Live Update</b> pushes — those carrying {@code wzrk_la}. When set, the SDK invokes
+     * {@link ICleverTapLiveUpdateNotificationFactory#onCreateNotification} for such pushes instead of
      * its built-in renderers; pushes with a {@code pt_id} are still rendered by Push Templates (when
      * delivered through {@code CTFcmMessageHandler}), and ordinary pushes are unaffected.
      *
@@ -3561,13 +3561,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param factory The factory implementation, or {@code null} to revert to default rendering.
      */
-    public static void setNotificationFactory(@Nullable ICleverTapNotificationFactory factory) {
-        sNotificationFactory = factory;
+    public static void setLiveUpdateNotificationFactory(@Nullable ICleverTapLiveUpdateNotificationFactory factory) {
+        sLiveUpdateNotificationFactory = factory;
     }
 
     @Nullable
-    public static ICleverTapNotificationFactory getNotificationFactory() {
-        return sNotificationFactory;
+    public static ICleverTapLiveUpdateNotificationFactory getLiveUpdateNotificationFactory() {
+        return sLiveUpdateNotificationFactory;
     }
 
     /** @noinspection unused*/

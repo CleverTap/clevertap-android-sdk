@@ -12,16 +12,16 @@ import com.clevertap.android.sdk.Constants
  * in-place render is, by default, an update).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object LiveActivityLifecycle {
+object LiveUpdateLifecycle {
 
     @JvmStatic
     fun state(event: String?): String = when {
-        Constants.WZRK_LIVE_ACTIVITY_EVENT_START.equals(event, ignoreCase = true) ->
-            Constants.LIVE_ACTIVITY_STATE_STARTED
+        Constants.WZRK_LIVE_UPDATE_EVENT_START.equals(event, ignoreCase = true) ->
+            Constants.LIVE_UPDATE_STATE_STARTED
 
-        Constants.WZRK_LIVE_ACTIVITY_EVENT_END.equals(event, ignoreCase = true) ->
-            Constants.LIVE_ACTIVITY_STATE_ENDED
+        Constants.WZRK_LIVE_UPDATE_EVENT_END.equals(event, ignoreCase = true) ->
+            Constants.LIVE_UPDATE_STATE_ENDED
 
-        else -> Constants.LIVE_ACTIVITY_STATE_UPDATED
+        else -> Constants.LIVE_UPDATE_STATE_UPDATED
     }
 }

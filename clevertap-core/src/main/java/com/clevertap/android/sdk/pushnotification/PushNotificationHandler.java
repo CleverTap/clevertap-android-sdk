@@ -32,12 +32,12 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
      *
      * <p>The flatten semantics (string coercion, compact-JSON for nested arrays/objects, JSON-null
      * skip, and root-wins so wrapper/identity/analytics keys are never overwritten) live in
-     * {@link LiveActivityPayloadSurfacer#flatten} — a pure, unit-tested seam. This method just applies
+     * {@link LiveUpdatePayloadSurfacer#flatten} — a pure, unit-tested seam. This method just applies
      * the result to the bundle.</p>
      */
-    static void surfaceLiveActivityPayload(Bundle message) {
-        String data = message.getString(Constants.WZRK_LIVE_ACTIVITY_DATA);
-        Map<String, String> toSurface = LiveActivityPayloadSurfacer.flatten(data, message.keySet());
+    static void surfaceLiveUpdatePayload(Bundle message) {
+        String data = message.getString(Constants.WZRK_LIVE_UPDATE_DATA);
+        Map<String, String> toSurface = LiveUpdatePayloadSurfacer.flatten(data, message.keySet());
         for (Map.Entry<String, String> entry : toSurface.entrySet()) {
             message.putString(entry.getKey(), entry.getValue());
         }
@@ -87,8 +87,8 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                 // top level so the normal PT/core routing below can read it. A `pt_id` inside `data`
                 // selects Mode B (SDK/PT render); its absence means Mode A (client factory). The
                 // Mode A vs Mode B decision is finalised in _createNotification.
-                if (LiveActivityRouter.isLiveActivity(message)) {
-                    surfaceLiveActivityPayload(message);
+                if (LiveUpdateRouter.isLiveUpdate(message)) {
+                    surfaceLiveUpdatePayload(message);
                 }
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template

@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 /**
  * Pure flattening of the nested Live Update `data` object into the flat key/value pairs to add at
- * the top level, extracted from `PushNotificationHandler.surfaceLiveActivityPayload` so the merge
+ * the top level, extracted from `PushNotificationHandler.surfaceLiveUpdatePayload` so the merge
  * semantics are unit-testable without a real [android.os.Bundle].
  *
  * Rules:
@@ -19,7 +19,7 @@ import org.json.JSONObject
  * - Null/empty/malformed input yields an empty map (never throws).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object LiveActivityPayloadSurfacer {
+object LiveUpdatePayloadSurfacer {
 
     @JvmStatic
     fun flatten(dataJson: String?, existingKeys: Set<String>): Map<String, String> {
