@@ -73,9 +73,10 @@ This is the right behaviour for most apps, where a screen just shows whichever u
 clevertapInstance.setDisplayUnitCache(new DisplayUnitCache() {
     @Override
     public void updateDisplayUnits(List<CleverTapDisplayUnit> units) {
-        // Merge the new batch into your own collection:
-        // - de-duplicate by unitID (the SDK may pass units you already have)
-        // - treat an /a1 list, even an empty one, as the full current set
+        // The SDK passes a full set each time: on app launch the new set, and on a
+        // recommendations fetch your getAllDisplayUnits() plus the new units. So:
+        // - merge into your own collection, de-duplicating by unitID
+        // - decide yourself when to drop older units (an empty list means none were delivered)
         // - keep it thread-safe; the SDK calls it from a background thread
     }
 
