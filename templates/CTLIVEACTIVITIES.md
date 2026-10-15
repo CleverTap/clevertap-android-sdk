@@ -33,7 +33,7 @@ You control only what the notification looks like — either by letting the SDK 
 
 On Android, the natural counterpart to an iOS Live Activity is a **progress-centric notification** — a live, ongoing notification built around a progress indicator (a delivery advancing through stages, a countdown, a score).
 
-On **Android 16 (API 36) and above**, the SDK renders this as a **native, promoted live notification** with essentially no work on your side — you just send the content in the campaign. It comes with a progress track, milestone points, a status-bar chip, and automatic promotion to an ongoing "live" notification; the SDK handles all of it.
+On **Android 16 (API 36) and above**, the SDK renders this as a **native, promoted live notification** with essentially no work on your side — you add one manifest permission (see [Requirements](#requirements)) and send the content in the campaign. It comes with a progress track, milestone points, a status-bar chip, and automatic promotion to an ongoing "live" notification; the SDK handles all of it.
 
 On **earlier Android versions**, the SDK automatically falls back to a custom notification that mirrors the same look, so the very same campaign works across devices. The only difference is that it cannot be *promoted* (promotion is an Android 16 OS capability); it is still shown as an ongoing live update.
 
@@ -115,6 +115,7 @@ The campaign's final push ends the activity: the notification stops being ongoin
 
 # Requirements
 
-- Live Updates are delivered over your existing FCM push setup — no extra permission or registration is required.
+- Live Updates are delivered over your existing FCM push setup — no extra registration is required.
+- To promote the progress-centric notification on Android 16 (API 36) and above, add `<uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />` to your app's `AndroidManifest.xml`.
 - The progress-centric notification requires the Push Templates SDK (see [Push Templates](CTPUSHTEMPLATES.md)).
 - The native, promoted progress notification is available on Android 16 (API 36) and above; earlier versions use an automatic fallback that mirrors the look but is not promoted.

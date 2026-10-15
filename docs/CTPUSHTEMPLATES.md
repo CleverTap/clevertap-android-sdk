@@ -309,7 +309,7 @@ The Progress Template renders a progress-centric notification for [Live Updates 
 
 It renders in two tiers depending on the OS version:
 
-- **Android 16 (API 36) and above:** a native `Notification.ProgressStyle`. This supports a segmented progress track, milestone points (with optional titles), a tracker icon that rides the track, start/end icons, a status-bar chip, and promotion to an ongoing "live" notification. This tier uses no custom `RemoteViews`, which is what lets Android promote it.
+- **Android 16 (API 36) and above:** a native `Notification.ProgressStyle`. This supports a segmented progress track, milestone points (with optional titles), a tracker icon that rides the track, start/end icons, a status-bar chip, and promotion to an ongoing "live" notification. This tier uses no custom `RemoteViews`, which is what lets Android promote it. Promotion requires the `android.permission.POST_PROMOTED_NOTIFICATIONS` permission in your app's manifest.
 - **Below Android 16:** a custom layout for the expanded view that mimics the same look — a segmented milestone track drawn from the same payload, or a plain progress bar. The collapsed view is the standard system notification. These are kept ongoing so they behave like a live update, but cannot be promoted (promotion is an Android 16 feature).
 
 The progress indicator is **segmented** when `pt_progress_segments` or `pt_progress_points` are supplied. In that case the track total is the sum of the segment lengths (100 when there are none), so `pt_progress` and each point `position` must be on that scale — `pt_progress_max` applies only to the plain bar below Android 16. When no segments or points are supplied, the indicator is a plain bar: indeterminate when `pt_progress_indeterminate` is `true`, otherwise determinate from `pt_progress` / `pt_progress_max`.
@@ -658,11 +658,11 @@ pt_id | Required | Value - `pt_progress`
 pt_title | Required | Title
 pt_msg | Required | Message
 pt_subtitle | Optional | Sub text shown in the notification header
-pt_progress | Optional | Current progress. On the segmented track (and the Android 16 native style) this is on the segment-total scale; on the plain bar it is out of `pt_progress_max`
+pt_progress | Required (any one) | Current progress. On the segmented track (and the Android 16 native style) this is on the segment-total scale; on the plain bar it is out of `pt_progress_max`
 pt_progress_max | Optional | Maximum for the plain progress bar below Android 16. Defaults to `100`. Ignored for the segmented track
-pt_progress_indeterminate | Optional | Set to `true` for an indeterminate (animating) bar. Only applies when there are no segments or points ("true"/"false")
-pt_progress_segments | Optional | JSON array of segments, each `{ "length": Int, "color": "#RRGGBB" }`. Up to 10 segments
-pt_progress_points | Optional | JSON array of milestone points, each `{ "position": Int, "color": "#RRGGBB", "title": String }`. Up to 4 points, none at the ends
+pt_progress_indeterminate | Required (any one) | Set to `true` for an indeterminate (animating) bar. Only applies when there are no segments or points ("true"/"false")
+pt_progress_segments | Required (any one) | JSON array of segments, each `{ "length": Int, "color": "#RRGGBB" }`. Up to 10 segments
+pt_progress_points | Required (any one) | JSON array of milestone points, each `{ "position": Int, "color": "#RRGGBB", "title": String }`. Up to 4 points, none at the ends
 pt_styled_by_progress | Optional | Set to `true` to fade the part of the track ahead of the current progress ("true"/"false")
 pt_progress_tracker_icon | Optional | Image URL for the tracker icon that rides the track at the current progress
 pt_progress_start_icon | Optional | Image URL for the icon at the start of the track
@@ -673,12 +673,13 @@ pt_when | Optional | Epoch time in milliseconds the chronometer counts from/to w
 pt_countdown | Optional | Set to `true` so the chronometer counts down to `pt_when` ("true"/"false")
 pt_promote | Optional | Set to `false` to opt out of ongoing-notification promotion on Android 16 ("true"/"false")
 pt_ico | Optional | Large icon image URL
-pt_bg | Optional | Background Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_dismiss | Optional | Auto dismiss the notification after a set time (value in seconds)
 wzrk_dl | Optional | Deep link opened when the notification is tapped
 wzrk_acts | Optional | Action buttons, in the standard Push Template actions format
 pt_json | Optional | Above keys in JSON format
+
+At least one of the four `Required (any one)` keys must be sent; otherwise the notification is not shown.
 
 ### NOTE
 * `pt_title` and `pt_msg` in all the templates support HTML elements like bold `<b>`, italics `<i>` and underline `<u>`
