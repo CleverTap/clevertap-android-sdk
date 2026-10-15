@@ -245,7 +245,8 @@ class ValidationConfig private constructor(
             Constants.SC_OUTGOING_EVENT_NAME,
             Constants.SC_INCOMING_EVENT_NAME,
             Constants.SC_END_EVENT_NAME,
-            Constants.SC_CAMPAIGN_OPT_OUT_EVENT_NAME
+            Constants.SC_CAMPAIGN_OPT_OUT_EVENT_NAME,
+            Constants.LIVE_ACTIVITY_EVENT_NAME
         )
 
         val DEFAULT_RESTRICTED_MULTI_VALUE_FIELDS = setOf(
