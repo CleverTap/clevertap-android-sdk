@@ -197,11 +197,11 @@ CleverTap Huawei Push SDK provides an out of the box service to use the Huawei M
 CleverTap Push Templates SDK helps you engage with your users using fancy push notification templates built specifically to work with [CleverTap](https://www.clevertap.com).
 Find the integration steps for the CleverTap Push Templates SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATES.md)
 
-## 📲 CleverTap Live Activities (Live Updates)
+## 📲 CleverTap Live Updates
 [(Back to top)](#-table-of-contents)
 
 Live Updates are a single, ongoing notification that is refreshed in place to show real-time information — an order on its way, a ride approaching, a live score. CleverTap drives them from the same campaign as iOS Live Activities.
-Find the integration steps for CleverTap Live Activities [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTLIVEACTIVITIES.md)
+Find the integration steps for CleverTap Live Updates [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTLIVEUPDATES.md)
 
 ## 📲 CleverTap RenderMax SDK
 [(Back to top)](#-table-of-contents)

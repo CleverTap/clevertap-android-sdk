@@ -2,15 +2,15 @@
 ### Version 8.5.0 (October 15, 2026)
 
 #### New Features
-* **Live Updates (Live Activities):** The SDK can now power CleverTap-driven Live Updates — a single,
+* **Live Updates:** The SDK can now power CleverTap-driven Live Updates — a single,
   continuously-updating notification that surfaces real-time information (for example a live score or a
   delivery's progress) and is refreshed remotely without the user reopening the app. On Android these
   are delivered as ordinary FCM pushes, rendered by the Push Templates `pt_progress` template or a
-  custom `ICleverTapNotificationFactory`, so there is no token or activity-registration step. Each
+  custom `ICleverTapLiveUpdateNotificationFactory`, so there is no token or activity-registration step. Each
   update is keyed by `wzrk_activityId`, from which the SDK derives a deterministic notification id so
   successive `update` and `end` pushes refresh the same notification in place. A single `Live Activity`
   lifecycle event is raised with a `state` field (Started / Updated / Ended / Dismissed). See
-  [Live Activities](CTLIVEACTIVITIES.md). Pair with the Push Templates `pt_progress` template (v2.7.0)
+  [Live Updates](CTLIVEUPDATES.md). Pair with the Push Templates `pt_progress` template (v2.7.0)
   for a ready-made progress-bar live update.
 * **Native Display Frequency Caps:** Adds frequency-cap support for Native Display (Display Units). A
   campaign is only held back once your app has reported those impressions with
@@ -24,9 +24,9 @@
 #### API Changes
 
 * **New:** Adds the following public APIs:
-  * `CleverTapAPI.setNotificationFactory(ICleverTapNotificationFactory)` / `getNotificationFactory()`: Set or get the factory that builds Live Update notifications without a `pt_id`
-  * `ICleverTapNotificationFactory`: The interface to implement to build a Live Update notification yourself
-  * `CleverTapAPI.handleLiveActivityDismissed(Context, Bundle)`: Records the `Dismissed` event when your factory sets its own `deleteIntent`
+  * `CleverTapAPI.setLiveUpdateNotificationFactory(ICleverTapLiveUpdateNotificationFactory)` / `getLiveUpdateNotificationFactory()`: Set or get the factory that builds Live Update notifications without a `pt_id`
+  * `ICleverTapLiveUpdateNotificationFactory`: The interface to implement to build a Live Update notification yourself
+  * `CleverTapAPI.handleLiveUpdateDismissed(Context, Bundle)`: Records the `Dismissed` event when your factory sets its own `deleteIntent`
   * `pushDisplayUnitElementViewedEventForID(String, HashMap)` / `pushDisplayUnitElementClickedEventForID(String, HashMap)`: Record views and clicks on a single slide or element of a Native Display unit
   * `CleverTapDisplayUnit.getMetaDataForContent(int)`: Returns the data to pass to the per-slide view and click APIs
 

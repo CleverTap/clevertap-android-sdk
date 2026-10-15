@@ -305,7 +305,7 @@ pt_input_auto_open | Required | fixed value - `true`
 
 ## Progress Template
 
-The Progress Template renders a progress-centric notification for [Live Updates / Live Activities](CTLIVEACTIVITIES.md) — a single, ongoing notification that is updated remotely to reflect real-time progress, such as a delivery, a ride, or a live score. It can also be sent as a one-off push; in that case set `pt_dismiss`, since without an `end` push the notification stays ongoing.
+The Progress Template renders a progress-centric notification for [Live Updates](CTLIVEUPDATES.md) — a single, ongoing notification that is updated remotely to reflect real-time progress, such as a delivery, a ride, or a live score. It can also be sent as a one-off push; in that case set `pt_dismiss`, since without an `end` push the notification stays ongoing.
 
 It renders in two tiers depending on the OS version:
 
@@ -314,7 +314,7 @@ It renders in two tiers depending on the OS version:
 
 The progress indicator is **segmented** when `pt_progress_segments` or `pt_progress_points` are supplied. In that case the track total is the sum of the segment lengths (100 when there are none), so `pt_progress` and each point `position` must be on that scale — `pt_progress_max` applies only to the plain bar. When no segments or points are supplied, the indicator is a plain bar: indeterminate when `pt_progress_indeterminate` is `true`, otherwise determinate from `pt_progress` / `pt_progress_max`.
 
-A status-bar chip is controlled by `pt_chip_type`: `text` shows `pt_chip_text`, while `timer` / `countdown` show a running chronometer from `pt_when` (set `pt_countdown` to `true` to count down). On the `end` event (sent through the Live Activities wrapper as `wzrk_la_event=end`) the notification stops being ongoing, the chip or chronometer is dropped, and it becomes dismissable.
+A status-bar chip is controlled by `pt_chip_type`: `text` shows `pt_chip_text`, while `timer` / `countdown` show a running chronometer from `pt_when` (set `pt_countdown` to `true` to count down). On the `end` event (sent through the Live Updates wrapper as `wzrk_la_event=end`) the notification stops being ongoing, the chip or chronometer is dropped, and it becomes dismissable.
 
 Native limits apply on both tiers: up to 10 segments and 4 points, with no point at the very start or end of the track. With more than 10 segments, the track is drawn as a single segment.
 

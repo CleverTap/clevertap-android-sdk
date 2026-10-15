@@ -1,4 +1,4 @@
-# Live Activities (Live Updates) by CleverTap
+# Live Updates by CleverTap
 
 A **Live Update** is a single, ongoing notification that is refreshed in place to show real-time information — an order on its way, a ride approaching, a live match score. It is the Android counterpart of an iOS Live Activity, and CleverTap drives both from the same campaign.
 
@@ -64,11 +64,11 @@ To render the progress-centric notification, your app must include the Push Temp
 
 ## Custom handling — build your own notification
 
-When you want a bespoke layout instead of the built-in progress notification, implement `ICleverTapNotificationFactory` and register it once in your `Application.onCreate()`, since a push can start the app without any Activity. When a live-update push arrives without a `pt_id`, the SDK calls your factory to build the `Notification`; a push with any `pt_id` is rendered by Push Templates instead, and ordinary pushes are unaffected.
+When you want a bespoke layout instead of the built-in progress notification, implement `ICleverTapLiveUpdateNotificationFactory` and register it once in your `Application.onCreate()`, since a push can start the app without any Activity. When a live-update push arrives without a `pt_id`, the SDK calls your factory to build the `Notification`; a push with any `pt_id` is rendered by Push Templates instead, and ordinary pushes are unaffected.
 
 #### Kotlin
 ```kotlin
-CleverTapAPI.setNotificationFactory(object : ICleverTapNotificationFactory {
+CleverTapAPI.setLiveUpdateNotificationFactory(object : ICleverTapLiveUpdateNotificationFactory {
     override fun onCreateNotification(context: Context, extras: Bundle): Notification? {
         // Build and return the Notification for this live update, or null to skip.
         // extras carries all CleverTap keys, including wzrk_activityId and the nested "data".
@@ -84,7 +84,7 @@ CleverTapAPI.setNotificationFactory(object : ICleverTapNotificationFactory {
 
 #### Java
 ```java
-CleverTapAPI.setNotificationFactory((context, extras) -> {
+CleverTapAPI.setLiveUpdateNotificationFactory((context, extras) -> {
     // Build and return the Notification, or null to skip.
     boolean ended = "end".equals(extras.getString("wzrk_la_event"));
     return new NotificationCompat.Builder(context, channelId)
@@ -95,12 +95,12 @@ CleverTapAPI.setNotificationFactory((context, extras) -> {
 });
 ```
 
-You build the `Notification`; the SDK still owns display, notification-channel creation, the notification id (so your updates land in place), deduplication, and lifecycle analytics. Pass `null` to `setNotificationFactory` to revert to default rendering.
+You build the `Notification`; the SDK still owns display, notification-channel creation, the notification id (so your updates land in place), deduplication, and lifecycle analytics. Pass `null` to `setLiveUpdateNotificationFactory` to revert to default rendering.
 
 - The SDK posts your `Notification` as is, so make it non-ongoing on the `end` push yourself (as above); otherwise the user can't swipe it away.
 - `onCreateNotification` runs on a background thread while the SDK renders pushes one at a time, so keep it fast and avoid network calls.
 - `context` may be the caller's context (for example your `FirebaseMessagingService`), so don't store it.
-- If you set your own `deleteIntent`, the SDK doesn't add its own, so call `CleverTapAPI.handleLiveActivityDismissed(context, extras)` from it to keep recording the `Dismissed` event.
+- If you set your own `deleteIntent`, the SDK doesn't add its own, so call `CleverTapAPI.handleLiveUpdateDismissed(context, extras)` from it to keep recording the `Dismissed` event.
 
 # Lifecycle and analytics
 
