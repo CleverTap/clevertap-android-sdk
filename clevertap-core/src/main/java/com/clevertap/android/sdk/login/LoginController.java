@@ -129,6 +129,13 @@ public class LoginController {
                     // try and flush and then reset the queues
                     baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true);
                     baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true);
+                    // Drop any in-flight app-launch arbitration window so the previous user's buffered
+                    // in-app is never shown to the new user. Must run BEFORE cancelAllResponseJobs():
+                    // cancelling the fetch coroutine fires its completion signal, which would otherwise
+                    // display that buffered in-app.
+                    if (controllerManager.getInAppController() != null) {
+                        controllerManager.getInAppController().abandonAppLaunchArbitration();
+                    }
                     contentFetchManager.cancelAllResponseJobs();
                     cancelScheduledInApps();
                     dbManager.clearQueues(context);
@@ -171,6 +178,11 @@ public class LoginController {
                     notifyChangeUserCallback();
 
                     controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
+                    // Native Display (ND) frequency caps (SDK-6055): repoint ND counters to the new
+                    // user too. Null-guarded — ndFCManager can still be null on the async device-id path.
+                    if (controllerManager.getNdFCManager() != null) {
+                        controllerManager.getNdFCManager().changeUser();
+                    }
                 } catch (Throwable t) {
                     config.getLogger().verbose(config.getAccountId(), "Reset Profile error", t);
                 }

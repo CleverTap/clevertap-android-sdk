@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotificationMedia
 import com.clevertap.android.sdk.inapp.customtemplates.CustomTemplateInAppData.CREATOR.createFromJson
 import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
 import com.clevertap.android.sdk.inapp.evaluation.LimitAdapter
+import com.clevertap.android.sdk.network.ContentFetchItem
 import com.clevertap.android.sdk.orEmptyArray
 import com.clevertap.android.sdk.safeGetJSONArrayOrNullIfEmpty
 import com.clevertap.android.sdk.safeGetJSONObjectListOrEmpty
@@ -188,6 +189,12 @@ internal class InAppResponseAdapter(
     val inAppMode: String = responseJson.optString(Constants.INAPP_DELIVERY_MODE_KEY, "")
 
     val staleInApps: Pair<Boolean, JSONArray?> = responseJson.safeGetJSONArrayOrNullIfEmpty(Constants.INAPP_NOTIFS_STALE_KEY)
+
+    // content_fetch directives on this response, parsed to typed items (empty if absent). Downstream
+    // (arbitration) consumes these instead of re-reading the raw JSON by key.
+    val contentFetchItems: List<ContentFetchItem> =
+        responseJson.optJSONArray(Constants.CONTENT_FETCH_JSON_RESPONSE_KEY)
+            ?.let { ContentFetchItem.listFrom(it) } ?: emptyList()
 }
 
 enum class CtCacheType {

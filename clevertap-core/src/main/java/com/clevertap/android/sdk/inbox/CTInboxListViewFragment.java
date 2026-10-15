@@ -207,6 +207,20 @@ public class CTInboxListViewFragment extends Fragment {
         super.onResume();
         if (mediaRecyclerView != null) {
             mediaRecyclerView.onRestartPlayer();
+            // Retry after layout: a tab restored without a scroll - after rotation - gets no
+            // idle callback, and onRestartPlayer() alone runs too early to find any row.
+            mediaRecyclerView.post(mediaRecyclerView::playVideo);
+        }
+    }
+
+    /**
+     * Called by {@link CTInboxActivity} once this page has finished animating into place.
+     * {@link #onResume()} is too early: it runs while the pager is still settling, so every row
+     * measures zero visible height and {@code playVideo()} finds no candidate.
+     */
+    void onPageSettled() {
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.playVideo();
         }
     }
 

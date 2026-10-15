@@ -160,6 +160,21 @@ class EventNameValidatorTest {
     }
 
     @Test
+    fun `validate returns Drop for the SDK's Live Activity event name with the default config`() {
+        val input = EventNameNormalizationResult(
+            originalName = "Live Activity",
+            cleanedName = "Live Activity",
+            modifications = emptySet()
+        )
+        val config = ValidationConfig.default().build()
+
+        val result = validator.validate(input, config)
+
+        assertTrue(result is ValidationOutcome.Drop)
+        assertEquals(DropReason.RESTRICTED_EVENT_NAME, (result as ValidationOutcome.Drop).reason)
+    }
+
+    @Test
     fun `validate returns Success when event name not in restricted list`() {
         val input = EventNameNormalizationResult(
             originalName = "AllowedEvent",

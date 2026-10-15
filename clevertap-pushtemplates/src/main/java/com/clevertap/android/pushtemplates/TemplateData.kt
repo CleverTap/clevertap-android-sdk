@@ -245,3 +245,34 @@ internal data class VerticalImageTemplateData(
     val buttonData: VerticalImageButtonData? = null,
     val collapsedButtonData: VerticalImageButtonData? = null,
 ) : TemplateData()
+/**
+ * Progress-centric (`pt_progress`) template data. Unlike other templates this one does NOT feed a
+ * `Style` subclass (its native Android-16 tier is a base `NotificationCompat.ProgressStyle` with no
+ * custom RemoteViews, which is what allows promotion) — it is rendered by the specialized
+ * [com.clevertap.android.pushtemplates.styles.ProgressStyle]. It still flows through the normal
+ * [TemplateDataFactory] pipeline: the segments/points (incl. point titles) are parsed here once.
+ */
+internal data class ProgressTemplateData(
+    override val templateType: TemplateType = TemplateType.PROGRESS,
+    val title: String?,
+    val progress: Int?,
+    val progressMax: Int?,
+    val indeterminate: Boolean,
+    val segments: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.SegmentData>,
+    val points: List<com.clevertap.android.pushtemplates.styles.ProgressPayloadParser.PointData>,
+    /** Large icon URL (`pt_ico`, as in the other templates); the system draws it, on both tiers. */
+    val largeIcon: String? = null,
+    /** Auto-dismiss delay in ms (`pt_dismiss`, in seconds, as in the other templates); null = never. */
+    val dismissAfter: Long? = null,
+    /** Header sub text (`pt_subtitle`, else `wzrk_st`, as in the other templates); the system draws it. */
+    val subtitle: String? = null,
+) : TemplateData() {
+
+    /**
+     * The progress indicator is **segmented** (drawn milestone track / native segments) when the payload
+     * carries segments or points; otherwise it is a **plain bar** — indeterminate when
+     * [indeterminate] is set, else determinate from [progress] / [progressMax]. The two are mutually
+     * exclusive (a client uses either milestones or a simple bar, never both).
+     */
+    val isSegmented: Boolean get() = segments.isNotEmpty() || points.isNotEmpty()
+}

@@ -24,6 +24,11 @@ android {
     namespace 'com.clevertap.android.pushtemplates'
 }
 
+// Note: the progress-centric Live Update (pt_progress) uses androidx.core 1.17.0 APIs
+// (NotificationCompat.ProgressStyle + promotion) via REFLECTION (see ProgressStyle.kt), so there is
+// deliberately NO build-time dependency on 1.17.0 here — no compileOnly bump and no resolutionStrategy
+// force. Consumers keep their own androidx.core; apps that want the native promoted style ship
+// androidx.core:core:1.17.0 themselves (TAN §15), and the renderer falls back on older core.
 dependencies {
     compileOnly project(':clevertap-core')
     compileOnly (libs.android.material)

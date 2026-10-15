@@ -5,11 +5,13 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.viewpager.widget.ViewPager
 import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.R
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import org.junit.Assert.assertEquals
@@ -145,5 +147,51 @@ class CTInboxActivityTest : BaseTestCase() {
 
         assertEquals(1, attached.refreshListCalls)
         assertEquals(0, detached.refreshListCalls)
+    }
+
+    /** Page-settled listener over a tab adapter, with the pager parked on [currentItem]. */
+    private fun pageSettledListener(
+        vararg fragments: Fragment,
+        currentItem: Int
+    ): ViewPager.OnPageChangeListener {
+        val activity = Robolectric.buildActivity(CTInboxActivity::class.java).setup().get()
+        val adapter = CTInboxTabAdapter(activity.supportFragmentManager, fragments.size)
+        fragments.forEachIndexed { index, fragment -> adapter.addFragment(fragment, "tab$index", index) }
+        val pager = mockk<ViewPager>()
+        every { pager.currentItem } returns currentItem
+        return CTInboxActivity.createPageSettledListener(pager, adapter)
+    }
+
+    @Test
+    fun `page settled listener notifies the fragment that came to rest`() {
+        val tabOne = RecordingInboxListFragment()
+        val tabTwo = RecordingInboxListFragment()
+
+        pageSettledListener(tabOne, tabTwo, currentItem = 1)
+            .onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
+
+        assertEquals(0, tabOne.onPageSettledCalls)
+        assertEquals(1, tabTwo.onPageSettledCalls)
+    }
+
+    @Test
+    fun `page settled listener ignores states other than idle`() {
+        val tab = RecordingInboxListFragment()
+        val listener = pageSettledListener(tab, currentItem = 0)
+
+        listener.onPageScrollStateChanged(ViewPager.SCROLL_STATE_DRAGGING)
+        listener.onPageScrollStateChanged(ViewPager.SCROLL_STATE_SETTLING)
+
+        assertEquals(0, tab.onPageSettledCalls)
+    }
+
+    @Test
+    fun `page settled listener tolerates a non-inbox fragment at the current position`() {
+        val inboxTab = RecordingInboxListFragment()
+
+        pageSettledListener(Fragment(), inboxTab, currentItem = 0)
+            .onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
+
+        assertEquals(0, inboxTab.onPageSettledCalls)
     }
 }

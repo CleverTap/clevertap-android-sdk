@@ -50,4 +50,21 @@ object AnalyticsManagerBundler {
         }
         return event
     }
+
+    /**
+     * Builds the single "Live Activity" lifecycle event (mirrors iOS `recordLiveActivityEventNamed`).
+     * evtData is the wzrk payload plus a `state` field ("Started"/"Updated"/"Ended"/"Dismissed").
+     */
+    @JvmStatic
+    fun liveUpdateEventJson(root: JSONObject, state: String): JSONObject {
+        val event = JSONObject()
+        try {
+            root.put(Constants.LIVE_UPDATE_STATE_KEY, state)
+            event.put("evtName", Constants.LIVE_UPDATE_EVENT_NAME)
+            event.put("evtData", root)
+        } catch (ignored: Throwable) {
+            //no-op
+        }
+        return event
+    }
 }

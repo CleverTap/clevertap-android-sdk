@@ -1,0 +1,13 @@
+{
+  "pt_id": "pt_timer",
+  "pt_title": "Timer template",
+  "pt_title_alt": "Timer finished",
+  "pt_msg": "Counting down",
+  "pt_msg_alt": "The countdown is over",
+  "pt_timer_threshold": "20",
+  "pt_big_img": "https://picsum.photos/id/1016/1024/512",
+  "pt_img_corner_radius": "12",
+  "pt_img_border_width": "40",
+  "pt_img_border_clr": "#E91E63",
+  "pt_dl1": "ctdemo://com.clevertap.demo/HomeScreenActivity"
+}

@@ -99,12 +99,35 @@ public interface Constants {
     String PREFS_EVALUATED_INAPP_KEY_SS = "evaluated_ss";
     String PREFS_SUPPRESSED_INAPP_KEY_CS = "suppressed_ss";
 
+    // ---- Native Display (ND) frequency caps (SDK-6055) ----
+    // ND == Display Units channel. SS + legacy only (no CS mode). Mirrors the in-app keys above.
+    // Response keys (LC -> SDK). Campaign content still arrives under DISPLAY_UNIT_JSON_RESPONSE_KEY ("adUnit_notifs").
+    String DISPLAY_UNIT_NOTIFS_SS_KEY = "adUnit_notifs_ss";                 // advanced-rule metadata bundle (rules only)
+    String DISPLAY_UNIT_NOTIFS_APP_LAUNCHED_KEY = "adUnit_notifs_applaunched"; // app-launch content + CG-suppressed stubs
+    String DISPLAY_UNIT_NOTIFS_STALE_KEY = "adUnit_stale";                  // dead-target GC ids
+    // Request meta keys (SDK -> LC)
+    String ND_SS_EVAL_META = "adUnit_eval";                                 // eligible advanced ND campaign votes
+    String ND_SUPPRESSED_META = "adUnit_suppressed";                        // CG-suppression acks (app-launch path only)
+    String ND_TARGET_SHOWN_LIST = "ndtlc";                                  // [[ti, todayCount, lifetimeCount], ...]
+    // Wire keys with directional overload (mirror in-app imc/imp)
+    String ND_MAX_PER_SESSION_KEY = "ndmc";                                 // resp: session ceiling; also storage key
+    String ND_MAX_PER_DAY_KEY = "ndmp";                                     // req: SDK daily count; resp: daily ceiling
+    // ND store prefs namespace + keys
+    String ND_KEY = "adUnit";                                               // ND metadata store prefs namespace
+    String PREFS_ND_KEY_SS = DISPLAY_UNIT_NOTIFS_SS_KEY;                    // metadata bundle pref key
+    String PREFS_EVALUATED_ND_KEY_SS = "evaluated_nd_ss";                   // pending adUnit_eval report
+    String PREFS_SUPPRESSED_ND_KEY = "suppressed_nd";                       // pending adUnit_suppressed report
+
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String INBOX_V2_JSON_RESPONSE_KEY = "inbox_notifs_v2";
     String INBOX_V2_ISREAD_KEY = "isRead";
     long INBOX_V2_THROTTLE_WINDOW_MS = 5L * 60L * 1000L;
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String CONTENT_FETCH_JSON_RESPONSE_KEY = "content_fetch";
+    // Fields on a single content_fetch directive item (self-describing; see ContentFetchItem).
+    String CONTENT_FETCH_ITEM_EVENT_NAME = "eventName";
+    String CONTENT_FETCH_ITEM_RESPONSE_KEY = "responseKey";
+    String CONTENT_FETCH_ITEM_TARGET_ID = "tgtId";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
     String REQUEST_VARIANTS_JSON_RESPONSE_KEY = "abVariantInfo";
@@ -157,6 +180,14 @@ public interface Constants {
     String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
 
     String KEY_TRIGGERS_PER_INAPP = "triggers_per_inapp";
+
+    // ---- Native Display (ND) frequency-cap storage keys (SDK-6055), mirror the in-app keys above ----
+    String KEY_ND_MAX_PER_DAY = "ndstmcd";                 // stored ND daily ceiling (mirror of istmcd_inapp)
+    String KEY_ND_COUNTS_SHOWN_TODAY = "ndstc";            // stored ND global shown-today (mirror of istc_inapp)
+    String KEY_ND_LAST_RESET_DATE = "nd_ict_date";         // ddMMyyyy of the last daily reset (mirror of ict_date)
+    String KEY_ND_COUNTS_PER_TARGET = "nd_counts_per_target";   // NdCountsStore namespace (per-target counts + globals)
+    String KEY_ND_IMPRESSIONS_PER_TARGET = "nd_impressions";    // ND ImpressionStore namespace (whenLimits timestamps)
+    String KEY_ND_TRIGGERS_PER_TARGET = "nd_triggers_per_target"; // onEvery/onExactly trigger counts
     String INAPP_ID_IN_PAYLOAD = "ti";
     int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
@@ -221,6 +252,9 @@ public interface Constants {
 
     String KEY_EFC = "efc";
     String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";
+    // ND opt-in flag (ONC-418). Absent/false => campaign is outside the ND fcap regime; true => honor the
+    // fcap fields present. Gates whether a shown ND unit counts toward the global ndmp/ndtlc budget.
+    String KEY_IS_ND_FCAP_ENABLED = "isNdFcapEnabled";
     String KEY_TLC = "tlc";
     String KEY_TDC = "tdc";
     String KEY_KV = "kv";
@@ -254,7 +288,6 @@ public interface Constants {
     String WZRK_PUSH_ID = "wzrk_pid";
     String WZRK_DEDUPE = "wzrk_dd";
     String WZRK_PUSH_SILENT = "wzrk_pn_s";
-    String EXTRAS_FROM = "extras_from";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";
     String NOTIF_ICON = "ico";
@@ -275,6 +308,42 @@ public interface Constants {
     String WZRK_SUBTITLE = "wzrk_st";
     String WZRK_COLOR = "wzrk_clr";
     String WZRK_DISMISS = "wzrk_dismiss";
+
+    // --- Live Updates ---
+    // Mirrors the iOS Live Activity contract (CLTAP_LIVE_ACTIVITY_* / kCTLA*).
+    // On Android there is no ActivityKit token concept — live updates are ordinary
+    // FCM data pushes, rendered by the SDK when `data` has a pt_id (Mode B), else routed to an
+    // ICleverTapLiveUpdateNotificationFactory (Mode A). These keys mark such
+    // pushes and carry the backend-assigned identity used for in-place updates + attribution.
+    /** Marker present on a Live Update push. Value is "true". */
+    String WZRK_LIVE_UPDATE = "wzrk_la";
+    /** Backend-assigned stable activity id. The SDK derives the in-place notification id from it, and
+     *  because it is {@code wzrk_}-prefixed it also flows into the lifecycle event {@code evtData}
+     *  automatically (serves both routing and attribution). */
+    String WZRK_LIVE_UPDATE_ID = "wzrk_activityId";
+    /** Single nested payload object carried by a Live Update push. Holds the render content for BOTH
+     *  modes: if it contains a {@code pt_id} the SDK renders it (Mode B, e.g. {@code {"pt_id":"pt_progress", ...}});
+     *  otherwise it is the client factory's custom data (Mode A). Not {@code wzrk_}-prefixed on purpose
+     *  so the render blob never leaks into analytics evtData. */
+    String WZRK_LIVE_UPDATE_DATA = "data";
+    /** Lifecycle event carried by the push, sent by BE, mapped 1:1 to the analytics state:
+     *  {@link #WZRK_LIVE_UPDATE_EVENT_START} → Started, {@link #WZRK_LIVE_UPDATE_EVENT_UPDATE} →
+     *  Updated, {@link #WZRK_LIVE_UPDATE_EVENT_END} → Ended. Anything else defaults to Updated. */
+    String WZRK_LIVE_UPDATE_EVENT = "wzrk_la_event";
+    String WZRK_LIVE_UPDATE_EVENT_START = "start";
+    String WZRK_LIVE_UPDATE_EVENT_UPDATE = "update";
+    String WZRK_LIVE_UPDATE_EVENT_END = "end";
+    /** Single event name raised for every Live Update lifecycle transition (mirrors iOS kCTLAEventName). */
+    String LIVE_UPDATE_EVENT_NAME = "Live Activity";
+    /** evtData field holding the lifecycle state. */
+    String LIVE_UPDATE_STATE_KEY = "state";
+    String LIVE_UPDATE_STATE_STARTED = "Started";
+    String LIVE_UPDATE_STATE_UPDATED = "Updated";
+    String LIVE_UPDATE_STATE_ENDED = "Ended";
+    String LIVE_UPDATE_STATE_DISMISSED = "Dismissed";
+    // Note: a missing Live Update channel falls back to the shared push fallback channel
+    // (FCM_FALLBACK_NOTIFICATION_CHANNEL_ID via CTXtensions.getOrCreateChannel), not a bespoke one.
+
     String WZRK_STICKY = "wzrk_sticky";
     String WZRK_SILENCE_IN_FOREGROUND = "wzrk_sif";
     String WZRK_SOUND = "wzrk_sound";
@@ -331,6 +400,7 @@ public interface Constants {
     String KEY_ORIENTATION = "orientation";
     String KEY_WZRK_PARAMS = "wzrkParams";
     String KEY_CONTENT = "content";
+    String KEY_METADATA = "metadata";
     String KEY_CUSTOM_KV = "custom_kv";
     String KEY_BORDER = "border";
     String KEY_RADIUS = "radius";
@@ -371,6 +441,8 @@ public interface Constants {
     int FETCH_TYPE_IN_APPS = 5;
     int FETCH_TYPE_IN_ACTION_IN_APPS = 6;
     int FETCH_TYPE_INBOX_V2 = 7;
+    // Native Display SS metadata refresh — wzrk_fetch t value, agreed with BE.
+    int FETCH_TYPE_ND_META = 8;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     String LOG_TAG_INAPP = "InApp : ";

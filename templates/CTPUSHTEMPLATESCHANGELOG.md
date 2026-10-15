@@ -1,4 +1,10 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.7.0 (October 15, 2026)
+
+#### New Features
+* **Progress Template:** Adds a new `Progress` template (`pt_progress`) for Live Updates — a single, remotely-updated notification that shows real-time progress, for example a delivery's status or a live score. On Android 16 (API 36) it renders as a native `Notification.ProgressStyle` with a segmented track, milestone points, a tracker icon, a status-bar chip, and ongoing-notification promotion; on older versions it falls back to a custom layout that mirrors the same look. See [Progress Template](CTPUSHTEMPLATES.md#progress-template).
+* Supports CleverTap Android SDK v8.5.0.
+
 ### Version 2.6.0 (October 1, 2026)
 
 #### New Features

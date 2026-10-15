@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+
+        <!--
+            Renders a push-template payload straight from `adb shell am broadcast`, so templates can
+            be checked on a device without sending a campaign. See PushTestReceiver.
+
+            It lives in the debug source set, and only here, because it has to be exported for the
+            adb shell to reach it - and an exported receiver that renders arbitrary payloads,
+            including their deep links, is not something to ship. Keeping it out of `main` means it
+            cannot reach a release build even by accident.
+        -->
+        <receiver
+            android:name=".PushTestReceiver"
+            android:exported="true" />
+
+        <!--
+            The same thing with a screen in front of it: paste or pick a payload, render it locally.
+            Not exported, but it renders arbitrary payloads all the same, so it stays debug-only.
+        -->
+        <activity
+            android:name=".LocalPushActivity"
+            android:exported="false"
+            android:label="Local Push (JSON)"
+            android:windowSoftInputMode="adjustResize" />
+
+    </application>
+
+</manifest>

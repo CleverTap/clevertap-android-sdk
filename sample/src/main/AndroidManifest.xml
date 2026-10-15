@@ -6,6 +6,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
+    <!-- Required only for Android 16+ promoted (Live Update) notifications, e.g. the progress-centric
+         template. The SDK does not force this; apps using the feature declare it themselves. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+
     <!--Enable below line to test for Android GO devices-->
     <!--<uses-feature android:name="android.hardware.ram.low" android:required="true"/>-->
 
@@ -175,6 +179,16 @@
         <activity
             android:name=".ui.inbox.CustomInboxComposeActivity"
             android:exported="false"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
+
+        <!-- QA tool: paste a Live Update payload and send it like a real FCM push. Exported so QA can
+             also start it from a computer with adb (see LiveUpdatePayloadActivity). -->
+        <activity
+            android:name=".LiveUpdatePayloadActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:label="Live Update payload (QA)"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
     </application>
 

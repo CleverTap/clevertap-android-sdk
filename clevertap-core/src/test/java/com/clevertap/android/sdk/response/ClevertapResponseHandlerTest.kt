@@ -31,6 +31,13 @@ class ClevertapResponseHandlerTest {
         mockFetchVariablesResponse = mockk(relaxed = true)
         mockGenericResponse = mockk(relaxed = true)
         mockBodyJson = mockk()
+
+        // Declare each processor's user-switch policy (the handler now filters on this, not on type).
+        every { mockInAppResponse.runsDuringUserSwitch() } returns true
+        every { mockGenericResponse.runsDuringUserSwitch() } returns true
+        every { mockInboxResponse.runsDuringUserSwitch() } returns false
+        every { mockDisplayUnitResponse.runsDuringUserSwitch() } returns true // ingests ND meta on a switch
+        every { mockFetchVariablesResponse.runsDuringUserSwitch() } returns false
     }
 
     @Test
@@ -54,13 +61,14 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = true, isUserSwitching = false, source = CTResponseSource.A1)
         responses.forEach { response ->
-            verify { response.processResponse(mockBodyJson, bodyString, mockContext) }
+            verify { response.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
         }
     }
 
     @Test
-    fun `handleResponse with isUserSwitching true excludes InboxResponse, DisplayUnitResponse, and FetchVariablesResponse`() {
+    fun `handleResponse with isUserSwitching true excludes InboxResponse and FetchVariablesResponse but runs DisplayUnitResponse`() {
         // Given
         val responses = listOf(
             mockInAppResponse,
@@ -80,15 +88,17 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses are not processed
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        // DisplayUnitResponse runs on a user switch too — it ingests per-account ND meta while skipping
+        // per-user content internally (runsDuringUserSwitch = true).
+        verify { mockDisplayUnitResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses are processed
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
-
-        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
     }
 
     @Test
@@ -106,7 +116,12 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
+        verify {
+            mockInAppResponse.processResponse(
+                mockBodyJson, bodyString, mockContext,
+                ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+            )
+        }
     }
 
     @Test
@@ -124,7 +139,12 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify { mockGenericResponse.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify {
+            mockGenericResponse.processResponse(
+                mockBodyJson, bodyString, mockContext,
+                ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+            )
+        }
     }
 
 
@@ -133,11 +153,13 @@ class ClevertapResponseHandlerTest {
         // Given
         val mockOtherResponse1 = mockk<CleverTapResponse>(relaxed = true)
         val mockOtherResponse2 = mockk<CleverTapResponse>(relaxed = true)
+        every { mockOtherResponse1.runsDuringUserSwitch() } returns true
+        every { mockOtherResponse2.runsDuringUserSwitch() } returns true
         val responses = listOf(
             mockInAppResponse,
             mockInboxResponse,      // Should be excluded
             mockOtherResponse1,
-            mockDisplayUnitResponse, // Should be excluded
+            mockDisplayUnitResponse, // Runs on user switch (4-arg), like InAppResponse
             mockOtherResponse2,
             mockFetchVariablesResponse // Should be excluded
         )
@@ -152,22 +174,23 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
+        val ctx = ResponseContext(isFullResponse = false, isUserSwitching = true, source = CTResponseSource.A1)
         // Verify excluded responses
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        // DisplayUnitResponse runs on a user switch too — it ingests per-account ND meta while skipping
+        // per-user content internally (runsDuringUserSwitch = true).
+        verify { mockDisplayUnitResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
 
         // Verify included responses
-        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, true) }
-
-        verify { mockOtherResponse1.processResponse(mockBodyJson, bodyString, mockContext) }
-
-        verify { mockOtherResponse2.processResponse(mockBodyJson, bodyString, mockContext) }
+        verify { mockInAppResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockOtherResponse1.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify { mockOtherResponse2.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
     }
 
 
     @Test
-    fun `handleResponse with only excluded response types and isUserSwitching true processes nothing`() {
+    fun `handleResponse with isUserSwitching true skips Inbox and FetchVariables but still runs DisplayUnitResponse`() {
         // Given
         val responses = listOf(
             mockInboxResponse,
@@ -185,8 +208,11 @@ class ClevertapResponseHandlerTest {
         )
 
         // Then
-        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockDisplayUnitResponse.processResponse(any(), any(), any()) }
-        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any()) }
+        val ctx = ResponseContext(isFullResponse = true, isUserSwitching = true, source = CTResponseSource.A1)
+        verify(exactly = 0) { mockInboxResponse.processResponse(any(), any(), any(), any()) }
+        // DisplayUnitResponse runs on a user switch too — it ingests per-account ND meta while skipping
+        // per-user content internally (runsDuringUserSwitch = true).
+        verify { mockDisplayUnitResponse.processResponse(mockBodyJson, bodyString, mockContext, ctx) }
+        verify(exactly = 0) { mockFetchVariablesResponse.processResponse(any(), any(), any(), any()) }
     }
 }

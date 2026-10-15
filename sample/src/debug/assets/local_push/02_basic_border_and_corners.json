@@ -1,0 +1,11 @@
+{
+  "pt_id": "pt_basic",
+  "pt_title": "Border + rounded corners",
+  "pt_msg": "pt_img_border_width 40, radius 12",
+  "pt_msg_summary": "Both border keys are required; width is height x value / 1000",
+  "pt_big_img": "https://picsum.photos/id/1011/1024/512",
+  "pt_img_corner_radius": "12",
+  "pt_img_border_width": "40",
+  "pt_img_border_clr": "#FF5722",
+  "pt_dl1": "ctdemo://com.clevertap.demo/HomeScreenActivity"
+}

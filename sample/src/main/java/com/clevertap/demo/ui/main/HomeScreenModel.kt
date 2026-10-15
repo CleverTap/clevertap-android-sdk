@@ -1,6 +1,10 @@
 package com.clevertap.demo.ui.main
 
+import com.clevertap.demo.BuildConfig
+
 object HomeScreenModel {
+
+    const val LOCAL_PUSH_SECTION = "LOCAL PUSH (JSON)"
 
     val listData: Map<String, List<String>> by lazy {
         mapOf(
@@ -53,7 +57,10 @@ object HomeScreenModel {
             ),
             "DISPLAY UNITS" to listOf(
                 "Get Display Unit For Id", "Get All Display Units",
-                "Notification Viewed event for Display Unit", "Notification Clicked event for Display Unit"
+                "Notification Viewed event for Display Unit", "Notification Clicked event for Display Unit",
+                "Log per-slide attribution for all Display Units",
+                "Element Viewed event for every slide",
+                "Element Clicked event for first slide"
             ),
             "PRODUCT CONFIGS" to listOf(
                 "Set Default Product Configs",
@@ -137,6 +144,43 @@ object HomeScreenModel {
                 "Opt Out - userOptOut: true (single param)",
                 "Opt Out - userOptOut: false (single param)"
             ),
-        )
+            // Live Update local demos (SDK-rendered pt_progress + the Mode A custom factory). Section
+            // index 19 -> click codes "19-N" are handled in HomeScreenFragment (they render locally,
+            // needing a Context).
+            "LIVE UPDATES" to listOf(
+                "Progress: Order Tracker (local demo)",
+                "Progress: Actions + Deep Link (local demo)",
+                "Progress: Countdown Chip + Promoted (local demo)",
+                "Progress: No Promotion (local demo)",
+                "Progress: Start/End Icons (local demo)",
+                "Progress: Plain Bar - determinate (local demo)",
+                "Progress: Plain Bar + Start/End Icons (local demo)",
+                "Progress: Indeterminate Bar (local demo)",
+                "Progress: Indeterminate Bar + Start/End Icons (local demo)",
+                "Progress: Unequal Segments 10/80/10 (local demo)",
+                "Progress: On Track - tracker + styled by progress (local demo)",
+                "Progress: On Track - no tracker, fade only (local demo)",
+                "Progress: Light/Dark Colors - default, white, black (local demo)",
+                "Progress: Edge Points 0/100 - ends hidden (local demo)",
+                "Progress: Edge Points 5/95 - control, all 4 dots (local demo)",
+                "Custom Live Update - Mode A factory (local demo)",
+                "Paste Live Update payload (QA)"
+            ),
+        ) + localPushSection()
     }
+
+    /**
+     * Command string for the local push tester, or null when the section is absent. Derived from the
+     * section's position so it cannot drift out of step with [listData].
+     */
+    val localPushCommand: String? by lazy {
+        listData.keys.indexOf(LOCAL_PUSH_SECTION).takeIf { it >= 0 }?.let { "$it-0" }
+    }
+
+    /**
+     * Debug-only section: LocalPushActivity lives in the debug source set, so there is nothing to
+     * open in a release build. Appended last, which keeps every other section's index unchanged.
+     */
+    private fun localPushSection(): Map<String, List<String>> =
+        if (BuildConfig.DEBUG) mapOf(LOCAL_PUSH_SECTION to listOf("Open Local Push Tester")) else emptyMap()
 }

@@ -6,6 +6,7 @@ import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.network.api.ContentFetchRequestBody
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.network.http.Response
+import com.clevertap.android.sdk.response.CTResponseSource
 import com.clevertap.android.sdk.response.ClevertapResponseHandler
 import com.clevertap.android.sdk.toJsonOrNull
 import com.clevertap.android.sdk.utils.Clock
@@ -40,6 +41,10 @@ internal class ContentFetchManager(
 
     var clevertapResponseHandler: ClevertapResponseHandler? = null
 
+    // Fired once when a content-fetch batch settles (success/error/timeout/cancellation). Drives the
+    // app-launch arbitration window close. Wired in CleverTapFactory.
+    var onFetchBatchComplete: (() -> Unit)? = null
+
     var parentJob = SupervisorJob()
 
     private var scope = CoroutineScope(
@@ -47,7 +52,11 @@ internal class ContentFetchManager(
     )
     private val logger = config.logger
 
-    fun handleContentFetch(contentFetchItems: JSONArray, packageName: String) {
+    fun handleContentFetch(
+        contentFetchItems: JSONArray,
+        packageName: String,
+        firesArbitrationComplete: Boolean = false
+    ) {
         scope.launch {
             try {
                 val payload = getContentFetchPayload(contentFetchItems, packageName)
@@ -60,6 +69,20 @@ internal class ContentFetchManager(
                 logger.verbose(TAG, "Fetch job was cancelled.")
             } catch (e: Exception) {
                 logger.verbose(TAG, "Unexpected error during content fetch", e)
+            } finally {
+                // Settle the app-launch arbitration window ONLY for the batch that owns it — the /a1
+                // whose content_fetch carries an app-launch in-app. Other batches (inbox / native
+                // display / other events) run concurrently under limitedParallelism and must NOT close
+                // the window: a non-owning fetch finishing first would show the /a1 winner early and
+                // then let the real /content winner double-show. A throwing callback here (in a
+                // finally) would crash the host app; contain it.
+                if (firesArbitrationComplete) {
+                    try {
+                        onFetchBatchComplete?.invoke()
+                    } catch (t: Throwable) {
+                        logger.verbose(TAG, "Error in content fetch completion callback", t)
+                    }
+                }
             }
         }
     }
@@ -131,7 +154,13 @@ internal class ContentFetchManager(
                 return true
             }
 
-            clevertapResponseHandler?.handleResponse(false, bodyJson, bodyString, isUserSwitching)
+            clevertapResponseHandler?.handleResponse(
+                isFullResponse = false,
+                bodyJson = bodyJson,
+                bodyString = bodyString,
+                isUserSwitching = isUserSwitching,
+                source = CTResponseSource.CONTENT_FETCH
+            )
             return true
         } else {
             when (response.code) {

@@ -1,0 +1,12 @@
+{
+  "pt_id": "pt_rating",
+  "pt_title": "Rating template",
+  "pt_msg": "How did we do?",
+  "pt_big_img": "https://picsum.photos/id/1011/1024/512",
+  "pt_default_dl": "ctdemo://com.clevertap.demo/HomeScreenActivity",
+  "pt_dl1": "ctdemo://com.clevertap.demo/HomeScreenActivity",
+  "pt_dl2": "ctdemo://com.clevertap.demo/HomeScreenActivity",
+  "pt_dl3": "ctdemo://com.clevertap.demo/HomeScreenActivity",
+  "pt_dl4": "ctdemo://com.clevertap.demo/HomeScreenActivity",
+  "pt_dl5": "ctdemo://com.clevertap.demo/HomeScreenActivity"
+}

@@ -1,0 +1,11 @@
+{
+  "pt_id": "pt_zero_bezel",
+  "pt_title": "Zero bezel",
+  "pt_msg": "Image runs edge to edge",
+  "pt_msg_summary": "Collapsed view takes its own image and scale type",
+  "pt_big_img": "https://picsum.photos/id/1015/1024/512",
+  "pt_big_img_collapsed": "https://picsum.photos/id/1015/1024/512",
+  "pt_scale_type": "center_crop",
+  "pt_scale_type_collapsed": "center_crop",
+  "pt_dl1": "ctdemo://com.clevertap.demo/HomeScreenActivity"
+}
