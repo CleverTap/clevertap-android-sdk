@@ -141,14 +141,14 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
     fun `Mode A with factory - renders and raises Started`() {
         createChannel("la_ch")
         mockkStatic(CleverTapAPI::class)
-        val factory = mockk<ICleverTapNotificationFactory>()
-        every { CleverTapAPI.getNotificationFactory() } returns factory
+        val factory = mockk<ICleverTapLiveUpdateNotificationFactory>()
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns factory
         every { factory.onCreateNotification(any(), any()) } returns factoryNotification("la_ch")
 
         val extras = baseBundle().apply {
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_1")
-            putString(Constants.WZRK_LIVE_ACTIVITY_EVENT, Constants.WZRK_LIVE_ACTIVITY_EVENT_START)
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_1")
+            putString(Constants.WZRK_LIVE_UPDATE_EVENT, Constants.WZRK_LIVE_UPDATE_EVENT_START)
             putString("wzrk_cid", "la_ch")
         }
 
@@ -156,7 +156,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
 
         verify(exactly = 1) { factory.onCreateNotification(appCtx, extras) }
         verify(exactly = 1) {
-            analyticsManager.raiseLiveActivityLifecycleEvent(extras, Constants.LIVE_ACTIVITY_STATE_STARTED)
+            analyticsManager.raiseLiveUpdateLifecycleEvent(extras, Constants.LIVE_UPDATE_STATE_STARTED)
         }
         // Mode A is rendered entirely by the factory; the SDK renderer is not consulted.
         verify(exactly = 0) { renderer.getMessage(any()) }
@@ -165,70 +165,70 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
     @Test
     fun `Mode A factory returns null - does not raise lifecycle`() {
         mockkStatic(CleverTapAPI::class)
-        val factory = mockk<ICleverTapNotificationFactory>()
-        every { CleverTapAPI.getNotificationFactory() } returns factory
+        val factory = mockk<ICleverTapLiveUpdateNotificationFactory>()
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns factory
         every { factory.onCreateNotification(any(), any()) } returns null
 
         val extras = baseBundle().apply {
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_1")
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_1")
         }
 
         buildSut()._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
 
-        verify(exactly = 0) { analyticsManager.raiseLiveActivityLifecycleEvent(any(), any()) }
+        verify(exactly = 0) { analyticsManager.raiseLiveUpdateLifecycleEvent(any(), any()) }
     }
 
     @Test
     fun `Mode A end event - raises Ended`() {
         createChannel("la_ch")
         mockkStatic(CleverTapAPI::class)
-        val factory = mockk<ICleverTapNotificationFactory>()
-        every { CleverTapAPI.getNotificationFactory() } returns factory
+        val factory = mockk<ICleverTapLiveUpdateNotificationFactory>()
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns factory
         every { factory.onCreateNotification(any(), any()) } returns factoryNotification("la_ch")
 
         val extras = baseBundle().apply {
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_1")
-            putString(Constants.WZRK_LIVE_ACTIVITY_EVENT, Constants.WZRK_LIVE_ACTIVITY_EVENT_END)
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_1")
+            putString(Constants.WZRK_LIVE_UPDATE_EVENT, Constants.WZRK_LIVE_UPDATE_EVENT_END)
             putString("wzrk_cid", "la_ch")
         }
 
         buildSut()._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
 
         verify(exactly = 1) {
-            analyticsManager.raiseLiveActivityLifecycleEvent(extras, Constants.LIVE_ACTIVITY_STATE_ENDED)
+            analyticsManager.raiseLiveUpdateLifecycleEvent(extras, Constants.LIVE_UPDATE_STATE_ENDED)
         }
     }
 
     @Test
     fun `Mode A no factory - empty-message core renderer is silent (not blank render)`() {
         mockkStatic(CleverTapAPI::class)
-        every { CleverTapAPI.getNotificationFactory() } returns null
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns null
 
         // Real core renderer: getMessage reads nm (absent -> empty), so the empty-message gate applies.
         val coreRenderer = CoreNotificationRenderer()
         val extras = baseBundle().apply {
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_1")
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_1")
         }
 
         buildSut(theRenderer = coreRenderer)._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
 
         // Falls through to SDK render with the core renderer + empty message => treated as silent.
         verify(exactly = 1) { dbAdapter.storeUninstallTimestamp() }
-        verify(exactly = 0) { analyticsManager.raiseLiveActivityLifecycleEvent(any(), any()) }
+        verify(exactly = 0) { analyticsManager.raiseLiveUpdateLifecycleEvent(any(), any()) }
     }
 
     @Test
     fun `Mode B pt_id with empty message - not silent, proceeds to render`() {
         mockkStatic(CleverTapAPI::class)
-        every { CleverTapAPI.getNotificationFactory() } returns null
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns null
         every { renderer.getMessage(any()) } returns "" // title-only pt_progress
 
         val extras = baseBundle().apply {
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_1")
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_1")
             putString("pt_id", "pt_progress")
         }
 

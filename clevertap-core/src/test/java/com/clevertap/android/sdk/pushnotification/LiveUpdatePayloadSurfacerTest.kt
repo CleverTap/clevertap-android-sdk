@@ -9,22 +9,22 @@ import org.robolectric.RobolectricTestRunner
 
 /** Robolectric (for real org.json) tests for flattening the Live Update `data` object. */
 @RunWith(RobolectricTestRunner::class)
-class LiveActivityPayloadSurfacerTest {
+class LiveUpdatePayloadSurfacerTest {
 
     @Test
     fun `null or empty data yields empty`() {
-        assertTrue(LiveActivityPayloadSurfacer.flatten(null, emptySet()).isEmpty())
-        assertTrue(LiveActivityPayloadSurfacer.flatten("", emptySet()).isEmpty())
+        assertTrue(LiveUpdatePayloadSurfacer.flatten(null, emptySet()).isEmpty())
+        assertTrue(LiveUpdatePayloadSurfacer.flatten("", emptySet()).isEmpty())
     }
 
     @Test
     fun `malformed data yields empty and does not throw`() {
-        assertTrue(LiveActivityPayloadSurfacer.flatten("{not json", emptySet()).isEmpty())
+        assertTrue(LiveUpdatePayloadSurfacer.flatten("{not json", emptySet()).isEmpty())
     }
 
     @Test
     fun `primitives are coerced to strings`() {
-        val out = LiveActivityPayloadSurfacer.flatten(
+        val out = LiveUpdatePayloadSurfacer.flatten(
             """{"pt_progress":456,"pt_promote":true,"nt":"Pizza"}""", emptySet()
         )
         assertEquals("456", out["pt_progress"])
@@ -34,7 +34,7 @@ class LiveActivityPayloadSurfacerTest {
 
     @Test
     fun `nested array and object are kept as compact json strings`() {
-        val out = LiveActivityPayloadSurfacer.flatten(
+        val out = LiveUpdatePayloadSurfacer.flatten(
             """{"pt_progress_segments":[{"length":1}],"obj":{"a":1}}""", emptySet()
         )
         assertEquals("""[{"length":1}]""", out["pt_progress_segments"])
@@ -43,7 +43,7 @@ class LiveActivityPayloadSurfacerTest {
 
     @Test
     fun `root wins - a key already present at top level is not surfaced`() {
-        val out = LiveActivityPayloadSurfacer.flatten(
+        val out = LiveUpdatePayloadSurfacer.flatten(
             """{"wzrk_pid":"INNER","nt":"Pizza"}""", setOf("wzrk_pid")
         )
         assertFalse(out.containsKey("wzrk_pid"))
@@ -52,7 +52,7 @@ class LiveActivityPayloadSurfacerTest {
 
     @Test
     fun `json null is skipped, not written as the literal null`() {
-        val out = LiveActivityPayloadSurfacer.flatten("""{"x":null,"y":"1"}""", emptySet())
+        val out = LiveUpdatePayloadSurfacer.flatten("""{"x":null,"y":"1"}""", emptySet())
         assertFalse(out.containsKey("x"))
         assertEquals("1", out["y"])
     }

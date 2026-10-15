@@ -9,10 +9,10 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
-import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory
+import com.clevertap.android.sdk.pushnotification.ICleverTapLiveUpdateNotificationFactory
 
 /**
- * Sample [ICleverTapNotificationFactory] — **Mode A (client renders)** — showing how a client can
+ * Sample [ICleverTapLiveUpdateNotificationFactory] — **Mode A (client renders)** — showing how a client can
  * build a **progress-centric** Live Update themselves, without the SDK's `pt_progress` template.
  *
  * On **Android 16+** it uses `NotificationCompat.ProgressStyle` directly (the sample app ships
@@ -34,7 +34,7 @@ import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory
  * builds the Notification and, because a client-rendered notification owns its own content intent,
  * wires the click so CleverTap records "Notification Clicked" (see [contentIntent]).
  */
-class CustomNotificationFactory : ICleverTapNotificationFactory {
+class CustomNotificationFactory : ICleverTapLiveUpdateNotificationFactory {
 
     companion object {
         private const val CHANNEL_ID = "live_updates_channel"

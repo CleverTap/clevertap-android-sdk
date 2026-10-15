@@ -106,15 +106,15 @@ class PushProviders internal constructor(
 
         try {
             // May be overridden below for Live Update Mode B so successive updates land in place.
-            var liveActivityNotificationId = notificationId
+            var liveUpdateNotificationId = notificationId
 
             // Live Update: flatten the nested `data` (pt_id + client render keys) to the top level so
             // the factory routing below can read it. Idempotent (root-wins), so it is a no-op when the
             // SDK's FCM handler path already surfaced it — this is what lets a Mode A client-factory
             // Live Update work on the CleverTapAPI.createNotification entry point too.
-            val isLiveActivity = LiveActivityRouter.isLiveActivity(extras)
-            if (isLiveActivity) {
-                PushNotificationHandler.surfaceLiveActivityPayload(extras)
+            val isLiveUpdate = LiveUpdateRouter.isLiveUpdate(extras)
+            if (isLiveUpdate) {
+                PushNotificationHandler.surfaceLiveUpdatePayload(extras)
             }
 
             val isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equals("true", ignoreCase = true)
@@ -132,35 +132,35 @@ class PushProviders internal constructor(
                 }
             }
 
-            // Live Activity (live update) pushes: a client-supplied factory renders them unless the
+            // Live Update pushes: a client-supplied factory renders them unless the
             // payload has a pt_id (see below).
             // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
-            if (isLiveActivity) {
+            if (isLiveUpdate) {
                 // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
                 // the gate): pt_id present => Mode B (SDK/Push Template renders, and it takes
                 // precedence over a client factory); pt_id absent => Mode A (client factory renders
                 // the `data` custom content). Lifecycle events are raised in postNotificationRendered
                 // for both modes.
                 val isPtMode = PushNotificationHandler.isForPushTemplates(extras)
-                val customFactory = CleverTapAPI.getNotificationFactory()
+                val customFactory = CleverTapAPI.getLiveUpdateNotificationFactory()
                 if (!isPtMode && customFactory == null) {
                     config.logger.debug(
                         config.accountId,
-                        "Live Update has no pt_id and no ICleverTapNotificationFactory is set; " +
-                            "call setNotificationFactory in Application.onCreate"
+                        "Live Update has no pt_id and no ICleverTapLiveUpdateNotificationFactory is set; " +
+                            "call setLiveUpdateNotificationFactory in Application.onCreate"
                     )
                 }
 
-                if (LiveActivityRouter.mode(isPtMode, customFactory != null) == LiveActivityMode.FACTORY) {
+                if (LiveUpdateRouter.mode(isPtMode, customFactory != null) == LiveUpdateMode.FACTORY) {
                     // Mode A — client factory renders the Notification.
-                    triggerLiveActivityNotification(context, extras, customFactory)
+                    triggerLiveUpdateNotification(context, extras, customFactory)
                     return
                 }
                 // Mode B — SDK renders with the SDK-owned in-place id (derived from wzrk_activityId)
                 // so successive updates for the same activity replace the same notification.
-                val inPlaceId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID))
+                val inPlaceId = LiveUpdateRouter.stableId(extras.getString(Constants.WZRK_LIVE_UPDATE_ID))
                 if (inPlaceId != null) {
-                    liveActivityNotificationId = inPlaceId
+                    liveUpdateNotificationId = inPlaceId
                 }
                 // fall through to normal rendering
             }
@@ -173,9 +173,9 @@ class PushProviders internal constructor(
             // Mode A payload delivered to a build with no factory registered (SDK_RENDER fall-through),
             // or a Mode B pt_progress on the createNotification entry that never reached the template
             // renderer. Keep treating an empty message there as a silent push (pre-Live-Update behavior).
-            val liveActivityTemplateRender =
-                isLiveActivity && iNotificationRenderer !is CoreNotificationRenderer
-            if (notifMessage.isEmpty() && !liveActivityTemplateRender) {
+            val liveUpdateTemplateRender =
+                isLiveUpdate && iNotificationRenderer !is CoreNotificationRenderer
+            if (notifMessage.isEmpty() && !liveUpdateTemplateRender) {
                 //silent notification
                 config.logger.verbose(config.accountId, "Push notification message is empty, not rendering")
                 baseDatabaseManager.loadDBAdapter(context).storeUninstallTimestamp()
@@ -189,7 +189,7 @@ class PushProviders internal constructor(
             // Resolve the title for parity/side-effects; the renderer applies the app-name fallback
             // itself when it builds the notification in triggerNotification.
             iNotificationRenderer.getTitle(extras, context)
-            triggerNotification(context, extras, liveActivityNotificationId)
+            triggerNotification(context, extras, liveUpdateNotificationId)
         } catch (t: Throwable) {
             // Occurs if the notification image was null
             // Let's return, as we couldn't get a handle on the app's icon
@@ -943,8 +943,8 @@ class PushProviders internal constructor(
 
         // Live Update Mode B (SDK-rendered): attach the dismissal delete intent so swipe-away
         // raises the "Dismissed" event — respecting any delete intent a Push Template already set.
-        if (LiveActivityRouter.isLiveActivity(extras)) {
-            applyLiveActivityDismissIntent(context, n, extras, notifId)
+        if (LiveUpdateRouter.isLiveUpdate(extras)) {
+            applyLiveUpdateDismissIntent(context, n, extras, notifId)
         }
 
         notificationManager.notify(notifId, n)
@@ -954,14 +954,14 @@ class PushProviders internal constructor(
     }
 
     /**
-     * Renders a Live Activity (live update) push via the client-supplied factory.
+     * Renders a Live Update push via the client-supplied factory.
      *
      * Unlike a regular custom-factory render, the SDK owns lifecycle here to stay on par with
      * the iOS Live Activity contract.
      */
-    private fun triggerLiveActivityNotification(
+    private fun triggerLiveUpdateNotification(
         context: Context, extras: Bundle,
-        customFactory: ICleverTapNotificationFactory?
+        customFactory: ICleverTapLiveUpdateNotificationFactory?
     ) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
 
@@ -975,24 +975,24 @@ class PushProviders internal constructor(
             notification = customFactory!!.onCreateNotification(context, extras) ?: run {
                 config.logger.debug(
                     config.accountId,
-                    "ICleverTapNotificationFactory returned null, not rendering notification"
+                    "ICleverTapLiveUpdateNotificationFactory returned null, not rendering notification"
                 )
                 return
             }
         } catch (t: Throwable) {
-            config.logger.debug(config.accountId, "ICleverTapNotificationFactory threw an exception", t)
+            config.logger.debug(config.accountId, "ICleverTapLiveUpdateNotificationFactory threw an exception", t)
             return
         }
 
         // SDK owns the id so updates land on the same notification (in-place). It is derived from
         // the stable wzrk_activityId; if a malformed push omits it, fall back to the per-send
         // wzrk_pid so the notification still shows (it just won't update in place).
-        val activityNotifId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID))
+        val activityNotifId = LiveUpdateRouter.stableId(extras.getString(Constants.WZRK_LIVE_UPDATE_ID))
         val notificationId: Int
         if (activityNotifId != null) {
             notificationId = activityNotifId
         } else {
-            val pidNotifId = LiveActivityRouter.stableId(extras.getString(Constants.WZRK_PUSH_ID))
+            val pidNotifId = LiveUpdateRouter.stableId(extras.getString(Constants.WZRK_PUSH_ID))
             notificationId = pidNotifId ?: clock.currentTimeSeconds().toInt()
             config.logger.debug(
                 config.accountId,
@@ -1001,13 +1001,13 @@ class PushProviders internal constructor(
         }
 
         val event = extras.getString(
-            Constants.WZRK_LIVE_ACTIVITY_EVENT,
-            Constants.WZRK_LIVE_ACTIVITY_EVENT_UPDATE
+            Constants.WZRK_LIVE_UPDATE_EVENT,
+            Constants.WZRK_LIVE_UPDATE_EVENT_UPDATE
         )
 
         // Guarantee the notification lands in a real channel (same fallback as core push). This may
         // rebuild the notification, so resolve the channel BEFORE attaching the dismiss intent.
-        notification = ensureLiveActivityChannel(context, notification, notificationManager)
+        notification = ensureLiveUpdateChannel(context, notification, notificationManager)
 
         // Respect a user-blocked channel: don't post (or record lifecycle/Viewed) for a notification
         // nobody will see — same gate triggerNotification applies to core pushes.
@@ -1023,12 +1023,12 @@ class PushProviders internal constructor(
         }
 
         // Attach a delete intent for dismissal tracking, without clobbering one the client set.
-        applyLiveActivityDismissIntent(context, notification, extras, notificationId)
+        applyLiveUpdateDismissIntent(context, notification, extras, notificationId)
 
         notificationManager.notify(notificationId, notification)
         config.logger.debug(
             config.accountId,
-            "Rendered Live Activity notification (id=$notificationId, event=$event)"
+            "Rendered Live Update notification (id=$notificationId, event=$event)"
         )
 
         // Lifecycle events (Started/Updated/Ended) are raised centrally in postNotificationRendered
@@ -1037,11 +1037,11 @@ class PushProviders internal constructor(
     }
 
     /**
-     * Guards against Android O+ silently dropping a Live Activity (Mode A / factory) notification
+     * Guards against Android O+ silently dropping a Live Update (Mode A / factory) notification
      * posted to a channel that does not exist — reusing the same channel resolution + fallback
      * as ordinary CleverTap push notifications.
      */
-    private fun ensureLiveActivityChannel(
+    private fun ensureLiveUpdateChannel(
         context: Context, notification: Notification,
         notificationManager: NotificationManager
     ): Notification {
@@ -1084,12 +1084,12 @@ class PushProviders internal constructor(
      * raises the "Dismissed" event — but only if the notification does not already carry a delete
      * intent set by the client (Mode A factory) or a Push Template.
      */
-    private fun applyLiveActivityDismissIntent(
+    private fun applyLiveUpdateDismissIntent(
         context: Context, notification: Notification,
         extras: Bundle, notificationId: Int
     ) {
         if (notification.deleteIntent == null) {
-            notification.deleteIntent = liveActivityDismissIntent(context, extras, notificationId)
+            notification.deleteIntent = liveUpdateDismissIntent(context, extras, notificationId)
         } else {
             config.logger.debug(
                 config.accountId,
@@ -1099,10 +1099,10 @@ class PushProviders internal constructor(
         }
     }
 
-    private fun liveActivityDismissIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent {
-        val dismissIntent = Intent(context, CTLiveActivityDismissReceiver::class.java)
+    private fun liveUpdateDismissIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent {
+        val dismissIntent = Intent(context, CTLiveUpdateDismissReceiver::class.java)
         dismissIntent.putExtras(extras)
-        dismissIntent.putExtra(Constants.KEY_CT_TYPE, CTLiveActivityDismissReceiver.TYPE_DISMISS)
+        dismissIntent.putExtra(Constants.KEY_CT_TYPE, CTLiveUpdateDismissReceiver.TYPE_DISMISS)
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (VERSION.SDK_INT >= VERSION_CODES.M) {
             flags = flags or PendingIntent.FLAG_IMMUTABLE
@@ -1113,11 +1113,11 @@ class PushProviders internal constructor(
     private fun postNotificationRendered(context: Context, extras: Bundle) {
         // Raise the "Live Activity" lifecycle event for any live-update render (factory Mode A or
         // SDK-rendered Mode B) — exactly once, and independent of the wzrk_rnv (viewed) gate below.
-        if (LiveActivityRouter.isLiveActivity(extras)) {
+        if (LiveUpdateRouter.isLiveUpdate(extras)) {
             // State is driven entirely by the BE-sent wzrk_la_event (start/update/end) — no local
-            // first-render tracking. See LiveActivityLifecycle.
-            val state = LiveActivityLifecycle.state(extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT))
-            analyticsManager.raiseLiveActivityLifecycleEvent(extras, state)
+            // first-render tracking. See LiveUpdateLifecycle.
+            val state = LiveUpdateLifecycle.state(extras.getString(Constants.WZRK_LIVE_UPDATE_EVENT))
+            analyticsManager.raiseLiveUpdateLifecycleEvent(extras, state)
         }
 
         val ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE)

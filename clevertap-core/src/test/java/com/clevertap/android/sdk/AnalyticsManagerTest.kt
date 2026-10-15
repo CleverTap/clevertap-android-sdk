@@ -2029,21 +2029,21 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `raiseLiveActivityLifecycleEvent queues a Live Activity NV event carrying the state`() {
+    fun `raiseLiveUpdateLifecycleEvent queues a Live Activity NV event carrying the state`() {
         val bundle = Bundle().apply {
             putString("wzrk_activityId", "act-1")
             putString("wzrk_id", "id-1")
         }
 
-        analyticsManagerSUT.raiseLiveActivityLifecycleEvent(bundle, Constants.LIVE_ACTIVITY_STATE_STARTED)
+        analyticsManagerSUT.raiseLiveUpdateLifecycleEvent(bundle, Constants.LIVE_UPDATE_STATE_STARTED)
 
         verify {
             eventQueueManager.queueEvent(
                 context,
                 match {
-                    it.optString("evtName") == Constants.LIVE_ACTIVITY_EVENT_NAME &&
-                        it.optJSONObject("evtData")?.optString(Constants.LIVE_ACTIVITY_STATE_KEY) ==
-                        Constants.LIVE_ACTIVITY_STATE_STARTED
+                    it.optString("evtName") == Constants.LIVE_UPDATE_EVENT_NAME &&
+                        it.optJSONObject("evtData")?.optString(Constants.LIVE_UPDATE_STATE_KEY) ==
+                        Constants.LIVE_UPDATE_STATE_STARTED
                 },
                 Constants.NV_EVENT,
                 any<FlattenedEventData.EventProperties>()
@@ -2052,8 +2052,8 @@ class AnalyticsManagerTest {
     }
 
     @Test
-    fun `raiseLiveActivityLifecycleEvent ignores an empty bundle`() {
-        analyticsManagerSUT.raiseLiveActivityLifecycleEvent(Bundle(), Constants.LIVE_ACTIVITY_STATE_ENDED)
+    fun `raiseLiveUpdateLifecycleEvent ignores an empty bundle`() {
+        analyticsManagerSUT.raiseLiveUpdateLifecycleEvent(Bundle(), Constants.LIVE_UPDATE_STATE_ENDED)
 
         verify(exactly = 0) {
             eventQueueManager.queueEvent(any(), any(), Constants.NV_EVENT, any<FlattenedEventData.EventProperties>())

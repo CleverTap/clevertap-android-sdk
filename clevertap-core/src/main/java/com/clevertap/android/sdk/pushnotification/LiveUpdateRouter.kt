@@ -4,9 +4,9 @@ import android.os.Bundle
 import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 
-/** Rendering mode chosen for a Live Update (live activity) push. */
+/** Rendering mode chosen for a Live Update push. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-enum class LiveActivityMode {
+enum class LiveUpdateMode {
     /** SDK renders it (Core or Push Template) — chosen when the payload carries a `pt_id`. */
     SDK_RENDER,
 
@@ -20,12 +20,12 @@ enum class LiveActivityMode {
  * notification id are unit-testable without any Android I/O (no DB, NotificationManager, etc.).
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-object LiveActivityRouter {
+object LiveUpdateRouter {
 
     /** True when the push is a Live Update: `wzrk_la` is "true" (case-insensitive). */
     @JvmStatic
-    fun isLiveActivity(extras: Bundle?): Boolean =
-        "true".equals(extras?.getString(Constants.WZRK_LIVE_ACTIVITY), ignoreCase = true)
+    fun isLiveUpdate(extras: Bundle?): Boolean =
+        "true".equals(extras?.getString(Constants.WZRK_LIVE_UPDATE), ignoreCase = true)
 
     /**
      * A `pt_id` in the payload (Mode B) means "SDK render this" and **wins over a registered
@@ -33,8 +33,8 @@ object LiveActivityRouter {
      * factory (Mode A). Otherwise the SDK renders (its Core/Template renderer).
      */
     @JvmStatic
-    fun mode(isPtMode: Boolean, hasFactory: Boolean): LiveActivityMode =
-        if (!isPtMode && hasFactory) LiveActivityMode.FACTORY else LiveActivityMode.SDK_RENDER
+    fun mode(isPtMode: Boolean, hasFactory: Boolean): LiveUpdateMode =
+        if (!isPtMode && hasFactory) LiveUpdateMode.FACTORY else LiveUpdateMode.SDK_RENDER
 
     /**
      * Deterministic, positive notification id derived from a stable key (the `wzrk_activityId`) so

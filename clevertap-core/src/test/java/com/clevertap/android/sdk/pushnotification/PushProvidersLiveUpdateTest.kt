@@ -30,7 +30,7 @@ import org.robolectric.RobolectricTestRunner
  * message must NOT drop it as a silent push — whereas an ordinary empty-message push still is silent.
  */
 @RunWith(RobolectricTestRunner::class)
-class PushProvidersLiveActivityTest : BaseTestCase() {
+class PushProvidersLiveUpdateTest : BaseTestCase() {
 
     private lateinit var baseDatabaseManager: BaseDatabaseManager
     private lateinit var dbAdapter: DBAdapter
@@ -54,7 +54,7 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
         logger = mockk(relaxed = true)
         val config = spyk(cleverTapInstanceConfig)
         every { config.logger } returns logger
-        CleverTapAPI.setNotificationFactory(null)
+        CleverTapAPI.setLiveUpdateNotificationFactory(null)
 
         // Build a real PushProviders via its internal constructor (skips provider discovery in init()).
         pushProviders = PushProviders(
@@ -71,7 +71,7 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
 
     @After
     fun tearDown() {
-        CleverTapAPI.setNotificationFactory(null)
+        CleverTapAPI.setLiveUpdateNotificationFactory(null)
     }
 
     @Test
@@ -91,8 +91,8 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
     fun `empty-message Live Update is not dropped as silent and proceeds to render`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_A1234")
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_A1234")
         }
 
         pushProviders._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
@@ -106,8 +106,8 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
     fun `Live Update without pt_id and without a factory logs where to register the factory`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_A1234")
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_A1234")
         }
 
         pushProviders._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
@@ -118,11 +118,11 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
     @Test
     fun `factory registered as a Kotlin lambda renders a Live Update without pt_id`() {
         var called = false
-        CleverTapAPI.setNotificationFactory { _, _ -> called = true; null }
+        CleverTapAPI.setLiveUpdateNotificationFactory { _, _ -> called = true; null }
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_A1234")
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_A1234")
         }
 
         pushProviders._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
@@ -134,8 +134,8 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
     fun `pt_id Live Update without a factory does not log the missing factory`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
-            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_A1234")
+            putString(Constants.WZRK_LIVE_UPDATE, "true")
+            putString(Constants.WZRK_LIVE_UPDATE_ID, "order_A1234")
             putString("pt_id", "pt_progress")
         }
 
