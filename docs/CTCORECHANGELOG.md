@@ -5,13 +5,12 @@
 * **Live Updates:** The SDK can now power CleverTap-driven Live Updates — a single,
   continuously-updating notification that surfaces real-time information (for example a live score or a
   delivery's progress) and is refreshed remotely without the user reopening the app. On Android these
-  are delivered as ordinary FCM pushes, rendered by the Push Templates `pt_progress` template or a
-  custom `ICleverTapLiveUpdateNotificationFactory`, so there is no token or activity-registration step. Each
-  update is keyed by `wzrk_activityId`, from which the SDK derives a deterministic notification id so
-  successive `update` and `end` pushes refresh the same notification in place. A single `Live Activity`
-  lifecycle event is raised with a `state` field (Started / Updated / Ended / Dismissed). See
-  [Live Updates](CTLIVEUPDATES.md). Pair with the Push Templates `pt_progress` template (v2.7.0)
-  for a ready-made progress-bar live update.
+  are delivered as ordinary FCM pushes, rendered by the Push Templates `pt_progress` template (v2.7.0)
+  or a custom `ICleverTapLiveUpdateNotificationFactory`, so there is no token or activity-registration
+  step. Each update is keyed by `wzrk_activityId`, from which the SDK derives a deterministic
+  notification id so successive `update` and `end` pushes refresh the same notification in place. A
+  single `Live Activity` lifecycle event is raised with a `state` field (Started / Updated / Ended /
+  Dismissed). See [Live Updates](CTLIVEUPDATES.md).
 * **Native Display Frequency Caps:** Adds frequency-cap support for Native Display (Display Units). A
   campaign is only held back once your app has reported those impressions with
   `pushDisplayUnitViewedEventForID`. Supports server-side and legacy caps — session, daily,
