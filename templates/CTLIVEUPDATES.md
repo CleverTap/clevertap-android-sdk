@@ -124,6 +124,7 @@ The campaign's final push ends the activity: the notification stops being ongoin
 # Requirements
 
 - Live Updates are delivered over your existing FCM push setup — no extra registration is required.
+- As for any push, Android 13 (API 33) and above need the `POST_NOTIFICATIONS` runtime permission (see [Push primer](EXAMPLES.md#push-primer-android-13-notification-runtime-permission)).
 - To promote the progress-centric notification on Android 16 (API 36) and above, add `<uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />` to your app's `AndroidManifest.xml`.
 - The progress-centric notification requires the Push Templates SDK (see [Push Templates](CTPUSHTEMPLATES.md)).
 - The native Android 16 style requires `androidx.core:core` 1.17.0 or above in your app; with an older version the SDK uses the fallback layout on Android 16 too.
