@@ -3555,6 +3555,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * notification channel (created if missing), the notification id (derived from
      * {@code wzrk_activityId} for in-place updates), lifecycle/viewed analytics, and deduplication.</p>
      *
+     * <p>Call this in {@link Application#onCreate()}: a push can start the app without any Activity.</p>
+     *
      * @param factory The factory implementation, or {@code null} to revert to default rendering.
      */
     public static void setNotificationFactory(@Nullable ICleverTapNotificationFactory factory) {

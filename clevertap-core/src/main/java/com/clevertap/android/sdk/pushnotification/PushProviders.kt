@@ -144,6 +144,13 @@ class PushProviders internal constructor(
                 // for both modes.
                 val isPtMode = PushNotificationHandler.isForPushTemplates(extras)
                 val customFactory = CleverTapAPI.getNotificationFactory()
+                if (!isPtMode && customFactory == null) {
+                    config.logger.debug(
+                        config.accountId,
+                        "Live Update has no pt_id and no ICleverTapNotificationFactory is set; " +
+                            "call setNotificationFactory in Application.onCreate"
+                    )
+                }
 
                 if (LiveActivityRouter.mode(isPtMode, customFactory != null) == LiveActivityMode.FACTORY) {
                     // Mode A — client factory renders the Notification.

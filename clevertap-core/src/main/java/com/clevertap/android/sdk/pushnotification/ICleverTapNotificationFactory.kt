@@ -7,7 +7,8 @@ import com.clevertap.android.sdk.CleverTapAPI
 
 /**
  * Gives the client full control over building the [Notification] for a CleverTap Live Activity
- * (live update) push. Register via [CleverTapAPI.setNotificationFactory]; the SDK then calls
+ * (live update) push. Register via [CleverTapAPI.setNotificationFactory] in `Application.onCreate`
+ * (a push can start the app without any Activity); the SDK then calls
  * [onCreateNotification] instead of its built-in renderers.
  *
  * The SDK still owns display, channel creation, the notification id (derived from `wzrk_activityId`

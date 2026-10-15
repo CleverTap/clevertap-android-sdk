@@ -3,8 +3,10 @@ package com.clevertap.android.sdk.pushnotification
 import android.content.Context
 import android.os.Bundle
 import com.clevertap.android.sdk.AnalyticsManager
+import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
@@ -13,7 +15,9 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +35,7 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
     private lateinit var dbAdapter: DBAdapter
     private lateinit var renderer: INotificationRenderer
     private lateinit var pushProviders: PushProviders
+    private lateinit var logger: Logger
 
     @Before
     override fun setUp() {
@@ -45,10 +50,15 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
         every { renderer.getMessage(any()) } returns ""
         every { renderer.getTitle(any(), any()) } returns "Order #A1234"
 
+        logger = mockk(relaxed = true)
+        val config = spyk(cleverTapInstanceConfig)
+        every { config.logger } returns logger
+        CleverTapAPI.setNotificationFactory(null)
+
         // Build a real PushProviders via its internal constructor (skips provider discovery in init()).
         pushProviders = PushProviders(
             appCtx,
-            cleverTapInstanceConfig,
+            config,
             baseDatabaseManager,
             mockk<ValidationResultStack>(relaxed = true),
             mockk<AnalyticsManager>(relaxed = true),
@@ -56,6 +66,11 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
             mockk<Clock>(relaxed = true)
         )
         pushProviders.pushNotificationRenderer = renderer
+    }
+
+    @After
+    fun tearDown() {
+        CleverTapAPI.setNotificationFactory(null)
     }
 
     @Test
@@ -84,5 +99,32 @@ class PushProvidersLiveActivityTest : BaseTestCase() {
         // Not treated as silent, and rendering was entered (title read past the empty-message gate).
         verify(exactly = 0) { dbAdapter.storeUninstallTimestamp() }
         verify(atLeast = 1) { renderer.getTitle(any(), any()) }
+    }
+
+    @Test
+    fun `Live Update without pt_id and without a factory logs where to register the factory`() {
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
+            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_A1234")
+        }
+
+        pushProviders._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        verify(exactly = 1) { logger.debug(any(), match<String> { it.contains("Application.onCreate") }) }
+    }
+
+    @Test
+    fun `pt_id Live Update without a factory does not log the missing factory`() {
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.WZRK_LIVE_ACTIVITY, "true")
+            putString(Constants.WZRK_LIVE_ACTIVITY_ID, "order_A1234")
+            putString("pt_id", "pt_progress")
+        }
+
+        pushProviders._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        verify(exactly = 0) { logger.debug(any(), match<String> { it.contains("Application.onCreate") }) }
     }
 }
