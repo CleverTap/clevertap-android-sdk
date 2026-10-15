@@ -40,7 +40,7 @@
         </receiver>
 
         <receiver
-            android:name=".pushnotification.CTLiveActivityDismissReceiver"
+            android:name=".pushnotification.CTLiveUpdateDismissReceiver"
             android:enabled="true"
             android:exported="false" />
 

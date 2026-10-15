@@ -337,7 +337,7 @@ internal class ValidatorFactory {
                 }
 
                 is ProgressTemplateData -> {
-                    // No required content — the progress template always renders a bar.
+                    // Unused: PROGRESS is handled in getValidator() (field-based ProgressTemplateValidator).
                     emptyMap()
                 }
             }

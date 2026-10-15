@@ -368,6 +368,7 @@ class ValidationConfigTest {
         assertTrue(config.restrictedEventNames!!.contains("Stayed"))
         assertTrue(config.restrictedEventNames.contains("App Launched"))
         assertTrue(config.restrictedEventNames.contains("Notification Clicked"))
+        assertTrue(config.restrictedEventNames.contains("Live Activity"))
     }
 
     @Test

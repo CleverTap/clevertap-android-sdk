@@ -9,7 +9,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 
 /**
- * Receives the delete-intent fired when a Live Activity (live update) notification is swiped away.
+ * Receives the delete-intent fired when a Live Update notification is swiped away.
  * Raises the "Live Activity" lifecycle event with state `Dismissed`, keeping Android on par with
  * the iOS Live Activity dismissal callback (which the OS provides via ActivityKit).
  *
@@ -17,18 +17,18 @@ import com.clevertap.android.sdk.Logger
  * delete intent, so client dismiss handling is never clobbered.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-class CTLiveActivityDismissReceiver : BroadcastReceiver() {
+class CTLiveUpdateDismissReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         try {
             val extras = intent.extras ?: return
             Logger.v(
-                "CTLiveActivityDismissReceiver: live activity dismissed for "
-                    + extras.getString(Constants.WZRK_LIVE_ACTIVITY_ID)
+                "CTLiveUpdateDismissReceiver: live update dismissed for "
+                    + extras.getString(Constants.WZRK_LIVE_UPDATE_ID)
             )
-            CleverTapAPI.handleLiveActivityDismissed(context.applicationContext, extras)
+            CleverTapAPI.handleLiveUpdateDismissed(context.applicationContext, extras)
         } catch (t: Throwable) {
-            Logger.v("CTLiveActivityDismissReceiver: failed to handle dismissal", t)
+            Logger.v("CTLiveUpdateDismissReceiver: failed to handle dismissal", t)
         }
     }
 

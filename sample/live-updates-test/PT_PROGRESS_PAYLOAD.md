@@ -66,7 +66,7 @@ over any registered notification factory).
 ## ⚠️ Scale rule (read this first)
 
 The native Android 16 `ProgressStyle` has **no separate max** — the **total track length = the sum of
-the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on that path. So:
+the `pt_progress_segments` lengths**. So:
 
 - **`pt_progress` and every point `position` must be on the same scale as the segment-length sum.**
   Above, segments sum to `100`, so `pt_progress: "66"` and points `33 / 66` all line up and the
@@ -75,9 +75,11 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
   clamp to the **far right** — a common mistake.
 - With **no** `pt_progress_segments`, the track defaults to `0..100`, so a percentage `pt_progress`
   works directly (plain-bar case, and points without segments).
+- **Plain bar** (no segments, no points) with `pt_progress_max`: the SDK sends native one segment of
+  that length, so `pt_progress: "3"` + `pt_progress_max: "5"` shows 60% on both tiers.
 - The fallback below Android 16 draws the **same** milestone track as native: same total, same
   limits (see *Limits*), so one payload looks the same on both tiers. `pt_progress_max` is **not** used by
-  the milestone track on either tier; it only sets the max of the **plain bar below Android 16**.
+  the milestone track on either tier; it only sets the max of the **plain bar** (on both tiers).
 
 ## Wrapper keys (top level)
 
@@ -99,7 +101,7 @@ the `pt_progress_segments` lengths**, and `pt_progress_max` is **ignored** on th
 | `pt_small_icon_clr` | Accent color | `#RRGGBB` (`pt_small_icon_clr_dark` for dark mode; `wzrk_color` as fallback). Below Android 12 it is also the default color of segments/points that have no `color` (see *Colors*) |
 | `pt_ico` | Large icon URL | Optional, same key as the other templates. Set on the notification and drawn by the **system** in its own slot on the right, in the collapsed and the expanded view, on both tiers (native ProgressStyle on 16+; standard collapsed view and the expanded frame below 16). Not cropped |
 | `pt_progress` | Current progress on the track scale | See scale rule above |
-| `pt_progress_max` | Max of the plain bar | Used **only** by the plain determinate bar **below 16**. Ignored by native and by the milestone track on both tiers (its total = segment-length sum, else 100) |
+| `pt_progress_max` | Max of the plain bar | Used **only** by the plain bar (no segments, no points), on both tiers: below 16 it is the bar's max, on 16+ it is sent as one segment of that length. Ignored by the milestone track on both tiers (its total = segment-length sum, else 100) |
 | `pt_styled_by_progress` | Fade everything ahead of the progress | Milestone track on both tiers: segments/points after `pt_progress` are drawn at half opacity and thinner. The SDK default is `false` (the platform's own default is `true`); when `false`, only the tracker shows the progress, as on native. Not applied to the plain bar below 16 |
 | `pt_progress_indeterminate` | Animated bar with no fixed fill | Both tiers. Honored **only** when there are no segments/points. The tracker icon is hidden in this mode (both tiers) |
 | `pt_progress_segments` | `[{length, color?}]` | Drawn to scale: each segment's width follows its `length`; the lengths define the track total. **Max 10** (see *Limits*) |

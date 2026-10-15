@@ -351,4 +351,62 @@ class ProgressStyleTest {
         assertEquals(nb, result)
         assertNotNull(result.build())
     }
+
+    private fun data(
+        progress: Int?,
+        progressMax: Int?,
+        segments: List<ProgressPayloadParser.SegmentData> = emptyList(),
+        points: List<ProgressPayloadParser.PointData> = emptyList()
+    ) = ProgressTemplateData(
+        title = "Order #1", progress = progress, progressMax = progressMax, indeterminate = false,
+        segments = segments, points = points
+    )
+
+    @Test
+    fun `native plain bar uses pt_progress_max as its total, so 3 of 5 is 60 percent as below 16`() {
+        val d = data(progress = 3, progressMax = 5)
+        assertEquals(5, ProgressStyle.nativePlainBarMax(d))
+        assertEquals(3, ProgressStyle.nativeProgress(d))
+    }
+
+    @Test
+    fun `native plain bar keeps a byte-sized progress on the pt_progress_max scale`() {
+        val d = data(progress = 52_428_800, progressMax = 104_857_600)
+        assertEquals(104_857_600, ProgressStyle.nativePlainBarMax(d))
+        assertEquals(52_428_800, ProgressStyle.nativeProgress(d))
+    }
+
+    @Test
+    fun `native plain bar without pt_progress_max keeps the default 100 track`() {
+        val d = data(progress = 40, progressMax = null)
+        assertNull(ProgressStyle.nativePlainBarMax(d))
+        assertEquals(40, ProgressStyle.nativeProgress(d))
+    }
+
+    @Test
+    fun `native plain bar ignores a zero or negative pt_progress_max`() {
+        assertNull(ProgressStyle.nativePlainBarMax(data(progress = 3, progressMax = 0)))
+        assertNull(ProgressStyle.nativePlainBarMax(data(progress = 3, progressMax = -5)))
+    }
+
+    @Test
+    fun `native plain bar clamps progress to pt_progress_max like the fallback bar`() {
+        assertEquals(5, ProgressStyle.nativeProgress(data(progress = 7, progressMax = 5)))
+        assertEquals(0, ProgressStyle.nativeProgress(data(progress = -2, progressMax = 5)))
+        assertEquals(0, ProgressStyle.nativeProgress(data(progress = null, progressMax = 5)))
+    }
+
+    @Test
+    fun `native milestone track ignores pt_progress_max, its total comes from the segments`() {
+        val segments = List(5) { ProgressPayloadParser.SegmentData(1, null) }
+        val d = data(progress = 3, progressMax = 100, segments = segments)
+        assertNull(ProgressStyle.nativePlainBarMax(d))
+        assertEquals(3, ProgressStyle.nativeProgress(d))
+    }
+
+    @Test
+    fun `native points-only track ignores pt_progress_max, as the fallback track does`() {
+        val d = data(progress = 3, progressMax = 5, points = listOf(ProgressPayloadParser.PointData(50, null)))
+        assertNull(ProgressStyle.nativePlainBarMax(d))
+    }
 }
