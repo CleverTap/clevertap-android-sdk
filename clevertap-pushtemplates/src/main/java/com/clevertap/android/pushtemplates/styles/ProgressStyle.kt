@@ -123,10 +123,10 @@ internal class ProgressStyle(
         // fallback), so the system shows the sub text in it on every version.
         data.subtitle?.let { nb.setSubText(it) }
 
-        // Prefer the native ProgressStyle on Android 16+, but guard it: androidx.core is a
-        // consumer-supplied (compileOnly) dependency, so a host app on core < 1.17.0 at runtime
-        // won't have NotificationCompat.ProgressStyle. Rather than force that version on every
-        // consumer, we catch the class/method absence and degrade to the RemoteViews fallback.
+        // Prefer the native ProgressStyle on Android 16+, but guard it: the SDK does not depend on
+        // androidx.core 1.17.0 (the host app brings its own core), so a host app on core < 1.17.0
+        // at runtime won't have NotificationCompat.ProgressStyle. Rather than force that version on
+        // every consumer, we catch the class/method absence and degrade to the RemoteViews fallback.
         // The 1.17.0 APIs are looked up once per process (NativeProgressApi); null means unavailable,
         // which is logged once there, so this check costs nothing on later renders.
         val api = if (Build.VERSION.SDK_INT >= API_PROGRESS_STYLE) NativeProgressApi.methods else null
