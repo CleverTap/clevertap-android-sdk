@@ -87,7 +87,7 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                 // top level so the normal PT/core routing below can read it. A `pt_id` inside `data`
                 // selects Mode B (SDK/PT render); its absence means Mode A (client factory). The
                 // Mode A vs Mode B decision is finalised in _createNotification.
-                if ("true".equalsIgnoreCase(message.getString(Constants.WZRK_LIVE_ACTIVITY, ""))) {
+                if (LiveActivityRouter.isLiveActivity(message)) {
                     surfaceLiveActivityPayload(message);
                 }
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {

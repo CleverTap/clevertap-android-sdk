@@ -1,6 +1,11 @@
 package com.clevertap.android.sdk.pushnotification
 
+import android.os.Bundle
+import com.clevertap.android.sdk.Constants
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -9,6 +14,23 @@ import org.junit.Test
 
 /** Pure-JVM unit tests for the Live Update Mode A/B routing + in-place id derivation. */
 class LiveActivityRouterTest {
+
+    private fun extras(wzrkLa: String?) = mockk<Bundle> {
+        every { getString(Constants.WZRK_LIVE_ACTIVITY) } returns wzrkLa
+    }
+
+    @Test
+    fun `isLiveActivity is true for wzrk_la true in any case`() {
+        assertTrue(LiveActivityRouter.isLiveActivity(extras("true")))
+        assertTrue(LiveActivityRouter.isLiveActivity(extras("TRUE")))
+    }
+
+    @Test
+    fun `isLiveActivity is false for a missing, other or null bundle`() {
+        assertFalse(LiveActivityRouter.isLiveActivity(extras(null)))
+        assertFalse(LiveActivityRouter.isLiveActivity(extras("false")))
+        assertFalse(LiveActivityRouter.isLiveActivity(null))
+    }
 
     @Test
     fun `pt_id present selects SDK_RENDER even when a factory is registered`() {

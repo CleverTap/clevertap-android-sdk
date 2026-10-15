@@ -66,6 +66,7 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.ICleverTapNotificationFactory;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
+import com.clevertap.android.sdk.pushnotification.LiveActivityRouter;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushType;
@@ -917,7 +918,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        if (!"true".equalsIgnoreCase(notification.getString(Constants.WZRK_LIVE_ACTIVITY))) {
+        if (!LiveActivityRouter.isLiveActivity(notification)) {
             Logger.v("handleLiveActivityDismissed called with a non Live Activity bundle; ignoring.");
             return;
         }

@@ -112,7 +112,8 @@ class PushProviders internal constructor(
             // the factory routing below can read it. Idempotent (root-wins), so it is a no-op when the
             // SDK's FCM handler path already surfaced it — this is what lets a Mode A client-factory
             // Live Update work on the CleverTapAPI.createNotification entry point too.
-            if ("true".equals(extras.getString(Constants.WZRK_LIVE_ACTIVITY, ""), ignoreCase = true)) {
+            val isLiveActivity = LiveActivityRouter.isLiveActivity(extras)
+            if (isLiveActivity) {
                 PushNotificationHandler.surfaceLiveActivityPayload(extras)
             }
 
@@ -133,9 +134,6 @@ class PushProviders internal constructor(
 
             // Live Activity (live update) pushes are rendered by a client-supplied factory.
             // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
-            val isLiveActivity = extras.getString(Constants.WZRK_LIVE_ACTIVITY, "")
-                .equals("true", ignoreCase = true)
-
             if (isLiveActivity) {
                 // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
                 // the gate): pt_id present => Mode B (SDK/Push Template renders, and it takes
@@ -944,7 +942,7 @@ class PushProviders internal constructor(
 
         // Live Update Mode B (SDK-rendered): attach the dismissal delete intent so swipe-away
         // raises the "Dismissed" event — respecting any delete intent a Push Template already set.
-        if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equals("true", ignoreCase = true)) {
+        if (LiveActivityRouter.isLiveActivity(extras)) {
             applyLiveActivityDismissIntent(context, n, extras, notifId)
         }
 
@@ -1114,7 +1112,7 @@ class PushProviders internal constructor(
     private fun postNotificationRendered(context: Context, extras: Bundle) {
         // Raise the "Live Activity" lifecycle event for any live-update render (factory Mode A or
         // SDK-rendered Mode B) — exactly once, and independent of the wzrk_rnv (viewed) gate below.
-        if (extras.getString(Constants.WZRK_LIVE_ACTIVITY, "").equals("true", ignoreCase = true)) {
+        if (LiveActivityRouter.isLiveActivity(extras)) {
             // State is driven entirely by the BE-sent wzrk_la_event (start/update/end) — no local
             // first-render tracking. See LiveActivityLifecycle.
             val state = LiveActivityLifecycle.state(extras.getString(Constants.WZRK_LIVE_ACTIVITY_EVENT))
