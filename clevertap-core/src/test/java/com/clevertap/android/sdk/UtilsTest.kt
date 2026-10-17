@@ -842,27 +842,27 @@ class UtilsTest : BaseTestCase() {
     @Test
     fun test_getNotificationGifURI_when_urlIsNull_should_ReturnNull() {
         val clock = TestClock()
-        
+
         val result = Utils.getNotificationGifURI(null, application, cleverTapInstanceConfig, clock)
-        
+
         assertNull(result)
     }
 
     @Test
     fun test_getNotificationGifURI_when_urlIsNotGif_should_ReturnNull() {
         val clock = TestClock()
-        
+
         val result = Utils.getNotificationGifURI("https://example.com/image.png", application, cleverTapInstanceConfig, clock)
-        
+
         assertNull(result)
     }
 
     @Test
     fun test_getNotificationGifURI_when_urlIsEmptyString_should_ReturnNull() {
         val clock = TestClock()
-        
+
         val result = Utils.getNotificationGifURI("", application, cleverTapInstanceConfig, clock)
-        
+
         assertNull(result)
     }
 
@@ -877,11 +877,11 @@ class UtilsTest : BaseTestCase() {
         every { failedDownload.status } returns DownloadedBitmap.Status.DOWNLOAD_FAILED
         every { failedDownload.bytes } returns null
         every { failedDownload.downloadTime } returns 1000L
-        
+
         every { HttpBitmapLoader.getHttpBitmap(any(), any()) } returns failedDownload
-        
+
         val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
-        
+
         assertNull(result)
 
         unmockkStatic(HttpBitmapLoader::class)
@@ -1002,12 +1002,12 @@ class UtilsTest : BaseTestCase() {
 
         // Mock FileProvider.getUriForFile to return expected URI
         mockkStatic(FileProvider::class)
-        every { 
+        every {
             FileProvider.getUriForFile(
                 application,
                 "${application.packageName}.clevertap.fileprovider",
                 any(File::class)
-            ) 
+            )
         } returns expectedUri
 
         val result = Utils.getNotificationGifURI("https://example.com/image.gif", application, cleverTapInstanceConfig, clock)
@@ -1016,7 +1016,7 @@ class UtilsTest : BaseTestCase() {
         assertEquals(expectedUri, result)
 
         // Verify that the correct download request was made
-        verify { 
+        verify {
             HttpBitmapLoader.getHttpBitmap(
                 HttpBitmapLoader.HttpBitmapOperation.DOWNLOAD_BYTES_WITH_TIME_LIMIT,
                 any()
@@ -1024,7 +1024,7 @@ class UtilsTest : BaseTestCase() {
         }
 
         // Verify that Files.write was called with correct parameters
-        verify { 
+        verify {
             Files.write(
                 any(Path::class),
                 gifBytes
@@ -1032,7 +1032,7 @@ class UtilsTest : BaseTestCase() {
         }
 
         // Verify that FileProvider.getUriForFile was called with correct authority and filename
-        verify { 
+        verify {
             FileProvider.getUriForFile(
                 application,
                 "${application.packageName}.clevertap.fileprovider",

@@ -41,7 +41,7 @@ class QueueDataTest : BaseTestCase() {
     fun test_hasEvents_when_EventIdsIsEmpty_should_ReturnFalse() {
         // Setup
         queueData.eventIds.clear()
-        
+
         // Test & Validate
         assertFalse(queueData.hasEvents, "hasEvents should be false when eventIds is empty")
     }
@@ -54,7 +54,7 @@ class QueueDataTest : BaseTestCase() {
             add("2")
             add("3")
         }
-        
+
         // Test & Validate
         assertTrue(queueData.hasEvents, "hasEvents should be true when eventIds has elements")
     }
@@ -74,7 +74,7 @@ class QueueDataTest : BaseTestCase() {
             add("p1")
             add("p2")
         }
-        
+
         // Test & Validate
         assertTrue(queueData.hasProfileEvents, "hasProfileEvents should be true when profileEventIds has elements")
     }
@@ -85,7 +85,7 @@ class QueueDataTest : BaseTestCase() {
     fun test_QueueData_when_Initialized_should_HaveDefaultValues() {
         // Test
         val newQueueData = QueueData()
-        
+
         // Validate
         assertEquals(JSONArray().toString(), newQueueData.data.toString(), "Empty data by default")
         assertEquals(0, newQueueData.eventIds.size, "EventIds should be empty by default")
@@ -101,13 +101,13 @@ class QueueDataTest : BaseTestCase() {
         queueData.data.put(JSONObject().put("name", "event1"))
         queueData.data.put(JSONObject().put("name", "event2"))
         queueData.data.put(JSONObject().put("name", "profile1"))
-        
+
         queueData.eventIds.apply {
             add("1")
             add("2")
         }
         queueData.profileEventIds.add("3")
-        
+
         // Validate
         assertFalse(queueData.isEmpty, "Should not be empty when data exists")
         assertTrue(queueData.hasEvents, "Should have events")
@@ -122,13 +122,13 @@ class QueueDataTest : BaseTestCase() {
         // Setup
         queueData.data.put(JSONObject().put("name", "event1"))
         queueData.data.put(JSONObject().put("name", "event2"))
-        
+
         queueData.eventIds.apply {
             add("1")
             add("2")
         }
         queueData.profileEventIds.clear()
-        
+
         // Validate
         assertFalse(queueData.isEmpty, "Should not be empty")
         assertTrue(queueData.hasEvents, "Should have events")
@@ -140,13 +140,13 @@ class QueueDataTest : BaseTestCase() {
         // Setup
         queueData.data.put(JSONObject().put("name", "profile1"))
         queueData.data.put(JSONObject().put("name", "profile2"))
-        
+
         queueData.eventIds.clear()
         queueData.profileEventIds.apply {
             add("p1")
             add("p2")
         }
-        
+
         // Validate
         assertFalse(queueData.isEmpty, "Should not be empty")
         assertFalse(queueData.hasEvents, "Should not have events")

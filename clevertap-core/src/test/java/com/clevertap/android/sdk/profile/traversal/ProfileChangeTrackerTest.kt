@@ -12,7 +12,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordChange records simple value change`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("name", "oldName", "newName", changes)
 
         assertEquals(1, changes.size)
@@ -24,7 +24,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordChange records null old value`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("email", null, "[email protected]", changes)
 
         assertEquals(1, changes.size)
@@ -35,7 +35,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordChange records null new value`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("phone", "1234567890", null, changes)
 
         assertEquals(1, changes.size)
@@ -46,7 +46,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordChange processes date prefixes in old value`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("created", "\$D_1609459200", "newValue", changes)
 
         assertEquals(1, changes.size)
@@ -57,7 +57,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordChange processes date prefixes in new value`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("updated", "oldValue", "\$D_1704067200", changes)
 
         assertEquals(1, changes.size)
@@ -68,7 +68,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordChange handles multiple changes`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("name", "oldName", "newName", changes)
         tracker.recordChange("age", 25, 26, changes)
         tracker.recordChange("email", null, "[email protected]", changes)
@@ -82,7 +82,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordAddition records simple addition`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordAddition("newField", "newValue", changes)
 
         assertEquals(1, changes.size)
@@ -93,7 +93,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordAddition processes date prefixes`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordAddition("timestamp", "\$D_1609459200", changes)
 
         assertEquals(1, changes.size)
@@ -111,7 +111,7 @@ class ProfileChangeTrackerTest {
                 put("city", "NYC")
             })
         }
-        
+
         tracker.recordAddition("user", newObj, changes)
 
         assertEquals(3, changes.size)
@@ -134,7 +134,7 @@ class ProfileChangeTrackerTest {
                 })
             })
         }
-        
+
         tracker.recordAddition("root", newObj, changes)
 
         assertEquals(1, changes.size)
@@ -145,7 +145,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordDeletion records simple deletion`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordDeletion("oldValue", "field", changes)
 
         assertEquals(1, changes.size)
@@ -156,7 +156,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `recordDeletion processes date prefixes`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordDeletion("\$D_1609459200", "timestamp", changes)
 
         assertEquals(1, changes.size)
@@ -174,7 +174,7 @@ class ProfileChangeTrackerTest {
                 put("city", "NYC")
             })
         }
-        
+
         tracker.recordDeletion(oldObj, "user", changes)
 
         assertEquals(3, changes.size)
@@ -197,7 +197,7 @@ class ProfileChangeTrackerTest {
                 })
             })
         }
-        
+
         tracker.recordDeletion(oldObj, "root", changes)
 
         assertEquals(1, changes.size)
@@ -221,7 +221,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `handles numeric values`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("count", 10, 20, changes)
         tracker.recordChange("price", 99.99, 89.99, changes)
 
@@ -235,7 +235,7 @@ class ProfileChangeTrackerTest {
     @Test
     fun `handles boolean values`() {
         val changes = mutableMapOf<String, ProfileChange>()
-        
+
         tracker.recordChange("isActive", false, true, changes)
 
         assertEquals(1, changes.size)
@@ -247,7 +247,7 @@ class ProfileChangeTrackerTest {
     fun `recordAddition with empty JSONObject records nothing`() {
         val changes = mutableMapOf<String, ProfileChange>()
         val emptyObj = JSONObject()
-        
+
         tracker.recordAddition("empty", emptyObj, changes)
 
         assertEquals(0, changes.size)
@@ -257,7 +257,7 @@ class ProfileChangeTrackerTest {
     fun `recordDeletion with empty JSONObject records nothing`() {
         val changes = mutableMapOf<String, ProfileChange>()
         val emptyObj = JSONObject()
-        
+
         tracker.recordDeletion(emptyObj, "empty", changes)
 
         assertEquals(0, changes.size)

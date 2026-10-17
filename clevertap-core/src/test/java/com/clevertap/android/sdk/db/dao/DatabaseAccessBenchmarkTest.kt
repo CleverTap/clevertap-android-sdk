@@ -58,22 +58,22 @@ class DatabaseAccessBenchmarkTest : BaseTestCase() {
 
     companion object {
         private const val BENCHMARK_ITERATIONS = 1000
-        
+
         /**
          * Flag to enable/disable performance assertions.
          * Set to false by default to prevent flaky test failures in CI/CD.
          * Can be enabled locally for performance regression testing.
-         * 
+         *
          * To enable assertions, set system property:
          * -Dclevertap.benchmark.assertions.enabled=true
-         * 
+         *
          * Or in build.gradle:
          * test {
          *     systemProperty 'clevertap.benchmark.assertions.enabled', 'true'
          * }
          */
         private val ENABLE_ASSERTIONS = System.getProperty("clevertap.benchmark.assertions.enabled", "false").toBoolean()
-        
+
         init {
             if (ENABLE_ASSERTIONS) {
                 println("⚠️  Benchmark assertions are ENABLED - tests may fail due to timing variations")

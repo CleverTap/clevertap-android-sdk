@@ -51,7 +51,7 @@ internal class InputBoxStyle(private val data: InputBoxTemplateData, private val
         nb: NotificationCompat.Builder
     ): NotificationCompat.Builder {
         var inputBoxNotificationBuilder = super.builderFromStyle(context, extras, notificationId, nb)
-        
+
         // Apply action buttons with special flag for InputBoxStyle
         inputBoxNotificationBuilder = actionButtonsHandler.addActionButtons(
             context, extras, notificationId, inputBoxNotificationBuilder, true

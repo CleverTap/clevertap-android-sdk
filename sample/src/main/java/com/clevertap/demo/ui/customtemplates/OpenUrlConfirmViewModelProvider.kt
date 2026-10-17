@@ -8,13 +8,13 @@ import com.clevertap.demo.ViewModelFactory
  * (e.g., in CleverTap template presenters)
  */
 object OpenUrlConfirmViewModelProvider {
-    
+
     private var viewModelInstance: OpenUrlConfirmViewModel? = null
-    
+
     private val viewModelFactory by lazy {
         ViewModelFactory(MyApplication.ctInstance)
     }
-    
+
     /**
      * Get or create the singleton ViewModel instance using the main ViewModelFactory
      */

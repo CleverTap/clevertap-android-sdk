@@ -2611,7 +2611,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().pushDisplayUnitElementClickedEventForID(
                 unitID, additionalProperties);
     }
-    
+
     /**
      * Raises a Native Display element view event for the given unit and element.
      * Merges caller properties with cached unit {@code wzrk_*} fields, with cached

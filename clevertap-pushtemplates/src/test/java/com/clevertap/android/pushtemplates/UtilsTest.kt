@@ -2117,7 +2117,7 @@ class UtilsTest {
         val eventProps = hashMapOf<String, Any>().apply {
             put("key1", "value1")
         }
-        
+
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(any(), any()) } just Runs
@@ -2139,7 +2139,7 @@ class UtilsTest {
         val mockInstance = mockk<CleverTapAPI>()
         val eventName = "test_event"
         val eventProps = hashMapOf<String, Any>()
-        
+
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
@@ -2162,7 +2162,7 @@ class UtilsTest {
         val eventProps = hashMapOf<String, Any>().apply {
             put("key1", "value1")
         }
-        
+
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(any(), any()) } just Runs
@@ -2189,7 +2189,7 @@ class UtilsTest {
             put("boolean_prop", true)
             put("nested_object", mapOf("inner_key" to "inner_value"))
         }
-        
+
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
@@ -2210,7 +2210,7 @@ class UtilsTest {
         val mockInstance = mockk<CleverTapAPI>()
         val eventName = "test_event"
         val eventProps: HashMap<String, Any>? = null
-        
+
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
@@ -2234,7 +2234,7 @@ class UtilsTest {
         val eventProps = hashMapOf<String, Any>().apply {
             put("test_key", "test_value")
         }
-        
+
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
@@ -2259,7 +2259,7 @@ class UtilsTest {
         val eventProps = hashMapOf<String, Any>().apply {
             put("key", "value")
         }
-        
+
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
@@ -2283,10 +2283,10 @@ class UtilsTest {
         val mockAppContext = mockk<Context>()
         val mockIntent = mockk<Intent>()
         val pushId = "test_push_123"
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2308,10 +2308,10 @@ class UtilsTest {
         val mockContext = mockk<Context>()
         val mockAppContext = mockk<Context>()
         val mockIntent = mockk<Intent>()
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns null
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2334,10 +2334,10 @@ class UtilsTest {
         val mockAppContext = mockk<Context>()
         val mockIntent = mockk<Intent>()
         val pushId = "test_push_123"
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2360,10 +2360,10 @@ class UtilsTest {
         val mockAppContext = mockk<Context>()
         val mockIntent = mockk<Intent>()
         val pushId = "test_push_123"
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2387,10 +2387,10 @@ class UtilsTest {
         val mockAppContext = mockk<Context>()
         val mockIntent = mockk<Intent>()
         val pushId = "test_push_123"
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2412,10 +2412,10 @@ class UtilsTest {
         val mockIntent = mockk<Intent>()
         val pushId = "test_push_123"
         val expectedPath = "/data/data/com.test/files/push_templates"
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2437,10 +2437,10 @@ class UtilsTest {
         val mockIntent = mockk<Intent>()
         val pushId = "test_push_123"
         val fileList = arrayOf("image_test_push_123.jpg", "other_file.jpg", "test_push_123_backup.png")
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2466,10 +2466,10 @@ class UtilsTest {
             "image_campaign_2024_spring_abc123.jpg",
             "unrelated_file.png"
         )
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns pushId
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2495,10 +2495,10 @@ class UtilsTest {
             "cache_null_456.png",
             "regular_file.jpg"
         )
-        
+
         every { mockContext.applicationContext } returns mockAppContext
         every { mockIntent.getStringExtra(Constants.WZRK_PUSH_ID) } returns null
-        
+
         mockkConstructor(ContextWrapper::class)
         val mockDirectory = mockk<File>()
         every { anyConstructed<ContextWrapper>().getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE) } returns mockDirectory
@@ -2653,7 +2653,7 @@ class UtilsTest {
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val mockStatusBarNotification3 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2, mockStatusBarNotification3)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification1.id } returns 456
@@ -2679,7 +2679,7 @@ class UtilsTest {
         val mockStatusBarNotification1 = mockk<StatusBarNotification>()
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification1.id } returns 456
@@ -2702,7 +2702,7 @@ class UtilsTest {
         val mockNotificationManager = mockk<NotificationManager>()
         val targetNotificationId = 123
         val notifications = arrayOf<StatusBarNotification>()
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
 
@@ -2725,7 +2725,7 @@ class UtilsTest {
         val mockStatusBarNotification1 = mockk<StatusBarNotification>()
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification1.id } returns targetNotificationId
@@ -2750,7 +2750,7 @@ class UtilsTest {
         val targetNotificationId = -1
         val mockStatusBarNotification = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification.id } returns targetNotificationId
@@ -2775,7 +2775,7 @@ class UtilsTest {
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val mockNotification = mockk<Notification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification1.id } returns 456
@@ -2802,7 +2802,7 @@ class UtilsTest {
         val mockStatusBarNotification1 = mockk<StatusBarNotification>()
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification1.id } returns 456
@@ -2825,7 +2825,7 @@ class UtilsTest {
         val mockNotificationManager = mockk<NotificationManager>()
         val targetNotificationId = 123
         val notifications = arrayOf<StatusBarNotification>()
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
 
@@ -2850,7 +2850,7 @@ class UtilsTest {
         val mockNotification1 = mockk<Notification>()
         val mockNotification2 = mockk<Notification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification1.id } returns targetNotificationId
@@ -2877,7 +2877,7 @@ class UtilsTest {
         val mockStatusBarNotification = mockk<StatusBarNotification>()
         val mockNotification = mockk<Notification>()
         val notifications = arrayOf(mockStatusBarNotification)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
         every { mockStatusBarNotification.id } returns targetNotificationId
@@ -2903,7 +2903,7 @@ class UtilsTest {
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val mockStatusBarNotification3 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2, mockStatusBarNotification3)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockContext.packageName } returns packageName
         every { mockNotificationManager.activeNotifications } returns notifications
@@ -2934,7 +2934,7 @@ class UtilsTest {
         val mockContext = mockk<Context>()
         val mockNotificationManager = mockk<NotificationManager>()
         val notifications = arrayOf<StatusBarNotification>()
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockNotificationManager.activeNotifications } returns notifications
 
@@ -2956,7 +2956,7 @@ class UtilsTest {
         val mockStatusBarNotification1 = mockk<StatusBarNotification>()
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockContext.packageName } returns packageName
         every { mockNotificationManager.activeNotifications } returns notifications
@@ -2984,7 +2984,7 @@ class UtilsTest {
         val mockStatusBarNotification1 = mockk<StatusBarNotification>()
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockContext.packageName } returns packageName
         every { mockNotificationManager.activeNotifications } returns notifications
@@ -3011,7 +3011,7 @@ class UtilsTest {
         val packageName = "com.test.app"
         val mockStatusBarNotification = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockContext.packageName } returns packageName
         every { mockNotificationManager.activeNotifications } returns notifications
@@ -3036,7 +3036,7 @@ class UtilsTest {
         val packageName = "com.test.app"
         val mockStatusBarNotification = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockContext.packageName } returns packageName
         every { mockNotificationManager.activeNotifications } returns notifications
@@ -3061,7 +3061,7 @@ class UtilsTest {
         val mockStatusBarNotification1 = mockk<StatusBarNotification>()
         val mockStatusBarNotification2 = mockk<StatusBarNotification>()
         val notifications = arrayOf(mockStatusBarNotification1, mockStatusBarNotification2)
-        
+
         every { mockContext.getSystemService(Context.NOTIFICATION_SERVICE) } returns mockNotificationManager
         every { mockContext.packageName } returns packageName
         every { mockNotificationManager.activeNotifications } returns notifications
@@ -3134,7 +3134,7 @@ class UtilsTest {
     fun `getTimerThreshold should return last found value when multiple timer threshold keys exist`() {
         // Given
         val timerKey1 = PTConstants.PT_TIMER_THRESHOLD + "1"
-        val timerKey2 = PTConstants.PT_TIMER_THRESHOLD + "2" 
+        val timerKey2 = PTConstants.PT_TIMER_THRESHOLD + "2"
         val keys = setOf(timerKey1, timerKey2)
         every { mockBundle.keySet() } returns keys
         every { mockBundle.getString(timerKey1) } returns "25"
@@ -3396,14 +3396,14 @@ class UtilsTest {
 
         // Then
         assertEquals(2, result.keySet().size)
-        
+
         val images = result.getStringArray("images")
         assertNotNull(images)
         assertEquals(3, images!!.size)
         assertEquals("image1.jpg", images[0])
         assertEquals("image2.jpg", images[1])
         assertEquals("image3.jpg", images[2])
-        
+
         val tags = result.getStringArray("tags")
         assertNotNull(tags)
         assertEquals(2, tags!!.size)
@@ -3427,11 +3427,11 @@ class UtilsTest {
 
         // Then
         assertEquals(2, result.keySet().size)
-        
+
         val emptyArray1 = result.getStringArray("empty_array")
         assertNotNull(emptyArray1)
         assertEquals(0, emptyArray1!!.size)
-        
+
         val emptyArray2 = result.getStringArray("another_empty")
         assertNotNull(emptyArray2)
         assertEquals(0, emptyArray2!!.size)
@@ -3456,17 +3456,17 @@ class UtilsTest {
 
         // Then
         assertEquals(5, result.keySet().size)
-        
+
         assertEquals("Test Title", result.getString("title"))
         assertEquals("Test Description", result.getString("description"))
         assertEquals("456", result.getString("id"))
-        
+
         val images = result.getStringArray("images")
         assertNotNull(images)
         assertEquals(2, images!!.size)
         assertEquals("img1.jpg", images[0])
         assertEquals("img2.jpg", images[1])
-        
+
         val tags = result.getStringArray("tags")
         assertNotNull(tags)
         assertEquals(1, tags!!.size)
@@ -3488,7 +3488,7 @@ class UtilsTest {
 
         // Then
         assertEquals(1, result.keySet().size)
-        
+
         val mixedArray = result.getStringArray("mixed_array")
         assertNotNull(mixedArray)
         assertEquals(3, mixedArray!!.size)
@@ -3512,7 +3512,7 @@ class UtilsTest {
 
         // Then
         assertEquals(1, result.keySet().size)
-        
+
         val singleArray = result.getStringArray("single_item")
         assertNotNull(singleArray)
         assertEquals(1, singleArray!!.size)
@@ -3577,14 +3577,14 @@ class UtilsTest {
 
         // Then
         assertEquals(2, result.keySet().size)
-        
+
         val numbers = result.getStringArray("numbers")
         assertNotNull(numbers)
         assertEquals(3, numbers!!.size)
         assertEquals("1", numbers[0])
         assertEquals("2", numbers[1])
         assertEquals("3", numbers[2])
-        
+
         val mixedTypes = result.getStringArray("mixed_types")
         assertNotNull(mixedTypes)
         assertEquals(4, mixedTypes!!.size)
@@ -3654,7 +3654,7 @@ class UtilsTest {
 
         // Then
         assertEquals(1, result.keySet().size)
-        
+
         val resultArray = result.getStringArray("large_array")
         assertNotNull(resultArray)
         assertEquals(100, resultArray!!.size)
@@ -3702,7 +3702,7 @@ class UtilsTest {
 
         // Then
         assertEquals(1, result.keySet().size)
-        
+
         val arrayWithEmpty = result.getStringArray("array_with_empty")
         assertNotNull(arrayWithEmpty)
         assertEquals(4, arrayWithEmpty!!.size)
@@ -3757,10 +3757,10 @@ class UtilsTest {
         // Then
         assertEquals(3, result1.keySet().size)
         assertEquals(3, result2.keySet().size)
-        
+
         assertEquals(result1.getString("a"), result2.getString("a"))
         assertEquals(result1.getString("c"), result2.getString("c"))
-        
+
         val array1 = result1.getStringArray("b")
         val array2 = result2.getStringArray("b")
         assertNotNull(array1)
@@ -3793,27 +3793,27 @@ class UtilsTest {
 
         // Then
         assertEquals(8, result.keySet().size)
-        
+
         // String values
         assertEquals("campaign_123", result.getString("pt_id"))
         assertEquals("Special Offer", result.getString("pt_title"))
         assertEquals("Don't miss out on this deal!", result.getString("pt_msg"))
         assertEquals("1640995200", result.getString("pt_timer_end"))
         assertEquals("#FF0000", result.getString("pt_bg"))
-        
+
         // Array values
         val images = result.getStringArray("pt_img")
         assertNotNull(images)
         assertEquals(2, images!!.size)
         assertEquals("image1.jpg", images[0])
         assertEquals("image2.jpg", images[1])
-        
+
         val ctas = result.getStringArray("pt_cta")
         assertNotNull(ctas)
         assertEquals(2, ctas!!.size)
         assertEquals("Buy Now", ctas[0])
         assertEquals("Learn More", ctas[1])
-        
+
         val deeplinks = result.getStringArray("pt_deeplink")
         assertNotNull(deeplinks)
         assertEquals(2, deeplinks!!.size)

@@ -5,16 +5,16 @@ import androidx.annotation.WorkerThread
 interface PushNotificationDAO {
     @WorkerThread
     fun storePushNotificationId(id: String, ttlInSeconds: Long)
-    
+
     @WorkerThread
     fun fetchPushNotificationIds(): Array<String>
-    
+
     @WorkerThread
     fun doesPushNotificationIdExist(id: String): Boolean
-    
+
     @WorkerThread
     fun updatePushNotificationIds(ids: Array<String>)
-    
+
     @WorkerThread
     fun cleanUpPushNotifications()
 }

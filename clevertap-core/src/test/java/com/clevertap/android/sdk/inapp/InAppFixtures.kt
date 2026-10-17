@@ -33,7 +33,7 @@ object InAppFixtures {
                     "android": "",
                     "ios": "",
                     "kv": {
-                      
+
                     }
                   }
                 },
@@ -69,7 +69,7 @@ object InAppFixtures {
                 "og": ""
               },
               "mediaLandscape": {
-                
+
               },
               "isMediaSourceRecommendedLandscape": false,
               "recommendedTextLandscape": {
@@ -91,11 +91,11 @@ object InAppFixtures {
                 }
               ],
               "frequencyLimits": [
-                
+
               ],
               "excludeGlobalFCaps": -1,
               "occurrenceLimits": [
-                
+
               ],
               "wzrk_ttl": 1743136393
             }
@@ -130,11 +130,11 @@ object InAppFixtures {
             }
           ],
           "frequencyLimits": [
-            
+
           ],
           "excludeGlobalFCaps": -1,
           "occurrenceLimits": [
-            
+
           ],
           "wzrk_ttl": 1743142761,
           "d": {
@@ -173,11 +173,11 @@ object InAppFixtures {
             }
           ],
           "frequencyLimits": [
-            
+
           ],
           "excludeGlobalFCaps": -1,
           "occurrenceLimits": [
-            
+
           ],
           "wzrk_ttl": 1743142761,
           "d": {
@@ -215,11 +215,11 @@ object InAppFixtures {
             }
           ],
           "frequencyLimits": [
-            
+
           ],
           "excludeGlobalFCaps": -1,
           "occurrenceLimits": [
-            
+
           ],
           "wzrk_ttl": 1743142761,
           "d": {
@@ -257,11 +257,11 @@ object InAppFixtures {
             }
           ],
           "frequencyLimits": [
-            
+
           ],
           "excludeGlobalFCaps": -1,
           "occurrenceLimits": [
-            
+
           ],
           "wzrk_ttl": 1743142761,
           "d": {
@@ -300,11 +300,11 @@ object InAppFixtures {
             }
           ],
           "frequencyLimits": [
-            
+
           ],
           "excludeGlobalFCaps": -1,
           "occurrenceLimits": [
-            
+
           ],
           "wzrk_ttl": 1743142761,
           "d": {
@@ -336,11 +336,11 @@ object InAppFixtures {
             }
           ],
           "frequencyLimits": [
-            
+
           ],
           "excludeGlobalFCaps": -1,
           "occurrenceLimits": [
-            
+
           ],
           "wzrk_ttl": 1743142761,
           "d": {
@@ -459,7 +459,7 @@ object InAppFixtures {
       ],
       "excludeGlobalFCaps": 1,
       "occurrenceLimits": [
-        
+
       ],
       "wzrk_ttl_offset": 172800,
       "d": {

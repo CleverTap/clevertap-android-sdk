@@ -57,21 +57,21 @@ internal class NestedJsonBuilder {
             // Find all array indices in this part
             val indices = mutableListOf<Int>()
             val matches = ARRAY_INDEX_PATTERN.findAll(remaining)
-            
+
             for (match in matches) {
                 val indexStr = match.groupValues[1]
                 val index = indexStr.toInt()
                 indices.add(index)
             }
-            
+
             // Extract the base key (part before first [)
             if (indices.isNotEmpty()) {
                 val firstBracket = remaining.indexOf('[')
                 baseKey = remaining.substring(0, firstBracket)
-                
+
                 // Add base key with first index
                 segments.add(PathSegment(baseKey, indices[0]))
-                
+
                 // Add remaining indices as empty-key segments
                 for (i in 1 until indices.size) {
                     segments.add(PathSegment("", indices[i]))
@@ -104,7 +104,7 @@ internal class NestedJsonBuilder {
                     // This segment represents an array
                     val array = current.optJSONArray(segment.key) ?: JSONArray()
                     current.put(segment.key, array)
-                    
+
                     // Ensure array has enough space for the index we're accessing
                     ensureArraySize(array, segment.arrayIndex + 1)
 
@@ -169,7 +169,7 @@ internal class NestedJsonBuilder {
                 if (segment.arrayIndex == null) {
                     throw JSONException("Array requires index notation, got key: ${segment.key}")
                 }
-                
+
                 ensureArraySize(current, segment.arrayIndex + 1)
 
                 if (isLastSegment) {

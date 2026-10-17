@@ -8,7 +8,7 @@ import org.json.JSONObject
  */
 sealed interface ValidationResult {
     val outcome: ValidationOutcome
-    
+
     fun shouldDrop(): Boolean = outcome is ValidationOutcome.Drop
 }
 
@@ -64,7 +64,7 @@ data class EventDataMetrics(
     val maxObjectKeyCount: Int,
     val maxArrayLength: Int,
     val maxKVPairCount: Int,
-    
+
     // Data quality metrics
     val keysModified: List<KeyModification>,
     val valuesModified: List<ValueModification>,

@@ -377,14 +377,14 @@ class NumberOperationUtilsTest {
     fun `addNumbers type promotion hierarchy Int-Long-Float-Double`() {
         // Int stays Int
         assertTrue(NumberOperationUtils.addNumbers(1, 2) is Int)
-        
+
         // Long promotes Int
         assertTrue(NumberOperationUtils.addNumbers(1, 2L) is Long)
-        
+
         // Float promotes Int and Long
         assertTrue(NumberOperationUtils.addNumbers(1, 2.0f) is Float)
         assertTrue(NumberOperationUtils.addNumbers(1L, 2.0f) is Float)
-        
+
         // Double promotes all
         assertTrue(NumberOperationUtils.addNumbers(1, 2.0) is Double)
         assertTrue(NumberOperationUtils.addNumbers(1L, 2.0) is Double)
@@ -395,14 +395,14 @@ class NumberOperationUtilsTest {
     fun `subtractNumbers type promotion hierarchy Int-Long-Float-Double`() {
         // Int stays Int
         assertTrue(NumberOperationUtils.subtractNumbers(5, 2) is Int)
-        
+
         // Long promotes Int
         assertTrue(NumberOperationUtils.subtractNumbers(5, 2L) is Long)
-        
+
         // Float promotes Int and Long
         assertTrue(NumberOperationUtils.subtractNumbers(5, 2.0f) is Float)
         assertTrue(NumberOperationUtils.subtractNumbers(5L, 2.0f) is Float)
-        
+
         // Double promotes all
         assertTrue(NumberOperationUtils.subtractNumbers(5, 2.0) is Double)
         assertTrue(NumberOperationUtils.subtractNumbers(5L, 2.0) is Double)
@@ -412,7 +412,7 @@ class NumberOperationUtilsTest {
     @Test
     fun `operations handle decimal precision with Float`() {
         val result = NumberOperationUtils.addNumbers(0.1f, 0.2f)
-        
+
         assertTrue(result is Float)
         // Float precision issues
         assertEquals(0.3f, result as Float, 0.0001f)
@@ -421,7 +421,7 @@ class NumberOperationUtilsTest {
     @Test
     fun `operations handle decimal precision with Double`() {
         val result = NumberOperationUtils.addNumbers(0.1, 0.2)
-        
+
         assertTrue(result is Double)
         // Double has better precision but still not perfect
         assertEquals(0.3, result as Double, 0.00001)

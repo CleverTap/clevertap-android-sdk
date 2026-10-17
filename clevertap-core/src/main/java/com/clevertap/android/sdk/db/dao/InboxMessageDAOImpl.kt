@@ -25,10 +25,10 @@ internal class InboxMessageDAOImpl(
     override fun getMessages(userId: String): ArrayList<CTMessageDAO> {
         val tName = INBOX_MESSAGES.tableName
         val messageDAOArrayList = ArrayList<CTMessageDAO>()
-        
+
         try {
             dbHelper.readableDatabase.query(
-                tName, null, "${Column.USER_ID} = ?", arrayOf(userId), 
+                tName, null, "${Column.USER_ID} = ?", arrayOf(userId),
                 null, null, "${Column.CREATED_AT} DESC"
             )?.use { cursor ->
                 // find indices
@@ -219,8 +219,8 @@ internal class InboxMessageDAOImpl(
         val tName = INBOX_MESSAGES.tableName
         return try {
             dbHelper.writableDatabase.delete(
-                tName, 
-                "${Column.ID} = ? AND ${Column.USER_ID} = ?", 
+                tName,
+                "${Column.ID} = ? AND ${Column.USER_ID} = ?",
                 arrayOf(messageId, userId)
             )
             true
@@ -243,8 +243,8 @@ internal class InboxMessageDAOImpl(
 
         return try {
             dbHelper.writableDatabase.delete(
-                tName, 
-                "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?", 
+                tName,
+                "${Column.ID} IN ($idsTemplateGroup) AND ${Column.USER_ID} = ?",
                 whereArgs.toTypedArray()
             )
             true
@@ -260,11 +260,11 @@ internal class InboxMessageDAOImpl(
         val cv = ContentValues().apply {
             put(Column.IS_READ, 1)
         }
-        
+
         return try {
             dbHelper.writableDatabase.update(
-                tName, cv, 
-                "${Column.ID} = ? AND ${Column.USER_ID} = ?", 
+                tName, cv,
+                "${Column.ID} = ? AND ${Column.USER_ID} = ?",
                 arrayOf(messageId, userId)
             )
             true

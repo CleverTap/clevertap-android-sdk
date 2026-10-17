@@ -105,9 +105,9 @@ class EventMediatorTest {
     @Test
     fun `shouldDeferProcessingEvent returns false for DEFINE_VARS_EVENT`() {
         val event = JSONObject()
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.DEFINE_VARS_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -115,9 +115,9 @@ class EventMediatorTest {
     fun `shouldDeferProcessingEvent returns false when config is created post app launch`() {
         val event = JSONObject()
         every { config.isCreatedPostAppLaunch } returns true
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -125,9 +125,9 @@ class EventMediatorTest {
     fun `shouldDeferProcessingEvent returns false for system events when not created post app launch`() {
         val event = JSONObject().put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
         every { config.isCreatedPostAppLaunch } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -137,9 +137,9 @@ class EventMediatorTest {
         val event = JSONObject().put("evtName", Constants.APP_LAUNCHED_EVENT)
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -147,9 +147,9 @@ class EventMediatorTest {
     fun `shouldDeferProcessingEvent returns false for Notification Viewed system event`() {
         val event = JSONObject().put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
         every { config.isCreatedPostAppLaunch } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -157,9 +157,9 @@ class EventMediatorTest {
     fun `shouldDeferProcessingEvent returns false for Geofence Entered system event`() {
         val event = JSONObject().put("evtName", Constants.GEOFENCE_ENTERED_EVENT_NAME)
         every { config.isCreatedPostAppLaunch } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -167,9 +167,9 @@ class EventMediatorTest {
     fun `shouldDeferProcessingEvent returns false for Geofence Exited system event`() {
         val event = JSONObject().put("evtName", Constants.GEOFENCE_EXITED_EVENT_NAME)
         every { config.isCreatedPostAppLaunch } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -178,9 +178,9 @@ class EventMediatorTest {
         val event = JSONObject().put("evtName", "CustomEvent")
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -189,9 +189,9 @@ class EventMediatorTest {
         val event = JSONObject().put("evtName", "CustomEvent")
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns true
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -199,9 +199,9 @@ class EventMediatorTest {
     fun `shouldDeferProcessingEvent returns false for non-RAISED_EVENT when not created post app launch`() {
         val event = JSONObject()
         every { config.isCreatedPostAppLaunch } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.PROFILE_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -210,9 +210,9 @@ class EventMediatorTest {
         val event = JSONObject()
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -221,9 +221,9 @@ class EventMediatorTest {
         val event = JSONObject().put("evtName", 123) // Invalid evtName type
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -232,9 +232,9 @@ class EventMediatorTest {
         val event = JSONObject().put("evtName", "CustomEvent")
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.PAGE_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -243,9 +243,9 @@ class EventMediatorTest {
         val event = JSONObject().put("evtName", "CustomEvent")
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.PROFILE_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -254,9 +254,9 @@ class EventMediatorTest {
         val event = JSONObject().put("evtName", "CustomEvent")
         every { config.isCreatedPostAppLaunch } returns false
         every { cleverTapMetaData.isAppLaunchPushed } returns false
-        
+
         val result = eventMediator.shouldDeferProcessingEvent(event, Constants.FETCH_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -266,9 +266,9 @@ class EventMediatorTest {
         val event = JSONObject()
         every { networkRepo.isMuted() } returns true
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.FETCH_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -277,9 +277,9 @@ class EventMediatorTest {
         val event = JSONObject()
         every { networkRepo.isMuted() } returns true
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.DEFINE_VARS_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -287,9 +287,9 @@ class EventMediatorTest {
     fun `shouldDropEvent returns true when network is muted`() {
         val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomEvent")
         every { networkRepo.isMuted() } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -298,9 +298,9 @@ class EventMediatorTest {
         val event = JSONObject().put(Constants.KEY_EVT_NAME, "CustomEvent")
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns false
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -310,9 +310,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns false
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -322,9 +322,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns false
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.NV_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -334,9 +334,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.PROFILE_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -346,9 +346,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.PAGE_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -358,9 +358,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.DATA_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -370,9 +370,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -382,9 +382,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -394,9 +394,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.NV_EVENT)
-        
+
         assertFalse(result)
     }
 
@@ -406,9 +406,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.NV_EVENT)
-        
+
         assertTrue(result)
     }
 
@@ -417,9 +417,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(null, Constants.RAISED_EVENT)
-        
+
         assertTrue(result) // Should drop because event name is null (not a system event)
     }
 
@@ -429,9 +429,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result) // Should drop because event name is null (not a system event)
     }
 
@@ -441,9 +441,9 @@ class EventMediatorTest {
         every { networkRepo.isMuted() } returns false
         every { cleverTapMetaData.isCurrentUserOptedOut } returns true
         every { cleverTapMetaData.enabledSystemEvents } returns true
-        
+
         val result = eventMediator.shouldDropEvent(event, Constants.RAISED_EVENT)
-        
+
         assertTrue(result) // Should drop because event name extraction fails
     }
 

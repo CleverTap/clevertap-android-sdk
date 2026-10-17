@@ -22,7 +22,7 @@ class CustomInboxViewModel(
         private set
     override var unreadMessagesCount by mutableStateOf(0)
         private set
-    
+
     private val _inboxMessages = mutableStateListOf<CTInboxMessage>()
     override val inboxMessages: List<CTInboxMessage> = _inboxMessages
 

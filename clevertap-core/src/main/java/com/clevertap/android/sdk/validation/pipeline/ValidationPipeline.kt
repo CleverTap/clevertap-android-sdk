@@ -20,11 +20,11 @@ interface ValidationPipeline<I, O> {
      * @return The validation result containing outcome and cleaned data
      */
     fun execute(input: I, config: ValidationConfig): O
-    
+
     /**
      * Logs validation outcome
      * Provides consistent logging across all pipeline implementations.
-     * 
+     *
      * @param logger Logger instance to use
      * @param tag Log tag (e.g., "EventNameValidation")
      * @param outcome Validation outcome to log

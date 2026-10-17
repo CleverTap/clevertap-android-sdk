@@ -6,7 +6,7 @@ import android.graphics.Bitmap
  * Represents the result of a GIF processing operation.
  */
 internal sealed interface GifResult {
-    
+
     /**
      * Represents a successful GIF processing result.
      * @param frames The processed GIF frames
@@ -16,7 +16,7 @@ internal sealed interface GifResult {
         val frames: List<Bitmap>,
         val duration: Int
     ) : GifResult
-    
+
     /**
      * Represents a failed GIF processing result.
      * @param reason The reason for the failure

@@ -8,7 +8,7 @@ class CleverTapFixtures {
 
         /**
          * Creates a ManifestInfo instance with default parameters for testing.
-         * 
+         *
          * @param accountId Account ID (default: Constant.ACC_ID)
          * @param accountToken Account token (default: Constant.ACC_TOKEN)
          * @param accountRegion Account region (default: null)
