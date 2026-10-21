@@ -8,6 +8,9 @@ public class PTConstants {
 
     public static final String LOG_TAG = "PTLog";
 
+    // Name sent with BuildConfig.VERSION_CODE through CustomSdkVersionProvider
+    public static final String PT_SDK_NAME = "PushTemplates";
+
     public static final String PT_MANUAL_CAROUSEL_CURRENT = "pt_manual_carousel_current";
 
     public static final String PT_IMAGE_LIST = "pt_image_list";
