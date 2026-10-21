@@ -8,7 +8,7 @@ public class PTConstants {
 
     public static final String LOG_TAG = "PTLog";
 
-    // Name sent with BuildConfig.VERSION_CODE through CustomSdkVersionProvider
+    // Name sent with BuildConfig.VERSION_CODE through CleverTapAPI.setCustomSdkVersion
     public static final String PT_SDK_NAME = "PushTemplates";
 
     public static final String PT_MANUAL_CAROUSEL_CURRENT = "pt_manual_carousel_current";
