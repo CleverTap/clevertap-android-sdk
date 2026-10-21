@@ -54,7 +54,6 @@ import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
-import com.clevertap.android.sdk.interfaces.CustomSdkVersionProvider;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
@@ -934,8 +933,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (instance == null) {
             instance = new CleverTapAPI(context, config, cleverTapID);
             instances.put(config.getAccountId(), instance);
-            // Covers apps that set the handler before creating the instance
-            registerNotificationHandlerSdkVersion(instance);
             final CleverTapAPI finalInstance = instance;
         } else if (instance.getConfig().getEnableCustomCleverTapId() && Utils
                 .validateCTID(cleverTapID) && instance.isErrorDeviceId()) {
@@ -3460,35 +3457,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static void setNotificationHandler(NotificationHandler notificationHandler) {
         sNotificationHandler = notificationHandler;
-        // Covers apps that create the instance before setting the handler
-        if (instances == null) {
-            return;
-        }
-        try {
-            for (CleverTapAPI instance : instances.values()) {
-                registerNotificationHandlerSdkVersion(instance);
-            }
-        } catch (Throwable t) {
-            Logger.v("Unable to register notification handler SDK version", t);
-        }
-    }
-
-    /**
-     * Registers the name and version of the notification handler's module, if it provides them, with the
-     * given instance. Called when an instance is created and when the handler is set, so it works in
-     * either order and from the first request of every process.
-     */
-    static void registerNotificationHandlerSdkVersion(CleverTapAPI instance) {
-        NotificationHandler handler = sNotificationHandler;
-        if (instance == null || !(handler instanceof CustomSdkVersionProvider)) {
-            return;
-        }
-        try {
-            CustomSdkVersionProvider provider = (CustomSdkVersionProvider) handler;
-            instance.setCustomSdkVersion(provider.getCustomSdkName(), provider.getCustomSdkVersion());
-        } catch (Throwable t) {
-            Logger.v("Unable to register notification handler SDK version", t);
-        }
     }
 
     /** @noinspection unused*/
