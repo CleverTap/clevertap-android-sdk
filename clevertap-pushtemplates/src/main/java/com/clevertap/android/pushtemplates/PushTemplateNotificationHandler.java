@@ -2,14 +2,16 @@ package com.clevertap.android.pushtemplates;
 
 import android.content.Context;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
+import com.clevertap.android.sdk.interfaces.CustomSdkVersionProvider;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
 import com.clevertap.android.sdk.pushnotification.PushType;
 
-public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
+public class PushTemplateNotificationHandler implements ActionButtonClickHandler, CustomSdkVersionProvider {
 
     @Override
     public boolean onActionButtonClick(final Context context, final Bundle extras, final int notificationId) {
@@ -50,6 +52,18 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
     @Override
     public boolean onNewToken(final Context applicationContext, final String token, final PushType pushType) {
         return true;
+    }
+
+    // Core registers these with every instance once this handler is set via CleverTapAPI.setNotificationHandler
+    @NonNull
+    @Override
+    public String getCustomSdkName() {
+        return PTConstants.PT_SDK_NAME;
+    }
+
+    @Override
+    public int getCustomSdkVersion() {
+        return BuildConfig.VERSION_CODE;
     }
 
 }
