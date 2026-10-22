@@ -7,6 +7,8 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
 
 /**
@@ -71,7 +73,11 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private final Object optOutFlagLock = new Object();
 
-    private HashMap<String, Integer> customSdkVersions = new HashMap<>();
+    // Concurrent because modules register from their own threads while the network thread reads it
+    private final Map<String, Integer> customSdkVersions = new ConcurrentHashMap<>();
+
+    // Versions registered by modules for every instance, so they apply whether or not an instance exists yet
+    private static final Map<String, Integer> sharedCustomSdkVersions = new ConcurrentHashMap<>();
 
     private long referrerClickTime = 0;
 
@@ -199,6 +205,9 @@ public class CoreMetaData extends CleverTapMetaData {
 
     public int getCustomSdkVersion(String customSdkName) {
         Integer version = customSdkVersions.get(customSdkName);
+        if (version == null) {
+            version = sharedCustomSdkVersions.get(customSdkName);
+        }
         return version!=null ? version : 0;
     }
 
@@ -206,8 +215,14 @@ public class CoreMetaData extends CleverTapMetaData {
         customSdkVersions.put(customSdkName,customSdkVersion);
     }
 
-    public HashMap<String,Integer> getAllCustomSdkVersions(){
-        return customSdkVersions;
+    static void setSharedCustomSdkVersion(String customSdkName, int customSdkVersion) {
+        sharedCustomSdkVersions.put(customSdkName, customSdkVersion);
+    }
+
+    public Map<String,Integer> getAllCustomSdkVersions(){
+        Map<String, Integer> allCustomSdkVersions = new HashMap<>(sharedCustomSdkVersions);
+        allCustomSdkVersions.putAll(customSdkVersions);
+        return allCustomSdkVersions;
     }
 
     void setLastSessionLength(final int lastSessionLength) {

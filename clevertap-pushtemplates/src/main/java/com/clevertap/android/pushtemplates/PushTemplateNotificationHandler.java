@@ -8,21 +8,15 @@ import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
 import com.clevertap.android.sdk.pushnotification.PushType;
-import java.util.HashMap;
 
 public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
 
     public PushTemplateNotificationHandler() {
-        // Covers apps that create the instance before setting this handler
         try {
-            HashMap<String, CleverTapAPI> instances = CleverTapAPI.getInstances();
-            if (instances != null) {
-                for (CleverTapAPI instance : instances.values()) {
-                    registerSdkVersion(instance);
-                }
-            }
+            CleverTapAPI.registerCustomSdkVersion(PTConstants.PT_SDK_NAME, BuildConfig.VERSION_CODE);
         } catch (Throwable t) {
-            PTLog.verbose("Unable to register Push Templates SDK version", t);
+            // Older Core without registerCustomSdkVersion, the version is just not reported
+            PTLog.verbose("Core does not support registerCustomSdkVersion", t);
         }
     }
 
@@ -53,8 +47,6 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
                     .getGlobalInstance(applicationContext,
                             PushNotificationUtil.getAccountIdFromNotificationBundle(message));
             if (cleverTapAPI != null) {
-                // Covers instances created after this handler was set
-                registerSdkVersion(cleverTapAPI);
                 INotificationRenderer templateRenderer = new TemplateRenderer(applicationContext, message, cleverTapAPI.getCoreState().getConfig());
                 cleverTapAPI.renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message);
             }
@@ -67,17 +59,6 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
     @Override
     public boolean onNewToken(final Context applicationContext, final String token, final PushType pushType) {
         return true;
-    }
-
-    static void registerSdkVersion(CleverTapAPI instance) {
-        if (instance == null) {
-            return;
-        }
-        try {
-            instance.setCustomSdkVersion(PTConstants.PT_SDK_NAME, BuildConfig.VERSION_CODE);
-        } catch (Throwable t) {
-            PTLog.verbose("Unable to register Push Templates SDK version", t);
-        }
     }
 
 }
