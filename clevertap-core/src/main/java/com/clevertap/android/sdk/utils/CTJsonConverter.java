@@ -24,9 +24,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 @RestrictTo(Scope.LIBRARY)
@@ -155,7 +155,7 @@ public class CTJsonConverter {
             evtData.put("LIAMC", deviceInfo.getLocalInAppCount());
 
             // add custom sdk versions in "af" key of header.
-            HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
+            Map<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
             for (Entry<String, Integer> entries : allCustomSdkVersions.entrySet()) {
                 evtData.put(entries.getKey(), entries.getValue());
             }
