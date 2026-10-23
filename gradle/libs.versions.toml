@@ -1,9 +1,9 @@
 [versions]
 # Project
-android_compileSdk = "36"
-android_gradle_plugin = "8.9.3"
+android_compileSdk = "37"
+android_gradle_plugin = "9.1.1"
 android_minSdk = "23"
-kotlin_plugin = "2.0.10"
+kotlin_plugin = "2.2.10"
 rules = "1.7.0"
 sonarqube_plugin = "3.3"
 detekt_gradle_plugin = "1.23.3"

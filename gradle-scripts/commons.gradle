@@ -21,8 +21,18 @@ group = publishedGroupId
 
 def (major,minor,patch) = libraryVersion.split("\\.")
 
+kotlin {
+    // AGP 9 forces KGP 2.2.10; keep the published kotlin-stdlib dependency the same as before
+    coreLibrariesVersion = "2.0.10"
+}
+
 android {
     compileSdk libs.versions.android.compileSdk.get().toInteger()
+    kotlinOptions {
+        // keep the Kotlin metadata at 2.0 so apps on older Kotlin can still use the SDK
+        languageVersion = "2.0"
+        apiVersion = "2.0"
+    }
     buildFeatures {
         buildConfig = true
     }
@@ -37,6 +47,10 @@ android {
         buildConfigField ("String", "VERSION_NAME", "\"$versionName\"")
 
         consumerProguardFiles 'consumer-rules.pro'
+        aarMetadata {
+            // AGP 9 defaults this to compileSdk (37); 35 matches what apps already need today
+            minCompileSdk = 35
+        }
     }
 
     buildTypes {
@@ -58,7 +72,7 @@ android {
             buildConfigField "String", "SDK_VERSION_STRING",
                     "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
             minifyEnabled false// keep it false we will supply proguard through consumerProguardFiles
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -90,6 +104,7 @@ android {
     }
 
     testOptions {
+        targetSdk = 23 // AGP 9 defaults the test targetSdk to compileSdk; AGP 8 used 23
         animationsDisabled true
         unitTests {
             includeAndroidResources = true

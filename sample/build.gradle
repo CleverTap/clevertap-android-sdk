@@ -66,11 +66,11 @@ android {
     buildTypes {
         named("debug") {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         named("release") {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         signed {
             initWith release
@@ -100,7 +100,7 @@ dependencies {
     implementation ("androidx.core:core:1.17.0")
     implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation ("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
-    implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.20")
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib:2.2.10") // AGP 9 compiles the sample with Kotlin 2.2.10
     // LiveData
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
