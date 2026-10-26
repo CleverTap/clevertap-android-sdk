@@ -1,11 +1,15 @@
 package com.clevertap.android.hms
 
+import com.clevertap.android.hms.HmsConstants.HMS_SDK_NAME
 import com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION
 import com.clevertap.android.hms.HmsConstants.HPS
+import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.*
 import org.junit.runner.*
@@ -52,6 +56,24 @@ class HmsPushProviderTest : BaseTestCase() {
     @Test
     fun testGetPushType() {
         Assert.assertEquals(pushProvider.pushType, HPS)
+    }
+
+    @Test
+    fun testConstructorRegistersSdkVersionWithCore() {
+        mockkStatic(CleverTapAPI::class) {
+            HmsPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
+
+            verify(exactly = 1) { CleverTapAPI.registerCustomSdkVersion(HMS_SDK_NAME, BuildConfig.VERSION_CODE) }
+        }
+    }
+
+    @Test
+    fun testConstructorWhenCoreHasNoRegisterCustomSdkVersion_doesNotCrash() {
+        mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.registerCustomSdkVersion(any(), any()) } throws NoSuchMethodError("registerCustomSdkVersion")
+
+            HmsPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
+        }
     }
 
     @Test

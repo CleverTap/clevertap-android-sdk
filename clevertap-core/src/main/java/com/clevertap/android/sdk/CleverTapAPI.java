@@ -3254,6 +3254,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getCoreMetaData().setCustomSdkVersion(customSdkName,customSdkVersion);
     }
 
+    /**
+     * Registers a module's name and version for every CleverTapAPI instance, including instances created
+     * later. Used by modules like Push Templates that have no instance of their own when they start.
+     */
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public static void registerCustomSdkVersion(@NonNull String customSdkName, int customSdkVersion) {
+        CoreMetaData.setSharedCustomSdkVersion(customSdkName, customSdkVersion);
+    }
+
     //To be called from DeviceInfo AdID GUID generation
     void deviceIDCreated(String deviceId) {
 

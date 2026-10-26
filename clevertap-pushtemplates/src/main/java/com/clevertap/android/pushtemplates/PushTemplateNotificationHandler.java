@@ -11,6 +11,15 @@ import com.clevertap.android.sdk.pushnotification.PushType;
 
 public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
 
+    public PushTemplateNotificationHandler() {
+        try {
+            CleverTapAPI.registerCustomSdkVersion(PTConstants.PT_SDK_NAME, BuildConfig.VERSION_CODE);
+        } catch (Throwable t) {
+            // Older Core without registerCustomSdkVersion, the version is just not reported
+            PTLog.verbose("Core does not support registerCustomSdkVersion", t);
+        }
+    }
+
     @Override
     public boolean onActionButtonClick(final Context context, final Bundle extras, final int notificationId) {
         String actionID = extras.getString(PTConstants.PT_ACTION_ID);
