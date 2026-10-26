@@ -81,6 +81,8 @@ internal class QueueHeaderBuilder(
     }
 
     private fun addAppFields(header: JSONObject) {
+        // ddnd is read per header, so read pushStatus too and keep them in sync.
+        deviceInfo.refreshPushStatus()
         val appFields = deviceInfo.appLaunchedFields
         if (coreMetaData.isWebInterfaceInitializedExternally) {
             appFields.put("wv_init", true)
