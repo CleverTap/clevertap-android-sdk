@@ -12,7 +12,6 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
-import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
@@ -224,7 +223,7 @@ private fun NotificationManager.createDefaultFallbackChannel(context: Context): 
  * @param caller The caller.
  * @param context The application context.
  */
-@MainThread
+@WorkerThread
 fun CleverTapAPI.flushPushImpressionsOnPostAsyncSafely(
     logTag: String,
     caller: String,

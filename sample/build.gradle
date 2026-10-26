@@ -17,11 +17,11 @@ allprojects {
 Properties localProperties = loadLocalProperties()
 
 android {
-    compileSdk 36
+    compileSdk 37
     defaultConfig {
         applicationId "com.clevertap.demo"
         minSdkVersion 23
-        targetSdkVersion 36
+        targetSdkVersion 37
         versionCode 8050000
         versionName "8.5.0"
         multiDexEnabled true

@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.clevertap.demo"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.clevertap.demo"
         minSdk = 23
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 556
         versionName = "1.7.0-instant"
 
