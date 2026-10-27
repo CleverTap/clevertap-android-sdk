@@ -125,6 +125,36 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         assertEquals(true, deviceInfo.isDarkMode())
     }
 
+    @Test
+    fun `a full refresh that lands after refreshPushStatus keeps the newer push status`() {
+        notificationShadow.setNotificationsEnabled(true)
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+        deviceInfo.prepareDeviceStateRefresh().call()
+        val fullRefresh = deviceInfo.prepareDeviceStateRefresh()
+
+        notificationShadow.setNotificationsEnabled(false)
+        deviceInfo.refreshPushStatus()
+        // The full refresh read before the header did, so it still sees the old permission.
+        notificationShadow.setNotificationsEnabled(true)
+        fullRefresh.call()
+
+        assertEquals(DeviceState.PUSH_STATUS_DENIED, deviceInfo.getPushStatus())
+    }
+
+    @Test
+    fun `a full refresh prepared after refreshPushStatus stores its own push status`() {
+        notificationShadow.setNotificationsEnabled(true)
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+        deviceInfo.prepareDeviceStateRefresh().call()
+        notificationShadow.setNotificationsEnabled(false)
+        deviceInfo.refreshPushStatus()
+
+        notificationShadow.setNotificationsEnabled(true)
+        deviceInfo.prepareDeviceStateRefresh().call()
+
+        assertEquals(DeviceState.PUSH_STATUS_ALLOWED, deviceInfo.getPushStatus())
+    }
+
     private fun darkActivityConfiguration() = Configuration().apply {
         uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or Configuration.UI_MODE_NIGHT_YES
         fontScale = 1.3f
@@ -184,7 +214,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         every { deviceInfo.isBoldText() } returns false
         every { deviceInfo.getInstallSource() } returns "com.android.vending"
 
-        val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+        val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), true, false)
 
         assertEquals(40, appFields.get("batt"))
         assertEquals(true, appFields.get("chg"))
@@ -210,7 +240,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         every { deviceInfo.isBoldText() } returns null
         every { deviceInfo.getInstallSource() } returns null
 
-        val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+        val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), true, false)
 
         listOf(
             "batt", "chg", "ram", "cpu", "metered", "lowData",
@@ -219,6 +249,19 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
             assertFalse(appFields.has(it), "$it should be left out")
         }
         assertEquals(true, appFields.has("dt"))
+    }
+
+    @Test
+    fun `app fields leave out metered and data saver when network info reporting is off`() {
+        val deviceInfo = mockk<DeviceInfo>(relaxed = true)
+        every { deviceInfo.context } returns appCtx
+        every { deviceInfo.isMeteredNetwork() } returns false
+        every { deviceInfo.isDataSaverOn() } returns true
+
+        val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+
+        assertFalse(appFields.has("metered"))
+        assertFalse(appFields.has("lowData"))
     }
 
     @Test

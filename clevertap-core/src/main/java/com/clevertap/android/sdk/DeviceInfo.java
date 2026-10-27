@@ -437,6 +437,9 @@ public class DeviceInfo {
 
     private long deviceStateGeneration = 0;
 
+    // Bumped on each push only refresh, guarded by deviceStateLock, so a full refresh keeps a newer push status.
+    private long pushStatusGeneration = 0;
+
     // Last resumed activity's configuration, guarded by deviceStateLock. Its display values win.
     private Configuration activityConfiguration;
 
@@ -803,21 +806,27 @@ public class DeviceInfo {
      */
     Callable<Void> prepareDeviceStateRefresh() {
         final long generation;
+        final long pushGeneration;
         synchronized (deviceStateLock) {
             generation = ++deviceStateGeneration;
+            pushGeneration = pushStatusGeneration;
         }
         return () -> {
-            refreshDeviceState(generation);
+            refreshDeviceState(generation, pushGeneration);
             return null;
         };
     }
 
     // Dropped if a newer refresh was prepared.
     @WorkerThread
-    private void refreshDeviceState(long generation) {
+    private void refreshDeviceState(long generation, long pushGeneration) {
         DeviceState state = DeviceState.read(context, context.getResources().getConfiguration());
         synchronized (deviceStateLock) {
             if (generation == deviceStateGeneration) {
+                // A push only refresh stored after this one was prepared, so its push status is newer.
+                if (pushGeneration != pushStatusGeneration) {
+                    state = state.withPushStatus(deviceState.getPushStatus());
+                }
                 deviceState = withActivityDisplay(state);
             }
         }
@@ -841,6 +850,7 @@ public class DeviceInfo {
         synchronized (deviceStateLock) {
             if (deviceState != null) {
                 deviceState = deviceState.withPushStatus(pushStatus);
+                pushStatusGeneration++;
             }
         }
     }

@@ -109,8 +109,6 @@ public class CTJsonConverter {
             evtData.putOpt("chg", deviceInfo.isCharging());
             evtData.putOpt("ram", deviceInfo.getRamTier());
             evtData.putOpt("cpu", deviceInfo.getCpuCores());
-            evtData.putOpt("metered", deviceInfo.isMeteredNetwork());
-            evtData.putOpt("lowData", deviceInfo.isDataSaverOn());
             evtData.putOpt("boldText", deviceInfo.isBoldText());
             evtData.putOpt("instSrc", deviceInfo.getInstallSource());
 
@@ -166,6 +164,9 @@ public class CTJsonConverter {
                 if (radio != null) {
                     evtData.put("Radio", radio);
                 }
+
+                evtData.putOpt("metered", deviceInfo.isMeteredNetwork());
+                evtData.putOpt("lowData", deviceInfo.isDataSaverOn());
             }
             //Adds an extra field to send local inApp count in queueData.
             evtData.put("LIAMC", deviceInfo.getLocalInAppCount());
