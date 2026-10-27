@@ -46,6 +46,8 @@ class ActivityLifeCycleManager {
 
     private final InboxV2Bridge inboxV2Bridge;
 
+    private final DeviceInfo deviceInfo;
+
     ActivityLifeCycleManager(Context context,
                              CleverTapInstanceConfig config,
                              AnalyticsManager analyticsManager,
@@ -57,7 +59,8 @@ class ActivityLifeCycleManager {
                              BaseEventQueueManager baseEventQueueManager,
                              CTExecutors executors,
                              Clock clock,
-                             InboxV2Bridge inboxV2Bridge) {
+                             InboxV2Bridge inboxV2Bridge,
+                             DeviceInfo deviceInfo) {
         this.context = context;
         this.config = config;
         this.analyticsManager = analyticsManager;
@@ -70,6 +73,7 @@ class ActivityLifeCycleManager {
         this.executors = executors;
         this.clock = clock;
         this.inboxV2Bridge = inboxV2Bridge;
+        this.deviceInfo = deviceInfo;
     }
 
     //Lifecycle
@@ -101,6 +105,7 @@ class ActivityLifeCycleManager {
     //Lifecycle
     public void activityResumed(Activity activity) {
         config.getLogger().verbose(config.getAccountId(), "App in foreground");
+        updateDisplayState(activity);
         sessionManager.checkTimeoutSession();
 
         //Anything in this If block will run once per App Launch.
@@ -140,6 +145,26 @@ class ActivityLifeCycleManager {
         }
         baseEventQueueManager.pushInitialEventsAsync();
         inAppController.showNotificationIfAvailable();
+        refreshDeviceState();
+    }
+
+    // Before App Launched, so it carries the activity's display values. Caught so it can't skip the resume work.
+    private void updateDisplayState(Activity activity) {
+        try {
+            deviceInfo.updateDisplayState(activity.getResources().getConfiguration());
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to update display state", t);
+        }
+    }
+
+    // Power or push permission may have changed in the background. Caught so it can't skip the work above.
+    private void refreshDeviceState() {
+        try {
+            Task<Void> refreshTask = executors.ioTask();
+            refreshTask.execute("refreshDeviceState", deviceInfo.prepareDeviceStateRefresh());
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to refresh device state", t);
+        }
     }
 
     public void onActivityCreated(final Bundle notification, final Uri deepLink, String accountId) {

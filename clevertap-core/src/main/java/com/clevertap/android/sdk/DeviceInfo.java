@@ -17,6 +17,7 @@ import android.content.res.Configuration;
 import android.graphics.Insets;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
+import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -27,6 +28,7 @@ import android.view.WindowMetrics;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -427,6 +429,23 @@ public class DeviceInfo {
 
     private final  NetworkMonitor networkMonitor;
 
+    // Read at init and on each resume, push status per request header. Building af makes no system calls.
+    private volatile DeviceState deviceState;
+
+    // Guards deviceState. Each refresh takes a generation so only the newest result is stored.
+    private final Object deviceStateLock = new Object();
+
+    private long deviceStateGeneration = 0;
+
+    // Bumped on each push only refresh, guarded by deviceStateLock, so a full refresh keeps a newer push status.
+    private long pushStatusGeneration = 0;
+
+    // Last resumed activity's configuration, guarded by deviceStateLock. Its display values win.
+    private Configuration activityConfiguration;
+
+    // Can't change while the app runs, so read once off the main thread at init.
+    private volatile DeviceSpecs deviceSpecs;
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -697,6 +716,171 @@ public class DeviceInfo {
 
 
 
+    @Nullable
+    public Boolean isLowPowerMode() {
+        return getDeviceState().getLowPower();
+    }
+
+    @Nullable
+    public Integer getThermalLevel() {
+        return getDeviceState().getThermal();
+    }
+
+    @Nullable
+    public Boolean isDarkMode() {
+        return getDeviceState().getDarkMode();
+    }
+
+    @Nullable
+    public Double getTextSize() {
+        return getDeviceState().getTextSize();
+    }
+
+    @Nullable
+    public Boolean isReduceMotion() {
+        return getDeviceState().getReduceMotion();
+    }
+
+    @Nullable
+    public Integer getPushStatus() {
+        return getDeviceState().getPushStatus();
+    }
+
+    @Nullable
+    public Integer getBatteryLevel() {
+        return getDeviceState().getBatt();
+    }
+
+    @Nullable
+    public Boolean isCharging() {
+        return getDeviceState().getChg();
+    }
+
+    @Nullable
+    public Boolean isMeteredNetwork() {
+        return getDeviceState().getMetered();
+    }
+
+    @Nullable
+    public Boolean isDataSaverOn() {
+        return getDeviceState().getLowData();
+    }
+
+    @Nullable
+    public Boolean isBoldText() {
+        return getDeviceState().getBoldText();
+    }
+
+    @Nullable
+    public Integer getRamTier() {
+        return getDeviceSpecs().getRam();
+    }
+
+    @Nullable
+    public Integer getCpuCores() {
+        return getDeviceSpecs().getCpu();
+    }
+
+    @Nullable
+    public String getInstallSource() {
+        return getDeviceSpecs().getInstSrc();
+    }
+
+    private DeviceSpecs getDeviceSpecs() {
+        DeviceSpecs specs = deviceSpecs;
+        if (specs == null) {
+            // Not read yet. No system calls on the main thread, so leave the values out until the init read lands.
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                return DeviceSpecs.UNKNOWN;
+            }
+            // Off the main thread, reading twice is harmless.
+            specs = DeviceSpecs.read(context);
+            deviceSpecs = specs;
+        }
+        return specs;
+    }
+
+    /**
+     * Returns a task that re-reads the device state, to run off the main thread.
+     * Only the newest prepared task's result is stored.
+     */
+    Callable<Void> prepareDeviceStateRefresh() {
+        final long generation;
+        final long pushGeneration;
+        synchronized (deviceStateLock) {
+            generation = ++deviceStateGeneration;
+            pushGeneration = pushStatusGeneration;
+        }
+        return () -> {
+            refreshDeviceState(generation, pushGeneration);
+            return null;
+        };
+    }
+
+    // Dropped if a newer refresh was prepared.
+    @WorkerThread
+    private void refreshDeviceState(long generation, long pushGeneration) {
+        DeviceState state = DeviceState.read(context, context.getResources().getConfiguration());
+        synchronized (deviceStateLock) {
+            if (generation == deviceStateGeneration) {
+                // A push only refresh stored after this one was prepared, so its push status is newer.
+                if (pushGeneration != pushStatusGeneration) {
+                    state = state.withPushStatus(deviceState.getPushStatus());
+                }
+                deviceState = withActivityDisplay(state);
+            }
+        }
+    }
+
+    /** Stores a resumed activity's display values. No system calls, so safe on the main thread. */
+    void updateDisplayState(Configuration activityConfig) {
+        Configuration copy = new Configuration(activityConfig);
+        synchronized (deviceStateLock) {
+            activityConfiguration = copy;
+            if (deviceState != null) {
+                deviceState = deviceState.withDisplay(copy);
+            }
+        }
+    }
+
+    /** Re-reads only push permission, so pushStatus matches ddnd in the same header. */
+    @WorkerThread
+    public void refreshPushStatus() {
+        Integer pushStatus = DeviceState.readPushStatus(context);
+        synchronized (deviceStateLock) {
+            if (deviceState != null) {
+                deviceState = deviceState.withPushStatus(pushStatus);
+                pushStatusGeneration++;
+            }
+        }
+    }
+
+    // Callers hold deviceStateLock.
+    private DeviceState withActivityDisplay(DeviceState state) {
+        return activityConfiguration == null ? state : state.withDisplay(activityConfiguration);
+    }
+
+    private DeviceState getDeviceState() {
+        DeviceState state = deviceState;
+        if (state != null) {
+            return state;
+        }
+        // Not read yet. On the main thread, send only display values, which need no system call.
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            synchronized (deviceStateLock) {
+                return withActivityDisplay(DeviceState.displayOnly(context.getResources().getConfiguration()));
+            }
+        }
+        state = DeviceState.read(context, context.getResources().getConfiguration());
+        synchronized (deviceStateLock) {
+            // Keep a value a refresh stored meanwhile.
+            if (deviceState == null) {
+                deviceState = withActivityDisplay(state);
+            }
+            return deviceState;
+        }
+    }
+
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
         StorageHelper.putBoolean(context, config.getAccountId(), Constants.NETWORK_INFO, enableNetworkInfoReporting);
@@ -723,6 +907,16 @@ public class DeviceInfo {
                 getDeviceCachedInfo();
                 return null;
             }
+        });
+
+        // Own task, so it doesn't wait behind the snapshot above or get skipped if that throws.
+        Task<Void> taskDeviceState = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceState.execute("initDeviceState", prepareDeviceStateRefresh());
+
+        Task<Void> taskDeviceSpecs = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceSpecs.execute("initDeviceSpecs", () -> {
+            getDeviceSpecs();
+            return null;
         });
 
         Task<String> task = CTExecutorFactory.executors(config).ioTask();

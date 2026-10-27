@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.app.Activity
+import android.content.res.Configuration
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
@@ -16,8 +17,10 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import junit.framework.Assert.assertEquals
 import org.json.JSONObject
+import java.util.concurrent.Callable
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -50,7 +53,8 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             coreState.baseEventQueueManager,
             MockCTExecutors(),
             FakeClock(),
-            inboxV2Bridge
+            inboxV2Bridge,
+            coreState.deviceInfo
         )
     }
 
@@ -161,6 +165,41 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
             verify { coreState.baseEventQueueManager.pushInitialEventsAsync() }
             verify { coreState.inAppController.showNotificationIfAvailable() }
         }
+    }
+
+    @Test
+    fun `activityResumed stores the activity display values before App Launched and refreshes the rest after`() {
+        coreState.coreMetaData.isAppLaunchPushed = false
+        val activity = mockk<Activity>(relaxed = true)
+        val configuration = Configuration().apply { fontScale = 1.3f }
+        every { activity.resources.configuration } returns configuration
+        var refreshRan = false
+        every { coreState.deviceInfo.prepareDeviceStateRefresh() } returns Callable { refreshRan = true; null }
+
+        activityLifeCycleManager.activityResumed(activity)
+
+        verifyOrder {
+            coreState.deviceInfo.updateDisplayState(configuration)
+            coreState.analyticsManager.pushAppLaunchedEvent()
+            coreState.deviceInfo.prepareDeviceStateRefresh()
+        }
+        assertTrue(refreshRan)
+    }
+
+    @Test
+    fun `activityResumed still runs the resume work when reading the activity configuration fails`() {
+        coreState.coreMetaData.isAppLaunchPushed = false
+        val activity = mockk<Activity>()
+        every { activity.resources } throws IllegalStateException("no resources")
+        var refreshRan = false
+        every { coreState.deviceInfo.prepareDeviceStateRefresh() } returns Callable { refreshRan = true; null }
+
+        activityLifeCycleManager.activityResumed(activity)
+
+        verify(exactly = 0) { coreState.deviceInfo.updateDisplayState(any()) }
+        verify { coreState.analyticsManager.pushAppLaunchedEvent() }
+        verify { coreState.inAppController.showNotificationIfAvailable() }
+        assertTrue(refreshRan)
     }
 
     @Test

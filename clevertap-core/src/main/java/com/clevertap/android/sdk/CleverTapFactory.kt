@@ -653,7 +653,8 @@ internal object CleverTapFactory {
             baseEventQueueManager,
             executors,
             SYSTEM,
-            inboxV2Bridge
+            inboxV2Bridge,
+            deviceInfo
         )
 
         val loginController = LoginController(
