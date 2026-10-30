@@ -153,8 +153,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     static CleverTapInstanceConfig defaultConfig;
 
-    private static HashMap<String, CleverTapAPI> instances;
-
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
 
@@ -821,12 +819,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     private static CleverTapAPI fromAccountId(final Context context, final String _accountId) {
-        if (instances == null) {
+        if (CleverTapInstanceStore.isEmpty()) {
             return createInstanceIfAvailable(context, _accountId);
         }
 
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+        for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
             boolean shouldProcess = false;
             if (instance != null) {
                 shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
@@ -843,11 +840,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     public static HashMap<String, CleverTapAPI> getInstances() {
-        return instances;
+        return CleverTapInstanceStore.snapshot();
     }
 
     public static void setInstances(final HashMap<String, CleverTapAPI> instances) {
-        CleverTapAPI.instances = instances;
+        CleverTapInstanceStore.replaceAll(instances);
     }
 
     /**
@@ -881,7 +878,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             // no-op
         }
 
-        if (instances == null) {
+        if (CleverTapInstanceStore.isEmpty()) {
             CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
             if (instance != null) {
                 instance.pushNotificationClickedEvent(notification);
@@ -889,8 +886,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        for (String accountId : instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+        for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
             boolean shouldProcess = false;
             if (instance != null) {
                 shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
@@ -931,7 +927,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         // Reuse the shared instance-resolution (default vs multi-instance) instead of re-implementing
-        // the instances.keySet() loop — same path handleNotificationClicked and friends use.
+        // the registry lookup — same path handleNotificationClicked and friends use.
         final CleverTapAPI instance = fromAccountId(context, _accountId);
         if (instance == null) {
             return;
@@ -977,16 +973,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             Logger.v("CleverTapInstanceConfig cannot be null");
             return null;
         }
-        if (instances == null) {
-            instances = new HashMap<>();
-        }
-
-        CleverTapAPI instance = instances.get(config.getAccountId());
-        if (instance == null) {
-            instance = new CleverTapAPI(context, config, cleverTapID);
-            instances.put(config.getAccountId(), instance);
-            final CleverTapAPI finalInstance = instance;
-        } else if (instance.getConfig().getEnableCustomCleverTapId() && Utils
+        final boolean[] created = {false};
+        CleverTapAPI instance = CleverTapInstanceStore.getOrCreate(
+                config.getAccountId(),
+                () -> {
+                    created[0] = true;
+                    return new CleverTapAPI(context, config, cleverTapID);
+                });
+        if (!created[0] && instance.getConfig().getEnableCustomCleverTapId() && Utils
                 .validateCTID(cleverTapID) && instance.isErrorDeviceId()) {
             instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
         }
@@ -1016,12 +1010,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("WeakerAccess")
     public static void onActivityPaused() {
-        if (instances == null) {
-            return;
-        }
-
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+        for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
             try {
                 if (instance != null) {
                     instance.coreState.getActivityLifeCycleManager().activityPaused();
@@ -1039,7 +1028,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings("WeakerAccess")
     public static void onActivityResumed(Activity activity, String cleverTapID) {
-        if (instances == null) {
+        if (CleverTapInstanceStore.isEmpty()) {
             CleverTapAPI.createInstanceIfAvailable(
                     activity.getApplicationContext(),
                     null,
@@ -1049,7 +1038,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
         CoreMetaData.setAppForeground(true);
 
-        if (instances == null) {
+        if (CleverTapInstanceStore.isEmpty()) {
             Logger.v("Instances is null in onActivityResumed!");
             return;
         }
@@ -1065,8 +1054,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CoreMetaData.setInitialAppEnteredForegroundTime(initialAppEnteredForegroundTime);
         }
 
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+        for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
             try {
                 if (instance != null) {
                     instance.coreState.getActivityLifeCycleManager().activityResumed(activity);
@@ -1087,7 +1075,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @RestrictTo(Scope.LIBRARY)
     public static void runJobWork(Context context) {
-        if (instances == null) {
+        if (CleverTapInstanceStore.isEmpty()) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
             if (instance != null) {
                 if (instance.getConfig().isBackgroundSync()) {
@@ -1098,14 +1086,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
             return;
         }
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            if (instance != null && instance.getConfig().isAnalyticsOnly()) {
-                Logger.d(accountId, "Instance is Analytics Only not running the Job");
+        for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
+            if (instance.getConfig().isAnalyticsOnly()) {
+                Logger.d(instance.getAccountId(), "Instance is Analytics Only not running the Job");
                 continue;
             }
-            if (!(instance != null && instance.getConfig().isBackgroundSync())) {
-                Logger.d(accountId, "Instance doesn't allow Background sync, not running the Job");
+            if (!instance.getConfig().isBackgroundSync()) {
+                Logger.d(instance.getAccountId(), "Instance doesn't allow Background sync, not running the Job");
                 continue;
             }
             instance.coreState.getPushProviders().runPushAmpWork(context);
@@ -3255,103 +3242,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     //To be called from DeviceInfo AdID GUID generation
-    void deviceIDCreated(String deviceId) {
-
-        String accountId = coreState.getConfig().getAccountId();
-
-        if (coreState.getControllerManager() == null) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "ControllerManager not set yet! Returning from deviceIDCreated()");
-            return;
-        }
-
-        StoreRegistry storeRegistry = coreState.getStoreRegistry();
-        ICryptHandler cryptHandler = coreState.getCryptHandler();
-        StoreProvider storeProvider = StoreProvider.getInstance();
-        EvaluationManager evaluationManager = coreState.getEvaluationManager();
-
-        // Inflate the local profile here as deviceId is required
-        coreState.getLocalDataStore().inflateLocalProfileAsync(context);
-
-        // must move initStores task to async executor due to addChangeUserCallback synchronization
-        Task<Void> task = coreState.getExecutors().ioTask();
-        task.execute("initStores", () -> {
-            if (storeRegistry.getInAppStore() == null) {
-                InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,
-                        accountId);
-                storeRegistry.setInAppStore(inAppStore);
-                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
-                // can cause ANR if called from main thread
-                coreState.getCallbackManager().addChangeUserCallback(inAppStore);
-            }
-            if (storeRegistry.getImpressionStore() == null) {
-                ImpressionStore impStore = storeProvider.provideImpressionStore(context, deviceId,
-                        accountId);
-                storeRegistry.setImpressionStore(impStore);
-                // can cause ANR if called from main thread
-                coreState.getCallbackManager().addChangeUserCallback(impStore);
-            }
-            // Native Display (ND) stores are created lazily by storeRegistry.ndStoreProvider; prime the
-            // evaluator's in-memory eval/suppressed lists now that the device id is available.
-            coreState.getNdEvaluationManager().loadEvaluatedAndSuppressedNdIds();
-            return null;
-        });
-
-
-        /*
-          Reinitialising InAppFCManager with device id, if it's null
-          during first initialisation from CleverTapFactory.getCoreState()
-         */
-        if (coreState.getControllerManager().getInAppFCManager() == null) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "Initializing InAppFC after Device ID Created = " + deviceId);
-            coreState.getControllerManager()
-                    .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId,
-                            coreState.getStoreRegistry(), coreState.getImpressionManager(),
-                            coreState.getExecutors(), clevertapClock));
-        }
-
-        /*
-          Reinitialising NdFCManager (Native Display frequency caps) with device id, if it's null
-          during first initialisation from CleverTapFactory.getCoreState()
-         */
-        if (coreState.getControllerManager().getNdFCManager() == null) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "Initializing NdFC after Device ID Created = " + deviceId);
-            coreState.getControllerManager()
-                    .setNdFCManager(new NdFCManager(coreState.getConfig(), coreState.getStoreRegistry(),
-                            coreState.getNdImpressionManager(),
-                            coreState.getExecutors(), clevertapClock));
-        }
-
-        //todo : replace with variables
-        /*
-          Reinitialising product config & Feature Flag controllers with device id, if it's null
-          during first initialisation from CleverTapFactory.getCoreState()
-         */
-        CTFeatureFlagsController ctFeatureFlagsController = coreState.getControllerManager()
-                .getCTFeatureFlagsController();
-
-        if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "Initializing Feature Flags after Device ID Created = " + deviceId);
-            ctFeatureFlagsController.setGuidAndInit(deviceId);
-        }
-        //todo: replace with variables
-        CTProductConfigController ctProductConfigController = coreState.getControllerManager()
-                .getCTProductConfigController();
-
-        if (ctProductConfigController != null && TextUtils
-                .isEmpty(ctProductConfigController.getSettings().getGuid())) {
-            getConfigLogger().verbose(accountId + ":async_deviceID",
-                    "Initializing Product Config after Device ID Created = " + deviceId);
-            ctProductConfigController.setGuidAndInit(deviceId);
-        }
-        getConfigLogger().verbose(accountId + ":async_deviceID",
-                "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
-        coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
-        coreState.getCallbackManager().notifyCleverTapIDChanged(deviceId);
-    }
 
     private CleverTapInstanceConfig getConfig() {
         return coreState.getConfig();
@@ -3372,11 +3262,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
         // make sure we have at least the default instance created here.
-        if (instances == null) {
+        if (CleverTapInstanceStore.isEmpty()) {
             CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null, cleverTapID);
         }
 
-        if (instances == null) {
+        if (CleverTapInstanceStore.isEmpty()) {
             Logger.v("Instances is null in onActivityCreated!");
             return;
         }
@@ -3425,8 +3315,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         try {
-            for (String accountId : CleverTapAPI.instances.keySet()) {
-                CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
                 if (instance != null) {
                     instance.coreState.getActivityLifeCycleManager()
                             .onActivityCreated(notification, deepLink, _accountId);
@@ -3479,13 +3368,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @RestrictTo(Scope.LIBRARY_GROUP)
     public static ArrayList<CleverTapAPI> getAvailableInstances(Context context) {
         ArrayList<CleverTapAPI> apiArrayList = new ArrayList<>();
-        if (instances == null || instances.isEmpty()) {
+        if (CleverTapInstanceStore.isEmpty()) {
             CleverTapAPI cleverTapAPI = CleverTapAPI.getDefaultInstance(context);
             if (cleverTapAPI != null) {
                 apiArrayList.add(cleverTapAPI);
             }
         } else {
-            apiArrayList.addAll(CleverTapAPI.instances.values());
+            apiArrayList.addAll(CleverTapInstanceStore.all());
         }
         return apiArrayList;
     }
@@ -3531,10 +3420,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private static @Nullable
     CleverTapAPI getDefaultInstanceOrFirstOther(Context context) {
         CleverTapAPI instance = getDefaultInstance(context);
-        if (instance == null && instances != null && !instances.isEmpty()) {
-            for (String accountId : CleverTapAPI.instances.keySet()) {
-                instance = CleverTapAPI.instances.get(accountId);
-                if (instance != null) {
+        if (instance == null && !CleverTapInstanceStore.isEmpty()) {
+            for (CleverTapAPI other : CleverTapInstanceStore.all()) {
+                if (other != null) {
+                    instance = other;
                     break;
                 }
             }
