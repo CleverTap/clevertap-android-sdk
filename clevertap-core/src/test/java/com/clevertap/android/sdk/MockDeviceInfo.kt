@@ -21,7 +21,7 @@ class MockDeviceInfo(
         return ctId
     }
 
-    override fun onInitDeviceInfo(cleverTapID: String?) {
+    override fun cacheDeviceInfoAsync() {
     }
 
     override fun getAttributionID(): String {

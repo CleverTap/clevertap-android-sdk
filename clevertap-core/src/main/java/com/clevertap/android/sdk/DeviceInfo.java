@@ -714,7 +714,10 @@ public class DeviceInfo {
         return StorageHelper.getInt(context, LOCAL_INAPP_COUNT, 0);
     }
 
-    void onInitDeviceInfo(final String cleverTapID) {
+    // Caches immutable device properties (model, screen size, carrier, …) off the caller thread.
+    // Device-id resolution itself now happens in CleverTapFactory's device-id barrier via
+    // initDeviceID(), not here (SDK-6254).
+    void cacheDeviceInfoAsync() {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
         Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
         taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
@@ -724,22 +727,6 @@ public class DeviceInfo {
                 return null;
             }
         });
-
-        Task<String> task = CTExecutorFactory.executors(config).ioTask();
-        // callback on main thread
-        task.addOnSuccessListener(deviceId -> {
-            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
-                    "DeviceID initialized successfully!" + Thread.currentThread());
-            // No need to put getDeviceID() on background thread because prefs already loaded
-            CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(deviceId);
-        });
-        task.execute("initDeviceID", new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return initDeviceID(cleverTapID);
-            }
-        });
-
     }
 
     public void setCurrentUserOptOutStateFromStorage() {
@@ -916,7 +903,7 @@ public class DeviceInfo {
         return Constants.FALLBACK_ID_TAG + ":" + this.config.getAccountId();
     }
 
-    private String initDeviceID(String cleverTapID) {
+    String initDeviceID(String cleverTapID) {
         getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {

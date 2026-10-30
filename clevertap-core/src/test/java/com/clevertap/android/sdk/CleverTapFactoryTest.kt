@@ -108,14 +108,17 @@ class CleverTapFactoryTest : BaseTestCase() {
 
     @Test
     fun test_getCoreState_ReturnedObjectMustHaveNonNullInAppFCManagerInsideControllerManager(){
-        // Create instance first to avoid stackoverflow error
-        CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
+        // SDK-6254: InAppFCManager is initialised on the device-id barrier
+        // (CleverTapAPI.deviceIDCreated), not inside getCoreState. Create the instance, then drive
+        // the device-id flow (getCoreState reaches back into deviceIDCreated on that cached
+        // instance) and assert the manager is wired onto it.
+        val instance = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
         mockkStatic(CTExecutorFactory::class) {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
                 cleverTapInstanceConfig
             )
-            val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
-            assertNotNull(coreState.controllerManager.inAppFCManager)
+            CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
+            assertNotNull(instance.coreState.controllerManager.inAppFCManager)
         }
     }
 
