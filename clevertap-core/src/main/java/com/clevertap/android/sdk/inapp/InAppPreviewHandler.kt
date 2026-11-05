@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.isNotNullAndBlank
 import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewUrlPolicy
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.Task
@@ -20,7 +21,8 @@ internal class InAppPreviewHandler(
     private val networkManager: NetworkManager,
     private val inAppResponse: InAppResponse,
     private val context: Context,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val urlPolicy: PushPreviewUrlPolicy,
 ) {
 
     fun handleInAppPreview(extras: Bundle) {
@@ -52,12 +54,22 @@ internal class InAppPreviewHandler(
 
     private fun getPreviewPayload(extras: Bundle): JSONObject? {
         val s3Url = extras.getString(Constants.INAPP_PREVIEW_S3_URL_KEY)
-        if (s3Url.isNotNullAndBlank()) {
-            networkManager.fetchInAppPreviewPayloadFromUrl(s3Url)?.let { return it }
+        if (!s3Url.isNotNullAndBlank()) {
+            return inlinePreviewPayload(extras)
         }
-
-        return extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)?.let { JSONObject(it) }
+        // SDK-6282 option F: only fetch from CleverTap's own preview hosts. A rejected URL never
+        // falls back to the inline payload; a failed fetch from an allowed host still does.
+        val rejection = urlPolicy.reasonToReject(s3Url)
+        return if (rejection != null) {
+            logger.debug("In-app preview URL rejected ($rejection). Aborting preview display")
+            null
+        } else {
+            networkManager.fetchInAppPreviewPayloadFromUrl(s3Url) ?: inlinePreviewPayload(extras)
+        }
     }
+
+    private fun inlinePreviewPayload(extras: Bundle): JSONObject? =
+        extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)?.let { JSONObject(it) }
 
     private fun shouldUseHalfInterstitial(extras: Bundle): Boolean {
         val type = extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)

@@ -31,7 +31,7 @@ class DatabaseHelper internal constructor(
 
     companion object {
 
-        private const val DATABASE_VERSION = 7
+        private const val DATABASE_VERSION = 8
         private const val DB_LIMIT = 24 * 1024 * 1024 //24mb
     }
 
@@ -54,6 +54,7 @@ class DatabaseHelper internal constructor(
         executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
         executeStatement(db, CREATE_INBOX_PENDING_DELETES_TABLE)
         executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
+        executeStatement(db, CREATE_PUSH_PREVIEWS_TABLE)
         executeStatement(db, EVENTS_TIME_INDEX)
         executeStatement(db, PROFILE_EVENTS_TIME_INDEX)
         executeStatement(db, UNINSTALL_TS_INDEX)
@@ -106,6 +107,10 @@ class DatabaseHelper internal constructor(
             executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
             executeStatement(db, ALTER_INBOX_MESSAGES_ADD_SOURCE)
             executeStatement(db, ALTER_INBOX_MESSAGES_ADD_INDEX_STATE)
+        }
+        if (oldVersion < 8) {
+            // Version 8 (core 8.5.1): trusted copies of Send Test previews, see SDK-6282.
+            executeStatement(db, CREATE_PUSH_PREVIEWS_TABLE)
         }
     }
 
@@ -220,7 +225,8 @@ class DatabaseHelper internal constructor(
     USER_EVENT_LOGS_TABLE("userEventLogs"),
     DELAYED_LEGACY_INAPPS("delayedLegacyInApps"),
     INBOX_PENDING_DELETES("inbox_pending_deletes"),
-    INBOX_PENDING_READS("inbox_pending_reads")
+    INBOX_PENDING_READS("inbox_pending_reads"),
+    PUSH_PREVIEWS("pushPreviews")
 }
 
 object Column {
@@ -245,6 +251,8 @@ object Column {
     const val DELAY = "delay"
     const val SOURCE = "source"
     const val INDEX_STATE = "index_state"
+    const val PREVIEW_KEY = "previewKey"
+    const val COLLAPSE_KEY = "collapseKey"
 }
 
 private val CREATE_EVENTS_TABLE = """
@@ -295,6 +303,21 @@ private val CREATE_INBOX_PENDING_READS_TABLE = """
         ${Column.EXPIRES} INTEGER NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL,
         PRIMARY KEY (${Column.USER_ID}, ${Column.ID})
+    );
+"""
+
+/**
+ * Trusted copies of Send Test previews (SDK-6282). One row per distinct preview,
+ * keyed by a content hash, aged out by `expires`. See PushPreviewDAOImpl.
+ */
+private val CREATE_PUSH_PREVIEWS_TABLE = """
+    CREATE TABLE ${Table.PUSH_PREVIEWS.tableName} (
+        ${Column.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${Column.PREVIEW_KEY} TEXT NOT NULL UNIQUE,
+        ${Column.DATA} TEXT NOT NULL,
+        ${Column.EXPIRES} INTEGER NOT NULL,
+        ${Column.CREATED_AT} INTEGER NOT NULL,
+        ${Column.COLLAPSE_KEY} TEXT
     );
 """
 

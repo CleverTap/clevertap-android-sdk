@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.pushnotification
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.db.BaseDatabaseManager
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -29,7 +30,8 @@ class PushProvidersDndTest : BaseTestCase() {
     private fun buildSut(): PushProviders = PushProviders(
         appCtx, cleverTapInstanceConfig, mockk<BaseDatabaseManager>(relaxed = true),
         mockk<ValidationResultStack>(relaxed = true), mockk<AnalyticsManager>(relaxed = true),
-        mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true)
+        mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true),
+        mockk<PushPreviewStore>(relaxed = true)
     )
 
     @Test
