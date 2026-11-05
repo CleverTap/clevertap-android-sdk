@@ -53,6 +53,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -520,6 +521,48 @@ class InAppControllerTest {
             )
         }
         verify(exactly = 1) { mockInAppListener.onShow(inApp) }
+    }
+
+    @Test
+    fun `getDisplayingInApp returns the in-app on screen when the id matches`() {
+        val inAppController = createInAppController()
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+
+        val currentInApp = InAppController.currentlyDisplayingInApp!!
+        assertEquals("1742963524_20250326", currentInApp.campaignId)
+        assertSame(currentInApp, InAppController.getDisplayingInApp("1742963524_20250326"))
+    }
+
+    @Test
+    fun `getDisplayingInApp returns null when the id does not match`() {
+        val inAppController = createInAppController()
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+
+        assertNull(InAppController.getDisplayingInApp("another_campaign"))
+        assertNull(InAppController.getDisplayingInApp(null))
+    }
+
+    @Test
+    fun `getDisplayingInApp returns null when no in-app is displayed`() {
+        assertNull(InAppController.getDisplayingInApp("1742963524_20250326"))
+    }
+
+    @Test
+    fun `full screen in-app is launched with the in-app it keeps in memory`() {
+        val inAppController = createInAppController()
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+
+        val currentInApp = InAppController.currentlyDisplayingInApp!!
+        verify(exactly = 1) {
+            InAppNotificationActivity.launchForInAppNotification(any(), currentInApp, any())
+        }
+        assertSame(currentInApp, InAppController.getDisplayingInApp(currentInApp.campaignId))
     }
 
     @Test
