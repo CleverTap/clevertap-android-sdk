@@ -6,6 +6,9 @@
   when a full-screen custom HTML In-App with a very large HTML payload is shown. Regular In-Apps were
   not affected. The In-App screen now receives only the In-App id and reads the In-App from memory,
   instead of receiving the whole In-App through the Intent.
+* **Full-Screen In-App After The App Is Killed:** If Android kills the app while a full-screen In-App
+  is on screen, the In-App is shown again when the user returns, as long as its time to live has not
+  passed. It is not counted again (no second `Notification Viewed`).
 
 ### Version 8.5.0 (October 15, 2026)
 
