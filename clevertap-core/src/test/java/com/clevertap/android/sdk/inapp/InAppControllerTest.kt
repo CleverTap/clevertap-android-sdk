@@ -662,7 +662,7 @@ class InAppControllerTest {
     }
 
     @Test
-    fun `restoreDisplayedInApp gives null when another in-app is on screen`() {
+    fun `restoreDisplayedInApp queues the restored in-app while another in-app is on screen`() {
         val savedInApp = savedInAppJson(ttlSeconds = fakeClock.currentTimeSeconds() + 60, inAppId = "saved_campaign")
         val mockStore = displayedInAppStore(savedInApp)
         val inAppController = createInAppController(displayedInAppStore = mockStore)
@@ -679,6 +679,16 @@ class InAppControllerTest {
 
         assertNull(result)
         assertSame(onScreen, InAppController.currentlyDisplayingInApp)
+
+        // When the in-app on screen closes, the restored one is shown and still not counted again.
+        inAppController.inAppNotificationDidDismiss(onScreen!!, null)
+        val shownLater = InAppController.currentlyDisplayingInApp
+        assertEquals("saved_campaign", shownLater?.campaignId)
+        assertTrue(shownLater!!.isRestored)
+        inAppController.inAppNotificationDidShow(shownLater, null)
+        verify(exactly = 0) { mockInAppFCManager.didShow(any(), shownLater) }
+        verify(exactly = 0) { mockAnalyticsManager.pushInAppNotificationStateEvent(false, shownLater, any()) }
+        verify(exactly = 1) { mockInAppListener.onShow(shownLater) }
     }
 
     @Test
@@ -946,6 +956,7 @@ class InAppControllerTest {
         assertNull(result)
         assertNull(InAppController.currentlyDisplayingInApp)
         verify(exactly = 1) { mockStore.remove("push_primer") }
+        verify(exactly = 1) { mockInAppActionHandler.notifyPushPermissionListeners() }
     }
 
     private fun savedInAppJson(ttlSeconds: Long, inAppId: String = SAVED_INAPP_ID): JSONObject {
@@ -956,7 +967,6 @@ class InAppControllerTest {
     // A store that has only [savedInApp], saved under the id of its in-app.
     private fun displayedInAppStore(savedInApp: JSONObject? = null): DisplayedInAppStore {
         val store = mockk<DisplayedInAppStore>(relaxed = true)
-        verify(exactly = 1) { mockInAppActionHandler.notifyPushPermissionListeners() }
         every { store.get(any()) } returns null
         if (savedInApp != null) {
             val inAppId = savedInApp.getJSONObject("inApp").getString(Constants.NOTIFICATION_ID_TAG)

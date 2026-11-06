@@ -1101,23 +1101,32 @@ internal class InAppController(
             inAppsStopped -> "InAppState is $inAppState"
             htmlWithoutInternet -> "an active internet connection is required to display the HTML InApp"
             pushPermissionGranted -> "push permission is already granted"
-            currentlyDisplayingInApp != null -> "in-app ${currentlyDisplayingInApp?.campaignId} is on screen"
             else -> null
         }
         if (notRestoredReason != null) {
             logger.verbose(defaultLogTag, "Not restoring in-app ${inApp.campaignId}: $notRestoredReason")
             if (inAppsStopped || htmlWithoutInternet || pushPermissionGranted) {
                 removeSavedDisplayedInApp(inApp.campaignId)
+            }
             if (pushPermissionGranted) {
                 // Same as showInApp: the app's push permission listeners get the result.
                 inAppActionHandler.notifyPushPermissionListeners()
-            }
             }
             listener.onRestoreResult(null)
             return
         }
 
         inApp.isRestored = true
+        if (currentlyDisplayingInApp != null) {
+            // Same as showInApp: the In-App waits for the one on screen to close, it is not dropped.
+            logger.verbose(
+                defaultLogTag,
+                "In-app ${currentlyDisplayingInApp?.campaignId} is on screen, queuing restored in-app ${inApp.campaignId}"
+            )
+            pendingNotifications.add(inApp)
+            listener.onRestoreResult(null)
+            return
+        }
         // Set before the listener shows it: the In-App screen and fragment read it from here.
         currentlyDisplayingInApp = inApp
         if (listener.onRestoreResult(inApp)) {
