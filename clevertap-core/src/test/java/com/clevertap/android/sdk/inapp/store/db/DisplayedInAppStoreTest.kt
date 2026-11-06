@@ -83,7 +83,7 @@ class DisplayedInAppStoreTest {
     }
 
     @Test
-    fun `get returns null when the data cannot be decrypted or parsed`() {
+    fun `get returns null and removes the row when the data cannot be decrypted or parsed`() {
         every { mockDAO.fetchSingleInApp(inAppId) } returns "encrypted"
 
         every { mockCryptHandler.decrypt("encrypted") } returns null
@@ -91,6 +91,17 @@ class DisplayedInAppStoreTest {
 
         every { mockCryptHandler.decrypt("encrypted") } returns "not json"
         assertNull(store.get(inAppId))
+
+        verify(exactly = 2) { mockDAO.remove(inAppId) }
+    }
+
+    @Test
+    fun `get keeps the row when the database read fails`() {
+        // The DAO returns null for both "not found" and a read error; neither removes anything.
+        every { mockDAO.fetchSingleInApp(inAppId) } returns null
+
+        assertNull(store.get(inAppId))
+        verify(exactly = 0) { mockDAO.remove(any()) }
     }
 
     @Test

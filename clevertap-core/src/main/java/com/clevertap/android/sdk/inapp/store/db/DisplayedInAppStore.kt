@@ -44,22 +44,22 @@ internal class DisplayedInAppStore(
 
     /**
      * @return the data saved for [inAppId], or null if nothing is saved or it cannot be read.
+     * A row that is read but cannot be decrypted or parsed is removed, as it can never be used.
      */
     @WorkerThread
     fun get(inAppId: String): JSONObject? {
         val encryptedData = dao.fetchSingleInApp(inAppId) ?: return null
-        return try {
-            val data = cryptHandler.decrypt(encryptedData)
-            if (data == null) {
-                logger.verbose(accountId, "Failed to decrypt displayed in-app: $inAppId")
-                null
-            } else {
-                JSONObject(data)
-            }
+        val data = try {
+            cryptHandler.decrypt(encryptedData)?.let { JSONObject(it) }
         } catch (e: JSONException) {
             logger.verbose(accountId, "Error parsing displayed in-app: $inAppId", e)
             null
         }
+        if (data == null) {
+            logger.verbose(accountId, "Removing displayed in-app $inAppId: it cannot be decrypted or parsed")
+            dao.remove(inAppId)
+        }
+        return data
     }
 
     /**

@@ -1071,9 +1071,9 @@ internal class InAppController(
             }
 
             inAppJson == null -> {
+                // Not stored, or the row could not be read. The store removes a row it cannot
+                // decrypt or parse; a row that failed to read for another reason is kept.
                 logger.verbose(defaultLogTag, "Cannot restore in-app $inAppId: it is not stored or cannot be read")
-                // Removes a row that is there but cannot be read (too large or cannot be decrypted).
-                removeSavedDisplayedInAppNow(inAppId)
                 null
             }
 

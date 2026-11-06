@@ -641,9 +641,8 @@ class InAppControllerTest {
 
         assertNull(result)
         assertNull(InAppController.currentlyDisplayingInApp)
-        // Only a row with this id is removed; the saved in-app of another id is kept.
-        verify(exactly = 1) { mockStore.remove("another_campaign") }
-        verify(exactly = 0) { mockStore.remove(SAVED_INAPP_ID) }
+        // Nothing is removed here: the store itself removes a row it cannot read.
+        verify(exactly = 0) { mockStore.remove(any()) }
     }
 
     @Test
