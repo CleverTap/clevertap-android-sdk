@@ -62,6 +62,8 @@ import com.clevertap.android.sdk.network.QueueHeaderBuilder
 import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.profile.ProfileStateTraverser
 import com.clevertap.android.sdk.pushnotification.PushProviders
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewUrlPolicy
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
@@ -504,12 +506,22 @@ internal object CleverTapFactory {
             coreMetaData
         )
 
+        val pushPreviewStore = PushPreviewStore(
+            context = context,
+            databaseManager = databaseManager,
+            executors = executors,
+            clock = SYSTEM,
+            logger = config.logger,
+            accountId = config.accountId,
+        )
+
         val inAppPreviewHandler = InAppPreviewHandler(
             executors,
             networkManager,
             inAppResponseForSendTestInApp,
             context,
-            config.logger
+            config.logger,
+            PushPreviewUrlPolicy()
         )
 
         val analyticsManager = AnalyticsManager(
@@ -526,7 +538,8 @@ internal object CleverTapFactory {
             SYSTEM,
             executors,
             localDataStore,
-            inAppPreviewHandler
+            inAppPreviewHandler,
+            pushPreviewStore
         )
 
         val inAppNotificationInflater = InAppNotificationInflater(
@@ -604,7 +617,8 @@ internal object CleverTapFactory {
         val pushProviders = PushProviders
             .load(
                 context, config, databaseManager, validationResultStack,
-                analyticsManager, controllerManager, ctWorkManager, SYSTEM
+                analyticsManager, controllerManager, ctWorkManager, SYSTEM,
+                pushPreviewStore
             )
 
         val networkScope = NetworkScope()

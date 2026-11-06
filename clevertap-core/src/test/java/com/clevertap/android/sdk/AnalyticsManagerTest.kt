@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.InAppPreviewHandler
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.inbox.CTInboxMessage
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.utils.Clock
@@ -81,6 +82,9 @@ class AnalyticsManagerTest {
     @MockK(relaxed = true)
     private lateinit var inAppPreviewHandler: InAppPreviewHandler
 
+    @MockK(relaxed = true)
+    private lateinit var pushPreviewStore: PushPreviewStore
+
     private val bundleIdCheck = Bundle().apply {
         putString("wzrk_pn", "wzrk_pn")
         putString("wzrk_id", "duplicate-id")
@@ -116,7 +120,8 @@ class AnalyticsManagerTest {
             timeProvider,
             MockCTExecutors(),
             localDataStore,
-            inAppPreviewHandler
+            inAppPreviewHandler,
+            pushPreviewStore
         )
     }
 
@@ -1918,30 +1923,118 @@ class AnalyticsManagerTest {
         }
     }
 
+    // SDK-6282: a tapped preview renders only the copy the store saved at push arrival.
+    // The tapped intent's own content is used for the lookup and never handed to a renderer.
     @Test
-    fun `pushNotificationClickedEvent should handle in-app preview`() {
+    fun `pushNotificationClickedEvent should handle in-app preview from the trusted store copy`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "test")
             putString(Constants.WZRK_ACCT_ID_KEY, cleverTapInstanceConfig.accountId)
-            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "{}")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"type\":\"custom-html\"}")
         }
+        val trusted = Bundle().apply {
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"type\":\"custom-html\"}")
+        }
+        every { pushPreviewStore.find(extras) } returns trusted
+
         analyticsManagerSUT.pushNotificationClickedEvent(extras)
-        verify { inAppPreviewHandler.handleInAppPreview(extras) }
+
+        verify(exactly = 1) { inAppPreviewHandler.handleInAppPreview(trusted) }
+        verify(exactly = 0) { inAppPreviewHandler.handleInAppPreview(extras) }
     }
 
     @Test
-    fun `pushNotificationClickedEvent should handle inbox preview`() {
+    fun `pushNotificationClickedEvent should render nothing when the store has no trusted copy`() {
+        // A launch intent carries preview fields the SDK never received as a push.
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"type\":\"custom-html\",\"d\":{\"html\":\"<p>not stored</p>\"}}")
+        }
+        every { pushPreviewStore.find(extras) } returns null
+        val inboxController = mockk<CTInboxController>(relaxed = true)
+        every { coreState.controllerManager.ctInboxController } returns inboxController
+
+        analyticsManagerSUT.pushNotificationClickedEvent(extras)
+
+        verify(exactly = 0) { inAppPreviewHandler.handleInAppPreview(any()) }
+        verify(exactly = 0) { inboxController.updateMessages(any()) }
+        verify(exactly = 0) { eventQueueManager.queueEvent(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `pushNotificationClickedEvent should handle inbox preview from the trusted store copy`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "test")
             putString(Constants.WZRK_ACCT_ID_KEY, cleverTapInstanceConfig.accountId)
             putString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY, "{\"msg\":[]}")
         }
+        val trusted = Bundle().apply {
+            putString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY, "{\"msg\":[]}")
+        }
+        every { pushPreviewStore.find(extras) } returns trusted
         val inboxController = mockk<CTInboxController>(relaxed = true)
         every { coreState.controllerManager.ctInboxController } returns inboxController
 
         analyticsManagerSUT.pushNotificationClickedEvent(extras)
 
         verify { inboxController.updateMessages(any()) }
+    }
+
+    @Test
+    fun `pushNotificationClickedEvent treats a preview key with a null value as an ordinary push`() {
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.NOTIFICATION_ID_TAG, "campaign-2")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, null)
+        }
+
+        analyticsManagerSUT.pushNotificationClickedEvent(extras)
+
+        verify(exactly = 0) { pushPreviewStore.find(any()) }
+        verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `pushNotificationClickedEvent should not consult the store for an ordinary push`() {
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.NOTIFICATION_ID_TAG, "campaign-1")
+        }
+
+        analyticsManagerSUT.pushNotificationClickedEvent(extras)
+
+        verify(exactly = 0) { pushPreviewStore.find(any()) }
+    }
+
+    // SDK-6282: the viewed event is the trusted sighting for apps that render push themselves.
+    // It must fire before the wzrk_id check, because every Send Test carries wzrk_id "0_0".
+    @Test
+    fun `pushNotificationViewedEvent should remember the push before the id and dedupe checks`() {
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"type\":\"custom-html\"}")
+            // no wzrk_id on purpose: the viewed event itself is dropped, the sighting must not be
+        }
+
+        analyticsManagerSUT.pushNotificationViewedEvent(extras)
+
+        verify(exactly = 1) { pushPreviewStore.remember(extras) }
+        verify(exactly = 0) { eventQueueManager.queueEvent(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `pushNotificationViewedEvent should not remember a bundle that is not from CleverTap`() {
+        val extras = Bundle().apply {
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
+        }
+
+        analyticsManagerSUT.pushNotificationViewedEvent(extras)
+
+        verify(exactly = 0) { pushPreviewStore.remember(any()) }
     }
 
 
