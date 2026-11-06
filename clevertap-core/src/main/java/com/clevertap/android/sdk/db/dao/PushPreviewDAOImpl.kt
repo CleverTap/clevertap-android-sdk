@@ -29,6 +29,10 @@ internal class PushPreviewDAOImpl(
         val nowSeconds = clock.currentTimeSeconds()
         val values = ContentValues().apply {
             put(Column.PREVIEW_KEY, previewKey)
+            // Encrypted only at FULL_DATA, like events and inbox. Unlike those tables this
+            // one is not re-wrapped by CryptMigrator when the encryption level changes:
+            // unwrapDbData reads both plain and encrypted text, and a row lives at most
+            // 24 hours, so a level change leaves nothing behind that needs migrating.
             put(Column.DATA, dbEncryptionHandler.wrapDbData(data))
             put(Column.EXPIRES, expiresAtSeconds)
             put(Column.CREATED_AT, nowSeconds)
