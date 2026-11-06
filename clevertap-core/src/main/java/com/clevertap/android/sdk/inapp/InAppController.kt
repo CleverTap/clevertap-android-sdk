@@ -1083,16 +1083,18 @@ internal class InAppController(
         // and a suspended in-app is not kept for resumeInApps, to keep the restore simple.
         val inAppsStopped = inAppState != InAppState.RESUMED
         val htmlWithoutInternet = Constants.KEY_CUSTOM_HTML == inApp.type && !networkMonitor.isNetworkOnline()
+        val pushPermissionGranted = inApp.isRequestForPushPermission && inAppActionHandler.arePushNotificationsEnabled()
         val notRestoredReason = when {
             inApp.error != null -> inApp.error
             inAppsStopped -> "InAppState is $inAppState"
             htmlWithoutInternet -> "an active internet connection is required to display the HTML InApp"
+            pushPermissionGranted -> "push permission is already granted"
             currentlyDisplayingInApp != null -> "in-app ${currentlyDisplayingInApp?.campaignId} is on screen"
             else -> null
         }
         if (notRestoredReason != null) {
             logger.verbose(defaultLogTag, "Not restoring in-app ${inApp.campaignId}: $notRestoredReason")
-            if (inAppsStopped || htmlWithoutInternet) {
+            if (inAppsStopped || htmlWithoutInternet || pushPermissionGranted) {
                 removeSavedDisplayedInApp(inApp.campaignId)
             }
             listener.onRestoreResult(null)

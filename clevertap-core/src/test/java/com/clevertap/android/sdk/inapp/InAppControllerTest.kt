@@ -924,6 +924,29 @@ class InAppControllerTest {
         verify(exactly = 1) { mockStore.clear() }
     }
 
+    @Test
+    fun `restoreDisplayedInApp gives null for a push permission in-app when permission is already granted`() {
+        every { mockInAppActionHandler.arePushNotificationsEnabled() } returns true
+        val pushPermissionInApp = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL)
+            .put(Constants.NOTIFICATION_ID_TAG, "push_primer")
+            .put(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, true)
+        val mockStore = displayedInAppStore(
+            JSONObject().put("inApp", pushPermissionInApp).put("ttl", fakeClock.currentTimeSeconds() + 60)
+        )
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp("push_primer") {
+            result = it
+            false
+        }
+
+        // Same rule as showInApp: a push permission in-app is not shown once permission is granted.
+        assertNull(result)
+        assertNull(InAppController.currentlyDisplayingInApp)
+        verify(exactly = 1) { mockStore.remove("push_primer") }
+    }
+
     private fun savedInAppJson(ttlSeconds: Long, inAppId: String = SAVED_INAPP_ID): JSONObject {
         val inApp = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).put(Constants.NOTIFICATION_ID_TAG, inAppId)
         return JSONObject().put("inApp", inApp).put("ttl", ttlSeconds)
