@@ -276,9 +276,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         // The restored in-app is now the one on screen, so setUp finds it in memory. Pass no saved
         // state so a new fragment is added; the one Android restored removed itself.
         setUp(null);
-        // setUp closes the activity in some cases (e.g. a portrait-only in-app in landscape). Then
-        // the in-app is not shown, so the controller must free the in-app slot.
-        return !isFinishing();
+        // setUp closes the activity in some cases (e.g. a portrait-only in-app in landscape). When it
+        // did so through didDismiss, the controller already frees the in-app slot on that path, so
+        // true keeps it from doing it twice. Otherwise false makes the controller free the slot.
+        return !isFinishing() || invokedCallbacks;
     }
 
     private void onRestoreTimeout() {

@@ -214,9 +214,31 @@ class InAppNotificationActivityTest {
         val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1742963524_20250326"))
             .create().get()
 
-        // false tells the controller the in-app is not shown, so it frees the in-app slot.
-        assertEquals(false, shown)
+        // setUp dismissed it, so the controller frees the in-app slot on the dismiss path and the
+        // result is true: the controller must not free it a second time.
+        assertEquals(true, shown)
         assertTrue(activity.isFinishing)
+        verify(exactly = 1) { mockInAppController.inAppNotificationDidDismiss(portraitOnly, null) }
+    }
+
+    @Test
+    fun `restore result after the user left the screen closes it and keeps the saved in-app`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        val listener = slot<InAppController.RestoredInAppListener>()
+        every { mockInAppController.restoreDisplayedInApp(any(), capture(listener)) } just runs
+        val controller = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .create().start().resume()
+        // User presses Home while the restore is still running: Android saves the state.
+        controller.pause().saveInstanceState(Bundle()).stop()
+
+        val restored = CTInAppNotification(JSONObject(htmlInApp), true).apply { isRestored = true }
+        val shown = listener.captured.onRestoreResult(restored)
+
+        // A fragment cannot be added after the state is saved, so the screen closes and the
+        // controller frees the slot. Nothing is dismissed, so the saved row is kept.
+        assertFalse(shown)
+        assertTrue(controller.get().isFinishing)
+        verify(exactly = 0) { mockInAppController.inAppNotificationDidDismiss(any(), any()) }
     }
 
     @Test
