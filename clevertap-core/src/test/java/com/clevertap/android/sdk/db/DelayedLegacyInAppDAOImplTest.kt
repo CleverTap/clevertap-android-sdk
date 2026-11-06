@@ -494,4 +494,21 @@ class DelayedLegacyInAppDAOImplTest {
             assertNull(delayedInAppDAO.fetchSingleInApp("inapp_$index"))
         }
     }
+
+    @Test
+    fun `DAO works the same on the displayed in-app table and keeps it apart from delayed in-apps`() {
+        val displayedInAppDAO = DelayedLegacyInAppDAOImpl(databaseHelper, logger, Table.DISPLAYED_INAPP, testClock)
+        delayedInAppDAO.insertBatch(listOf(DelayedLegacyInAppData(testInAppId1, testDelay1, testInAppData1)))
+
+        assertTrue(displayedInAppDAO.insertBatch(listOf(DelayedLegacyInAppData(testInAppId2, 0, testInAppData2))))
+        assertEquals(testInAppData2, displayedInAppDAO.fetchSingleInApp(testInAppId2))
+        assertNull(displayedInAppDAO.fetchSingleInApp(testInAppId1))
+
+        // Clearing delayed in-apps (done at every app start) does not touch the displayed in-app.
+        delayedInAppDAO.clearAll()
+        assertEquals(testInAppData2, displayedInAppDAO.fetchSingleInApp(testInAppId2))
+
+        assertTrue(displayedInAppDAO.remove(testInAppId2))
+        assertNull(displayedInAppDAO.fetchSingleInApp(testInAppId2))
+    }
 }

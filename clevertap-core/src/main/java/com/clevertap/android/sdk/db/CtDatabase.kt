@@ -31,7 +31,7 @@ class DatabaseHelper internal constructor(
 
     companion object {
 
-        private const val DATABASE_VERSION = 7
+        private const val DATABASE_VERSION = 8
         private const val DB_LIMIT = 24 * 1024 * 1024 //24mb
     }
 
@@ -54,6 +54,7 @@ class DatabaseHelper internal constructor(
         executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
         executeStatement(db, CREATE_INBOX_PENDING_DELETES_TABLE)
         executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
+        executeStatement(db, CREATE_DISPLAYED_INAPP_TABLE)
         executeStatement(db, EVENTS_TIME_INDEX)
         executeStatement(db, PROFILE_EVENTS_TIME_INDEX)
         executeStatement(db, UNINSTALL_TS_INDEX)
@@ -106,6 +107,9 @@ class DatabaseHelper internal constructor(
             executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
             executeStatement(db, ALTER_INBOX_MESSAGES_ADD_SOURCE)
             executeStatement(db, ALTER_INBOX_MESSAGES_ADD_INDEX_STATE)
+        }
+        if (oldVersion < 8) {
+            executeStatement(db, CREATE_DISPLAYED_INAPP_TABLE)
         }
     }
 
@@ -220,7 +224,8 @@ class DatabaseHelper internal constructor(
     USER_EVENT_LOGS_TABLE("userEventLogs"),
     DELAYED_LEGACY_INAPPS("delayedLegacyInApps"),
     INBOX_PENDING_DELETES("inbox_pending_deletes"),
-    INBOX_PENDING_READS("inbox_pending_reads")
+    INBOX_PENDING_READS("inbox_pending_reads"),
+    DISPLAYED_INAPP("displayedInApp")
 }
 
 object Column {
@@ -269,6 +274,16 @@ private val CREATE_USER_EVENT_LOGS_TABLE = """
 
 private val CREATE_DELAYED_LEGACY_INAPPS_TABLE = """
     CREATE TABLE ${Table.DELAYED_LEGACY_INAPPS.tableName} (
+        ${Column.INAPP_ID} STRING PRIMARY KEY,
+        ${Column.DELAY} INTEGER NOT NULL,
+        ${Column.DATA} TEXT NOT NULL,
+        ${Column.CREATED_AT} INTEGER NOT NULL
+    );
+"""
+
+// Same columns as the delayed in-apps table, so DelayedLegacyInAppDAOImpl can be used for it.
+private val CREATE_DISPLAYED_INAPP_TABLE = """
+    CREATE TABLE ${Table.DISPLAYED_INAPP.tableName} (
         ${Column.INAPP_ID} STRING PRIMARY KEY,
         ${Column.DELAY} INTEGER NOT NULL,
         ${Column.DATA} TEXT NOT NULL,

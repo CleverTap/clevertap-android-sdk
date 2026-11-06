@@ -19,6 +19,7 @@ import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -27,6 +28,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 import android.os.Looper
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -37,6 +39,7 @@ class InAppNotificationActivityTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var config: CleverTapInstanceConfig
+    private val mockInAppController = mockk<InAppController>(relaxed = true)
 
     private val htmlInApp = """
         {
@@ -52,7 +55,15 @@ class InAppNotificationActivityTest {
     fun setUp() {
         config = CleverTapInstanceConfig.createInstance(context, "TEST", "TEST")
         mockkStatic(CleverTapAPI::class)
-        every { CleverTapAPI.instanceWithConfig(any(), any()) } returns mockk(relaxed = true)
+        val coreState = mockk<CoreState>(relaxed = true)
+        every { coreState.inAppController } returns mockInAppController
+        val cleverTapAPI = mockk<CleverTapAPI>(relaxed = true)
+        every { cleverTapAPI.coreState } returns coreState
+        every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
+        // By default nothing is saved, so an in-app that is not in memory cannot be restored.
+        every { mockInAppController.restoreDisplayedInApp(any(), any()) } answers {
+            secondArg<InAppController.RestoredInAppListener>().onRestoreResult(null)
+        }
         mockkObject(InAppController.Companion)
     }
 
@@ -140,5 +151,121 @@ class InAppNotificationActivityTest {
 
         assertTrue(host.supportFragmentManager.fragments.isEmpty())
         assertEquals(null, fragment.view)
+    }
+
+    @Test
+    fun `after process death the in-app is restored from storage and shown`() {
+        // 1. In-app on screen, Android saves the activity state (e.g. user presses Home).
+        val inApp = CTInAppNotification(JSONObject(htmlInApp), true)
+        every { InAppController.getDisplayingInApp("1120_test") } returns inApp
+        val first = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .setup()
+        val savedState = Bundle()
+        first.saveInstanceState(savedState)
+
+        // 2. The process is killed: memory is empty, but the in-app was saved, so it is restored.
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        val restoredInApp = CTInAppNotification(JSONObject(htmlInApp), true).apply { isRestored = true }
+        var shown = false
+        every { mockInAppController.restoreDisplayedInApp("1120_test", any()) } answers {
+            // The controller puts the restored in-app in memory before it calls back.
+            every { InAppController.getDisplayingInApp("1120_test") } returns restoredInApp
+            shown = secondArg<InAppController.RestoredInAppListener>().onRestoreResult(restoredInApp)
+        }
+        val recreated = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .create(savedState).start().resume().get()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue(shown)
+        assertFalse(recreated.isFinishing)
+        assertEquals(1, recreated.supportFragmentManager.fragments.count { it is CTInAppHtmlInterstitialFragment })
+    }
+
+    @Test
+    fun `activity closes when restoring the in-app takes too long`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        every { mockInAppController.restoreDisplayedInApp(any(), any()) } just runs // never calls back
+
+        val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .create().start().resume().get()
+        assertFalse(activity.isFinishing)
+
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(5))
+
+        assertTrue(activity.isFinishing)
+    }
+
+    @Test
+    @Config(qualifiers = "land")
+    fun `restored portrait-only in-app in landscape closes the activity and frees the in-app slot`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        val portraitOnly = CTInAppNotification(
+            JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL)
+                .put(Constants.KEY_PORTRAIT, true)
+                .put(Constants.KEY_LANDSCAPE, false),
+            true
+        ).apply { isRestored = true }
+        var shown: Boolean? = null
+        every { mockInAppController.restoreDisplayedInApp(any(), any()) } answers {
+            every { InAppController.getDisplayingInApp(any()) } returns portraitOnly
+            shown = secondArg<InAppController.RestoredInAppListener>().onRestoreResult(portraitOnly)
+        }
+
+        val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1742963524_20250326"))
+            .create().get()
+
+        // setUp dismissed it, so the controller frees the in-app slot on the dismiss path and the
+        // result is true: the controller must not free it a second time.
+        assertEquals(true, shown)
+        assertTrue(activity.isFinishing)
+        verify(exactly = 1) { mockInAppController.inAppNotificationDidDismiss(portraitOnly, null) }
+    }
+
+    @Test
+    fun `restore result after the user left the screen closes it and keeps the saved in-app`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        val listener = slot<InAppController.RestoredInAppListener>()
+        every { mockInAppController.restoreDisplayedInApp(any(), capture(listener)) } just runs
+        val controller = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .create().start().resume()
+        // User presses Home while the restore is still running: Android saves the state.
+        controller.pause().saveInstanceState(Bundle()).stop()
+
+        val restored = CTInAppNotification(JSONObject(htmlInApp), true).apply { isRestored = true }
+        val shown = listener.captured.onRestoreResult(restored)
+
+        // A fragment cannot be added after the state is saved, so the screen closes and the
+        // controller frees the slot. Nothing is dismissed, so the saved row is kept.
+        assertFalse(shown)
+        assertTrue(controller.get().isFinishing)
+        verify(exactly = 0) { mockInAppController.inAppNotificationDidDismiss(any(), any()) }
+    }
+
+    @Test
+    fun `restore result that comes after the timeout is dropped`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        val listener = slot<InAppController.RestoredInAppListener>()
+        every { mockInAppController.restoreDisplayedInApp(any(), capture(listener)) } just runs
+        val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .create().start().resume().get()
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(5))
+
+        val late = CTInAppNotification(JSONObject(htmlInApp), true).apply { isRestored = true }
+        // false tells the controller to free the in-app slot, since nothing shows it.
+        assertFalse(listener.captured.onRestoreResult(late))
+        assertTrue(activity.isFinishing)
+        assertTrue(activity.supportFragmentManager.fragments.isEmpty())
+    }
+
+    @Test
+    fun `restore is not started and the activity closes when the intent has no config`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        val intent = Intent(context, InAppNotificationActivity::class.java)
+            .putExtra(Constants.INAPP_ID_KEY, "1120_test")
+
+        val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, intent).create().get()
+
+        assertTrue(activity.isFinishing)
+        verify(exactly = 0) { mockInAppController.restoreDisplayedInApp(any(), any()) }
     }
 }

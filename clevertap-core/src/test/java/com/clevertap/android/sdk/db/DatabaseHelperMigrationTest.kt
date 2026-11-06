@@ -94,7 +94,9 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
         dbHelper.readableDatabase.use { upgraded ->
             val names = listOf(
                 Table.INBOX_PENDING_DELETES.tableName,
-                Table.INBOX_PENDING_READS.tableName
+                Table.INBOX_PENDING_READS.tableName,
+                // v6 -> v8 runs every later step too.
+                Table.DISPLAYED_INAPP.tableName
             )
             for (name in names) {
                 val c = upgraded.rawQuery(
@@ -124,6 +126,52 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
                 Column.SOURCE in columnNames,
                 "source column must exist on fresh install"
             )
+        }
+    }
+
+    @Test
+    fun `upgrade from v7 creates the displayed in-app table and keeps existing rows`() {
+        val path = appCtx.getDatabasePath(dbName)
+        path.parentFile?.mkdirs()
+        SQLiteDatabase.openOrCreateDatabase(path, null).use { seed ->
+            seed.version = 7
+            seed.execSQL(
+                "CREATE TABLE ${Table.EVENTS.tableName} (" +
+                    "${Column.ID} INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "${Column.DATA} STRING NOT NULL, ${Column.CREATED_AT} INTEGER NOT NULL);"
+            )
+            seed.execSQL(
+                "INSERT INTO ${Table.EVENTS.tableName} (${Column.DATA}, ${Column.CREATED_AT}) VALUES ('{}', 1);"
+            )
+        }
+
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        // Opening a connection forces onUpgrade(7, 8).
+        dbHelper.readableDatabase.use { upgraded ->
+            assertEquals(8, upgraded.version)
+            upgraded.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
+                arrayOf(Table.DISPLAYED_INAPP.tableName)
+            ).use { assertTrue(it.moveToFirst(), "displayed in-app table should exist after V8 migration") }
+            upgraded.rawQuery("SELECT count(*) FROM ${Table.EVENTS.tableName};", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(1, it.getInt(0))
+            }
+        }
+    }
+
+    @Test
+    fun `fresh install creates the displayed in-app table`() {
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.readableDatabase.use { db ->
+            db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
+                arrayOf(Table.DISPLAYED_INAPP.tableName)
+            ).use { assertTrue(it.moveToFirst(), "displayed in-app table must exist on fresh install") }
         }
     }
 }

@@ -38,6 +38,12 @@ class CTInAppNotification : Parcelable {
     val jsonDescription
         get() = _jsonDescription.copy()
 
+    /**
+     * The In-App JSON without a copy, for writing it to storage. Must not be changed by the caller.
+     */
+    internal val jsonDescriptionForStorage: JSONObject
+        get() = _jsonDescription
+
     var landscapeImageUrl: String? = null
         private set
 
@@ -111,6 +117,12 @@ class CTInAppNotification : Parcelable {
         private set
 
     internal var error: String? = null
+
+    /**
+     * True when this In-App was shown again from storage after the app process was killed.
+     * It was already counted when first shown, so it must not be counted again.
+     */
+    internal var isRestored: Boolean = false
 
     internal var height: Int = 0
         private set
