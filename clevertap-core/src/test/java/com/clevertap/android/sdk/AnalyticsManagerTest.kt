@@ -1947,11 +1947,11 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushNotificationClickedEvent should render nothing when the store has no trusted copy`() {
-        // An intent:// link from a web page carries preview fields the SDK never received as a push.
+        // A launch intent carries preview fields the SDK never received as a push.
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")
             putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
-            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"type\":\"custom-html\",\"d\":{\"html\":\"<script>evil()</script>\"}}")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"type\":\"custom-html\",\"d\":{\"html\":\"<p>not stored</p>\"}}")
         }
         every { pushPreviewStore.find(extras) } returns null
         val inboxController = mockk<CTInboxController>(relaxed = true)

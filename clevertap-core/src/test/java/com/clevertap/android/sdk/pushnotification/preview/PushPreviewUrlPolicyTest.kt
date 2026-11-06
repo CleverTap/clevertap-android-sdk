@@ -8,7 +8,7 @@ import kotlin.test.assertNull
 
 /**
  * Pure JVM: the policy uses java.net.URI only, so no Robolectric is needed.
- * Each rejected case names the attack it stands for.
+ * Each rejected case names the shape of input it stands for.
  */
 class PushPreviewUrlPolicyTest {
 
@@ -51,15 +51,18 @@ class PushPreviewUrlPolicyTest {
 
     @Test
     fun `host suffix tricks are rejected`() {
-        assertEquals("host not allowed: $host.evil.com", policy.reasonToReject("https://$host.evil.com$goodPath"))
-        assertEquals("host not allowed: evil$host", policy.reasonToReject("https://evil$host$goodPath"))
-        assertEquals("host not allowed: evil.com", policy.reasonToReject("https://evil.com/$host$goodPath"))
+        assertEquals(
+            "host not allowed: $host.other.example",
+            policy.reasonToReject("https://$host.other.example$goodPath")
+        )
+        assertEquals("host not allowed: other$host", policy.reasonToReject("https://other$host$goodPath"))
+        assertEquals("host not allowed: other.example", policy.reasonToReject("https://other.example/$host$goodPath"))
     }
 
     @Test
     fun `userinfo is rejected`() {
-        assertEquals("userinfo", policy.reasonToReject("https://$host@evil.com$goodPath"))
-        assertEquals("userinfo", policy.reasonToReject("https://evil.com@$host$goodPath"))
+        assertEquals("userinfo", policy.reasonToReject("https://$host@other.example$goodPath"))
+        assertEquals("userinfo", policy.reasonToReject("https://other.example@$host$goodPath"))
     }
 
     @Test
@@ -89,8 +92,8 @@ class PushPreviewUrlPolicyTest {
     fun `control characters, spaces, backslashes and non-ascii are rejected`() {
         assertEquals("illegal character", policy.reasonToReject("https://$host$goodPath\r\nX: y"))
         assertEquals("illegal character", policy.reasonToReject("https://$host$goodPath a"))
-        assertEquals("illegal character", policy.reasonToReject("https://$host\\evil.com$goodPath"))
-        // Cyrillic "е" in place of the Latin one: a look-alike domain.
+        assertEquals("illegal character", policy.reasonToReject("https://$host\\other.example$goodPath"))
+        // Cyrillic "е" in place of the Latin one: a domain that only looks the same.
         assertEquals("illegal character", policy.reasonToReject("https://sk1-еventstore.amazonaws.com$goodPath"))
     }
 
@@ -108,7 +111,7 @@ class PushPreviewUrlPolicyTest {
 
     @Test
     fun `rejection reason never echoes the url`() {
-        val reason = policy.reasonToReject("https://evil.com$goodPath?secret=1")!!
+        val reason = policy.reasonToReject("https://other.example$goodPath?secret=1")!!
         assertFalse(reason.contains("secret"))
     }
 }

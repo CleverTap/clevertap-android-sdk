@@ -709,8 +709,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      * Runs on the serial executor, the same queue the store writes on, so a copy
      * saved at push arrival is always visible here.
      *
-     * Example: a Chrome intent:// link carrying its own wzrk_inapp reaches this
-     * method, finds no stored copy, and renders nothing.
+     * Example: a launch intent that carries its own wzrk_inapp but was never received
+     * as a push finds no stored copy and renders nothing.
      */
     private void renderTrustedPushPreview(final Bundle extras) {
         Task<Void> task = executors.postAsyncSafelyTask();
@@ -728,7 +728,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     handleSendTestForDisplayUnits(trusted);
                 }
             } catch (Throwable t) {
-                // The extras may come from anywhere. Whatever they contain, a tap must never crash the app.
+                // A tap must never crash the app, whatever the extras contain.
                 config.getLogger().verbose(config.getAccountId(), "Failed to process push preview", t);
             }
             return null;

@@ -69,7 +69,7 @@ internal object PushPreviewKey {
  * Example: `{ "b": 1.0, "a": "x" }` and `{"a":"x","b":1}` both become `{"a":"x","b":1}`.
  *
  * Why this has its own reader instead of org.json: the input may come from a tapped
- * intent, which anyone can build. org.json parses recursively, so `[[[[...` ten
+ * intent, which is not under the SDK's control. org.json parses recursively, so `[[[[...` ten
  * thousand levels deep overflows the stack, and StackOverflowError is not an Exception.
  * org.json also accepts single-quoted strings and comments, so no pre-scan written for
  * standard JSON can reliably predict how deep it will recurse. This reader accepts

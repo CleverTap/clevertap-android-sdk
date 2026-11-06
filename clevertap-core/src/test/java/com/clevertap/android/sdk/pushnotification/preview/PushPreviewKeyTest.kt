@@ -145,14 +145,14 @@ class PushPreviewKeyTest : BaseTestCase() {
         assertNull(CanonicalJson.of(""))
     }
 
-    // An attacker's intent can carry anything. The reader carries the depth into every
+    // A tapped intent can carry anything. The reader carries the depth into every
     // nested call and refuses at the limit, so no input can make it recurse deeper.
 
     @Test
     fun `canonical json refuses deeply nested arrays`() {
-        val hostile = "[".repeat(20_000) + "]".repeat(20_000)
+        val refused = "[".repeat(20_000) + "]".repeat(20_000)
 
-        assertNull(CanonicalJson.of(hostile))
+        assertNull(CanonicalJson.of(refused))
     }
 
     @Test
@@ -169,16 +169,16 @@ class PushPreviewKeyTest : BaseTestCase() {
 
     @Test
     fun `single-quoted string followed by deep nesting is refused at the quote`() {
-        val hostile = "['\"'," + "[".repeat(20_000) + "]".repeat(20_000) + "]"
+        val refused = "['\"'," + "[".repeat(20_000) + "]".repeat(20_000) + "]"
 
-        assertNull(CanonicalJson.of(hostile))
+        assertNull(CanonicalJson.of(refused))
     }
 
     @Test
     fun `comment followed by deep nesting is refused at the comment`() {
-        val hostile = "/* \" */" + "[".repeat(20_000) + "]".repeat(20_000)
+        val refused = "/* \" */" + "[".repeat(20_000) + "]".repeat(20_000)
 
-        assertNull(CanonicalJson.of(hostile))
+        assertNull(CanonicalJson.of(refused))
         assertNull(CanonicalJson.of("[1, // \"\n" + "[".repeat(20_000) + "]".repeat(20_000) + "]"))
         assertNull(CanonicalJson.of("[1, # \"\n" + "[".repeat(20_000) + "]".repeat(20_000) + "]"))
     }
@@ -213,16 +213,16 @@ class PushPreviewKeyTest : BaseTestCase() {
 
     @Test
     fun `canonical json refuses deeply nested objects`() {
-        val hostile = """{"a":""".repeat(5_000) + "1" + "}".repeat(5_000)
+        val refused = """{"a":""".repeat(5_000) + "1" + "}".repeat(5_000)
 
-        assertNull(CanonicalJson.of(hostile))
+        assertNull(CanonicalJson.of(refused))
     }
 
     @Test
     fun `canonical json refuses oversized input`() {
-        val hostile = """{"a":"${"x".repeat(70_000)}"}"""
+        val refused = """{"a":"${"x".repeat(70_000)}"}"""
 
-        assertNull(CanonicalJson.of(hostile))
+        assertNull(CanonicalJson.of(refused))
     }
 
     @Test
@@ -233,12 +233,12 @@ class PushPreviewKeyTest : BaseTestCase() {
     }
 
     @Test
-    fun `key for hostile input is still computed from the raw string without crashing`() {
-        val hostile = "[".repeat(20_000) + "]".repeat(20_000)
+    fun `key for refused input is still computed from the raw string without crashing`() {
+        val refused = "[".repeat(20_000) + "]".repeat(20_000)
 
-        val key = PushPreviewKey.of(inApp(hostile))
+        val key = PushPreviewKey.of(inApp(refused))
 
         assertEquals(64, key.length)
-        assertEquals(key, PushPreviewKey.of(inApp(hostile)))
+        assertEquals(key, PushPreviewKey.of(inApp(refused)))
     }
 }

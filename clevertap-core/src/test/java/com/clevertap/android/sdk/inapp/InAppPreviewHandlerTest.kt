@@ -59,7 +59,7 @@ class InAppPreviewHandlerTest : BaseTestCase() {
     @Test
     fun `handleInAppPreview should not fetch or render when the S3 URL fails the policy`() {
         val extras = Bundle().apply {
-            putString(Constants.INAPP_PREVIEW_S3_URL_KEY, "https://attacker.example/inapp-preview-campaign/1/x")
+            putString(Constants.INAPP_PREVIEW_S3_URL_KEY, "https://other-host.example/inapp-preview-campaign/1/x")
             putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"source\":\"inline\"}")
         }
 

@@ -6,15 +6,15 @@ import java.util.Locale
 
 /**
  * Option F of SDK-6282: decides whether an in-app preview may be fetched from
- * a wzrk_inapp_s3_url. Treats the URL as hostile input even though the trusted
- * store already vouches for it.
+ * a wzrk_inapp_s3_url. Validates the URL strictly even though the trusted store
+ * already vouches for it.
  *
  * Allowed example:
  *   https://sk1-...-gd8sly0omq1m.s3.ap-northeast-2.amazonaws.com/inapp-preview-campaign/1699358338/8bd4...
  * Rejected examples and why:
  *   http://...                                  scheme
- *   https://sk1-...amazonaws.com.evil.com/...   host not allowed (exact match only)
- *   https://sk1-...amazonaws.com@evil.com/...   userinfo
+ *   https://sk1-...amazonaws.com.other.example/...   host not allowed (exact match only)
+ *   https://sk1-...amazonaws.com@other.example/...   userinfo
  *   https://sk1-...amazonaws.com/other/x        path prefix
  */
 internal class PushPreviewUrlPolicy(

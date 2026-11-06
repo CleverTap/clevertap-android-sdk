@@ -15,9 +15,9 @@ import org.json.JSONObject
  * Keeps trusted copies of Send Test previews (SDK-6282).
  *
  * [remember] is called wherever a push is seen at arrival, inside the app
- * process. [find] is called when a notification is tapped. The tap may come
- * from anywhere, including a web page's intent:// link, so the tapped intent's
- * content is used only to compute a lookup key and never rendered.
+ * process. [find] is called when a notification is tapped. The tap intent is not
+ * under the SDK's control, so its content is used only to compute a lookup key
+ * and never rendered.
  *
  * Threading: [remember] may be called from any thread and returns at once.
  * [find] must run on the SDK's serial executor, the same one [remember] posts

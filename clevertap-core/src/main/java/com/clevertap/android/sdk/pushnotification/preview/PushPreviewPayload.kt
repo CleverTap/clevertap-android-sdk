@@ -66,8 +66,8 @@ internal class PushPreviewPayload private constructor(
 
         /**
          * A real preview field is under 4 KB, the FCM payload cap. A tapped intent can carry
-         * up to about 1 MB (the Binder limit), and hashing that on every launch is work an
-         * attacker should not be able to cause. Anything over this is not a preview.
+         * up to about 1 MB (the Binder limit), and hashing that on every launch is wasted
+         * work. Anything over this is not treated as a preview.
          */
         private const val MAX_FIELD_LENGTH = 64 * 1024
 
