@@ -106,7 +106,7 @@ class InAppNotificationActivityTest {
     }
 
     @Test
-    fun `after process death the old fragment is not restored and the activity finishes`() {
+    fun `after process death the restored fragment removes itself and the activity finishes`() {
         // 1. In-app on screen, Android saves the activity state (e.g. user presses Home).
         val inApp = CTInAppNotification(JSONObject(htmlInApp), true)
         every { InAppController.getDisplayingInApp("1120_test") } returns inApp
@@ -119,6 +119,8 @@ class InAppNotificationActivityTest {
         every { InAppController.getDisplayingInApp(any()) } returns null
         val recreated = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
             .create(savedState).get()
+        // Android restores the old fragment inside super.onCreate; it removes itself (orphan).
+        shadowOf(Looper.getMainLooper()).idle()
 
         assertTrue(recreated.isFinishing)
         assertTrue(recreated.supportFragmentManager.fragments.isEmpty())

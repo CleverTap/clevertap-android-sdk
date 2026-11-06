@@ -92,9 +92,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     public void onCreate(Bundle savedInstanceState) {
-        // After the app process is killed the in-app is no longer in memory. Skip restoring its
-        // fragment from saved state; the activity closes below.
-        super.onCreate(isInAppMissing() ? null : savedInstanceState);
+        super.onCreate(savedInstanceState);
+        if (isInAppMissing()) {
+            // The in-app is no longer in memory, e.g. Android recreated this activity after the app
+            // process was killed. Close right away; a restored in-app fragment removes itself.
+            Logger.v("In-app " + getIntent().getStringExtra(Constants.INAPP_ID_KEY)
+                    + " is no longer available, closing InAppNotificationActivity");
+            finish();
+            return;
+        }
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
