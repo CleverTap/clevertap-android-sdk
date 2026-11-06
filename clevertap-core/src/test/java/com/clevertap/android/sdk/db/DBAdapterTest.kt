@@ -314,6 +314,19 @@ class DBAdapterTest : BaseTestCase() {
         assertSame(dao1, dao2) // Verify same instance is returned
     }
 
+    @Test
+    fun `displayedInAppDAO returns singleton instance separate from the delayed in-apps DAO`() {
+        val dao1 = dbAdapter.displayedInAppDAO()
+        val dao2 = dbAdapter.displayedInAppDAO()
+
+        assertSame(dao1, dao2)
+        assertNotSame(dbAdapter.delayedLegacyInAppDAO(), dao1)
+        // Writes go to the displayed in-app table only.
+        dao1.insertBatch(listOf(DelayedLegacyInAppData("displayed_1", 0, "data")))
+        assertEquals("data", dao1.fetchSingleInApp("displayed_1"))
+        assertNull(dbAdapter.delayedLegacyInAppDAO().fetchSingleInApp("displayed_1"))
+    }
+
     // =====================================================
     // markIndexed / findSweepableV2Ids
     // =====================================================
