@@ -44,25 +44,39 @@ internal class PushPreviewPayload private constructor(
         )
 
         /**
-         * True when the bundle carries at least one preview field with a value, which is
-         * exactly when [fromBundle] returns non-null. A key present with a null value does
-         * not count, so such a bundle still takes the ordinary click path.
+         * True when the bundle carries at least one preview field with a String value, which
+         * is what [fromBundle] reads. A key present with a null or non-String value does not
+         * count, so such a bundle still takes the ordinary click path.
+         *
+         * Only Strings: every real push path (FCM, HMS, Push Amplification, the React Native,
+         * Cordova, Flutter and Expo wrappers, and the documented custom-handling snippet) puts
+         * push data with putString. A non-String value can only come from another app's
+         * intent, and it can never match a stored row, so there is no reason to read it.
          */
         @JvmStatic
-        fun hasPreviewFields(extras: Bundle): Boolean = KEYS.any { extras.get(it) != null }
+        fun hasPreviewFields(extras: Bundle): Boolean = KEYS.any { extras.getString(it) != null }
 
         /** Null when the bundle carries no preview field at all. */
         fun fromBundle(extras: Bundle): PushPreviewPayload? =
-            fromLookup { key -> extras.get(key)?.toString() }
+            fromLookup { key -> extras.getString(key) }
 
         /** Null when the stored JSON carries no preview field (corrupt row). */
         fun fromJson(json: JSONObject): PushPreviewPayload? =
             fromLookup { key -> if (json.has(key)) json.optString(key) else null }
 
+        /**
+         * A real preview field is under 4 KB, the FCM payload cap. A tapped intent can carry
+         * up to about 1 MB (the Binder limit), and hashing that on every launch is work an
+         * attacker should not be able to cause. Anything over this is not a preview.
+         */
+        private const val MAX_FIELD_LENGTH = 64 * 1024
+
         private fun fromLookup(valueOf: (String) -> String?): PushPreviewPayload? {
             val fields = LinkedHashMap<String, String>(KEYS.size)
             for (key in KEYS) {
-                valueOf(key)?.let { fields[key] = it }
+                val value = valueOf(key) ?: continue
+                if (value.length > MAX_FIELD_LENGTH) return null
+                fields[key] = value
             }
             return if (fields.isEmpty()) null else PushPreviewPayload(fields)
         }

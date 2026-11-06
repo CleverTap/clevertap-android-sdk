@@ -41,6 +41,27 @@ class PushPreviewPayloadTest : BaseTestCase() {
     }
 
     @Test
+    fun `a preview field over 64 KB makes the bundle not a preview, before any hashing`() {
+        // A tapped intent can be close to 1 MB; a real preview field is under 4 KB.
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "x".repeat(64 * 1024 + 1))
+        }
+
+        assertNull(PushPreviewPayload.fromBundle(extras))
+    }
+
+    @Test
+    fun `a preview field of exactly 64 KB is still accepted`() {
+        val extras = Bundle().apply {
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "x".repeat(64 * 1024))
+        }
+
+        assertNotNull(PushPreviewPayload.fromBundle(extras))
+    }
+
+    @Test
     fun `fromBundle keeps only the five preview fields`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")
@@ -63,15 +84,18 @@ class PushPreviewPayloadTest : BaseTestCase() {
     }
 
     @Test
-    fun `fromBundle stringifies a non-string value instead of dropping it`() {
-        // A wrapper library may store the field with the wrong type; getString would return null.
+    fun `a non-string preview value is ignored`() {
+        // Every real push path puts Strings (FCM, HMS, Push Amp, all wrappers, the docs snippet).
+        // Only another app's intent can carry other types, and those can never match a stored row.
         val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
             putBoolean(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, true)
+            putInt(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, 7)
+            putStringArray(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY, arrayOf("{}"))
         }
 
-        val payload = PushPreviewPayload.fromBundle(extras)
-
-        assertEquals("true", payload?.get(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY))
+        assertFalse(PushPreviewPayload.hasPreviewFields(extras))
+        assertNull(PushPreviewPayload.fromBundle(extras))
     }
 
     @Test

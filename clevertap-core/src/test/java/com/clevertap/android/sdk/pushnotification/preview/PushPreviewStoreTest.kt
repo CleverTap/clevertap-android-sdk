@@ -221,6 +221,17 @@ class PushPreviewStoreTest : BaseTestCase() {
     }
 
     @Test
+    fun `an oversized preview field is ignored on both sides without touching the database`() {
+        val oversized = sendTest("x".repeat(64 * 1024 + 1))
+
+        store.remember(oversized)
+        assertNull(store.find(oversized))
+
+        verify(exactly = 0) { dbAdapter.savePushPreview(any(), any(), any(), any()) }
+        verify(exactly = 0) { dbAdapter.findPushPreview(any()) }
+    }
+
+    @Test
     fun `find returns null without a database call for a bundle without preview fields`() {
         val ordinary = Bundle().apply { putString(Constants.NOTIFICATION_TAG, "true") }
 

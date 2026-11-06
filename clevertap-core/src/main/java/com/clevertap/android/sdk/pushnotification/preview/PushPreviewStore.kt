@@ -80,7 +80,10 @@ internal class PushPreviewStore(
     /** The trusted copy as a bundle of preview fields only, or null when none was ever received. */
     @WorkerThread
     fun find(extras: Bundle): Bundle? {
-        val payload = PushPreviewPayload.fromBundle(extras) ?: return null
+        val payload = PushPreviewPayload.fromBundle(extras) ?: run {
+            logger.debug(accountId, "Push preview ignored, the tapped bundle has no usable preview fields")
+            return null
+        }
         val key = PushPreviewKey.of(payload)
         val stored = databaseManager.loadDBAdapter(context).findPushPreview(key)
         return if (stored == null) {
