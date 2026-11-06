@@ -1150,7 +1150,7 @@ internal class InAppController(
             }
             val store = displayedInAppStoreProvider() ?: return@execute
             val displayedInApp = JSONObject()
-                .put(DISPLAYED_INAPP_JSON, inAppNotification.jsonDescription)
+                .put(DISPLAYED_INAPP_JSON, inAppNotification.jsonDescriptionForStorage)
                 .put(DISPLAYED_INAPP_TTL, inAppNotification.timeToLive)
             val saved = store.save(inAppId, displayedInApp)
             logger.verbose(

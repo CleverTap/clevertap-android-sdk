@@ -38,6 +38,12 @@ class CTInAppNotification : Parcelable {
     val jsonDescription
         get() = _jsonDescription.copy()
 
+    /**
+     * The In-App JSON without a copy, for writing it to storage. Must not be changed by the caller.
+     */
+    internal val jsonDescriptionForStorage: JSONObject
+        get() = _jsonDescription
+
     var landscapeImageUrl: String? = null
         private set
 
