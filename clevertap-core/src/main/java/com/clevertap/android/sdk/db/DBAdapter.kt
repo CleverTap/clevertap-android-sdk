@@ -303,13 +303,12 @@ internal class DBAdapter constructor(
 
     @WorkerThread
     @Synchronized
-    fun savePushPreview(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?) =
+    fun savePushPreview(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?): Boolean =
         pushPreviewDAO.save(previewKey, data, expiresAtSeconds, collapseKey)
 
     @WorkerThread
     @Synchronized
-    fun findPushPreview(previewKey: String, nowSeconds: Long): String? =
-        pushPreviewDAO.find(previewKey, nowSeconds)
+    fun findPushPreview(previewKey: String): String? = pushPreviewDAO.find(previewKey)
 
     // =====================================================
     // UNINSTALL TIMESTAMP OPERATIONS

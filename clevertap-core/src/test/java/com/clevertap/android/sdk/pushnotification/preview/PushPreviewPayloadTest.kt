@@ -28,6 +28,19 @@ class PushPreviewPayloadTest : BaseTestCase() {
     }
 
     @Test
+    fun `a preview key present with a null value does not count as a preview`() {
+        // A wrapper that forwards every key of a push may put wzrk_inapp_type with no value.
+        // Such a bundle must take the ordinary click path, not the preview gate.
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, null)
+        }
+
+        assertFalse(PushPreviewPayload.hasPreviewFields(extras))
+        assertNull(PushPreviewPayload.fromBundle(extras))
+    }
+
+    @Test
     fun `fromBundle keeps only the five preview fields`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")

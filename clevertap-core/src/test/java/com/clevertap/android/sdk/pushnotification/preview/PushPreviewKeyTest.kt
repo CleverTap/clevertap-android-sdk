@@ -195,6 +195,9 @@ class PushPreviewKeyTest : BaseTestCase() {
         assertNull(CanonicalJson.of("""{"a":"tab${'\t'}here"}"""))       // raw control character
         assertNull(CanonicalJson.of("""{"a":"\q"}"""))                   // unknown escape
         assertNull(CanonicalJson.of("""{"a":"\u12"}"""))                 // short unicode escape
+        assertNull(CanonicalJson.of("""{"a":"\u+041"}"""))               // signed unicode escape
+        assertNull(CanonicalJson.of("""{"a":"\u-001"}"""))               // negative unicode escape
+        assertNull(CanonicalJson.of("""{"a":"\u00g1"}"""))               // non hex digit
         assertNull(CanonicalJson.of("""42"""))                           // top level scalar
     }
 

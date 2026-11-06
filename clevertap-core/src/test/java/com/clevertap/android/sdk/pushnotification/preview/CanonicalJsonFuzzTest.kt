@@ -31,7 +31,7 @@ class CanonicalJsonFuzzTest : BaseTestCase() {
 
     private fun randomString(): String {
         val length = random.nextInt(12)
-        val alphabet = "ab \"\\/\n\t{}[]:,'#\u00e9\u20ac\u0001"
+        val alphabet = """ab "\/${'\n'}${'\t'}{}[]:,'#\u00e9\u20ac${'\u0001'}"""
         return buildString { repeat(length) { append(alphabet[random.nextInt(alphabet.length)]) } }
     }
 
@@ -61,7 +61,7 @@ class CanonicalJsonFuzzTest : BaseTestCase() {
     }
 
     private fun randomGarbage(): String {
-        val alphabet = "{}[]\"'\\:,/ #\n\t0123456789.-+eEtrufalsn\u0000\u00e9"
+        val alphabet = """{}[]"'\:,/ #${'\n'}${'\t'}0123456789.-+eEtrufalsn${'\u0000'}é"""
         val length = random.nextInt(60)
         return buildString { repeat(length) { append(alphabet[random.nextInt(alphabet.length)]) } }
     }
@@ -131,7 +131,11 @@ class CanonicalJsonFuzzTest : BaseTestCase() {
             }
             val text = open.toString() + "1" + close.toString()
             val result = CanonicalJson.of(text)
-            if (depth <= 32) assertNotNull(result, "depth $depth must be accepted") else assertNull(result, "depth $depth must be refused")
+            if (depth <= 32) {
+                assertNotNull(result, "depth $depth must be accepted")
+            } else {
+                assertNull(result, "depth $depth must be refused")
+            }
         }
     }
 

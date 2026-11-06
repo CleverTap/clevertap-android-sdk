@@ -3,8 +3,8 @@ package com.clevertap.android.sdk.pushnotification.preview
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 /**
  * Pure JVM: the policy uses java.net.URI only, so no Robolectric is needed.
@@ -20,7 +20,6 @@ class PushPreviewUrlPolicyTest {
     @Test
     fun `real backend url is allowed`() {
         assertNull(policy.reasonToReject(good))
-        assertTrue(policy.isAllowed(good))
     }
 
     @Test
@@ -35,7 +34,7 @@ class PushPreviewUrlPolicyTest {
 
     @Test
     fun `default host list contains the known preview bucket`() {
-        assertTrue(PushPreviewUrlPolicy().isAllowed(good))
+        assertNull(PushPreviewUrlPolicy().reasonToReject(good))
     }
 
     @Test
@@ -46,7 +45,7 @@ class PushPreviewUrlPolicyTest {
     @Test
     fun `non-http schemes are rejected`() {
         for (url in listOf("file:///etc/passwd", "javascript:alert(1)", "content://x/y", "data:text/html,hi")) {
-            assertFalse(policy.isAllowed(url), "must reject $url")
+            assertNotNull(policy.reasonToReject(url), "must reject $url")
         }
     }
 
@@ -97,8 +96,8 @@ class PushPreviewUrlPolicyTest {
 
     @Test
     fun `ipv6 literal and empty host are rejected`() {
-        assertFalse(policy.isAllowed("https://[::1]$goodPath"))
-        assertFalse(policy.isAllowed("https:///$goodPath"))
+        assertNotNull(policy.reasonToReject("https://[::1]$goodPath"))
+        assertNotNull(policy.reasonToReject("https:///$goodPath"))
     }
 
     @Test

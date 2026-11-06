@@ -21,10 +21,10 @@ internal class PushPreviewDAOImpl(
 ) : PushPreviewDAO {
 
     @WorkerThread
-    override fun save(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?) {
+    override fun save(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?): Boolean {
         if (!dbHelper.belowMemThreshold()) {
             logger.verbose(NOT_ENOUGH_SPACE_LOG)
-            return
+            return false
         }
         val nowSeconds = clock.currentTimeSeconds()
         val values = ContentValues().apply {
@@ -34,7 +34,7 @@ internal class PushPreviewDAOImpl(
             put(Column.CREATED_AT, nowSeconds)
             put(Column.COLLAPSE_KEY, collapseKey)
         }
-        try {
+        return try {
             // One transaction, one fsync. Three auto-committed statements would cost
             // three fsyncs, which is the whole cost of this call on slow flash.
             dbHelper.writableDatabase.transaction {
@@ -44,14 +44,17 @@ internal class PushPreviewDAOImpl(
                 delete(TABLE, "${Column.EXPIRES} <= $nowSeconds", null)
                 trimToCap(this)
             }
+            true
         } catch (e: SQLiteException) {
             // Log only. A preview store failure must never take the whole database down.
             logger.verbose("Error saving push preview into $TABLE", e)
+            false
         }
     }
 
     @WorkerThread
-    override fun find(previewKey: String, nowSeconds: Long): String? {
+    override fun find(previewKey: String): String? {
+        val nowSeconds = clock.currentTimeSeconds()
         try {
             dbHelper.readableDatabase.query(
                 TABLE,
@@ -61,7 +64,10 @@ internal class PushPreviewDAOImpl(
                 null, null, null, "1"
             ).use { cursor ->
                 if (cursor.moveToFirst()) {
-                    return dbEncryptionHandler.unwrapDbData(cursor.getString(0))
+                    return dbEncryptionHandler.unwrapDbData(cursor.getString(0)).also { data ->
+                        // A row that exists but cannot be decrypted is a key problem, not a missing push.
+                        if (data == null) logger.verbose("Push preview row for $previewKey is unreadable")
+                    }
                 }
             }
         } catch (e: SQLiteException) {

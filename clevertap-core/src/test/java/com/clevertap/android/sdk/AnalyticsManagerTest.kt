@@ -1984,6 +1984,20 @@ class AnalyticsManagerTest {
     }
 
     @Test
+    fun `pushNotificationClickedEvent treats a preview key with a null value as an ordinary push`() {
+        val extras = Bundle().apply {
+            putString(Constants.NOTIFICATION_TAG, "true")
+            putString(Constants.NOTIFICATION_ID_TAG, "campaign-2")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, null)
+        }
+
+        analyticsManagerSUT.pushNotificationClickedEvent(extras)
+
+        verify(exactly = 0) { pushPreviewStore.find(any()) }
+        verify(exactly = 1) { eventQueueManager.queueEvent(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `pushNotificationClickedEvent should not consult the store for an ordinary push`() {
         val extras = Bundle().apply {
             putString(Constants.NOTIFICATION_TAG, "true")

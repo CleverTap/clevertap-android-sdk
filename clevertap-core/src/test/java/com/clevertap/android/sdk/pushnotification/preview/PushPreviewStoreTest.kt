@@ -38,6 +38,7 @@ class PushPreviewStoreTest : BaseTestCase() {
         dbAdapter = mockk(relaxed = true)
         databaseManager = mockk(relaxed = true)
         every { databaseManager.loadDBAdapter(any()) } returns dbAdapter
+        every { dbAdapter.savePushPreview(any(), any(), any(), any()) } returns true
         clock = TestClock(nowMillis)
         store = PushPreviewStore(
             context = appCtx,
@@ -147,6 +148,19 @@ class PushPreviewStoreTest : BaseTestCase() {
     }
 
     @Test
+    fun `a failed save leaves the next sighting free to try again`() {
+        // Disk full or a database error: nothing reached the disk, so the guard must not
+        // stop the second sighting of the same push from writing the row.
+        every { dbAdapter.savePushPreview(any(), any(), any(), any()) } returns false andThen true
+
+        store.remember(sendTest())
+        clock.advanceTime(200)
+        store.remember(sendTest())
+
+        verify(exactly = 2) { dbAdapter.savePushPreview(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `same push seen again after the window is saved again to refresh its expiry`() {
         store.remember(sendTest())
         clock.advanceTime(10_001)
@@ -182,8 +196,7 @@ class PushPreviewStoreTest : BaseTestCase() {
     fun `find returns a bundle built from the stored copy only`() {
         val tapped = sendTest().apply { putString(Constants.WZRK_ACCT_ID_KEY, "ACC-1") }
         val storedJson = PushPreviewPayload.fromBundle(sendTest())!!.toJson().toString()
-        val nowSeconds = TimeUnit.MILLISECONDS.toSeconds(nowMillis)
-        every { dbAdapter.findPushPreview(keyOf(tapped), nowSeconds) } returns storedJson
+        every { dbAdapter.findPushPreview(keyOf(tapped)) } returns storedJson
 
         val trusted = store.find(tapped)
 
@@ -195,14 +208,14 @@ class PushPreviewStoreTest : BaseTestCase() {
 
     @Test
     fun `find returns null when the store has no row for the key`() {
-        every { dbAdapter.findPushPreview(any(), any()) } returns null
+        every { dbAdapter.findPushPreview(any()) } returns null
 
         assertNull(store.find(sendTest()))
     }
 
     @Test
     fun `find returns null when the stored copy is unreadable`() {
-        every { dbAdapter.findPushPreview(any(), any()) } returns "not json"
+        every { dbAdapter.findPushPreview(any()) } returns "not json"
 
         assertNull(store.find(sendTest()))
     }
@@ -212,7 +225,7 @@ class PushPreviewStoreTest : BaseTestCase() {
         val ordinary = Bundle().apply { putString(Constants.NOTIFICATION_TAG, "true") }
 
         assertNull(store.find(ordinary))
-        verify(exactly = 0) { dbAdapter.findPushPreview(any(), any()) }
+        verify(exactly = 0) { dbAdapter.findPushPreview(any()) }
     }
 
     // ---------- expiry rule ----------

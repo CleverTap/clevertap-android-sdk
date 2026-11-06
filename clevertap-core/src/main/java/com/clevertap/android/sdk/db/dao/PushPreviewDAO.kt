@@ -23,14 +23,16 @@ internal interface PushPreviewDAO {
      * @param data the preview fields as JSON text (encrypted before storage)
      * @param expiresAtSeconds epoch seconds after which the row is ignored
      * @param collapseKey the push's wzrk_ck, kept for diagnostics only
+     * @return true when the row is on disk, false when nothing was written
+     *         (no space left, or a database error that was logged)
      */
     @WorkerThread
-    fun save(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?)
+    fun save(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?): Boolean
 
     /**
      * Returns the stored JSON text for [previewKey] if it exists and has not
-     * expired at [nowSeconds], otherwise null.
+     * expired now, otherwise null.
      */
     @WorkerThread
-    fun find(previewKey: String, nowSeconds: Long): String?
+    fun find(previewKey: String): String?
 }

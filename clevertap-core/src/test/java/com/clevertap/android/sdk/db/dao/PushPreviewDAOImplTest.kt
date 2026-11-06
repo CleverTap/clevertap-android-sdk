@@ -16,8 +16,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class PushPreviewDAOImplTest : BaseTestCase() {
@@ -58,25 +60,28 @@ class PushPreviewDAOImplTest : BaseTestCase() {
     @Test
     fun `save then find returns the data`() {
         val data = """{"wzrk_inapp_type":"custom-html"}"""
-        dao.save("k1", data, nowSeconds + 60, "1_2")
+        assertTrue(dao.save("k1", data, nowSeconds + 60, "1_2"))
 
-        assertEquals(data, dao.find("k1", nowSeconds))
+        assertEquals(data, dao.find("k1"))
     }
 
     @Test
     fun `find returns null for an unknown key`() {
         dao.save("k1", "{}", nowSeconds + 60, null)
 
-        assertNull(dao.find("k2", nowSeconds))
+        assertNull(dao.find("k2"))
     }
 
     @Test
     fun `find ignores a row once it has expired`() {
         dao.save("k1", "{}", nowSeconds + 10, null)
 
-        assertEquals("{}", dao.find("k1", nowSeconds + 9))
-        assertNull(dao.find("k1", nowSeconds + 10))
-        assertNull(dao.find("k1", nowSeconds + 11))
+        clock.setCurrentTime((nowSeconds + 9) * 1000)
+        assertEquals("{}", dao.find("k1"))
+        clock.setCurrentTime((nowSeconds + 10) * 1000)
+        assertNull(dao.find("k1"))
+        clock.setCurrentTime((nowSeconds + 11) * 1000)
+        assertNull(dao.find("k1"))
     }
 
     @Test
@@ -85,7 +90,8 @@ class PushPreviewDAOImplTest : BaseTestCase() {
         dao.save("k1", """{"v":1}""", nowSeconds + 1000, null)
 
         assertEquals(1, rowCount())
-        assertEquals("""{"v":1}""", dao.find("k1", nowSeconds + 500))
+        clock.setCurrentTime((nowSeconds + 500) * 1000)
+        assertEquals("""{"v":1}""", dao.find("k1"))
     }
 
     @Test
@@ -95,7 +101,7 @@ class PushPreviewDAOImplTest : BaseTestCase() {
         dao.save("new", "{}", nowSeconds + 1000, null)
 
         assertEquals(1, rowCount())
-        assertNull(dao.find("old", clock.currentTimeSeconds()))
+        assertNull(dao.find("old"))
     }
 
     @Test
@@ -103,8 +109,8 @@ class PushPreviewDAOImplTest : BaseTestCase() {
         for (i in 1..53) dao.save("k$i", "{}", nowSeconds + 1000, null)
 
         assertEquals(50, rowCount())
-        for (i in 1..3) assertNull(dao.find("k$i", nowSeconds), "k$i must have been trimmed")
-        for (i in 4..53) assertEquals("{}", dao.find("k$i", nowSeconds), "k$i must survive")
+        for (i in 1..3) assertNull(dao.find("k$i"), "k$i must have been trimmed")
+        for (i in 4..53) assertEquals("{}", dao.find("k$i"), "k$i must survive")
     }
 
     @Test
@@ -112,7 +118,7 @@ class PushPreviewDAOImplTest : BaseTestCase() {
         for (i in 1..50) dao.save("k$i", "{}", nowSeconds + 1000, null)
 
         assertEquals(50, rowCount())
-        assertEquals("{}", dao.find("k1", nowSeconds))
+        assertEquals("{}", dao.find("k1"))
     }
 
     @Test
@@ -139,14 +145,14 @@ class PushPreviewDAOImplTest : BaseTestCase() {
 
         assertEquals("""}1:"a"{""", rawData("k1"))
         assertNotEquals("""{"a":1}""", rawData("k1"))
-        assertEquals("""{"a":1}""", encryptingDao.find("k1", nowSeconds))
+        assertEquals("""{"a":1}""", encryptingDao.find("k1"))
     }
 
     @Test
     fun `save on a broken table logs and does not throw`() {
         dbHelper.writableDatabase.execSQL("DROP TABLE $table")
 
-        dao.save("k1", "{}", nowSeconds + 60, null)
-        assertNull(dao.find("k1", nowSeconds))
+        assertFalse(dao.save("k1", "{}", nowSeconds + 60, null))
+        assertNull(dao.find("k1"))
     }
 }

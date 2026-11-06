@@ -43,9 +43,13 @@ internal class PushPreviewPayload private constructor(
             Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY, // wzrk_adunit
         )
 
-        /** True when the bundle carries at least one preview field. No allocation. */
+        /**
+         * True when the bundle carries at least one preview field with a value, which is
+         * exactly when [fromBundle] returns non-null. A key present with a null value does
+         * not count, so such a bundle still takes the ordinary click path.
+         */
         @JvmStatic
-        fun hasPreviewFields(extras: Bundle): Boolean = KEYS.any(extras::containsKey)
+        fun hasPreviewFields(extras: Bundle): Boolean = KEYS.any { extras.get(it) != null }
 
         /** Null when the bundle carries no preview field at all. */
         fun fromBundle(extras: Bundle): PushPreviewPayload? =

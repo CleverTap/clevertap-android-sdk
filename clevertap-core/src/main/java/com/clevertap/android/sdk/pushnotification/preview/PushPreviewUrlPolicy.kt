@@ -21,8 +21,6 @@ internal class PushPreviewUrlPolicy(
     private val allowedHosts: Set<String> = DEFAULT_ALLOWED_HOSTS,
 ) {
 
-    fun isAllowed(url: String): Boolean = reasonToReject(url) == null
-
     /**
      * Null when allowed, otherwise a short reason for the log. Never echoes the URL.
      * Checks run in order: raw text, then structure, then host, then path, and the

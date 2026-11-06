@@ -249,9 +249,11 @@ internal object CanonicalJson {
             return decoded != null
         }
 
+        /** Exactly four hex digits. toIntOrNull alone would also accept a sign, as in "\u-001". */
         private fun readUnicodeEscape(): Char? {
             val end = pos + HEX_DIGITS
-            val code = if (end <= text.length) text.substring(pos, end).toIntOrNull(HEX_RADIX) else null
+            val digits = if (end <= text.length) text.substring(pos, end) else ""
+            val code = if (digits.all(::isHexDigit)) digits.toIntOrNull(HEX_RADIX) else null
             if (code != null) pos = end
             return code?.toChar()
         }
@@ -292,6 +294,8 @@ internal object CanonicalJson {
             val WHITESPACE = charArrayOf(' ', '\t', '\n', '\r')
         }
     }
+
+    private fun isHexDigit(ch: Char): Boolean = ch in '0'..'9' || ch in 'a'..'f' || ch in 'A'..'F'
 
     /** 100, 100.0 and 1e2 all print as 100; other finite numbers print as Kotlin's Double text. */
     private fun normaliseNumber(token: String): String {

@@ -63,13 +63,16 @@ internal class PushPreviewStore(
                 return@execute
             }
             val expiresAt = expiresAtSeconds(ttlSeconds, clock.currentTimeSeconds())
-            databaseManager.loadDBAdapter(context)
+            val saved = databaseManager.loadDBAdapter(context)
                 .savePushPreview(key, payload.toJson().toString(), expiresAt, collapseKey)
-            recentlyRemembered[key] = startedAt
+            // Only a row that reached the disk may stop the next sighting; a failed write
+            // (no space, database error) must leave the next sighting free to try again.
+            if (saved) recentlyRemembered[key] = startedAt
             val elapsed = clock.currentTimeMillis() - startedAt
             logger.verbose(
                 accountId,
-                "Push preview remembered in $elapsed ms, key=${key.take(KEY_LOG_CHARS)}, expires=$expiresAt"
+                "Push preview ${if (saved) "remembered" else "not saved"} in $elapsed ms, " +
+                    "key=${key.take(KEY_LOG_CHARS)}, expires=$expiresAt"
             )
         }
     }
@@ -79,8 +82,7 @@ internal class PushPreviewStore(
     fun find(extras: Bundle): Bundle? {
         val payload = PushPreviewPayload.fromBundle(extras) ?: return null
         val key = PushPreviewKey.of(payload)
-        val stored = databaseManager.loadDBAdapter(context)
-            .findPushPreview(key, clock.currentTimeSeconds())
+        val stored = databaseManager.loadDBAdapter(context).findPushPreview(key)
         return if (stored == null) {
             logger.debug(accountId, "Push preview ignored, no trusted copy for key=${key.take(KEY_LOG_CHARS)}")
             null
