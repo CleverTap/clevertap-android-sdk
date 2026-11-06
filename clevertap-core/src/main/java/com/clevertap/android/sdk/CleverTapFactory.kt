@@ -39,6 +39,7 @@ import com.clevertap.android.sdk.inbox.InboxV2Bridge
 import com.clevertap.android.sdk.inbox.InboxV2Fetcher
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
+import com.clevertap.android.sdk.inapp.store.db.DisplayedInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.NdStoreProvider
@@ -541,6 +542,16 @@ internal object CleverTapFactory {
 
         val pipManager = PIPManager { FileResourceProvider.initInstance(context, config.logger, networkMonitor) }
 
+        // Made on first use, on a background thread (save, delete or restore of the in-app on screen).
+        // Lazy is thread safe, and loadDBAdapter opens or upgrades the database if needed.
+        val displayedInAppStore by lazy {
+            DisplayedInAppStore(
+                databaseManager.loadDBAdapter(context).displayedInAppDAO(),
+                cryptHandler,
+                config.logger,
+                accountId
+            )
+        }
         val inAppController = InAppController(
             context = context,
             config = config,
@@ -562,8 +573,10 @@ internal object CleverTapFactory {
             networkMonitor = networkMonitor,
             pipManager = pipManager,
             validationResultStack = validationResultStack,
+            displayedInAppStoreProvider = { displayedInAppStore },
         )
         controllerManager.inAppController = inAppController
+        callbackManager.addChangeUserCallback(inAppController)
 
         // Native Display (ND) gets its own controller for event-stream evaluation, decoupled from the
         // in-app controller (SDK-6055 Phase 10). EventQueueManager fans the queued event out to both.

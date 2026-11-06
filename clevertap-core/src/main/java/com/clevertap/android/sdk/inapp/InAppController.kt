@@ -56,6 +56,8 @@ import com.clevertap.android.sdk.inapp.fragment.CTInAppNativeHeaderFragment
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
 import com.clevertap.android.sdk.inapp.pipsdk.PIPManager
 import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
+import com.clevertap.android.sdk.inapp.store.db.DisplayedInAppStore
+import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.network.ContentFetchItem
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.task.CTExecutors
@@ -65,6 +67,7 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
+import java.util.concurrent.TimeUnit
 
 internal class InAppController(
     private val context: Context,
@@ -87,7 +90,22 @@ internal class InAppController(
     private val networkMonitor: NetworkMonitor,
     private val pipManager: PIPManager,
     private val validationResultStack: ValidationResultStack,
-) : InAppListener, PIPShowFailureHandler {
+    private val displayedInAppStoreProvider: () -> DisplayedInAppStore? = { null },
+) : InAppListener, PIPShowFailureHandler, ChangeUserCallback {
+
+    /**
+     * Gets the result of [restoreDisplayedInApp] on the main thread: the restored In-App, or null
+     * when it cannot be restored. Return true when the In-App is shown, false to drop it.
+     */
+    fun interface RestoredInAppListener {
+        @MainThread
+        fun onRestoreResult(inApp: CTInAppNotification?): Boolean
+    }
+
+    // Strong reference: InAppNotificationInflater holds its listener weakly. Only the latest restore
+    // is kept: a new one starts only from a new In-App screen, and the old screen is gone by then.
+    @Volatile
+    private var restoreReadyListener: InAppNotificationInflater.InAppNotificationReadyListener? = null
 
     private enum class InAppState {
         DISCARDED,
@@ -120,6 +138,11 @@ internal class InAppController(
         // fires completion and tears the window down normally before this fires. Tearing down
         // earlier would reset to passthrough and let a late /content show a second app-launch in-app.
         private const val APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS = 25_000L
+
+        // The saved in-app is kept as {"inApp": <in-app JSON as received>, "ttl": <time to live>}, so
+        // the in-app JSON, and the wzrk_ fields its events copy from it, stay unchanged.
+        private const val DISPLAYED_INAPP_JSON = "inApp"
+        private const val DISPLAYED_INAPP_TTL = "ttl"
 
         private val pendingNotifications =
             Collections.synchronizedList(ArrayList<CTInAppNotification>())
@@ -530,6 +553,14 @@ internal class InAppController(
         inAppNotification: CTInAppNotification,
         formData: Bundle?
     ) {
+        if (inAppNotification.isRestored) {
+            // Counted, tracked and reported to the listener when it was first shown.
+            logger.verbose(
+                defaultLogTag,
+                "In-app ${inAppNotification.campaignId} restored after process kill, not counting it again"
+            )
+            return
+        }
         controllerManager.inAppFCManager?.didShow(context, inAppNotification)
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData)
 
@@ -979,6 +1010,168 @@ internal class InAppController(
         return inAppActivityExclude
     }
 
+    /**
+     * Shows again the full-screen In-App [inAppId] that was on screen when the app process was
+     * killed. Android recreates the In-App screen with only the id, and memory is empty, so the
+     * In-App is read from the database on a background thread.
+     *
+     * The result goes to [listener] on the main thread. It is null when nothing is stored for
+     * [inAppId], the In-App's own time to live has passed, In-Apps are suspended or discarded,
+     * an HTML In-App has no internet, or another In-App is on screen.
+     */
+    @MainThread
+    fun restoreDisplayedInApp(inAppId: String, listener: RestoredInAppListener) {
+        // On the in-app thread, like save and the delete on dismiss, so the saved in-app is read,
+        // saved and deleted in order.
+        val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+        task.execute("InAppController#restoreDisplayedInApp") {
+            val inAppJson = readDisplayedInAppForRestore(inAppId)
+            if (inAppJson == null) {
+                executors.mainTask<Unit>().execute("InAppController#restoreDisplayedInApp") {
+                    listener.onRestoreResult(null)
+                }
+                return@execute
+            }
+            val readyListener = object : InAppNotificationInflater.InAppNotificationReadyListener {
+                override fun onNotificationReady(notification: CTInAppNotification) {
+                    if (restoreReadyListener === this) {
+                        restoreReadyListener = null
+                    }
+                    onRestoredInAppReady(notification, listener)
+                }
+            }
+            restoreReadyListener = readyListener
+            inAppNotificationInflater.inflate(inAppJson, "InAppController#restoreDisplayedInApp", readyListener)
+        }
+    }
+
+    @WorkerThread
+    private fun readDisplayedInAppForRestore(inAppId: String): JSONObject? {
+        val store = displayedInAppStoreProvider()
+        val displayedInApp = store?.get(inAppId)
+        val inAppJson = displayedInApp?.optJSONObject(DISPLAYED_INAPP_JSON)
+        val timeToLive = displayedInApp?.optLong(DISPLAYED_INAPP_TTL) ?: 0L
+        val nowSeconds = TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis())
+        return when {
+            store == null -> {
+                logger.verbose(defaultLogTag, "Cannot restore in-app $inAppId: there is no displayed in-app store")
+                null
+            }
+
+            inAppJson == null -> {
+                logger.verbose(defaultLogTag, "Cannot restore in-app $inAppId: it is not stored or cannot be read")
+                // Removes a row that is there but cannot be read (too large or cannot be decrypted).
+                removeSavedDisplayedInAppNow(inAppId)
+                null
+            }
+
+            // Same time to live check as showInApp.
+            nowSeconds > timeToLive -> {
+                logger.verbose(defaultLogTag, "Not restoring in-app $inAppId: it has elapsed its time to live")
+                removeSavedDisplayedInAppNow(inAppId)
+                null
+            }
+
+            else -> inAppJson
+        }
+    }
+
+    @MainThread
+    private fun onRestoredInAppReady(inApp: CTInAppNotification, listener: RestoredInAppListener) {
+        // Same rules as showInApp: respect suspendInApps/discardInApps, and HTML needs internet.
+        // In those cases the saved in-app is removed: showInApp discards it when in-apps are discarded,
+        // and a suspended in-app is not kept for resumeInApps, to keep the restore simple.
+        val inAppsStopped = inAppState != InAppState.RESUMED
+        val htmlWithoutInternet = Constants.KEY_CUSTOM_HTML == inApp.type && !networkMonitor.isNetworkOnline()
+        val notRestoredReason = when {
+            inApp.error != null -> inApp.error
+            inAppsStopped -> "InAppState is $inAppState"
+            htmlWithoutInternet -> "an active internet connection is required to display the HTML InApp"
+            currentlyDisplayingInApp != null -> "in-app ${currentlyDisplayingInApp?.campaignId} is on screen"
+            else -> null
+        }
+        if (notRestoredReason != null) {
+            logger.verbose(defaultLogTag, "Not restoring in-app ${inApp.campaignId}: $notRestoredReason")
+            if (inAppsStopped || htmlWithoutInternet) {
+                removeSavedDisplayedInApp(inApp.campaignId)
+            }
+            listener.onRestoreResult(null)
+            return
+        }
+
+        inApp.isRestored = true
+        // Set before the listener shows it: the In-App screen and fragment read it from here.
+        currentlyDisplayingInApp = inApp
+        if (listener.onRestoreResult(inApp)) {
+            logger.verbose(defaultLogTag, "Restored in-app ${inApp.campaignId} after process kill")
+        } else {
+            // The In-App screen is closing or being recreated (e.g. rotation during the restore).
+            // Free the slot right away on the main thread, so a new screen can restore it. The saved
+            // in-app is kept: the user did not close it. No dismiss callbacks.
+            currentlyDisplayingInApp = null
+            val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+            task.execute("InAppController#onRestoredInAppReady") {
+                checkPendingNotifications()
+                _showNotificationIfAvailable()
+            }
+        }
+    }
+
+    /**
+     * Keeps the full-screen In-App on screen in the database, so [restoreDisplayedInApp] can show it
+     * again after the app process is killed. Only one In-App is kept. Its time to live is stored
+     * beside the In-App JSON: parsing the JSON again could give it a new default one.
+     *
+     * Runs on the in-app thread, like dismiss, so a save and the delete on dismiss run in order.
+     */
+    private fun saveDisplayedInApp(inAppNotification: CTInAppNotification) {
+        val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+        task.execute("InAppController#saveDisplayedInApp") {
+            if (currentlyDisplayingInApp !== inAppNotification) {
+                return@execute // already dismissed
+            }
+            val inAppId = inAppNotification.campaignId
+            if (inAppId.isNullOrEmpty()) {
+                return@execute // the In-App screen finds in-apps by id, so this one cannot be restored
+            }
+            val store = displayedInAppStoreProvider() ?: return@execute
+            val displayedInApp = JSONObject()
+                .put(DISPLAYED_INAPP_JSON, inAppNotification.jsonDescription)
+                .put(DISPLAYED_INAPP_TTL, inAppNotification.timeToLive)
+            val saved = store.save(inAppId, displayedInApp)
+            logger.verbose(
+                defaultLogTag,
+                "Saved in-app $inAppId to show it again after a process kill: $saved"
+            )
+        }
+    }
+
+    private fun removeSavedDisplayedInApp(inAppId: String?) {
+        inAppId ?: return
+        val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+        task.execute("InAppController#removeSavedDisplayedInApp") {
+            removeSavedDisplayedInAppNow(inAppId)
+        }
+    }
+
+    /**
+     * The saved In-App belongs to the previous user, so it is not shown again after a process kill.
+     * Runs on the in-app thread, after any save already queued for it.
+     */
+    override fun onChangeUser(deviceId: String, accountId: String) {
+        val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
+        task.execute("InAppController#onChangeUser") {
+            val cleared = displayedInAppStoreProvider()?.clear() ?: return@execute
+            logger.verbose(defaultLogTag, "Removed the saved in-app on user change: $cleared")
+        }
+    }
+
+    @WorkerThread
+    private fun removeSavedDisplayedInAppNow(inAppId: String) {
+        val removed = displayedInAppStoreProvider()?.remove(inAppId) ?: return
+        logger.verbose(defaultLogTag, "Removed saved in-app $inAppId: $removed")
+    }
+
     private fun checkPendingNotifications(): Boolean {
         logger.verbose(defaultLogTag, "checking Pending Notifications")
         synchronized(pendingNotifications) {
@@ -996,6 +1189,9 @@ internal class InAppController(
         logger.verbose(defaultLogTag, "Running inAppDidDismiss")
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp?.campaignId == inAppNotification.campaignId)) {
             currentlyDisplayingInApp = null
+            // Nothing is on screen now, so there is nothing to restore after a process kill.
+            // Called on the in-app background thread, so the database is used directly.
+            inAppNotification.campaignId?.let { removeSavedDisplayedInAppNow(it) }
             checkPendingNotifications()
         }
     }
@@ -1208,6 +1404,7 @@ internal class InAppController(
                         inAppNotification,
                         config
                     )
+                    saveDisplayedInApp(inAppNotification)
                 } catch (t: Throwable) {
                     logger.verbose(
                         "Please verify the integration of your app. It is not setup to support in-app notifications yet.",
