@@ -1108,6 +1108,10 @@ internal class InAppController(
             logger.verbose(defaultLogTag, "Not restoring in-app ${inApp.campaignId}: $notRestoredReason")
             if (inAppsStopped || htmlWithoutInternet || pushPermissionGranted) {
                 removeSavedDisplayedInApp(inApp.campaignId)
+            if (pushPermissionGranted) {
+                // Same as showInApp: the app's push permission listeners get the result.
+                inAppActionHandler.notifyPushPermissionListeners()
+            }
             }
             listener.onRestoreResult(null)
             return
