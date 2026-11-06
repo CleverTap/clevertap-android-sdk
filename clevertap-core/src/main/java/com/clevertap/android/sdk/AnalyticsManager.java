@@ -715,16 +715,21 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private void renderTrustedPushPreview(final Bundle extras) {
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("renderTrustedPushPreview", () -> {
-            Bundle trusted = pushPreviewStore.find(extras);
-            if (trusted == null) {
-                return null; // the store already logged why
-            }
-            if (trusted.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)) {
-                inAppPreviewHandler.handleInAppPreview(trusted);
-            } else if (trusted.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-                handleInboxPreview(trusted);
-            } else if (trusted.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-                handleSendTestForDisplayUnits(trusted);
+            try {
+                Bundle trusted = pushPreviewStore.find(extras);
+                if (trusted == null) {
+                    return null; // the store already logged why
+                }
+                if (trusted.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)) {
+                    inAppPreviewHandler.handleInAppPreview(trusted);
+                } else if (trusted.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
+                    handleInboxPreview(trusted);
+                } else if (trusted.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
+                    handleSendTestForDisplayUnits(trusted);
+                }
+            } catch (Throwable t) {
+                // The extras may come from anywhere. Whatever they contain, a tap must never crash the app.
+                config.getLogger().verbose(config.getAccountId(), "Failed to process push preview", t);
             }
             return null;
         });

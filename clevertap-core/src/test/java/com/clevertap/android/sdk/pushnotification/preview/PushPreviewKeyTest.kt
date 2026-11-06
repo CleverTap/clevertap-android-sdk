@@ -144,4 +144,45 @@ class PushPreviewKeyTest : BaseTestCase() {
         assertNull(CanonicalJson.of("{broken"))
         assertNull(CanonicalJson.of(""))
     }
+
+    // An attacker's intent can carry anything. Hostile JSON must be refused before parsing,
+    // because org.json recurses and a StackOverflowError would crash the app.
+
+    @Test
+    fun `canonical json refuses deeply nested arrays without touching the parser`() {
+        val hostile = "[".repeat(20_000) + "]".repeat(20_000)
+
+        assertNull(CanonicalJson.of(hostile))
+    }
+
+    @Test
+    fun `canonical json refuses deeply nested objects`() {
+        val hostile = """{"a":""".repeat(5_000) + "1" + "}".repeat(5_000)
+
+        assertNull(CanonicalJson.of(hostile))
+    }
+
+    @Test
+    fun `canonical json refuses oversized input`() {
+        val hostile = """{"a":"${"x".repeat(70_000)}"}"""
+
+        assertNull(CanonicalJson.of(hostile))
+    }
+
+    @Test
+    fun `brackets inside strings do not count as nesting`() {
+        val text = """{"a":"${"[".repeat(500)}","b":"\"[{"}"""
+
+        assertEquals("""{"a":"${"[".repeat(500)}","b":"\"[{"}""", CanonicalJson.of(text))
+    }
+
+    @Test
+    fun `key for hostile input is still computed from the raw string without crashing`() {
+        val hostile = "[".repeat(20_000) + "]".repeat(20_000)
+
+        val key = PushPreviewKey.of(inApp(hostile))
+
+        assertEquals(64, key.length)
+        assertEquals(key, PushPreviewKey.of(inApp(hostile)))
+    }
 }
