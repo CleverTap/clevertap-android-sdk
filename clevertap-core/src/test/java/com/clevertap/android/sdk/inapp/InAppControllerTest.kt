@@ -941,7 +941,8 @@ class InAppControllerTest {
             false
         }
 
-        // Same rule as showInApp: a push permission in-app is not shown once permission is granted.
+        // Same rule as showInApp: a push permission in-app is not shown once permission is granted,
+        // and the app's push permission listeners get the result.
         assertNull(result)
         assertNull(InAppController.currentlyDisplayingInApp)
         verify(exactly = 1) { mockStore.remove("push_primer") }
@@ -955,6 +956,7 @@ class InAppControllerTest {
     // A store that has only [savedInApp], saved under the id of its in-app.
     private fun displayedInAppStore(savedInApp: JSONObject? = null): DisplayedInAppStore {
         val store = mockk<DisplayedInAppStore>(relaxed = true)
+        verify(exactly = 1) { mockInAppActionHandler.notifyPushPermissionListeners() }
         every { store.get(any()) } returns null
         if (savedInApp != null) {
             val inAppId = savedInApp.getJSONObject("inApp").getString(Constants.NOTIFICATION_ID_TAG)
