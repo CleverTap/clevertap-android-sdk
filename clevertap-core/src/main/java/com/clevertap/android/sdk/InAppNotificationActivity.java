@@ -46,7 +46,8 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
-        DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback, InAppDisplayListener {
+        DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback, InAppDisplayListener,
+        InAppController.RestoredInAppListener {
 
     private final static String INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT = "displayPushPermissionPrompt";
     private final static String INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS = "shouldShowFallbackSettings";
@@ -251,11 +252,16 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
         Logger.v("In-app " + inAppId + " is not in memory, restoring it from storage");
         restoreTimeoutHandler.postDelayed(this::onRestoreTimeout, RESTORE_TIMEOUT_MS);
-        cleverTapAPI.getCoreState().getInAppController().restoreDisplayedInApp(inAppId, this::onRestoreResult);
+        cleverTapAPI.getCoreState().getInAppController().restoreDisplayedInApp(inAppId, this);
         return true;
     }
 
-    private boolean onRestoreResult(@Nullable CTInAppNotification restoredInApp) {
+    /**
+     * Result of {@link InAppController#restoreDisplayedInApp}. The activity is the listener itself,
+     * so the controller can hold it weakly.
+     */
+    @Override
+    public boolean onRestoreResult(@Nullable CTInAppNotification restoredInApp) {
         if (restoreFinished || isFinishing() || isDestroyed()) {
             return false;
         }

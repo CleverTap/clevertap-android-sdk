@@ -1021,6 +1021,9 @@ internal class InAppController(
      */
     @MainThread
     fun restoreDisplayedInApp(inAppId: String, listener: RestoredInAppListener) {
+        // The listener is the In-App screen. It is held weakly, so a screen that is closed before
+        // the result comes back (timeout, or the inflate never calls back) is not kept alive.
+        val listenerRef = WeakReference(listener)
         // On the in-app thread, like save and the delete on dismiss, so the saved in-app is read,
         // saved and deleted in order.
         val task = executors.postAsyncSafelyTask<Unit>(Constants.TAG_FEATURE_IN_APPS)
@@ -1028,7 +1031,7 @@ internal class InAppController(
             val inAppJson = readDisplayedInAppForRestore(inAppId)
             if (inAppJson == null) {
                 executors.mainTask<Unit>().execute("InAppController#restoreDisplayedInApp") {
-                    listener.onRestoreResult(null)
+                    listenerRef.get()?.onRestoreResult(null)
                 }
                 return@execute
             }
@@ -1037,7 +1040,12 @@ internal class InAppController(
                     if (restoreReadyListener === this) {
                         restoreReadyListener = null
                     }
-                    onRestoredInAppReady(notification, listener)
+                    val screen = listenerRef.get()
+                    if (screen == null) {
+                        logger.verbose(defaultLogTag, "Not restoring in-app $inAppId: the in-app screen is gone")
+                        return
+                    }
+                    onRestoredInAppReady(notification, screen)
                 }
             }
             restoreReadyListener = readyListener
