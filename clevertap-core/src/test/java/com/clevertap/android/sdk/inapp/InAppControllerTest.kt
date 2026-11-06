@@ -624,7 +624,8 @@ class InAppControllerTest {
         inAppController.inAppNotificationDidShow(restored!!, null)
         verify(exactly = 0) { mockInAppFCManager.didShow(any(), any()) }
         verify(exactly = 0) { mockAnalyticsManager.pushInAppNotificationStateEvent(any(), any(), any()) }
-        verify(exactly = 0) { mockInAppListener.onShow(any()) }
+        // The app still gets onShow, so onShow and onDismissed stay paired in the new process.
+        verify(exactly = 1) { mockInAppListener.onShow(restored!!) }
     }
 
     @Test

@@ -554,17 +554,21 @@ internal class InAppController(
         formData: Bundle?
     ) {
         if (inAppNotification.isRestored) {
-            // Counted, tracked and reported to the listener when it was first shown.
+            // Counted and tracked when it was first shown. The app still gets onShow, so its
+            // onShow/onDismissed callbacks stay paired in the new process.
             logger.verbose(
                 defaultLogTag,
                 "In-app ${inAppNotification.campaignId} restored after process kill, not counting it again"
             )
+            notifyOnShow(inAppNotification)
             return
         }
         controllerManager.inAppFCManager?.didShow(context, inAppNotification)
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData)
+        notifyOnShow(inAppNotification)
+    }
 
-        //Fire onShow() callback when InApp is shown.
+    private fun notifyOnShow(inAppNotification: CTInAppNotification) {
         try {
             callbackManager.getInAppNotificationListener()?.onShow(inAppNotification)
         } catch (t: Throwable) {
