@@ -129,6 +129,19 @@ internal class InAppController(
         internal var currentlyDisplayingInApp: CTInAppNotification? = null
             private set
 
+        /**
+         * Returns the in-app on screen when its campaign id matches [inAppId], else null.
+         *
+         * In-app screens and fragments receive only this id instead of the whole
+         * [CTInAppNotification], so large HTML is never sent through Binder
+         * (TransactionTooLargeException, SDK-6299). It is null after the app process was killed.
+         */
+        @JvmStatic
+        fun getDisplayingInApp(inAppId: String?): CTInAppNotification? {
+            if (inAppId == null) return null
+            return currentlyDisplayingInApp?.takeIf { it.campaignId == inAppId }
+        }
+
         @VisibleForTesting
         internal fun clearCurrentlyDisplayingInApp() {
             currentlyDisplayingInApp = null

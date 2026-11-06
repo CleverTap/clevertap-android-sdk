@@ -139,6 +139,7 @@ public interface Constants {
     String INAPP_MAX_PER_DAY_KEY = "imp";
     String INAPP_WINDOW = "w";
     String INAPP_KEY = "inApp";
+    String INAPP_ID_KEY = "inAppId";
     String INAPP_WZRK_PIVOT = "wzrk_pivot";
     String INAPP_WZRK_CGID = "wzrk_cgId";
     int INAPP_CLOSE_IV_WIDTH = 40;

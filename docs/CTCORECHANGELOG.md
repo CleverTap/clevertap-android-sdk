@@ -1,4 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.5.1 (Unreleased)
+
+#### Bug Fixes
+* **Crash With Very Large Custom HTML In-Apps:** Fixes an app crash (`TransactionTooLargeException`)
+  when a full-screen custom HTML In-App with a very large HTML payload is shown. Regular In-Apps were
+  not affected. The In-App screen now receives only the In-App id and reads the In-App from memory,
+  instead of receiving the whole In-App through the Intent.
+
 ### Version 8.5.0 (October 15, 2026)
 
 #### New Features

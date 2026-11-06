@@ -37,6 +37,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppActionType;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.InAppListener;
 
 import java.lang.ref.WeakReference;
@@ -81,13 +82,25 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             CTInAppNotification inAppNotification,
             CleverTapInstanceConfig config) {
         Intent intent = new Intent(context, InAppNotificationActivity.class);
-        intent.putExtra(Constants.INAPP_KEY, inAppNotification);
+        // Only the id is sent; the in-app is read from InAppController. Sending the whole object
+        // can exceed the Binder limit for large HTML (TransactionTooLargeException, SDK-6299).
+        intent.putExtra(Constants.INAPP_ID_KEY, inAppNotification.getCampaignId());
         intent.putExtra(INTENT_EXTRA_CT_CONFIG, config);
+        config.getLogger().verbose(config.getAccountId(),
+                "Launching InAppNotificationActivity with in-app id: " + inAppNotification.getCampaignId());
         context.startActivity(intent);
     }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (isInAppMissing()) {
+            // The in-app is no longer in memory, e.g. Android recreated this activity after the app
+            // process was killed. Close right away; a restored in-app fragment removes itself.
+            Logger.v("In-app " + getIntent().getStringExtra(Constants.INAPP_ID_KEY)
+                    + " is no longer available, closing InAppNotificationActivity");
+            finish();
+            return;
+        }
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -138,13 +151,19 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             setListener(ctState.getInAppController());
             ctState.getInAppController().registerInAppDisplayListener(this);
 
-            inAppNotification = intentExtras.getParcelable(Constants.INAPP_KEY);
+            String inAppId = intentExtras.getString(Constants.INAPP_ID_KEY);
+            inAppNotification = InAppController.getDisplayingInApp(inAppId);
+            if (inAppNotification == null) {
+                // Not in memory (e.g. the app process was killed): close without tracking.
+                config.getLogger().verbose(config.getAccountId(),
+                        "In-app " + inAppId + " is no longer available, closing InAppNotificationActivity");
+                finish();
+                return;
+            }
+            config.getLogger().verbose(config.getAccountId(),
+                    "InAppNotificationActivity loaded in-app " + inAppId + " from memory");
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
-            finish();
-            return;
-        }
-        if (inAppNotification == null) {
             finish();
             return;
         }
@@ -396,6 +415,18 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private String getFragmentTag() {
         return config.getAccountId() + ":CT_INAPP_CONTENT_FRAGMENT";
+    }
+
+    /**
+     * True when this activity was opened for an in-app that is no longer in memory, which happens
+     * when Android recreates it after the app process was killed.
+     */
+    private boolean isInAppMissing() {
+        Bundle extras = getIntent().getExtras();
+        if (extras == null || !extras.containsKey(Constants.INAPP_ID_KEY)) {
+            return false;
+        }
+        return InAppController.getDisplayingInApp(extras.getString(Constants.INAPP_ID_KEY)) == null;
     }
 
     private void showAlertDialogForInApp() {
