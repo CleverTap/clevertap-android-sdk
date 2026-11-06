@@ -326,7 +326,9 @@ class PushProviders internal constructor(
      */
     fun processCustomPushNotification(extras: Bundle) {
         // SDK-6282: trusted sighting for Push Amplification pushes handled by the app.
-        pushPreviewStore.remember(extras)
+        if (!config.isAnalyticsOnly) {
+            pushPreviewStore.remember(extras)
+        }
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
         task.execute("customHandlePushAmplification") {
             val notifMessage = extras.getString(Constants.NOTIF_MSG) ?: ""

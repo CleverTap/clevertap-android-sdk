@@ -778,7 +778,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         // SDK-6282: custom renderers call this after showing the notification. It is the
         // trusted sighting for apps that do not use the SDK's rendering. Must run before the
         // wzrk_id and dedupe checks below, because every Send Test carries wzrk_id "0_0".
-        pushPreviewStore.remember(extras);
+        // An analytics-only instance never renders a preview, so it has nothing to remember.
+        if (!config.isAnalyticsOnly()) {
+            pushPreviewStore.remember(extras);
+        }
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG)
                 || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
