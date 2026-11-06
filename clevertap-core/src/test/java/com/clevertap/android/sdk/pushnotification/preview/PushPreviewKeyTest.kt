@@ -145,14 +145,67 @@ class PushPreviewKeyTest : BaseTestCase() {
         assertNull(CanonicalJson.of(""))
     }
 
-    // An attacker's intent can carry anything. Hostile JSON must be refused before parsing,
-    // because org.json recurses and a StackOverflowError would crash the app.
+    // An attacker's intent can carry anything. The reader carries the depth into every
+    // nested call and refuses at the limit, so no input can make it recurse deeper.
 
     @Test
-    fun `canonical json refuses deeply nested arrays without touching the parser`() {
+    fun `canonical json refuses deeply nested arrays`() {
         val hostile = "[".repeat(20_000) + "]".repeat(20_000)
 
         assertNull(CanonicalJson.of(hostile))
+    }
+
+    @Test
+    fun `canonical json accepts the maximum depth and refuses one level more`() {
+        val atLimit = "[".repeat(32) + "]".repeat(32)
+        val overLimit = "[".repeat(33) + "]".repeat(33)
+
+        assertEquals(atLimit, CanonicalJson.of(atLimit))
+        assertNull(CanonicalJson.of(overLimit))
+    }
+
+    // org.json would accept these; the reader must not, because a pre-scan written for
+    // standard JSON cannot predict them (the review finding on PR #1123).
+
+    @Test
+    fun `single-quoted string followed by deep nesting is refused at the quote`() {
+        val hostile = "['\"'," + "[".repeat(20_000) + "]".repeat(20_000) + "]"
+
+        assertNull(CanonicalJson.of(hostile))
+    }
+
+    @Test
+    fun `comment followed by deep nesting is refused at the comment`() {
+        val hostile = "/* \" */" + "[".repeat(20_000) + "]".repeat(20_000)
+
+        assertNull(CanonicalJson.of(hostile))
+        assertNull(CanonicalJson.of("[1, // \"\n" + "[".repeat(20_000) + "]".repeat(20_000) + "]"))
+        assertNull(CanonicalJson.of("[1, # \"\n" + "[".repeat(20_000) + "]".repeat(20_000) + "]"))
+    }
+
+    @Test
+    fun `non standard json that org_json tolerates is refused`() {
+        assertNull(CanonicalJson.of("""{a:1}"""))                        // unquoted key
+        assertNull(CanonicalJson.of("""{"a":hello}"""))                  // unquoted value
+        assertNull(CanonicalJson.of("""{'a':1}"""))                      // single quotes
+        assertNull(CanonicalJson.of("""[1,]"""))                         // trailing comma
+        assertNull(CanonicalJson.of("""[01]"""))                         // leading zero
+        assertNull(CanonicalJson.of("""{"a":1}garbage"""))               // trailing text
+        assertNull(CanonicalJson.of("""{"a":"x\"""))                     // lone trailing backslash
+        assertNull(CanonicalJson.of("""{"a":"tab${'\t'}here"}"""))       // raw control character
+        assertNull(CanonicalJson.of("""{"a":"\q"}"""))                   // unknown escape
+        assertNull(CanonicalJson.of("""{"a":"\u12"}"""))                 // short unicode escape
+        assertNull(CanonicalJson.of("""42"""))                           // top level scalar
+    }
+
+    @Test
+    fun `standard json features round trip`() {
+        assertEquals("""{"a":{},"b":[]}""", CanonicalJson.of("""{ "b": [], "a": {} }"""))
+        assertEquals("""{"k":"A"}""", CanonicalJson.of("""{"k":"A"}"""))
+        assertEquals("""{"k":"a/b"}""", CanonicalJson.of("""{"k":"a\/b"}"""))
+        assertEquals("""{"k":2}""", CanonicalJson.of("""{"k":1,"k":2}"""))
+        assertEquals("""[true,false,null,-5,0.25]""", CanonicalJson.of("[ true , false , null , -5 , 0.25 ]"))
+        assertEquals("""{"k":"\u0001"}""", CanonicalJson.of("""{"k":"\u0001"}"""))
     }
 
     @Test
