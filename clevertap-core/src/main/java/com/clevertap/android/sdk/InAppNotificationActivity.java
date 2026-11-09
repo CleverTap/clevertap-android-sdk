@@ -251,6 +251,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             return false;
         }
         Logger.v("In-app " + inAppId + " is not in memory, restoring it from storage");
+        // This window is transparent and has no content yet, but it still covers the app and would
+        // take every tap. Let taps through to the app until the in-app is ready.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         restoreTimeoutHandler.postDelayed(this::onRestoreTimeout, RESTORE_TIMEOUT_MS);
         cleverTapAPI.getCoreState().getInAppController().restoreDisplayedInApp(inAppId, this);
         return true;
@@ -275,6 +278,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
         // The restored in-app is now the one on screen, so setUp finds it in memory. Pass no saved
         // state so a new fragment is added; the one Android restored removed itself.
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         setUp(null);
         // setUp closes the activity in some cases (e.g. a portrait-only in-app in landscape). When it
         // did so through didDismiss, the controller already frees the in-app slot on that path, so

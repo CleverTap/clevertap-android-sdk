@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.fragment.app.FragmentActivity
 import androidx.test.core.app.ApplicationProvider
 import com.clevertap.android.sdk.inapp.CTInAppNotification
@@ -179,6 +180,36 @@ class InAppNotificationActivityTest {
         assertTrue(shown)
         assertFalse(recreated.isFinishing)
         assertEquals(1, recreated.supportFragmentManager.fragments.count { it is CTInAppHtmlInterstitialFragment })
+    }
+
+    @Test
+    fun `taps go through the screen while the in-app is restored and not once it is shown`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        val listener = slot<InAppController.RestoredInAppListener>()
+        every { mockInAppController.restoreDisplayedInApp(any(), capture(listener)) } just runs
+        val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .create().start().resume().get()
+
+        // Nothing is on the screen yet, so it must not take the user's taps.
+        assertTrue(activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE != 0)
+
+        val restored = CTInAppNotification(JSONObject(htmlInApp), true).apply { isRestored = true }
+        every { InAppController.getDisplayingInApp("1120_test") } returns restored
+        assertTrue(listener.captured.onRestoreResult(restored))
+
+        // The in-app is on the screen, so it takes the taps again.
+        assertTrue(activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE == 0)
+    }
+
+    @Test
+    fun `screen shown from memory takes taps as before`() {
+        val inApp = CTInAppNotification(JSONObject(htmlInApp), true)
+        every { InAppController.getDisplayingInApp("1120_test") } returns inApp
+
+        val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .setup().get()
+
+        assertTrue(activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE == 0)
     }
 
     @Test
