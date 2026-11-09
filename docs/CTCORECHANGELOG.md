@@ -9,6 +9,10 @@
 * **Full-Screen In-App After The App Is Killed:** If Android kills the app while a full-screen In-App
   is on screen, the In-App is shown again when the user returns, as long as its time to live has not
   passed. It is not counted again (no second `Notification Viewed`).
+* **Send Test Previews Render Only From A Trusted Copy:** Send Test previews (In-App, App Inbox,
+  Display Unit) are now shown only when the push actually reached the SDK; previews from any other
+  launch Intent are ignored. Apps that render push themselves must keep calling
+  `pushNotificationViewedEvent(extras)` after showing the notification, as already documented.
 
 ### Version 8.5.0 (October 15, 2026)
 
