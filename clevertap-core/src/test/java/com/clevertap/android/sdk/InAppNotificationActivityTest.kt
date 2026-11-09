@@ -289,6 +289,20 @@ class InAppNotificationActivityTest {
     }
 
     @Test
+    fun `activity closes without crashing when the SDK cannot be created for the restore`() {
+        every { InAppController.getDisplayingInApp(any()) } returns null
+        // After a process kill this call creates the SDK; a start-up error must not crash the screen.
+        every { CleverTapAPI.instanceWithConfig(any(), any()) } throws RuntimeException("start-up failed")
+
+        val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
+            .create().get()
+
+        assertTrue(activity.isFinishing)
+        assertTrue(activity.supportFragmentManager.fragments.isEmpty())
+        verify(exactly = 0) { mockInAppController.restoreDisplayedInApp(any(), any()) }
+    }
+
+    @Test
     fun `restore is not started and the activity closes when the intent has no config`() {
         every { InAppController.getDisplayingInApp(any()) } returns null
         val intent = Intent(context, InAppNotificationActivity::class.java)

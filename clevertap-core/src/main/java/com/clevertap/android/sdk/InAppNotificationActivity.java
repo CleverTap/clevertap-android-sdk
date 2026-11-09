@@ -237,26 +237,33 @@ public final class InAppNotificationActivity extends FragmentActivity implements
      * @return false when it cannot start, so the activity should close.
      */
     private boolean restoreInApp() {
-        Bundle extras = getIntent().getExtras();
-        if (extras == null) {
+        // After a process kill this is often the call that creates the SDK instance for the new
+        // process. As in setUp, any error closes the screen instead of crashing the app.
+        try {
+            Bundle extras = getIntent().getExtras();
+            if (extras == null) {
+                return false;
+            }
+            String inAppId = extras.getString(Constants.INAPP_ID_KEY);
+            CleverTapInstanceConfig restoreConfig = extras.getParcelable(INTENT_EXTRA_CT_CONFIG);
+            if (inAppId == null || restoreConfig == null) {
+                return false;
+            }
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, restoreConfig);
+            if (cleverTapAPI == null) {
+                return false;
+            }
+            Logger.v("In-app " + inAppId + " is not in memory, restoring it from storage");
+            // This window is transparent and has no content yet, but it still covers the app and
+            // would take every tap. Let taps through to the app until the in-app is ready.
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            restoreTimeoutHandler.postDelayed(this::onRestoreTimeout, RESTORE_TIMEOUT_MS);
+            cleverTapAPI.getCoreState().getInAppController().restoreDisplayedInApp(inAppId, this);
+            return true;
+        } catch (Throwable t) {
+            Logger.v("Could not start restoring the in-app, closing InAppNotificationActivity", t);
             return false;
         }
-        String inAppId = extras.getString(Constants.INAPP_ID_KEY);
-        CleverTapInstanceConfig restoreConfig = extras.getParcelable(INTENT_EXTRA_CT_CONFIG);
-        if (inAppId == null || restoreConfig == null) {
-            return false;
-        }
-        CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, restoreConfig);
-        if (cleverTapAPI == null) {
-            return false;
-        }
-        Logger.v("In-app " + inAppId + " is not in memory, restoring it from storage");
-        // This window is transparent and has no content yet, but it still covers the app and would
-        // take every tap. Let taps through to the app until the in-app is ready.
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-        restoreTimeoutHandler.postDelayed(this::onRestoreTimeout, RESTORE_TIMEOUT_MS);
-        cleverTapAPI.getCoreState().getInAppController().restoreDisplayedInApp(inAppId, this);
-        return true;
     }
 
     /**
