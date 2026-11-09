@@ -155,6 +155,10 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
                 "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
                 arrayOf(Table.DISPLAYED_INAPP.tableName)
             ).use { assertTrue(it.moveToFirst(), "displayed in-app table should exist after V8 migration") }
+            assertEquals(
+                listOf(Column.INAPP_ID, Column.DATA, Column.TTL, Column.CREATED_AT),
+                columnNames(upgraded, Table.DISPLAYED_INAPP.tableName)
+            )
             upgraded.rawQuery("SELECT count(*) FROM ${Table.EVENTS.tableName};", null).use {
                 assertTrue(it.moveToFirst())
                 assertEquals(1, it.getInt(0))
@@ -172,6 +176,16 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
                 "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
                 arrayOf(Table.DISPLAYED_INAPP.tableName)
             ).use { assertTrue(it.moveToFirst(), "displayed in-app table must exist on fresh install") }
+            assertEquals(
+                listOf(Column.INAPP_ID, Column.DATA, Column.TTL, Column.CREATED_AT),
+                columnNames(db, Table.DISPLAYED_INAPP.tableName)
+            )
         }
     }
+
+    private fun columnNames(db: SQLiteDatabase, table: String): List<String> =
+        db.rawQuery("PRAGMA table_info($table);", null).use { cursor ->
+            generateSequence { if (cursor.moveToNext()) cursor.getString(cursor.getColumnIndexOrThrow("name")) else null }
+                .toList()
+        }
 }

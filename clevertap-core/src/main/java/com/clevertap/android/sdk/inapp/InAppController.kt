@@ -139,11 +139,6 @@ internal class InAppController(
         // earlier would reset to passthrough and let a late /content show a second app-launch in-app.
         private const val APP_LAUNCH_ARBITRATION_MAX_LIFETIME_MS = 25_000L
 
-        // The saved in-app is kept as {"inApp": <in-app JSON as received>, "ttl": <time to live>}, so
-        // the in-app JSON, and the wzrk_ fields its events copy from it, stay unchanged.
-        private const val DISPLAYED_INAPP_JSON = "inApp"
-        private const val DISPLAYED_INAPP_TTL = "ttl"
-
         private val pendingNotifications =
             Collections.synchronizedList(ArrayList<CTInAppNotification>())
 
@@ -1061,8 +1056,6 @@ internal class InAppController(
     private fun readDisplayedInAppForRestore(inAppId: String): JSONObject? {
         val store = displayedInAppStoreProvider()
         val displayedInApp = store?.get(inAppId)
-        val inAppJson = displayedInApp?.optJSONObject(DISPLAYED_INAPP_JSON)
-        val timeToLive = displayedInApp?.optLong(DISPLAYED_INAPP_TTL) ?: 0L
         val nowSeconds = TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis())
         return when {
             store == null -> {
@@ -1070,7 +1063,7 @@ internal class InAppController(
                 null
             }
 
-            inAppJson == null -> {
+            displayedInApp == null -> {
                 // Not stored, or the row could not be read. The store removes a row it cannot
                 // decrypt or parse; a row that failed to read for another reason is kept.
                 logger.verbose(defaultLogTag, "Cannot restore in-app $inAppId: it is not stored or cannot be read")
@@ -1078,13 +1071,13 @@ internal class InAppController(
             }
 
             // Same time to live check as showInApp.
-            nowSeconds > timeToLive -> {
+            nowSeconds > displayedInApp.timeToLive -> {
                 logger.verbose(defaultLogTag, "Not restoring in-app $inAppId: it has elapsed its time to live")
                 removeSavedDisplayedInAppNow(inAppId)
                 null
             }
 
-            else -> inAppJson
+            else -> displayedInApp.inApp
         }
     }
 
@@ -1147,7 +1140,7 @@ internal class InAppController(
     /**
      * Keeps the full-screen In-App on screen in the database, so [restoreDisplayedInApp] can show it
      * again after the app process is killed. Only one In-App is kept. Its time to live is stored
-     * beside the In-App JSON: parsing the JSON again could give it a new default one.
+     * in its own column: parsing the JSON again could give it a new default one.
      *
      * Runs on the in-app thread, like dismiss, so a save and the delete on dismiss run in order.
      */
@@ -1162,10 +1155,7 @@ internal class InAppController(
                 return@execute // the In-App screen finds in-apps by id, so this one cannot be restored
             }
             val store = displayedInAppStoreProvider() ?: return@execute
-            val displayedInApp = JSONObject()
-                .put(DISPLAYED_INAPP_JSON, inAppNotification.jsonDescription)
-                .put(DISPLAYED_INAPP_TTL, inAppNotification.timeToLive)
-            val saved = store.save(inAppId, displayedInApp)
+            val saved = store.save(inAppId, inAppNotification.jsonDescription, inAppNotification.timeToLive)
             logger.verbose(
                 defaultLogTag,
                 "Saved in-app $inAppId to show it again after a process kill: $saved"

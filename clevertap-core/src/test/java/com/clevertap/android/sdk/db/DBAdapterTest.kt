@@ -320,10 +320,11 @@ class DBAdapterTest : BaseTestCase() {
         val dao2 = dbAdapter.displayedInAppDAO()
 
         assertSame(dao1, dao2)
-        assertNotSame(dbAdapter.delayedLegacyInAppDAO(), dao1)
+        assertNotSame<Any>(dbAdapter.delayedLegacyInAppDAO(), dao1)
         // Writes go to the displayed in-app table only.
-        dao1.insertBatch(listOf(DelayedLegacyInAppData("displayed_1", 0, "data")))
-        assertEquals("data", dao1.fetchSingleInApp("displayed_1"))
+        val displayed = DisplayedInAppData("displayed_1", "data", 100L)
+        dao1.save(displayed)
+        assertEquals(displayed, dao1.fetch("displayed_1"))
         assertNull(dbAdapter.delayedLegacyInAppDAO().fetchSingleInApp("displayed_1"))
     }
 

@@ -541,12 +541,13 @@ class DBManagerTest : BaseTestCase() {
     @Test
     fun `loadDBAdapter clears delayed in-apps but keeps the displayed in-app for restore`() {
         dbAdapter.delayedLegacyInAppDAO().insertBatch(listOf(DelayedLegacyInAppData("delayed_1", 5, "delayed")))
-        dbAdapter.displayedInAppDAO().insertBatch(listOf(DelayedLegacyInAppData("displayed_1", 0, "displayed")))
+        val displayed = DisplayedInAppData("displayed_1", "displayed", 100L)
+        dbAdapter.displayedInAppDAO().save(displayed)
 
         // The first load in a new process cleans up tables.
         val loaded = dbManager.loadDBAdapter(appCtx)
 
         assertNull(loaded.delayedLegacyInAppDAO().fetchSingleInApp("delayed_1"))
-        assertEquals("displayed", loaded.displayedInAppDAO().fetchSingleInApp("displayed_1"))
+        assertEquals(displayed, loaded.displayedInAppDAO().fetch("displayed_1"))
     }
 }

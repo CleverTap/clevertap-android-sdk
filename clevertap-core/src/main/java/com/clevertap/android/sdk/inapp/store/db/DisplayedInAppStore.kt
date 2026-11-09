@@ -3,16 +3,25 @@ package com.clevertap.android.sdk.inapp.store.db
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.db.DelayedLegacyInAppDAO
-import com.clevertap.android.sdk.db.DelayedLegacyInAppData
+import com.clevertap.android.sdk.db.DisplayedInAppDAO
+import com.clevertap.android.sdk.db.DisplayedInAppData
 import org.json.JSONException
 import org.json.JSONObject
 
 /**
+ * The saved full-screen In-App, read back from the database.
+ *
+ * @property inApp The In-App JSON as it was received.
+ * @property timeToLive The In-App's time to live, in seconds since the epoch.
+ */
+internal data class DisplayedInApp(
+    val inApp: JSONObject,
+    val timeToLive: Long
+)
+
+/**
  * Keeps the full-screen In-App that is on screen in the database, encrypted, so it can be shown
  * again after the app process is killed. Only one In-App is kept: [save] replaces the old one.
- *
- * Uses the same DAO and table columns as the delayed In-Apps, on its own table.
  *
  * @property dao The DAO for the displayed In-App table.
  * @property cryptHandler Encrypts and decrypts the saved In-App.
@@ -20,46 +29,46 @@ import org.json.JSONObject
  * @property accountId The account ID for logging context.
  */
 internal class DisplayedInAppStore(
-    private val dao: DelayedLegacyInAppDAO,
+    private val dao: DisplayedInAppDAO,
     private val cryptHandler: CryptHandler,
     private val logger: ILogger,
     private val accountId: String
 ) {
 
     /**
-     * Saves [data] for [inAppId] and removes any other saved In-App.
+     * Saves [inApp] with its [timeToLive] for [inAppId] and removes any other saved In-App.
      *
      * @return true if it was saved.
      */
     @WorkerThread
-    fun save(inAppId: String, data: JSONObject): Boolean {
-        val encryptedData = cryptHandler.encrypt(data.toString())
+    fun save(inAppId: String, inApp: JSONObject, timeToLive: Long): Boolean {
+        val encryptedData = cryptHandler.encrypt(inApp.toString())
         if (encryptedData == null) {
             logger.verbose(accountId, "Failed to encrypt displayed in-app: $inAppId")
             return false
         }
-        dao.clearAll()
-        return dao.insertBatch(listOf(DelayedLegacyInAppData(inAppId = inAppId, delay = 0, inAppData = encryptedData)))
+        return dao.save(DisplayedInAppData(inAppId = inAppId, inAppData = encryptedData, timeToLive = timeToLive))
     }
 
     /**
-     * @return the data saved for [inAppId], or null if nothing is saved or it cannot be read.
+     * @return the In-App saved for [inAppId], or null if nothing is saved or it cannot be read.
      * A row that is read but cannot be decrypted or parsed is removed, as it can never be used.
      */
     @WorkerThread
-    fun get(inAppId: String): JSONObject? {
-        val encryptedData = dao.fetchSingleInApp(inAppId) ?: return null
-        val data = try {
-            cryptHandler.decrypt(encryptedData)?.let { JSONObject(it) }
+    fun get(inAppId: String): DisplayedInApp? {
+        val saved = dao.fetch(inAppId) ?: return null
+        val inApp = try {
+            cryptHandler.decrypt(saved.inAppData)?.let { JSONObject(it) }
         } catch (e: JSONException) {
             logger.verbose(accountId, "Error parsing displayed in-app: $inAppId", e)
             null
         }
-        if (data == null) {
+        if (inApp == null) {
             logger.verbose(accountId, "Removing displayed in-app $inAppId: it cannot be decrypted or parsed")
             dao.remove(inAppId)
+            return null
         }
-        return data
+        return DisplayedInApp(inApp, saved.timeToLive)
     }
 
     /**

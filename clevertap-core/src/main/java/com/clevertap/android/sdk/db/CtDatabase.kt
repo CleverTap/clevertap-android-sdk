@@ -248,6 +248,7 @@ object Column {
     const val COUNT = "count"
     const val INAPP_ID = "inAppId"
     const val DELAY = "delay"
+    const val TTL = "ttl"
     const val SOURCE = "source"
     const val INDEX_STATE = "index_state"
 }
@@ -281,12 +282,11 @@ private val CREATE_DELAYED_LEGACY_INAPPS_TABLE = """
     );
 """
 
-// Same columns as the delayed in-apps table, so DelayedLegacyInAppDAOImpl can be used for it.
 private val CREATE_DISPLAYED_INAPP_TABLE = """
     CREATE TABLE ${Table.DISPLAYED_INAPP.tableName} (
         ${Column.INAPP_ID} STRING PRIMARY KEY,
-        ${Column.DELAY} INTEGER NOT NULL,
         ${Column.DATA} TEXT NOT NULL,
+        ${Column.TTL} INTEGER NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL
     );
 """

@@ -57,7 +57,7 @@ internal class DBAdapter constructor(
     @Volatile
     private var delayedLegacyInAppDao: DelayedLegacyInAppDAO? = null
     @Volatile
-    private var displayedInAppDao: DelayedLegacyInAppDAO? = null
+    private var displayedInAppDao: DisplayedInAppDAO? = null
 
     // =====================================================
     // EVENT-RELATED OPERATIONS
@@ -328,11 +328,9 @@ internal class DBAdapter constructor(
     }
 
     @WorkerThread
-    fun displayedInAppDAO(): DelayedLegacyInAppDAO {
+    fun displayedInAppDAO(): DisplayedInAppDAO {
         return displayedInAppDao ?: synchronized(this) {
-            displayedInAppDao ?: DelayedLegacyInAppDAOImpl(
-                dbHelper, logger, Table.DISPLAYED_INAPP
-            ).also { displayedInAppDao = it }
+            displayedInAppDao ?: DisplayedInAppDAOImpl(dbHelper, logger).also { displayedInAppDao = it }
         }
     }
 
