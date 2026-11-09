@@ -35,6 +35,7 @@ import com.clevertap.android.sdk.StorageHelper
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.interfaces.AudibleNotification
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.Task
@@ -60,7 +61,8 @@ class PushProviders internal constructor(
     private val validationResultStack: ValidationResultStack,
     private val analyticsManager: AnalyticsManager,
     private val ctWorkManager: CTWorkManager,
-    private val clock: Clock
+    private val clock: Clock,
+    private val pushPreviewStore: PushPreviewStore,
 ) : CTPushProviderListener {
 
     private val allEnabledPushTypes = ArrayList<PushType>()
@@ -103,6 +105,9 @@ class PushProviders internal constructor(
             )
             return
         }
+
+        // SDK-6282: trusted sighting. Covers SDK rendering, Push Templates, HMS and Live Update.
+        pushPreviewStore.remember(extras)
 
         try {
             // May be overridden below for Live Update Mode B so successive updates land in place.
@@ -320,6 +325,10 @@ class PushProviders internal constructor(
      * Notifications from Pull Notifications.
      */
     fun processCustomPushNotification(extras: Bundle) {
+        // SDK-6282: trusted sighting for Push Amplification pushes handled by the app.
+        if (!config.isAnalyticsOnly) {
+            pushPreviewStore.remember(extras)
+        }
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Unit>()
         task.execute("customHandlePushAmplification") {
             val notifMessage = extras.getString(Constants.NOTIF_MSG) ?: ""
@@ -1178,11 +1187,12 @@ class PushProviders internal constructor(
             analyticsManager: AnalyticsManager,
             controllerManager: ControllerManager,
             ctWorkManager: CTWorkManager,
-            clock: Clock
+            clock: Clock,
+            pushPreviewStore: PushPreviewStore,
         ): PushProviders {
             val providers = PushProviders(
                 context, config, baseDatabaseManager, validationResultStack,
-                analyticsManager, ctWorkManager, clock
+                analyticsManager, ctWorkManager, clock, pushPreviewStore
             )
             providers.init()
             controllerManager.pushProviders = providers
