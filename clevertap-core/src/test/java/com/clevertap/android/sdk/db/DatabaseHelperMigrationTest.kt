@@ -108,6 +108,66 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
         }
     }
 
+    /**
+     * Seed a database file at version 7 (core 8.2.0 to 8.5.0). Only the version matters:
+     * the 7 -> 8 step adds one table and touches nothing else.
+     */
+    private fun seedV7Database(): SQLiteDatabase {
+        val path = appCtx.getDatabasePath(dbName)
+        path.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(path, null)
+        db.version = 7
+        return db
+    }
+
+    private fun SQLiteDatabase.hasTable(name: String): Boolean =
+        rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", arrayOf(name))
+            .use { it.moveToFirst() }
+
+    @Test
+    fun `upgrade from v7 creates pushPreviews table`() {
+        seedV7Database().close()
+
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.readableDatabase.use { upgraded ->
+            assertTrue(upgraded.hasTable(Table.PUSH_PREVIEWS.tableName), "pushPreviews must exist after V8 migration")
+            assertEquals(8, upgraded.version)
+        }
+    }
+
+    @Test
+    fun `upgrade from v6 also creates pushPreviews table`() {
+        seedV6Database().close()
+
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.readableDatabase.use { upgraded ->
+            assertTrue(upgraded.hasTable(Table.PUSH_PREVIEWS.tableName), "pushPreviews must exist after V6 -> V8 migration")
+        }
+    }
+
+    @Test
+    fun `fresh install creates pushPreviews with a unique preview key`() {
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.writableDatabase.use { db ->
+            assertTrue(db.hasTable(Table.PUSH_PREVIEWS.tableName))
+            val row = android.content.ContentValues().apply {
+                put(Column.PREVIEW_KEY, "k1")
+                put(Column.DATA, "{}")
+                put(Column.EXPIRES, 1L)
+                put(Column.CREATED_AT, 1L)
+            }
+            assertTrue(db.insertWithOnConflict(Table.PUSH_PREVIEWS.tableName, null, row, SQLiteDatabase.CONFLICT_IGNORE) >= 0)
+            // Second insert with the same key is ignored, proving the UNIQUE constraint is in place.
+            assertEquals(-1L, db.insertWithOnConflict(Table.PUSH_PREVIEWS.tableName, null, row, SQLiteDatabase.CONFLICT_IGNORE))
+        }
+    }
+
     @Test
     fun `fresh install creates inboxMessages with source column already present`() {
         val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")

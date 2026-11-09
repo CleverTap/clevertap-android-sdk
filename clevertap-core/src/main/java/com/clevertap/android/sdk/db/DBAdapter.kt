@@ -51,6 +51,9 @@ internal class DBAdapter constructor(
     private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
     private val inboxPendingActionsDAO: InboxPendingActionsDAO by lazy { InboxPendingActionsDAOImpl(dbHelper, logger, clock) }
+    private val pushPreviewDAO: PushPreviewDAO by lazy {
+        PushPreviewDAOImpl(dbHelper, logger, dbEncryptionHandler, clock)
+    }
 
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
@@ -293,6 +296,19 @@ internal class DBAdapter constructor(
 
     @Synchronized
     fun cleanUpPushNotifications() = pushNotificationDAO.cleanUpPushNotifications()
+
+    // =====================================================
+    // PUSH PREVIEW OPERATIONS (trusted copies of Send Test previews, SDK-6282)
+    // =====================================================
+
+    @WorkerThread
+    @Synchronized
+    fun savePushPreview(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?): Boolean =
+        pushPreviewDAO.save(previewKey, data, expiresAtSeconds, collapseKey)
+
+    @WorkerThread
+    @Synchronized
+    fun findPushPreview(previewKey: String): String? = pushPreviewDAO.find(previewKey)
 
     // =====================================================
     // UNINSTALL TIMESTAMP OPERATIONS
