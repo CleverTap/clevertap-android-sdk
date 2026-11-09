@@ -693,6 +693,32 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `queued restored in-app is shown even when the frequency cap and beforeShow would refuse it`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60, inAppId = "saved_campaign")
+        val mockStore = displayedInAppStore(savedInApp)
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val onScreen = InAppController.currentlyDisplayingInApp!!
+        inAppController.restoreDisplayedInApp("saved_campaign") { false }
+        // The restored in-app was counted before the process kill, so a "show once" cap now says no,
+        // and the app already approved it in beforeShow.
+        every { mockInAppFCManager.canShow(any(), any()) } returns false
+        every { mockInAppListener.beforeShow(any()) } returns false
+
+        inAppController.inAppNotificationDidDismiss(onScreen, null)
+
+        val shownLater = InAppController.currentlyDisplayingInApp
+        assertEquals("saved_campaign", shownLater?.campaignId)
+        assertTrue(shownLater!!.isRestored)
+        // canShow and beforeShow ran once for the first in-app, never for the restored one.
+        verify(exactly = 0) { mockInAppFCManager.canShow(shownLater, any()) }
+        verify(exactly = 1) { mockInAppFCManager.canShow(any(), any()) }
+        verify(exactly = 1) { mockInAppListener.beforeShow(any()) }
+    }
+
+    @Test
     fun `restored in-app that the in-app screen drops frees the in-app slot`() {
         val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60)
         val mockStore = displayedInAppStore(savedInApp)

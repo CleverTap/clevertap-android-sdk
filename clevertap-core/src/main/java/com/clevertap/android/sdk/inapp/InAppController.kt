@@ -1272,6 +1272,12 @@ internal class InAppController(
     }
 
     private fun checkLimitsBeforeShowing(inAppNotification: CTInAppNotification) {
+        if (inAppNotification.isRestored) {
+            // Already shown and counted before the process kill, and queued only because another
+            // in-app was on screen: the frequency caps would reject it a second time.
+            showInApp(inAppNotification)
+            return
+        }
         val task = executors.ioTask<Boolean>()
         task.addOnSuccessListener { canShow ->
             if (canShow) {
@@ -1329,7 +1335,8 @@ internal class InAppController(
 
     @MainThread
     private fun showInApp(inAppNotification: CTInAppNotification) {
-        val goFromListener = checkBeforeShowApprovalBeforeDisplay(inAppNotification)
+        // A restored in-app was already approved by the app before the process kill.
+        val goFromListener = inAppNotification.isRestored || checkBeforeShowApprovalBeforeDisplay(inAppNotification)
         if (!goFromListener) {
             logger.verbose(
                 defaultLogTag,
