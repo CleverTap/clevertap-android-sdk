@@ -54,6 +54,7 @@ class DatabaseHelper internal constructor(
         executeStatement(db, CREATE_DELAYED_LEGACY_INAPPS_TABLE)
         executeStatement(db, CREATE_INBOX_PENDING_DELETES_TABLE)
         executeStatement(db, CREATE_INBOX_PENDING_READS_TABLE)
+        executeStatement(db, CREATE_DISPLAYED_INAPP_TABLE)
         executeStatement(db, CREATE_PUSH_PREVIEWS_TABLE)
         executeStatement(db, EVENTS_TIME_INDEX)
         executeStatement(db, PROFILE_EVENTS_TIME_INDEX)
@@ -109,6 +110,8 @@ class DatabaseHelper internal constructor(
             executeStatement(db, ALTER_INBOX_MESSAGES_ADD_INDEX_STATE)
         }
         if (oldVersion < 8) {
+            // Version 8 (core 8.5.1): the full-screen in-app on screen, see SDK-6301.
+            executeStatement(db, CREATE_DISPLAYED_INAPP_TABLE)
             // Version 8 (core 8.5.1): trusted copies of Send Test previews, see SDK-6282.
             executeStatement(db, CREATE_PUSH_PREVIEWS_TABLE)
         }
@@ -226,6 +229,7 @@ class DatabaseHelper internal constructor(
     DELAYED_LEGACY_INAPPS("delayedLegacyInApps"),
     INBOX_PENDING_DELETES("inbox_pending_deletes"),
     INBOX_PENDING_READS("inbox_pending_reads"),
+    DISPLAYED_INAPP("displayedInApp"),
     PUSH_PREVIEWS("pushPreviews")
 }
 
@@ -249,6 +253,7 @@ object Column {
     const val COUNT = "count"
     const val INAPP_ID = "inAppId"
     const val DELAY = "delay"
+    const val TTL = "ttl"
     const val SOURCE = "source"
     const val INDEX_STATE = "index_state"
     const val PREVIEW_KEY = "previewKey"
@@ -280,6 +285,15 @@ private val CREATE_DELAYED_LEGACY_INAPPS_TABLE = """
         ${Column.INAPP_ID} STRING PRIMARY KEY,
         ${Column.DELAY} INTEGER NOT NULL,
         ${Column.DATA} TEXT NOT NULL,
+        ${Column.CREATED_AT} INTEGER NOT NULL
+    );
+"""
+
+private val CREATE_DISPLAYED_INAPP_TABLE = """
+    CREATE TABLE ${Table.DISPLAYED_INAPP.tableName} (
+        ${Column.INAPP_ID} STRING PRIMARY KEY,
+        ${Column.DATA} TEXT NOT NULL,
+        ${Column.TTL} INTEGER NOT NULL,
         ${Column.CREATED_AT} INTEGER NOT NULL
     );
 """

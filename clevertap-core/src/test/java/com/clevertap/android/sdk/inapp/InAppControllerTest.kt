@@ -30,6 +30,8 @@ import com.clevertap.android.sdk.inapp.pipsdk.PIPMediaType
 import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.sdk.validation.ValidationResultStack
+import com.clevertap.android.sdk.inapp.store.db.DisplayedInApp
+import com.clevertap.android.sdk.inapp.store.db.DisplayedInAppStore
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.toList
 import com.clevertap.android.sdk.utils.FakeClock
@@ -42,6 +44,7 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.json.JSONArray
@@ -52,9 +55,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+
+private const val SAVED_INAPP_ID = "1742963524_20250326"
 
 @RunWith(RobolectricTestRunner::class)
 class InAppControllerTest {
@@ -566,6 +572,431 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `full screen in-app on screen is saved with its time to live`() {
+        val mockStore = displayedInAppStore()
+        val savedId = slot<String>()
+        val savedInApp = slot<JSONObject>()
+        val savedTtl = slot<Long>()
+        every { mockStore.save(capture(savedId), capture(savedInApp), capture(savedTtl)) } returns true
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+
+        val currentInApp = InAppController.currentlyDisplayingInApp!!
+        assertEquals(currentInApp.campaignId, savedId.captured)
+        // The in-app JSON is saved unchanged (its events copy wzrk_ fields from it); the TTL is beside it.
+        assertEquals(currentInApp.jsonDescription.toString(), savedInApp.captured.toString())
+        assertEquals(currentInApp.timeToLive, savedTtl.captured)
+    }
+
+    @Test
+    fun `dismissing the in-app removes the saved in-app`() {
+        val mockStore = displayedInAppStore()
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val inApp = InAppController.currentlyDisplayingInApp!!
+
+        inAppController.inAppNotificationDidDismiss(inApp, null)
+
+        assertNull(InAppController.currentlyDisplayingInApp)
+        verify(exactly = 1) { mockStore.remove(inApp.campaignId!!) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp shows the saved in-app again and does not count it again`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60)
+        val mockStore = displayedInAppStore(savedInApp)
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var restored: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+            restored = it
+            true
+        }
+
+        assertNotNull(restored)
+        assertTrue(restored!!.isRestored)
+        assertSame(restored, InAppController.getDisplayingInApp(restored!!.campaignId))
+
+        inAppController.inAppNotificationDidShow(restored!!, null)
+        verify(exactly = 0) { mockInAppFCManager.didShow(any(), any()) }
+        verify(exactly = 0) { mockAnalyticsManager.pushInAppNotificationStateEvent(any(), any(), any()) }
+        // The app still gets onShow, so onShow and onDismissed stay paired in the new process.
+        verify(exactly = 1) { mockInAppListener.onShow(restored!!) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp gives null when no in-app is saved for the id`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60))
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp("another_campaign") {
+            result = it
+            false
+        }
+
+        assertNull(result)
+        assertNull(InAppController.currentlyDisplayingInApp)
+        // Nothing is removed here: the store itself removes a row it cannot read.
+        verify(exactly = 0) { mockStore.remove(any()) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp gives null and removes the saved in-app when its time to live has passed`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() - 1)
+        val mockStore = displayedInAppStore(savedInApp)
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+            result = it
+            false
+        }
+
+        assertNull(result)
+        verify(exactly = 1) { mockStore.remove(SAVED_INAPP_ID) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp queues the restored in-app while another in-app is on screen`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60, inAppId = "saved_campaign")
+        val mockStore = displayedInAppStore(savedInApp)
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val onScreen = InAppController.currentlyDisplayingInApp
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp("saved_campaign") {
+            result = it
+            false
+        }
+
+        assertNull(result)
+        assertSame(onScreen, InAppController.currentlyDisplayingInApp)
+
+        // When the in-app on screen closes, the restored one is shown and still not counted again.
+        inAppController.inAppNotificationDidDismiss(onScreen!!, null)
+        val shownLater = InAppController.currentlyDisplayingInApp
+        assertEquals("saved_campaign", shownLater?.campaignId)
+        assertTrue(shownLater!!.isRestored)
+        inAppController.inAppNotificationDidShow(shownLater, null)
+        verify(exactly = 0) { mockInAppFCManager.didShow(any(), shownLater) }
+        verify(exactly = 0) { mockAnalyticsManager.pushInAppNotificationStateEvent(false, shownLater, any()) }
+        verify(exactly = 1) { mockInAppListener.onShow(shownLater) }
+    }
+
+    @Test
+    fun `queued restored in-app is shown even when the frequency cap and beforeShow would refuse it`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60, inAppId = "saved_campaign")
+        val mockStore = displayedInAppStore(savedInApp)
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val onScreen = InAppController.currentlyDisplayingInApp!!
+        inAppController.restoreDisplayedInApp("saved_campaign") { false }
+        // The restored in-app was counted before the process kill, so a "show once" cap now says no,
+        // and the app already approved it in beforeShow.
+        every { mockInAppFCManager.canShow(any(), any()) } returns false
+        every { mockInAppListener.beforeShow(any()) } returns false
+
+        inAppController.inAppNotificationDidDismiss(onScreen, null)
+
+        val shownLater = InAppController.currentlyDisplayingInApp
+        assertEquals("saved_campaign", shownLater?.campaignId)
+        assertTrue(shownLater!!.isRestored)
+        // canShow and beforeShow ran once for the first in-app, never for the restored one.
+        verify(exactly = 0) { mockInAppFCManager.canShow(shownLater, any()) }
+        verify(exactly = 1) { mockInAppFCManager.canShow(any(), any()) }
+        verify(exactly = 1) { mockInAppListener.beforeShow(any()) }
+    }
+
+    @Test
+    fun `restored in-app that the in-app screen drops frees the in-app slot`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60)
+        val mockStore = displayedInAppStore(savedInApp)
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) { false }
+
+        assertNull(InAppController.currentlyDisplayingInApp)
+        // The user did not close it, so it stays saved for a recreated in-app screen.
+        verify(exactly = 0) { mockStore.remove(any()) }
+    }
+
+    @Test
+    fun `in-app screen recreated during the restore restores the in-app again`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60))
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        // The first screen is destroyed (e.g. rotation) before its result comes back.
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) { false }
+        var restored: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+            restored = it
+            true
+        }
+
+        assertNotNull(restored)
+        assertSame(restored, InAppController.currentlyDisplayingInApp)
+        verify(exactly = 0) { mockStore.remove(any()) }
+    }
+
+    @Test
+    fun `in-app without an id is not saved`() {
+        val mockStore = displayedInAppStore()
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        val noId = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).apply { remove(Constants.NOTIFICATION_ID_TAG) }
+
+        inAppController.addInAppNotificationsToQueue(listOf(noId))
+
+        assertNotNull(InAppController.currentlyDisplayingInApp)
+        verify(exactly = 0) { mockStore.save(any(), any(), any()) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp gives null when in-apps are suspended or discarded`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60))
+
+        for (stopInApps in listOf<(InAppController) -> Unit>({ it.suspendInApps() }, { it.discardInApps(false) })) {
+            val inAppController = createInAppController(displayedInAppStore = mockStore)
+            stopInApps(inAppController)
+
+            var result: CTInAppNotification? = mockk()
+            inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+                result = it
+                false
+            }
+
+            assertNull(result)
+            assertNull(InAppController.currentlyDisplayingInApp)
+        }
+        verify(exactly = 2) { mockStore.remove(SAVED_INAPP_ID) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp gives null for an HTML in-app when there is no internet`() {
+        every { mockNetworkMonitor.isNetworkOnline() } returns false
+        val htmlInApp = JSONObject(
+            """{"ti":1,"wzrk_id":"html_campaign","type":"custom-html",""" +
+                """"w":{"dk":true,"sc":true,"pos":"c","xp":90,"yp":85},"d":{"html":"<html></html>"}}"""
+        )
+        val mockStore = displayedInAppStore(DisplayedInApp(htmlInApp, fakeClock.currentTimeSeconds() + 60))
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp("html_campaign") {
+            result = it
+            false
+        }
+
+        assertNull(result)
+        verify(exactly = 1) { mockStore.remove("html_campaign") }
+    }
+
+    @Test
+    fun `full screen in-app is shown and not saved when there is no database store`() {
+        val inAppController = createInAppController(displayedInAppStore = null)
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+
+        assertNotNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
+    fun `header in-app is not saved because it is not shown in the in-app screen`() {
+        val mockStore = displayedInAppStore()
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]").toList()
+        )
+
+        assertNotNull(InAppController.currentlyDisplayingInApp)
+        verify(exactly = 0) { mockStore.save(any(), any(), any()) }
+    }
+
+    @Test
+    fun `next full screen in-app replaces the saved one`() {
+        val mockStore = displayedInAppStore()
+        val savedIds = mutableListOf<String>()
+        every { mockStore.save(capture(savedIds), any(), any()) } returns true
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        val second = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).put(Constants.NOTIFICATION_ID_TAG, "second_campaign")
+
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        inAppController.inAppNotificationDidDismiss(InAppController.currentlyDisplayingInApp!!, null)
+        inAppController.addInAppNotificationsToQueue(listOf(second))
+
+        // save replaces the old row, so only one in-app is ever kept.
+        assertEquals(listOf(SAVED_INAPP_ID, "second_campaign"), savedIds)
+    }
+
+    @Test
+    fun `dismissing an in-app that is not on screen keeps the saved in-app`() {
+        val mockStore = displayedInAppStore()
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val onScreen = InAppController.currentlyDisplayingInApp!!
+        val other = CTInAppNotification(
+            JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).put(Constants.NOTIFICATION_ID_TAG, "other_campaign"), true
+        )
+
+        inAppController.inAppNotificationDidDismiss(other, null)
+
+        assertSame(onScreen, InAppController.currentlyDisplayingInApp)
+        verify(exactly = 0) { mockStore.remove(any()) }
+    }
+
+    @Test
+    fun `PIP that fails to show removes the saved in-app`() {
+        val mockStore = displayedInAppStore()
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val inApp = InAppController.currentlyDisplayingInApp!!
+
+        inAppController.onPIPShowFailed(inApp, PIPMediaType.IMAGE)
+
+        assertNull(InAppController.currentlyDisplayingInApp)
+        verify(exactly = 1) { mockStore.remove(inApp.campaignId!!) }
+    }
+
+    @Test
+    fun `restored in-app closed by the user removes the saved in-app`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60))
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        var restored: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+            restored = it
+            true
+        }
+
+        inAppController.inAppNotificationDidDismiss(restored!!, null)
+
+        assertNull(InAppController.currentlyDisplayingInApp)
+        verify(exactly = 1) { mockStore.remove(SAVED_INAPP_ID) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp shows the in-app when its time to live ends this second`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds()))
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var restored: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+            restored = it
+            true
+        }
+
+        // Same check as showInApp: only a time to live in the past stops it.
+        assertNotNull(restored)
+        verify(exactly = 0) { mockStore.remove(any()) }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp gives null right away when there is no database store`() {
+        val inAppController = createInAppController(displayedInAppStore = null)
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+            result = it
+            false
+        }
+
+        assertNull(result)
+        assertNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
+    fun `restoreDisplayedInApp gives null when the saved in-app cannot be built`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60))
+        val broken = mockk<CTInAppNotification>(relaxed = true) {
+            every { error } returns "bad in-app"
+            every { campaignId } returns SAVED_INAPP_ID
+        }
+        every { mockInAppInflater.inflate(any(), any(), any()) } answers {
+            (args[2] as InAppNotificationReadyListener).onNotificationReady(broken)
+        }
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) {
+            result = it
+            false
+        }
+
+        assertNull(result)
+        assertNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
+    fun `user change removes the saved in-app so it is not restored for the new user`() {
+        val mockStore = displayedInAppStore()
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+
+        inAppController.onChangeUser("new_device_id", "account_id")
+
+        verify(exactly = 1) { mockStore.clear() }
+    }
+
+    @Test
+    fun `restoreDisplayedInApp gives null for a push permission in-app when permission is already granted`() {
+        every { mockInAppActionHandler.arePushNotificationsEnabled() } returns true
+        val pushPermissionInApp = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL)
+            .put(Constants.NOTIFICATION_ID_TAG, "push_primer")
+            .put(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION, true)
+        val mockStore = displayedInAppStore(DisplayedInApp(pushPermissionInApp, fakeClock.currentTimeSeconds() + 60))
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        var result: CTInAppNotification? = mockk()
+        inAppController.restoreDisplayedInApp("push_primer") {
+            result = it
+            false
+        }
+
+        // Same rule as showInApp: a push permission in-app is not shown once permission is granted,
+        // and the app's push permission listeners get the result.
+        assertNull(result)
+        assertNull(InAppController.currentlyDisplayingInApp)
+        verify(exactly = 1) { mockStore.remove("push_primer") }
+        verify(exactly = 1) { mockInAppActionHandler.notifyPushPermissionListeners() }
+    }
+
+    private fun savedInApp(ttlSeconds: Long, inAppId: String = SAVED_INAPP_ID): DisplayedInApp {
+        val inApp = JSONObject(InAppFixtures.TYPE_HALF_INTERSTITIAL).put(Constants.NOTIFICATION_ID_TAG, inAppId)
+        return DisplayedInApp(inApp, ttlSeconds)
+    }
+
+    // A store that has only [savedInApp], saved under the id of its in-app.
+    private fun displayedInAppStore(savedInApp: DisplayedInApp? = null): DisplayedInAppStore {
+        val store = mockk<DisplayedInAppStore>(relaxed = true)
+        every { store.get(any()) } returns null
+        if (savedInApp != null) {
+            val inAppId = savedInApp.inApp.getString(Constants.NOTIFICATION_ID_TAG)
+            every { store.get(inAppId) } returns savedInApp
+        }
+        return store
+    }
+
+    @Test
     fun `addInAppNotificationsToQueue should add to queue and display all provided notifications`() {
         val inApps =
             JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL},${InAppFixtures.TYPE_CUSTOM_HTML_HEADER_WITH_KV}]")
@@ -1048,7 +1479,8 @@ class InAppControllerTest {
 
 
     private fun createInAppController(
-        pipManager: PIPManager = mockk(relaxed = true)
+        pipManager: PIPManager = mockk(relaxed = true),
+        displayedInAppStore: DisplayedInAppStore? = null
     ): InAppController {
         return InAppController(
             context = mockk(relaxed = true),
@@ -1071,6 +1503,7 @@ class InAppControllerTest {
             clock = fakeClock,
             pipManager = pipManager,
             validationResultStack = mockValidationResultStack,
+            displayedInAppStoreProvider = { displayedInAppStore },
         )
     }
 
