@@ -118,8 +118,9 @@ class InAppNotificationActivityTest {
     }
 
     @Test
-    fun `after process death the restored fragment removes itself and the activity finishes`() {
-        // 1. In-app on screen, Android saves the activity state (e.g. user presses Home).
+    fun `after process death the saved full-screen fragment is not recreated`() {
+        // 1. In-app on screen, Android saves the activity state (e.g. user presses Home). The saved
+        // state holds the full-screen fragment.
         val inApp = CTInAppNotification(JSONObject(htmlInApp), true)
         every { InAppController.getDisplayingInApp("1120_test") } returns inApp
         val first = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
@@ -127,15 +128,23 @@ class InAppNotificationActivityTest {
         val savedState = Bundle()
         first.saveInstanceState(savedState)
 
-        // 2. The process is killed, so memory is empty. Android recreates the activity from saved state.
+        // 2. The process is killed, so memory is empty. Android recreates the activity from the saved
+        // state and drives it through to resume. onCreate passes null to super for a missing in-app,
+        // so the saved fragment is never recreated and no orphan HTML fragment reaches onCreateView
+        // against an unset in-app (SDK-6301). Nothing is stored here, so the restore finds no copy
+        // and the activity finishes.
+        //
+        // Note: the on-device crash was a timing race (the orphan's onCreateView running before its
+        // self-removal). Robolectric's single Looper removes the orphan first, so it cannot reproduce
+        // that race; this asserts the post-fix behaviour and must be paired with an on-device process
+        // kill (Developer Options > Don't keep activities, or `adb shell am kill`).
         every { InAppController.getDisplayingInApp(any()) } returns null
         val recreated = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
-            .create(savedState).get()
-        // Android restores the old fragment inside super.onCreate; it removes itself (orphan).
+            .create(savedState).start().resume().get()
         shadowOf(Looper.getMainLooper()).idle()
 
         assertTrue(recreated.isFinishing)
-        assertTrue(recreated.supportFragmentManager.fragments.isEmpty())
+        assertTrue(recreated.supportFragmentManager.fragments.none { it is CTInAppHtmlInterstitialFragment })
     }
 
     @Test
