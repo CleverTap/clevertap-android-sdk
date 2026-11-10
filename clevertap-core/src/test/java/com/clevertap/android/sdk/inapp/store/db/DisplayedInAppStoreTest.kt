@@ -2,8 +2,8 @@ package com.clevertap.android.sdk.inapp.store.db
 
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.db.DisplayedInAppDAO
-import com.clevertap.android.sdk.db.DisplayedInAppData
+import com.clevertap.android.sdk.db.dao.DisplayedInAppDAO
+import com.clevertap.android.sdk.db.dao.DisplayedInAppData
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

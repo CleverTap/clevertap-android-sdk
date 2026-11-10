@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db
 
 import TestCryptHandler
+import com.clevertap.android.sdk.db.dao.DisplayedInAppData
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
