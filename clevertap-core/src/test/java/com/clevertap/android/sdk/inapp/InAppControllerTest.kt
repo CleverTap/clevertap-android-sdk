@@ -775,6 +775,35 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `restore that finishes after a newer restore is dropped and not queued again`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60))
+        // The inflater does not answer right away, so the two restores can finish out of order.
+        val pending = mutableListOf<Pair<JSONObject, InAppNotificationReadyListener>>()
+        every { mockInAppInflater.inflate(any(), any(), any()) } answers {
+            pending.add(args[0] as JSONObject to args[2] as InAppNotificationReadyListener)
+        }
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        // Screen A starts the restore, is recreated (rotation), and screen B starts it again.
+        var shownOnA: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) { shownOnA = it; false }
+        var shownOnB: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) { shownOnB = it; true }
+        assertEquals(2, pending.size)
+
+        // B's inflate finishes first and shows the in-app; A's finishes late.
+        pending[1].second.onNotificationReady(CTInAppNotification(pending[1].first, true))
+        pending[0].second.onNotificationReady(CTInAppNotification(pending[0].first, true))
+
+        assertNotNull(shownOnB)
+        assertSame(shownOnB, InAppController.currentlyDisplayingInApp)
+        assertNull(shownOnA)
+        // The late result is dropped: nothing waits in the queue to show the same campaign again.
+        inAppController.inAppNotificationDidDismiss(shownOnB!!, null)
+        assertNull(InAppController.currentlyDisplayingInApp)
+    }
+
+    @Test
     fun `in-app without an id is not saved`() {
         val mockStore = displayedInAppStore()
         val inAppController = createInAppController(displayedInAppStore = mockStore)

@@ -1036,9 +1036,13 @@ internal class InAppController(
             }
             val readyListener = object : InAppNotificationInflater.InAppNotificationReadyListener {
                 override fun onNotificationReady(notification: CTInAppNotification) {
-                    if (restoreReadyListener === this) {
-                        restoreReadyListener = null
+                    if (restoreReadyListener !== this) {
+                        // A newer restore started meanwhile (e.g. the screen was recreated by a
+                        // rotation): that one shows the in-app, this result would show it twice.
+                        logger.verbose(defaultLogTag, "Dropping an outdated restore of in-app $inAppId")
+                        return
                     }
+                    restoreReadyListener = null
                     val screen = listenerRef.get()
                     if (screen == null) {
                         logger.verbose(defaultLogTag, "Not restoring in-app $inAppId: the in-app screen is gone")
