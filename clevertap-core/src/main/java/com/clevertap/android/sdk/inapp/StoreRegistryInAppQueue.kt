@@ -54,7 +54,10 @@ internal class StoreRegistryInAppQueue(
             return null
         }
         val removedObject = currentQueue.removeAt(0)
-        saveQueue(currentQueue)
+        if (saveQueue(currentQueue) == false) {
+            // The queue was too large to save and has been dropped; don't show an in-app under memory pressure
+            return null
+        }
         return removedObject
     }
 

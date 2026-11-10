@@ -251,6 +251,12 @@ public interface Constants {
     String INAPP_PIP_VIDEO_LOAD_FAILED_ERROR_MSG = "InApp PIP video failed to load";
     String INAPP_PIP_GIF_LOAD_FAILED_ERROR_MSG = "InApp PIP GIF failed to load";
 
+    // wzrk_error codes/messages for the server-side in-app queue dropped on OutOfMemoryError.
+    int INAPP_QUEUE_SAVE_OOM_ERROR_CODE = 596;
+    int INAPP_QUEUE_READ_OOM_ERROR_CODE = 597;
+    String INAPP_QUEUE_SAVE_OOM_ERROR_MSG = "InApp queue dropped on save (OOM)";
+    String INAPP_QUEUE_READ_OOM_ERROR_MSG = "InApp queue dropped on read (OOM)";
+
     String KEY_EFC = "efc";
     String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";
     // ND opt-in flag (ONC-418). Absent/false => campaign is outside the ND fcap regime; true => honor the

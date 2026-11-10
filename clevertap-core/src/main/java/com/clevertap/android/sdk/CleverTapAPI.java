@@ -3278,7 +3278,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task.execute("initStores", () -> {
             if (storeRegistry.getInAppStore() == null) {
                 InAppStore inAppStore = storeProvider.provideInAppStore(context, cryptHandler, deviceId,
-                        accountId);
+                        accountId, coreState.getValidationResultStack());
                 storeRegistry.setInAppStore(inAppStore);
                 evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds();
                 // can cause ANR if called from main thread

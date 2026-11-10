@@ -6,11 +6,14 @@ import com.clevertap.android.sdk.Constants.PREFS_EVALUATED_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_CS
 import com.clevertap.android.sdk.Constants.PREFS_INAPP_KEY_SS
 import com.clevertap.android.sdk.Constants.PREFS_SUPPRESSED_INAPP_KEY_CS
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.STORE_TYPE_INAPP
 import com.clevertap.android.sdk.StoreProvider
 import com.clevertap.android.sdk.cryption.ICryptHandler
 import com.clevertap.android.sdk.login.ChangeUserCallback
 import com.clevertap.android.sdk.store.preference.ICTPreference
+import com.clevertap.android.sdk.validation.ValidationResult
+import com.clevertap.android.sdk.validation.ValidationResultStack
 import com.clevertap.android.sdk.toList
 import org.json.JSONArray
 import org.json.JSONException
@@ -27,10 +30,12 @@ import org.json.JSONObject
  *
  * @property ctPreference The shared preference handler for storing and retrieving data.
  * @property cryptHandler The handler used for encryption and decryption of In-App messages.
+ * @property validationResultStack Stack used to report a dropped Server-side In-App queue as `wzrk_error`.
  */
 internal class InAppStore(
     private val ctPreference: ICTPreference,
-    private val cryptHandler: ICryptHandler
+    private val cryptHandler: ICryptHandler,
+    private val validationResultStack: ValidationResultStack? = null
 ) : ChangeUserCallback {
 
     private var clientSideInAppsCache: List<JSONObject>? = null
@@ -134,13 +139,48 @@ internal class InAppStore(
     /**
      * Stores Server-side legacy In-App messages in encrypted format.
      *
+     * The whole queue is serialised and encrypted as one string, so a very large queue can fail to
+     * allocate. In that case the saved queue is dropped, since every later save would fail the same way.
+     *
      * @param serverSideInApps The list of Server-side legacy In-App messages.
+     * @return false if the queue was too large to save and has been dropped, true otherwise.
      */
-    fun storeServerSideInApps(serverSideInApps: List<JSONObject>) {
+    fun storeServerSideInApps(serverSideInApps: List<JSONObject>): Boolean {
         serverSideInAppsCache = serverSideInApps
-        val jsonArray = JSONArray(serverSideInApps)
-        val encryptedString = cryptHandler.encrypt(jsonArray.toString())
-        encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
+        return try {
+            val jsonArray = JSONArray(serverSideInApps)
+            val encryptedString = cryptHandler.encrypt(jsonArray.toString())
+            encryptedString?.apply { ctPreference.writeString(INAPP_KEY, this) }
+            true
+        } catch (oom: OutOfMemoryError) {
+            Logger.v("Server-side in-app queue too large to save, dropping it", oom)
+            val previousLength = ctPreference.readString(INAPP_KEY, "")?.length ?: 0
+            removeServerSideInApps()
+            reportDroppedQueue(Constants.INAPP_QUEUE_SAVE_OOM_ERROR_CODE) {
+                "${Constants.INAPP_QUEUE_SAVE_OOM_ERROR_MSG}, items=${serverSideInApps.size}, prevLen=$previousLength"
+            }
+            false
+        }
+    }
+
+    /**
+     * Removes Server-side legacy In-App messages.
+     */
+    private fun removeServerSideInApps() {
+        ctPreference.remove(INAPP_KEY)
+        serverSideInAppsCache = emptyList()
+    }
+
+    /**
+     * Reports a dropped Server-side In-App queue as `wzrk_error` on the next queued event.
+     * Runs under memory pressure, so any failure here is swallowed rather than crashing the app.
+     */
+    private inline fun reportDroppedQueue(errorCode: Int, errorDesc: () -> String) {
+        try {
+            validationResultStack?.pushValidationResult(ValidationResult(errorCode, errorDesc()))
+        } catch (t: Throwable) {
+            // Reporting is best effort
+        }
     }
 
     /**
@@ -331,6 +371,13 @@ internal class InAppStore(
             try {
                 val decrypted = cryptHandler.decrypt(ssInAppsEncrypted)
                 JSONArray(decrypted).toList<JSONObject>()
+            } catch (oom: OutOfMemoryError) {
+                Logger.v("Server-side in-app queue too large to read, dropping it", oom)
+                ctPreference.remove(INAPP_KEY)
+                reportDroppedQueue(Constants.INAPP_QUEUE_READ_OOM_ERROR_CODE) {
+                    "${Constants.INAPP_QUEUE_READ_OOM_ERROR_MSG}, len=${ssInAppsEncrypted.length}"
+                }
+                emptyList()
             } catch (e: Exception) {
                 emptyList()
             }

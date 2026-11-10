@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.preference.NdCountsStore
 import com.clevertap.android.sdk.inapp.store.preference.NdStore
 import com.clevertap.android.sdk.store.preference.CTPreference
+import com.clevertap.android.sdk.validation.ValidationResultStack
 
 const val STORE_TYPE_INAPP = 1
 const val STORE_TYPE_IMPRESSION = 2
@@ -89,16 +90,18 @@ internal class StoreProvider {
      * @param cryptHandler The handler used for encryption and decryption of In-App messages.
      * @param deviceId The device id for user.
      * @param accountId The unique account identifier.
+     * @param validationResultStack Stack used to report dropped in-app queues as `wzrk_error`.
      * @return An instance of [InAppStore].
      */
     fun provideInAppStore(
         context: Context,
         cryptHandler: ICryptHandler,
         deviceId: String,
-        accountId: String
+        accountId: String,
+        validationResultStack: ValidationResultStack? = null
     ): InAppStore {
         val prefName = constructStorePreferenceName(STORE_TYPE_INAPP, deviceId, accountId)
-        return InAppStore(getCTPreference(context, prefName), cryptHandler)
+        return InAppStore(getCTPreference(context, prefName), cryptHandler, validationResultStack)
     }
 
     /**

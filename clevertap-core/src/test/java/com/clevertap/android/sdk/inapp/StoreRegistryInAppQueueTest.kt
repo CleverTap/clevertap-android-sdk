@@ -32,6 +32,7 @@ class StoreRegistryInAppQueueTest {
     @Before
     fun setup() {
         mockInAppStore = mockk(relaxed = true)
+        every { mockInAppStore.storeServerSideInApps(any()) } returns true
         mockImpressionStore = mockk(relaxed = true)
         mockLegacyInAppStore = mockk(relaxed = true)
         mockFileStore = mockk(relaxed = true)
@@ -128,6 +129,17 @@ class StoreRegistryInAppQueueTest {
 
         verify { mockInAppStore.storeServerSideInApps(JSONArray().toList<JSONObject>()) }
         assertEquals(jsonObject.toString(), dequeuedObject?.toString())
+    }
+
+    @Test
+    fun `dequeue when the remaining queue cannot be saved returns null`() {
+        val fakeQueue = JSONArray().put(JSONObject().put("key", "value")).toList<JSONObject>()
+        every { mockInAppStore.readServerSideInApps() } returns fakeQueue
+        every { mockInAppStore.storeServerSideInApps(any()) } returns false
+
+        val dequeuedObject = inAppQueue.dequeue()
+
+        assertNull(dequeuedObject)
     }
 
     @Test

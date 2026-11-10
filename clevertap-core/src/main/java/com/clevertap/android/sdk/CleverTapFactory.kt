@@ -286,7 +286,8 @@ internal object CleverTapFactory {
                         context = context,
                         cryptHandler = cryptHandler,
                         deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
+                        accountId = config.accountId,
+                        validationResultStack = validationResultStack
                     )
                     storeRegistry.inAppStore = inAppStore
                     evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
