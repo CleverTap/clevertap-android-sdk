@@ -102,11 +102,18 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (isInAppMissing()) {
+        // getIntent() and getDisplayingInApp (a static field, null in a fresh process) are both
+        // readable before super.onCreate, so the restore case can be decided first.
+        boolean restoring = isInAppMissing();
+        // When restoring, pass null to super so Android does not recreate the full-screen fragment
+        // it saved for this activity. That fragment's in-app is no longer in memory, and recreating
+        // it would run onCreateView against an unset in-app. restoreInApp adds a fresh fragment once
+        // the in-app has been read back from storage.
+        super.onCreate(restoring ? null : savedInstanceState);
+        if (restoring) {
             // The in-app is no longer in memory, e.g. Android recreated this activity after the app
-            // process was killed. A restored in-app fragment removes itself. Try to show the in-app
-            // again from storage; close if that cannot start.
+            // process was killed. Try to show the in-app again from storage; close if that cannot
+            // start.
             if (!restoreInApp()) {
                 Logger.v("In-app " + getIntent().getStringExtra(Constants.INAPP_ID_KEY)
                         + " is no longer available, closing InAppNotificationActivity");
