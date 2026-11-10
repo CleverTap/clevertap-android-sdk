@@ -1,4 +1,34 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 8.6.0 (November 10, 2026)
+
+#### Improvements
+* **Send Test Previews:** Hardens how Send Test previews (In-App, App Inbox, Display Unit) are opened.
+  A preview is now shown only when the preview push actually reached the SDK; previews from any other
+  launch Intent are ignored. Apps that render push themselves must keep calling
+  `pushNotificationViewedEvent(extras)` after showing the notification, as already documented.
+* **Large In-App Queue Handling:** Improves how the SDK handles a very large queue of In-Apps waiting to
+  be shown. If the queue grows too large to save or read, the SDK now drops it instead of crashing with an
+  `OutOfMemoryError`, and reports the drop to CleverTap on the next event.
+
+#### Bug Fixes
+* **Crash With Very Large Custom HTML In-Apps:** Fixes an app crash (`TransactionTooLargeException`)
+  when a full-screen custom HTML In-App with a very large HTML payload is shown. Regular In-Apps were
+  not affected. The In-App screen now receives only the In-App id and reads the In-App from memory,
+  instead of receiving the whole In-App through the Intent.
+* **Full-Screen In-App After The App Is Killed:** If Android kills the app while a full-screen In-App
+  is on screen, the In-App is shown again when the user returns, as long as its time to live has not
+  passed. It is not counted again (no second `Notification Viewed`).
+* **App Crash At Start In R8 Release Builds With AGP 9:** Fixes a crash at app start
+  (`NoSuchMethodException: androidx.work.impl.WorkDatabase_Impl.<init>`) in minified release builds made
+  with AGP 9. The SDK now ships the Room constructor keep rule. No effect on AGP 8 apps.
+* **SSL Pinning Not Applied:** Fixes SSL pinning (`CLEVERTAP_SSL_PINNING`) silently falling back to normal
+  HTTPS because the bundled certificate could not be loaded. Pinning is now applied when enabled and
+  trusts the five Amazon Trust Services root certificates. If you use pinning with a custom proxy or
+  handshake domain, make sure that domain's certificate chains to an Amazon Trust Services root, or SDK
+  requests will fail. If pinning cannot be set up on a device, the SDK logs an error and uses normal HTTPS.
+* **WorkManager Compatibility:** The SDK now works with WorkManager 2.9.1 through 2.10.2 (the version the SDK
+  ships with).
+
 ### Version 8.5.0 (October 15, 2026)
 
 #### New Features
