@@ -21,6 +21,9 @@
   trusts the five Amazon Trust Services root certificates. If you use pinning with a custom proxy or
   handshake domain, make sure that domain's certificate chains to an Amazon Trust Services root, or SDK
   requests will fail. If pinning cannot be set up on a device, the SDK logs an error and uses normal HTTPS.
+* **Crash When Saving A Very Large In-App Queue:** Fixes an app crash (`OutOfMemoryError`) when the
+  saved queue of In-Apps waiting to be shown grows too large to save or read. The SDK now drops that
+  queue instead of crashing, and reports the drop to CleverTap on the next event.
 
 ### Version 8.5.0 (October 15, 2026)
 

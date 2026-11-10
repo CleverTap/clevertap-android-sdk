@@ -573,7 +573,11 @@ internal object CleverTapFactory {
             coreMetaData = coreMetaData,
             manifestInfo = ManifestInfo.getInstance(context),
             deviceInfo = deviceInfo,
-            inAppQueue = StoreRegistryInAppQueue(storeRegistry = storeRegistry, logTag = config.accountId),
+            inAppQueue = StoreRegistryInAppQueue(
+                storeRegistry = storeRegistry,
+                logTag = config.accountId,
+                onQueueDropped = validationResultStack::pushValidationResult
+            ),
             evaluationManager = evaluationManager,
             templatesManager = templatesManager,
             inAppActionHandler = inAppActionHandler,
