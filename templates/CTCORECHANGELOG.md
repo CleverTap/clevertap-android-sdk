@@ -20,7 +20,7 @@
   HTTPS because the bundled certificate could not be loaded. Pinning is now applied when enabled and
   trusts the five Amazon Trust Services root certificates. If you use pinning with a custom proxy or
   handshake domain, make sure that domain's certificate chains to an Amazon Trust Services root, or SDK
-  requests will fail.
+  requests will fail. If pinning cannot be set up on a device, the SDK logs an error and uses normal HTTPS.
 
 ### Version 8.5.0 (October 15, 2026)
 
