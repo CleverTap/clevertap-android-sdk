@@ -1,5 +1,5 @@
 ## CleverTap Android SDK CHANGE LOG
-### Version 8.5.1 (Unreleased)
+### Version 8.6.0 (November 10, 2026)
 
 #### Improvements
 * **Send Test Previews:** Hardens how Send Test previews (In-App, App Inbox, Display Unit) are opened.
