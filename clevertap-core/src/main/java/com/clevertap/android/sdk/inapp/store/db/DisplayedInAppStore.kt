@@ -3,8 +3,8 @@ package com.clevertap.android.sdk.inapp.store.db
 import androidx.annotation.WorkerThread
 import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.cryption.CryptHandler
-import com.clevertap.android.sdk.db.DisplayedInAppDAO
-import com.clevertap.android.sdk.db.DisplayedInAppData
+import com.clevertap.android.sdk.db.dao.DisplayedInAppDAO
+import com.clevertap.android.sdk.db.dao.DisplayedInAppData
 import org.json.JSONException
 import org.json.JSONObject
 

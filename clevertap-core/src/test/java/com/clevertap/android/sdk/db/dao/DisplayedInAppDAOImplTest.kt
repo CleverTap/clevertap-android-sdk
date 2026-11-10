@@ -1,9 +1,14 @@
-package com.clevertap.android.sdk.db
+package com.clevertap.android.sdk.db.dao
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.db.Column
+import com.clevertap.android.sdk.db.DatabaseHelper
+import com.clevertap.android.sdk.db.DelayedLegacyInAppDAOImpl
+import com.clevertap.android.sdk.db.DelayedLegacyInAppData
+import com.clevertap.android.sdk.db.Table
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.TestClock
 import io.mockk.every

@@ -719,6 +719,31 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `queued restored in-app is shown through the main thread when the in-app on screen closes`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60, inAppId = "saved_campaign")
+        val executors = MockCTExecutors()
+        val inAppController = createInAppController(
+            displayedInAppStore = displayedInAppStore(savedInApp),
+            executors = executors
+        )
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val onScreen = InAppController.currentlyDisplayingInApp!!
+        inAppController.restoreDisplayedInApp("saved_campaign") { false }
+
+        // The dismiss advances the queue on the in-app thread: the restored in-app must not be shown there.
+        executors.deferMainTasks = true
+        inAppController.inAppNotificationDidDismiss(onScreen, null)
+        assertNull(InAppController.currentlyDisplayingInApp)
+
+        executors.runPendingMainTasks()
+        val shownLater = InAppController.currentlyDisplayingInApp
+        assertEquals("saved_campaign", shownLater?.campaignId)
+        assertTrue(shownLater!!.isRestored)
+    }
+
+    @Test
     fun `restored in-app that the in-app screen drops frees the in-app slot`() {
         val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60)
         val mockStore = displayedInAppStore(savedInApp)
@@ -747,6 +772,35 @@ class InAppControllerTest {
         assertNotNull(restored)
         assertSame(restored, InAppController.currentlyDisplayingInApp)
         verify(exactly = 0) { mockStore.remove(any()) }
+    }
+
+    @Test
+    fun `restore that finishes after a newer restore is dropped and not queued again`() {
+        val mockStore = displayedInAppStore(savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60))
+        // The inflater does not answer right away, so the two restores can finish out of order.
+        val pending = mutableListOf<Pair<JSONObject, InAppNotificationReadyListener>>()
+        every { mockInAppInflater.inflate(any(), any(), any()) } answers {
+            pending.add(args[0] as JSONObject to args[2] as InAppNotificationReadyListener)
+        }
+        val inAppController = createInAppController(displayedInAppStore = mockStore)
+
+        // Screen A starts the restore, is recreated (rotation), and screen B starts it again.
+        var shownOnA: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) { shownOnA = it; false }
+        var shownOnB: CTInAppNotification? = null
+        inAppController.restoreDisplayedInApp(SAVED_INAPP_ID) { shownOnB = it; true }
+        assertEquals(2, pending.size)
+
+        // B's inflate finishes first and shows the in-app; A's finishes late.
+        pending[1].second.onNotificationReady(CTInAppNotification(pending[1].first, true))
+        pending[0].second.onNotificationReady(CTInAppNotification(pending[0].first, true))
+
+        assertNotNull(shownOnB)
+        assertSame(shownOnB, InAppController.currentlyDisplayingInApp)
+        assertNull(shownOnA)
+        // The late result is dropped: nothing waits in the queue to show the same campaign again.
+        inAppController.inAppNotificationDidDismiss(shownOnB!!, null)
+        assertNull(InAppController.currentlyDisplayingInApp)
     }
 
     @Test
@@ -1480,12 +1534,13 @@ class InAppControllerTest {
 
     private fun createInAppController(
         pipManager: PIPManager = mockk(relaxed = true),
-        displayedInAppStore: DisplayedInAppStore? = null
+        displayedInAppStore: DisplayedInAppStore? = null,
+        executors: MockCTExecutors = MockCTExecutors()
     ): InAppController {
         return InAppController(
             context = mockk(relaxed = true),
             config = mockConfig,
-            executors = MockCTExecutors(),
+            executors = executors,
             controllerManager = mockControllerManager,
             callbackManager = mockCallbackManager,
             analyticsManager = mockAnalyticsManager,
