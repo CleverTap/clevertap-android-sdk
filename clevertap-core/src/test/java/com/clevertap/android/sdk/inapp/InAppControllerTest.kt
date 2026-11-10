@@ -719,6 +719,31 @@ class InAppControllerTest {
     }
 
     @Test
+    fun `queued restored in-app is shown through the main thread when the in-app on screen closes`() {
+        val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60, inAppId = "saved_campaign")
+        val executors = MockCTExecutors()
+        val inAppController = createInAppController(
+            displayedInAppStore = displayedInAppStore(savedInApp),
+            executors = executors
+        )
+        inAppController.addInAppNotificationsToQueue(
+            JSONArray("[${InAppFixtures.TYPE_HALF_INTERSTITIAL}]").toList()
+        )
+        val onScreen = InAppController.currentlyDisplayingInApp!!
+        inAppController.restoreDisplayedInApp("saved_campaign") { false }
+
+        // The dismiss advances the queue on the in-app thread: the restored in-app must not be shown there.
+        executors.deferMainTasks = true
+        inAppController.inAppNotificationDidDismiss(onScreen, null)
+        assertNull(InAppController.currentlyDisplayingInApp)
+
+        executors.runPendingMainTasks()
+        val shownLater = InAppController.currentlyDisplayingInApp
+        assertEquals("saved_campaign", shownLater?.campaignId)
+        assertTrue(shownLater!!.isRestored)
+    }
+
+    @Test
     fun `restored in-app that the in-app screen drops frees the in-app slot`() {
         val savedInApp = savedInApp(ttlSeconds = fakeClock.currentTimeSeconds() + 60)
         val mockStore = displayedInAppStore(savedInApp)
@@ -1480,12 +1505,13 @@ class InAppControllerTest {
 
     private fun createInAppController(
         pipManager: PIPManager = mockk(relaxed = true),
-        displayedInAppStore: DisplayedInAppStore? = null
+        displayedInAppStore: DisplayedInAppStore? = null,
+        executors: MockCTExecutors = MockCTExecutors()
     ): InAppController {
         return InAppController(
             context = mockk(relaxed = true),
             config = mockConfig,
-            executors = MockCTExecutors(),
+            executors = executors,
             controllerManager = mockControllerManager,
             callbackManager = mockCallbackManager,
             analyticsManager = mockAnalyticsManager,

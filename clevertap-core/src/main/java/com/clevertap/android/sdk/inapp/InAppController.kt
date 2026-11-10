@@ -1275,7 +1275,10 @@ internal class InAppController(
         if (inAppNotification.isRestored) {
             // Already shown and counted before the process kill, and queued only because another
             // in-app was on screen: the frequency caps would reject it a second time.
-            showInApp(inAppNotification)
+            // The queue is advanced on the in-app thread, and showInApp must run on the main thread.
+            executors.mainTask<Unit>().execute("checkLimitsBeforeShowing#restored") {
+                showInApp(inAppNotification)
+            }
             return
         }
         val task = executors.ioTask<Boolean>()
