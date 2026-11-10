@@ -110,9 +110,9 @@ class DatabaseHelper internal constructor(
             executeStatement(db, ALTER_INBOX_MESSAGES_ADD_INDEX_STATE)
         }
         if (oldVersion < 8) {
-            // Version 8 (core 8.5.1): the full-screen in-app on screen, see SDK-6301.
+            // Version 8 (core 8.6.0): the full-screen in-app on screen, see SDK-6301.
             executeStatement(db, CREATE_DISPLAYED_INAPP_TABLE)
-            // Version 8 (core 8.5.1): trusted copies of Send Test previews, see SDK-6282.
+            // Version 8 (core 8.6.0): trusted copies of Send Test previews, see SDK-6282.
             executeStatement(db, CREATE_PUSH_PREVIEWS_TABLE)
         }
     }
