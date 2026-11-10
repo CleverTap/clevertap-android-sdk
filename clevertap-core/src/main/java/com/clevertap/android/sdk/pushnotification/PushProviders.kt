@@ -17,7 +17,6 @@ import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
 import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.BuildConfig
 import com.clevertap.android.sdk.getOrCreateChannel
@@ -37,6 +36,7 @@ import com.clevertap.android.sdk.interfaces.AudibleNotification
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpWorker
 import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
+import com.clevertap.android.sdk.pushnotification.work.CTWorkManagerAccessor
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.Task
 import com.clevertap.android.sdk.utils.Clock
@@ -465,7 +465,8 @@ class PushProviders internal constructor(
         }
 
         try {
-            val workManager = WorkManager.getInstance(context)
+            // Java accessor, so this also works on WorkManager older than 2.10 (SDK-6153)
+            val workManager = CTWorkManagerAccessor.getInstance(context)
 
             // Create a work request only when it doesn't exist already or the ping frequency is updated
             if (existingWorkName.isEmpty() || isPingFrequencyUpdated) {
@@ -492,10 +493,12 @@ class PushProviders internal constructor(
                         "$pingFrequency minutes"
                 )
             }
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
+            // Throwable, not Exception: WorkManager can throw NoSuchMethodError or
+            // NoClassDefFoundError, which are Errors. Uncaught they crash the app (SDK-6153).
             config.logger.debug(
                 config.accountId,
-                "Pushamp - Failed scheduling/cancelling periodic work request$e"
+                "Pushamp - Failed scheduling/cancelling periodic work request$t"
             )
         }
     }
@@ -504,12 +507,12 @@ class PushProviders internal constructor(
         val existingWorkName = StorageHelper.getString(context, PF_WORK_ID, "") ?: ""
         if (existingWorkName.isNotEmpty()) {
             try {
-                val workManager = WorkManager.getInstance(context)
+                val workManager = CTWorkManagerAccessor.getInstance(context)
                 workManager.cancelUniqueWork(existingWorkName)
                 StorageHelper.putString(context, PF_WORK_ID, "")
                 config.logger.debug(config.accountId, "Pushamp - Successfully cancelled work")
-            } catch (e: Exception) {
-                config.logger.debug(config.accountId, "Pushamp - Failure while cancelling work")
+            } catch (t: Throwable) {
+                config.logger.debug(config.accountId, "Pushamp - Failure while cancelling work", t)
             }
         }
     }
