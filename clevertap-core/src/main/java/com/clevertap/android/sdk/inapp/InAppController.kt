@@ -1102,9 +1102,9 @@ internal class InAppController(
         }
         if (notRestoredReason != null) {
             logger.verbose(defaultLogTag, "Not restoring in-app ${inApp.campaignId}: $notRestoredReason")
-            if (inAppsStopped || htmlWithoutInternet || pushPermissionGranted) {
-                removeSavedDisplayedInApp(inApp.campaignId)
-            }
+            // Nothing restores this in-app again (the screen closes), so the saved row would only
+            // linger. An in-app that could not be built (e.g. its image failed to load) is dropped too.
+            removeSavedDisplayedInApp(inApp.campaignId)
             if (pushPermissionGranted) {
                 // Same as showInApp: the app's push permission listeners get the result.
                 inAppActionHandler.notifyPushPermissionListeners()

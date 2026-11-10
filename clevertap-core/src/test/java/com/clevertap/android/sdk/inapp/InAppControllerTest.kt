@@ -996,6 +996,8 @@ class InAppControllerTest {
 
         assertNull(result)
         assertNull(InAppController.currentlyDisplayingInApp)
+        // The screen closes and nothing retries, so the row is removed instead of lingering.
+        verify(exactly = 1) { mockStore.remove(SAVED_INAPP_ID) }
     }
 
     @Test
