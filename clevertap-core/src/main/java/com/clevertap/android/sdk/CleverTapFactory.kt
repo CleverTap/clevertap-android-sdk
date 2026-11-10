@@ -286,8 +286,7 @@ internal object CleverTapFactory {
                         context = context,
                         cryptHandler = cryptHandler,
                         deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId,
-                        validationResultStack = validationResultStack
+                        accountId = config.accountId
                     )
                     storeRegistry.inAppStore = inAppStore
                     evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
@@ -574,7 +573,11 @@ internal object CleverTapFactory {
             coreMetaData = coreMetaData,
             manifestInfo = ManifestInfo.getInstance(context),
             deviceInfo = deviceInfo,
-            inAppQueue = StoreRegistryInAppQueue(storeRegistry = storeRegistry, logTag = config.accountId),
+            inAppQueue = StoreRegistryInAppQueue(
+                storeRegistry = storeRegistry,
+                logTag = config.accountId,
+                onQueueDropped = validationResultStack::pushValidationResult
+            ),
             evaluationManager = evaluationManager,
             templatesManager = templatesManager,
             inAppActionHandler = inAppActionHandler,

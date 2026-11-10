@@ -5,16 +5,11 @@ import com.clevertap.android.sdk.cryption.CryptHandler
 import com.clevertap.android.sdk.inapp.store.preference.InAppStore.Companion.PREFS_DELAYED_INAPP_KEY_CS
 import com.clevertap.android.sdk.store.preference.ICTPreference
 import com.clevertap.android.sdk.toList
-import com.clevertap.android.sdk.validation.ValidationResult
-import com.clevertap.android.sdk.validation.ValidationResultStack
 import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class InAppStoreTest {
 
@@ -310,88 +305,29 @@ class InAppStoreTest {
     }
 
     @Test
-    fun `storeServerSideInApps returns true when the queue is saved`() {
+    fun `removeServerSideInApps removes the stored queue and empties the cache`() {
         every { cryptHandler.encrypt(any()) } returns "encryptedString"
+        inAppStore.storeServerSideInApps(listOf(JSONObject().put("id", 1)))
 
-        val saved = inAppStore.storeServerSideInApps(listOf(JSONObject().put("id", 1)))
+        inAppStore.removeServerSideInApps()
 
-        assertTrue(saved)
-        verify(exactly = 0) { ctPreference.remove(Constants.INAPP_KEY) }
-    }
-
-    @Test
-    fun `storeServerSideInApps drops the queue and returns false on OutOfMemoryError`() {
-        every { cryptHandler.encrypt(any()) } throws OutOfMemoryError()
-
-        val saved = inAppStore.storeServerSideInApps(listOf(JSONObject().put("id", 1)))
-
-        assertFalse(saved)
         verify { ctPreference.remove(Constants.INAPP_KEY) }
-        verify(exactly = 0) { ctPreference.writeString(Constants.INAPP_KEY, any()) }
         assertEquals(emptyList(), inAppStore.readServerSideInApps())
     }
 
     @Test
-    fun `readServerSideInApps drops the saved queue and returns empty on OutOfMemoryError`() {
+    fun `serverSideInAppsStoredLength returns the stored string length without decrypting`() {
         every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns "encryptedString"
-        every { cryptHandler.decrypt("encryptedString") } throws OutOfMemoryError()
 
-        val result = inAppStore.readServerSideInApps()
-
-        assertEquals(emptyList(), result)
-        verify { ctPreference.remove(Constants.INAPP_KEY) }
+        assertEquals("encryptedString".length, inAppStore.serverSideInAppsStoredLength())
+        verify(exactly = 0) { cryptHandler.decrypt(any()) }
     }
 
     @Test
-    fun `storeServerSideInApps reports wzrk_error with item count and previous length on OutOfMemoryError`() {
-        val validationResultStack = ValidationResultStack()
-        val inAppStore = InAppStore(ctPreference, cryptHandler, validationResultStack)
-        every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns "previous"
-        every { cryptHandler.encrypt(any()) } throws OutOfMemoryError()
+    fun `serverSideInAppsStoredLength returns 0 when nothing is stored`() {
+        every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns null
 
-        inAppStore.storeServerSideInApps(listOf(JSONObject().put("id", 1), JSONObject().put("id", 2)))
-
-        val vr = validationResultStack.popValidationResult()
-        assertEquals(Constants.INAPP_QUEUE_SAVE_OOM_ERROR_CODE, vr.errorCode)
-        assertEquals("${Constants.INAPP_QUEUE_SAVE_OOM_ERROR_MSG}, items=2, prevLen=8", vr.errorDesc)
-    }
-
-    @Test
-    fun `readServerSideInApps reports wzrk_error with stored length on OutOfMemoryError`() {
-        val validationResultStack = ValidationResultStack()
-        val inAppStore = InAppStore(ctPreference, cryptHandler, validationResultStack)
-        every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns "encryptedString"
-        every { cryptHandler.decrypt("encryptedString") } throws OutOfMemoryError()
-
-        inAppStore.readServerSideInApps()
-
-        val vr = validationResultStack.popValidationResult()
-        assertEquals(Constants.INAPP_QUEUE_READ_OOM_ERROR_CODE, vr.errorCode)
-        assertEquals("${Constants.INAPP_QUEUE_READ_OOM_ERROR_MSG}, len=15", vr.errorDesc)
-    }
-
-    @Test
-    fun `storeServerSideInApps still drops the queue when reporting wzrk_error throws`() {
-        val validationResultStack = mockk<ValidationResultStack>()
-        every { validationResultStack.pushValidationResult(any<ValidationResult>()) } throws OutOfMemoryError()
-        val inAppStore = InAppStore(ctPreference, cryptHandler, validationResultStack)
-        every { cryptHandler.encrypt(any()) } throws OutOfMemoryError()
-
-        val saved = inAppStore.storeServerSideInApps(listOf(JSONObject().put("id", 1)))
-
-        assertFalse(saved)
-        verify { ctPreference.remove(Constants.INAPP_KEY) }
-    }
-
-    @Test
-    fun `storeServerSideInApps does not report wzrk_error when the save succeeds`() {
-        val validationResultStack = ValidationResultStack()
-        val inAppStore = InAppStore(ctPreference, cryptHandler, validationResultStack)
-        every { cryptHandler.encrypt(any()) } returns "encryptedString"
-
-        inAppStore.storeServerSideInApps(listOf(JSONObject().put("id", 1)))
-
-        assertNull(validationResultStack.popValidationResult())
+        assertEquals(0, inAppStore.serverSideInAppsStoredLength())
     }
 
     @Test
