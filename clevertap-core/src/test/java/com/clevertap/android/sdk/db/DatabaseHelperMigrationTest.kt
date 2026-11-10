@@ -94,7 +94,9 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
         dbHelper.readableDatabase.use { upgraded ->
             val names = listOf(
                 Table.INBOX_PENDING_DELETES.tableName,
-                Table.INBOX_PENDING_READS.tableName
+                Table.INBOX_PENDING_READS.tableName,
+                // v6 -> v8 runs every later step too.
+                Table.DISPLAYED_INAPP.tableName
             )
             for (name in names) {
                 val c = upgraded.rawQuery(
@@ -105,6 +107,66 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
                     assertTrue(it.moveToFirst(), "Table $name should exist after V7 migration")
                 }
             }
+        }
+    }
+
+    /**
+     * Seed a database file at version 7 (core 8.2.0 to 8.5.0). Only the version matters:
+     * the 7 -> 8 step adds one table and touches nothing else.
+     */
+    private fun seedV7Database(): SQLiteDatabase {
+        val path = appCtx.getDatabasePath(dbName)
+        path.parentFile?.mkdirs()
+        val db = SQLiteDatabase.openOrCreateDatabase(path, null)
+        db.version = 7
+        return db
+    }
+
+    private fun SQLiteDatabase.hasTable(name: String): Boolean =
+        rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", arrayOf(name))
+            .use { it.moveToFirst() }
+
+    @Test
+    fun `upgrade from v7 creates pushPreviews table`() {
+        seedV7Database().close()
+
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.readableDatabase.use { upgraded ->
+            assertTrue(upgraded.hasTable(Table.PUSH_PREVIEWS.tableName), "pushPreviews must exist after V8 migration")
+            assertEquals(8, upgraded.version)
+        }
+    }
+
+    @Test
+    fun `upgrade from v6 also creates pushPreviews table`() {
+        seedV6Database().close()
+
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.readableDatabase.use { upgraded ->
+            assertTrue(upgraded.hasTable(Table.PUSH_PREVIEWS.tableName), "pushPreviews must exist after V6 -> V8 migration")
+        }
+    }
+
+    @Test
+    fun `fresh install creates pushPreviews with a unique preview key`() {
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.writableDatabase.use { db ->
+            assertTrue(db.hasTable(Table.PUSH_PREVIEWS.tableName))
+            val row = android.content.ContentValues().apply {
+                put(Column.PREVIEW_KEY, "k1")
+                put(Column.DATA, "{}")
+                put(Column.EXPIRES, 1L)
+                put(Column.CREATED_AT, 1L)
+            }
+            assertTrue(db.insertWithOnConflict(Table.PUSH_PREVIEWS.tableName, null, row, SQLiteDatabase.CONFLICT_IGNORE) >= 0)
+            // Second insert with the same key is ignored, proving the UNIQUE constraint is in place.
+            assertEquals(-1L, db.insertWithOnConflict(Table.PUSH_PREVIEWS.tableName, null, row, SQLiteDatabase.CONFLICT_IGNORE))
         }
     }
 
@@ -126,4 +188,64 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
             )
         }
     }
+
+    @Test
+    fun `upgrade from v7 creates the displayed in-app table and keeps existing rows`() {
+        val path = appCtx.getDatabasePath(dbName)
+        path.parentFile?.mkdirs()
+        SQLiteDatabase.openOrCreateDatabase(path, null).use { seed ->
+            seed.version = 7
+            seed.execSQL(
+                "CREATE TABLE ${Table.EVENTS.tableName} (" +
+                    "${Column.ID} INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "${Column.DATA} STRING NOT NULL, ${Column.CREATED_AT} INTEGER NOT NULL);"
+            )
+            seed.execSQL(
+                "INSERT INTO ${Table.EVENTS.tableName} (${Column.DATA}, ${Column.CREATED_AT}) VALUES ('{}', 1);"
+            )
+        }
+
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        // Opening a connection forces onUpgrade(7, 8).
+        dbHelper.readableDatabase.use { upgraded ->
+            assertEquals(8, upgraded.version)
+            upgraded.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
+                arrayOf(Table.DISPLAYED_INAPP.tableName)
+            ).use { assertTrue(it.moveToFirst(), "displayed in-app table should exist after V8 migration") }
+            assertEquals(
+                listOf(Column.INAPP_ID, Column.DATA, Column.TTL, Column.CREATED_AT),
+                columnNames(upgraded, Table.DISPLAYED_INAPP.tableName)
+            )
+            upgraded.rawQuery("SELECT count(*) FROM ${Table.EVENTS.tableName};", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(1, it.getInt(0))
+            }
+        }
+    }
+
+    @Test
+    fun `fresh install creates the displayed in-app table`() {
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
+
+        dbHelper.readableDatabase.use { db ->
+            db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
+                arrayOf(Table.DISPLAYED_INAPP.tableName)
+            ).use { assertTrue(it.moveToFirst(), "displayed in-app table must exist on fresh install") }
+            assertEquals(
+                listOf(Column.INAPP_ID, Column.DATA, Column.TTL, Column.CREATED_AT),
+                columnNames(db, Table.DISPLAYED_INAPP.tableName)
+            )
+        }
+    }
+
+    private fun columnNames(db: SQLiteDatabase, table: String): List<String> =
+        db.rawQuery("PRAGMA table_info($table);", null).use { cursor ->
+            generateSequence { if (cursor.moveToNext()) cursor.getString(cursor.getColumnIndexOrThrow("name")) else null }
+                .toList()
+        }
 }

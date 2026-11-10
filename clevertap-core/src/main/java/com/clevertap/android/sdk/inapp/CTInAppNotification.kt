@@ -112,6 +112,12 @@ class CTInAppNotification : Parcelable {
 
     internal var error: String? = null
 
+    /**
+     * True when this In-App was shown again from storage after the app process was killed.
+     * It was already counted when first shown, so it must not be counted again.
+     */
+    internal var isRestored: Boolean = false
+
     internal var height: Int = 0
         private set
 
