@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.network.NetworkManager
-import com.clevertap.android.sdk.pushnotification.preview.PushPreviewUrlPolicy
 import com.clevertap.android.sdk.response.InAppResponse
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
@@ -45,28 +44,9 @@ class InAppPreviewHandlerTest : BaseTestCase() {
         mockCTExecutors = MockCTExecutors()
         inAppPreviewHandler = InAppPreviewHandler(
             mockCTExecutors, networkManager, inAppResponse, context,
-            testLogger, PushPreviewUrlPolicy(setOf(ALLOWED_HOST))
+            testLogger
         )
         mockkStatic(Utils::class)
-    }
-
-    private companion object {
-        const val ALLOWED_HOST = "preview-bucket.s3.test-region.amazonaws.com"
-        const val S3_URL = "https://$ALLOWED_HOST/inapp-preview-campaign/1699358338/8bd4c58d-2632-45da-95e6-5ef23d55d6f7?X-Amz-Expires=240"
-    }
-
-    // SDK-6282 option F: a preview URL outside the allowlist is never fetched and never rendered.
-    @Test
-    fun `handleInAppPreview should not fetch or render when the S3 URL fails the policy`() {
-        val extras = Bundle().apply {
-            putString(Constants.INAPP_PREVIEW_S3_URL_KEY, "https://other-host.example/inapp-preview-campaign/1/x")
-            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"source\":\"inline\"}")
-        }
-
-        inAppPreviewHandler.handleInAppPreview(extras)
-
-        verify(exactly = 0) { networkManager.fetchInAppPreviewPayloadFromUrl(any()) }
-        verify(exactly = 0) { inAppResponse.processResponse(any(), any(), any()) }
     }
 
     @After
@@ -105,7 +85,7 @@ class InAppPreviewHandlerTest : BaseTestCase() {
     @Test
     fun `handleInAppPreview should fetch payload from S3 URL when available`() {
         // Given
-        val s3Url = S3_URL
+        val s3Url = "https://s3.amazonaws.com/test/inapp.json"
         val inappPayload = JSONObject().apply {
             put("key", "value")
         }
@@ -133,7 +113,7 @@ class InAppPreviewHandlerTest : BaseTestCase() {
     @Test
     fun `handleInAppPreview should prefer S3 URL over inline payload`() {
         // Given
-        val s3Url = S3_URL
+        val s3Url = "https://s3.amazonaws.com/test/inapp.json"
         val s3Payload = JSONObject().apply {
             put("source", "s3")
         }
@@ -167,7 +147,7 @@ class InAppPreviewHandlerTest : BaseTestCase() {
     @Test
     fun `handleInAppPreview should fallback to inline payload when S3 fetch fails`() {
         // Given
-        val s3Url = S3_URL
+        val s3Url = "https://s3.amazonaws.com/test/inapp.json"
         val inlinePayload = JSONObject().apply {
             put("source", "inline")
         }

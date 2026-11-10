@@ -64,7 +64,6 @@ import com.clevertap.android.sdk.network.api.CtApiWrapper
 import com.clevertap.android.sdk.profile.ProfileStateTraverser
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
-import com.clevertap.android.sdk.pushnotification.preview.PushPreviewUrlPolicy
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.response.ARPResponse
 import com.clevertap.android.sdk.response.CleverTapResponse
@@ -521,8 +520,7 @@ internal object CleverTapFactory {
             networkManager,
             inAppResponseForSendTestInApp,
             context,
-            config.logger,
-            PushPreviewUrlPolicy()
+            config.logger
         )
 
         val analyticsManager = AnalyticsManager(
