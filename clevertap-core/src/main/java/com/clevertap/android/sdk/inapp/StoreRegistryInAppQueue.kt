@@ -20,9 +20,17 @@ import org.json.JSONObject
  * [onQueueDropped].
  * </p>
  *
+ * <p>
+ * On Android 9+, if Android itself runs out of memory loading the prefs file, every access to it
+ * throws [IllegalStateException] caused by [OutOfMemoryError]. The queue is then treated as empty
+ * and saves are skipped. The file is not deleted, since it holds other in-app data too. This is
+ * reported once per process.
+ * </p>
+ *
  * @property storeRegistry The registry providing access to different stores, including [InAppStore].
  * @property logTag The tag to use when logging.
- * @property onQueueDropped Receives a [ValidationResult] describing a dropped queue, reported as `wzrk_error`.
+ * @property onQueueDropped Receives a [ValidationResult] describing a dropped or unavailable queue,
+ * reported as `wzrk_error`.
  *
  * @constructor Creates an InAppQueue with the given store registry.
  */
@@ -31,6 +39,8 @@ internal class StoreRegistryInAppQueue(
     private val logTag: String,
     private val onQueueDropped: (ValidationResult) -> Unit = {}
 ) : InAppQueue {
+
+    private var prefsLoadFailureReported = false
 
     @WorkerThread
     @Synchronized
@@ -98,6 +108,9 @@ internal class StoreRegistryInAppQueue(
                 "${Constants.INAPP_QUEUE_READ_OOM_ERROR_MSG}, len=$storedLength"
             }
             emptyList()
+        } catch (e: IllegalStateException) {
+            onPrefsLoadFailed(e)
+            emptyList()
         }
     }
 
@@ -121,6 +134,26 @@ internal class StoreRegistryInAppQueue(
                 "${Constants.INAPP_QUEUE_SAVE_OOM_ERROR_MSG}, items=${queue.size}, prevLen=$storedLength"
             }
             false
+        } catch (e: IllegalStateException) {
+            onPrefsLoadFailed(e)
+            false
+        }
+    }
+
+    /**
+     * Handles the prefs file that Android failed to load (Android 9+ rethrows the load error as
+     * [IllegalStateException]). Any other [IllegalStateException] is rethrown unchanged.
+     */
+    private fun onPrefsLoadFailed(e: IllegalStateException) {
+        if (e.cause !is OutOfMemoryError) {
+            throw e
+        }
+        Logger.v(logTag, "In-app prefs could not be loaded, in-app queue unavailable", e)
+        if (!prefsLoadFailureReported) {
+            prefsLoadFailureReported = true
+            reportDroppedQueue(Constants.INAPP_QUEUE_PREFS_LOAD_OOM_ERROR_CODE) {
+                Constants.INAPP_QUEUE_PREFS_LOAD_OOM_ERROR_MSG
+            }
         }
     }
 

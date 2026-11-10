@@ -256,6 +256,9 @@ public interface Constants {
     int INAPP_QUEUE_READ_OOM_ERROR_CODE = 597;
     String INAPP_QUEUE_SAVE_OOM_ERROR_MSG = "InApp queue dropped on save (OOM)";
     String INAPP_QUEUE_READ_OOM_ERROR_MSG = "InApp queue dropped on read (OOM)";
+    // Android could not load the in-app prefs file (OutOfMemoryError); the queue is kept as is.
+    int INAPP_QUEUE_PREFS_LOAD_OOM_ERROR_CODE = 598;
+    String INAPP_QUEUE_PREFS_LOAD_OOM_ERROR_MSG = "InApp queue unavailable, prefs load failed (OOM)";
 
     String KEY_EFC = "efc";
     String KEY_EXCLUDE_GLOBAL_CAPS = "excludeGlobalFCaps";

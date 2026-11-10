@@ -220,6 +220,40 @@ class StoreRegistryInAppQueueTest {
     }
 
     @Test
+    fun `when prefs failed to load, queue is empty, nothing is deleted and 598 is reported once`() {
+        val reported = mutableListOf<ValidationResult>()
+        val inAppQueue = StoreRegistryInAppQueue(storeRegistry, "Test") { reported.add(it) }
+        val loadFailure = IllegalStateException(OutOfMemoryError())
+        every { mockInAppStore.readServerSideInApps() } throws loadFailure
+        every { mockInAppStore.storeServerSideInApps(any()) } throws loadFailure
+
+        inAppQueue.enqueue(JSONObject().put("id", 1))
+        assertNull(inAppQueue.dequeue())
+        assertEquals(0, inAppQueue.getQueueLength())
+
+        verify(exactly = 0) { mockInAppStore.removeServerSideInApps() }
+        assertEquals(Constants.INAPP_QUEUE_PREFS_LOAD_OOM_ERROR_CODE, reported.single().errorCode)
+        assertEquals(Constants.INAPP_QUEUE_PREFS_LOAD_OOM_ERROR_MSG, reported.single().errorDesc)
+    }
+
+    @Test
+    fun `when prefs failed to load on save only, enqueue does not throw`() {
+        every { mockInAppStore.readServerSideInApps() } returns emptyList()
+        every { mockInAppStore.storeServerSideInApps(any()) } throws IllegalStateException(OutOfMemoryError())
+
+        inAppQueue.enqueue(JSONObject().put("id", 1))
+
+        verify(exactly = 0) { mockInAppStore.removeServerSideInApps() }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `IllegalStateException not caused by OutOfMemoryError is rethrown`() {
+        every { mockInAppStore.readServerSideInApps() } throws IllegalStateException("other")
+
+        inAppQueue.enqueue(JSONObject().put("id", 1))
+    }
+
+    @Test
     fun `getQueueLength returns correctLength`() {
         val jsonArray = JSONArray().put(JSONObject().put("key", "value"))
         every { mockInAppStore.readServerSideInApps() } returns jsonArray.toList()
