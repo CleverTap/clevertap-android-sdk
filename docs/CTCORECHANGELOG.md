@@ -24,6 +24,8 @@
 * **Crash When Saving A Very Large In-App Queue:** Fixes an app crash (`OutOfMemoryError`) when the
   saved queue of In-Apps waiting to be shown grows too large to save or read. The SDK now drops that
   queue instead of crashing, and reports the drop to CleverTap on the next event.
+* **WorkManager Compatibility:** The SDK now works with WorkManager 2.9.1 through 2.10.2 (the version the SDK
+  ships with).
 
 ### Version 8.5.0 (October 15, 2026)
 
