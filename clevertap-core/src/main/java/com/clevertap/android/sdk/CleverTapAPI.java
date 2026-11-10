@@ -1277,6 +1277,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     private void asyncStartup() {
+        // Runs after getCoreState() has already posted the device-id barrier (SDK-6254) to this
+        // same per-account serial queue, so these startup tasks — and every later app call — are
+        // ordered behind device-id resolution. See the ordering contract in
+        // CleverTapFactory.getCoreState().
         Task<Void> task = coreState.getExecutors().postAsyncSafelyTask();
         task.execute("CleverTapAPI#initializeDeviceInfo", () -> {
             if (getConfig().isDefaultInstance()) {

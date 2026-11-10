@@ -605,6 +605,20 @@ internal object CleverTapFactory {
         // SDK's work runs on this same queue and is ordered behind it, so it never observes a
         // half-built device-scoped state. This replaces the old main-thread CleverTapAPI
         // .deviceIDCreated() callback that DeviceInfo used to reach back into.
+        //
+        // ORDERING CONTRACT — do not break:
+        //  1. This MUST be posted here, inside getCoreState(), which runs synchronously in the
+        //     CleverTapAPI constructor BEFORE asyncStartup() and before the constructor returns.
+        //     That is what makes it enqueue ahead of every app-initiated task: the app can only
+        //     call public methods once it holds the (not-yet-returned) instance.
+        //  2. Public "action" methods (pushEvent/pushProfile/onUserLogin/push-token/in-app
+        //     evaluation …) all enqueue onto this SAME per-account serial queue
+        //     (postAsyncSafelyTask, keyed by accountId) via EventQueueManager, so they are
+        //     ordered AFTER this barrier and see a fully-built device-scoped state.
+        //  3. Off-queue readers (e.g. InAppResponse) must keep their null-guards — the barrier
+        //     orders the serial queue, it does not make these fields non-null for other threads.
+        // If you move this call earlier/out of getCoreState, or route an action method off this
+        // queue, you reintroduce the dropped-in-apps / login-race window this fixed.
         val deviceScopedInit = executors.postAsyncSafelyTask<Unit>()
         deviceScopedInit.execute("initDeviceScopedState") {
             val deviceId = deviceInfo.initDeviceID(cleverTapID)
