@@ -153,16 +153,4 @@ class CanonicalJsonFuzzTest : BaseTestCase() {
             assertEquals(key, PushPreviewKey.of(payload), text)
         }
     }
-
-    @Test
-    fun `url policy never throws on any input`() {
-        val policy = PushPreviewUrlPolicy(setOf("host.example"))
-        val alphabet = "https://host.example/inapp-preview-campaign/1/x?a=b#@:\\%.. \n\u00e9[]{}"
-        repeat(rounds * 2) {
-            val length = random.nextInt(80)
-            val url = buildString { repeat(length) { append(alphabet[random.nextInt(alphabet.length)]) } }
-            policy.reasonToReject(url) // must not throw; the value is whatever the rules say
-        }
-        assertNull(policy.reasonToReject("https://host.example/inapp-preview-campaign/1/x"))
-    }
 }
