@@ -1,13 +1,12 @@
 package com.clevertap.android.sdk.network.http
 
-import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient.Companion.AMAZON_ROOT_CA1_PATH
+import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient.Companion.CERTIFICATES_DIR
+import com.clevertap.android.sdk.network.http.UrlConnectionHttpClient.Companion.PINNED_ROOT_CERTIFICATES
 import io.mockk.mockk
-import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -22,7 +21,7 @@ class UrlConnectionHttpClientTest {
     )
 
     @Test
-    fun `createSslContext builds a TLS context from the bundled certificate`() {
+    fun `createSslContext builds a TLS context from the bundled certificates`() {
         val sslContext = client.createSslContext()
 
         assertNotNull(sslContext)
@@ -30,22 +29,27 @@ class UrlConnectionHttpClientTest {
     }
 
     @Test
-    fun `bundled certificate is Amazon Root CA 1`() {
-        val stream = UrlConnectionHttpClient::class.java.classLoader?.getResourceAsStream(AMAZON_ROOT_CA1_PATH)
-        assertNotNull("Certificate missing at $AMAZON_ROOT_CA1_PATH", stream)
-
-        val certificate = stream!!.use {
-            CertificateFactory.getInstance("X.509").generateCertificate(it) as X509Certificate
+    fun `bundled certificates are the five Amazon Trust Services roots`() {
+        val subjects = PINNED_ROOT_CERTIFICATES.map { name ->
+            val path = "$CERTIFICATES_DIR/$name.cer"
+            val stream = UrlConnectionHttpClient::class.java.classLoader?.getResourceAsStream(path)
+            assertNotNull("Certificate missing at $path", stream)
+            stream!!.use {
+                (CertificateFactory.getInstance("X.509").generateCertificate(it) as X509Certificate)
+                    .subjectX500Principal.name
+            }
         }
 
-        assertEquals("CN=Amazon Root CA 1,O=Amazon,C=US", certificate.subjectX500Principal.name)
-    }
-
-    @Test
-    fun `KeyStore class loader cannot see the bundled certificate`() {
-        // Root cause of the old bug: javaClass inside KeyStore.apply {} resolved to KeyStore's loader
-        val stream = KeyStore::class.java.classLoader?.getResourceAsStream(AMAZON_ROOT_CA1_PATH)
-
-        assertNull(stream)
+        assertEquals(
+            listOf(
+                "CN=Amazon Root CA 1,O=Amazon,C=US",
+                "CN=Amazon Root CA 2,O=Amazon,C=US",
+                "CN=Amazon Root CA 3,O=Amazon,C=US",
+                "CN=Amazon Root CA 4,O=Amazon,C=US",
+                "CN=Starfield Services Root Certificate Authority - G2,O=Starfield Technologies\\, Inc.," +
+                    "L=Scottsdale,ST=Arizona,C=US"
+            ),
+            subjects
+        )
     }
 }

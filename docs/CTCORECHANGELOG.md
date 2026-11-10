@@ -17,7 +17,10 @@
   (`NoSuchMethodException: androidx.work.impl.WorkDatabase_Impl.<init>`) in minified release builds made
   with AGP 9. The SDK now ships the Room constructor keep rule. No effect on AGP 8 apps.
 * **SSL Pinning Not Applied:** Fixes SSL pinning (`CLEVERTAP_SSL_PINNING`) silently falling back to normal
-  HTTPS because the bundled certificate could not be loaded. Pinning is now applied when enabled.
+  HTTPS because the bundled certificate could not be loaded. Pinning is now applied when enabled and
+  trusts the five Amazon Trust Services root certificates. If you use pinning with a custom proxy or
+  handshake domain, make sure that domain's certificate chains to an Amazon Trust Services root, or SDK
+  requests will fail.
 
 ### Version 8.5.0 (October 15, 2026)
 
