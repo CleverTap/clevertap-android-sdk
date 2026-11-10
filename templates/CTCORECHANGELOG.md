@@ -1,6 +1,15 @@
 ## CleverTap Android SDK CHANGE LOG
 ### Version 8.5.1 (Unreleased)
 
+#### Improvements
+* **Send Test Previews:** Hardens how Send Test previews (In-App, App Inbox, Display Unit) are opened.
+  A preview is now shown only when the preview push actually reached the SDK; previews from any other
+  launch Intent are ignored. Apps that render push themselves must keep calling
+  `pushNotificationViewedEvent(extras)` after showing the notification, as already documented.
+* **Large In-App Queue Handling:** Improves how the SDK handles a very large queue of In-Apps waiting to
+  be shown. If the queue grows too large to save or read, the SDK now drops it instead of crashing with an
+  `OutOfMemoryError`, and reports the drop to CleverTap on the next event.
+
 #### Bug Fixes
 * **Crash With Very Large Custom HTML In-Apps:** Fixes an app crash (`TransactionTooLargeException`)
   when a full-screen custom HTML In-App with a very large HTML payload is shown. Regular In-Apps were
@@ -9,10 +18,6 @@
 * **Full-Screen In-App After The App Is Killed:** If Android kills the app while a full-screen In-App
   is on screen, the In-App is shown again when the user returns, as long as its time to live has not
   passed. It is not counted again (no second `Notification Viewed`).
-* **Send Test Previews Render Only From A Trusted Copy:** Send Test previews (In-App, App Inbox,
-  Display Unit) are now shown only when the push actually reached the SDK; previews from any other
-  launch Intent are ignored. Apps that render push themselves must keep calling
-  `pushNotificationViewedEvent(extras)` after showing the notification, as already documented.
 * **App Crash At Start In R8 Release Builds With AGP 9:** Fixes a crash at app start
   (`NoSuchMethodException: androidx.work.impl.WorkDatabase_Impl.<init>`) in minified release builds made
   with AGP 9. The SDK now ships the Room constructor keep rule. No effect on AGP 8 apps.
@@ -21,9 +26,6 @@
   trusts the five Amazon Trust Services root certificates. If you use pinning with a custom proxy or
   handshake domain, make sure that domain's certificate chains to an Amazon Trust Services root, or SDK
   requests will fail. If pinning cannot be set up on a device, the SDK logs an error and uses normal HTTPS.
-* **Crash When Saving A Very Large In-App Queue:** Fixes an app crash (`OutOfMemoryError`) when the
-  saved queue of In-Apps waiting to be shown grows too large to save or read. The SDK now drops that
-  queue instead of crashing, and reports the drop to CleverTap on the next event.
 * **WorkManager Compatibility:** The SDK now works with WorkManager 2.9.1 through 2.10.2 (the version the SDK
   ships with).
 
