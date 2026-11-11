@@ -5,10 +5,10 @@ android_gradle_plugin = "9.1.1"
 android_minSdk = "23"
 kotlin_plugin = "2.2.10"
 rules = "1.7.0"
-sonarqube_plugin = "3.3"
-detekt_gradle_plugin = "1.23.3"
+sonarqube_plugin = "7.3.1.8318"
+detekt_gradle_plugin = "1.23.4"
 firebase_gradle_crashlytics = "3.0.2"
-vanniktech_maven_pulish_plugin = "0.32.0"
+vanniktech_maven_pulish_plugin = "0.36.0"
 
 # AndroidX
 annotation = "1.8.2"

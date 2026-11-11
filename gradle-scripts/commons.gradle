@@ -130,7 +130,7 @@ if (project.rootProject.file('local.properties').exists()) {
 
 afterEvaluate {
     mavenPublishing {
-        publishToMavenCentral("CENTRAL_PORTAL")
+        publishToMavenCentral()
         signAllPublications()
 
         coordinates(publishedGroupId, artifact, libraryVersion)
