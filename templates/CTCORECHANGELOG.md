@@ -1,4 +1,22 @@
 ## CleverTap Android SDK CHANGE LOG
+### Version 9.0.0 (Unreleased)
+
+#### New Features
+* **Android 17 Support:** Adds support for Android 17, making the SDK compliant with Android 17 requirements. Details [here](https://developer.android.com/about/versions/17/summary)
+
+#### Improvements
+* **Build Tools:** The SDK is now built with Android Gradle Plugin 9.1.1, Gradle 9.3.1 and compileSdk 37.
+  App requirements do not change: compileSdk 35 or higher, Android Gradle Plugin 8.1.1 or higher,
+  minSdk 23 and Kotlin 1.9 or higher, the same as 8.6.0.
+
+#### Notes
+* **`@Variable` Fields:** Do not declare `@Variable` fields as `final`. Apps that target Android 17 cannot
+  change `static final` fields, so their values are not updated. See [Variables](Variables.md).
+* **Portrait-Only In-Apps On Tablets:** Apps that target Android 17 can no longer keep a portrait lock on
+  large screens (600dp and up), so they run in landscape when the tablet is held that way. In-Apps created
+  for portrait only are not shown in landscape. If your app runs only in portrait, select both Portrait and
+  Landscape when creating the In-App campaign.
+
 ### Version 8.6.0 (November 10, 2026)
 
 #### Improvements
