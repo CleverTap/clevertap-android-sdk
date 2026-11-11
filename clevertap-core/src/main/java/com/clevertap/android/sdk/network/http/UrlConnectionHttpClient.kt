@@ -1,14 +1,15 @@
 package com.clevertap.android.sdk.network.http
 
 import android.net.TrafficStats
+import android.util.Log
+import androidx.annotation.VisibleForTesting
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
-import java.io.BufferedInputStream
-import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -24,11 +25,23 @@ class UrlConnectionHttpClient(
         const val READ_TIMEOUT = 10000
         const val CONNECT_TIMEOUT = 10000
         const val NETWORK_TAG_HTTP_REQUESTS = 17
+        @VisibleForTesting
+        internal const val CERTIFICATES_DIR = "com/clevertap/android/sdk/certificates"
+
+        // All five Amazon Trust Services roots, as AWS recommends for custom trust stores
+        @VisibleForTesting
+        internal val PINNED_ROOT_CERTIFICATES = listOf(
+            "AmazonRootCA1",
+            "AmazonRootCA2",
+            "AmazonRootCA3",
+            "AmazonRootCA4",
+            "SFSRootCAG2"
+        )
     }
 
     private val socketFactory: SSLSocketFactory? by lazy {
         try {
-            Logger.d("Pinning SSL session to DigiCertGlobalRoot CA certificate")
+            Logger.d("Pinning SSL session to Amazon Trust Services root certificates")
             sslContext?.socketFactory
         } catch (e: Exception) {
             Logger.d("Issue in pinning SSL,", e)
@@ -98,31 +111,34 @@ class UrlConnectionHttpClient(
         return connection
     }
 
-    private fun createSslContext(): SSLContext? {
-        try {
-
-            val sslContext = SSLContext.getInstance("TLS").apply {
-                val certificateFactory = CertificateFactory.getInstance("X.509")
-                val trustManagerFactory = TrustManagerFactory
-                    .getInstance(TrustManagerFactory.getDefaultAlgorithm())
-                    .apply {
-                        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
-                            load(null, null) //Use null InputStream & password to create empty key store
-                            val inputStream: InputStream =
-                                BufferedInputStream(javaClass.classLoader?.getResourceAsStream("com/clevertap/android/sdk/certificates/AmazonRootCA1.cer"))
-                            val x509Certificate3 = certificateFactory.generateCertificate(inputStream) as X509Certificate
-                            setCertificateEntry("AmazonRootCA1", x509Certificate3)
-                        }
-                        init(keyStore)
-                    }
-
-                init(null, trustManagerFactory.trustManagers, null)
+    @VisibleForTesting
+    internal fun createSslContext(): SSLContext? = try {
+        val certificateFactory = CertificateFactory.getInstance("X.509")
+        // Use this class's loader: javaClass inside a scope function can point to a JDK class (e.g. KeyStore)
+        val classLoader = UrlConnectionHttpClient::class.java.classLoader
+        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
+            load(null, null) // Use null InputStream & password to create empty key store
+            PINNED_ROOT_CERTIFICATES.forEach { name ->
+                val path = "$CERTIFICATES_DIR/$name.cer"
+                val certificate = classLoader
+                    ?.getResourceAsStream(path)
+                    ?.use { certificateFactory.generateCertificate(it) }
+                    ?: error("Certificate not found: $path")
+                setCertificateEntry(name, certificate)
             }
-            Logger.d("SSL Context built")
-            return sslContext
-        } catch (e: Exception) {
-            Logger.i("Error building SSL Context", e)
         }
-        return null
+        val trustManagerFactory = TrustManagerFactory
+            .getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            .apply { init(keyStore) }
+
+        SSLContext.getInstance("TLS")
+            .apply { init(null, trustManagerFactory.trustManagers, null) }
+            .also { Logger.d("SSL Context built") }
+    } catch (e: Exception) {
+        // Only reached when pinning is enabled, so make the fallback to normal HTTPS visible
+        if (CleverTapAPI.getDebugLevel() > CleverTapAPI.LogLevel.OFF.intValue()) {
+            Log.e(Constants.CLEVERTAP_LOG_TAG, "SSL pinning is enabled but could not be set up, using normal HTTPS", e)
+        }
+        null
     }
 }

@@ -51,11 +51,16 @@ internal class DBAdapter constructor(
     private val pushNotificationDAO: PushNotificationDAO by lazy { PushNotificationDAOImpl(dbHelper, logger, clock) }
     private val uninstallTimestampDAO: UninstallTimestampDAO by lazy { UninstallTimestampDAOImpl(dbHelper, logger) }
     private val inboxPendingActionsDAO: InboxPendingActionsDAO by lazy { InboxPendingActionsDAOImpl(dbHelper, logger, clock) }
+    private val pushPreviewDAO: PushPreviewDAO by lazy {
+        PushPreviewDAOImpl(dbHelper, logger, dbEncryptionHandler, clock)
+    }
 
     @Volatile
     private var userEventLogDao: UserEventLogDAO? = null
     @Volatile
     private var delayedLegacyInAppDao: DelayedLegacyInAppDAO? = null
+    @Volatile
+    private var displayedInAppDao: DisplayedInAppDAO? = null
 
     // =====================================================
     // EVENT-RELATED OPERATIONS
@@ -295,6 +300,19 @@ internal class DBAdapter constructor(
     fun cleanUpPushNotifications() = pushNotificationDAO.cleanUpPushNotifications()
 
     // =====================================================
+    // PUSH PREVIEW OPERATIONS (trusted copies of Send Test previews, SDK-6282)
+    // =====================================================
+
+    @WorkerThread
+    @Synchronized
+    fun savePushPreview(previewKey: String, data: String, expiresAtSeconds: Long, collapseKey: String?): Boolean =
+        pushPreviewDAO.save(previewKey, data, expiresAtSeconds, collapseKey)
+
+    @WorkerThread
+    @Synchronized
+    fun findPushPreview(previewKey: String): String? = pushPreviewDAO.find(previewKey)
+
+    // =====================================================
     // UNINSTALL TIMESTAMP OPERATIONS
     // =====================================================
 
@@ -322,6 +340,13 @@ internal class DBAdapter constructor(
             delayedLegacyInAppDao ?: DelayedLegacyInAppDAOImpl(
                 dbHelper, logger, Table.DELAYED_LEGACY_INAPPS
             ).also { delayedLegacyInAppDao = it }
+        }
+    }
+
+    @WorkerThread
+    fun displayedInAppDAO(): DisplayedInAppDAO {
+        return displayedInAppDao ?: synchronized(this) {
+            displayedInAppDao ?: DisplayedInAppDAOImpl(dbHelper, logger).also { displayedInAppDao = it }
         }
     }
 
