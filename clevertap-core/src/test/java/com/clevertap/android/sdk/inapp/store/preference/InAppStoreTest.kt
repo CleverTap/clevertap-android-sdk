@@ -305,6 +305,32 @@ class InAppStoreTest {
     }
 
     @Test
+    fun `removeServerSideInApps removes the stored queue and empties the cache`() {
+        every { cryptHandler.encrypt(any()) } returns "encryptedString"
+        inAppStore.storeServerSideInApps(listOf(JSONObject().put("id", 1)))
+
+        inAppStore.removeServerSideInApps()
+
+        verify { ctPreference.remove(Constants.INAPP_KEY) }
+        assertEquals(emptyList(), inAppStore.readServerSideInApps())
+    }
+
+    @Test
+    fun `serverSideInAppsStoredLength returns the stored string length without decrypting`() {
+        every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns "encryptedString"
+
+        assertEquals("encryptedString".length, inAppStore.serverSideInAppsStoredLength())
+        verify(exactly = 0) { cryptHandler.decrypt(any()) }
+    }
+
+    @Test
+    fun `serverSideInAppsStoredLength returns 0 when nothing is stored`() {
+        every { ctPreference.readString(Constants.INAPP_KEY, any()) } returns null
+
+        assertEquals(0, inAppStore.serverSideInAppsStoredLength())
+    }
+
+    @Test
     fun `readServerSideInApps returns empty JSONArray when decryption fails`() {
         // Arrange
         val ssEncryptedInApps = "encryptedString"
