@@ -5,6 +5,7 @@ import com.clevertap.android.sdk.AnalyticsManager
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.db.BaseDatabaseManager
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
@@ -51,7 +52,8 @@ class PushProvidersTokenTest : BaseTestCase() {
         return PushProviders(
             appCtx, cleverTapInstanceConfig, mockk<BaseDatabaseManager>(relaxed = true),
             mockk<ValidationResultStack>(relaxed = true), mockk<AnalyticsManager>(relaxed = true),
-            mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true)
+            mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true),
+            mockk<PushPreviewStore>(relaxed = true)
         )
     }
 

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.task
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import java.util.concurrent.Executor
 
 class MockCTExecutors @JvmOverloads constructor(config: CleverTapInstanceConfig? = null) : CTExecutors(config) {
 
@@ -9,8 +10,18 @@ class MockCTExecutors @JvmOverloads constructor(config: CleverTapInstanceConfig?
         return Task(config, executor, executor, "ioTask")
     }
 
+    /** When true, mainTask work waits like a posted main-thread message until [runPendingMainTasks]. */
+    var deferMainTasks = false
+    private val pendingMainTasks = mutableListOf<Runnable>()
+
+    fun runPendingMainTasks() {
+        while (pendingMainTasks.isNotEmpty()) {
+            pendingMainTasks.removeAt(0).run()
+        }
+    }
+
     override fun <TResult : Any?> mainTask(): Task<TResult> {
-        val executor = MockExecutor()
+        val executor = if (deferMainTasks) Executor { pendingMainTasks.add(it) } else MockExecutor()
         return Task(config, executor, executor, "mainTask")
     }
 

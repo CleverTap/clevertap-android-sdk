@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -64,7 +65,8 @@ class PushProvidersLiveUpdateTest : BaseTestCase() {
             mockk<ValidationResultStack>(relaxed = true),
             mockk<AnalyticsManager>(relaxed = true),
             mockk<CTWorkManager>(relaxed = true),
-            mockk<Clock>(relaxed = true)
+            mockk<Clock>(relaxed = true),
+            mockk<PushPreviewStore>(relaxed = true)
         )
         pushProviders.pushNotificationRenderer = renderer
     }
