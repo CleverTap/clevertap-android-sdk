@@ -1,4 +1,10 @@
 ## CleverTap Push Templates SDK CHANGE LOG
+### Version 2.8.0 (Unreleased)
+
+#### New features
+* Adds support for Android 17, making it compliant with Android 17 requirements. Details [here](https://developer.android.com/about/versions/17/summary)
+* Supports CleverTap Android SDK v9.0.0.
+
 ### Version 2.7.0 (October 15, 2026)
 
 #### New Features

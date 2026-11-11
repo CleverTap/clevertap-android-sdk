@@ -1,5 +1,10 @@
 ## CleverTap Huawei Push SDK CHANGE LOG
 
+### Version 1.6.0 (Unreleased)
+* Adds support for Android 17, making it compliant with Android 17 requirements. Details [here](https://developer.android.com/about/versions/17/summary)
+* Updates Minimum Android SDK version to API 23 (Android 6.0)
+* Removes `printStackTrace` calls.
+
 ### Version 1.5.1 (September 29, 2025)
 * Adds support for custom initialization of `AGConnect` using `agconnect-services.json` from the assets folder.
 

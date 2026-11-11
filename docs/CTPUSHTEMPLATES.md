@@ -20,7 +20,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:2.7.0"
+implementation "com.clevertap.android:push-templates:2.8.0"
 implementation "com.clevertap.android:clevertap-android-sdk:9.0.0" // 4.4.0 and above (8.5.0 and above for the Progress Template)
 ```
 
