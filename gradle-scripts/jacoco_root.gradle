@@ -82,7 +82,7 @@ def createVariantCoverage(variant) {
             xml.required = true
         }
 
-        def javaClasses = fileTree(dir: variant.javaCompileProvider.get().destinationDir, excludes: project.excludes)
+        def javaClasses = fileTree(dir: variant.javaCompileProvider.get().destinationDirectory.get().asFile, excludes: project.excludes)
         def kotlinClasses = fileTree(dir: "${buildDir}/tmp/kotlin-classes/${variantName}", excludes: project.excludes)
         getClassDirectories().setFrom(files([javaClasses, kotlinClasses]))
 
