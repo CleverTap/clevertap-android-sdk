@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inbox
 
 import android.os.Looper
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.fragment.app.FragmentActivity
@@ -58,6 +59,19 @@ class CTInboxBaseMessageViewHolderTest : BaseTestCase() {
     private fun unreadMessage(id: String): CTInboxMessage {
         val json = JSONObject(MESSAGE_JSON).put("id", id).put("isRead", false)
         return CTInboxMessage(json)
+    }
+
+    @Test
+    fun `playerRemoved empties and hides the video container left visible by playerReady`() {
+        val container = FrameLayout(appCtx).apply { addView(View(appCtx)) }
+        holder.frameLayout = container
+        holder.playerReady()
+        assertEquals(View.VISIBLE, container.visibility)
+
+        holder.playerRemoved()
+
+        assertEquals(0, container.childCount)
+        assertEquals(View.GONE, container.visibility)
     }
 
     @Test
