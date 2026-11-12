@@ -294,6 +294,8 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         FrameLayout frameLayout = getLayoutForMediaPlayer();
         if (frameLayout != null) {
             frameLayout.removeAllViews();
+            // playerReady() left it VISIBLE; nothing else hides it until the next bind.
+            frameLayout.setVisibility(View.GONE);
         }
     }
 
