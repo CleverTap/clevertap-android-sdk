@@ -47,7 +47,9 @@ class MediaPlayerRecyclerView : RecyclerView {
             override fun onChildViewDetachedFromWindow(view: View) {
                 playingHolder?.let { ph ->
                     if (ph.itemView == view) {
-                        stop()
+                        // Not stop(): the row can come back from RecyclerView's view cache
+                        // without a rebind, so its video container must be cleared here.
+                        removeVideoView()
                     }
                 }
             }
