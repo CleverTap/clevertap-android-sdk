@@ -4,7 +4,6 @@ import android.content.Context;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.network.IJRepo;
 import org.json.JSONObject;
 

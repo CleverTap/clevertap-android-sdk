@@ -9,8 +9,9 @@ class MockCleverTapDisplayUnit {
 
     fun getMockResponse(noItems: Int): JSONArray {
         val jsonArray = JSONArray()
-        for (i in 1..noItems)
+        repeat(noItems) {
             jsonArray.put(MockCleverTapDisplayUnit().getAUnit())
+        }
         return jsonArray
     }
 
@@ -20,7 +21,7 @@ class MockCleverTapDisplayUnit {
         jsonObject.put(Constants.KEY_TYPE, CTDisplayUnitType.SIMPLE.type)
         jsonObject.put(Constants.KEY_BG, "mock-unit-bg")
         val contentArray = JSONArray()
-        for (i in 1..3) {
+        repeat(3) {
             contentArray.put(MockDisplayUnitContent().getContent())
         }
         jsonObject.put(Constants.KEY_CONTENT, contentArray)

@@ -9,7 +9,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.media.RingtoneManager
 import android.net.Uri
-import android.os.*
+import android.os.Bundle
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.core.app.NotificationCompat.Builder
@@ -51,7 +51,7 @@ import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
+import java.util.Random
 private const val TAG = "TemplateRenderer"
 class TemplateRenderer(context: Context, private val extras: Bundle, internal val config: CleverTapInstanceConfig? = null) : INotificationRenderer, AudibleNotification {
     internal val templateMediaManager: TemplateMediaManager by lazy {

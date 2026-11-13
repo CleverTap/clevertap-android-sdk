@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.RatingTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
-import java.util.*
+import java.util.Random
 
 internal class RatingContentView(
     context: Context,

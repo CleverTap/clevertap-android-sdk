@@ -512,8 +512,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     /**
-     * Raises the Notification Clicked event, if {@param clicked} is true,
-     * otherwise the Notification Viewed event, if {@param clicked} is false.
+     * Raises the Notification Clicked event, if {@code clicked} is true,
+     * otherwise the Notification Viewed event, if {@code clicked} is false.
      *
      * @param clicked    Whether or not this notification was clicked
      * @param data       The data to be attached as the event data
@@ -1248,8 +1248,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     /**
-     * Raises the Notification Clicked event, if {@param clicked} is true,
-     * otherwise the Notification Viewed event, if {@param clicked} is false.
+     * Raises the Notification Clicked event, if {@code clicked} is true,
+     * otherwise the Notification Viewed event, if {@code clicked} is false.
      *
      * @param clicked    Whether or not this notification was clicked
      * @param data       The data to be attached as the event data

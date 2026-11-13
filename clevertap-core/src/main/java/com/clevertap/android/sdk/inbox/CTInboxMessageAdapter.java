@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import java.util.ArrayList;
-import java.util.Date;
 
 
 @SuppressWarnings("rawtypes")

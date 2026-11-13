@@ -164,12 +164,6 @@ class DBManagerTest : BaseTestCase() {
         }
     }
 
-    private fun List<JSONObject>.toJSONArray(): JSONArray {
-        val arr = JSONArray()
-        this.forEach { arr.put(it) }
-        return arr
-    }
-
     // ============= New Test Cases for Combined Queue Implementation =============
 
     @Test

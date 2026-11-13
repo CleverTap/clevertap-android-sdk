@@ -1414,24 +1414,6 @@ class UtilsTest : BaseTestCase() {
         assertEquals("valid", result[0].getString("id"))
     }
 
-    private fun prepareForWifiConnectivityTest(
-        isConnected: Boolean,
-        networkType: Int = ConnectivityManager.TYPE_WIFI
-    ) {
-        val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val shadowConnectivityManager = Shadows.shadowOf(connectivityManager)
-        shadowConnectivityManager.also {
-            val network = ShadowNetworkInfo.newInstance(
-                if (isConnected) NetworkInfo.DetailedState.CONNECTED else NetworkInfo.DetailedState.DISCONNECTED,
-                networkType,
-                0,
-                true,
-                if (isConnected) NetworkInfo.State.CONNECTED else NetworkInfo.State.DISCONNECTED
-            )
-            it.setNetworkInfo(networkType, network)
-        }
-    }
-
     private fun prepareForTeleConnectTest(
         networkType: Int = NETWORK_TYPE_CDMA,
         teleServiceAvailable: Boolean = true,
