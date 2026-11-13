@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.network
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -74,6 +75,8 @@ internal class NetworkMonitor constructor(
         logger.debug(accountId, "NetworkMonitor initialized with state: ${_stateFlow.value}")
     }
 
+    // The host app declares ACCESS_NETWORK_STATE; a missing permission is handled by the catch below
+    @SuppressLint("MissingPermission")
     private fun calculateCurrentNetworkState(): NetworkState {
         return try {
             val cm: ConnectivityManager = connectivityManager ?: return NetworkState.UNDETECTED
@@ -103,6 +106,8 @@ internal class NetworkMonitor constructor(
         }
     }
 
+    // The host app declares ACCESS_NETWORK_STATE; a missing permission is handled by the catch below
+    @SuppressLint("MissingPermission")
     private fun registerNetworkCallback() {
         val callback = object : ConnectivityManager.NetworkCallback() {
 
