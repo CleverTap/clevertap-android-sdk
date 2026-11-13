@@ -92,7 +92,8 @@ internal class CTInAppHtmlBannerOverlay(
         mainHandler.post(this::build)
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    // The touch listener only detects a swipe to dismiss, it is not a click, so performClick is not needed
+    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
     private fun build() {
         // This is partially based on CTInAppBasePartialHtmlFragment.displayHTMLView().
         val activity = activityWeakRef.get()

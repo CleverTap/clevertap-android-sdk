@@ -81,7 +81,8 @@ internal abstract class CTInAppBasePartialHtmlFragment : CTInAppBasePartialFragm
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    // The touch listener only detects a swipe to dismiss, it is not a click, so performClick is not needed
+    @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
     private fun displayHTMLView(inflater: LayoutInflater, container: ViewGroup?): View? {
         try {
             val inAppView = getView(inflater, container)
