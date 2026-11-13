@@ -48,7 +48,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     }
 
     @Test
-    @Ignore
+    @Ignore("Incomplete test (TODO), disabled in SDK-609")
     fun test_execute_whenExecuteCalledFromAsyncThread() {
         //TODO
         var threadID1 = -1L

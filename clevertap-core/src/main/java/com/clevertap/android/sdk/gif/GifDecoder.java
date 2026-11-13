@@ -19,7 +19,6 @@
  */
 package com.clevertap.android.sdk.gif;
 
-import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.os.Build;
 import androidx.annotation.NonNull;
@@ -933,7 +932,6 @@ class GifDecoder {
         return result;
     }
 
-    @TargetApi(12)
     private static void setAlpha(Bitmap bitmap) {
         if (Build.VERSION.SDK_INT >= 12) {
             bitmap.setHasAlpha(true);
