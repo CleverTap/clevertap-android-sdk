@@ -59,19 +59,11 @@ internal class LimitsMatcher(
             LimitType.Ever -> manager.getImpressions(campaignId).size < limit.limit
             LimitType.OnEvery -> {
                 val triggerCount = triggerManager.getTriggers(campaignId)
-                /*TODO: VERIFY IF WE NEED TO ADD 1 TO TRIGGER COUNT, IF THE IMPRESSION HAS BEEN
-                   ALREADY RECORDED FROM ELSEWHERE
-                val tc = triggerCount + 1
-                tc % limit.limit == 0*/
                 triggerCount % limit.limit == 0
             }
 
             LimitType.OnExactly -> {
                 val triggerCount = triggerManager.getTriggers(campaignId)
-                /*TODO: VERIFY IF WE NEED TO ADD 1 TO TRIGGER COUNT, IF THE IMPRESSION HAS BEEN
-                    ALREADY RECORDED FROM ELSEWHERE
-                 val tc = triggerCount + 1
-                tc == limit.limit*/
                 triggerCount == limit.limit
             }
         }
