@@ -9,7 +9,6 @@ import kotlin.test.assertEquals
 
 class SharedPreferencesMigrationTest : BaseTestCase() {
     private val prefNameV1 = Constants.KEY_COUNTS_PER_INAPP
-    private val prefNameV2 = "${Constants.KEY_COUNTS_PER_INAPP}:deviceId1"
     private val prefNameV3 = "${Constants.KEY_COUNTS_PER_INAPP}:deviceId1:acctId1"
     override fun setUp() {
 

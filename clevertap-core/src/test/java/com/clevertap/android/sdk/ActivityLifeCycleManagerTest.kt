@@ -60,7 +60,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         assertFalse(CoreMetaData.isAppForeground())
     }
 
-    @Ignore
+    @Ignore("Failing; disabled in 'Fix failing test cases' (June 2022), needs investigation")
     @Test
     fun test_activityPaused_whenInCurrentSession_LastSessionEpochMustBeSavedInPreference() {
         coreState.coreMetaData.currentSessionId = 100

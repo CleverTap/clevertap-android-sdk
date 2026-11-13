@@ -1,5 +1,6 @@
 package com.clevertap.android.pushtemplates.media
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -17,6 +18,8 @@ internal class TemplateRepository(val context: Context, val config: CleverTapIns
         private const val BYTES_DOWNLOAD_TIMEOUT_MS = 5000L
     }
 
+    // The host app declares ACCESS_NETWORK_STATE; a missing permission is handled by the catch below
+    @SuppressLint("MissingPermission")
     private fun isNetworkAvailable(): Boolean {
         return try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp.delay
 
 
+import android.annotation.SuppressLint
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -28,6 +29,8 @@ import java.util.concurrent.ConcurrentHashMap
  * Core timer manager that handles scheduling, lifecycle, and callback management
  * This is the reusable component for both delay and in-action features
  */
+// repeatOnLifecycle below uses the process lifecycle, not a Fragment, so lint's warning does not apply
+@SuppressLint("RepeatOnLifecycleWrongUsage")
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class InAppTimerManager(
     private val accountId: String,

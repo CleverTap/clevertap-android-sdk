@@ -2,8 +2,6 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
-import android.os.Handler;
-import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;

@@ -743,7 +743,7 @@ internal sealed interface InAppSelectionStrategy {
      * - Used for both client-side and app launch server-side delayed in-apps
      */
     data object Delayed : InAppSelectionStrategy {
-        private val TAG = "DelayedInAppSelectionStrategy"
+        private const val TAG = "DelayedInAppSelectionStrategy"
         override fun shouldUpdateTTL(): Boolean = false
 
         override fun selectInApps(

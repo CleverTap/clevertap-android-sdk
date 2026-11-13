@@ -6,7 +6,10 @@ import android.os.Bundle
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.FiveIconsTemplateData
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.content.*
+import com.clevertap.android.pushtemplates.content.ContentView
+import com.clevertap.android.pushtemplates.content.FIVE_ICON_CONTENT_PENDING_INTENT
+import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
+import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 import com.clevertap.android.sdk.Constants
 
