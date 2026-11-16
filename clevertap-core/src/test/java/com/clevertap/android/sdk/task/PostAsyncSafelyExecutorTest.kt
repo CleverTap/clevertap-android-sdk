@@ -4,11 +4,11 @@ import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
@@ -48,20 +48,34 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     }
 
     @Test
-    @Ignore("Incomplete test (TODO), disabled in SDK-609")
-    fun test_execute_whenExecuteCalledFromAsyncThread() {
-        //TODO
-        var threadID1 = -1L
-        var threadID2 = -2L
-        executor.execute({
-            threadID1 = Thread.currentThread().id
-            executor.execute({
-                threadID2 = Thread.currentThread().id
-            })
-        })
-        verify { mExecutorService.execute(any()) }
-        Thread.sleep(1000)
-        Assert.assertEquals(threadID1, threadID2)
+    fun test_execute_whenCalledFromExecutorThread_runsNestedTaskInlineOnSameThread() {
+        // A real executor is needed here: the mock used by the other tests never runs the task.
+        val realExecutor = PostAsyncSafelyExecutor()
+        val done = CountDownLatch(1)
+        var outerThreadId = -1L
+        var nestedThreadId = -2L
+        var nestedRanInline = false
+
+        try {
+            realExecutor.execute {
+                outerThreadId = Thread.currentThread().id
+                var nestedFinished = false
+                realExecutor.execute {
+                    nestedThreadId = Thread.currentThread().id
+                    nestedFinished = true
+                }
+                // A queued task could not have run yet, because this single thread is still busy here.
+                nestedRanInline = nestedFinished
+                done.countDown()
+            }
+
+            Assert.assertTrue("outer task did not finish", done.await(5, TimeUnit.SECONDS))
+            Assert.assertTrue("nested task was queued instead of running inline", nestedRanInline)
+            Assert.assertEquals(outerThreadId, nestedThreadId)
+        } finally {
+            // Always stop the real thread, even when an assertion fails
+            realExecutor.shutdownNow()
+        }
     }
 
     @Test(expected = NullPointerException::class)
