@@ -648,7 +648,15 @@ internal object CleverTapFactory {
         //     orders the serial queue, it does not make these fields non-null for other threads.
         // If you move this call earlier/out of getCoreState, or route an action method off this
         // queue, you reintroduce the dropped-in-apps / login-race window this fixed.
-        val deviceScopedInit = executors.postAsyncSafelyTask<Unit>()
+        val deviceScopedInit = executors.postAsyncSafelyTask<String>()
+        // The device-scoped build runs in execute() on the serial queue and returns the resolved
+        // device id. The success listener runs on the default callback executor (MAIN), so the
+        // ID / profile listener callbacks keep their documented main-thread delivery — the same
+        // mechanism the old ioTask-based deviceIDCreated() used.
+        deviceScopedInit.addOnSuccessListener { deviceId ->
+            callbackManager.notifyUserProfileInitialized(deviceId)
+            callbackManager.notifyCleverTapIDChanged(deviceId)
+        }
         deviceScopedInit.execute("initDeviceScopedState") {
             val deviceId = deviceInfo.initDeviceID(cleverTapID)
 
@@ -703,8 +711,9 @@ internal object CleverTapFactory {
                 ?.takeIf { it.settings.guid.isNullOrEmpty() }
                 ?.setGuidAndInit(deviceId)
 
-            callbackManager.notifyUserProfileInitialized(deviceId)
-            callbackManager.notifyCleverTapIDChanged(deviceId)
+            // Hand the resolved device id to the success listener (registered above), which
+            // fires on the main thread to notify the ID / profile listeners.
+            deviceId
         }
 
         return CoreState(
