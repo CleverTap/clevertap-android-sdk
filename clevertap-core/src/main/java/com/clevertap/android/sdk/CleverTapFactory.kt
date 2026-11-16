@@ -660,59 +660,70 @@ internal object CleverTapFactory {
         deviceScopedInit.execute("initDeviceScopedState") {
             val deviceId = deviceInfo.initDeviceID(cleverTapID)
 
-            if (storeRegistry.inAppStore == null) {
-                val inAppStore = storeProvider.provideInAppStore(
-                    context = context,
-                    cryptHandler = cryptHandler,
-                    deviceId = deviceId,
-                    accountId = config.accountId,
-                )
-                storeRegistry.inAppStore = inAppStore
-                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-                callbackManager.addChangeUserCallback(inAppStore)
-            }
-            if (storeRegistry.impressionStore == null) {
-                val impressionStore = storeProvider.provideImpressionStore(
-                    context = context,
-                    deviceId = deviceId,
-                    accountId = config.accountId,
-                )
-                storeRegistry.impressionStore = impressionStore
-                callbackManager.addChangeUserCallback(impressionStore)
-            }
-            // ND stores are created lazily via storeRegistry.ndStoreProvider; prime the evaluator's
-            // in-memory eval/suppressed lists now that the device id is available.
-            ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
+            // A failure while building the device-scoped state must NOT suppress the ID / profile
+            // listener notifications: the old deviceIDCreated() isolated store-init in a separate
+            // task and always notified once the device id was known. Preserve those "always notify"
+            // semantics by swallowing-and-logging build errors and still handing back the device id.
+            try {
+                if (storeRegistry.inAppStore == null) {
+                    val inAppStore = storeProvider.provideInAppStore(
+                        context = context,
+                        cryptHandler = cryptHandler,
+                        deviceId = deviceId,
+                        accountId = config.accountId,
+                    )
+                    storeRegistry.inAppStore = inAppStore
+                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
+                    callbackManager.addChangeUserCallback(inAppStore)
+                }
+                if (storeRegistry.impressionStore == null) {
+                    val impressionStore = storeProvider.provideImpressionStore(
+                        context = context,
+                        deviceId = deviceId,
+                        accountId = config.accountId,
+                    )
+                    storeRegistry.impressionStore = impressionStore
+                    callbackManager.addChangeUserCallback(impressionStore)
+                }
+                // ND stores are created lazily via storeRegistry.ndStoreProvider; prime the
+                // evaluator's in-memory eval/suppressed lists now that the device id is available.
+                ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
 
-            if (controllerManager.inAppFCManager == null) {
-                controllerManager.inAppFCManager = InAppFCManager(
-                    context, config, deviceId, storeRegistry, impressionManager, executors, SYSTEM,
+                if (controllerManager.inAppFCManager == null) {
+                    controllerManager.inAppFCManager = InAppFCManager(
+                        context, config, deviceId, storeRegistry, impressionManager, executors, SYSTEM,
+                    )
+                }
+                if (controllerManager.ndFCManager == null) {
+                    controllerManager.ndFCManager = NdFCManager(
+                        config = config,
+                        storeRegistry = storeRegistry,
+                        impressionManager = ndImpressionManager,
+                        executors = executors,
+                        clock = SYSTEM,
+                    )
+                }
+
+                // Inflate the local profile now that the device id is known.
+                localDataStore.inflateLocalProfileAsync(context)
+
+                // Feature Flags / Product Config may have been created before the id resolved; set
+                // their guid now if so (when created afterwards they already receive the resolved id).
+                controllerManager.ctFeatureFlagsController
+                    ?.takeIf { it.guid.isNullOrEmpty() }
+                    ?.setGuidAndInit(deviceId)
+                controllerManager.ctProductConfigController
+                    ?.takeIf { it.settings.guid.isNullOrEmpty() }
+                    ?.setGuidAndInit(deviceId)
+            } catch (t: Throwable) {
+                config.logger.verbose(
+                    config.accountId + ":async_deviceID",
+                    "Error building device-scoped state; notifying listeners anyway", t,
                 )
             }
-            if (controllerManager.ndFCManager == null) {
-                controllerManager.ndFCManager = NdFCManager(
-                    config = config,
-                    storeRegistry = storeRegistry,
-                    impressionManager = ndImpressionManager,
-                    executors = executors,
-                    clock = SYSTEM,
-                )
-            }
 
-            // Inflate the local profile now that the device id is known.
-            localDataStore.inflateLocalProfileAsync(context)
-
-            // Feature Flags / Product Config may have been created before the id resolved; set their
-            // guid now if so (when created afterwards they already receive the resolved id).
-            controllerManager.ctFeatureFlagsController
-                ?.takeIf { it.guid.isNullOrEmpty() }
-                ?.setGuidAndInit(deviceId)
-            controllerManager.ctProductConfigController
-                ?.takeIf { it.settings.guid.isNullOrEmpty() }
-                ?.setGuidAndInit(deviceId)
-
-            // Hand the resolved device id to the success listener (registered above), which
-            // fires on the main thread to notify the ID / profile listeners.
+            // Hand the resolved device id to the success listener (registered above), which fires
+            // on the main thread to notify the ID / profile listeners — always, once the id resolved.
             deviceId
         }
 
