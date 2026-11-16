@@ -45,24 +45,26 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
 
 
     override fun generateListener() {
-        setListener(
-            CleverTapAPI.instanceWithConfig(requireContext(), config).coreState.inAppController
-        )
+        // Resolve the live instance by accountId rather than rebuilding from the passed config
+        // snapshot (SDK-6254). If it can't be resolved, skip instead of recreating a stale instance.
+        CleverTapAPI.getGlobalInstance(requireContext(), config.accountId)
+            ?.coreState?.inAppController
+            ?.let { setListener(it) }
     }
 
     private fun registerInAppDisplayListener() {
-        context?.let {
-            CleverTapAPI.instanceWithConfig(it, config)
-                .coreState.inAppController
-                .registerInAppDisplayListener(this)
+        context?.let { ctx ->
+            CleverTapAPI.getGlobalInstance(ctx, config.accountId)
+                ?.coreState?.inAppController
+                ?.registerInAppDisplayListener(this)
         }
     }
 
     private fun unregisterInAppDisplayListener() {
-        context?.let {
-            CleverTapAPI.instanceWithConfig(it, config)
-                .coreState.inAppController
-                .unregisterInAppDisplayListener()
+        context?.let { ctx ->
+            CleverTapAPI.getGlobalInstance(ctx, config.accountId)
+                ?.coreState?.inAppController
+                ?.unregisterInAppDisplayListener()
         }
     }
 
