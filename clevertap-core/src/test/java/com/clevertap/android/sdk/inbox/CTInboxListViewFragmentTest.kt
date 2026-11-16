@@ -387,7 +387,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         mockkStatic(CleverTapAPI::class)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
-            every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
+            every { CleverTapAPI.getGlobalInstance(any(), any()) } returns api
             every { api.isInboxFetchDisabledForSession } returns false
             val callbackSlot = slot<FetchInboxCallback>()
             justRun { api.fetchInbox(capture(callbackSlot)) }
@@ -416,7 +416,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         mockkStatic(CleverTapAPI::class)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
-            every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
+            every { CleverTapAPI.getGlobalInstance(any(), any()) } returns api
             every { api.isInboxFetchDisabledForSession } returns false
             val callbackSlot = slot<FetchInboxCallback>()
             justRun { api.fetchInbox(capture(callbackSlot)) }

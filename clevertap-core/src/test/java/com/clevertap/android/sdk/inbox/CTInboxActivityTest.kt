@@ -59,13 +59,13 @@ class CTInboxActivityTest : BaseTestCase() {
 
     /** Launches CTInboxActivity with real inbox extras (no-tabs style config). */
     private fun launchNoTabsInboxActivity(messageCount: Int): CTInboxActivity {
-        every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
+        every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
         every { cleverTapAPI.inboxMessageCount } returns messageCount
         every { cleverTapAPI.allInboxMessages } returns arrayListOf()
 
         val intent = Intent(appCtx, CTInboxActivity::class.java).apply {
             putExtra("styleConfig", CTInboxStyleConfig())
-            putExtra("configBundle", Bundle().apply { putParcelable("config", cleverTapInstanceConfig) })
+            putExtra("configBundle", Bundle().apply { putString("config", cleverTapInstanceConfig.accountId) })
         }
         val controller = Robolectric.buildActivity(CTInboxActivity::class.java, intent)
         controller.get().setTheme(androidx.appcompat.R.style.Theme_AppCompat)
@@ -92,7 +92,7 @@ class CTInboxActivityTest : BaseTestCase() {
     fun `activity recreation does not duplicate the list fragment`() {
         mockkStatic(CleverTapAPI::class)
         try {
-            every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
+            every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
             every { cleverTapAPI.inboxMessageCount } returns 1
             every { cleverTapAPI.allInboxMessages } returns arrayListOf()
             // Theme must survive recreation: applicationInfo.theme is what the recreated
@@ -101,7 +101,7 @@ class CTInboxActivityTest : BaseTestCase() {
 
             val intent = Intent(appCtx, CTInboxActivity::class.java).apply {
                 putExtra("styleConfig", CTInboxStyleConfig())
-                putExtra("configBundle", Bundle().apply { putParcelable("config", cleverTapInstanceConfig) })
+                putExtra("configBundle", Bundle().apply { putString("config", cleverTapInstanceConfig.accountId) })
             }
             val controller = Robolectric.buildActivity(CTInboxActivity::class.java, intent).setup()
             controller.get().supportFragmentManager.executePendingTransactions()
