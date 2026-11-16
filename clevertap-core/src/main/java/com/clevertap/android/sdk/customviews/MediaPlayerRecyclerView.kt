@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.AbsListView
 import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.res.ResourcesCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,14 +25,7 @@ import com.clevertap.android.sdk.video.inbox.Media3Handle
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class MediaPlayerRecyclerView : RecyclerView {
 
-    private val handle : InboxVideoPlayerHandle = when (VideoLibChecker.mediaLibType) {
-        VideoLibraryIntegrated.MEDIA3 -> {
-            Media3Handle()
-        }
-        else -> {
-            ExoplayerHandle()
-        }
-    }
+    private val handle: InboxVideoPlayerHandle
     private val rect = Rect()
     private val onScrollListener: OnScrollListener = object : OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -47,8 +41,8 @@ class MediaPlayerRecyclerView : RecyclerView {
             override fun onChildViewDetachedFromWindow(view: View) {
                 playingHolder?.let { ph ->
                     if (ph.itemView == view) {
-                        // Not stop(): the row can come back from RecyclerView's view cache
-                        // without a rebind, so its video container must be cleared here.
+                        // The row can come back from RecyclerView's view cache without a
+                        // rebind, so its video container must be cleared here.
                         removeVideoView()
                     }
                 }
@@ -61,6 +55,7 @@ class MediaPlayerRecyclerView : RecyclerView {
      * {@inheritDoc}
      */
     constructor(context: Context) : super(context) {
+        handle = createHandle()
         initialize()
     }
 
@@ -71,6 +66,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         context: Context,
         attrs: AttributeSet
     ) : super(context, attrs) {
+        handle = createHandle()
         initialize()
     }
 
@@ -82,6 +78,17 @@ class MediaPlayerRecyclerView : RecyclerView {
         attrs: AttributeSet,
         defStyleAttr: Int
     ) : super(context, attrs, defStyleAttr) {
+        handle = createHandle()
+        initialize()
+    }
+
+    /** Lets tests supply the player handle; neither video library is on the unit test classpath. */
+    @VisibleForTesting
+    internal constructor(
+        context: Context,
+        handle: InboxVideoPlayerHandle
+    ) : super(context) {
+        this.handle = handle
         initialize()
     }
 
@@ -153,22 +160,13 @@ class MediaPlayerRecyclerView : RecyclerView {
         }
     }
 
-    fun stop() {
-        /*if (player != null) {
-            player.stop();
-        }*/
-        handle.pause()
-        playingHolder = null
-    }
-
     /**
-     * Detaches the shared player surface from its current holder and forgets it.
+     * Releases the player, detaches the shared player surface from its current holder and
+     * forgets that holder.
      *
      * Must be called before mutating the adapter data and calling notifyDataSetChanged(),
      * otherwise the surface view stays parented inside a holder that gets rebound to a
-     * different message. [stop] is not enough for that: it forgets [playingHolder] without
-     * clearing the holder's video container, leaving an orphaned surface behind.
-     * [removeVideoView] both empties that container and forgets the holder.
+     * different message. Also called when the list is destroyed.
      */
     fun prepareForListRebind() {
         Logger.v(
@@ -179,6 +177,15 @@ class MediaPlayerRecyclerView : RecyclerView {
             }
         )
         removeVideoView()
+    }
+
+    private fun createHandle(): InboxVideoPlayerHandle = when (VideoLibChecker.mediaLibType) {
+        VideoLibraryIntegrated.MEDIA3 -> {
+            Media3Handle()
+        }
+        else -> {
+            ExoplayerHandle()
+        }
     }
 
     private fun findBestVisibleMediaHolder(): CTInboxBaseMessageViewHolder? {
