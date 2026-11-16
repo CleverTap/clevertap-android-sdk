@@ -28,6 +28,7 @@ kotlin {
 
 android {
     compileSdk libs.versions.android.compileSdk.get().toInteger()
+    // TODO(SDK-6331): move to kotlin { compilerOptions } before AGP 10
     kotlinOptions {
         // keep the Kotlin metadata at 2.0 so apps on older Kotlin can still use the SDK
         languageVersion = "2.0"
