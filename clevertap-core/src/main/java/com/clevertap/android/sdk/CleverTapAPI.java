@@ -3149,7 +3149,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         Intent intent = new Intent(context, CTInboxActivity.class);
         intent.putExtra("styleConfig", _styleConfig);
         Bundle configBundle = new Bundle();
-        configBundle.putParcelable("config", getConfig());
+        // Pass only the accountId; the activity resolves the live instance by id instead of
+        // rebuilding it from a serialized config copy (SDK-6254).
+        configBundle.putString("config", getConfig().getAccountId());
         intent.putExtra("configBundle", configBundle);
         try {
             Activity currentActivity = CoreMetaData.getCurrentActivity();

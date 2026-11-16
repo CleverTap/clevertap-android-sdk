@@ -75,16 +75,18 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             }
             styleConfig = extras.getParcelable("styleConfig");
             Bundle configBundle = extras.getBundle("configBundle");
-            if (configBundle != null) {
-                config = configBundle.getParcelable("config");
+            // Resolve the live instance by accountId rather than rebuilding it from a serialized
+            // config copy in the intent (SDK-6254); derive config from the resolved instance.
+            String accountId = configBundle != null ? configBundle.getString("config") : null;
+            cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), accountId);
+            if (cleverTapAPI == null) {
+                throw new IllegalArgumentException();
             }
-            cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
-            if (cleverTapAPI != null) {
-                setListener(cleverTapAPI);
-                pushPermissionHandler = new PushPermissionHandler(
-                        config,
-                        cleverTapAPI.getCoreState().getCallbackManager().getPushPermissionResponseListenerList());
-            }
+            config = cleverTapAPI.getCoreState().getConfig();
+            setListener(cleverTapAPI);
+            pushPermissionHandler = new PushPermissionHandler(
+                    config,
+                    cleverTapAPI.getCoreState().getCallbackManager().getPushPermissionResponseListenerList());
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
@@ -118,7 +120,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         tabLayout = linearLayout.findViewById(R.id.tab_layout);
         viewPager = linearLayout.findViewById(R.id.view_pager);
         Bundle bundle = new Bundle();
-        bundle.putParcelable("config", config);
+        bundle.putString("config", config.getAccountId());
         bundle.putParcelable("styleConfig", styleConfig);
 
         if (!styleConfig.isUsingTabs()) {
