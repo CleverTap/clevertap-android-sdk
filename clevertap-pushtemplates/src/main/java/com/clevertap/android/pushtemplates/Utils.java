@@ -277,7 +277,10 @@ public class Utils {
 
         CleverTapAPI instance;
         if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+            // Resolve the live instance by accountId rather than rebuilding it from the config
+            // snapshot in the notification extras (SDK-6254). The config is still passed in the
+            // extras for back-compat with notifications posted by older SDK versions.
+            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
@@ -301,7 +304,10 @@ public class Utils {
 
         CleverTapAPI instance;
         if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+            // Resolve the live instance by accountId rather than rebuilding it from the config
+            // snapshot in the notification extras (SDK-6254). The config is still passed in the
+            // extras for back-compat with notifications posted by older SDK versions.
+            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
@@ -328,7 +334,10 @@ public class Utils {
 
         CleverTapAPI instance;
         if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+            // Resolve the live instance by accountId rather than rebuilding it from the config
+            // snapshot in the notification extras (SDK-6254). The config is still passed in the
+            // extras for back-compat with notifications posted by older SDK versions.
+            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
@@ -482,7 +491,10 @@ public class Utils {
     static void raiseNotificationClicked(Context context, Bundle extras, CleverTapInstanceConfig config) {
         CleverTapAPI instance;
         if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
+            // Resolve the live instance by accountId rather than rebuilding it from the config
+            // snapshot in the notification extras (SDK-6254). The config is still passed in the
+            // extras for back-compat with notifications posted by older SDK versions.
+            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
