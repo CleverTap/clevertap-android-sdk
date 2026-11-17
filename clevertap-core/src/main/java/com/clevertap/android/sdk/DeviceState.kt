@@ -14,12 +14,46 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.annotation.VisibleForTesting
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Future
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
-// Log why a read failed, since its af key is left out.
-private inline fun <T> readOrNull(name: String, read: () -> T?): T? =
-    runCatching(read)
-        .onFailure { Logger.v("Unable to read $name for the app fields", it) }
-        .getOrNull()
+// About 4x the slowest read seen on a stressed emulator (130 ms).
+private const val READ_TIMEOUT_MS = 500L
+
+// A stuck system call can't be cancelled, only abandoned. Capped so stuck reads can't pile up threads,
+// daemon so they can't keep the process alive. Extra reads queue instead of being dropped, and still time out.
+private val readExecutor = ThreadPoolExecutor(4, 4, 30L, TimeUnit.SECONDS, ArrayBlockingQueue(64)) { runnable ->
+    Thread(runnable, "CTDeviceStateRead").apply { isDaemon = true }
+}.apply { allowCoreThreadTimeOut(true) }
+
+// Null if the read fails or takes longer than READ_TIMEOUT_MS, so its af key is left out.
+@VisibleForTesting
+internal fun <T> readOrNull(name: String, timeoutMs: Long = READ_TIMEOUT_MS, read: () -> T?): T? {
+    var future: Future<T?>? = null
+    return try {
+        future = readExecutor.submit(Callable { read() })
+        future.get(timeoutMs, TimeUnit.MILLISECONDS)
+    } catch (t: Throwable) {
+        future?.cancel(true)
+        when (t) {
+            is TimeoutException -> Logger.v("Reading $name for the app fields timed out after $timeoutMs ms, leaving it out")
+            is RejectedExecutionException -> Logger.v("Too many device reads waiting, skipped $name for the app fields")
+            is InterruptedException -> {
+                Thread.currentThread().interrupt()
+                Logger.v("Interrupted while reading $name for the app fields")
+            }
+            else -> Logger.v("Unable to read $name for the app fields", (t as? ExecutionException)?.cause ?: t)
+        }
+        null
+    }
+}
 
 /** Device state sent in the af fields, with the iOS keys. A value that can't be read is null and left out. */
 internal data class DeviceState(

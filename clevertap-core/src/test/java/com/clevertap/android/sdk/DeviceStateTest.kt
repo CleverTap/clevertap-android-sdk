@@ -13,6 +13,8 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import java.util.concurrent.CountDownLatch
 
 @RunWith(RobolectricTestRunner::class)
 class DeviceStateTest : BaseTestCase() {
@@ -81,6 +83,47 @@ class DeviceStateTest : BaseTestCase() {
 
         assertNull(state.thermal)
         assertNull(state.pushStatus)
+    }
+
+    @Test
+    fun `readOrNull returns the value of a read that finishes in time`() {
+        assertEquals(42, readOrNull("fast read") { 42 })
+    }
+
+    @Test
+    fun `readOrNull returns null when the read throws`() {
+        assertNull(readOrNull<Int>("failing read") { throw SecurityException("no permission") })
+    }
+
+    @Test
+    fun `readOrNull stops waiting and returns null when the read is too slow`() {
+        val release = CountDownLatch(1)
+        val start = System.nanoTime()
+
+        val result = readOrNull("stuck read", timeoutMs = 100) { release.await(); 1 }
+
+        val waitedMs = (System.nanoTime() - start) / 1_000_000
+        release.countDown()
+        assertNull(result)
+        assertTrue(waitedMs < 1_000, "waited $waitedMs ms")
+    }
+
+    @Test
+    fun `readOrNull queues reads beyond the pool size instead of dropping them`() {
+        val callers = 8
+        val start = CountDownLatch(1)
+        val results = arrayOfNulls<Int>(callers)
+        val threads = (0 until callers).map { i ->
+            Thread {
+                start.await()
+                results[i] = readOrNull("busy read $i") { Thread.sleep(20); i }
+            }.apply { start() }
+        }
+
+        start.countDown()
+        threads.forEach { it.join(5_000) }
+
+        assertEquals((0 until callers).toList(), results.toList())
     }
 
     private fun configWithNight(night: Int) = Configuration().apply {
