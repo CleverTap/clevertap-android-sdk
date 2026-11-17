@@ -13,18 +13,28 @@ interface InboxVideoPlayerHandle {
 
     fun videoSurface(): View
     fun setPlayWhenReady(play: Boolean)
-    fun pause()
+
+    /**
+     * Stops the current video and detaches the player from its view. The player and the view stay
+     * alive so the next video can reuse them; call [release] when they are no longer needed.
+     */
+    fun stop()
+
+    /** Releases the player and its view. */
+    fun release()
     fun initPlayerView(
         context: Context,
         artworkAsset: () -> Drawable?,
     )
 
     fun playerVolume(): Float
-    fun handleMute()
+    fun setPlayerVolume(volume: Float)
+    fun currentPositionMs(): Long
     fun startPlaying(
         ctx: Context,
         uriString: String,
         isMediaAudio: Boolean,
         isMediaVideo: Boolean,
+        startPositionMs: Long,
     )
 }

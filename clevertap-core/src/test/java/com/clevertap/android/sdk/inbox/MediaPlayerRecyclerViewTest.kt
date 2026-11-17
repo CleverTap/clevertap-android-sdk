@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.inbox
 
 import android.content.Context
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.os.Parcel
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
@@ -12,14 +15,20 @@ import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView
 import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 /**
  * Lives in the inbox package because the holder's constructor and video container are
@@ -32,8 +41,13 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     private class VideoRowHolder(itemView: View, val container: FrameLayout) : CTInboxBaseMessageViewHolder(itemView) {
 
         var attachCount = 0
+        var attempts = 0
+        var addResult = true
         var bindCount = 0
         var isVideoRow = true
+        var messageIdValue: String? = null
+        var mediaUrlValue: String? = null
+        var muteClick: Function0<Float>? = null
 
         init {
             frameLayout = container
@@ -42,6 +56,10 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         val showsVideo: Boolean
             get() = container.visibility == View.VISIBLE && container.childCount > 0
+
+        override fun getMessageId() = messageIdValue
+
+        override fun getMediaUrl() = mediaUrlValue
 
         override fun needsMediaPlayer() = isVideoRow
 
@@ -53,10 +71,16 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
             playMedia: Function3<String, Boolean, Boolean, Void>,
             videoSurfaceView: View
         ): Boolean {
+            attempts++
+            if (!addResult) {
+                return false
+            }
             attachCount++
+            this.muteClick = muteClick
             frameLayout.removeAllViews()
             frameLayout.addView(videoSurfaceView)
             frameLayout.visibility = View.VISIBLE // what playerReady() does once the player is ready
+            playMedia.invoke(mediaUrlValue.orEmpty(), false, true)
             return true
         }
     }
@@ -82,6 +106,8 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         override fun onBindViewHolder(holder: VideoRowHolder, position: Int) {
             holder.bindCount++
             holder.isVideoRow = videoPositions == null || position in videoPositions
+            holder.messageIdValue = "message$position"
+            holder.mediaUrlValue = "url$position"
             holder.container.visibility = View.GONE // what the real holders do on bind
         }
 
@@ -89,6 +115,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     }
 
     private lateinit var handle: InboxVideoPlayerHandle
+    private lateinit var surface: View
     private lateinit var list: MediaPlayerRecyclerView
     private lateinit var adapter: VideoRowsAdapter
 
@@ -96,8 +123,9 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
+        surface = View(appCtx) // one player view for the whole list, as in the real handles
         handle = mockk(relaxed = true)
-        every { handle.videoSurface() } answers { View(appCtx) }
+        every { handle.videoSurface() } returns surface
     }
 
     /** Lays the list out with [rows] video rows; three of them fit on screen. */
@@ -118,22 +146,46 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
     private fun rowsShowingVideo() = adapter.holders.count { it.showsVideo }
 
+    private fun scrollPastTwoRows() = list.scrollBy(0, SCROLL_PAST_TWO_ROWS)
+
+    private fun scrollBackPastTwoRows() = list.scrollBy(0, -SCROLL_PAST_TWO_ROWS)
+
     @Test
-    fun `detaching the playing row releases the player and clears its video container`() {
+    fun `the player is created on the first play and not with the list`() {
+        showList(rows = 1)
+        verify(exactly = 0) { handle.initExoplayer(any(), any(), any()) }
+
+        list.playVideo()
+
+        verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `detaching the playing row stops the player and clears its video container`() {
         showList(rows = 1)
         val row = rowAt(0)
         list.playVideo()
         assertEquals("row never became the playing row", 1, row.attachCount)
         assertEquals(View.VISIBLE, row.container.visibility)
         assertEquals(1, row.container.childCount)
-        verify(exactly = 1) { handle.pause() } // playVideo() releases any earlier player first
 
         // What RecyclerView does when the row scrolls off screen.
         list.layoutManager!!.removeAllViews()
 
-        verify(exactly = 2) { handle.pause() }
+        verify(exactly = 1) { handle.stop() }
         assertEquals(0, row.container.childCount)
         assertEquals(View.GONE, row.container.visibility)
+    }
+
+    @Test
+    fun `stopping a video keeps the player for the next one`() {
+        showList(rows = 1)
+        list.playVideo()
+
+        list.layoutManager!!.removeAllViews()
+
+        verify(exactly = 1) { handle.stop() }
+        verify(exactly = 0) { handle.release() }
     }
 
     @Test
@@ -143,7 +195,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         list.layoutManager!!.removeAllViews()
 
-        verify(exactly = 0) { handle.pause() }
+        verify(exactly = 0) { handle.stop() }
         assertEquals(0, row.attachCount)
     }
 
@@ -155,11 +207,10 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
         assertEquals("top row never became the playing row", 1, playing.attachCount)
         assertEquals(0, other.attachCount)
-        verify(exactly = 1) { handle.pause() }
 
         list.layoutManager!!.removeView(other.itemView)
 
-        verify(exactly = 1) { handle.pause() }
+        verify(exactly = 0) { handle.stop() }
         assertEquals(View.VISIBLE, playing.container.visibility)
         assertEquals(1, playing.container.childCount)
         assertEquals(1, rowsShowingVideo())
@@ -174,7 +225,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         assertEquals(1, rowsShowingVideo())
 
         // Scroll the playing row off screen; RecyclerView detaches it into its view cache.
-        list.scrollBy(0, SCROLL_PAST_TWO_ROWS)
+        scrollPastTwoRows()
         assertEquals("playing row should be detached", null, first.itemView.parent)
         assertEquals(0, first.container.childCount)
         assertEquals(View.GONE, first.container.visibility)
@@ -185,7 +236,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         assertEquals(1, rowsShowingVideo())
 
         // Scroll back: the row returns from the cache without a rebind.
-        list.scrollBy(0, -SCROLL_PAST_TWO_ROWS)
+        scrollBackPastTwoRows()
         assertSame(first, rowAt(0))
         assertEquals("row came back through a rebind; the test no longer covers the cache path", 1, first.bindCount)
         assertEquals("a stale video container is visible next to the playing row", 1, rowsShowingVideo())
@@ -204,12 +255,12 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
         assertEquals("video row never became the playing row", 1, video.attachCount)
 
-        list.scrollBy(0, SCROLL_PAST_TWO_ROWS)
+        scrollPastTwoRows()
         assertEquals("video row should be detached", null, video.itemView.parent)
         list.playVideo() // scroll settled with no video row on screen
         assertEquals(0, rowsShowingVideo())
 
-        list.scrollBy(0, -SCROLL_PAST_TWO_ROWS)
+        scrollBackPastTwoRows()
         assertSame(video, rowAt(0))
         assertEquals("row came back through a rebind; the test no longer covers the cache path", 1, video.bindCount)
 
@@ -219,6 +270,118 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         assertEquals(2, video.attachCount)
         assertEquals(View.VISIBLE, video.container.visibility)
         assertEquals(1, video.container.childCount)
+    }
+
+    @Test
+    fun `a video that was never played starts muted from the beginning`() {
+        showList(rows = 1)
+
+        list.playVideo()
+
+        verify(exactly = 1) { handle.setPlayerVolume(0f) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+    }
+
+    @Test
+    fun `a video resumes from where it was left with the sound it had`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        list.playVideo()
+        // The user unmuted it and it played for 12 seconds.
+        every { handle.currentPositionMs() } returns 12_000L
+        every { handle.playerVolume() } returns 1f
+
+        scrollPastTwoRows()
+        scrollBackPastTwoRows()
+        list.playVideo()
+
+        verify(exactly = 1) { handle.setPlayerVolume(1f) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 12_000L) }
+    }
+
+    @Test
+    fun `a video that was left muted resumes muted`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        list.playVideo()
+        every { handle.currentPositionMs() } returns 5_000L
+        every { handle.playerVolume() } returns 0f
+
+        scrollPastTwoRows()
+        scrollBackPastTwoRows()
+        list.playVideo()
+
+        verify(exactly = 2) { handle.setPlayerVolume(0f) } // first play and the resume
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 5_000L) }
+    }
+
+    @Test
+    fun `each video keeps its own position and sound`() {
+        showList(rows = 6)
+        list.playVideo() // row 0
+        every { handle.currentPositionMs() } returns 5_000L
+        every { handle.playerVolume() } returns 1f
+        scrollPastTwoRows()
+        list.playVideo() // row 3 takes over; it was never played, so it starts muted from 0:00
+        verify(exactly = 1) { handle.startPlaying(any(), "url3", false, true, 0L) }
+
+        every { handle.currentPositionMs() } returns 7_000L
+        every { handle.playerVolume() } returns 0f
+        scrollBackPastTwoRows()
+        list.playVideo() // row 0 is back: it gets its own state, not the state of row 3
+
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 5_000L) }
+        verify(exactly = 1) { handle.setPlayerVolume(1f) }
+    }
+
+    @Test
+    fun `a saved state is ignored when the message now has different media`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        val video = rowAt(0)
+        list.playVideo()
+        every { handle.currentPositionMs() } returns 12_000L
+        every { handle.playerVolume() } returns 1f
+        scrollPastTwoRows()
+        scrollBackPastTwoRows()
+        video.mediaUrlValue = "another-url"
+
+        list.playVideo()
+
+        verify(exactly = 1) { handle.startPlaying(any(), "another-url", false, true, 0L) }
+        verify(exactly = 0) { handle.setPlayerVolume(1f) }
+    }
+
+    @Test
+    fun `tapping the mute control switches between muted and full volume`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+
+        every { handle.playerVolume() } returns 0f // muted: a tap turns the sound on
+        row.muteClick!!.invoke()
+        verify(exactly = 1) { handle.setPlayerVolume(1f) }
+
+        every { handle.playerVolume() } returns 1f // audible: a tap mutes it
+        row.muteClick!!.invoke()
+        verify(exactly = 2) { handle.setPlayerVolume(0f) } // the muted start and this tap
+    }
+
+    @Test
+    fun `releasing the player stops the video and a later play creates the player again`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        assertEquals(1, row.container.childCount)
+
+        list.releasePlayer()
+
+        verify(exactly = 1) { handle.stop() }
+        verify(exactly = 1) { handle.release() }
+        assertEquals(0, row.container.childCount)
+        assertEquals(View.GONE, row.container.visibility)
+
+        list.playVideo()
+
+        assertEquals(2, row.attachCount)
+        verify(exactly = 2) { handle.initExoplayer(any(), any(), any()) }
     }
 
     private companion object {

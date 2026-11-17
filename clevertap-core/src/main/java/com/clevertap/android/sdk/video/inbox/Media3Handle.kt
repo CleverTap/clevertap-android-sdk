@@ -87,11 +87,20 @@ class Media3Handle: InboxVideoPlayerHandle {
         }
     }
 
-    override fun pause() {
+    override fun stop() {
+        // Detach the view first so it does not keep showing the last frame of the old video.
+        videoSurfaceView?.player = null
         player?.let { ep ->
             ep.stop()
-            ep.release()
+            ep.clearMediaItems()
+            ep.volume = 0f
         }
+        videoSurfaceView?.hideController()
+    }
+
+    override fun release() {
+        videoSurfaceView?.player = null
+        player?.release()
         player = null
         videoSurfaceView = null
     }
@@ -122,32 +131,28 @@ class Media3Handle: InboxVideoPlayerHandle {
 
     override fun playerVolume(): Float = player?.let { ep -> ep.volume } ?: 0f
 
-    override fun handleMute() {
-        player?.let { ep ->
-            val playerVolume = playerVolume()
-
-            if (playerVolume > 0) {
-                ep.volume = 0f
-            } else if (playerVolume == 0f) {
-                ep.volume = 1f
-            }
-        }
+    override fun setPlayerVolume(volume: Float) {
+        player?.volume = volume
     }
+
+    override fun currentPositionMs(): Long = player?.currentPosition ?: 0L
 
     override fun startPlaying(
         ctx: Context,
         uriString: String,
         isMediaAudio: Boolean,
         isMediaVideo: Boolean,
+        startPositionMs: Long,
     ) {
         videoSurfaceView?.let { spv ->
+            spv.player = player // stop() detached the view from the player
             spv.requestFocus()
             spv.setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
         }
         // Prepare the player with the source.
         player?.let { ep ->
             val mediaItem: MediaItem = MediaItem.fromUri(uriString)
-            ep.setMediaItem(mediaItem)
+            ep.setMediaItem(mediaItem, startPositionMs)
             ep.prepare()
             if (isMediaAudio) {
                 videoSurfaceView?.showController() //show controller for audio as it is not autoplay

@@ -250,10 +250,19 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        // Free the player while the inbox is not visible; each video resumes from where it was.
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.releasePlayer();
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.prepareForListRebind();
+            mediaRecyclerView.releasePlayer();
         }
     }
 

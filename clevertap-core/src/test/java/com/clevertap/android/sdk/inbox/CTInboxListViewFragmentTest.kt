@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inbox
 
+import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -480,6 +481,28 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         // playVideo(), not onRestartPlayer(): the player is already initialised by this point.
         verify(exactly = 1) { media.playVideo() }
         verify(exactly = 0) { media.onRestartPlayer() }
+    }
+
+    @Test
+    fun test_onStop_releases_the_player_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onStop()
+
+        verify(exactly = 1) { media.releasePlayer() }
+    }
+
+    @Test
+    fun test_onDestroy_releases_the_player_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onDestroy()
+
+        verify(exactly = 1) { media.releasePlayer() }
     }
 
     @Test
