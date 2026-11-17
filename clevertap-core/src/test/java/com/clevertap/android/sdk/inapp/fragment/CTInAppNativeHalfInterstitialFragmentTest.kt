@@ -28,6 +28,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -125,6 +126,60 @@ class CTInAppNativeHalfInterstitialFragmentTest {
 
         assertEquals((350 * CARD_RATIO).toInt(), params.height)
         assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, params.width)
+    }
+
+    // SDK-6342: the height the card is reduced to, from the sizes measured before the resize.
+    @Test
+    fun `fitted height removes the bar height from both sides of the card`() {
+        assertEquals(
+            704,
+            CTInAppBaseFullFragment.fittedHalfInterstitialHeight(cardWidth = 780, cardHeight = 800, barHeight = 48)
+        )
+    }
+
+    @Test
+    fun `fitted height uses the whole card height when no bar covers it`() {
+        assertEquals(
+            800,
+            CTInAppBaseFullFragment.fittedHalfInterstitialHeight(cardWidth = 780, cardHeight = 800, barHeight = 0)
+        )
+    }
+
+    // Sizes in px measured on an Android 15 foldable emulator, 738dp wide, in portrait.
+    @Test
+    fun `fitted height when the app is drawn behind the bars`() {
+        // The window is the whole screen, so the bars cover the container.
+        assertEquals(
+            1728,
+            CTInAppBaseFullFragment.fittedHalfInterstitialHeight(cardWidth = 1630, cardHeight = 1982, barHeight = 127)
+        )
+    }
+
+    @Test
+    fun `fitted height when the system keeps the app clear of the bars`() {
+        // The bars do not cover the container, so nothing more is removed.
+        assertEquals(
+            1777,
+            CTInAppBaseFullFragment.fittedHalfInterstitialHeight(cardWidth = 1630, cardHeight = 1777, barHeight = 0)
+        )
+    }
+
+    @Test
+    fun `fitted height is null when the card fits`() {
+        assertNull(
+            CTInAppBaseFullFragment.fittedHalfInterstitialHeight(cardWidth = 350, cardHeight = 800, barHeight = 48)
+        )
+    }
+
+    @Test
+    fun `fitted height is null when no height is left`() {
+        assertNull(
+            CTInAppBaseFullFragment.fittedHalfInterstitialHeight(cardWidth = 350, cardHeight = 90, barHeight = 48)
+        )
+        // The bars use all of the height.
+        assertNull(
+            CTInAppBaseFullFragment.fittedHalfInterstitialHeight(cardWidth = 780, cardHeight = 800, barHeight = 400)
+        )
     }
 
     private val fragment = CTInAppNativeHalfInterstitialFragment()
