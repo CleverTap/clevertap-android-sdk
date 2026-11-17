@@ -10,6 +10,8 @@ import android.content.res.Configuration;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -37,13 +39,15 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppActionType;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inapp.InAppListener;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
-        DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback, InAppDisplayListener {
+        DidClickForHardPermissionListener, PushPermissionHandler.PushPermissionResultCallback, InAppDisplayListener,
+        InAppController.RestoredInAppListener {
 
     private final static String INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT = "displayPushPermissionPrompt";
     private final static String INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS = "shouldShowFallbackSettings";
@@ -60,6 +64,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private PushPermissionHandler pushPermissionHandler;
 
     private boolean invokedCallbacks = false;
+
+    // Restoring the in-app after a process kill: the activity has no content until it is loaded.
+    private static final long RESTORE_TIMEOUT_MS = 4000;
+
+    private final Handler restoreTimeoutHandler = new Handler(Looper.getMainLooper());
+
+    private boolean restoreFinished = false;
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public static void launchForPushPermissionPrompt(
@@ -81,13 +92,39 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             CTInAppNotification inAppNotification,
             CleverTapInstanceConfig config) {
         Intent intent = new Intent(context, InAppNotificationActivity.class);
-        intent.putExtra(Constants.INAPP_KEY, inAppNotification);
+        // Only the id is sent; the in-app is read from InAppController. Sending the whole object
+        // can exceed the Binder limit for large HTML (TransactionTooLargeException, SDK-6299).
+        intent.putExtra(Constants.INAPP_ID_KEY, inAppNotification.getCampaignId());
         intent.putExtra(INTENT_EXTRA_CT_CONFIG, config);
+        config.getLogger().verbose(config.getAccountId(),
+                "Launching InAppNotificationActivity with in-app id: " + inAppNotification.getCampaignId());
         context.startActivity(intent);
     }
 
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        // getIntent() and getDisplayingInApp (a static field, null in a fresh process) are both
+        // readable before super.onCreate, so the restore case can be decided first.
+        boolean restoring = isInAppMissing();
+        // When restoring, pass null to super so Android does not recreate the full-screen fragment
+        // it saved for this activity. That fragment's in-app is no longer in memory, and recreating
+        // it would run onCreateView against an unset in-app. restoreInApp adds a fresh fragment once
+        // the in-app has been read back from storage.
+        super.onCreate(restoring ? null : savedInstanceState);
+        if (restoring) {
+            // The in-app is no longer in memory, e.g. Android recreated this activity after the app
+            // process was killed. Try to show the in-app again from storage; close if that cannot
+            // start.
+            if (!restoreInApp()) {
+                Logger.v("In-app " + getIntent().getStringExtra(Constants.INAPP_ID_KEY)
+                        + " is no longer available, closing InAppNotificationActivity");
+                finish();
+            }
+            return;
+        }
+        setUp(savedInstanceState);
+    }
+
+    private void setUp(@Nullable Bundle savedInstanceState) {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -138,13 +175,19 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             setListener(ctState.getInAppController());
             ctState.getInAppController().registerInAppDisplayListener(this);
 
-            inAppNotification = intentExtras.getParcelable(Constants.INAPP_KEY);
+            String inAppId = intentExtras.getString(Constants.INAPP_ID_KEY);
+            inAppNotification = InAppController.getDisplayingInApp(inAppId);
+            if (inAppNotification == null) {
+                // Not in memory (e.g. the app process was killed): close without tracking.
+                config.getLogger().verbose(config.getAccountId(),
+                        "In-app " + inAppId + " is no longer available, closing InAppNotificationActivity");
+                finish();
+                return;
+            }
+            config.getLogger().verbose(config.getAccountId(),
+                    "InAppNotificationActivity loaded in-app " + inAppId + " from memory");
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
-            finish();
-            return;
-        }
-        if (inAppNotification == null) {
             finish();
             return;
         }
@@ -190,7 +233,81 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        pushPermissionHandler.onActivityResume(this);
+        if (pushPermissionHandler != null) { // null while an in-app is being restored
+            pushPermissionHandler.onActivityResume(this);
+        }
+    }
+
+    /**
+     * Starts showing the in-app again from storage after the app process was killed.
+     *
+     * @return false when it cannot start, so the activity should close.
+     */
+    private boolean restoreInApp() {
+        // After a process kill this is often the call that creates the SDK instance for the new
+        // process. As in setUp, any error closes the screen instead of crashing the app.
+        try {
+            Bundle extras = getIntent().getExtras();
+            if (extras == null) {
+                return false;
+            }
+            String inAppId = extras.getString(Constants.INAPP_ID_KEY);
+            CleverTapInstanceConfig restoreConfig = extras.getParcelable(INTENT_EXTRA_CT_CONFIG);
+            if (inAppId == null || restoreConfig == null) {
+                return false;
+            }
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, restoreConfig);
+            if (cleverTapAPI == null) {
+                return false;
+            }
+            Logger.v("In-app " + inAppId + " is not in memory, restoring it from storage");
+            // This window is transparent and has no content yet, but it still covers the app and
+            // would take every tap. Let taps through to the app until the in-app is ready.
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            restoreTimeoutHandler.postDelayed(this::onRestoreTimeout, RESTORE_TIMEOUT_MS);
+            cleverTapAPI.getCoreState().getInAppController().restoreDisplayedInApp(inAppId, this);
+            return true;
+        } catch (Throwable t) {
+            Logger.v("Could not start restoring the in-app, closing InAppNotificationActivity", t);
+            return false;
+        }
+    }
+
+    /**
+     * Result of {@link InAppController#restoreDisplayedInApp}. The activity is the listener itself,
+     * so the controller can hold it weakly.
+     */
+    @Override
+    public boolean onRestoreResult(@Nullable CTInAppNotification restoredInApp) {
+        if (restoreFinished || isFinishing() || isDestroyed()) {
+            return false;
+        }
+        restoreFinished = true;
+        restoreTimeoutHandler.removeCallbacksAndMessages(null);
+        if (restoredInApp == null || getSupportFragmentManager().isStateSaved()) {
+            Logger.v("In-app " + getIntent().getStringExtra(Constants.INAPP_ID_KEY)
+                    + " could not be restored, closing InAppNotificationActivity");
+            finish();
+            return false;
+        }
+        // The restored in-app is now the one on screen, so setUp finds it in memory. Pass no saved
+        // state so a new fragment is added; the one Android restored removed itself.
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        setUp(null);
+        // setUp closes the activity in some cases (e.g. a portrait-only in-app in landscape). When it
+        // did so through didDismiss, the controller already frees the in-app slot on that path, so
+        // true keeps it from doing it twice. Otherwise false makes the controller free the slot.
+        return !isFinishing() || invokedCallbacks;
+    }
+
+    private void onRestoreTimeout() {
+        if (restoreFinished) {
+            return;
+        }
+        restoreFinished = true;
+        Logger.v("Restoring in-app " + getIntent().getStringExtra(Constants.INAPP_ID_KEY)
+                + " took too long, closing InAppNotificationActivity");
+        finish();
     }
 
     @SuppressLint("WrongConstant")
@@ -398,6 +515,18 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         return config.getAccountId() + ":CT_INAPP_CONTENT_FRAGMENT";
     }
 
+    /**
+     * True when this activity was opened for an in-app that is no longer in memory, which happens
+     * when Android recreates it after the app process was killed.
+     */
+    private boolean isInAppMissing() {
+        Bundle extras = getIntent().getExtras();
+        if (extras == null || !extras.containsKey(Constants.INAPP_ID_KEY)) {
+            return false;
+        }
+        return InAppController.getDisplayingInApp(extras.getString(Constants.INAPP_ID_KEY)) == null;
+    }
+
     private void showAlertDialogForInApp() {
         List<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if (buttons.isEmpty()) {
@@ -472,6 +601,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        restoreTimeoutHandler.removeCallbacksAndMessages(null);
 
         if (config != null) {
             CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, config);

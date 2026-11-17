@@ -111,6 +111,7 @@ class NdCampaignScenariosTest : BaseTestCase() {
             MockCTExecutors(),
             mockk(relaxed = true),
             mockk(relaxed = true),
+            mockk(relaxed = true),
         )
 
         // Advanced-rule metadata (what the evaluator reads).

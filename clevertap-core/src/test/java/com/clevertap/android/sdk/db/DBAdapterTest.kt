@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db
 
 import TestCryptHandler
+import com.clevertap.android.sdk.db.dao.DisplayedInAppData
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.TestLogger
 import com.clevertap.android.sdk.cryption.EncryptionLevel
@@ -312,6 +313,20 @@ class DBAdapterTest : BaseTestCase() {
         // Then
         assertNotNull(dao1)
         assertSame(dao1, dao2) // Verify same instance is returned
+    }
+
+    @Test
+    fun `displayedInAppDAO returns singleton instance separate from the delayed in-apps DAO`() {
+        val dao1 = dbAdapter.displayedInAppDAO()
+        val dao2 = dbAdapter.displayedInAppDAO()
+
+        assertSame(dao1, dao2)
+        assertNotSame<Any>(dbAdapter.delayedLegacyInAppDAO(), dao1)
+        // Writes go to the displayed in-app table only.
+        val displayed = DisplayedInAppData("displayed_1", "data", 100L)
+        dao1.save(displayed)
+        assertEquals(displayed, dao1.fetch("displayed_1"))
+        assertNull(dbAdapter.delayedLegacyInAppDAO().fetchSingleInApp("displayed_1"))
     }
 
     // =====================================================

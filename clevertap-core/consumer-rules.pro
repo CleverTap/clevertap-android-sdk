@@ -17,3 +17,5 @@
 -dontwarn com.clevertap.android.sdk.**
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,
                 SourceFile,LineNumberTable,*Annotation*,EnclosingMethod
+# WorkManager 2.10.x brings Room 2.6.1, whose rule keeps RoomDatabase subclasses but not their constructor. R8 in AGP 9 removes it and the app crashes at start (SDK-6284).
+-keep class * extends androidx.room.RoomDatabase { void <init>(); }

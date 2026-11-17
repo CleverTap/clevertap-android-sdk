@@ -52,6 +52,28 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
         // set the text zoom in order to ignore device font size changes
         settings.textZoom = 100
         id = 188293
+        lockDownLocalAccess()
+    }
+
+    /**
+     * An in-app only ever shows content that came from CleverTap over https, so the
+     * WebView must never read the phone's files or content providers, whether or not
+     * JavaScript is on. Android's defaults leave content access on for every app and
+     * file access on for apps targeting Android 10 or lower, so both are turned off here
+     * on every in-app WebView, not only when JavaScript is enabled.
+     *
+     * Example: a campaign with d.url = "content://com.app.fileprovider/cache/session.json"
+     * used to show that file on screen; now the WebView refuses to load it.
+     * Assets under file:///android_asset stay reachable; Android exempts them.
+     */
+    private fun lockDownLocalAccess() {
+        settings.apply {
+            allowContentAccess = false
+            allowFileAccess = false
+            @Suppress("DEPRECATION")
+            allowFileAccessFromFileURLs = false
+            javaScriptCanOpenWindowsAutomatically = false
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -178,14 +200,7 @@ internal class CTInAppWebView @SuppressLint("ResourceType") constructor(
 
     @SuppressLint("SetJavaScriptEnabled")
     fun setJavaScriptInterface(webInterface: CTWebInterface) {
-        getSettings().apply {
-            javaScriptEnabled = true
-            javaScriptCanOpenWindowsAutomatically = false
-            allowContentAccess = false
-            allowFileAccess = false
-            allowFileAccessFromFileURLs = false
-        }
-
+        settings.javaScriptEnabled = true
         addJavascriptInterface(
             webInterface,
             JAVASCRIPT_INTERFACE_NAME

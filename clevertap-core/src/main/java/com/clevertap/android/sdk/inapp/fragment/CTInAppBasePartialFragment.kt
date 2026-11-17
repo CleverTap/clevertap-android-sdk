@@ -12,6 +12,7 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
 
     override fun onStart() {
         super.onStart()
+        if (isOrphan) return
         if (isCleanedUp.get()) {
             cleanup()
         }

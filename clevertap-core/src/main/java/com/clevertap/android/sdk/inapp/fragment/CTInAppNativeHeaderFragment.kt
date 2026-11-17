@@ -34,6 +34,7 @@ internal class CTInAppNativeHeaderFragment : CTInAppBasePartialNativeFragment() 
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        if (isOrphan) return null
         val inAppButtons = mutableListOf<Button>()
         val inAppView = inflater.inflate(R.layout.inapp_header, container, false)
         this.inAppView = inAppView

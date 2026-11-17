@@ -11,6 +11,7 @@ import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CleverTapFactoryTest : BaseTestCase() {
@@ -135,6 +136,15 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullAnalyticsManager(){
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
         assertNotNull(coreState.analyticsManager)
+    }
+
+    @Test
+    fun test_getCoreState_RegistersInAppControllerForUserChange(){
+        mockkStatic(CTExecutorFactory::class) {
+            every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+            val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
+            assertTrue(coreState.callbackManager.changeUserCallbackList.contains(coreState.inAppController))
+        }
     }
 
     @Test

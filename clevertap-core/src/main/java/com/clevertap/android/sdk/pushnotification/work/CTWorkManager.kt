@@ -9,7 +9,6 @@ import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Utils
@@ -33,8 +32,9 @@ class CTWorkManager(private val context: Context, config: CleverTapInstanceConfi
                 .setConstraints(constraints)
                 .build()
 
-            // schedule unique work request to avoid duplicates
-            WorkManager.getInstance(context).enqueueUniqueWork(
+            // schedule unique work request to avoid duplicates.
+            // Java accessor, so this also works on WorkManager older than 2.10 (SDK-6153)
+            CTWorkManagerAccessor.getInstance(context).enqueueUniqueWork(
                 FLUSH_PUSH_IMPRESSIONS_ONE_TIME_WORKER_NAME,
                 ExistingWorkPolicy.KEEP,
                 flushPushImpressionsWorkRequest

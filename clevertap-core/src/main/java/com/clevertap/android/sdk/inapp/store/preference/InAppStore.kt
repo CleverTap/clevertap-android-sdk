@@ -144,6 +144,19 @@ internal class InAppStore(
     }
 
     /**
+     * Removes Server-side legacy In-App messages.
+     */
+    fun removeServerSideInApps() {
+        ctPreference.remove(INAPP_KEY)
+        serverSideInAppsCache = emptyList()
+    }
+
+    /**
+     * Length of the stored (encrypted) Server-side legacy In-App messages, read without decrypting them.
+     */
+    fun serverSideInAppsStoredLength(): Int = ctPreference.readString(INAPP_KEY, "")?.length ?: 0
+
+    /**
      * Stores evaluated Server-side In-App IDs.
      *
      * @param evaluatedServerSideInAppIds The array of evaluated Server-side In-App IDs.

@@ -20,6 +20,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.inapp.CTInAppNotificationButton
 import com.clevertap.android.sdk.inapp.InAppActionParser
 import com.clevertap.android.sdk.inapp.InAppActionType
+import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.inapp.InAppListener
 import com.clevertap.android.sdk.inapp.InAppWebInteraction
 import com.clevertap.android.sdk.inapp.images.FileResourceProvider
@@ -84,6 +85,14 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
     private var listenerWeakReference: WeakReference<InAppListener>? = null
     private var didClickForHardPermissionListener: DidClickForHardPermissionListener? = null
 
+    /**
+     * True when the in-app for this fragment is no longer in memory, e.g. Android restored the
+     * fragment after the app process was killed. The fragment then removes itself and must not
+     * touch [inAppNotification] or send any events.
+     */
+    protected var isOrphan: Boolean = false
+        private set
+
     protected abstract fun cleanup()
     protected abstract fun generateListener()
 
@@ -93,8 +102,19 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
         super.onAttach(context)
         val bundle = arguments
         if (bundle != null) {
-            inAppNotification = bundle.getParcelable<CTInAppNotification>(Constants.INAPP_KEY)!!
             config = bundle.getParcelable<CleverTapInstanceConfig>(Constants.KEY_CONFIG)!!
+            val inAppId = bundle.getString(Constants.INAPP_ID_KEY)
+            val inApp = InAppController.getDisplayingInApp(inAppId)
+            if (inApp == null) {
+                config.logger.verbose(
+                    config.accountId,
+                    "In-app $inAppId is no longer available, removing its fragment"
+                )
+                isOrphan = true
+                parentFragmentManager.beginTransaction().remove(this).commitAllowingStateLoss()
+                return
+            }
+            inAppNotification = inApp
             currentOrientation = resources.configuration.orientation
             generateListener()/*Initialize the below listener only when in app has InAppNotification activity as their host activity
             when requesting permission for notification.*/
@@ -106,6 +126,7 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (isOrphan) return
         activeMediaUrl = savedInstanceState?.getString(KEY_ACTIVE_MEDIA_URL)
             ?: InAppMediaHandler.resolveMediaUrl(inAppNotification, currentOrientation)
         mediaHandler = createMediaHandler()
@@ -125,7 +146,8 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
 
     fun setArguments(inAppNotification: CTInAppNotification, config: CleverTapInstanceConfig) {
         val bundle = Bundle()
-        bundle.putParcelable(Constants.INAPP_KEY, inAppNotification)
+        // Only the id: arguments are saved through Binder, and large HTML would not fit (SDK-6299).
+        bundle.putString(Constants.INAPP_ID_KEY, inAppNotification.campaignId)
         bundle.putParcelable(Constants.KEY_CONFIG, config)
         setArguments(bundle)
     }
@@ -173,11 +195,13 @@ internal abstract class CTInAppBaseFragment : Fragment(), InAppWebInteraction {
         !inAppNotification.isShowClose && inAppNotification.swipeToDismiss
 
     override fun didDismiss(data: Bundle?) {
+        if (isOrphan) return
         cleanup()
         getListener()?.inAppNotificationDidDismiss(inAppNotification, data)
     }
 
     fun didShow(data: Bundle?) {
+        if (isOrphan) return
         getListener()?.inAppNotificationDidShow(inAppNotification, data)
     }
 

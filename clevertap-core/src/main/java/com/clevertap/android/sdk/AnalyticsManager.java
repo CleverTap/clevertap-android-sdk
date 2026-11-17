@@ -25,6 +25,8 @@ import com.clevertap.android.sdk.inbox.EventSuppressor;
 import com.clevertap.android.sdk.profile.ProfileCommand;
 import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
 import com.clevertap.android.sdk.profile.traversal.ProfileChange;
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewPayload;
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
@@ -68,6 +70,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private final Object notificationMapLock = new Object();
     private final LocalDataStore localDataStore;
     private final InAppPreviewHandler inAppPreviewHandler;
+    private final PushPreviewStore pushPreviewStore;
     private final EventSuppressor inboxViewedSuppressor = new EventSuppressor(2_000L);
     private final EventSuppressor inboxClickedSuppressor = new EventSuppressor(5_000L);
 
@@ -87,7 +90,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             Clock currentTimeProvider,
             CTExecutors executors,
             LocalDataStore localDataStore,
-            InAppPreviewHandler inAppPreviewHandler
+            InAppPreviewHandler inAppPreviewHandler,
+            PushPreviewStore pushPreviewStore
     ) {
         this.context = context;
         this.config = config;
@@ -103,6 +107,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.executors = executors;
         this.localDataStore = localDataStore;
         this.inAppPreviewHandler = inAppPreviewHandler;
+        this.pushPreviewStore = pushPreviewStore;
     }
 
     @Override
@@ -655,18 +660,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)) {
-            inAppPreviewHandler.handleInAppPreview(extras);
-            return;
-        }
-
-        if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleInboxPreview(extras);
-            return;
-        }
-
-        if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleSendTestForDisplayUnits(extras);
+        if (PushPreviewPayload.hasPreviewFields(extras)) {
+            // SDK-6282: the tapped intent may come from anywhere. Render only the copy
+            // the SDK saved when the push arrived, never the intent's own content.
+            renderTrustedPushPreview(extras);
             return;
         }
 
@@ -707,6 +704,37 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
+    /**
+     * Looks the tapped preview up in the trusted store and renders the stored copy.
+     * Runs on the serial executor, the same queue the store writes on, so a copy
+     * saved at push arrival is always visible here.
+     *
+     * Example: a launch intent that carries its own wzrk_inapp but was never received
+     * as a push finds no stored copy and renders nothing.
+     */
+    private void renderTrustedPushPreview(final Bundle extras) {
+        Task<Void> task = executors.postAsyncSafelyTask();
+        task.execute("renderTrustedPushPreview", () -> {
+            try {
+                Bundle trusted = pushPreviewStore.find(extras);
+                if (trusted == null) {
+                    return null; // the store already logged why
+                }
+                if (trusted.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)) {
+                    inAppPreviewHandler.handleInAppPreview(trusted);
+                } else if (trusted.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
+                    handleInboxPreview(trusted);
+                } else if (trusted.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
+                    handleSendTestForDisplayUnits(trusted);
+                }
+            } catch (Throwable t) {
+                // A tap must never crash the app, whatever the extras contain.
+                config.getLogger().verbose(config.getAccountId(), "Failed to process push preview", t);
+            }
+            return null;
+        });
+    }
+
     private void handleInboxPreview(Bundle extras) {
         Task<Void> task = executors.postAsyncSafelyTask();
         task.execute("testInboxNotification", () -> {
@@ -745,6 +773,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     "Push notification: " + (extras == null ? "NULL" : extras.toString())
                             + " not from CleverTap - will not process Notification Viewed event.");
             return;
+        }
+
+        // SDK-6282: custom renderers call this after showing the notification. It is the
+        // trusted sighting for apps that do not use the SDK's rendering. Must run before the
+        // wzrk_id and dedupe checks below, because every Send Test carries wzrk_id "0_0".
+        // An analytics-only instance never renders a preview, so it has nothing to remember.
+        if (!config.isAnalyticsOnly()) {
+            pushPreviewStore.remember(extras);
         }
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG)

@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.db.BaseDatabaseManager
 import com.clevertap.android.sdk.db.DBAdapter
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
 import com.clevertap.android.sdk.pushnotification.work.CTWorkManager
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -41,6 +42,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
     private lateinit var dbAdapter: DBAdapter
     private lateinit var baseDatabaseManager: BaseDatabaseManager
     private lateinit var analyticsManager: AnalyticsManager
+    private lateinit var pushPreviewStore: PushPreviewStore
     private lateinit var renderer: INotificationRenderer
 
     @Before
@@ -50,6 +52,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
         baseDatabaseManager = mockk(relaxed = true)
         every { baseDatabaseManager.loadDBAdapter(any()) } returns dbAdapter
         analyticsManager = mockk(relaxed = true)
+        pushPreviewStore = mockk(relaxed = true)
 
         renderer = mockk(relaxed = true)
         every { renderer.getMessage(any()) } returns "a message"
@@ -69,7 +72,8 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
         val sut = PushProviders(
             appCtx, config, baseDatabaseManager,
             mockk<ValidationResultStack>(relaxed = true),
-            analyticsManager, mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true)
+            analyticsManager, mockk<CTWorkManager>(relaxed = true), mockk<Clock>(relaxed = true),
+            pushPreviewStore
         )
         sut.pushNotificationRenderer = theRenderer
         return sut
@@ -105,6 +109,28 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
         buildSut(config = analyticsOnly)._createNotification(appCtx, baseBundle(), Constants.EMPTY_NOTIFICATION_ID)
 
         verify(exactly = 0) { renderer.getMessage(any()) }
+        verify(exactly = 0) { pushPreviewStore.remember(any()) }
+    }
+
+    // SDK-6282: every push the SDK renders is a trusted sighting for the preview store,
+    // recorded before any render decision so no later gate can skip it.
+    @Test
+    fun `push with notification tag - is remembered by the preview store before rendering`() {
+        val extras = baseBundle().apply {
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY, "custom-html")
+            putString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY, "{\"type\":\"custom-html\"}")
+        }
+
+        buildSut()._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        verify(exactly = 1) { pushPreviewStore.remember(extras) }
+    }
+
+    @Test
+    fun `no notification tag - is not remembered by the preview store`() {
+        buildSut()._createNotification(appCtx, Bundle(), Constants.EMPTY_NOTIFICATION_ID)
+
+        verify(exactly = 0) { pushPreviewStore.remember(any()) }
     }
 
     @Test

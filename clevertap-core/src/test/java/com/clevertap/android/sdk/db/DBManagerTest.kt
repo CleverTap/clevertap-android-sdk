@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.db
 
 import TestCryptHandler
+import com.clevertap.android.sdk.db.dao.DisplayedInAppData
 import com.clevertap.android.sdk.CTLockManager
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -536,5 +537,18 @@ class DBManagerTest : BaseTestCase() {
         assertEquals(30, queueData.eventIds.size)
         assertEquals(50, queueData.data.length()) // Should return exactly 50
         assertTrue(queueData.hasMore) // ensures that we will continue loop to fetch continued events to send
+    }
+
+    @Test
+    fun `loadDBAdapter clears delayed in-apps but keeps the displayed in-app for restore`() {
+        dbAdapter.delayedLegacyInAppDAO().insertBatch(listOf(DelayedLegacyInAppData("delayed_1", 5, "delayed")))
+        val displayed = DisplayedInAppData("displayed_1", "displayed", 100L)
+        dbAdapter.displayedInAppDAO().save(displayed)
+
+        // The first load in a new process cleans up tables.
+        val loaded = dbManager.loadDBAdapter(appCtx)
+
+        assertNull(loaded.delayedLegacyInAppDAO().fetchSingleInApp("delayed_1"))
+        assertEquals(displayed, loaded.displayedInAppDAO().fetch("displayed_1"))
     }
 }
