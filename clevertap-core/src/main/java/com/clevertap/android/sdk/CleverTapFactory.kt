@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.clevertap.android.sdk.CTPreferenceCache.Companion.getInstance
 import com.clevertap.android.sdk.StoreProvider.Companion.getInstance
 import com.clevertap.android.sdk.cryption.CTKeyGenerator
@@ -684,6 +685,12 @@ internal object CleverTapFactory {
             SYSTEM,
             inboxV2Bridge
         )
+
+        AppBackgroundObserver(
+            lifecycleOwner = ProcessLifecycleOwner.get(),
+            config = config,
+            onAppBackground = activityLifeCycleManager::appBackgrounded
+        ).register()
 
         val loginController = LoginController(
             context, config, deviceInfo,

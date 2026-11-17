@@ -29,9 +29,6 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
-import androidx.lifecycle.DefaultLifecycleObserver;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.ProcessLifecycleOwner;
 import com.clevertap.android.sdk.cryption.ICryptHandler;
 import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
@@ -95,7 +92,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -175,8 +171,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CoreState coreState;
 
     private static Clock clevertapClock = Clock.SYSTEM;
-
-    private static final AtomicBoolean appBackgroundObserverRegistered = new AtomicBoolean(false);
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
@@ -991,7 +985,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (instance == null) {
             instance = new CleverTapAPI(context, config, cleverTapID);
             instances.put(config.getAccountId(), instance);
-            registerAppBackgroundObserver();
+            final CleverTapAPI finalInstance = instance;
         } else if (instance.getConfig().getEnableCustomCleverTapId() && Utils
                 .validateCTID(cleverTapID) && instance.isErrorDeviceId()) {
             instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
@@ -1031,46 +1025,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             try {
                 if (instance != null) {
                     instance.coreState.getActivityLifeCycleManager().activityPaused();
-                }
-            } catch (Throwable t) {
-                // Ignore
-            }
-        }
-    }
-
-    /**
-     * Registers a process-level lifecycle observer (once per process) so queued events are flushed
-     * when the whole app moves to background. Unlike {@link #onActivityPaused()}, ON_STOP of
-     * {@link ProcessLifecycleOwner} does not fire on activity transitions or configuration changes.
-     */
-    private static void registerAppBackgroundObserver() {
-        if (!appBackgroundObserverRegistered.compareAndSet(false, true)) {
-            return;
-        }
-        runOnUiThread(() -> {
-            try {
-                ProcessLifecycleOwner.get().getLifecycle().addObserver(new DefaultLifecycleObserver() {
-                    @Override
-                    public void onStop(@NonNull LifecycleOwner owner) {
-                        onAppBackgrounded();
-                    }
-                });
-            } catch (Throwable t) {
-                Logger.v("Failed to register app background observer - " + t.getLocalizedMessage());
-            }
-        });
-    }
-
-    static void onAppBackgrounded() {
-        if (instances == null) {
-            return;
-        }
-
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            try {
-                if (instance != null) {
-                    instance.coreState.getActivityLifeCycleManager().appBackgrounded();
                 }
             } catch (Throwable t) {
                 // Ignore
