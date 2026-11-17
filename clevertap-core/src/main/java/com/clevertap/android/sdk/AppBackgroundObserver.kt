@@ -3,6 +3,8 @@ package com.clevertap.android.sdk
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 /**
  * Notifies [onAppBackground] when the whole app moves to background.
@@ -19,10 +21,10 @@ internal class AppBackgroundObserver(
 ) : DefaultLifecycleObserver {
 
     fun register() {
-        // Lifecycle#addObserver must be called on the main thread
-        Utils.runOnUiThread {
+        // lifecycleScope runs on Dispatchers.Main.immediate, as Lifecycle#addObserver requires the main thread
+        lifecycleOwner.lifecycleScope.launch {
             try {
-                lifecycleOwner.lifecycle.addObserver(this)
+                lifecycleOwner.lifecycle.addObserver(this@AppBackgroundObserver)
             } catch (t: Throwable) {
                 logger.verbose(accountId, "Failed to register app background observer", t)
             }
