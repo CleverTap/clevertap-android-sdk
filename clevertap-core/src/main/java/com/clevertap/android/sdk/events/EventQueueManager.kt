@@ -96,6 +96,14 @@ internal class EventQueueManager(
         flushQueueAsync(context, EventGroup.REGULAR)
     }
 
+    override fun flushOnAppBackground(context: Context) {
+        logger.verbose(config.accountId, "App backgrounded, flushing queued events")
+        // Cancel the pending delayed flush; we flush right away instead of waiting for it
+        commsRunnable?.let { mainLooperHandler.removeCallbacks(it) }
+        flushQueueAsync(context, EventGroup.REGULAR)
+        flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED)
+    }
+
     override fun flushQueueAsync(context: Context, eventGroup: EventGroup) {
         val task = executors(config).postAsyncSafelyTask<Void?>()
         task.execute("CommsManager#flushQueueAsync") {
