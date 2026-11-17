@@ -533,6 +533,36 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     }
 
     @Test
+    fun test_refreshList_with_changed_content_detaches_the_video_first_and_plays_again_after() {
+        val fragment = viewReadyFragment()
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"))
+        fragment.refreshList()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"), message("B"))
+        fragment.refreshList()
+
+        verify(exactly = 1) { media.prepareForListRebind() }
+        verify(exactly = 1) { media.post(any<Runnable>()) } // playVideo() once the rows are laid out again
+    }
+
+    @Test
+    fun test_refreshList_with_identical_content_leaves_the_video_alone() {
+        val fragment = viewReadyFragment()
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"))
+        fragment.refreshList()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"))
+        fragment.refreshList()
+
+        verify(exactly = 0) { media.prepareForListRebind() }
+        verify(exactly = 0) { media.post(any<Runnable>()) }
+    }
+
+    @Test
     fun test_onPageSettled_is_a_no_op_without_video_support() {
         // haveVideoPlayerSupport = false leaves mediaRecyclerView null.
         val fragment = viewReadyFragment()

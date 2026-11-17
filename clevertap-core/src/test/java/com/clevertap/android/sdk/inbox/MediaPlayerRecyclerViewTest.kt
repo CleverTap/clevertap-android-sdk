@@ -483,6 +483,107 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     }
 
     @Test
+    fun `pausing the list pauses the player without releasing it`() {
+        showList(rows = 1)
+        list.playVideo()
+
+        list.onPausePlayer()
+
+        verify(exactly = 1) { handle.setPlayWhenReady(false) }
+        verify(exactly = 0) { handle.release() }
+    }
+
+    @Test
+    fun `restarting the list plays the most visible video row`() {
+        showList(rows = 1)
+
+        list.onRestartPlayer()
+
+        assertEquals(1, rowAt(0).attachCount)
+    }
+
+    @Test
+    fun `a playing row keeps playing while enough of it is visible`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        list.playVideo()
+
+        list.playVideo()
+
+        verify(exactly = 1) { handle.setPlayWhenReady(true) }
+        assertEquals("the row must not be attached a second time", 1, rowAt(0).attachCount)
+    }
+
+    @Test
+    fun `a playing row is paused when too little of it is visible`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        list.playVideo()
+
+        list.scrollBy(0, 350) // 250 of the 600 pixels of the row stay on screen
+        list.playVideo()
+
+        verify(exactly = 1) { handle.setPlayWhenReady(false) }
+        verify(exactly = 0) { handle.stop() } // the row is still attached, so it is only paused
+    }
+
+    @Test
+    fun `preparing for a list rebind stops the playing video and keeps the player`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+
+        list.prepareForListRebind()
+
+        verify(exactly = 1) { handle.stop() }
+        verify(exactly = 0) { handle.release() }
+        assertEquals(0, row.container.childCount)
+    }
+
+    @Test
+    fun `preparing for a list rebind with no video playing does nothing`() {
+        showList(rows = 1)
+
+        list.prepareForListRebind()
+
+        verify(exactly = 0) { handle.stop() }
+    }
+
+    @Test
+    fun `leaving the window releases the player`() {
+        showList(rows = 1)
+        list.playVideo()
+
+        shadowOf(list).callOnDetachedFromWindow()
+
+        verify(exactly = 1) { handle.stop() }
+        verify(exactly = 1) { handle.release() }
+    }
+
+    @Test
+    fun `playing starts when the list stops scrolling`() {
+        showList(rows = 6)
+        val listeners = RecyclerView::class.java.getDeclaredField("mScrollListeners")
+            .apply { isAccessible = true }.get(list) as List<*>
+
+        listeners.filterIsInstance<RecyclerView.OnScrollListener>()
+            .forEach { it.onScrollStateChanged(list, RecyclerView.SCROLL_STATE_IDLE) }
+
+        assertEquals(1, rowAt(0).attachCount)
+    }
+
+    @Test
+    fun `the list can be created the way the inbox creates it`() {
+        val attrs = Robolectric.buildAttributeSet().build()
+        val lists = listOf(
+            MediaPlayerRecyclerView(appCtx),
+            MediaPlayerRecyclerView(appCtx, attrs),
+            MediaPlayerRecyclerView(appCtx, attrs, 0)
+        )
+
+        // No player is created until a video plays, so these calls must be harmless.
+        lists.forEach { it.onPausePlayer() }
+    }
+
+    @Test
     fun `restoring states ignores entries that are broken`() {
         showList(rows = 1)
         val broken = Bundle().apply {
@@ -507,6 +608,65 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         assertTrue(saved.isEmpty)
         verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+    }
+
+    @Test
+    fun `a row that cannot take the player is not treated as playing`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        row.addResult = false
+
+        list.playVideo()
+        list.playVideo()
+
+        assertEquals("the second play must try again, not take the already-playing shortcut", 2, row.attempts)
+        assertEquals(0, row.attachCount)
+        verify(exactly = 0) { handle.setPlayWhenReady(any()) }
+    }
+
+    @Test
+    fun `buffering and ready events of the player reach the playing row`() {
+        val buffering = slot<() -> Unit>()
+        val ready = slot<() -> Unit>()
+        justRun { handle.initExoplayer(any(), capture(buffering), capture(ready)) }
+        showList(rows = 1)
+        val row = rowAt(0)
+        val spinner = FrameLayout(appCtx).apply { visibility = View.GONE }
+        row.progressBarFrameLayout = spinner
+        list.playVideo()
+        row.container.visibility = View.GONE
+
+        buffering.captured.invoke()
+        assertEquals(View.VISIBLE, spinner.visibility)
+
+        ready.captured.invoke()
+        assertEquals(View.VISIBLE, row.container.visibility)
+        assertEquals(View.GONE, spinner.visibility)
+    }
+
+    @Test
+    fun `the player view gets the audio artwork`() {
+        val artwork = slot<() -> Drawable?>()
+        justRun { handle.initPlayerView(any(), capture(artwork)) }
+        showList(rows = 1)
+
+        list.playVideo()
+
+        assertNotNull(artwork.captured.invoke())
+    }
+
+    @Test
+    fun `a recycled row that is still playing is stopped even when no detach was reported`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        val recycleListener = RecyclerView::class.java.getDeclaredField("mRecyclerListener")
+            .apply { isAccessible = true }.get(list) as RecyclerView.RecyclerListener
+
+        recycleListener.onViewRecycled(row)
+
+        verify(exactly = 1) { handle.stop() }
+        assertEquals(0, row.container.childCount)
     }
 
     private companion object {
