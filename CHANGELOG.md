@@ -1,6 +1,9 @@
 ## CHANGE LOG.
 ### Unreleased
 * [CleverTap Android SDK v9.0.0](docs/CTCORECHANGELOG.md).
+* [CleverTap Push Templates SDK v2.8.0](docs/CTPUSHTEMPLATESCHANGELOG.md).
+* [CleverTap Geofence SDK v1.5.0](docs/CTGEOFENCECHANGELOG.md).
+* [CleverTap Huawei Push SDK v1.6.0](docs/CTHUAWEIPUSHCHANGELOG.md).
 
 ### November 10, 2026
 * [CleverTap Android SDK v8.6.0](docs/CTCORECHANGELOG.md).

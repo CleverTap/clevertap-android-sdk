@@ -180,14 +180,14 @@ dependencies {
     implementation "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"*/
 
     remoteImplementation("com.clevertap.android:clevertap-android-sdk:9.0.0")
-    remoteImplementation("com.clevertap.android:clevertap-geofence-sdk:1.4.0")
-    remoteImplementation("com.clevertap.android:push-templates:2.7.0")
-    remoteImplementation("com.clevertap.android:clevertap-hms-sdk:1.5.1")
+    remoteImplementation("com.clevertap.android:clevertap-geofence-sdk:1.5.0")
+    remoteImplementation("com.clevertap.android:push-templates:2.8.0")
+    remoteImplementation("com.clevertap.android:clevertap-hms-sdk:1.6.0")
 
     stagingImplementation("com.clevertap.android:clevertap-android-sdk:9.0.0")
-    stagingImplementation("com.clevertap.android:clevertap-geofence-sdk:1.4.0")
-    stagingImplementation("com.clevertap.android:push-templates:2.7.0")
-    stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.5.1")
+    stagingImplementation("com.clevertap.android:clevertap-geofence-sdk:1.5.0")
+    stagingImplementation("com.clevertap.android:push-templates:2.8.0")
+    stagingImplementation("com.clevertap.android:clevertap-hms-sdk:1.6.0")
 }
 
 Properties loadLocalProperties() {
