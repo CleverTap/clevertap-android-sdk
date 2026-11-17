@@ -3,6 +3,8 @@ package com.clevertap.android.sdk.inapp.fragment
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.clevertap.android.sdk.InAppNotificationActivity
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
@@ -67,7 +69,22 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         layoutParams: FrameLayout.LayoutParams,
         closeImageView: CloseImageView
     ) {
-        layoutParams.height = (relativeLayout.measuredWidth * 1.3f).toInt()
+        val aspectHeight = (relativeLayout.measuredWidth * 1.3f).toInt()
+        // The card is centered and can be drawn behind the status and navigation bars, so keep
+        // the height of the taller bar free on both sides.
+        val bars = ViewCompat.getRootWindowInsets(relativeLayout)?.getInsets(
+            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        )
+        val barHeight = if (bars == null) 0 else maxOf(bars.top, bars.bottom)
+        val availableHeight = relativeLayout.measuredHeight - 2 * barHeight
+
+        if (availableHeight > 0 && aspectHeight > availableHeight) {
+            // The card would be taller than the screen, so fit the height and make it narrower.
+            layoutParams.height = availableHeight
+            layoutParams.width = (availableHeight / 1.3f).toInt()
+        } else {
+            layoutParams.height = aspectHeight
+        }
         relativeLayout.setLayoutParams(layoutParams)
         addCloseImageView(relativeLayout, closeImageView)
     }
