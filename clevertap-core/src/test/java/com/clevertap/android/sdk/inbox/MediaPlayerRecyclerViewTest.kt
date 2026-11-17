@@ -365,6 +365,104 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     }
 
     @Test
+    fun `a new list resumes a video from the states saved by the old one`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        list.playVideo()
+        every { handle.currentPositionMs() } returns 12_000L
+        every { handle.playerVolume() } returns 1f
+        val saved = list.saveVideoStates() // the video is still playing
+        list.releasePlayer() // the old list goes away
+
+        showList(rows = 6, videoPositions = setOf(0)) // what a rotation builds
+        list.restoreVideoStates(saved)
+        list.playVideo()
+
+        verify(exactly = 1) { handle.setPlayerVolume(1f) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 12_000L) }
+    }
+
+    @Test
+    fun `saved states keep their values through a parcel`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        list.playVideo()
+        every { handle.currentPositionMs() } returns 7_000L
+        every { handle.playerVolume() } returns 1f
+        val saved = list.saveVideoStates()
+
+        val parcel = Parcel.obtain()
+        val restored: Bundle?
+        try {
+            parcel.writeBundle(saved)
+            parcel.setDataPosition(0)
+            restored = parcel.readBundle(javaClass.classLoader)
+        } finally {
+            parcel.recycle()
+        }
+        list.releasePlayer() // the old list goes away
+        showList(rows = 6, videoPositions = setOf(0))
+        list.restoreVideoStates(restored)
+        list.playVideo()
+
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 7_000L) }
+        verify(exactly = 1) { handle.setPlayerVolume(1f) }
+    }
+
+    @Test
+    fun `saved states hold both the playing video and the ones stopped earlier`() {
+        showList(rows = 6)
+        list.playVideo() // row 0
+        every { handle.currentPositionMs() } returns 5_000L
+        every { handle.playerVolume() } returns 1f
+        scrollPastTwoRows()
+        list.playVideo() // row 3 takes over
+        every { handle.currentPositionMs() } returns 9_000L
+        every { handle.playerVolume() } returns 0f
+
+        val saved = list.saveVideoStates()
+
+        val stopped = saved.getBundle("message0")
+        val playing = saved.getBundle("message3")
+        assertNotNull("the stopped video was not saved", stopped)
+        assertNotNull("the playing video was not saved", playing)
+        assertEquals(5_000L, stopped!!.getLong("positionMs"))
+        assertEquals(1f, stopped.getFloat("volume"), 0f)
+        assertEquals(9_000L, playing!!.getLong("positionMs"))
+        assertEquals(0f, playing.getFloat("volume"), 0f)
+    }
+
+    @Test
+    fun `the place is saved under the message the video was started for even if the row is rebound`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        every { handle.currentPositionMs() } returns 12_000L
+        every { handle.playerVolume() } returns 1f
+
+        // The row now shows another message while it is still attached and playing.
+        row.messageIdValue = "another-message"
+        row.mediaUrlValue = "another-url"
+        val saved = list.saveVideoStates()
+
+        val started = saved.getBundle("message0")
+        assertNotNull("the place was not saved for the message that was playing", started)
+        assertEquals("url0", started!!.getString("mediaUrl"))
+        assertEquals(12_000L, started.getLong("positionMs"))
+        assertEquals("the place was saved for the row's new message", null, saved.getBundle("another-message"))
+    }
+
+    @Test
+    fun `restoring no states keeps every video starting muted from the beginning`() {
+        showList(rows = 1)
+
+        list.restoreVideoStates(null)
+        list.restoreVideoStates(Bundle())
+        list.playVideo()
+
+        verify(exactly = 1) { handle.setPlayerVolume(0f) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+    }
+
+    @Test
     fun `releasing the player stops the video and a later play creates the player again`() {
         showList(rows = 1)
         val row = rowAt(0)
@@ -382,6 +480,33 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         assertEquals(2, row.attachCount)
         verify(exactly = 2) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `restoring states ignores entries that are broken`() {
+        showList(rows = 1)
+        val broken = Bundle().apply {
+            putString("message0", "not a bundle")
+            putBundle("message1", Bundle()) // has no media url
+        }
+
+        list.restoreVideoStates(broken)
+        list.playVideo()
+
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+    }
+
+    @Test
+    fun `a row without a message id is never saved or restored`() {
+        showList(rows = 1)
+        rowAt(0).messageIdValue = null
+        list.playVideo()
+        every { handle.currentPositionMs() } returns 9_000L
+
+        val saved = list.saveVideoStates()
+
+        assertTrue(saved.isEmpty)
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
     }
 
     private companion object {

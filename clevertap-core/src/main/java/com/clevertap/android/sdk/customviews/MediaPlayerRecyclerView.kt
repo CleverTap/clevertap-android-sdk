@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.customviews
 import android.content.Context
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import android.widget.AbsListView
@@ -194,6 +195,42 @@ class MediaPlayerRecyclerView : RecyclerView {
     }
 
     /**
+     * Where every video was left, including the one playing now, to give to a new list through
+     * [restoreVideoStates]. The fragment uses it to keep the videos' places across a rotation.
+     */
+    fun saveVideoStates(): Bundle {
+        rememberVideoState()
+        val saved = Bundle()
+        for ((messageId, state) in videoStates) {
+            saved.putBundle(
+                messageId,
+                Bundle().apply {
+                    putString(KEY_MEDIA_URL, state.mediaUrl)
+                    putLong(KEY_POSITION_MS, state.positionMs)
+                    putFloat(KEY_VOLUME, state.volume)
+                }
+            )
+        }
+        return saved
+    }
+
+    /** Takes back what [saveVideoStates] returned. A null or empty bundle changes nothing. */
+    fun restoreVideoStates(saved: Bundle?) {
+        if (saved == null) {
+            return
+        }
+        for (messageId in saved.keySet()) {
+            val state = saved.getBundle(messageId) ?: continue
+            val mediaUrl = state.getString(KEY_MEDIA_URL) ?: continue
+            videoStates[messageId] = VideoState(
+                mediaUrl = mediaUrl,
+                positionMs = state.getLong(KEY_POSITION_MS),
+                volume = state.getFloat(KEY_VOLUME)
+            )
+        }
+    }
+
+    /**
      * Stops the playing video and releases the player. The next [playVideo] creates a new
      * player, and videos resume from where they were left.
      */
@@ -324,5 +361,9 @@ class MediaPlayerRecyclerView : RecyclerView {
         /** A video that was never played starts muted. */
         const val MUTED_VOLUME = 0f
         const val FULL_VOLUME = 1f
+
+        const val KEY_MEDIA_URL = "mediaUrl"
+        const val KEY_POSITION_MS = "positionMs"
+        const val KEY_VOLUME = "volume"
     }
 }

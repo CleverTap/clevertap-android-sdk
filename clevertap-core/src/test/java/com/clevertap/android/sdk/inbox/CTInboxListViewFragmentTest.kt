@@ -484,6 +484,33 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     }
 
     @Test
+    fun test_onSaveInstanceState_keeps_the_video_states_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        val states = Bundle().apply { putString("message0", "state") }
+        every { media.saveVideoStates() } returns states
+        fragment.mediaRecyclerView = media
+        val outState = Bundle()
+
+        fragment.onSaveInstanceState(outState)
+
+        assertSame(states, outState.getBundle("videoStates"))
+    }
+
+    @Test
+    fun test_onViewStateRestored_gives_the_video_states_back_to_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        val states = Bundle().apply { putString("message0", "state") }
+        fragment.mediaRecyclerView = media
+        val saved = Bundle().apply { putBundle("videoStates", states) }
+
+        fragment.onViewStateRestored(saved)
+
+        verify(exactly = 1) { media.restoreVideoStates(states) }
+    }
+
+    @Test
     fun test_onStop_releases_the_player_of_the_media_recycler() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)

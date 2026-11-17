@@ -58,6 +58,8 @@ public class CTInboxListViewFragment extends Fragment {
 
     CleverTapInstanceConfig config;
 
+    private static final String VIDEO_STATES_KEY = "videoStates";
+
     boolean haveVideoPlayerSupport = VideoLibChecker.haveVideoPlayerSupport;
 
     ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
@@ -192,6 +194,7 @@ public class CTInboxListViewFragment extends Fragment {
                 if (mediaRecyclerView.getLayoutManager() != null) {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
+                mediaRecyclerView.restoreVideoStates(savedInstanceState.getBundle(VIDEO_STATES_KEY));
             }
 
             if (recyclerView != null) {
@@ -240,6 +243,7 @@ public class CTInboxListViewFragment extends Fragment {
                 outState.putParcelable("recyclerLayoutState",
                         mediaRecyclerView.getLayoutManager().onSaveInstanceState());
             }
+            outState.putBundle(VIDEO_STATES_KEY, mediaRecyclerView.saveVideoStates());
         }
 
         if (recyclerView != null) {
