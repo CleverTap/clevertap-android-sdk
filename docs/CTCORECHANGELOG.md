@@ -11,6 +11,7 @@
 
 #### Bug Fixes
 * **Push Primer On Foldables:** Fixes the app closing when the push primer is shown after a fold.
+* **Half-Interstitial In-App:** Fixes the In-App being cut off in portrait on unfolded foldables.
 
 #### Notes
 * **`@Variable` Fields:** Do not declare `@Variable` fields as `final`. Apps that target Android 17 cannot
