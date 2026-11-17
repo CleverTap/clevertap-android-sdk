@@ -37,7 +37,7 @@ class MediaPlayerRecyclerView : RecyclerView {
     private class VideoState(val mediaUrl: String, val positionMs: Long, val volume: Float)
 
     /** The message and media the player was started for. The row may show another one later. */
-    private class PlayingVideo(val messageId: String, val mediaUrl: String)
+    private class PlayingVideo(val messageId: String?, val mediaUrl: String?)
 
     private val handle: InboxVideoPlayerHandle
     private val rect = Rect()
@@ -123,9 +123,15 @@ class MediaPlayerRecyclerView : RecyclerView {
             return
         }
 
+        val messageId = targetHolder.messageId
+        val mediaUrl = targetHolder.mediaUrl
+
         // Case 2 : Found viewholder is same with surface and player attached
         playingHolder?.let { ph ->
-            if (ph.itemView == targetHolder.itemView) {
+            // A row can be rebound to another message while it is attached, so the row alone
+            // does not tell that the same video is playing.
+            val samePlayingVideo = playingVideo?.messageId == messageId && playingVideo?.mediaUrl == mediaUrl
+            if (ph.itemView == targetHolder.itemView && samePlayingVideo) {
                 val measured = ph.itemView.getGlobalVisibleRect(rect)
                 val visibleHeight = if (measured) {
                     rect.height()
@@ -145,15 +151,13 @@ class MediaPlayerRecyclerView : RecyclerView {
         // Case 3: Video has to be played in a different view holder, so move the player there
         stopVideo()
         initPlayer()
-        val messageId = targetHolder.messageId
-        val mediaUrl = targetHolder.mediaUrl
         val savedState = savedStateOf(messageId, mediaUrl)
         val volume = savedState?.volume ?: MUTED_VOLUME
         handle.setPlayerVolume(volume)
         // Set before addMediaPlayer(): it starts playback, and the buffering/ready callbacks
         // read playingHolder to find the views they must show.
         playingHolder = targetHolder
-        playingVideo = if (messageId != null && mediaUrl != null) PlayingVideo(messageId, mediaUrl) else null
+        playingVideo = PlayingVideo(messageId, mediaUrl)
         val addedVideo = targetHolder.addMediaPlayer(
             volume,
             ::toggleMute,
@@ -345,7 +349,9 @@ class MediaPlayerRecyclerView : RecyclerView {
      */
     private fun rememberVideoState() {
         val video = playingVideo ?: return
-        videoStates[video.messageId] = VideoState(video.mediaUrl, handle.currentPositionMs(), handle.playerVolume())
+        val messageId = video.messageId ?: return
+        val mediaUrl = video.mediaUrl ?: return
+        videoStates[messageId] = VideoState(mediaUrl, handle.currentPositionMs(), handle.playerVolume())
     }
 
     /** The saved state of the message, only if its media is still the same. */

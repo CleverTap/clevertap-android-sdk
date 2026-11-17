@@ -669,6 +669,36 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         assertEquals(0, row.container.childCount)
     }
 
+    @Test
+    fun `a playing row that now shows another message is not treated as still playing`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        assertEquals(1, row.attachCount)
+
+        // The same row is rebound to another message without being detached.
+        row.messageIdValue = "another-message"
+        row.mediaUrlValue = "another-url"
+        list.playVideo()
+
+        assertEquals("the new message must get its own start", 2, row.attachCount)
+        verify(exactly = 1) { handle.startPlaying(any(), "another-url", false, true, 0L) }
+        verify(exactly = 0) { handle.setPlayWhenReady(any()) }
+    }
+
+    @Test
+    fun `a playing row without a message id keeps playing when the list settles`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        row.messageIdValue = null
+        list.playVideo()
+
+        list.playVideo()
+
+        assertEquals("the second play must take the already-playing shortcut", 1, row.attachCount)
+        verify(exactly = 1) { handle.setPlayWhenReady(true) }
+    }
+
     private companion object {
 
         const val LIST_WIDTH = 1080
