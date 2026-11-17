@@ -393,7 +393,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
-            every { fragment.requireContext() } returns appCtx
+            every { fragment.context } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }
 
@@ -422,7 +422,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
-            every { fragment.requireContext() } returns appCtx
+            every { fragment.context } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }
 
