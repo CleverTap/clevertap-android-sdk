@@ -30,7 +30,8 @@ class AppBackgroundObserverTest : BaseTestCase() {
         backgroundCount = 0
         AppBackgroundObserver(
             lifecycleOwner = lifecycleOwner,
-            config = cleverTapInstanceConfig,
+            accountId = cleverTapInstanceConfig.accountId,
+            logger = cleverTapInstanceConfig.logger,
             onAppBackground = { backgroundCount++ }
         ).register()
     }
@@ -71,7 +72,8 @@ class AppBackgroundObserverTest : BaseTestCase() {
         val owner = TestLifecycleOwner(Lifecycle.State.CREATED)
         AppBackgroundObserver(
             lifecycleOwner = owner,
-            config = cleverTapInstanceConfig,
+            accountId = cleverTapInstanceConfig.accountId,
+            logger = cleverTapInstanceConfig.logger,
             onAppBackground = { throw IllegalStateException("boom") }
         ).register()
 

@@ -13,7 +13,8 @@ import androidx.lifecycle.ProcessLifecycleOwner
  */
 internal class AppBackgroundObserver(
     private val lifecycleOwner: LifecycleOwner,
-    private val config: CleverTapInstanceConfig,
+    private val accountId: String,
+    private val logger: ILogger,
     private val onAppBackground: () -> Unit
 ) : DefaultLifecycleObserver {
 
@@ -23,17 +24,17 @@ internal class AppBackgroundObserver(
             try {
                 lifecycleOwner.lifecycle.addObserver(this)
             } catch (t: Throwable) {
-                config.logger.verbose(config.accountId, "Failed to register app background observer", t)
+                logger.verbose(accountId, "Failed to register app background observer", t)
             }
         }
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        config.logger.verbose(config.accountId, "App moved to background")
+        logger.verbose(accountId, "App moved to background")
         try {
             onAppBackground()
         } catch (t: Throwable) {
-            config.logger.verbose(config.accountId, "Failed to handle app background", t)
+            logger.verbose(accountId, "Failed to handle app background", t)
         }
     }
 }

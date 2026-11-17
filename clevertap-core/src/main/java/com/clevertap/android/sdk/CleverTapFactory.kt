@@ -688,7 +688,8 @@ internal object CleverTapFactory {
 
         AppBackgroundObserver(
             lifecycleOwner = ProcessLifecycleOwner.get(),
-            config = config,
+            accountId = config.accountId,
+            logger = config.logger,
             onAppBackground = activityLifeCycleManager::appBackgrounded
         ).register()
 
