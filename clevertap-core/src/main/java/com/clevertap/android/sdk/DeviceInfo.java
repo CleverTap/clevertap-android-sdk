@@ -437,8 +437,11 @@ public class DeviceInfo {
 
     private long deviceStateGeneration = 0;
 
-    // Bumped on each push only refresh, guarded by deviceStateLock, so a full refresh keeps a newer push status.
+    // Bumped on each push only refresh, guarded by deviceStateLock. A full read that overlaps one keeps its value.
     private long pushStatusGeneration = 0;
+
+    // Last push only read, guarded by deviceStateLock. Kept even before the first full read is stored.
+    private Integer latestPushStatus;
 
     // Last resumed activity's configuration, guarded by deviceStateLock. Its display values win.
     private Configuration activityConfiguration;
@@ -806,30 +809,33 @@ public class DeviceInfo {
      */
     Callable<Void> prepareDeviceStateRefresh() {
         final long generation;
-        final long pushGeneration;
         synchronized (deviceStateLock) {
             generation = ++deviceStateGeneration;
-            pushGeneration = pushStatusGeneration;
         }
         return () -> {
-            refreshDeviceState(generation, pushGeneration);
+            refreshDeviceState(generation);
             return null;
         };
     }
 
     // Dropped if a newer refresh was prepared.
     @WorkerThread
-    private void refreshDeviceState(long generation, long pushGeneration) {
+    private void refreshDeviceState(long generation) {
+        final long pushGeneration;
+        synchronized (deviceStateLock) {
+            pushGeneration = pushStatusGeneration;
+        }
         DeviceState state = DeviceState.read(context, context.getResources().getConfiguration());
         synchronized (deviceStateLock) {
             if (generation == deviceStateGeneration) {
-                // A push only refresh stored after this one was prepared, so its push status is newer.
-                if (pushGeneration != pushStatusGeneration) {
-                    state = state.withPushStatus(deviceState.getPushStatus());
-                }
-                deviceState = withActivityDisplay(state);
+                deviceState = withActivityDisplay(withLatestPushStatus(state, pushGeneration));
             }
         }
+    }
+
+    // Callers hold deviceStateLock. A push only refresh ran during this read, so keep what the last header sent.
+    private DeviceState withLatestPushStatus(DeviceState state, long pushGeneration) {
+        return pushGeneration == pushStatusGeneration ? state : state.withPushStatus(latestPushStatus);
     }
 
     /** Stores a resumed activity's display values. No system calls, so safe on the main thread. */
@@ -848,9 +854,10 @@ public class DeviceInfo {
     public void refreshPushStatus() {
         Integer pushStatus = DeviceState.readPushStatus(context);
         synchronized (deviceStateLock) {
+            latestPushStatus = pushStatus;
+            pushStatusGeneration++;
             if (deviceState != null) {
                 deviceState = deviceState.withPushStatus(pushStatus);
-                pushStatusGeneration++;
             }
         }
     }
@@ -865,17 +872,22 @@ public class DeviceInfo {
         if (state != null) {
             return state;
         }
-        // Not read yet. On the main thread, send only display values, which need no system call.
+        // Not read yet. On the main thread, send only display values and a push status already read, no system call.
         if (Looper.myLooper() == Looper.getMainLooper()) {
             synchronized (deviceStateLock) {
-                return withActivityDisplay(DeviceState.displayOnly(context.getResources().getConfiguration()));
+                DeviceState displayOnly = DeviceState.displayOnly(context.getResources().getConfiguration());
+                return withActivityDisplay(displayOnly.withPushStatus(latestPushStatus));
             }
+        }
+        final long pushGeneration;
+        synchronized (deviceStateLock) {
+            pushGeneration = pushStatusGeneration;
         }
         state = DeviceState.read(context, context.getResources().getConfiguration());
         synchronized (deviceStateLock) {
             // Keep a value a refresh stored meanwhile.
             if (deviceState == null) {
-                deviceState = withActivityDisplay(state);
+                deviceState = withActivityDisplay(withLatestPushStatus(state, pushGeneration));
             }
             return deviceState;
         }

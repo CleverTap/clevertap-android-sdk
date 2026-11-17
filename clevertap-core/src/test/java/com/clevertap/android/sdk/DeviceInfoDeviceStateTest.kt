@@ -6,6 +6,8 @@ import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -126,33 +128,91 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
     }
 
     @Test
-    fun `a full refresh that lands after refreshPushStatus keeps the newer push status`() {
-        notificationShadow.setNotificationsEnabled(true)
+    fun `a full refresh that overlaps refreshPushStatus keeps the header's push status`() {
         val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
         deviceInfo.prepareDeviceStateRefresh().call()
-        val fullRefresh = deviceInfo.prepareDeviceStateRefresh()
 
-        notificationShadow.setNotificationsEnabled(false)
-        deviceInfo.refreshPushStatus()
-        // The full refresh read before the header did, so it still sees the old permission.
-        notificationShadow.setNotificationsEnabled(true)
-        fullRefresh.call()
+        withPushRefreshDuringRead(deviceInfo) {
+            deviceInfo.prepareDeviceStateRefresh().call()
+        }
 
         assertEquals(DeviceState.PUSH_STATUS_DENIED, deviceInfo.getPushStatus())
     }
 
     @Test
-    fun `a full refresh prepared after refreshPushStatus stores its own push status`() {
+    fun `an init refresh that overlaps refreshPushStatus on an empty cache keeps the header's push status`() {
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+
+        withPushRefreshDuringRead(deviceInfo) {
+            deviceInfo.prepareDeviceStateRefresh().call()
+        }
+
+        assertEquals(DeviceState.PUSH_STATUS_DENIED, deviceInfo.getPushStatus())
+    }
+
+    @Test
+    fun `a lazy read that overlaps refreshPushStatus keeps the header's push status`() {
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+
+        val pushStatus = withPushRefreshDuringRead(deviceInfo) {
+            offMainThread { deviceInfo.getPushStatus() }
+        }
+
+        assertEquals(DeviceState.PUSH_STATUS_DENIED, pushStatus)
+    }
+
+    @Test
+    fun `a full refresh queued before refreshPushStatus but read after stores its own push status`() {
         notificationShadow.setNotificationsEnabled(true)
         val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
         deviceInfo.prepareDeviceStateRefresh().call()
+        val queued = deviceInfo.prepareDeviceStateRefresh()
         notificationShadow.setNotificationsEnabled(false)
         deviceInfo.refreshPushStatus()
 
         notificationShadow.setNotificationsEnabled(true)
-        deviceInfo.prepareDeviceStateRefresh().call()
+        queued.call()
 
         assertEquals(DeviceState.PUSH_STATUS_ALLOWED, deviceInfo.getPushStatus())
+    }
+
+    @Test
+    fun `a lazy read that starts after refreshPushStatus stores its own push status`() {
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+        notificationShadow.setNotificationsEnabled(false)
+        deviceInfo.refreshPushStatus()
+
+        notificationShadow.setNotificationsEnabled(true)
+
+        assertEquals(DeviceState.PUSH_STATUS_ALLOWED, offMainThread { deviceInfo.getPushStatus() })
+    }
+
+    @Test
+    fun `getters on the main thread send a push status already read before the first full read`() {
+        notificationShadow.setNotificationsEnabled(true)
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+
+        deviceInfo.refreshPushStatus()
+
+        assertEquals(DeviceState.PUSH_STATUS_ALLOWED, deviceInfo.getPushStatus())
+        assertNull(deviceInfo.getCpuCores())
+    }
+
+    // The full read sees push allowed, then a header reads denied before the full read stores.
+    private fun <T> withPushRefreshDuringRead(deviceInfo: DeviceInfo, block: () -> T): T {
+        mockkObject(DeviceState.Companion)
+        try {
+            every { DeviceState.read(any(), any()) } answers {
+                notificationShadow.setNotificationsEnabled(true)
+                val older = callOriginal()
+                notificationShadow.setNotificationsEnabled(false)
+                deviceInfo.refreshPushStatus()
+                older
+            }
+            return block()
+        } finally {
+            unmockkObject(DeviceState.Companion)
+        }
     }
 
     private fun darkActivityConfiguration() = Configuration().apply {
