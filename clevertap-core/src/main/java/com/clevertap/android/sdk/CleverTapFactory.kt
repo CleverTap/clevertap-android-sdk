@@ -665,44 +665,42 @@ internal object CleverTapFactory {
             // task and always notified once the device id was known. Preserve those "always notify"
             // semantics by swallowing-and-logging build errors and still handing back the device id.
             try {
-                if (storeRegistry.inAppStore == null) {
-                    val inAppStore = storeProvider.provideInAppStore(
-                        context = context,
-                        cryptHandler = cryptHandler,
-                        deviceId = deviceId,
-                        accountId = config.accountId,
-                    )
-                    storeRegistry.inAppStore = inAppStore
-                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-                    callbackManager.addChangeUserCallback(inAppStore)
-                }
-                if (storeRegistry.impressionStore == null) {
-                    val impressionStore = storeProvider.provideImpressionStore(
-                        context = context,
-                        deviceId = deviceId,
-                        accountId = config.accountId,
-                    )
-                    storeRegistry.impressionStore = impressionStore
-                    callbackManager.addChangeUserCallback(impressionStore)
-                }
+                // This barrier is the single, once-per-instance writer of these device-scoped
+                // fields (getCoreState runs once per instance; this job is the only place that
+                // builds the stores / FC managers). They start null in StoreRegistry/
+                // ControllerManager, so no "if null" guard is needed — build them unconditionally.
+                val inAppStore = storeProvider.provideInAppStore(
+                    context = context,
+                    cryptHandler = cryptHandler,
+                    deviceId = deviceId,
+                    accountId = config.accountId,
+                )
+                storeRegistry.inAppStore = inAppStore
+                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
+                callbackManager.addChangeUserCallback(inAppStore)
+
+                val impressionStore = storeProvider.provideImpressionStore(
+                    context = context,
+                    deviceId = deviceId,
+                    accountId = config.accountId,
+                )
+                storeRegistry.impressionStore = impressionStore
+                callbackManager.addChangeUserCallback(impressionStore)
+
                 // ND stores are created lazily via storeRegistry.ndStoreProvider; prime the
                 // evaluator's in-memory eval/suppressed lists now that the device id is available.
                 ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
 
-                if (controllerManager.inAppFCManager == null) {
-                    controllerManager.inAppFCManager = InAppFCManager(
-                        context, config, deviceId, storeRegistry, impressionManager, executors, SYSTEM,
-                    )
-                }
-                if (controllerManager.ndFCManager == null) {
-                    controllerManager.ndFCManager = NdFCManager(
-                        config = config,
-                        storeRegistry = storeRegistry,
-                        impressionManager = ndImpressionManager,
-                        executors = executors,
-                        clock = SYSTEM,
-                    )
-                }
+                controllerManager.inAppFCManager = InAppFCManager(
+                    context, config, deviceId, storeRegistry, impressionManager, executors, SYSTEM,
+                )
+                controllerManager.ndFCManager = NdFCManager(
+                    config = config,
+                    storeRegistry = storeRegistry,
+                    impressionManager = ndImpressionManager,
+                    executors = executors,
+                    clock = SYSTEM,
+                )
 
                 // Inflate the local profile now that the device id is known.
                 localDataStore.inflateLocalProfileAsync(context)
