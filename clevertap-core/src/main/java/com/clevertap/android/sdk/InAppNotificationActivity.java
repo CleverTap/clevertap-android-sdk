@@ -152,7 +152,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             // Resolve the live instance by accountId rather than rebuilding it from a serialized
             // config copy passed in the intent (which would diverge on a cold start). SDK-6254.
             String accountId = intentExtras.getString(INTENT_EXTRA_CT_CONFIG);
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(this, accountId);
+            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), accountId);
             if (cleverTapAPI == null) {
                 throw new IllegalArgumentException();
             }
@@ -259,7 +259,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (inAppId == null || accountId == null) {
                 return false;
             }
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(this, accountId);
+            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), accountId);
             if (cleverTapAPI == null) {
                 return false;
             }
@@ -607,7 +607,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         restoreTimeoutHandler.removeCallbacksAndMessages(null);
 
         if (config != null) {
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(this, config.getAccountId());
+            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), config.getAccountId());
             if (cleverTapAPI != null) {
                 CoreState ctState = cleverTapAPI.getCoreState();
                 if (ctState != null) {

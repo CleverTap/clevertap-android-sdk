@@ -47,14 +47,14 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
     override fun generateListener() {
         // Resolve the live instance by accountId rather than rebuilding from the passed config
         // snapshot (SDK-6254). If it can't be resolved, skip instead of recreating a stale instance.
-        CleverTapAPI.getGlobalInstance(requireContext(), config.accountId)
+        CleverTapAPI.getGlobalInstance(requireContext().applicationContext, config.accountId)
             ?.coreState?.inAppController
             ?.let { setListener(it) }
     }
 
     private fun registerInAppDisplayListener() {
         context?.let { ctx ->
-            CleverTapAPI.getGlobalInstance(ctx, config.accountId)
+            CleverTapAPI.getGlobalInstance(ctx.applicationContext, config.accountId)
                 ?.coreState?.inAppController
                 ?.registerInAppDisplayListener(this)
         }
@@ -62,7 +62,7 @@ internal abstract class CTInAppBasePartialFragment : CTInAppBaseFragment(), InAp
 
     private fun unregisterInAppDisplayListener() {
         context?.let { ctx ->
-            CleverTapAPI.getGlobalInstance(ctx, config.accountId)
+            CleverTapAPI.getGlobalInstance(ctx.applicationContext, config.accountId)
                 ?.coreState?.inAppController
                 ?.unregisterInAppDisplayListener()
         }

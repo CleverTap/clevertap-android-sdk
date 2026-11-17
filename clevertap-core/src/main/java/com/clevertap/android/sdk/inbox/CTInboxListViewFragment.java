@@ -114,7 +114,7 @@ public class CTInboxListViewFragment extends Fragment {
         Bundle bundle = getArguments();
         if (bundle == null) return null;
         final String filter = bundle.getString("filter", null);
-        CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(getActivity(), accountId);
+        CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(requireContext().getApplicationContext(), accountId);
         if (cleverTapAPI == null) return null;
         Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
         ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();

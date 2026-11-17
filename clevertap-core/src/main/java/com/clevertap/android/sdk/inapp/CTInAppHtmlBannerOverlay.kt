@@ -133,7 +133,7 @@ internal class CTInAppHtmlBannerOverlay(
             if (isJsEnabled) {
                 // Resolve by accountId rather than rebuilding from the passed config (SDK-6254);
                 // only wire the JS interface if the live instance resolves.
-                CleverTapAPI.getGlobalInstance(activity, config.accountId)?.let { instance ->
+                CleverTapAPI.getGlobalInstance(activity.applicationContext, config.accountId)?.let { instance ->
                     webView.setJavaScriptInterface(CTWebInterface(instance, host))
                 }
             }
