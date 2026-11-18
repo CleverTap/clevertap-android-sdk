@@ -100,31 +100,19 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
                                 layoutParams.gravity = Gravity.CENTER
                                 relativeLayout.setLayoutParams(layoutParams)
 
-                                relativeLayout.post {
-                                    val margin = closeImageView.measuredWidth / 2
-                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                }
+                                addCloseImageView(relativeLayout, closeImageView)
                             } else {
                                 layoutParams.width =
                                     (relativeLayout.measuredHeight * 1.3f).toInt()
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL
                                 relativeLayout.setLayoutParams(layoutParams)
-                                relativeLayout.post {
-                                    val margin = closeImageView.measuredWidth / 2
-                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                }
+                                addCloseImageView(relativeLayout, closeImageView)
                             }
                         } else {
                             layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
                             layoutParams.gravity = Gravity.CENTER
                             relativeLayout.setLayoutParams(layoutParams)
-                            relativeLayout.post {
-                                val margin = closeImageView.measuredWidth / 2
-                                closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                closeImageView.y = (relativeLayout.top - margin).toFloat()
-                            }
+                            addCloseImageView(relativeLayout, closeImageView)
                         }
 
                         relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
