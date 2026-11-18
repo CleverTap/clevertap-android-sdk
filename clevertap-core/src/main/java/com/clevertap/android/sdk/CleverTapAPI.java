@@ -1257,7 +1257,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             final CleverTapInstanceConfig config,
             String cleverTapID
     ) {
-        this(context, config, CleverTapFactory.getCoreState(context, config, cleverTapID), Clock.SYSTEM);
+        // Retain only the application context (never an Activity/Fragment) to avoid leaks — see
+        // the note in CleverTapFactory.getCoreState. SDK-6254.
+        this(context.getApplicationContext(), config, CleverTapFactory.getCoreState(context, config, cleverTapID), Clock.SYSTEM);
     }
 
     // Internal constructor for testing

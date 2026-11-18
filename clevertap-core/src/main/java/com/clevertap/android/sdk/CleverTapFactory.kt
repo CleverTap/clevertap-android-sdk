@@ -102,6 +102,12 @@ internal object CleverTapFactory {
             // todo this needs to be fixed with kotlin usage+using kotlin testing libs
             throw RuntimeException("This is invalid case and will not happen. Context/Config is null")
         }
+        // SDK-6254: the SDK lives for the whole process, so only ever retain the application
+        // context in its long-lived components — an Activity/Fragment context passed in by a caller
+        // would otherwise be leaked. DeviceInfo reports default-display metrics (it resolves
+        // DEFAULT_DISPLAY itself), so it does not need an Activity context.
+        @Suppress("NAME_SHADOWING")
+        val context = context.applicationContext
         // create storeRegistry, preferences for features
         val storeProvider = getInstance()
         val accountId = cleverTapInstanceConfig.accountId
