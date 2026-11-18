@@ -22,12 +22,17 @@ internal class AppBackgroundObserver(
 
     fun register() {
         // lifecycleScope runs on Dispatchers.Main.immediate, as Lifecycle#addObserver requires the main thread
-        lifecycleOwner.lifecycleScope.launch {
-            try {
-                lifecycleOwner.lifecycle.addObserver(this@AppBackgroundObserver)
-            } catch (t: Throwable) {
-                logger.verbose(accountId, "Failed to register app background observer", t)
+        // The try also covers lifecycleScope and launch, which throw when no Main dispatcher is available
+        try {
+            lifecycleOwner.lifecycleScope.launch {
+                try {
+                    lifecycleOwner.lifecycle.addObserver(this@AppBackgroundObserver)
+                } catch (t: Throwable) {
+                    logger.verbose(accountId, "Failed to register app background observer", t)
+                }
             }
+        } catch (t: Throwable) {
+            logger.verbose(accountId, "Failed to register app background observer", t)
         }
     }
 

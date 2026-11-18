@@ -50,6 +50,8 @@ internal class EventQueueManager(
     private val controllerManager: ControllerManager,
     private val loginInfoProvider: LoginInfoProvider, private val networkMonitor: NetworkMonitor
 ) : BaseEventQueueManager(), FailureFlushListener {
+    // Written on the serial executor, read on the main thread in flushOnAppBackground
+    @Volatile
     private var commsRunnable: Runnable? = null
 
     private val logger: Logger = config.logger
