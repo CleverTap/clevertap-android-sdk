@@ -20,6 +20,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mockk.verify
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -33,8 +34,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Tests the close button of the half-interstitial, the half-interstitial image and the interstitial
- * image fragments. The "close" key of the in-app says whether the close button is shown, even though
+ * Tests the close button of the half-interstitial, half-interstitial image, interstitial image, cover and
+ * cover image fragments. The "close" key of the in-app says whether the close button is shown, even though
  * it is read into [CTInAppNotification.isHideCloseButton].
  */
 @RunWith(RobolectricTestRunner::class)
@@ -109,7 +110,7 @@ class CTInAppCloseButtonTest {
 
     // ---------------------------------------------------------------------------------------
 
-    private enum class Kind { HALF_INTERSTITIAL, HALF_INTERSTITIAL_IMAGE, INTERSTITIAL_IMAGE }
+    private enum class Kind { HALF_INTERSTITIAL, HALF_INTERSTITIAL_IMAGE, INTERSTITIAL_IMAGE, COVER, COVER_IMAGE }
 
     private class Shown(
         val host: FragmentActivity,
@@ -131,7 +132,12 @@ class CTInAppCloseButtonTest {
             else -> JSONObject()
                 .put(
                     "type",
-                    if (kind == Kind.HALF_INTERSTITIAL_IMAGE) "half-interstitial-image" else "interstitial-image"
+                    when (kind) {
+                        Kind.HALF_INTERSTITIAL_IMAGE -> "half-interstitial-image"
+                        Kind.INTERSTITIAL_IMAGE -> "interstitial-image"
+                        Kind.COVER -> "cover"
+                        else -> "cover-image"
+                    }
                 )
                 .put("_id", "close-button-test")
                 .put("ti", 1)
@@ -141,6 +147,13 @@ class CTInAppCloseButtonTest {
                     "mediaLandscape",
                     JSONObject().put("content_type", "image/png").put("url", "https://example.com/b.png")
                 )
+                .also {
+                    if (kind == Kind.COVER) {
+                        it.put("title", JSONObject().put("text", "Title").put("color", "#000000"))
+                        it.put("message", JSONObject().put("text", "Message").put("color", "#000000"))
+                        it.put("buttons", JSONArray())
+                    }
+                }
         }
         // The local in-app builder always asks for the close button, so remove it before the test sets it.
         json.remove(Constants.KEY_HIDE_CLOSE)
@@ -152,11 +165,15 @@ class CTInAppCloseButtonTest {
             Kind.HALF_INTERSTITIAL -> CTInAppNativeHalfInterstitialFragment()
             Kind.HALF_INTERSTITIAL_IMAGE -> CTInAppNativeHalfInterstitialImageFragment()
             Kind.INTERSTITIAL_IMAGE -> CTInAppNativeInterstitialImageFragment()
+            Kind.COVER -> CTInAppNativeCoverFragment()
+            Kind.COVER_IMAGE -> CTInAppNativeCoverImageFragment()
         }
         val frameId = when (kind) {
             Kind.HALF_INTERSTITIAL -> R.id.inapp_half_interstitial_frame_layout
             Kind.HALF_INTERSTITIAL_IMAGE -> R.id.inapp_half_interstitial_image_frame_layout
             Kind.INTERSTITIAL_IMAGE -> R.id.inapp_interstitial_image_frame_layout
+            Kind.COVER -> R.id.inapp_cover_frame_layout
+            Kind.COVER_IMAGE -> R.id.inapp_cover_image_frame_layout
         }
 
         val inApp = CTInAppNotification(json, true)
