@@ -42,7 +42,7 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
         }
 
         val fl = inAppView.findViewById<FrameLayout>(R.id.inapp_interstitial_image_frame_layout)
-        fl.background = ColorDrawable(-0x45000000)
+        fl.background = ColorDrawable(0xBB000000.toInt())
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
         relativeLayout = fl.findViewById(R.id.interstitial_image_relative_layout)
