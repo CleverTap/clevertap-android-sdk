@@ -9,6 +9,9 @@
   App requirements do not change: compileSdk 35 or higher, Android Gradle Plugin 8.1.1 or higher,
   minSdk 23 and Kotlin 1.9 or higher, the same as 8.6.0.
 
+#### Bug Fixes
+* **Push Primer On Foldables:** Fixes the app closing when the push primer is shown after a fold.
+
 #### Notes
 * **`@Variable` Fields:** Do not declare `@Variable` fields as `final`. Apps that target Android 17 cannot
   change `static final` fields, so their values are not updated. See [Variables](Variables.md).
