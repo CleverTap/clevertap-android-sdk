@@ -140,6 +140,39 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
             })
     }
 
+    /**
+     * Sizes a half-interstitial card in landscape once it has been laid out. [isTabletInApp] is read at
+     * layout time and says whether the in-app was made for tablets.
+     */
+    fun addHalfInterstitialLandscapeLayoutListener(
+        relativeLayout: RelativeLayout?,
+        closeImageView: CloseImageView,
+        isTabletInApp: () -> Boolean
+    ) {
+        relativeLayout?.getViewTreeObserver()
+            ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
+                    if (isTabletInApp() && isTablet()) {
+                        redrawLandscapeHalfInterstitialTabletInApp(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                    } else {
+                        if (isTablet()) {
+                            redrawLandscapeHalfInterstitialMobileInAppOnTablet(
+                                relativeLayout, layoutParams, closeImageView
+                            )
+                        } else {
+                            redrawLandscapeHalfInterstitialInApp(
+                                relativeLayout, layoutParams, closeImageView
+                            )
+                        }
+                    }
+                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
+                }
+            })
+    }
+
     fun redrawHalfInterstitialInApp(
         relativeLayout: RelativeLayout,
         layoutParams: FrameLayout.LayoutParams,
@@ -174,6 +207,46 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         )
         layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(210)
         layoutParams.height = (layoutParams.width * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeHalfInterstitialInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.width = (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeHalfInterstitialMobileInAppOnTablet(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.setMargins(
+            getScaledPixels(140),
+            getScaledPixels(100),
+            getScaledPixels(140),
+            getScaledPixels(100)
+        )
+        layoutParams.height = relativeLayout.measuredHeight - getScaledPixels(130)
+        layoutParams.width = (layoutParams.height * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        layoutParams.gravity = Gravity.CENTER
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeHalfInterstitialTabletInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.width = (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        layoutParams.gravity = Gravity.CENTER
         relativeLayout.setLayoutParams(layoutParams)
         addCloseImageView(relativeLayout, closeImageView)
     }

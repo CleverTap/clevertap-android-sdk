@@ -3,11 +3,9 @@ package com.clevertap.android.sdk.inapp.fragment
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
@@ -56,46 +54,9 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
                 relativeLayout, closeImageView
             ) { inAppNotification.isTablet }
 
-            Configuration.ORIENTATION_LANDSCAPE -> relativeLayout?.getViewTreeObserver()
-                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
-                    override fun onGlobalLayout() {
-                        val relativeLayout = relativeLayout ?: return
-                        val layoutParams =
-                            relativeLayout.layoutParams as FrameLayout.LayoutParams
-                        if (!inAppNotification.isTablet || !isTablet()) {
-                            if (isTablet()) {
-                                layoutParams.setMargins(
-                                    getScaledPixels(140),
-                                    getScaledPixels(100),
-                                    getScaledPixels(140),
-                                    getScaledPixels(100)
-                                )
-                                layoutParams.height =
-                                    relativeLayout.measuredHeight - getScaledPixels(
-                                        130
-                                    )
-                                layoutParams.width = (layoutParams.height * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
-                                layoutParams.gravity = Gravity.CENTER
-                                relativeLayout.setLayoutParams(layoutParams)
-
-                                addCloseImageView(relativeLayout, closeImageView)
-                            } else {
-                                layoutParams.width =
-                                    (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
-                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL
-                                relativeLayout.setLayoutParams(layoutParams)
-                                addCloseImageView(relativeLayout, closeImageView)
-                            }
-                        } else {
-                            layoutParams.width = (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
-                            layoutParams.gravity = Gravity.CENTER
-                            relativeLayout.setLayoutParams(layoutParams)
-                            addCloseImageView(relativeLayout, closeImageView)
-                        }
-
-                        relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
-                    }
-                })
+            Configuration.ORIENTATION_LANDSCAPE -> addHalfInterstitialLandscapeLayoutListener(
+                relativeLayout, closeImageView
+            ) { inAppNotification.isTablet }
         }
 
         mediaHandler.setup(
