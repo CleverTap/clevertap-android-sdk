@@ -105,16 +105,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
 
         fl.background = ColorDrawable(0xBB000000.toInt())
 
-        closeImageView.setOnClickListener {
-            triggerCloseButtonAction()
-            activity?.finish()
-        }
-
-        if (!inAppNotification.isHideCloseButton) {
-            closeImageView.setVisibility(View.GONE)
-        } else {
-            closeImageView.setVisibility(View.VISIBLE)
-        }
+        setUpCloseButton(closeImageView)
 
         return inAppView
     }
