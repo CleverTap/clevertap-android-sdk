@@ -16,10 +16,7 @@ interface InboxVideoPlayerHandle {
     fun videoSurface(): View
     fun setPlayWhenReady(play: Boolean)
 
-    /**
-     * Stops the current video and detaches the player from its view. The player and the view stay
-     * alive so the next video can reuse them; call [release] when they are no longer needed.
-     */
+    /** Stops the video and detaches the view; the player stays alive for the next video. */
     fun stop()
 
     /** Releases the player and its view. */

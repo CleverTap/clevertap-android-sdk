@@ -22,13 +22,7 @@ import com.clevertap.android.sdk.video.VideoLibraryIntegrated
 import com.clevertap.android.sdk.video.inbox.ExoplayerHandle
 import com.clevertap.android.sdk.video.inbox.Media3Handle
 
-/**
- * Inbox list that plays the video of the most visible video row.
- *
- * One player serves the whole list and moves between rows. It is created on the first play and
- * released by [releasePlayer]. Where each video was left (position and volume) is remembered by
- * message id while the list lives, so a video that is stopped by scrolling resumes from there.
- */
+/** Inbox list that plays the most visible video row with one shared player. */
 @UnstableApi
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class MediaPlayerRecyclerView : RecyclerView {
@@ -55,8 +49,7 @@ class MediaPlayerRecyclerView : RecyclerView {
             override fun onChildViewAttachedToWindow(view: View) {}
             override fun onChildViewDetachedFromWindow(view: View) {
                 if (playingHolder?.itemView == view) {
-                    // The row can come back from RecyclerView's view cache without a rebind,
-                    // so its video container must be cleared here.
+                    // The row can return from the view cache without a rebind, so clear its container
                     stopVideo()
                 }
             }
@@ -65,7 +58,7 @@ class MediaPlayerRecyclerView : RecyclerView {
     private var playingHolder: CTInboxBaseMessageViewHolder? = null
     private var playingVideo: PlayingVideo? = null
 
-    /** True from [releasePlayer] until [onRestartPlayer]: a late [playVideo] must not rebuild the player. */
+    /** True from [releasePlayer] until [onRestartPlayer]. */
     private var released = false
 
     /**
@@ -132,8 +125,7 @@ class MediaPlayerRecyclerView : RecyclerView {
 
         // Case 2 : Found viewholder is same with surface and player attached
         playingHolder?.let { ph ->
-            // A row can be rebound to another message while it is attached, so the row alone
-            // does not tell that the same video is playing.
+            // The row can be rebound to another message, so also compare the message and media
             val samePlayingVideo = playingVideo?.messageId == messageId && playingVideo?.mediaUrl == mediaUrl
             if (ph.itemView == targetHolder.itemView && samePlayingVideo) {
                 val measured = ph.itemView.getGlobalVisibleRect(rect)
@@ -155,15 +147,14 @@ class MediaPlayerRecyclerView : RecyclerView {
         // Case 3: Video has to be played in a different view holder, so move the player there
         stopVideo()
         if (released) {
-            // A queued or delayed playVideo() after onStop must not start a new player
+            // A late playVideo() after onStop must not start a player
             return
         }
         initPlayer()
         val savedState = savedStateOf(messageId, mediaUrl)
         val volume = savedState?.volume ?: MUTED_VOLUME
         handle.setPlayerVolume(volume)
-        // Set before addMediaPlayer(): it starts playback, and the buffering/ready callbacks
-        // read playingHolder to find the views they must show.
+        // Set before addMediaPlayer(), because the player callbacks read playingHolder
         playingHolder = targetHolder
         playingVideo = PlayingVideo(messageId, mediaUrl)
         val addedVideo = targetHolder.addMediaPlayer(
@@ -187,14 +178,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         }
     }
 
-    /**
-     * Stops the playing video and detaches the shared player view from its row. The player is
-     * kept for the next video.
-     *
-     * Must be called before mutating the adapter data and calling notifyDataSetChanged(),
-     * otherwise the player view stays parented inside a holder that gets rebound to a
-     * different message.
-     */
+    /** Call before changing the adapter data, so the player view is not left in a rebound row. */
     fun prepareForListRebind() {
         Logger.v(
             if (playingHolder != null) {
@@ -206,10 +190,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         stopVideo()
     }
 
-    /**
-     * Where every video was left, including the one playing now, to give to a new list through
-     * [restoreVideoStates]. The fragment uses it to keep the videos' places across a rotation.
-     */
+    /** Where every video was left, to give to a new list (for example after a rotation). */
     fun saveVideoStates(): Bundle {
         rememberVideoState()
         val saved = Bundle()
@@ -242,10 +223,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         }
     }
 
-    /**
-     * Stops the playing video and releases the player. The next [playVideo] creates a new
-     * player, and videos resume from where they were left.
-     */
+    /** Stops the video and releases the player; the next [playVideo] after a restart creates a new one. */
     fun releasePlayer() {
         released = true
         stopVideo()
@@ -338,11 +316,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         }
     }
 
-    /**
-     * Remembers where the playing video was, empties its row's container and stops the player.
-     * The shared player and its view stay alive, so the shortcut in [playVideo] must not treat
-     * the row as playing any more: the holder is forgotten.
-     */
+    /** Saves the place, clears the row's container and stops the player, which stays alive. */
     private fun stopVideo() {
         val holder = playingHolder ?: return
         rememberVideoState()
@@ -352,10 +326,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         playingVideo = null
     }
 
-    /**
-     * Saves the place of the video that is playing, under the message the player was started
-     * for. The row's current message is not used: the row can be rebound while it is attached.
-     */
+    /** Saves the place under the message the player was started for, not the row's current one. */
     private fun rememberVideoState() {
         val video = playingVideo ?: return
         val messageId = video.messageId ?: return
