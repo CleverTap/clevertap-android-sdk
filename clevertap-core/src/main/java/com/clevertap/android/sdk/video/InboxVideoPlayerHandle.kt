@@ -36,4 +36,9 @@ interface InboxVideoPlayerHandle {
         isMediaVideo: Boolean,
         startPositionMs: Long,
     )
+
+    companion object {
+        /** Start where the media source starts by default. Same value as C.TIME_UNSET in both libraries. */
+        const val DEFAULT_START_POSITION = Long.MIN_VALUE + 1
+    }
 }

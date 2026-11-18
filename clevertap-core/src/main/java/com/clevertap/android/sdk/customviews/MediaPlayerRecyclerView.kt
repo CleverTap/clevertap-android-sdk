@@ -166,7 +166,7 @@ class MediaPlayerRecyclerView : RecyclerView {
                     uriString = uri,
                     isMediaAudio = isMediaAudio,
                     isMediaVideo = isMediaVideo,
-                    startPositionMs = savedState?.positionMs ?: 0L
+                    startPositionMs = savedState?.positionMs ?: InboxVideoPlayerHandle.DEFAULT_START_POSITION
                 )
                 null
             },

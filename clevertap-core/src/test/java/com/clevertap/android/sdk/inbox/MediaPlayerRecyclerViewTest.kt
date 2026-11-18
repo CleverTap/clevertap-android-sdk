@@ -279,7 +279,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
 
         verify(exactly = 1) { handle.setPlayerVolume(0f) }
-        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
     }
 
     @Test
@@ -321,7 +321,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         every { handle.playerVolume() } returns 1f
         scrollPastTwoRows()
         list.playVideo() // row 3 takes over; it was never played, so it starts muted from 0:00
-        verify(exactly = 1) { handle.startPlaying(any(), "url3", false, true, 0L) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url3", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
 
         every { handle.currentPositionMs() } returns 7_000L
         every { handle.playerVolume() } returns 0f
@@ -345,7 +345,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         list.playVideo()
 
-        verify(exactly = 1) { handle.startPlaying(any(), "another-url", false, true, 0L) }
+        verify(exactly = 1) { handle.startPlaying(any(), "another-url", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
         verify(exactly = 0) { handle.setPlayerVolume(1f) }
     }
 
@@ -459,7 +459,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
 
         verify(exactly = 1) { handle.setPlayerVolume(0f) }
-        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
     }
 
     @Test
@@ -608,7 +608,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.restoreVideoStates(broken)
         list.playVideo()
 
-        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
     }
 
     @Test
@@ -621,7 +621,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         val saved = list.saveVideoStates()
 
         assertTrue(saved.isEmpty)
-        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 0L) }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
     }
 
     @Test
@@ -697,7 +697,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
 
         assertEquals("the new message must get its own start", 2, row.attachCount)
-        verify(exactly = 1) { handle.startPlaying(any(), "another-url", false, true, 0L) }
+        verify(exactly = 1) { handle.startPlaying(any(), "another-url", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
         verify(exactly = 0) { handle.setPlayWhenReady(any()) }
     }
 
