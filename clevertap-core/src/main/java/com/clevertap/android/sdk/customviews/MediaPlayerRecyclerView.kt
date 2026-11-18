@@ -65,6 +65,9 @@ class MediaPlayerRecyclerView : RecyclerView {
     private var playingHolder: CTInboxBaseMessageViewHolder? = null
     private var playingVideo: PlayingVideo? = null
 
+    /** True from [releasePlayer] until [onRestartPlayer]: a late [playVideo] must not rebuild the player. */
+    private var released = false
+
     /**
      * {@inheritDoc}
      */
@@ -111,6 +114,7 @@ class MediaPlayerRecyclerView : RecyclerView {
     }
 
     fun onRestartPlayer() {
+        released = false
         playVideo()
     }
 
@@ -150,6 +154,10 @@ class MediaPlayerRecyclerView : RecyclerView {
 
         // Case 3: Video has to be played in a different view holder, so move the player there
         stopVideo()
+        if (released) {
+            // A queued or delayed playVideo() after onStop must not start a new player
+            return
+        }
         initPlayer()
         val savedState = savedStateOf(messageId, mediaUrl)
         val volume = savedState?.volume ?: MUTED_VOLUME
@@ -239,6 +247,7 @@ class MediaPlayerRecyclerView : RecyclerView {
      * player, and videos resume from where they were left.
      */
     fun releasePlayer() {
+        released = true
         stopVideo()
         handle.release()
     }

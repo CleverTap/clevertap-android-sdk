@@ -476,10 +476,24 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         assertEquals(0, row.container.childCount)
         assertEquals(View.GONE, row.container.visibility)
 
-        list.playVideo()
+        list.onRestartPlayer()
 
         assertEquals(2, row.attachCount)
         verify(exactly = 2) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a play queued after the player was released does not create a player`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        list.releasePlayer()
+
+        list.playVideo()
+
+        assertEquals(1, row.attachCount)
+        verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
+        verify(exactly = 1) { handle.startPlaying(any(), any(), any(), any(), any()) }
     }
 
     @Test
