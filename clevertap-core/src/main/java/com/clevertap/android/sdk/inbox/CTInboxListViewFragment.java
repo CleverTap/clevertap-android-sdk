@@ -18,9 +18,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.fragment.app.Fragment;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,6 +48,7 @@ import java.util.List;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
+@OptIn(markerClass = UnstableApi.class)
 public class CTInboxListViewFragment extends Fragment {
 
     interface InboxListener {
