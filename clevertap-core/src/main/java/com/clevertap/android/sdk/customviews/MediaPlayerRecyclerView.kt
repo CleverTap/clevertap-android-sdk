@@ -331,7 +331,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         addOnScrollListener(onScrollListener)
         addOnChildAttachStateChangeListener(onChildAttachStateChangeListener)
         // Backs up the detach callback, which RecyclerView does not guarantee for every recycle.
-        setRecyclerListener { holder ->
+        addRecyclerListener { holder ->
             if (holder === playingHolder) {
                 stopVideo()
             }

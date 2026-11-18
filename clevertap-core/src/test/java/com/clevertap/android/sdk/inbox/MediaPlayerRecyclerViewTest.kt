@@ -674,8 +674,9 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         showList(rows = 1)
         val row = rowAt(0)
         list.playVideo()
-        val recycleListener = RecyclerView::class.java.getDeclaredField("mRecyclerListener")
-            .apply { isAccessible = true }.get(list) as RecyclerView.RecyclerListener
+        val recycleListeners = RecyclerView::class.java.getDeclaredField("mRecyclerListeners")
+            .apply { isAccessible = true }.get(list) as List<*>
+        val recycleListener = recycleListeners.single() as RecyclerView.RecyclerListener
 
         recycleListener.onViewRecycled(row)
 
