@@ -22,6 +22,10 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
     namespace 'com.clevertap.android.geofence'
+    defaultConfig {
+        // Same number as BuildConfig.VERSION_CODE, filled into the gfSDKVersion meta-data in the manifest
+        manifestPlaceholders += [ctGeofenceSdkVersionCode: defaultConfig.versionCode]
+    }
 }
 
 dependencies {

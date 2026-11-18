@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk
 
+import android.os.Bundle
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.After
 import org.junit.Assert
@@ -48,5 +49,37 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
 
         Assert.assertEquals(2, coreMetaData.allCustomSdkVersions["OverriddenModule"])
         Assert.assertEquals(2, coreMetaData.getCustomSdkVersion("OverriddenModule"))
+    }
+
+    @Test
+    fun test_registerModuleSdkVersions_registersIntegerAndNumericStringValues() {
+        val metaData = Bundle().apply {
+            putInt(ManifestInfo.LABEL_MODULE_SDK_VERSION_PREFIX + "ManifestIntModule", 10400)
+            putString(ManifestInfo.LABEL_MODULE_SDK_VERSION_PREFIX + "ManifestStringModule", "10500")
+        }
+
+        ManifestInfo.registerModuleSdkVersions(metaData)
+
+        val all = CoreMetaData().allCustomSdkVersions
+        Assert.assertEquals(10400, all["ManifestIntModule"])
+        Assert.assertEquals(10500, all["ManifestStringModule"])
+    }
+
+    @Test
+    fun test_registerModuleSdkVersions_skipsInvalidAndUnrelatedKeys() {
+        val metaData = Bundle().apply {
+            putString(ManifestInfo.LABEL_MODULE_SDK_VERSION_PREFIX + "ManifestBadModule", "1.4.0")
+            putString(ManifestInfo.LABEL_MODULE_SDK_VERSION_PREFIX + "ManifestNullModule", null)
+            putInt(ManifestInfo.LABEL_MODULE_SDK_VERSION_PREFIX, 1)
+            putInt("ManifestUnrelatedModule", 1)
+        }
+
+        ManifestInfo.registerModuleSdkVersions(metaData)
+
+        val all = CoreMetaData().allCustomSdkVersions
+        Assert.assertFalse(all.containsKey("ManifestBadModule"))
+        Assert.assertFalse(all.containsKey("ManifestNullModule"))
+        Assert.assertFalse(all.containsKey(""))
+        Assert.assertFalse(all.containsKey("ManifestUnrelatedModule"))
     }
 }
