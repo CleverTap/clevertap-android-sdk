@@ -46,7 +46,7 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
 
-        fl.background = ColorDrawable(-0x45000000)
+        fl.background = ColorDrawable(0xBB000000.toInt())
 
         relativeLayout = fl.findViewById(R.id.half_interstitial_image_relative_layout)
         relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())

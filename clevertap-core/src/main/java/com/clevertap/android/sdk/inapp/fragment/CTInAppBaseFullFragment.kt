@@ -96,18 +96,18 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
      * @return true if device screen's smallest width, independent of orientation is >= 600dp else false
      */
     fun isTablet(): Boolean {
-            if (Utils.isActivityDead(activity)) {
-                return false
-            }
-
-            try {
-                return resources.getBoolean(R.bool.ctIsTablet)
-            } catch (_: Exception) {
-                // resource not found
-                Logger.d("Failed to decide whether device is a smart phone or tablet!")
-                return false
-            }
+        if (Utils.isActivityDead(activity)) {
+            return false
         }
+
+        try {
+            return resources.getBoolean(R.bool.ctIsTablet)
+        } catch (_: Exception) {
+            // resource not found
+            Logger.d("Failed to decide whether device is a smart phone or tablet!")
+            return false
+        }
+    }
 
     fun redrawHalfInterstitialInApp(
         relativeLayout: RelativeLayout,
