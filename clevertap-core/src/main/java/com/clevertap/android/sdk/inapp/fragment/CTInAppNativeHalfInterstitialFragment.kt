@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inapp.fragment
 
-import android.content.Context
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -16,7 +15,6 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
-import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.R
 import com.clevertap.android.sdk.inapp.media.InAppMediaConfig
 import com.clevertap.android.sdk.inapp.media.InAppMediaHandler
@@ -40,10 +38,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
     ): View? {
         val inAppButtons = mutableListOf<Button>()
         val inAppView: View =
-            if (inAppNotification.isTablet && isTablet() || inAppNotification.isLocalInApp && isTabletFromDeviceType(
-                    inflater.context
-                )
-            ) {
+            if ((inAppNotification.isTablet || inAppNotification.isLocalInApp) && isTablet()) {
                 inflater.inflate(R.layout.tab_inapp_half_interstitial, container, false)
             } else {
                 inflater.inflate(R.layout.inapp_half_interstitial, container, false)
@@ -62,10 +57,7 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                     override fun onGlobalLayout() {
                         val relativeLayout = relativeLayout ?: return
                         val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
-                        if (inAppNotification.isTablet && isTablet() || inAppNotification.isLocalInApp && isTabletFromDeviceType(
-                                inflater.context
-                            )
-                        ) {
+                        if ((inAppNotification.isTablet || inAppNotification.isLocalInApp) && isTablet()) {
                             redrawHalfInterstitialInApp(
                                 relativeLayout, layoutParams, closeImageView
                             )
@@ -192,9 +184,5 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
         }
 
         return inAppView
-    }
-
-    fun isTabletFromDeviceType(context: Context?): Boolean {
-        return DeviceInfo.getDeviceType(context) == DeviceInfo.TABLET
     }
 }
