@@ -91,19 +91,19 @@ internal class CTInAppNativeHalfInterstitialFragment : CTInAppBaseFullNativeFrag
                                 )
                                 layoutParams.height =
                                     relativeLayout.measuredHeight - getScaledPixels(130)
-                                layoutParams.width = (layoutParams.height * 1.3f).toInt()
+                                layoutParams.width = (layoutParams.height * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
                                 layoutParams.gravity = Gravity.CENTER
                                 relativeLayout.setLayoutParams(layoutParams)
 
                                 addCloseImageView(relativeLayout, closeImageView)
                             } else {
-                                layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
+                                layoutParams.width = (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL
                                 relativeLayout.setLayoutParams(layoutParams)
                                 addCloseImageView(relativeLayout, closeImageView)
                             }
                         } else {
-                            layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
+                            layoutParams.width = (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
                             layoutParams.gravity = Gravity.CENTER
                             relativeLayout.setLayoutParams(layoutParams)
                             addCloseImageView(relativeLayout, closeImageView)

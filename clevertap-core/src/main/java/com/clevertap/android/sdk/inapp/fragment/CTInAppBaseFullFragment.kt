@@ -27,7 +27,8 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
     }
 
     companion object {
-        private const val HALF_INTERSTITIAL_ASPECT_RATIO = 1.3f
+        internal const val HALF_INTERSTITIAL_ASPECT_RATIO = 1.3f
+        internal const val INTERSTITIAL_ASPECT_RATIO = 1.78f
 
         /**
          * Returns the height the half-interstitial card must be reduced to so that it fits the
@@ -142,7 +143,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
             getScaledPixels(140)
         )
         layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(210)
-        layoutParams.height = (layoutParams.width * 1.3f).toInt()
+        layoutParams.height = (layoutParams.width * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
         relativeLayout.setLayoutParams(layoutParams)
         addCloseImageView(relativeLayout, closeImageView)
     }
@@ -152,7 +153,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         layoutParams: FrameLayout.LayoutParams,
         closeImageView: CloseImageView
     ) {
-        layoutParams.height = (relativeLayout.measuredWidth * 1.78f).toInt()
+        layoutParams.height = (relativeLayout.measuredWidth * INTERSTITIAL_ASPECT_RATIO).toInt()
         relativeLayout.setLayoutParams(layoutParams)
         addCloseImageView(relativeLayout, closeImageView)
     }
@@ -163,12 +164,12 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         fl: FrameLayout,
         closeImageView: CloseImageView
     ) {
-        val aspectHeight = ((relativeLayout.measuredWidth - getScaledPixels(200)) * 1.78f).toInt()
+        val aspectHeight = ((relativeLayout.measuredWidth - getScaledPixels(200)) * INTERSTITIAL_ASPECT_RATIO).toInt()
         val requiredHeight = fl.measuredHeight - getScaledPixels(280)
 
         if (aspectHeight > requiredHeight) {
             layoutParams.height = requiredHeight
-            layoutParams.width = (requiredHeight / 1.78f).toInt()
+            layoutParams.width = (requiredHeight / INTERSTITIAL_ASPECT_RATIO).toInt()
         } else {
             layoutParams.height = aspectHeight
             layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(
@@ -190,12 +191,12 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         fl: FrameLayout,
         closeImageView: CloseImageView
     ) {
-        val aspectHeight = (relativeLayout.measuredWidth * 1.78f).toInt()
+        val aspectHeight = (relativeLayout.measuredWidth * INTERSTITIAL_ASPECT_RATIO).toInt()
         val requiredHeight = fl.measuredHeight - getScaledPixels(80)
 
         if (aspectHeight > requiredHeight) {
             layoutParams.height = requiredHeight
-            layoutParams.width = (requiredHeight / 1.78f).toInt()
+            layoutParams.width = (requiredHeight / INTERSTITIAL_ASPECT_RATIO).toInt()
         } else {
             layoutParams.height = aspectHeight
         }
@@ -209,7 +210,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         layoutParams: FrameLayout.LayoutParams,
         closeImageView: CloseImageView
     ) {
-        layoutParams.width = (relativeLayout.measuredHeight * 1.78f).toInt()
+        layoutParams.width = (relativeLayout.measuredHeight * INTERSTITIAL_ASPECT_RATIO).toInt()
         layoutParams.gravity = Gravity.CENTER_HORIZONTAL
         relativeLayout.setLayoutParams(layoutParams)
         addCloseImageView(relativeLayout, closeImageView)
@@ -221,12 +222,12 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         fl: FrameLayout,
         closeImageView: CloseImageView
     ) {
-        val aspectWidth = ((relativeLayout.measuredHeight - getScaledPixels(120)) * 1.78f).toInt()
+        val aspectWidth = ((relativeLayout.measuredHeight - getScaledPixels(120)) * INTERSTITIAL_ASPECT_RATIO).toInt()
         val requiredWidth = fl.measuredWidth - getScaledPixels(280)
 
         if (aspectWidth > requiredWidth) {
             layoutParams.width = requiredWidth
-            layoutParams.height = (requiredWidth / 1.78f).toInt()
+            layoutParams.height = (requiredWidth / INTERSTITIAL_ASPECT_RATIO).toInt()
         } else {
             layoutParams.width = aspectWidth
             layoutParams.height = (relativeLayout.measuredHeight - getScaledPixels(120))
@@ -247,12 +248,12 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         fl: FrameLayout,
         closeImageView: CloseImageView
     ) {
-        val aspectWidth = (relativeLayout.measuredHeight * 1.78f).toInt()
+        val aspectWidth = (relativeLayout.measuredHeight * INTERSTITIAL_ASPECT_RATIO).toInt()
         val requiredWidth = fl.measuredWidth - getScaledPixels(80)
 
         if (aspectWidth > requiredWidth) {
             layoutParams.width = requiredWidth
-            layoutParams.height = (requiredWidth / 1.78f).toInt()
+            layoutParams.height = (requiredWidth / INTERSTITIAL_ASPECT_RATIO).toInt()
         } else {
             layoutParams.width = aspectWidth
         }
