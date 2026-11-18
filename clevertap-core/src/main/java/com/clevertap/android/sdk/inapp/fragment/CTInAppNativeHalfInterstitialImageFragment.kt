@@ -52,31 +52,9 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
         relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
 
         when (currentOrientation) {
-            Configuration.ORIENTATION_PORTRAIT -> relativeLayout?.getViewTreeObserver()
-                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
-                    override fun onGlobalLayout() {
-                        val relativeLayout = relativeLayout ?: return
-                        val layoutParams =
-                            relativeLayout.layoutParams as FrameLayout.LayoutParams
-                        if (inAppNotification.isTablet && isTablet()) {
-                            redrawHalfInterstitialInApp(
-                                relativeLayout, layoutParams, closeImageView
-                            )
-                        } else {
-                            if (isTablet()) {
-                                redrawHalfInterstitialMobileInAppOnTablet(
-                                    relativeLayout, layoutParams, closeImageView
-                                )
-                            } else {
-                                redrawHalfInterstitialInApp(
-                                    relativeLayout, layoutParams, closeImageView
-                                )
-                            }
-                        }
-
-                        relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
-                    }
-                })
+            Configuration.ORIENTATION_PORTRAIT -> addHalfInterstitialPortraitLayoutListener(
+                relativeLayout, closeImageView
+            ) { inAppNotification.isTablet }
 
             Configuration.ORIENTATION_LANDSCAPE -> relativeLayout?.getViewTreeObserver()
                 ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {

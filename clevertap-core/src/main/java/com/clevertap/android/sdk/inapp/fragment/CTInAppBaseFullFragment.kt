@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.fragment
 
 import android.view.Gravity
 import android.view.View
+import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.core.view.ViewCompat
@@ -108,6 +109,35 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
             Logger.d("Failed to decide whether device is a smart phone or tablet!")
             return false
         }
+    }
+
+    /**
+     * Sizes a half-interstitial card in portrait once it has been laid out. [isTabletInApp] is read at
+     * layout time and says whether the in-app was made for tablets.
+     */
+    fun addHalfInterstitialPortraitLayoutListener(
+        relativeLayout: RelativeLayout?,
+        closeImageView: CloseImageView,
+        isTabletInApp: () -> Boolean
+    ) {
+        relativeLayout?.getViewTreeObserver()
+            ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
+                    if (isTabletInApp() && isTablet()) {
+                        redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView)
+                    } else {
+                        if (isTablet()) {
+                            redrawHalfInterstitialMobileInAppOnTablet(
+                                relativeLayout, layoutParams, closeImageView
+                            )
+                        } else {
+                            redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView)
+                        }
+                    }
+                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
+                }
+            })
     }
 
     fun redrawHalfInterstitialInApp(
