@@ -128,5 +128,4 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
 
         return inAppView
     }
-
 }

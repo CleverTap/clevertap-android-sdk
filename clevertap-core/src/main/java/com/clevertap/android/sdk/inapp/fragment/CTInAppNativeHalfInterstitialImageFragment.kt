@@ -72,5 +72,4 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         return inAppView
     }
-
 }
