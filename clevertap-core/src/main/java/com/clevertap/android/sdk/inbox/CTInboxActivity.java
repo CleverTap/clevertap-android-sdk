@@ -90,6 +90,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
+            // Resolution failed before cleverTapAPI/styleConfig were assigned (e.g. the account
+            // could not be resolved). Finish so we don't leave an empty activity on screen, and
+            // let onDestroy's null-guards skip the cleanup that would otherwise NPE.
+            finish();
             return;
         }
 
@@ -237,10 +241,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     protected void onDestroy() {
-        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
-        coreMetaData.setAppInboxActivity(null);
+        // Guard the failure path: if onCreate caught before assigning these, cleanup would NPE.
+        if (cleverTapAPI != null) {
+            CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+            coreMetaData.setAppInboxActivity(null);
+        }
 
-        if (styleConfig.isUsingTabs()) {
+        if (styleConfig != null && styleConfig.isUsingTabs()) {
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
                 if (fragment instanceof CTInboxListViewFragment) {

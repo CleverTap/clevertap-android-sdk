@@ -1112,11 +1112,16 @@ class UtilsTest {
         // When
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254: when getGlobalInstance can't resolve (persisted record missing), the click
+            // path falls back to instanceWithConfig. Here that also returns null (truly
+            // unresolvable), so no event is pushed.
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseNotificationClicked(mockContext, mockBundle, mockConfig)
 
             // Then
             verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             // No verification for pushNotificationClickedEvent as instance is null
         }
     }
@@ -1619,11 +1624,14 @@ class UtilsTest {
         // When
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254 fallback: unresolved via getGlobalInstance → instanceWithConfig, also null.
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
 
             // Then
             verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
         }
     }
@@ -1746,12 +1754,15 @@ class UtilsTest {
         // When
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254 fallback: unresolved via getGlobalInstance → instanceWithConfig, also null.
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
             verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
             verify { mockBundle.getString(key) }
         }
@@ -2055,11 +2066,14 @@ class UtilsTest {
         // When
         mockkStatic(CleverTapAPI::class) {
             every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254 fallback: unresolved via getGlobalInstance → instanceWithConfig, also null.
+            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
 
             // Then
             verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
+            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             // No verification for pushEvent as instance is null
         }
     }
