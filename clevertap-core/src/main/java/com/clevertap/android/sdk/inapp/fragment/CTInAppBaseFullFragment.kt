@@ -27,51 +27,6 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         })
     }
 
-    companion object {
-        internal const val HALF_INTERSTITIAL_ASPECT_RATIO = 1.3f
-        internal const val INTERSTITIAL_ASPECT_RATIO = 1.78f
-
-        /**
-         * Returns the height the half-interstitial card must be reduced to so that it fits the
-         * screen, or null when it fits and keeps its usual height of width x 1.3.
-         *
-         * The card is centered, so the bars cover its container on both sides and [barHeight] is
-         * removed twice. When no height is left, null is returned and the usual size is kept.
-         *
-         * @param cardWidth width of the card before resizing
-         * @param cardHeight height of the card before resizing
-         * @param barHeight how much the taller bar covers the container of the card
-         */
-        internal fun fittedHalfInterstitialHeight(cardWidth: Int, cardHeight: Int, barHeight: Int): Int? {
-            val aspectHeight = (cardWidth * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
-            val availableHeight = cardHeight - 2 * barHeight
-            return if (availableHeight > 0 && aspectHeight > availableHeight) availableHeight else null
-        }
-
-        /**
-         * Returns how much the status bar, the navigation bar or the display cutout covers the
-         * container of [relativeLayout], or 0 when it is not covered.
-         *
-         * An app that is drawn behind these bars (edge to edge, forced on Android 15 and above for
-         * apps that target API 35 or higher) is covered by them. Otherwise the system already keeps
-         * the content clear of the bars and nothing is covered, so the bars must not be removed again.
-         */
-        private fun systemBarOverlap(relativeLayout: RelativeLayout): Int {
-            val bars = ViewCompat.getRootWindowInsets(relativeLayout)?.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            val container = relativeLayout.parent as? View
-            if (bars == null || container == null) {
-                return 0
-            }
-            val containerTop = IntArray(2).also { container.getLocationInWindow(it) }[1]
-            val windowHeight = relativeLayout.rootView.height
-            val overlapTop = maxOf(0, bars.top - containerTop)
-            val overlapBottom = maxOf(0, containerTop + container.height - (windowHeight - bars.bottom))
-            return maxOf(overlapTop, overlapBottom)
-        }
-    }
-
     /**
      * Sets up the close button of a full screen in-app: it closes the in-app when clicked, and it is
      * shown only when the in-app asks for it. [CTInAppNotification.isHideCloseButton] is read from the
@@ -83,11 +38,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
             activity?.finish()
         }
 
-        if (!inAppNotification.isHideCloseButton) {
-            closeImageView.setVisibility(View.GONE)
-        } else {
-            closeImageView.setVisibility(View.VISIBLE)
-        }
+        closeImageView.visibility = if (inAppNotification.isHideCloseButton) View.VISIBLE else View.GONE
     }
 
     override fun cleanup() {
@@ -138,22 +89,21 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         closeImageView: CloseImageView,
         isTabletInApp: () -> Boolean
     ) {
-        relativeLayout?.getViewTreeObserver()
+        relativeLayout?.viewTreeObserver
             ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
                     val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
-                    if (isTabletInApp() && isTablet()) {
-                        redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView)
-                    } else {
-                        if (isTablet()) {
-                            redrawHalfInterstitialMobileInAppOnTablet(
-                                relativeLayout, layoutParams, closeImageView
-                            )
-                        } else {
-                            redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView)
-                        }
+                    val isTablet = isTablet()
+                    when {
+                        isTabletInApp() && isTablet -> redrawHalfInterstitialInApp(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                        isTablet -> redrawHalfInterstitialMobileInAppOnTablet(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                        else -> redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView)
                     }
-                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
+                    relativeLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
                 }
             })
     }
@@ -167,26 +117,23 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         closeImageView: CloseImageView,
         isTabletInApp: () -> Boolean
     ) {
-        relativeLayout?.getViewTreeObserver()
+        relativeLayout?.viewTreeObserver
             ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
                     val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
-                    if (isTabletInApp() && isTablet()) {
-                        redrawLandscapeHalfInterstitialTabletInApp(
+                    val isTablet = isTablet()
+                    when {
+                        isTabletInApp() && isTablet -> redrawLandscapeHalfInterstitialTabletInApp(
                             relativeLayout, layoutParams, closeImageView
                         )
-                    } else {
-                        if (isTablet()) {
-                            redrawLandscapeHalfInterstitialMobileInAppOnTablet(
-                                relativeLayout, layoutParams, closeImageView
-                            )
-                        } else {
-                            redrawLandscapeHalfInterstitialInApp(
-                                relativeLayout, layoutParams, closeImageView
-                            )
-                        }
+                        isTablet -> redrawLandscapeHalfInterstitialMobileInAppOnTablet(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                        else -> redrawLandscapeHalfInterstitialInApp(
+                            relativeLayout, layoutParams, closeImageView
+                        )
                     }
-                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
+                    relativeLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
                 }
             })
     }
@@ -382,5 +329,50 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         layoutParams.gravity = Gravity.CENTER
         relativeLayout.setLayoutParams(layoutParams)
         addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    companion object {
+        internal const val HALF_INTERSTITIAL_ASPECT_RATIO = 1.3f
+        internal const val INTERSTITIAL_ASPECT_RATIO = 1.78f
+
+        /**
+         * Returns the height the half-interstitial card must be reduced to so that it fits the
+         * screen, or null when it fits and keeps its usual height of width x 1.3.
+         *
+         * The card is centered, so the bars cover its container on both sides and [barHeight] is
+         * removed twice. When no height is left, null is returned and the usual size is kept.
+         *
+         * @param cardWidth width of the card before resizing
+         * @param cardHeight height of the card before resizing
+         * @param barHeight how much the taller bar covers the container of the card
+         */
+        internal fun fittedHalfInterstitialHeight(cardWidth: Int, cardHeight: Int, barHeight: Int): Int? {
+            val aspectHeight = (cardWidth * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+            val availableHeight = cardHeight - 2 * barHeight
+            return if (availableHeight > 0 && aspectHeight > availableHeight) availableHeight else null
+        }
+
+        /**
+         * Returns how much the status bar, the navigation bar or the display cutout covers the
+         * container of [relativeLayout], or 0 when it is not covered.
+         *
+         * An app that is drawn behind these bars (edge to edge, forced on Android 15 and above for
+         * apps that target API 35 or higher) is covered by them. Otherwise the system already keeps
+         * the content clear of the bars and nothing is covered, so the bars must not be removed again.
+         */
+        private fun systemBarOverlap(relativeLayout: RelativeLayout): Int {
+            val bars = ViewCompat.getRootWindowInsets(relativeLayout)?.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            val container = relativeLayout.parent as? View
+            if (bars == null || container == null) {
+                return 0
+            }
+            val containerTop = IntArray(2).also { container.getLocationInWindow(it) }[1]
+            val windowHeight = relativeLayout.rootView.height
+            val overlapTop = maxOf(0, bars.top - containerTop)
+            val overlapBottom = maxOf(0, containerTop + container.height - (windowHeight - bars.bottom))
+            return maxOf(overlapTop, overlapBottom)
+        }
     }
 }
