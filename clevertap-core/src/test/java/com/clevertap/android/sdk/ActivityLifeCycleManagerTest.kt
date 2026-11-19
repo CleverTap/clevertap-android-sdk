@@ -60,7 +60,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         assertFalse(CoreMetaData.isAppForeground())
     }
 
-    @Ignore
+    @Ignore("Failing; disabled in 'Fix failing test cases' (June 2022), needs investigation")
     @Test
     fun test_activityPaused_whenInCurrentSession_LastSessionEpochMustBeSavedInPreference() {
         coreState.coreMetaData.currentSessionId = 100
@@ -77,6 +77,18 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         assertEquals(-1,StorageHelper.getInt(appCtx,
             StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, Constants.LAST_SESSION_EPOCH),-1))
 
+    }
+
+    @Test
+    fun test_appBackgrounded_flushesEventQueue() {
+        activityLifeCycleManager.appBackgrounded()
+        verify { coreState.baseEventQueueManager.flushOnAppBackground(appCtx) }
+    }
+
+    @Test
+    fun test_activityPaused_doesNotFlushEventQueue() {
+        activityLifeCycleManager.activityPaused()
+        verify(exactly = 0) { coreState.baseEventQueueManager.flushOnAppBackground(any()) }
     }
 
     @Test

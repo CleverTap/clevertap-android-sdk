@@ -8,6 +8,7 @@
 * **Build Tools:** The SDK is now built with Android Gradle Plugin 9.1.1, Gradle 9.3.1 and compileSdk 37.
   App requirements do not change: compileSdk 35 or higher, Android Gradle Plugin 8.1.1 or higher,
   minSdk 23 and Kotlin 1.9 or higher, the same as 8.6.0.
+* **Faster Event Delivery On Background:** Queued events are now sent as soon as the app moves to the background, instead of waiting for the next scheduled flush.
 
 #### Bug Fixes
 * **Push Primer On Foldables:** Fixes the app closing when the push primer is shown after a fold.

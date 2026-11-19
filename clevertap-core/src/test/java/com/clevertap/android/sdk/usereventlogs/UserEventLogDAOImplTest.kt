@@ -46,8 +46,6 @@ class UserEventLogDAOImplTest {
 
 
     companion object {
-        private const val TEST_EVENT_NAME_2 = "TEST_EVENT_2"
-        private const val TEST_EVENT_NAME_2_NORMALIZED = "TEST_EVENT_2"
         private const val TEST_DB_NAME = "test_clevertap.db"
         private const val MOCK_TIME = 1234567890L
     }
