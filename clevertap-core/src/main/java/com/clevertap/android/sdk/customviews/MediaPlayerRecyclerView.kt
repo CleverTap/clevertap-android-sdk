@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.customviews
 import android.content.Context
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import android.widget.AbsListView
@@ -21,12 +22,20 @@ import com.clevertap.android.sdk.video.VideoLibraryIntegrated
 import com.clevertap.android.sdk.video.inbox.ExoplayerHandle
 import com.clevertap.android.sdk.video.inbox.Media3Handle
 
+/** Inbox list that plays the most visible video row with one shared player. */
 @UnstableApi
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class MediaPlayerRecyclerView : RecyclerView {
 
+    /** Where a video was left, for the media it was playing. */
+    private class VideoState(val mediaUrl: String, val positionMs: Long, val volume: Float)
+
+    /** The message and media the player was started for. The row may show another one later. */
+    private class PlayingVideo(val messageId: String?, val mediaUrl: String?)
+
     private val handle: InboxVideoPlayerHandle
     private val rect = Rect()
+    private val videoStates = mutableMapOf<String, VideoState>()
     private val onScrollListener: OnScrollListener = object : OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
@@ -39,24 +48,25 @@ class MediaPlayerRecyclerView : RecyclerView {
         object : OnChildAttachStateChangeListener {
             override fun onChildViewAttachedToWindow(view: View) {}
             override fun onChildViewDetachedFromWindow(view: View) {
-                playingHolder?.let { ph ->
-                    if (ph.itemView == view) {
-                        // The row can come back from RecyclerView's view cache without a
-                        // rebind, so its video container must be cleared here.
-                        removeVideoView()
-                    }
+                if (playingHolder?.itemView == view) {
+                    // The row can return from the view cache without a rebind, so clear its container
+                    stopVideo()
                 }
             }
         }
 
     private var playingHolder: CTInboxBaseMessageViewHolder? = null
+    private var playingVideo: PlayingVideo? = null
+
+    /** True from [releasePlayer] until [onRestartPlayer]. */
+    private var released = false
 
     /**
      * {@inheritDoc}
      */
     constructor(context: Context) : super(context) {
         handle = createHandle()
-        initialize()
+        registerListeners()
     }
 
     /**
@@ -67,7 +77,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         attrs: AttributeSet
     ) : super(context, attrs) {
         handle = createHandle()
-        initialize()
+        registerListeners()
     }
 
     /**
@@ -79,7 +89,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         defStyleAttr: Int
     ) : super(context, attrs, defStyleAttr) {
         handle = createHandle()
-        initialize()
+        registerListeners()
     }
 
     /** Lets tests supply the player handle; neither video library is on the unit test classpath. */
@@ -89,7 +99,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         handle: InboxVideoPlayerHandle
     ) : super(context) {
         this.handle = handle
-        initialize()
+        registerListeners()
     }
 
     fun onPausePlayer() {
@@ -97,7 +107,7 @@ class MediaPlayerRecyclerView : RecyclerView {
     }
 
     fun onRestartPlayer() {
-        initialize()
+        released = false
         playVideo()
     }
 
@@ -106,13 +116,18 @@ class MediaPlayerRecyclerView : RecyclerView {
 
         // Case 1 : No viewholder has video item in it
         if (targetHolder == null) {
-            removeVideoView()
+            stopVideo()
             return
         }
 
+        val messageId = targetHolder.messageId
+        val mediaUrl = targetHolder.mediaUrl
+
         // Case 2 : Found viewholder is same with surface and player attached
         playingHolder?.let { ph ->
-            if (ph.itemView == targetHolder.itemView) {
+            // The row can be rebound to another message, so also compare the message and media
+            val samePlayingVideo = playingVideo?.messageId == messageId && playingVideo?.mediaUrl == mediaUrl
+            if (ph.itemView == targetHolder.itemView && samePlayingVideo) {
                 val measured = ph.itemView.getGlobalVisibleRect(rect)
                 val visibleHeight = if (measured) {
                     rect.height()
@@ -126,30 +141,32 @@ class MediaPlayerRecyclerView : RecyclerView {
                     handle.setPlayWhenReady(false)
                 }
                 return
-            } else {
-                // no-op
             }
         }
 
-        // Case 3: Video has to be played in different view holder so we remove and reattch to correct one
-        removeVideoView()
-        initialize()
-        val currentVolume = handle.playerVolume()
-        // Set before addMediaPlayer(): it starts playback, and the buffering/ready callbacks
-        // read playingHolder to find the views they must show.
+        // Case 3: Video has to be played in a different view holder, so move the player there
+        stopVideo()
+        if (released) {
+            // A late playVideo() after onStop must not start a player
+            return
+        }
+        initPlayer()
+        val savedState = savedStateOf(messageId, mediaUrl)
+        val volume = savedState?.volume ?: MUTED_VOLUME
+        handle.setPlayerVolume(volume)
+        // Set before addMediaPlayer(), because the player callbacks read playingHolder
         playingHolder = targetHolder
+        playingVideo = PlayingVideo(messageId, mediaUrl)
         val addedVideo = targetHolder.addMediaPlayer(
-            currentVolume,
-            {
-                handle.handleMute()
-                handle.playerVolume()
-            },
+            volume,
+            ::toggleMute,
             { uri: String, isMediaAudio: Boolean, isMediaVideo: Boolean ->
                 handle.startPlaying(
                     ctx = context,
                     uriString = uri,
                     isMediaAudio = isMediaAudio,
-                    isMediaVideo = isMediaVideo
+                    isMediaVideo = isMediaVideo,
+                    startPositionMs = savedState?.positionMs ?: InboxVideoPlayerHandle.DEFAULT_START_POSITION
                 )
                 null
             },
@@ -157,17 +174,11 @@ class MediaPlayerRecyclerView : RecyclerView {
         )
         if (!addedVideo) {
             playingHolder = null
+            playingVideo = null
         }
     }
 
-    /**
-     * Releases the player, detaches the shared player surface from its current holder and
-     * forgets that holder.
-     *
-     * Must be called before mutating the adapter data and calling notifyDataSetChanged(),
-     * otherwise the surface view stays parented inside a holder that gets rebound to a
-     * different message. Also called when the list is destroyed.
-     */
+    /** Call before changing the adapter data, so the player view is not left in a rebound row. */
     fun prepareForListRebind() {
         Logger.v(
             if (playingHolder != null) {
@@ -176,7 +187,53 @@ class MediaPlayerRecyclerView : RecyclerView {
                 "prepareForListRebind: no active video — nothing to detach"
             }
         )
-        removeVideoView()
+        stopVideo()
+    }
+
+    /** Where every video was left, to give to a new list (for example after a rotation). */
+    fun saveVideoStates(): Bundle {
+        rememberVideoState()
+        val saved = Bundle()
+        for ((messageId, state) in videoStates) {
+            saved.putBundle(
+                messageId,
+                Bundle().apply {
+                    putString(KEY_MEDIA_URL, state.mediaUrl)
+                    putLong(KEY_POSITION_MS, state.positionMs)
+                    putFloat(KEY_VOLUME, state.volume)
+                }
+            )
+        }
+        return saved
+    }
+
+    /** Takes back what [saveVideoStates] returned. A null or empty bundle changes nothing. */
+    fun restoreVideoStates(saved: Bundle?) {
+        if (saved == null) {
+            return
+        }
+        for (messageId in saved.keySet()) {
+            val state = saved.getBundle(messageId) ?: continue
+            val mediaUrl = state.getString(KEY_MEDIA_URL) ?: continue
+            videoStates[messageId] = VideoState(
+                mediaUrl = mediaUrl,
+                positionMs = state.getLong(KEY_POSITION_MS),
+                volume = state.getFloat(KEY_VOLUME)
+            )
+        }
+    }
+
+    /** Stops the video and releases the player; the next [playVideo] after a restart creates a new one. */
+    fun releasePlayer() {
+        released = true
+        stopVideo()
+        handle.release()
+    }
+
+    override fun onDetachedFromWindow() {
+        // Backs up the fragment: a page removed from the pager never reaches onDestroy().
+        releasePlayer()
+        super.onDetachedFromWindow()
     }
 
     private fun createHandle(): InboxVideoPlayerHandle = when (VideoLibChecker.mediaLibType) {
@@ -217,7 +274,8 @@ class MediaPlayerRecyclerView : RecyclerView {
         return bestHolder
     }
 
-    private fun initialize() {
+    /** Creates the player and its view if they do not exist; a no-op while they are alive. */
+    private fun initPlayer() {
         handle.initExoplayer(
             context = context,
             buffering = ::bufferingStarted,
@@ -227,7 +285,12 @@ class MediaPlayerRecyclerView : RecyclerView {
             context = context,
             artworkAsset = ::artworkAsset
         )
-        recyclerViewListeners()
+    }
+
+    /** Switches between muted and full volume and returns the new volume. */
+    private fun toggleMute(): Float {
+        handle.setPlayerVolume(if (handle.playerVolume() > MUTED_VOLUME) MUTED_VOLUME else FULL_VOLUME)
+        return handle.playerVolume()
     }
 
     private fun bufferingStarted() {
@@ -242,18 +305,51 @@ class MediaPlayerRecyclerView : RecyclerView {
         return ResourcesCompat.getDrawable(resources, R.drawable.ct_audio, null)!!
     }
 
-    private fun recyclerViewListeners() {
-        removeOnScrollListener(onScrollListener)
-        removeOnChildAttachStateChangeListener(onChildAttachStateChangeListener)
+    private fun registerListeners() {
         addOnScrollListener(onScrollListener)
         addOnChildAttachStateChangeListener(onChildAttachStateChangeListener)
+        // Backs up the detach callback, which RecyclerView does not guarantee for every recycle.
+        addRecyclerListener { holder ->
+            if (holder === playingHolder) {
+                stopVideo()
+            }
+        }
     }
 
-    private fun removeVideoView() {
-        handle.pause()
-        playingHolder?.playerRemoved() // removes all the views from video container
-        // The surface is gone, so keeping the reference would let playVideo() take its Case 2
-        // shortcut and flip playWhenReady on a released player. Case 3 re-attaches instead.
+    /** Saves the place, clears the row's container and stops the player, which stays alive. */
+    private fun stopVideo() {
+        val holder = playingHolder ?: return
+        rememberVideoState()
+        holder.playerRemoved() // removes all the views from video container
+        handle.stop()
         playingHolder = null
+        playingVideo = null
+    }
+
+    /** Saves the place under the message the player was started for, not the row's current one. */
+    private fun rememberVideoState() {
+        val video = playingVideo ?: return
+        val messageId = video.messageId ?: return
+        val mediaUrl = video.mediaUrl ?: return
+        videoStates[messageId] = VideoState(mediaUrl, handle.currentPositionMs(), handle.playerVolume())
+    }
+
+    /** The saved state of the message, only if its media is still the same. */
+    private fun savedStateOf(messageId: String?, mediaUrl: String?): VideoState? {
+        if (messageId == null) {
+            return null
+        }
+        return videoStates[messageId]?.takeIf { it.mediaUrl == mediaUrl }
+    }
+
+    private companion object {
+
+        /** A video that was never played starts muted. */
+        const val MUTED_VOLUME = 0f
+        const val FULL_VOLUME = 1f
+
+        const val KEY_MEDIA_URL = "mediaUrl"
+        const val KEY_POSITION_MS = "positionMs"
+        const val KEY_VOLUME = "volume"
     }
 }

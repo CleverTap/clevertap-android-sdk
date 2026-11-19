@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inbox
 
+import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -480,6 +481,85 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         // playVideo(), not onRestartPlayer(): the player is already initialised by this point.
         verify(exactly = 1) { media.playVideo() }
         verify(exactly = 0) { media.onRestartPlayer() }
+    }
+
+    @Test
+    fun test_onSaveInstanceState_keeps_the_video_states_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        val states = Bundle().apply { putString("message0", "state") }
+        every { media.saveVideoStates() } returns states
+        fragment.mediaRecyclerView = media
+        val outState = Bundle()
+
+        fragment.onSaveInstanceState(outState)
+
+        assertSame(states, outState.getBundle("videoStates"))
+    }
+
+    @Test
+    fun test_onViewStateRestored_gives_the_video_states_back_to_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        val states = Bundle().apply { putString("message0", "state") }
+        fragment.mediaRecyclerView = media
+        val saved = Bundle().apply { putBundle("videoStates", states) }
+
+        fragment.onViewStateRestored(saved)
+
+        verify(exactly = 1) { media.restoreVideoStates(states) }
+    }
+
+    @Test
+    fun test_onStop_releases_the_player_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onStop()
+
+        verify(exactly = 1) { media.releasePlayer() }
+    }
+
+    @Test
+    fun test_onDestroy_releases_the_player_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onDestroy()
+
+        verify(exactly = 1) { media.releasePlayer() }
+    }
+
+    @Test
+    fun test_refreshList_with_changed_content_detaches_the_video_first_and_plays_again_after() {
+        val fragment = viewReadyFragment()
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"))
+        fragment.refreshList()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"), message("B"))
+        fragment.refreshList()
+
+        verify(exactly = 1) { media.prepareForListRebind() }
+        verify(exactly = 1) { media.post(any<Runnable>()) } // playVideo() once the rows are laid out again
+    }
+
+    @Test
+    fun test_refreshList_with_identical_content_leaves_the_video_alone() {
+        val fragment = viewReadyFragment()
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"))
+        fragment.refreshList()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        every { fragment.fetchFreshMessages() } returns arrayListOf(message("A"))
+        fragment.refreshList()
+
+        verify(exactly = 0) { media.prepareForListRebind() }
+        verify(exactly = 0) { media.post(any<Runnable>()) }
     }
 
     @Test
