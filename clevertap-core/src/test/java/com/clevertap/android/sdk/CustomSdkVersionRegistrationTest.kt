@@ -23,8 +23,8 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
     }
 
     @Test
-    fun test_registerCustomSdkVersion_whenCalledBeforeInstanceIsCreated_appliesToNewInstance() {
-        CleverTapAPI.registerCustomSdkVersion("LaterInstanceModule", 20601)
+    fun test_setSharedCustomSdkVersion_whenCalledBeforeInstanceIsCreated_appliesToNewInstance() {
+        CoreMetaData.setSharedCustomSdkVersion("LaterInstanceModule", 20601)
 
         val instance = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
 
@@ -34,7 +34,7 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
     @Test
     fun test_getAllCustomSdkVersions_includesSharedAndInstanceVersions() {
         val coreMetaData = CoreMetaData()
-        CleverTapAPI.registerCustomSdkVersion("SharedModule", 1)
+        CoreMetaData.setSharedCustomSdkVersion("SharedModule", 1)
         coreMetaData.setCustomSdkVersion("InstanceModule", 2)
 
         val all = coreMetaData.allCustomSdkVersions
@@ -46,7 +46,7 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
     @Test
     fun test_getAllCustomSdkVersions_whenSameName_instanceVersionWins() {
         val coreMetaData = CoreMetaData()
-        CleverTapAPI.registerCustomSdkVersion("OverriddenModule", 1)
+        CoreMetaData.setSharedCustomSdkVersion("OverriddenModule", 1)
         coreMetaData.setCustomSdkVersion("OverriddenModule", 2)
 
         Assert.assertEquals(2, coreMetaData.allCustomSdkVersions["OverriddenModule"])
@@ -86,9 +86,9 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
     }
 
     @Test
-    fun test_registerCustomSdkVersion_whenReservedAfKey_isIgnored() {
-        CleverTapAPI.registerCustomSdkVersion("Build", 10400)
-        CleverTapAPI.registerCustomSdkVersion("SDK Version", 10400)
+    fun test_setSharedCustomSdkVersion_whenReservedAfKey_isIgnored() {
+        CoreMetaData.setSharedCustomSdkVersion("Build", 10400)
+        CoreMetaData.setSharedCustomSdkVersion("SDK Version", 10400)
 
         val all = CoreMetaData().allCustomSdkVersions
         Assert.assertFalse(all.containsKey("Build"))

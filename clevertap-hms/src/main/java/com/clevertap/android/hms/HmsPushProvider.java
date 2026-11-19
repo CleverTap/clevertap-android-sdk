@@ -1,6 +1,5 @@
 package com.clevertap.android.hms;
 
-import static com.clevertap.android.hms.HmsConstants.HMS_SDK_NAME;
 import static com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
 import static com.clevertap.android.hms.HmsConstants.HPS;
 
@@ -8,7 +7,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
@@ -31,11 +29,6 @@ public class HmsPushProvider implements CTPushProvider {
             CleverTapInstanceConfig config) {
         this.ctPushListener = ctPushListener;
         this.hmsSdkHandler = new HmsSdkHandler(context, config);
-        try {
-            CleverTapAPI.registerCustomSdkVersion(HMS_SDK_NAME, BuildConfig.VERSION_CODE);
-        } catch (Throwable t) {
-            // Older Core without registerCustomSdkVersion, the version is just not reported
-        }
     }
 
     @NonNull

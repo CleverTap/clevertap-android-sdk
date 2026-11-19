@@ -10,6 +10,11 @@
     -->
 
     <application>
+        <!-- Read by Core's ManifestInfo and sent in the af header as PushTemplates -->
+        <meta-data
+            android:name="com.clevertap.sdk.version.PushTemplates"
+            android:value="${ctPushTemplatesSdkVersionCode}" />
+
         <receiver
             android:name="com.clevertap.android.pushtemplates.PTPushNotificationReceiver"
             android:enabled="true"
