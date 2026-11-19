@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp.pipsdk.internal.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Outline
@@ -247,6 +248,8 @@ internal class PIPCompactView(
         }
     }
 
+    // Touch here only drags the PIP window; every button has its own click listener
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> true     // claim gesture stream when no child consumed

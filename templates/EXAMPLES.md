@@ -514,6 +514,8 @@ To support in-app notifications, register the following activity in your Android
         android:value="YourSplashActivity1, YourSplashActivity2" />
    ```
 
+**Note:** Apps that target Android 17 (API 37) can no longer keep a portrait lock on large screens (600dp and up), so they run in landscape when a tablet is held that way. In-App notifications created for portrait only are not shown in landscape. If your app runs only in portrait, select both Portrait and Landscape when creating the In-App campaign.
+
 #### Dismissing a Picture-in-Picture (PIP) In-App Notification
 
 Use `dismissPipInApp()` to programmatically dismiss the currently visible PIP in-app notification —
