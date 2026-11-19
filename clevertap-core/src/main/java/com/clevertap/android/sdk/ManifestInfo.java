@@ -49,6 +49,9 @@ public class ManifestInfo {
     // (Unreal/Unity) via their merged manifest; regular integrations never set it.
     private static final String LABEL_INAPP_FRAGMENTLESS_BANNERS = "CLEVERTAP_INAPP_FRAGMENTLESS_BANNERS";
 
+    // Module versions from manifest meta-data, sent in af even if the app never uses the module
+    static final String LABEL_MODULE_SDK_VERSION_PREFIX = "com.clevertap.sdk.version.";
+
     private static ManifestInfo instance; // singleton
 
     public synchronized static ManifestInfo getInstance(Context context) {
@@ -185,6 +188,31 @@ public class ManifestInfo {
         provider1 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_1);
         provider2 = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_PUSH_PROVIDER_2);
         encryptionInTransit = _getManifestStringValueForKey(metaData, ManifestInfo.LABEL_ENCRYPTION_IN_TRANSIT);
+        registerModuleSdkVersions(metaData);
+    }
+
+    static void registerModuleSdkVersions(Bundle metaData) {
+        try {
+            for (String key : metaData.keySet()) {
+                if (key == null || !key.startsWith(LABEL_MODULE_SDK_VERSION_PREFIX)) {
+                    continue;
+                }
+                String name = key.substring(LABEL_MODULE_SDK_VERSION_PREFIX.length());
+                Object value = metaData.get(key);
+                if (name.isEmpty() || value == null) {
+                    continue;
+                }
+                try {
+                    // A numeric android:value is stored as an Integer, anything else as a String
+                    int version = value instanceof Integer ? (Integer) value : Integer.parseInt(value.toString());
+                    CoreMetaData.setSharedCustomSdkVersion(name, version);
+                } catch (NumberFormatException e) {
+                    Logger.v("Ignoring non numeric SDK version in manifest for " + key);
+                }
+            }
+        } catch (Throwable t) {
+            Logger.v("Unable to read module SDK versions from the manifest", t);
+        }
     }
 
     ManifestInfo(

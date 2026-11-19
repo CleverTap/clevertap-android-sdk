@@ -15,6 +15,7 @@
 
 #### Bug Fixes
 * **Push Primer On Foldables:** Fixes the app closing when the push primer is shown after a fold.
+* **App Inbox Video Container:** Fixes an old video container showing next to another message in App Inbox after a video row was scrolled off screen.
 
 #### Notes
 * **`@Variable` Fields:** Do not declare `@Variable` fields as `final`. Apps that target Android 17 cannot
