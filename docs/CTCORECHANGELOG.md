@@ -11,6 +11,7 @@
 * **App Inbox Videos:** A video now continues from where it was left when you scroll away and back, rotate the
   screen or return to the inbox. A video that was unmuted keeps its sound, and a new video starts muted from the
   beginning. The inbox now uses one video player for all rows instead of creating a new one for each row.
+* **Faster Event Delivery On Background:** Queued events are now sent as soon as the app moves to the background, instead of waiting for the next scheduled flush.
 
 #### Bug Fixes
 * **Push Primer On Foldables:** Fixes the app closing when the push primer is shown after a fold.
