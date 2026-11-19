@@ -80,6 +80,18 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
     }
 
     @Test
+    fun test_appBackgrounded_flushesEventQueue() {
+        activityLifeCycleManager.appBackgrounded()
+        verify { coreState.baseEventQueueManager.flushOnAppBackground(appCtx) }
+    }
+
+    @Test
+    fun test_activityPaused_doesNotFlushEventQueue() {
+        activityLifeCycleManager.activityPaused()
+        verify(exactly = 0) { coreState.baseEventQueueManager.flushOnAppBackground(any()) }
+    }
+
+    @Test
     fun test_activityResumed_whenAppLaunchedIsPushed() {
         val geofenceCallback = object : GeofenceCallback{
             override fun handleGeoFences(jsonObject: JSONObject?) {
