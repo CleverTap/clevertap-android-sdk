@@ -1,8 +1,12 @@
 package com.clevertap.android.sdk
 
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.testing.TestLifecycleOwner
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -68,6 +72,15 @@ class AppBackgroundObserverTest : BaseTestCase() {
     }
 
     @Test
+    fun test_destroyAfterBackground_doesNotInvokeCallbackAgain() {
+        lifecycleOwner.currentState = Lifecycle.State.RESUMED
+        lifecycleOwner.currentState = Lifecycle.State.CREATED
+        lifecycleOwner.currentState = Lifecycle.State.DESTROYED
+
+        assertEquals(1, backgroundCount)
+    }
+
+    @Test
     fun test_callbackThrows_isSwallowed() {
         val owner = TestLifecycleOwner(Lifecycle.State.CREATED)
         AppBackgroundObserver(
@@ -79,5 +92,78 @@ class AppBackgroundObserverTest : BaseTestCase() {
 
         owner.currentState = Lifecycle.State.RESUMED
         owner.currentState = Lifecycle.State.CREATED
+    }
+
+    @Test
+    fun test_addObserverThrows_isSwallowedAndLogged() {
+        val error = IllegalStateException("addObserver failed")
+        val testOwner = TestLifecycleOwner(Lifecycle.State.CREATED)
+        val owner = object : LifecycleOwner {
+            override val lifecycle: Lifecycle = AddObserverThrowingLifecycle(
+                delegate = testOwner.lifecycle,
+                error = error
+            )
+        }
+        val logger = mockk<ILogger>(relaxed = true)
+        var count = 0
+
+        AppBackgroundObserver(
+            lifecycleOwner = owner,
+            accountId = cleverTapInstanceConfig.accountId,
+            logger = logger,
+            onAppBackground = { count++ }
+        ).register()
+
+        testOwner.currentState = Lifecycle.State.RESUMED
+        testOwner.currentState = Lifecycle.State.CREATED
+
+        verify {
+            logger.verbose(cleverTapInstanceConfig.accountId, "Failed to register app background observer", error)
+        }
+        assertEquals(0, count)
+    }
+
+    @Test
+    fun test_lifecycleScopeThrows_isSwallowedAndLogged() {
+        val error = IllegalStateException("lifecycle unavailable")
+        val owner = object : LifecycleOwner {
+            override val lifecycle: Lifecycle
+                get() = throw error
+        }
+        val logger = mockk<ILogger>(relaxed = true)
+
+        AppBackgroundObserver(
+            lifecycleOwner = owner,
+            accountId = cleverTapInstanceConfig.accountId,
+            logger = logger,
+            onAppBackground = {}
+        ).register()
+
+        verify {
+            logger.verbose(cleverTapInstanceConfig.accountId, "Failed to register app background observer", error)
+        }
+    }
+
+    /**
+     * Delegates to a real lifecycle so lifecycleScope can register its own observer,
+     * but refuses [AppBackgroundObserver] to drive the failure path in register().
+     */
+    private class AddObserverThrowingLifecycle(
+        private val delegate: Lifecycle,
+        private val error: Throwable
+    ) : Lifecycle() {
+        override val currentState: State
+            get() = delegate.currentState
+
+        override fun addObserver(observer: LifecycleObserver) {
+            if (observer is AppBackgroundObserver) {
+                throw error
+            }
+            delegate.addObserver(observer)
+        }
+
+        override fun removeObserver(observer: LifecycleObserver) {
+            delegate.removeObserver(observer)
+        }
     }
 }
