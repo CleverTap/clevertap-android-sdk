@@ -50,7 +50,7 @@ public class Task<TResult> {
      * Register listener to get failure callbacks on the provided executor
      *
      * @param executor  - executor on which the failure callback will be called
-     * @param listener- failure listener
+     * @param listener  - failure listener
      * @return task
      */
     @NonNull
@@ -65,7 +65,7 @@ public class Task<TResult> {
     /**
      * Register listener to get failure callbacks on main thread
      *
-     * @param listener- failure listener
+     * @param listener  - failure listener
      * @return task
      */
     @NonNull
@@ -77,7 +77,7 @@ public class Task<TResult> {
      * Register listener to get success callbacks on the provided executor
      *
      * @param executor  - executor on which the success callback will be called
-     * @param listener- success listener
+     * @param listener  - success listener
      * @return task
      */
     @NonNull
@@ -92,7 +92,7 @@ public class Task<TResult> {
     /**
      * Register listener to get success callbacks on main thread
      *
-     * @param listener- success listener
+     * @param listener  - success listener
      * @return task
      */
     @NonNull

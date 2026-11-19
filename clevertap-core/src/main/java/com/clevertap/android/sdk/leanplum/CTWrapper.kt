@@ -100,7 +100,7 @@ internal class CTWrapper(private val ctProvider: CleverTapProvider) {
    * LP doesn't allow iterables in params.
    */
   fun advanceTo(state: String?, info: String?, params: Map<String, Any?>?) {
-    if (state == null) return;
+    if (state == null) return
 
     val event = Constants.STATE_PREFIX + state
     val properties =
