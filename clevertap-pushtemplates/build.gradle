@@ -22,6 +22,10 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
     namespace 'com.clevertap.android.pushtemplates'
+    defaultConfig {
+        // Same number as BuildConfig.VERSION_CODE, filled into the PushTemplates meta-data in the manifest
+        manifestPlaceholders += [ctPushTemplatesSdkVersionCode: defaultConfig.versionCode]
+    }
 }
 
 // Note: the progress-centric Live Update (pt_progress) uses androidx.core 1.17.0 APIs

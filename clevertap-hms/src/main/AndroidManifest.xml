@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
+        <!-- Read by Core's ManifestInfo and sent in the af header as HMS -->
+        <meta-data
+            android:name="com.clevertap.sdk.version.HMS"
+            android:value="${ctHmsSdkVersionCode}" />
+
         <service
             android:name=".CTHmsMessageService"
             android:exported="false">

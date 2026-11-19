@@ -24,10 +24,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
@@ -60,6 +64,15 @@ public class CTJsonConverter {
 
         return r;
     }
+
+    // Keys from() writes itself. A shared module version with one of these names would replace the real value
+    // in af for every instance, so CoreMetaData rejects them. Keep in sync with from().
+    public static final Set<String> RESERVED_AF_KEYS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            "Build", "Version", "OS Version", "SDK Version", "Latitude", "Longitude",
+            "GoogleAdID", Constants.MULTI_USER_PREFIX + "GoogleAdID", "GoogleAdIDLimit",
+            "Make", "Model", "Carrier", "useIP", "OS", "wdt", "hgt", "dpi", "dt", "locale", "abckt", "lib",
+            "proxyDomain", "spikyProxyDomain", "sslpin", "fcmsid", "cc",
+            "wifi", "BluetoothEnabled", "BluetoothVersion", "Radio", "LIAMC")));
 
     public static JSONObject from(DeviceInfo deviceInfo, CoreMetaData coreMetaData, boolean enableNetworkInfoReporting
             , boolean deviceIsMultiUser) throws JSONException {
@@ -155,7 +168,7 @@ public class CTJsonConverter {
             evtData.put("LIAMC", deviceInfo.getLocalInAppCount());
 
             // add custom sdk versions in "af" key of header.
-            HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
+            Map<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
             for (Entry<String, Integer> entries : allCustomSdkVersions.entrySet()) {
                 evtData.put(entries.getKey(), entries.getValue());
             }

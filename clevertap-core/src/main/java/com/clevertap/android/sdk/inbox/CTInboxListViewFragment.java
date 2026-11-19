@@ -256,7 +256,7 @@ public class CTInboxListViewFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.stop();
+            mediaRecyclerView.prepareForListRebind();
         }
     }
 
