@@ -636,10 +636,16 @@ internal object CleverTapFactory {
         )
 
         // SDK-6254: device-id barrier. Resolve the device id, then build every device-id-dependent
-        // component exactly once — as the first job on the per-account serial queue. The rest of the
-        // SDK's work runs on this same queue and is ordered behind it, so it never observes a
-        // half-built device-scoped state. This replaces the old main-thread CleverTapAPI
+        // component exactly once, ahead of every app-initiated task on the per-account serial queue.
+        // The rest of the SDK's work runs on this same queue and is ordered behind it, so it never
+        // observes a half-built device-scoped state. This replaces the old main-thread CleverTapAPI
         // .deviceIDCreated() callback that DeviceInfo used to reach back into.
+        //
+        // Note on ordering: this is NOT the very first job on the queue — two framework setup tasks
+        // ("migratingEncryption" and "loadInAppsDao" above) are posted earlier. That is intended:
+        // the stores built below read migrated/decrypted data, so the encryption migration must run
+        // first. What matters is that the barrier is posted here, before the constructor returns, so
+        // it is ordered ahead of every *app-initiated* task (see point 1).
         //
         // ORDERING CONTRACT — do not break:
         //  1. This MUST be posted here, inside getCoreState(), which runs synchronously in the
@@ -666,15 +672,32 @@ internal object CleverTapFactory {
         deviceScopedInit.execute("initDeviceScopedState") {
             val deviceId = deviceInfo.initDeviceID(cleverTapID)
 
-            // A failure while building the device-scoped state must NOT suppress the ID / profile
-            // listener notifications: the old deviceIDCreated() isolated store-init in a separate
-            // task and always notified once the device id was known. Preserve those "always notify"
-            // semantics by swallowing-and-logging build errors and still handing back the device id.
-            try {
-                // This barrier is the single, once-per-instance writer of these device-scoped
-                // fields (getCoreState runs once per instance; this job is the only place that
-                // builds the stores / FC managers). They start null in StoreRegistry/
-                // ControllerManager, so no "if null" guard is needed — build them unconditionally.
+            // Each device-scoped component is built in its own guarded step. A failure in one
+            // (e.g. a storage error while opening the in-app store) must NOT skip the others — on
+            // develop these were separate serial-queue tasks, so one throwing never stopped the
+            // rest; keep that isolation here (SDK-6254). Failures are logged at INFO (visible at
+            // the SDK's default log level, unlike verbose) with the failing component named.
+            //
+            // A failure also must NOT suppress the ID / profile listener notifications: the device
+            // id is still returned below so the success listener always fires ("always notify",
+            // matching the old deviceIDCreated() semantics).
+            //
+            // This barrier is the single, once-per-instance writer of these fields (getCoreState
+            // runs once per instance; this job is the only place that builds the stores / FC
+            // managers). They start null in StoreRegistry/ControllerManager, so no "if null" guard
+            // is needed — build them unconditionally.
+            fun step(component: String, block: () -> Unit) {
+                try {
+                    block()
+                } catch (t: Throwable) {
+                    config.logger.info(
+                        config.accountId + ":async_deviceID",
+                        "Error building device-scoped component '$component'; continuing with the rest", t,
+                    )
+                }
+            }
+
+            step("inAppStore") {
                 val inAppStore = storeProvider.provideInAppStore(
                     context = context,
                     cryptHandler = cryptHandler,
@@ -684,7 +707,9 @@ internal object CleverTapFactory {
                 storeRegistry.inAppStore = inAppStore
                 evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
                 callbackManager.addChangeUserCallback(inAppStore)
+            }
 
+            step("impressionStore") {
                 val impressionStore = storeProvider.provideImpressionStore(
                     context = context,
                     deviceId = deviceId,
@@ -692,14 +717,21 @@ internal object CleverTapFactory {
                 )
                 storeRegistry.impressionStore = impressionStore
                 callbackManager.addChangeUserCallback(impressionStore)
+            }
 
-                // ND stores are created lazily via storeRegistry.ndStoreProvider; prime the
-                // evaluator's in-memory eval/suppressed lists now that the device id is available.
+            // ND stores are created lazily via storeRegistry.ndStoreProvider; prime the
+            // evaluator's in-memory eval/suppressed lists now that the device id is available.
+            step("ndEvaluatedSuppressedLists") {
                 ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
+            }
 
+            step("inAppFCManager") {
                 controllerManager.inAppFCManager = InAppFCManager(
                     context, config, deviceId, storeRegistry, impressionManager, executors, SYSTEM,
                 )
+            }
+
+            step("ndFCManager") {
                 controllerManager.ndFCManager = NdFCManager(
                     config = config,
                     storeRegistry = storeRegistry,
@@ -707,23 +739,24 @@ internal object CleverTapFactory {
                     executors = executors,
                     clock = SYSTEM,
                 )
+            }
 
-                // Inflate the local profile now that the device id is known.
+            // Inflate the local profile now that the device id is known.
+            step("localProfile") {
                 localDataStore.inflateLocalProfileAsync(context)
+            }
 
-                // Feature Flags / Product Config may have been created before the id resolved; set
-                // their guid now if so (when created afterwards they already receive the resolved id).
+            // Feature Flags / Product Config may have been created before the id resolved; set
+            // their guid now if so (when created afterwards they already receive the resolved id).
+            step("featureFlagsGuid") {
                 controllerManager.ctFeatureFlagsController
                     ?.takeIf { it.guid.isNullOrEmpty() }
                     ?.setGuidAndInit(deviceId)
+            }
+            step("productConfigGuid") {
                 controllerManager.ctProductConfigController
                     ?.takeIf { it.settings.guid.isNullOrEmpty() }
                     ?.setGuidAndInit(deviceId)
-            } catch (t: Throwable) {
-                config.logger.verbose(
-                    config.accountId + ":async_deviceID",
-                    "Error building device-scoped state; notifying listeners anyway", t,
-                )
             }
 
             // Hand the resolved device id to the success listener (registered above), which fires

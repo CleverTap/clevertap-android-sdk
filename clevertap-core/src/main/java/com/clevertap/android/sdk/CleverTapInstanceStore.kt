@@ -22,12 +22,19 @@ internal object CleverTapInstanceStore {
      * Returns the existing instance for [accountId], or atomically creates one via [factory] and
      * stores it. [factory] is invoked at most once per account; concurrent callers for the same
      * account all receive the single instance the winner created.
+     *
+     * An already-present instance is returned on a lock-free fast path, so resolving an existing
+     * instance never waits on a [factory] build in progress for a *different* account. The lock is
+     * taken only on the create path, to keep check-then-create atomic (the double-check inside the
+     * lock covers callers that raced past the fast path).
      */
     @JvmStatic
-    fun getOrCreate(accountId: String, factory: () -> CleverTapAPI): CleverTapAPI =
-        synchronized(this) {
+    fun getOrCreate(accountId: String, factory: () -> CleverTapAPI): CleverTapAPI {
+        instances[accountId]?.let { return it }
+        return synchronized(this) {
             instances[accountId] ?: factory().also { instances[accountId] = it }
         }
+    }
 
     @JvmStatic
     fun get(accountId: String): CleverTapAPI? = instances[accountId]
