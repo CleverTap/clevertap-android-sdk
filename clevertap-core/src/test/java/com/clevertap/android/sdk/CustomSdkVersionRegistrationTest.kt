@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk
 
+import android.location.Location
 import android.os.Bundle
+import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.After
 import org.junit.Assert
@@ -81,5 +83,48 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
         Assert.assertFalse(all.containsKey("ManifestNullModule"))
         Assert.assertFalse(all.containsKey(""))
         Assert.assertFalse(all.containsKey("ManifestUnrelatedModule"))
+    }
+
+    @Test
+    fun test_registerCustomSdkVersion_whenReservedAfKey_isIgnored() {
+        CleverTapAPI.registerCustomSdkVersion("Build", 10400)
+        CleverTapAPI.registerCustomSdkVersion("SDK Version", 10400)
+
+        val all = CoreMetaData().allCustomSdkVersions
+        Assert.assertFalse(all.containsKey("Build"))
+        Assert.assertFalse(all.containsKey("SDK Version"))
+    }
+
+    @Test
+    fun test_registerModuleSdkVersions_whenReservedAfKey_keepsBuiltInAfValue() {
+        val metaData = Bundle().apply {
+            putInt(ManifestInfo.LABEL_MODULE_SDK_VERSION_PREFIX + "Build", 10400)
+            putInt(ManifestInfo.LABEL_MODULE_SDK_VERSION_PREFIX + "gfSDKVersion", 10400)
+        }
+
+        ManifestInfo.registerModuleSdkVersions(metaData)
+
+        val coreMetaData = CoreMetaData()
+        val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "id", coreMetaData)
+        val af = CTJsonConverter.from(deviceInfo, coreMetaData, false, false)
+        Assert.assertEquals("1", af.get("Build"))
+        Assert.assertEquals(10400, af.get("gfSDKVersion"))
+    }
+
+    @Test
+    fun test_reservedAfKeys_coverEveryKeyWrittenByFrom() {
+        val coreMetaData = CoreMetaData()
+        coreMetaData.locationFromUser = Location("test")
+        val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "id", coreMetaData)
+        val customKeys = coreMetaData.allCustomSdkVersions.keys
+
+        for (multiUser in listOf(false, true)) {
+            val af = CTJsonConverter.from(deviceInfo, coreMetaData, true, multiUser)
+            // from() swallows errors, so make sure it got to the end
+            Assert.assertTrue(af.has("LIAMC"))
+            af.keys().asSequence().filterNot { it in customKeys }.forEach {
+                Assert.assertTrue("af key $it missing from RESERVED_AF_KEYS", it in CTJsonConverter.RESERVED_AF_KEYS)
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ import android.location.Location;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.utils.CTJsonConverter;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -216,6 +217,11 @@ public class CoreMetaData extends CleverTapMetaData {
     }
 
     static void setSharedCustomSdkVersion(String customSdkName, int customSdkVersion) {
+        // Shared versions reach af for every instance, so they must not replace a built-in af field
+        if (CTJsonConverter.RESERVED_AF_KEYS.contains(customSdkName)) {
+            Logger.v("Ignoring SDK version for reserved af key " + customSdkName);
+            return;
+        }
         sharedCustomSdkVersions.put(customSdkName, customSdkVersion);
     }
 
