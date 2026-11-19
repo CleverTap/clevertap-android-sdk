@@ -119,65 +119,10 @@ class CTInAppCloseButtonTest {
     )
 
     private fun show(kind: Kind, close: Boolean?): Shown {
-        val json = when (kind) {
-            Kind.HALF_INTERSTITIAL -> CTLocalInApp.builder()
-                .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
-                .setTitleText("Title")
-                .setMessageText("Message")
-                .followDeviceOrientation(true)
-                .setPositiveBtnText("Allow")
-                .setNegativeBtnText("Cancel")
-                .build()
-
-            else -> JSONObject()
-                .put(
-                    "type",
-                    when (kind) {
-                        Kind.HALF_INTERSTITIAL_IMAGE -> "half-interstitial-image"
-                        Kind.INTERSTITIAL_IMAGE -> "interstitial-image"
-                        Kind.COVER -> "cover"
-                        else -> "cover-image"
-                    }
-                )
-                .put("_id", "close-button-test")
-                .put("ti", 1)
-                .put("d", true)
-                .put("media", JSONObject().put("content_type", "image/png").put("url", "https://example.com/a.png"))
-                .put(
-                    "mediaLandscape",
-                    JSONObject().put("content_type", "image/png").put("url", "https://example.com/b.png")
-                )
-                .also {
-                    if (kind == Kind.COVER) {
-                        it.put("title", JSONObject().put("text", "Title").put("color", "#000000"))
-                        it.put("message", JSONObject().put("text", "Message").put("color", "#000000"))
-                        it.put("buttons", JSONArray())
-                    }
-                }
-        }
-        // The local in-app builder always asks for the close button, so remove it before the test sets it.
-        json.remove(Constants.KEY_HIDE_CLOSE)
-        if (close != null) {
-            json.put(Constants.KEY_HIDE_CLOSE, close)
-        }
-
-        val fragment: CTInAppBaseFullFragment = when (kind) {
-            Kind.HALF_INTERSTITIAL -> CTInAppNativeHalfInterstitialFragment()
-            Kind.HALF_INTERSTITIAL_IMAGE -> CTInAppNativeHalfInterstitialImageFragment()
-            Kind.INTERSTITIAL_IMAGE -> CTInAppNativeInterstitialImageFragment()
-            Kind.COVER -> CTInAppNativeCoverFragment()
-            Kind.COVER_IMAGE -> CTInAppNativeCoverImageFragment()
-        }
-        val frameId = when (kind) {
-            Kind.HALF_INTERSTITIAL -> R.id.inapp_half_interstitial_frame_layout
-            Kind.HALF_INTERSTITIAL_IMAGE -> R.id.inapp_half_interstitial_image_frame_layout
-            Kind.INTERSTITIAL_IMAGE -> R.id.inapp_interstitial_image_frame_layout
-            Kind.COVER -> R.id.inapp_cover_frame_layout
-            Kind.COVER_IMAGE -> R.id.inapp_cover_image_frame_layout
-        }
-
-        val inApp = CTInAppNotification(json, true)
+        val inApp = CTInAppNotification(inAppJson(kind, close), true)
         every { InAppController.getDisplayingInApp(any()) } returns inApp
+
+        val fragment = fragmentFor(kind)
         val host = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
         fragment.setArguments(inApp, config)
         host.supportFragmentManager.beginTransaction()
@@ -185,7 +130,67 @@ class CTInAppCloseButtonTest {
             .commitNow()
         shadowOf(Looper.getMainLooper()).idle()
 
-        val frame = fragment.view!!.findViewById<FrameLayout>(frameId)
+        val frame = fragment.view!!.findViewById<FrameLayout>(frameIdFor(kind))
         return Shown(host, fragment, frame.findViewById(CloseImageView.VIEW_ID))
+    }
+
+    private fun inAppJson(kind: Kind, close: Boolean?): JSONObject {
+        val json = if (kind == Kind.HALF_INTERSTITIAL) localInAppJson() else mediaInAppJson(kind)
+        // The local in-app builder always asks for the close button, so remove it before the test sets it.
+        json.remove(Constants.KEY_HIDE_CLOSE)
+        if (close != null) {
+            json.put(Constants.KEY_HIDE_CLOSE, close)
+        }
+        return json
+    }
+
+    private fun localInAppJson(): JSONObject = CTLocalInApp.builder()
+        .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
+        .setTitleText("Title")
+        .setMessageText("Message")
+        .followDeviceOrientation(true)
+        .setPositiveBtnText("Allow")
+        .setNegativeBtnText("Cancel")
+        .build()
+
+    private fun mediaInAppJson(kind: Kind): JSONObject {
+        val type = when (kind) {
+            Kind.HALF_INTERSTITIAL_IMAGE -> "half-interstitial-image"
+            Kind.INTERSTITIAL_IMAGE -> "interstitial-image"
+            Kind.COVER -> "cover"
+            else -> "cover-image"
+        }
+        val json = JSONObject()
+            .put("type", type)
+            .put("_id", "close-button-test")
+            .put("ti", 1)
+            .put("d", true)
+            .put("media", JSONObject().put("content_type", "image/png").put("url", "https://example.com/a.png"))
+            .put(
+                "mediaLandscape",
+                JSONObject().put("content_type", "image/png").put("url", "https://example.com/b.png")
+            )
+        if (kind == Kind.COVER) {
+            json.put("title", JSONObject().put("text", "Title").put("color", "#000000"))
+            json.put("message", JSONObject().put("text", "Message").put("color", "#000000"))
+            json.put("buttons", JSONArray())
+        }
+        return json
+    }
+
+    private fun fragmentFor(kind: Kind): CTInAppBaseFullFragment = when (kind) {
+        Kind.HALF_INTERSTITIAL -> CTInAppNativeHalfInterstitialFragment()
+        Kind.HALF_INTERSTITIAL_IMAGE -> CTInAppNativeHalfInterstitialImageFragment()
+        Kind.INTERSTITIAL_IMAGE -> CTInAppNativeInterstitialImageFragment()
+        Kind.COVER -> CTInAppNativeCoverFragment()
+        Kind.COVER_IMAGE -> CTInAppNativeCoverImageFragment()
+    }
+
+    private fun frameIdFor(kind: Kind): Int = when (kind) {
+        Kind.HALF_INTERSTITIAL -> R.id.inapp_half_interstitial_frame_layout
+        Kind.HALF_INTERSTITIAL_IMAGE -> R.id.inapp_half_interstitial_image_frame_layout
+        Kind.INTERSTITIAL_IMAGE -> R.id.inapp_interstitial_image_frame_layout
+        Kind.COVER -> R.id.inapp_cover_frame_layout
+        Kind.COVER_IMAGE -> R.id.inapp_cover_image_frame_layout
     }
 }
