@@ -33,7 +33,7 @@ import com.google.android.exoplayer2.util.Util
     message = "ExoPlayer (com.google.android.exoplayer2) support in CleverTap is deprecated and will be removed in v9.0.0. Migrate to Media3 (androidx.media3) and use Media3Handle instead.",
     replaceWith = ReplaceWith("Media3Handle()", "com.clevertap.android.sdk.video.inbox.Media3Handle")
 )
-class ExoplayerHandle : InboxVideoPlayerHandle {
+internal class ExoplayerHandle : InboxVideoPlayerHandle {
 
     private var videoSurfaceView: StyledPlayerView? = null
     private var player: ExoPlayer? = null

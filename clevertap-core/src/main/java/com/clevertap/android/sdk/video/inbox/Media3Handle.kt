@@ -23,7 +23,7 @@ import androidx.media3.ui.PlayerView
 import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
 
 @UnstableApi
-class Media3Handle: InboxVideoPlayerHandle {
+internal class Media3Handle: InboxVideoPlayerHandle {
 
     private var videoSurfaceView: PlayerView? = null
     private var player: ExoPlayer? = null
