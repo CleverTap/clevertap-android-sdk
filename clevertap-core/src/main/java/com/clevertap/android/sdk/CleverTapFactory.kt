@@ -40,8 +40,6 @@ import com.clevertap.android.sdk.inbox.InboxV2Fetcher
 import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory.Companion.createFileResourcesRepo
 import com.clevertap.android.sdk.inapp.store.db.DelayedLegacyInAppStore
 import com.clevertap.android.sdk.inapp.store.db.DisplayedInAppStore
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore
 import com.clevertap.android.sdk.inapp.store.preference.NdStoreProvider
 import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
 import com.clevertap.android.sdk.login.LoginController
@@ -104,6 +102,12 @@ internal object CleverTapFactory {
             // todo this needs to be fixed with kotlin usage+using kotlin testing libs
             throw RuntimeException("This is invalid case and will not happen. Context/Config is null")
         }
+        // SDK-6254: the SDK lives for the whole process, so only ever retain the application
+        // context in its long-lived components — an Activity/Fragment context passed in by a caller
+        // would otherwise be leaked. DeviceInfo reports default-display metrics (it resolves
+        // DEFAULT_DISPLAY itself), so it does not need an Activity context.
+        @Suppress("NAME_SHADOWING")
+        val context = context.applicationContext
         // create storeRegistry, preferences for features
         val storeProvider = getInstance()
         val accountId = cleverTapInstanceConfig.accountId
@@ -203,10 +207,10 @@ internal object CleverTapFactory {
         }
 
         val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, networkMonitor)
-        // Native Display stores self-create lazily once the device id resolves (SDK-6055) — set before
-        // onInitDeviceInfo so any deviceIDCreated callback sees the provider.
+        // Native Display stores self-create lazily once the device id resolves (SDK-6055) — set
+        // before the device-id barrier (end of this method) primes the ND evaluator state.
         storeRegistry.ndStoreProvider = NdStoreProvider(context, deviceInfo, config.accountId)
-        deviceInfo.onInitDeviceInfo(cleverTapID)
+        deviceInfo.cacheDeviceInfoAsync()
 
         val validationConfig = ValidationConfig.default { deviceInfo.countryCode }.build()
 
@@ -277,68 +281,6 @@ internal object CleverTapFactory {
             ndLimitsMatcher = ndLimitsMatcher,
             storeRegistry = storeRegistry
         )
-
-        val taskInitStores = executors.ioTask<Unit>()
-        taskInitStores.execute("initStores") {
-            if (deviceInfo.getDeviceID() != null) {
-                if (storeRegistry.inAppStore == null) {
-                    val inAppStore: InAppStore = storeProvider.provideInAppStore(
-                        context = context,
-                        cryptHandler = cryptHandler,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.inAppStore = inAppStore
-                    evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
-                    callbackManager.addChangeUserCallback(inAppStore)
-                }
-                if (storeRegistry.impressionStore == null) {
-                    val impStore: ImpressionStore = storeProvider.provideImpressionStore(
-                        context = context,
-                        deviceId = deviceInfo.getDeviceID(),
-                        accountId = config.accountId
-                    )
-                    storeRegistry.impressionStore = impStore
-                    callbackManager.addChangeUserCallback(impStore)
-                }
-                // Native Display (ND) stores are created lazily by storeRegistry.ndStoreProvider; here
-                // we just prime the evaluator's in-memory eval/suppressed lists from the (now available)
-                // ND store.
-                ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
-            }
-        }
-
-        //Get device id should be async to avoid strict mode policy.
-        val taskInitFCManager = executors.ioTask<Unit>()
-        taskInitFCManager.execute("initFCManager") {
-            val deviceId = deviceInfo.deviceID
-            if (deviceId != null && controllerManager.inAppFCManager == null) {
-                config.logger
-                    .verbose(
-                        config.accountId + ":async_deviceID",
-                        "Initializing InAppFC with device Id = $deviceId"
-                    )
-                controllerManager.inAppFCManager = InAppFCManager(
-                    context,
-                    config,
-                    deviceId,
-                    storeRegistry,
-                    impressionManager,
-                    executors,
-                    SYSTEM
-                )
-            }
-            // Native Display (ND) frequency caps (SDK-6055)
-            if (deviceId != null && controllerManager.ndFCManager == null) {
-                controllerManager.ndFCManager = NdFCManager(
-                    config = config,
-                    storeRegistry = storeRegistry,
-                    impressionManager = ndImpressionManager,
-                    executors = executors,
-                    clock = SYSTEM,
-                )
-            }
-        }
 
         val impl = createFileResourcesRepo(
             context = context,
@@ -692,6 +634,135 @@ internal object CleverTapFactory {
             localDataStore, callbackManager, databaseManager, ctLockManager, loginInfoProvider, contentFetchManager,
             inboxV2Bridge
         )
+
+        // SDK-6254: device-id barrier. Resolve the device id, then build every device-id-dependent
+        // component exactly once, ahead of every app-initiated task on the per-account serial queue.
+        // The rest of the SDK's work runs on this same queue and is ordered behind it, so it never
+        // observes a half-built device-scoped state. This replaces the old main-thread CleverTapAPI
+        // .deviceIDCreated() callback that DeviceInfo used to reach back into.
+        //
+        // Note on ordering: this is NOT the very first job on the queue — two framework setup tasks
+        // ("migratingEncryption" and "loadInAppsDao" above) are posted earlier. That is intended:
+        // the stores built below read migrated/decrypted data, so the encryption migration must run
+        // first. What matters is that the barrier is posted here, before the constructor returns, so
+        // it is ordered ahead of every *app-initiated* task (see point 1).
+        //
+        // ORDERING CONTRACT — do not break:
+        //  1. This MUST be posted here, inside getCoreState(), which runs synchronously in the
+        //     CleverTapAPI constructor BEFORE asyncStartup() and before the constructor returns.
+        //     That is what makes it enqueue ahead of every app-initiated task: the app can only
+        //     call public methods once it holds the (not-yet-returned) instance.
+        //  2. Public "action" methods (pushEvent/pushProfile/onUserLogin/push-token/in-app
+        //     evaluation …) all enqueue onto this SAME per-account serial queue
+        //     (postAsyncSafelyTask, keyed by accountId) via EventQueueManager, so they are
+        //     ordered AFTER this barrier and see a fully-built device-scoped state.
+        //  3. Off-queue readers (e.g. InAppResponse) must keep their null-guards — the barrier
+        //     orders the serial queue, it does not make these fields non-null for other threads.
+        // If you move this call earlier/out of getCoreState, or route an action method off this
+        // queue, you reintroduce the dropped-in-apps / login-race window this fixed.
+        val deviceScopedInit = executors.postAsyncSafelyTask<String>()
+        // The device-scoped build runs in execute() on the serial queue and returns the resolved
+        // device id. The success listener runs on the default callback executor (MAIN), so the
+        // ID / profile listener callbacks keep their documented main-thread delivery — the same
+        // mechanism the old ioTask-based deviceIDCreated() used.
+        deviceScopedInit.addOnSuccessListener { deviceId ->
+            callbackManager.notifyUserProfileInitialized(deviceId)
+            callbackManager.notifyCleverTapIDChanged(deviceId)
+        }
+        deviceScopedInit.execute("initDeviceScopedState") {
+            val deviceId = deviceInfo.initDeviceID(cleverTapID)
+
+            // Each device-scoped component is built in its own guarded step. A failure in one
+            // (e.g. a storage error while opening the in-app store) must NOT skip the others — on
+            // develop these were separate serial-queue tasks, so one throwing never stopped the
+            // rest; keep that isolation here (SDK-6254). Failures are logged at INFO (visible at
+            // the SDK's default log level, unlike verbose) with the failing component named.
+            //
+            // A failure also must NOT suppress the ID / profile listener notifications: the device
+            // id is still returned below so the success listener always fires ("always notify",
+            // matching the old deviceIDCreated() semantics).
+            //
+            // This barrier is the single, once-per-instance writer of these fields (getCoreState
+            // runs once per instance; this job is the only place that builds the stores / FC
+            // managers). They start null in StoreRegistry/ControllerManager, so no "if null" guard
+            // is needed — build them unconditionally.
+            fun step(component: String, block: () -> Unit) {
+                try {
+                    block()
+                } catch (t: Throwable) {
+                    config.logger.info(
+                        config.accountId + ":async_deviceID",
+                        "Error building device-scoped component '$component'; continuing with the rest", t,
+                    )
+                }
+            }
+
+            step("inAppStore") {
+                val inAppStore = storeProvider.provideInAppStore(
+                    context = context,
+                    cryptHandler = cryptHandler,
+                    deviceId = deviceId,
+                    accountId = config.accountId,
+                )
+                storeRegistry.inAppStore = inAppStore
+                evaluationManager.loadSuppressedCSAndEvaluatedSSInAppsIds()
+                callbackManager.addChangeUserCallback(inAppStore)
+            }
+
+            step("impressionStore") {
+                val impressionStore = storeProvider.provideImpressionStore(
+                    context = context,
+                    deviceId = deviceId,
+                    accountId = config.accountId,
+                )
+                storeRegistry.impressionStore = impressionStore
+                callbackManager.addChangeUserCallback(impressionStore)
+            }
+
+            // ND stores are created lazily via storeRegistry.ndStoreProvider; prime the
+            // evaluator's in-memory eval/suppressed lists now that the device id is available.
+            step("ndEvaluatedSuppressedLists") {
+                ndEvaluationManager.loadEvaluatedAndSuppressedNdIds()
+            }
+
+            step("inAppFCManager") {
+                controllerManager.inAppFCManager = InAppFCManager(
+                    context, config, deviceId, storeRegistry, impressionManager, executors, SYSTEM,
+                )
+            }
+
+            step("ndFCManager") {
+                controllerManager.ndFCManager = NdFCManager(
+                    config = config,
+                    storeRegistry = storeRegistry,
+                    impressionManager = ndImpressionManager,
+                    executors = executors,
+                    clock = SYSTEM,
+                )
+            }
+
+            // Inflate the local profile now that the device id is known.
+            step("localProfile") {
+                localDataStore.inflateLocalProfileAsync(context)
+            }
+
+            // Feature Flags / Product Config may have been created before the id resolved; set
+            // their guid now if so (when created afterwards they already receive the resolved id).
+            step("featureFlagsGuid") {
+                controllerManager.ctFeatureFlagsController
+                    ?.takeIf { it.guid.isNullOrEmpty() }
+                    ?.setGuidAndInit(deviceId)
+            }
+            step("productConfigGuid") {
+                controllerManager.ctProductConfigController
+                    ?.takeIf { it.settings.guid.isNullOrEmpty() }
+                    ?.setGuidAndInit(deviceId)
+            }
+
+            // Hand the resolved device id to the success listener (registered above), which fires
+            // on the main thread to notify the ID / profile listeners — always, once the id resolved.
+            deviceId
+        }
 
         return CoreState(
             locationManager = locationManager,
