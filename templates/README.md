@@ -70,7 +70,7 @@ Also be sure to include the `google-services.json` classpath in your Project lev
         
          }       
          dependencies {      
-             classpath "${ext.com_android_tools_build_gradle}"
+             classpath "${ext.com_android_tools_build_gradle}" // 8.1.1 or higher
              classpath "${ext.google_services}"
         
              // NOTE: Do not place your application dependencies here; they belong       
