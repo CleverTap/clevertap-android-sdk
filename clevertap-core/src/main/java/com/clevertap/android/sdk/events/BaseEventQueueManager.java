@@ -36,4 +36,10 @@ public abstract class BaseEventQueueManager {
     public abstract void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData);
 
     public abstract void scheduleQueueFlush(final Context context);
+
+    /**
+     * Flushes queued events immediately when the whole app moves to background, bypassing the
+     * scheduled flush delay so events reach the server before the process may be killed.
+     */
+    public abstract void flushOnAppBackground(final Context context);
 }

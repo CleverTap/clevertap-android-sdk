@@ -99,6 +99,11 @@ class ActivityLifeCycleManager {
     }
 
     //Lifecycle
+    public void appBackgrounded() {
+        baseEventQueueManager.flushOnAppBackground(context);
+    }
+
+    //Lifecycle
     public void activityResumed(Activity activity) {
         config.getLogger().verbose(config.getAccountId(), "App in foreground");
         sessionManager.checkTimeoutSession();
