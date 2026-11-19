@@ -8,6 +8,11 @@
 
     <application>
 
+        <!-- Read by Core's ManifestInfo and sent in the af header as gfSDKVersion -->
+        <meta-data
+            android:name="com.clevertap.sdk.version.gfSDKVersion"
+            android:value="${ctGeofenceSdkVersionCode}" />
+
         <receiver android:name=".CTGeofenceReceiver" />
 
         <receiver android:name=".CTLocationUpdateReceiver" />
