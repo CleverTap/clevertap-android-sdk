@@ -55,7 +55,7 @@ internal class CTInAppNativeCoverImageFragment : CTInAppBaseFullFragment() {
         relativeLayout.findViewById<View>(R.id.video_frame)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
-        setUpCloseButton(closeImageView)
+        setupCloseButton(closeImageView)
 
         return inAppView
     }

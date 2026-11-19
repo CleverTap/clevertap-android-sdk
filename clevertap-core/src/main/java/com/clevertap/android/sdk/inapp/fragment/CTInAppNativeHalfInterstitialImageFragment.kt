@@ -68,7 +68,7 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
         relativeLayout?.findViewById<View>(R.id.gifImage)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
         relativeLayout?.findViewById<View>(R.id.video_frame)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
 
-        setUpCloseButton(closeImageView)
+        setupCloseButton(closeImageView)
 
         return inAppView
     }

@@ -32,7 +32,7 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
      * shown only when the in-app asks for it. [CTInAppNotification.isHideCloseButton] is read from the
      * "close" key of the in-app, so `true` means that the close button is shown.
      */
-    fun setUpCloseButton(closeImageView: CloseImageView) {
+    fun setupCloseButton(closeImageView: CloseImageView) {
         closeImageView.setOnClickListener {
             triggerCloseButtonAction()
             activity?.finish()
