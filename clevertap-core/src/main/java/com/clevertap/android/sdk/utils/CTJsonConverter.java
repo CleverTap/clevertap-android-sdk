@@ -111,6 +111,20 @@ public class CTJsonConverter {
             evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
             evtData.put("locale", deviceInfo.getLocale());
 
+            // Same keys as iOS. putOpt leaves out values that can't be read.
+            evtData.putOpt("lowPower", deviceInfo.isLowPowerMode());
+            evtData.putOpt("thermal", deviceInfo.getThermalLevel());
+            evtData.putOpt("darkMode", deviceInfo.isDarkMode());
+            evtData.putOpt("textSize", deviceInfo.getTextSize());
+            evtData.putOpt("reduceMotion", deviceInfo.isReduceMotion());
+            evtData.putOpt("pushStatus", deviceInfo.getPushStatus());
+            evtData.putOpt("batt", deviceInfo.getBatteryLevel());
+            evtData.putOpt("chg", deviceInfo.isCharging());
+            evtData.putOpt("ram", deviceInfo.getRamTier());
+            evtData.putOpt("cpu", deviceInfo.getCpuCores());
+            evtData.putOpt("boldText", deviceInfo.isBoldText());
+            evtData.putOpt("instSrc", deviceInfo.getInstallSource());
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 evtData.put("abckt", deviceInfo.getAppBucket());
             }
@@ -163,6 +177,9 @@ public class CTJsonConverter {
                 if (radio != null) {
                     evtData.put("Radio", radio);
                 }
+
+                evtData.putOpt("metered", deviceInfo.isMeteredNetwork());
+                evtData.putOpt("lowData", deviceInfo.isDataSaverOn());
             }
             //Adds an extra field to send local inApp count in queueData.
             evtData.put("LIAMC", deviceInfo.getLocalInAppCount());

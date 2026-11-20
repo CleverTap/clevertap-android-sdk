@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verifyOrder
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
@@ -61,6 +62,16 @@ class QueueHeaderBuilderTest {
 
         assertNotNull(header)
         assertEquals(caller, header!!.optString(Constants.D_SRC))
+    }
+
+    @Test
+    fun `buildHeader refreshes the push status before reading the app fields`() {
+        builder.buildHeader(null)
+
+        verifyOrder {
+            deviceInfo.refreshPushStatus()
+            deviceInfo.appLaunchedFields
+        }
     }
 
     @Test
