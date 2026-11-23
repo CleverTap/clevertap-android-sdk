@@ -20,6 +20,10 @@ apply from: "../gradle-scripts/commons.gradle"
 
 android {
     namespace 'com.clevertap.android.hms'
+    defaultConfig {
+        // Same number as BuildConfig.VERSION_CODE, filled into the HMS meta-data in the manifest
+        manifestPlaceholders += [ctHmsSdkVersionCode: defaultConfig.versionCode]
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

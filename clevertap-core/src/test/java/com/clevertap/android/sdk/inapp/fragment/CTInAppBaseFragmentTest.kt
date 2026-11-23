@@ -35,7 +35,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-@Ignore
+@Ignore("Disabled in SDK-5255: InAppController companion object mocking issue, see todo in setUp")
 class CTInAppBaseFragmentTest {
 
     private lateinit var mockInAppListener: InAppListener

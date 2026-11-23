@@ -97,7 +97,7 @@ internal class DisplayUnitResponse(
         //    user switch; the per-user ss-bundle is skipped on a switch so the outgoing user's rules don't
         //    land in the new user's prefs.
         if (source != CTResponseSource.CONTENT_FETCH) {
-            ingestNdMeta(response = response, context = context, isUserSwitching = isUserSwitching)
+            ingestNdMeta(response = response, isUserSwitching = isUserSwitching)
         }
 
         // 2. ND content — skipped on a user switch. On a /content re-feed the (cap-filtered) units are MERGED
@@ -109,7 +109,7 @@ internal class DisplayUnitResponse(
 
     // ---- ND fcap meta ----------------------------------------------------------------------------
 
-    private fun ingestNdMeta(response: JSONObject, context: Context, isUserSwitching: Boolean) {
+    private fun ingestNdMeta(response: JSONObject, isUserSwitching: Boolean) {
         // Content-only (send-test/preview) path has no ND stores wired — skip meta entirely.
         val stores = storeRegistry ?: return
         try {

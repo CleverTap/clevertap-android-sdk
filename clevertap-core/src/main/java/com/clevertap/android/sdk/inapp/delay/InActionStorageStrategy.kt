@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Storage strategy for in-action in-apps (no database needed, metadata only)
  */
-//TODO: check synchronization and map usage
 internal class InActionStorageStrategy(
     private val logger: ILogger,
     private val accountId: String

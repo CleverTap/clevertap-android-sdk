@@ -40,7 +40,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-// todo: can verify without manipulation of shared prefs; can improve later.
+// Note: this could be verified without manipulating shared prefs.
 class NetworkManagerTest : BaseTestCase() {
 
     private var closeable: AutoCloseable? = null
