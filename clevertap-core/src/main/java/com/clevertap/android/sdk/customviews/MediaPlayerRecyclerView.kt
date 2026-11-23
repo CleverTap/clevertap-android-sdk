@@ -11,7 +11,6 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.res.ResourcesCompat
 import androidx.media3.common.util.UnstableApi
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.R
@@ -249,28 +248,22 @@ class MediaPlayerRecyclerView : RecyclerView {
 
     private fun findBestVisibleMediaHolder(): CTInboxBaseMessageViewHolder? {
         var bestHolder: CTInboxBaseMessageViewHolder? = null
-        val startPosition = (layoutManager as LinearLayoutManager?)?.findFirstVisibleItemPosition() ?: 0
-        val endPosition = (layoutManager as LinearLayoutManager?)?.findLastVisibleItemPosition() ?: 0
         var bestHeight = 0
-        for (i in startPosition..endPosition) {
-            val pos = i - startPosition
-            val child = getChildAt(pos) ?: continue
-
-            val holder = child.tag as? CTInboxBaseMessageViewHolder
-            if (holder != null) {
-                if (!holder.needsMediaPlayer()) {
-                    continue
-                }
-                val measured = holder.itemView.getGlobalVisibleRect(rect)
-                val height = if (measured) {
-                    rect.height()
-                } else {
-                    0
-                }
-                if (height > bestHeight) {
-                    bestHeight = height
-                    bestHolder = holder
-                }
+        for (i in 0 until childCount) {
+            val holder = getChildViewHolder(getChildAt(i)) as? CTInboxBaseMessageViewHolder ?: continue
+            // A row that is animating out of the list has no adapter position any more
+            if (holder.bindingAdapterPosition == NO_POSITION || !holder.needsMediaPlayer()) {
+                continue
+            }
+            val measured = holder.itemView.getGlobalVisibleRect(rect)
+            val height = if (measured) {
+                rect.height()
+            } else {
+                0
+            }
+            if (height > bestHeight) {
+                bestHeight = height
+                bestHolder = holder
             }
         }
         return bestHolder

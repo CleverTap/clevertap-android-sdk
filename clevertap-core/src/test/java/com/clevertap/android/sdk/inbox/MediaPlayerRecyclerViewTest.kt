@@ -771,6 +771,17 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         assertEquals(1, row.attachCount)
     }
 
+    @Test
+    fun `the row is found through its view holder and not through the tag of its view`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        row.itemView.tag = null
+
+        list.playVideo()
+
+        assertEquals(1, row.attachCount)
+    }
+
     private companion object {
 
         const val LIST_WIDTH = 1080
