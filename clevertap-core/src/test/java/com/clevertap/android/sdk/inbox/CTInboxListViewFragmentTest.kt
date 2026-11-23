@@ -511,6 +511,38 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     }
 
     @Test
+    fun test_onPause_releases_the_player_of_the_media_recycler() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onPause()
+
+        verify(exactly = 1) { media.releasePlayer() }
+    }
+
+    @Test
+    fun test_onPause_without_a_media_recycler_does_nothing() {
+        val fragment = viewReadyFragment()
+        fragment.mediaRecyclerView = null
+
+        fragment.onPause()
+    }
+
+    @Test
+    fun test_onResume_after_onPause_brings_the_player_back() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+
+        fragment.onPause()
+        fragment.onResume()
+
+        verify(exactly = 1) { media.releasePlayer() }
+        verify(exactly = 1) { media.onRestartPlayer() }
+    }
+
+    @Test
     fun test_onStop_releases_the_player_of_the_media_recycler() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)

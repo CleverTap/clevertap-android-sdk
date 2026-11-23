@@ -497,17 +497,6 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     }
 
     @Test
-    fun `pausing the list pauses the player without releasing it`() {
-        showList(rows = 1)
-        list.playVideo()
-
-        list.onPausePlayer()
-
-        verify(exactly = 1) { handle.setPlayWhenReady(false) }
-        verify(exactly = 0) { handle.release() }
-    }
-
-    @Test
     fun `restarting the list plays the most visible video row`() {
         showList(rows = 1)
 
@@ -594,7 +583,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         )
 
         // No player is created until a video plays, so these calls must be harmless.
-        lists.forEach { it.onPausePlayer() }
+        lists.forEach { it.releasePlayer() }
     }
 
     @Test
@@ -712,6 +701,34 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
 
         assertEquals("the second play must take the already-playing shortcut", 1, row.attachCount)
         verify(exactly = 1) { handle.setPlayWhenReady(true) }
+    }
+
+    @Test
+    fun `a tab released on pause resumes where it was left when it restarts`() {
+        showList(rows = 6, videoPositions = setOf(0))
+        every { handle.currentPositionMs() } returns 9_000L
+        every { handle.playerVolume() } returns 1f
+        list.playVideo()
+
+        list.releasePlayer() // what the tab does when it is paused
+        list.onRestartPlayer() // what the tab does when it is resumed
+
+        verify(exactly = 1) { handle.release() }
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 9_000L) }
+        verify(exactly = 1) { handle.setPlayerVolume(1f) }
+    }
+
+    @Test
+    fun `a tab released on pause shows no video until it is resumed`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        list.releasePlayer()
+
+        list.playVideo() // a late play while the tab is paused
+
+        assertEquals(0, row.container.childCount)
+        verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
     }
 
     private companion object {

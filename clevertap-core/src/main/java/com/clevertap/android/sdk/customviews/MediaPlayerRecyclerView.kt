@@ -102,10 +102,6 @@ class MediaPlayerRecyclerView : RecyclerView {
         registerListeners()
     }
 
-    fun onPausePlayer() {
-        handle.setPlayWhenReady(false)
-    }
-
     fun onRestartPlayer() {
         released = false
         playVideo()

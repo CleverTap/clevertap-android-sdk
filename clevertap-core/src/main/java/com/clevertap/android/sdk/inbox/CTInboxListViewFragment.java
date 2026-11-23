@@ -235,8 +235,9 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        // A tab that is not the current one must not keep a player and its decoder
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.onPausePlayer();
+            mediaRecyclerView.releasePlayer();
         }
     }
 
