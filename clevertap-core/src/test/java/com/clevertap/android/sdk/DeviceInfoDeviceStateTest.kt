@@ -2,12 +2,14 @@ package com.clevertap.android.sdk
 
 import android.app.NotificationManager
 import android.content.res.Configuration
+import android.telephony.TelephonyManager
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
+import io.mockk.verify
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -16,7 +18,9 @@ import org.robolectric.annotation.Config
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -269,8 +273,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         every { deviceInfo.isCharging() } returns true
         every { deviceInfo.getRamTier() } returns 8
         every { deviceInfo.getCpuCores() } returns 8
-        every { deviceInfo.isMeteredNetwork() } returns false
-        every { deviceInfo.isDataSaverOn() } returns true
+        every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(null, null, null, false, true)
         every { deviceInfo.isBoldText() } returns false
         every { deviceInfo.getInstallSource() } returns "com.android.vending"
 
@@ -295,8 +298,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         every { deviceInfo.isCharging() } returns null
         every { deviceInfo.getRamTier() } returns null
         every { deviceInfo.getCpuCores() } returns null
-        every { deviceInfo.isMeteredNetwork() } returns null
-        every { deviceInfo.isDataSaverOn() } returns null
+        every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(null, null, null, null, null)
         every { deviceInfo.isBoldText() } returns null
         every { deviceInfo.getInstallSource() } returns null
 
@@ -315,13 +317,102 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
     fun `app fields leave out metered and data saver when network info reporting is off`() {
         val deviceInfo = mockk<DeviceInfo>(relaxed = true)
         every { deviceInfo.context } returns appCtx
-        every { deviceInfo.isMeteredNetwork() } returns false
-        every { deviceInfo.isDataSaverOn() } returns true
+        every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(null, null, null, false, true)
 
         val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
 
         assertFalse(appFields.has("metered"))
         assertFalse(appFields.has("lowData"))
+    }
+
+    @Test
+    fun `app fields take wifi, radio, bluetooth, metered and data saver from one grouped read`() {
+        val deviceInfo = mockk<DeviceInfo>(relaxed = true)
+        every { deviceInfo.context } returns appCtx
+        every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(true, "4G", false, true, false)
+
+        val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), true, false)
+
+        assertEquals(true, appFields.getBoolean("wifi"))
+        assertEquals("4G", appFields.getString("Radio"))
+        assertEquals(false, appFields.getBoolean("BluetoothEnabled"))
+        assertEquals(true, appFields.getBoolean("metered"))
+        assertEquals(false, appFields.getBoolean("lowData"))
+        verify(exactly = 0) { deviceInfo.isWifiConnected() }
+        verify(exactly = 0) { deviceInfo.getNetworkType() }
+        verify(exactly = 0) { deviceInfo.isBluetoothEnabled() }
+    }
+
+    @Test
+    fun `app fields leave out wifi, radio and bluetooth when their read did not finish or reporting is off`() {
+        val deviceInfo = mockk<DeviceInfo>(relaxed = true)
+        every { deviceInfo.context } returns appCtx
+        every { deviceInfo.liveNetworkInfo } returns null
+
+        val unfinished = CTJsonConverter.from(deviceInfo, CoreMetaData(), true, false)
+        every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(true, "4G", false, true, false)
+        val reportingOff = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+
+        listOf("wifi", "Radio", "BluetoothEnabled", "metered", "lowData").forEach {
+            assertFalse(unfinished.has(it), "$it should be left out")
+            assertFalse(reportingOff.has(it), "$it should be left out")
+        }
+    }
+
+    @Test
+    fun `live network info leaves out what it can't read without dropping the read`() {
+        // No network monitor and no bluetooth permission here, so each value is null but the read finishes.
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+
+        val info = deviceInfo.getLiveNetworkInfo()
+
+        assertNotNull(info)
+        assertNull(info.radio)
+        assertNull(deviceInfo.getNetworkType())
+    }
+
+    @Test
+    fun `app fields carry the last exit, and leave it out when there is no record`() {
+        val deviceInfo = mockk<DeviceInfo>(relaxed = true)
+        every { deviceInfo.context } returns appCtx
+        every { deviceInfo.getLastExitReason() } returns 6
+        every { deviceInfo.getLastExitStatus() } returns 0
+        every { deviceInfo.getLastExitImportance() } returns 100
+
+        val withExit = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+        every { deviceInfo.getLastExitReason() } returns null
+        every { deviceInfo.getLastExitStatus() } returns null
+        every { deviceInfo.getLastExitImportance() } returns null
+        val withoutExit = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+
+        assertEquals(6, withExit.getInt("exitRsn"))
+        assertEquals(0, withExit.getInt("exitStatus"))
+        assertEquals(100, withExit.getInt("exitImp"))
+        listOf("exitRsn", "exitStatus", "exitImp").forEach {
+            assertFalse(withoutExit.has(it), "$it should be left out")
+        }
+    }
+
+    @Test
+    fun `app fields carry the last anr details, and leave them out when the exit was not an anr`() {
+        val deviceInfo = mockk<DeviceInfo>(relaxed = true)
+        every { deviceInfo.context } returns appCtx
+        every { deviceInfo.getLastAnrType() } returns 2
+        every { deviceInfo.getLastAnrTimeoutMs() } returns 5000L
+        every { deviceInfo.isLastAnrUserPerceptible() } returns true
+
+        val withAnr = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+        every { deviceInfo.getLastAnrType() } returns null
+        every { deviceInfo.getLastAnrTimeoutMs() } returns null
+        every { deviceInfo.isLastAnrUserPerceptible() } returns null
+        val withoutAnr = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
+
+        assertEquals(2, withAnr.getInt("anrType"))
+        assertEquals(5000L, withAnr.getLong("anrTimeout"))
+        assertEquals(true, withAnr.getBoolean("anrUser"))
+        listOf("anrType", "anrTimeout", "anrUser").forEach {
+            assertFalse(withoutAnr.has(it), "$it should be left out")
+        }
     }
 
     @Test
@@ -331,6 +422,22 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
 
         assertEquals(Runtime.getRuntime().availableProcessors(), first)
         assertEquals(first, deviceInfo.getCpuCores())
+    }
+
+    @Test
+    fun `cached info reads package, telephony and window values through grouped reads`() {
+        val telephony = shadowOf(appCtx.getSystemService(TelephonyManager::class.java))
+        telephony.setNetworkOperatorName("Test Carrier")
+        telephony.setSimCountryIso("in")
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+
+        val packageInfo = appCtx.packageManager.getPackageInfo(appCtx.packageName, 0)
+        @Suppress("DEPRECATION")
+        assertEquals(packageInfo.versionCode, deviceInfo.getBuild())
+        assertEquals(packageInfo.versionName, deviceInfo.getVersionName())
+        assertEquals("Test Carrier", deviceInfo.getCarrier())
+        assertEquals("in", deviceInfo.getCountryCode())
+        assertTrue(deviceInfo.getDPI() > 0)
     }
 
     // Robolectric runs tests on the main looper, so off-main reads run here.

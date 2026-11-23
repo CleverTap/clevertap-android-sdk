@@ -78,7 +78,7 @@ class DeviceSignalsTest : BaseTestCase() {
 
         assertEquals(40, state.batt)
         assertEquals(true, state.chg)
-        assertEquals(true, state.lowData)
+        assertEquals(true, DeviceState.readDataSaver(appCtx))
         assertEquals(true, state.boldText)
     }
 
@@ -86,10 +86,10 @@ class DeviceSignalsTest : BaseTestCase() {
     @Config(sdk = [33])
     fun `metered is left out without ACCESS_NETWORK_STATE and read with it`() {
         shadowApplication.denyPermissions(Manifest.permission.ACCESS_NETWORK_STATE)
-        assertNull(DeviceState.read(appCtx, Configuration()).metered)
+        assertNull(DeviceState.readMetered(appCtx))
 
         shadowApplication.grantPermissions(Manifest.permission.ACCESS_NETWORK_STATE)
-        assertNotNull(DeviceState.read(appCtx, Configuration()).metered)
+        assertNotNull(DeviceState.readMetered(appCtx))
     }
 
     @Test

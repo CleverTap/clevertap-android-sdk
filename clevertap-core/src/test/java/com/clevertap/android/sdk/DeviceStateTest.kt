@@ -12,9 +12,12 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 @RunWith(RobolectricTestRunner::class)
 class DeviceStateTest : BaseTestCase() {
@@ -124,6 +127,90 @@ class DeviceStateTest : BaseTestCase() {
         threads.forEach { it.join(5_000) }
 
         assertEquals((0 until callers).toList(), results.toList())
+    }
+
+    @Test
+    fun `a slow read is dropped on the main thread but kept off it`() {
+        // Robolectric runs the test on the main looper. 800 ms is past the main thread timeout only.
+        val onMain = readOrNull("slow read") { Thread.sleep(800); 1 }
+        var offMain: Int? = null
+        Thread { offMain = readOrNull("slow read") { Thread.sleep(800); 2 } }.apply { start(); join(5_000) }
+
+        assertNull(onMain)
+        assertEquals(2, offMain)
+    }
+
+    @Test
+    fun `a read of an existing value runs inline on the main thread, so a full queue can't drop it`() {
+        val release = CountDownLatch(1)
+        val stuck = (0 until 64).map { startRead("stuck read $it", timeoutMs = 10_000) { release.await(); it } }
+        var readThread: Thread? = null
+
+        // Robolectric runs the test on the main looper.
+        val existing = existingReadOrNull("existing value") { readThread = Thread.currentThread(); 7 }
+        val added = readOrNull("new value") { 8 }
+
+        release.countDown()
+        stuck.forEach { it.get() }
+        assertEquals(7, existing)
+        assertEquals(Thread.currentThread(), readThread)
+        assertNull(added)
+        assertNull(existingReadOrNull<Int>("failing existing value") { throw SecurityException("no permission") })
+    }
+
+    @Test
+    fun `a timed out read does not leave its shared thread interrupted`() {
+        val release = AtomicBoolean(false)
+        val finished = CountDownLatch(1)
+        var interrupted = true
+
+        // Spins like a system call that never looks at the interrupt flag.
+        val result = readOrNull("stuck read", timeoutMs = 100) {
+            while (!release.get()) Thread.yield()
+            interrupted = Thread.currentThread().isInterrupted
+            finished.countDown()
+            1
+        }
+
+        release.set(true)
+        assertNull(result)
+        assertTrue(finished.await(5, TimeUnit.SECONDS))
+        assertFalse(interrupted)
+    }
+
+    @Test
+    fun `reads beyond the pending cap are skipped until the waiting ones run`() {
+        val release = CountDownLatch(1)
+        val stuck = (0 until 64).map { startRead("stuck read $it", timeoutMs = 10_000) { release.await(); it } }
+        var skippedReadRan = false
+
+        val skipped = readOrNull("extra read", timeoutMs = 10_000) { skippedReadRan = true; 1 }
+
+        release.countDown()
+        assertNull(skipped)
+        assertFalse(skippedReadRan)
+        assertEquals((0 until 64).toList(), stuck.map { it.get() })
+        assertEquals(7, readOrNull("read after the queue drained", timeoutMs = 5_000) { 7 })
+    }
+
+    @Test
+    fun `reads started together wait out one timeout, not one each`() {
+        val release = CountDownLatch(1)
+        val start = System.nanoTime()
+
+        val reads = (0 until 3).map { startRead("stuck read $it", timeoutMs = 300) { release.await(); it } }
+        val results = reads.map { it.get() }
+
+        val waitedMs = (System.nanoTime() - start) / 1_000_000
+        release.countDown()
+        assertEquals(listOf(null, null, null), results)
+        assertTrue(waitedMs < 700, "waited $waitedMs ms")
+    }
+
+    @Test
+    fun `catchOrNull keeps a failing value from dropping the rest of its group`() {
+        assertEquals(1, catchOrNull("fine value") { 1 })
+        assertNull(catchOrNull<Int>("failing value") { throw SecurityException("no permission") })
     }
 
     private fun configWithNight(night: Int) = Configuration().apply {

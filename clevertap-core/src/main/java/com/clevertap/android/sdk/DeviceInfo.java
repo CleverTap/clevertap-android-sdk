@@ -102,31 +102,64 @@ public class DeviceInfo {
         private final String locale;
 
         DeviceCachedInfo() {
-            versionName = getVersionName();
+            // One read per system service. They use only DeviceInfo fields, not this object's, so starting them
+            // here is safe.
+            DeviceRead<PackageValues> packageRead = DeviceStateKt.startExistingRead("package info", this::readPackageValues);
+            DeviceRead<TelephonyValues> telephonyRead = DeviceStateKt.startExistingRead("telephony", this::readTelephonyValues);
+            DeviceRead<WindowSize> windowRead = DeviceStateKt.startExistingRead("window size", this::getWindowSizeData);
+            DeviceRead<String> bucketRead = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                    ? DeviceStateKt.startExistingRead("app standby bucket", this::getAppBucket)
+                    : null;
+
             osName = getOsName();
             osVersion = getOsVersion();
             manufacturer = getManufacturer();
             model = getModel();
-            carrier = getCarrier();
-            build = getBuild();
-            bluetoothVersion = getBluetoothVersion();
-            countryCode = getCountryCode();
             sdkVersion = getSdkVersion();
-
-            WindowSize result = getWindowSizeData();
-
-            width = result.width;
-            height = result.height;
-            dpi = result.localDpi;
-
-
             localInAppCount = getLocalInAppCountFromPreference();
             locale = getDeviceLocale();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                appBucket = getAppBucket();
-            } else {
-                appBucket = null;
+
+            PackageValues packageValues = packageRead.get();
+            versionName = packageValues != null ? packageValues.versionName : null;
+            build = packageValues != null ? packageValues.build : 0;
+            bluetoothVersion = packageValues != null ? packageValues.bluetoothVersion : null;
+
+            TelephonyValues telephonyValues = telephonyRead.get();
+            carrier = telephonyValues != null ? telephonyValues.carrier : null;
+            countryCode = telephonyValues != null && telephonyValues.countryCode != null
+                    ? telephonyValues.countryCode : "";
+
+            WindowSize windowSize = windowRead.get();
+            if (windowSize == null) {
+                windowSize = new WindowSize(0, 0, 0);
             }
+            width = windowSize.width;
+            height = windowSize.height;
+            dpi = windowSize.localDpi;
+
+            appBucket = bucketRead != null ? bucketRead.get() : null;
+        }
+
+        // One getPackageInfo for both version values, plus the feature lookups, all on PackageManager.
+        private PackageValues readPackageValues() {
+            PackageInfo packageInfo = DeviceStateKt.catchOrNull("package info", this::getPackageInfo);
+            String bluetooth = DeviceStateKt.catchOrNull("bluetooth version", this::getBluetoothVersion);
+            return new PackageValues(
+                    packageInfo != null ? packageInfo.versionName : null,
+                    packageInfo != null ? packageInfo.versionCode : 0,
+                    bluetooth
+            );
+        }
+
+        private TelephonyValues readTelephonyValues() {
+            TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            if (manager == null) {
+                return null;
+            }
+            return new TelephonyValues(
+                    DeviceStateKt.catchOrNull("carrier", manager::getNetworkOperatorName),
+                    DeviceStateKt.catchOrNull("sim country", manager::getSimCountryIso)
+            );
         }
 
         @NonNull
@@ -193,41 +226,13 @@ public class DeviceInfo {
             return bluetoothVersion;
         }
 
-        private int getBuild() {
-            PackageInfo packageInfo;
+        private PackageInfo getPackageInfo() {
             try {
-                packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                return packageInfo.versionCode;
+                return context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             } catch (PackageManager.NameNotFoundException e) {
-                getConfigLogger().debug(config.getAccountId(), "Unable to get app build", e);
+                getConfigLogger().debug(config.getAccountId(), "Unable to get app version and build", e);
+                return null;
             }
-            return 0;
-        }
-
-        private String getCarrier() {
-            try {
-                TelephonyManager manager = (TelephonyManager) context
-                        .getSystemService(Context.TELEPHONY_SERVICE);
-                if (manager != null) {
-                    return manager.getNetworkOperatorName();
-                }
-
-            } catch (Exception e) {
-                // Failed to get network operator name from network
-            }
-            return null;
-        }
-
-        private String getCountryCode() {
-            try {
-                TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                if (tm != null) {
-                    return tm.getSimCountryIso();
-                }
-            } catch (Throwable ignore) {
-                return "";
-            }
-            return "";
         }
 
         private String getManufacturer() {
@@ -284,17 +289,6 @@ public class DeviceInfo {
             return BuildConfig.VERSION_CODE;
         }
 
-        private String getVersionName() {
-            PackageInfo packageInfo;
-            try {
-                packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                return packageInfo.versionName;
-            } catch (PackageManager.NameNotFoundException e) {
-                getConfigLogger().debug(config.getAccountId(), "Unable to get app version", e);
-            }
-            return null;
-        }
-
         private String getDeviceLocale() {
             String language = Locale.getDefault().getLanguage();
             if ("".equals(language)) {
@@ -328,6 +322,28 @@ public class DeviceInfo {
             this.localDpi = localDpi;
             this.width = width;
             this.height = height;
+        }
+    }
+
+    private static class PackageValues {
+        final String versionName;
+        final int build;
+        final String bluetoothVersion;
+
+        PackageValues(String versionName, int build, String bluetoothVersion) {
+            this.versionName = versionName;
+            this.build = build;
+            this.bluetoothVersion = bluetoothVersion;
+        }
+    }
+
+    private static class TelephonyValues {
+        final String carrier;
+        final String countryCode;
+
+        TelephonyValues(String carrier, String countryCode) {
+            this.carrier = carrier;
+            this.countryCode = countryCode;
         }
     }
 
@@ -429,7 +445,7 @@ public class DeviceInfo {
 
     private final  NetworkMonitor networkMonitor;
 
-    // Read at init and on each resume, push status per request header. Building af makes no system calls.
+    // Read at init and on each resume, push status per request header.
     private volatile DeviceState deviceState;
 
     // Guards deviceState. Each refresh takes a generation so only the newest result is stored.
@@ -471,24 +487,28 @@ public class DeviceInfo {
 
         if (sDeviceType == NULL) {
 
-            try {
+            Boolean isTv = DeviceStateKt.existingReadOrNull("ui mode", () -> {
                 UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
-                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-                    sDeviceType = TV;
-                    return sDeviceType;
-                }
-            } catch (Exception e) {
-                //uiModeManager or context is null
-                Logger.d(TAG, "Failed to decide whether device is a TV!", e);
+                return uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+            });
+            if (Boolean.TRUE.equals(isTv)) {
+                sDeviceType = TV;
+                return sDeviceType;
             }
 
+            @DeviceType int type;
             try {
-                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
+                type = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
             } catch (Exception e) {
                 // resource not found or context is null
                 Logger.d(TAG, "Failed to decide whether device is a smart phone or tablet!", e);
-                sDeviceType = UNKNOWN;
+                type = UNKNOWN;
             }
+            // Not cached when the TV check failed or timed out, so a TV isn't reported as a phone for the session.
+            if (isTv == null) {
+                return type;
+            }
+            sDeviceType = type;
         }
         return sDeviceType;
     }
@@ -617,8 +637,49 @@ public class DeviceInfo {
     }
 
     public String getNetworkType() {
+        return DeviceStateKt.existingReadOrNull("radio", this::readNetworkType);
+    }
+
+    private String readNetworkType() {
         if (networkMonitor == null) return null;
         return networkMonitor.getNetworkTypeString();
+    }
+
+    /**
+     * Wifi, radio, bluetooth, metered and data saver state, read live for each af build. One read for all,
+     * so the values can't disagree. Null if it didn't finish.
+     */
+    @Nullable
+    public LiveNetworkInfo getLiveNetworkInfo() {
+        return DeviceStateKt.existingReadOrNull("network info", () -> new LiveNetworkInfo(
+                DeviceStateKt.catchOrNull("wifi", this::readWifiConnected),
+                DeviceStateKt.catchOrNull("radio", this::readNetworkType),
+                DeviceStateKt.catchOrNull("bluetooth state", this::readBluetoothEnabled),
+                DeviceStateKt.catchOrNull("metered network", () -> DeviceState.readMetered(context)),
+                DeviceStateKt.catchOrNull("data saver", () -> DeviceState.readDataSaver(context))
+        ));
+    }
+
+    public static class LiveNetworkInfo {
+        @Nullable
+        public final Boolean wifi;
+        @Nullable
+        public final String radio;
+        @Nullable
+        public final Boolean bluetoothEnabled;
+        @Nullable
+        public final Boolean metered;
+        @Nullable
+        public final Boolean lowData;
+
+        LiveNetworkInfo(@Nullable Boolean wifi, @Nullable String radio, @Nullable Boolean bluetoothEnabled,
+                @Nullable Boolean metered, @Nullable Boolean lowData) {
+            this.wifi = wifi;
+            this.radio = radio;
+            this.bluetoothEnabled = bluetoothEnabled;
+            this.metered = metered;
+            this.lowData = lowData;
+        }
     }
 
     public String getOsName() {
@@ -676,20 +737,18 @@ public class DeviceInfo {
     @SuppressLint("MissingPermission")
     @SuppressWarnings("MissingPermission")
     public Boolean isBluetoothEnabled() {
-        Boolean isBluetoothEnabled = null;
-        try {
-            PackageManager pm = context.getPackageManager();
-            int hasBluetoothPermission = pm.checkPermission(Manifest.permission.BLUETOOTH, context.getPackageName());
-            if (hasBluetoothPermission == PackageManager.PERMISSION_GRANTED) {
-                BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                if (bluetoothAdapter != null) {
-                    isBluetoothEnabled = bluetoothAdapter.isEnabled();
-                }
-            }
-        } catch (Throwable e) {
-            // do nothing since we don't have permissions
+        return DeviceStateKt.existingReadOrNull("bluetooth state", this::readBluetoothEnabled);
+    }
+
+    @SuppressLint("MissingPermission")
+    private Boolean readBluetoothEnabled() {
+        PackageManager pm = context.getPackageManager();
+        int hasBluetoothPermission = pm.checkPermission(Manifest.permission.BLUETOOTH, context.getPackageName());
+        if (hasBluetoothPermission != PackageManager.PERMISSION_GRANTED) {
+            return null;
         }
-        return isBluetoothEnabled;
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        return bluetoothAdapter != null ? bluetoothAdapter.isEnabled() : null;
     }
 
     public boolean isErrorDeviceId() {
@@ -704,6 +763,10 @@ public class DeviceInfo {
     }
 
     public Boolean isWifiConnected() {
+        return DeviceStateKt.existingReadOrNull("wifi", this::readWifiConnected);
+    }
+
+    private Boolean readWifiConnected() {
         if (PackageManager.PERMISSION_GRANTED != context
                 .checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
             return null;
@@ -760,16 +823,6 @@ public class DeviceInfo {
     }
 
     @Nullable
-    public Boolean isMeteredNetwork() {
-        return getDeviceState().getMetered();
-    }
-
-    @Nullable
-    public Boolean isDataSaverOn() {
-        return getDeviceState().getLowData();
-    }
-
-    @Nullable
     public Boolean isBoldText() {
         return getDeviceState().getBoldText();
     }
@@ -787,6 +840,50 @@ public class DeviceInfo {
     @Nullable
     public String getInstallSource() {
         return getDeviceSpecs().getInstSrc();
+    }
+
+    /** ApplicationExitInfo reason of this process's last death, API 30 and up. Null when there is no record. */
+    @Nullable
+    public Integer getLastExitReason() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getReason() : null;
+    }
+
+    @Nullable
+    public Integer getLastExitStatus() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getStatus() : null;
+    }
+
+    @Nullable
+    public Integer getLastExitImportance() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getImportance() : null;
+    }
+
+    /** AnrTypes code on the last exit record, API 37 and up. The system can attach it to any exit reason. */
+    @Nullable
+    public Integer getLastAnrType() {
+        DeviceSpecs.Anr anr = getLastAnr();
+        return anr != null ? anr.getType() : null;
+    }
+
+    /** How long the system waited before declaring the ANR, in milliseconds. */
+    @Nullable
+    public Long getLastAnrTimeoutMs() {
+        DeviceSpecs.Anr anr = getLastAnr();
+        return anr != null ? anr.getTimeoutMs() : null;
+    }
+
+    @Nullable
+    public Boolean isLastAnrUserPerceptible() {
+        DeviceSpecs.Anr anr = getLastAnr();
+        return anr != null ? anr.getUserPerceptible() : null;
+    }
+
+    private DeviceSpecs.Anr getLastAnr() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getAnr() : null;
     }
 
     private DeviceSpecs getDeviceSpecs() {

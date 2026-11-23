@@ -124,6 +124,12 @@ public class CTJsonConverter {
             evtData.putOpt("cpu", deviceInfo.getCpuCores());
             evtData.putOpt("boldText", deviceInfo.isBoldText());
             evtData.putOpt("instSrc", deviceInfo.getInstallSource());
+            evtData.putOpt("exitRsn", deviceInfo.getLastExitReason());
+            evtData.putOpt("exitStatus", deviceInfo.getLastExitStatus());
+            evtData.putOpt("exitImp", deviceInfo.getLastExitImportance());
+            evtData.putOpt("anrType", deviceInfo.getLastAnrType());
+            evtData.putOpt("anrTimeout", deviceInfo.getLastAnrTimeoutMs());
+            evtData.putOpt("anrUser", deviceInfo.isLastAnrUserPerceptible());
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 evtData.put("abckt", deviceInfo.getAppBucket());
@@ -158,28 +164,19 @@ public class CTJsonConverter {
             }
 
             if (enableNetworkInfoReporting) {
-                final Boolean isWifi = deviceInfo.isWifiConnected();
-                if (isWifi != null) {
-                    evtData.put("wifi", isWifi);
-                }
-
-                final Boolean isBluetoothEnabled = deviceInfo.isBluetoothEnabled();
-                if (isBluetoothEnabled != null) {
-                    evtData.put("BluetoothEnabled", isBluetoothEnabled);
+                final DeviceInfo.LiveNetworkInfo networkInfo = deviceInfo.getLiveNetworkInfo();
+                if (networkInfo != null) {
+                    evtData.putOpt("wifi", networkInfo.wifi);
+                    evtData.putOpt("BluetoothEnabled", networkInfo.bluetoothEnabled);
+                    evtData.putOpt("Radio", networkInfo.radio);
+                    evtData.putOpt("metered", networkInfo.metered);
+                    evtData.putOpt("lowData", networkInfo.lowData);
                 }
 
                 final String bluetoothVersion = deviceInfo.getBluetoothVersion();
                 if (bluetoothVersion != null) {
                     evtData.put("BluetoothVersion", bluetoothVersion);
                 }
-
-                final String radio = deviceInfo.getNetworkType();
-                if (radio != null) {
-                    evtData.put("Radio", radio);
-                }
-
-                evtData.putOpt("metered", deviceInfo.isMeteredNetwork());
-                evtData.putOpt("lowData", deviceInfo.isDataSaverOn());
             }
             //Adds an extra field to send local inApp count in queueData.
             evtData.put("LIAMC", deviceInfo.getLocalInAppCount());

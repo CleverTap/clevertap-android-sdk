@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk
 
 import android.app.ActivityManager
+import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+import android.app.Application
+import android.app.ApplicationExitInfo
 import android.content.Context
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Test
@@ -8,6 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowActivityManager
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -47,4 +51,40 @@ class DeviceSpecsTest : BaseTestCase() {
 
         assertNull(DeviceSpecs.read(appCtx).instSrc)
     }
+
+    @Test
+    @Config(sdk = [33])
+    fun `read returns the newest exit of this process, not of the app's other processes`() {
+        val activityManager = shadowOf(appCtx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager)
+        val thisProcess = Application.getProcessName()
+        activityManager.addApplicationExitInfo(exitInfo(thisProcess, ApplicationExitInfo.REASON_CRASH, 1))
+        activityManager.addApplicationExitInfo(exitInfo(thisProcess, ApplicationExitInfo.REASON_ANR, 6))
+        activityManager.addApplicationExitInfo(exitInfo("$thisProcess:push", ApplicationExitInfo.REASON_LOW_MEMORY, 0))
+
+        val lastExit = DeviceSpecs.read(appCtx).lastExit
+
+        assertEquals(DeviceSpecs.LastExit(ApplicationExitInfo.REASON_ANR, 6, IMPORTANCE_FOREGROUND), lastExit)
+        // Below API 37 there are no ANR details, even for an ANR exit.
+        assertNull(lastExit?.anr)
+    }
+
+    @Test
+    @Config(sdk = [33])
+    fun `read leaves out the last exit when there is no record`() {
+        assertNull(DeviceSpecs.read(appCtx).lastExit)
+    }
+
+    @Test
+    @Config(sdk = [29])
+    fun `read leaves out the last exit below api 30`() {
+        assertNull(DeviceSpecs.read(appCtx).lastExit)
+    }
+
+    private fun exitInfo(processName: String, reason: Int, status: Int): ApplicationExitInfo =
+        ShadowActivityManager.ApplicationExitInfoBuilder.newBuilder()
+            .setProcessName(processName)
+            .setReason(reason)
+            .setStatus(status)
+            .setImportance(IMPORTANCE_FOREGROUND)
+            .build()
 }
