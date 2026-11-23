@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.PushPermissionHandler;
 import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.customviews.InboxVideoStates;
 import com.google.android.material.tabs.TabLayout;
 
 import java.lang.ref.WeakReference;
@@ -65,9 +66,30 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     private PushPermissionHandler pushPermissionHandler;
 
+    static final String VIDEO_STATES_KEY = "videoStates";
+
+    private final InboxVideoStates videoStates = new InboxVideoStates();
+
+    /** Where the videos were left, shared by the lists of all tabs of this screen. */
+    InboxVideoStates getVideoStates() {
+        return videoStates;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState); // the lists save the video that is playing now first
+        Bundle saved = videoStates.save();
+        if (!saved.isEmpty()) {
+            outState.putBundle(VIDEO_STATES_KEY, saved);
+        }
+    }
+
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            videoStates.restore(savedInstanceState.getBundle(VIDEO_STATES_KEY));
+        }
         try {
             Bundle extras = getIntent().getExtras();
             if (extras == null) {

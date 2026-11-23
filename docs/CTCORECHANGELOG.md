@@ -8,6 +8,9 @@
 * **Build Tools:** The SDK is now built with Android Gradle Plugin 9.1.1, Gradle 9.3.1 and compileSdk 37.
   App requirements do not change: compileSdk 35 or higher, Android Gradle Plugin 8.1.1 or higher,
   minSdk 23 and Kotlin 1.9 or higher, the same as 8.6.0.
+* **App Inbox Videos:** A video now continues from where it was left when you scroll away and back, rotate the
+  screen or return to the inbox. A video that was unmuted keeps its sound, and a new video starts muted from the
+  beginning. The inbox now uses one video player for all rows instead of creating a new one for each row.
 * **Faster Event Delivery On Background:** Queued events are now sent as soon as the app moves to the background, instead of waiting for the next scheduled flush.
 
 #### Bug Fixes
