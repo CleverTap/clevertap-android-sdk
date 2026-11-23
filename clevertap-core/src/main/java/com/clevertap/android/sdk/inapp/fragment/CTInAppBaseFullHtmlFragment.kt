@@ -91,7 +91,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             }
 
             if (isDarkenEnabled()) {
-                rl.background = ColorDrawable(-0x45000000)
+                rl.background = ColorDrawable(0xBB000000.toInt())
             } else {
                 rl.background = ColorDrawable(0x00000000)
             }

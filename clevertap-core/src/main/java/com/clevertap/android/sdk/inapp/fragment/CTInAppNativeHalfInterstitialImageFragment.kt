@@ -3,11 +3,9 @@ package com.clevertap.android.sdk.inapp.fragment
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.core.graphics.toColorInt
@@ -46,90 +44,19 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
 
-        fl.background = ColorDrawable(-0x45000000)
+        fl.background = ColorDrawable(0xBB000000.toInt())
 
         relativeLayout = fl.findViewById(R.id.half_interstitial_image_relative_layout)
         relativeLayout?.setBackgroundColor(inAppNotification.backgroundColor.toColorInt())
 
         when (currentOrientation) {
-            Configuration.ORIENTATION_PORTRAIT -> relativeLayout?.getViewTreeObserver()
-                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
-                    override fun onGlobalLayout() {
-                        val relativeLayout = relativeLayout ?: return
-                        val layoutParams =
-                            relativeLayout.layoutParams as FrameLayout.LayoutParams
-                        if (inAppNotification.isTablet && isTablet()) {
-                            redrawHalfInterstitialInApp(
-                                relativeLayout, layoutParams, closeImageView
-                            )
-                        } else {
-                            if (isTablet()) {
-                                redrawHalfInterstitialMobileInAppOnTablet(
-                                    relativeLayout, layoutParams, closeImageView
-                                )
-                            } else {
-                                redrawHalfInterstitialInApp(
-                                    relativeLayout, layoutParams, closeImageView
-                                )
-                            }
-                        }
+            Configuration.ORIENTATION_PORTRAIT -> addHalfInterstitialPortraitLayoutListener(
+                relativeLayout, closeImageView
+            ) { inAppNotification.isTablet }
 
-                        relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
-                    }
-                })
-
-            Configuration.ORIENTATION_LANDSCAPE -> relativeLayout?.getViewTreeObserver()
-                ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
-                    override fun onGlobalLayout() {
-                        val relativeLayout = relativeLayout ?: return
-                        val layoutParams =
-                            relativeLayout.layoutParams as FrameLayout.LayoutParams
-                        if (!inAppNotification.isTablet || !isTablet()) {
-                            if (isTablet()) {
-                                layoutParams.setMargins(
-                                    getScaledPixels(140),
-                                    getScaledPixels(100),
-                                    getScaledPixels(140),
-                                    getScaledPixels(100)
-                                )
-                                layoutParams.height =
-                                    relativeLayout.measuredHeight - getScaledPixels(
-                                        130
-                                    )
-                                layoutParams.width = (layoutParams.height * 1.3f).toInt()
-                                layoutParams.gravity = Gravity.CENTER
-                                relativeLayout.setLayoutParams(layoutParams)
-
-                                relativeLayout.post {
-                                    val margin = closeImageView.measuredWidth / 2
-                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                }
-                            } else {
-                                layoutParams.width =
-                                    (relativeLayout.measuredHeight * 1.3f).toInt()
-                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL
-                                relativeLayout.setLayoutParams(layoutParams)
-                                relativeLayout.post {
-                                    val margin = closeImageView.measuredWidth / 2
-                                    closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                    closeImageView.y = (relativeLayout.top - margin).toFloat()
-                                }
-                            }
-                        } else {
-                            layoutParams.width = (relativeLayout.measuredHeight * 1.3f).toInt()
-                            layoutParams.gravity = Gravity.CENTER
-                            relativeLayout.setLayoutParams(layoutParams)
-                            relativeLayout.post {
-                                val margin = closeImageView.measuredWidth / 2
-                                closeImageView.x = (relativeLayout.right - margin).toFloat()
-                                closeImageView.y = (relativeLayout.top - margin).toFloat()
-                            }
-                        }
-
-                        relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this)
-                    }
-                })
+            Configuration.ORIENTATION_LANDSCAPE -> addHalfInterstitialLandscapeLayoutListener(
+                relativeLayout, closeImageView
+            ) { inAppNotification.isTablet }
         }
 
         mediaHandler.setup(
@@ -141,18 +68,8 @@ internal class CTInAppNativeHalfInterstitialImageFragment : CTInAppBaseFullFragm
         relativeLayout?.findViewById<View>(R.id.gifImage)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
         relativeLayout?.findViewById<View>(R.id.video_frame)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
 
-        closeImageView.setOnClickListener {
-            triggerCloseButtonAction()
-            activity?.finish()
-        }
-
-        if (!inAppNotification.isHideCloseButton) {
-            closeImageView.setVisibility(View.GONE)
-        } else {
-            closeImageView.setVisibility(View.VISIBLE)
-        }
+        setupCloseButton(closeImageView)
 
         return inAppView
     }
-
 }

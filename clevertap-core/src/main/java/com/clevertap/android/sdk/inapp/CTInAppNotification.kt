@@ -126,7 +126,7 @@ class CTInAppNotification : Parcelable {
 
     internal var aspectRatio: Double = HTML_DEFAULT_ASPECT_RATIO
         private set
-    internal var isHideCloseButton: Boolean = false
+    internal var showCloseButton: Boolean = false
         private set
 
     internal var html: String? = null
@@ -230,7 +230,7 @@ class CTInAppNotification : Parcelable {
         } catch (_: Throwable) {
             // no-op
         }
-        isHideCloseButton = parcel.readByte().toInt() != 0x00
+        showCloseButton = parcel.readByte().toInt() != 0x00
         buttonCount = parcel.readInt()
         isTablet = parcel.readByte().toInt() != 0x00
         customInAppUrl = parcel.readString()
@@ -291,7 +291,7 @@ class CTInAppNotification : Parcelable {
         dest.writeString(messageColor)
         dest.writeTypedList<CTInAppNotificationButton?>(_buttons)
         dest.writeTypedList<CTInAppNotificationMedia?>(_mediaList)
-        dest.writeByte((if (this.isHideCloseButton) 0x01 else 0x00).toByte())
+        dest.writeByte((if (this.showCloseButton) 0x01 else 0x00).toByte())
         dest.writeInt(buttonCount)
         dest.writeByte((if (isTablet) 0x01 else 0x00).toByte())
         dest.writeString(customInAppUrl)
@@ -416,7 +416,7 @@ class CTInAppNotification : Parcelable {
                 messageColor = msgObject.optString(Constants.KEY_COLOR, messageColor).toValidColorOrFallback(Constants.BLACK)
             }
 
-            isHideCloseButton = jsonObject.optBoolean(Constants.KEY_HIDE_CLOSE, false)
+            showCloseButton = jsonObject.optBoolean(Constants.KEY_HIDE_CLOSE, false)
 
             val media = jsonObject.optJSONObject(Constants.KEY_MEDIA)
             if (media != null) {
