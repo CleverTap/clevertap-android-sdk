@@ -901,26 +901,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             // no-op
         }
 
-        if (CleverTapInstanceStore.isEmpty()) {
-            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
-            if (instance != null) {
-                instance.pushNotificationClickedEvent(notification);
-            }
-            return;
-        }
-
-        for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
-            boolean shouldProcess = false;
-            if (instance != null) {
-                shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
-                        || instance
-                        .getAccountId()
-                        .equals(_accountId);
-            }
-            if (shouldProcess) {
-                instance.pushNotificationClickedEvent(notification);
-                break;
-            }
+        // Resolve via fromAccountId (the same path handleLiveUpdateDismissed uses): it matches a
+        // loaded instance AND falls back to rebuilding from the persisted config. The old bespoke
+        // lookup only rebuilt when the registry was empty, so a click for a not-yet-loaded account
+        // in a multi-account app (another account already loaded) was silently dropped (SDK-6356).
+        final CleverTapAPI instance = fromAccountId(context, _accountId);
+        if (instance != null) {
+            instance.pushNotificationClickedEvent(notification);
         }
     }
 
