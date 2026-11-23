@@ -82,7 +82,7 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
     }
 
     private fun handleCloseButton() {
-        if (!inAppNotification.isHideCloseButton) {
+        if (!inAppNotification.showCloseButton) {
             closeImageView?.setOnClickListener(null)
             closeImageView?.setVisibility(View.GONE)
         } else {

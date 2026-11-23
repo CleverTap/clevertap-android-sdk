@@ -36,8 +36,8 @@ import kotlin.test.assertTrue
 
 /**
  * Tests the close button of the half-interstitial, half-interstitial image, interstitial image, cover and
- * cover image fragments. The "close" key of the in-app says whether the close button is shown, even though
- * it is read into [CTInAppNotification.isHideCloseButton].
+ * cover image fragments. The "close" key of the in-app says whether the close button is shown, and it is
+ * read into [CTInAppNotification.showCloseButton].
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-port")
