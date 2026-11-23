@@ -76,22 +76,9 @@ internal class CTInAppNativeInterstitialFragment : CTInAppBaseFullNativeFragment
 
         setTitleAndMessage()
         setButtons()
-        handleCloseButton()
+        setupCloseButton(closeImageView!!)
 
         return inAppView
-    }
-
-    private fun handleCloseButton() {
-        if (!inAppNotification.isHideCloseButton) {
-            closeImageView?.setOnClickListener(null)
-            closeImageView?.setVisibility(View.GONE)
-        } else {
-            closeImageView?.setVisibility(View.VISIBLE)
-            closeImageView?.setOnClickListener {
-                triggerCloseButtonAction()
-                activity?.finish()
-            }
-        }
     }
 
     private fun setButtons() {

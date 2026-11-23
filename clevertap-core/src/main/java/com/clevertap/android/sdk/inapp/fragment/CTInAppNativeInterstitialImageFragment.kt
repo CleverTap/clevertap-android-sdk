@@ -42,7 +42,7 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
         }
 
         val fl = inAppView.findViewById<FrameLayout>(R.id.inapp_interstitial_image_frame_layout)
-        fl.background = ColorDrawable(-0x45000000)
+        fl.background = ColorDrawable(0xBB000000.toInt())
 
         val closeImageView = fl.findViewById<CloseImageView>(CloseImageView.VIEW_ID)
         relativeLayout = fl.findViewById(R.id.interstitial_image_relative_layout)
@@ -124,18 +124,8 @@ internal class CTInAppNativeInterstitialImageFragment : CTInAppBaseFullFragment(
         relativeLayout?.findViewById<View>(R.id.gifImage)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
         relativeLayout?.findViewById<View>(R.id.video_frame)?.let { ViewCompat.setScreenReaderFocusable(it, true) }
 
-        closeImageView.setOnClickListener {
-            triggerCloseButtonAction()
-            activity?.finish()
-        }
-
-        if (!inAppNotification.isHideCloseButton) {
-            closeImageView.setVisibility(View.GONE)
-        } else {
-            closeImageView.setVisibility(View.VISIBLE)
-        }
+        setupCloseButton(closeImageView)
 
         return inAppView
     }
-
 }
