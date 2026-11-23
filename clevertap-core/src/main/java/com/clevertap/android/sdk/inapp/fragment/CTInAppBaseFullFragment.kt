@@ -82,6 +82,11 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
     /**
      * Sizes a half-interstitial card in portrait once it has been laid out. [isTabletInApp] is read at
      * layout time and says whether the in-app was made for tablets.
+     *
+     * The card is sized once, with the screen size at that time. This is correct because
+     * `InAppNotificationActivity` declares only `configChanges="keyboardHidden"`, so a rotation, resize or
+     * fold change recreates the activity and the fragment. If the activity starts to handle `orientation` or
+     * `screenSize` itself, the card must be sized again on such a change.
      */
     fun addHalfInterstitialPortraitLayoutListener(
         relativeLayout: RelativeLayout?,
@@ -110,6 +115,8 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
     /**
      * Sizes a half-interstitial card in landscape once it has been laid out. [isTabletInApp] is read at
      * layout time and says whether the in-app was made for tablets.
+     *
+     * Like the portrait helper, it sizes the card only once (see there for why this is enough).
      */
     fun addHalfInterstitialLandscapeLayoutListener(
         relativeLayout: RelativeLayout?,
