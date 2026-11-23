@@ -5,12 +5,15 @@ import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.Constant.Companion
 import io.mockk.every
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -109,8 +112,9 @@ class CleverTapFactoryTest : BaseTestCase() {
 
     @Test
     fun test_getCoreState_ReturnedObjectMustHaveNonNullInAppFCManagerInsideControllerManager(){
-        // Create instance first to avoid stackoverflow error
-        CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
+        // SDK-6254: InAppFCManager is built on the device-id barrier, which getCoreState posts to
+        // the per-account serial queue. MockCTExecutors runs that queue inline, so the manager is
+        // wired onto the returned CoreState by the time getCoreState() returns.
         mockkStatic(CTExecutorFactory::class) {
             every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(
                 cleverTapInstanceConfig
@@ -124,6 +128,32 @@ class CleverTapFactoryTest : BaseTestCase() {
     fun test_getCoreState_ReturnedObjectMustHaveNonNullNetworkManager(){
         val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
         assertNotNull(coreState.networkManager)
+    }
+
+    @Test
+    fun test_getCoreState_deviceScopedBuild_oneComponentFailing_doesNotSkipTheRest(){
+        // SDK-6254 (reviewer M2): the device-id barrier builds the stores and the frequency-cap
+        // managers as isolated steps. A failure in one (here: the in-app store fails to open) must
+        // NOT skip the others — on develop these were separate serial-queue tasks, so one throwing
+        // never stopped the rest. Reproduce the failure and assert the FC managers are still built.
+        val failingStoreProvider = spyk(StoreProvider.getInstance())
+        every {
+            failingStoreProvider.provideInAppStore(any(), any(), any(), any())
+        } throws RuntimeException("simulated storage error")
+
+        mockkStatic(CTExecutorFactory::class) {
+            mockkObject(StoreProvider.Companion) {
+                every { CTExecutorFactory.executors(any()) } returns MockCTExecutors(cleverTapInstanceConfig)
+                every { StoreProvider.getInstance() } returns failingStoreProvider
+
+                val coreState = CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, "12345")
+
+                // The failing component is null, but the independent ones after it are still built.
+                assertNull(coreState.storeRegistry.inAppStore)
+                assertNotNull(coreState.controllerManager.inAppFCManager)
+                assertNotNull(coreState.controllerManager.ndFCManager)
+            }
+        }
     }
 
     @Test
