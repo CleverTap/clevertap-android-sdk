@@ -54,7 +54,7 @@ class MediaPlayerRecyclerView : RecyclerView {
     private var playingHolder: CTInboxBaseMessageViewHolder? = null
     private var playingVideo: PlayingVideo? = null
 
-    /** True from [releasePlayer] until [onRestartPlayer]. */
+    /** True from [releasePlayer] until [onRestartPlayer] or until the list is attached to a window again. */
     private var released = false
 
     /**
