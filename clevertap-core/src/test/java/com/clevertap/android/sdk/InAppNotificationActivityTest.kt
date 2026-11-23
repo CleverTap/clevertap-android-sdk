@@ -60,8 +60,7 @@ class InAppNotificationActivityTest {
         every { coreState.inAppController } returns mockInAppController
         val cleverTapAPI = mockk<CleverTapAPI>(relaxed = true)
         every { cleverTapAPI.coreState } returns coreState
-        every { coreState.config } returns config
-        every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
+        every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
         // By default nothing is saved, so an in-app that is not in memory cannot be restored.
         every { mockInAppController.restoreDisplayedInApp(any(), any()) } answers {
             secondArg<InAppController.RestoredInAppListener>().onRestoreResult(null)
@@ -77,7 +76,7 @@ class InAppNotificationActivityTest {
     private fun inAppIntent(inAppId: String) =
         Intent(context, InAppNotificationActivity::class.java)
             .putExtra(Constants.INAPP_ID_KEY, inAppId)
-            .putExtra("config", config.accountId)
+            .putExtra("config", config)
 
     @Test
     fun `launchForInAppNotification sends only the in-app id and not the in-app object`() {
@@ -302,7 +301,7 @@ class InAppNotificationActivityTest {
     fun `activity closes without crashing when the SDK cannot be created for the restore`() {
         every { InAppController.getDisplayingInApp(any()) } returns null
         // After a process kill this call creates the SDK; a start-up error must not crash the screen.
-        every { CleverTapAPI.getGlobalInstance(any(), any()) } throws RuntimeException("start-up failed")
+        every { CleverTapAPI.instanceWithConfig(any(), any()) } throws RuntimeException("start-up failed")
 
         val activity = Robolectric.buildActivity(InAppNotificationActivity::class.java, inAppIntent("1120_test"))
             .create().get()

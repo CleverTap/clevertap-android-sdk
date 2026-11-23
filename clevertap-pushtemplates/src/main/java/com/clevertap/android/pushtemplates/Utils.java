@@ -277,17 +277,7 @@ public class Utils {
 
         CleverTapAPI instance;
         if (config != null) {
-            // Resolve the live instance by accountId rather than rebuilding it from the config
-            // snapshot in the notification extras (SDK-6254). The config is still passed in the
-            // extras for back-compat with notifications posted by older SDK versions.
-            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
-            if (instance == null) {
-                // Cold-start click before the account's persisted "instance:<id>" record flushed:
-                // getGlobalInstance can't rebuild from prefs, so fall back to the config carried in
-                // the notification extras. Guarantees the event still reaches its account (matches
-                // the pre-SDK-6254 delivery) instead of being silently dropped.
-                instance = CleverTapAPI.instanceWithConfig(context, config);
-            }
+            instance = CleverTapAPI.instanceWithConfig(context, config);
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
@@ -311,17 +301,7 @@ public class Utils {
 
         CleverTapAPI instance;
         if (config != null) {
-            // Resolve the live instance by accountId rather than rebuilding it from the config
-            // snapshot in the notification extras (SDK-6254). The config is still passed in the
-            // extras for back-compat with notifications posted by older SDK versions.
-            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
-            if (instance == null) {
-                // Cold-start click before the account's persisted "instance:<id>" record flushed:
-                // getGlobalInstance can't rebuild from prefs, so fall back to the config carried in
-                // the notification extras. Guarantees the event still reaches its account (matches
-                // the pre-SDK-6254 delivery) instead of being silently dropped.
-                instance = CleverTapAPI.instanceWithConfig(context, config);
-            }
+            instance = CleverTapAPI.instanceWithConfig(context, config);
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
@@ -348,17 +328,7 @@ public class Utils {
 
         CleverTapAPI instance;
         if (config != null) {
-            // Resolve the live instance by accountId rather than rebuilding it from the config
-            // snapshot in the notification extras (SDK-6254). The config is still passed in the
-            // extras for back-compat with notifications posted by older SDK versions.
-            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
-            if (instance == null) {
-                // Cold-start click before the account's persisted "instance:<id>" record flushed:
-                // getGlobalInstance can't rebuild from prefs, so fall back to the config carried in
-                // the notification extras. Guarantees the event still reaches its account (matches
-                // the pre-SDK-6254 delivery) instead of being silently dropped.
-                instance = CleverTapAPI.instanceWithConfig(context, config);
-            }
+            instance = CleverTapAPI.instanceWithConfig(context, config);
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
@@ -512,17 +482,7 @@ public class Utils {
     static void raiseNotificationClicked(Context context, Bundle extras, CleverTapInstanceConfig config) {
         CleverTapAPI instance;
         if (config != null) {
-            // Resolve the live instance by accountId rather than rebuilding it from the config
-            // snapshot in the notification extras (SDK-6254). The config is still passed in the
-            // extras for back-compat with notifications posted by older SDK versions.
-            instance = CleverTapAPI.getGlobalInstance(context, config.getAccountId());
-            if (instance == null) {
-                // Cold-start click before the account's persisted "instance:<id>" record flushed:
-                // getGlobalInstance can't rebuild from prefs, so fall back to the config carried in
-                // the notification extras. Guarantees the event still reaches its account (matches
-                // the pre-SDK-6254 delivery) instead of being silently dropped.
-                instance = CleverTapAPI.instanceWithConfig(context, config);
-            }
+            instance = CleverTapAPI.instanceWithConfig(context, config);
         } else {
             instance = CleverTapAPI.getDefaultInstance(context);
         }
