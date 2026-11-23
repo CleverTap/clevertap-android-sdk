@@ -63,7 +63,6 @@ public class CTInboxListViewFragment extends Fragment {
 
     String accountId;
 
-    private static final String VIDEO_STATES_KEY = "videoStates";
 
     boolean haveVideoPlayerSupport = VideoLibChecker.haveVideoPlayerSupport;
 
@@ -216,7 +215,7 @@ public class CTInboxListViewFragment extends Fragment {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
                 if (ownVideoStates != null) {
-                    mediaRecyclerView.restoreVideoStates(savedInstanceState.getBundle(VIDEO_STATES_KEY));
+                    mediaRecyclerView.restoreVideoStates(savedInstanceState.getBundle(CTInboxActivity.VIDEO_STATES_KEY));
                 }
             }
 
@@ -269,7 +268,7 @@ public class CTInboxListViewFragment extends Fragment {
             }
             mediaRecyclerView.rememberPlayingVideo(); // into the states the activity or this fragment keeps
             if (ownVideoStates != null) {
-                outState.putBundle(VIDEO_STATES_KEY, ownVideoStates.save());
+                outState.putBundle(CTInboxActivity.VIDEO_STATES_KEY, ownVideoStates.save());
             }
         }
 

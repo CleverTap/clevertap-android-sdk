@@ -309,8 +309,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         playingVideo = null
     }
 
-    /** Saves the place under the message the player was started for, not the row's current one. */
-    /** Saves the place of the video that is playing now into the shared states. */
+    /** Saves the place of the video that is playing now, under the message the player was started for. */
     fun rememberPlayingVideo() {
         val video = playingVideo ?: return
         val messageId = video.messageId ?: return

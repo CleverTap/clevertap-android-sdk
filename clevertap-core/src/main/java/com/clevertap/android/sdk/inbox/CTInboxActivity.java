@@ -9,7 +9,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
-import com.clevertap.android.sdk.customviews.InboxVideoStates;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.appcompat.widget.Toolbar;
@@ -26,6 +25,7 @@ import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.PushPermissionHandler;
 import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.customviews.InboxVideoStates;
 import com.google.android.material.tabs.TabLayout;
 
 import java.lang.ref.WeakReference;
@@ -66,7 +66,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     private PushPermissionHandler pushPermissionHandler;
 
-    private static final String VIDEO_STATES_KEY = "videoStates";
+    static final String VIDEO_STATES_KEY = "videoStates";
 
     private final InboxVideoStates videoStates = new InboxVideoStates();
 
