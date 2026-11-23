@@ -65,6 +65,7 @@ import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.ICleverTapLiveUpdateNotificationFactory;
+import com.clevertap.android.sdk.pushnotification.LiveUpdateBroadcast;
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.LiveUpdateRouter;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
@@ -946,6 +947,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task.execute("handleLiveUpdateDismissed", () -> {
             instance.getCoreState().getAnalyticsManager()
                     .raiseLiveUpdateLifecycleEvent(notification, Constants.LIVE_UPDATE_STATE_DISMISSED);
+            // Broadcast: unsubscribe on swipe only if the run opted in (wzrk_topic_unsub_on_dismiss).
+            if (LiveUpdateBroadcast.topic(notification) != null) {
+                instance.getCoreState().getPushProviders().getLiveUpdateBroadcastManager()
+                        .onDismissed(notification);
+            }
             return null;
         });
     }

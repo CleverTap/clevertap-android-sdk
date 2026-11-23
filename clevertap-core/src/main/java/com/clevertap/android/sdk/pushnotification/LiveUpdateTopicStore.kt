@@ -11,13 +11,15 @@ data class LiveUpdateTopicEntry(
     val activityId: String?,
     val accountId: String?,
     val subscribedAtSeconds: Long,
-    val expiresAtSeconds: Long
+    val expiresAtSeconds: Long,
+    /** A user swipe-away of the run's notification also unsubscribes (`wzrk_topic_unsub_on_dismiss`). */
+    val unsubscribeOnDismiss: Boolean = false
 )
 
 /**
  * Persists the broadcast topics this install is subscribed to. FCM topics are per install (not per
  * CleverTap account), so this is one store per process, keyed by topic. It is the source of truth
- * for "is this run still open" — an entry is removed exactly once, by End or expiry.
+ * for "is this run still open" — an entry is removed exactly once, by unsub, expiry or (when opted in) dismissal.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
@@ -29,6 +31,7 @@ class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
             .put(KEY_ACCOUNT_ID, entry.accountId)
             .put(KEY_SUBSCRIBED_AT, entry.subscribedAtSeconds)
             .put(KEY_EXPIRES_AT, entry.expiresAtSeconds)
+            .put(KEY_UNSUB_ON_DISMISS, entry.unsubscribeOnDismiss)
         prefs.edit().putString(entry.topic, json.toString()).apply()
     }
 
@@ -55,7 +58,8 @@ class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
             activityId = json.optString(KEY_ACTIVITY_ID).takeIf { it.isNotEmpty() },
             accountId = json.optString(KEY_ACCOUNT_ID).takeIf { it.isNotEmpty() },
             subscribedAtSeconds = json.optLong(KEY_SUBSCRIBED_AT),
-            expiresAtSeconds = json.optLong(KEY_EXPIRES_AT)
+            expiresAtSeconds = json.optLong(KEY_EXPIRES_AT),
+            unsubscribeOnDismiss = json.optBoolean(KEY_UNSUB_ON_DISMISS)
         )
     } catch (t: Throwable) {
         null
@@ -67,5 +71,6 @@ class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
         private const val KEY_ACCOUNT_ID = "acc"
         private const val KEY_SUBSCRIBED_AT = "s"
         private const val KEY_EXPIRES_AT = "e"
+        private const val KEY_UNSUB_ON_DISMISS = "d"
     }
 }

@@ -5,38 +5,32 @@ import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Constants
 
 /**
- * Pure payload reads for a broadcast-mode Live Update. Broadcast START arrives 1:1 on the device
- * token like any Live Update, but carries `wzrk_activityType = "1"` + the `wzrk_topic` on which the
- * run's later updates/end are delivered.
+ * Pure payload reads for broadcast topic subscription control. Deliberately independent of the Live
+ * Activity lifecycle keys (`wzrk_la`, `wzrk_la_event`): subscription is driven only by
+ * `wzrk_topic_action` + `wzrk_topic`, so the two concerns can share a push or travel separately.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 object LiveUpdateBroadcast {
-
-    /** True for a Live Update whose `wzrk_activityType` is "1". */
-    @JvmStatic
-    fun isBroadcast(extras: Bundle?): Boolean =
-        LiveUpdateRouter.isLiveUpdate(extras) &&
-            Constants.LIVE_UPDATE_ACTIVITY_TYPE_BROADCAST == extras?.getString(Constants.WZRK_LIVE_UPDATE_ACTIVITY_TYPE)
 
     @JvmStatic
     fun topic(extras: Bundle?): String? =
         extras?.getString(Constants.WZRK_LIVE_UPDATE_TOPIC)?.takeIf { it.isNotBlank() }
 
     @JvmStatic
-    fun isStart(extras: Bundle?): Boolean =
-        Constants.WZRK_LIVE_UPDATE_EVENT_START.equals(
-            extras?.getString(Constants.WZRK_LIVE_UPDATE_EVENT), ignoreCase = true
-        )
+    fun isSubscribe(extras: Bundle?): Boolean =
+        Constants.TOPIC_ACTION_SUBSCRIBE.equals(extras?.getString(Constants.WZRK_TOPIC_ACTION), ignoreCase = true)
 
     @JvmStatic
-    fun isEnd(extras: Bundle?): Boolean =
-        Constants.WZRK_LIVE_UPDATE_EVENT_END.equals(
-            extras?.getString(Constants.WZRK_LIVE_UPDATE_EVENT), ignoreCase = true
-        )
+    fun isUnsubscribe(extras: Bundle?): Boolean =
+        Constants.TOPIC_ACTION_UNSUBSCRIBE.equals(extras?.getString(Constants.WZRK_TOPIC_ACTION), ignoreCase = true)
+
+    @JvmStatic
+    fun unsubscribeOnDismiss(extras: Bundle?): Boolean =
+        "true".equals(extras?.getString(Constants.WZRK_TOPIC_UNSUB_ON_DISMISS), ignoreCase = true)
 
     /**
-     * Epoch seconds at which the Live Update must be removed. `dismissal_date` when valid, else the
-     * run's START (`wzrk_runId`, else `timestamp`, else [nowSeconds]) + 12h.
+     * Epoch seconds at which the subscription expires. `dismissal_date` when valid, else the run's
+     * START (`wzrk_runId`, else `timestamp`, else [nowSeconds]) + 12h.
      */
     @JvmStatic
     fun expiresAtSeconds(extras: Bundle?, nowSeconds: Long): Long {

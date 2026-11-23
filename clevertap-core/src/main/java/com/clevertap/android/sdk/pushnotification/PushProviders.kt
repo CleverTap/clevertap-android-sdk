@@ -134,6 +134,16 @@ class PushProviders internal constructor(
                 PushNotificationHandler.surfaceLiveUpdatePayload(extras)
             }
 
+            // Broadcast topic subscription control (wzrk_topic_action), independent of the Live
+            // Activity lifecycle. Acts at receipt; a pure control message stops here unrendered.
+            // Only pushes carrying wzrk_topic reach the manager, so nothing else loads its store.
+            if (LiveUpdateBroadcast.topic(extras) != null) {
+                if (!liveUpdateBroadcastManager.onReceived(extras)) {
+                    return
+                }
+                scheduleBroadcastExpiryIfSubscribe(context, extras)
+            }
+
             val isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equals("true", ignoreCase = true)
             if (isSilent) {
                 analyticsManager.pushNotificationViewedEvent(extras)
@@ -147,16 +157,6 @@ class PushProviders internal constructor(
                     config.logger.debug(config.accountId, "Push Notification already rendered, not showing again")
                     return
                 }
-            }
-
-            // Broadcast Live Update control messages (START subscribes, End unsubscribes) act at
-            // receipt, independent of rendering. Only pushes carrying wzrk_topic reach the manager,
-            // so 1:1 Live Updates never load its store.
-            if (isLiveUpdate && LiveUpdateBroadcast.topic(extras) != null) {
-                if (!liveUpdateBroadcastManager.onReceived(extras)) {
-                    return
-                }
-                scheduleBroadcastExpiryIfStart(context, extras)
             }
 
             // Live Update pushes: a client-supplied factory renders them unless the
@@ -1114,15 +1114,13 @@ class PushProviders internal constructor(
     }
 
     /**
-     * Opt-in ([CleverTapAPI.setLiveUpdateBroadcastUnsubscribeWorkerEnabled]): a broadcast START
+     * Opt-in ([CleverTapAPI.setLiveUpdateBroadcastUnsubscribeWorkerEnabled]): a `sub` message
      * schedules its topic unsubscription at `dismissal_date` (else START + 12h). Off by default — a
      * late topic push is then caught at receipt instead. dismissal_date governs only the topic
      * subscription; the notification itself is untouched.
      */
-    private fun scheduleBroadcastExpiryIfStart(context: Context, extras: Bundle) {
-        if (!CleverTapAPI.isLiveUpdateBroadcastUnsubscribeWorkerEnabled() ||
-            !LiveUpdateBroadcast.isStart(extras) || !LiveUpdateBroadcast.isBroadcast(extras)
-        ) {
+    private fun scheduleBroadcastExpiryIfSubscribe(context: Context, extras: Bundle) {
+        if (!CleverTapAPI.isLiveUpdateBroadcastUnsubscribeWorkerEnabled() || !LiveUpdateBroadcast.isSubscribe(extras)) {
             return
         }
         val topic = LiveUpdateBroadcast.topic(extras) ?: return
