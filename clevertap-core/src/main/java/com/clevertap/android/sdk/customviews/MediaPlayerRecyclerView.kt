@@ -226,6 +226,12 @@ class MediaPlayerRecyclerView : RecyclerView {
         handle.release()
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // The list can be moved to another parent without a lifecycle change, which released the player
+        released = false
+    }
+
     override fun onDetachedFromWindow() {
         // Backs up the fragment: a page removed from the pager never reaches onDestroy().
         releasePlayer()

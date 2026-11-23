@@ -731,6 +731,46 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
     }
 
+    @Test
+    fun `a list that is attached again starts a video after it was released on detach`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        list.releasePlayer() // what onDetachedFromWindow does
+
+        val activity = Robolectric.buildActivity(android.app.Activity::class.java).setup().get()
+        val parent = FrameLayout(activity)
+        activity.setContentView(parent)
+        parent.addView(list) // the list is moved to another parent: it attaches to a window again
+        parent.measure(
+            MeasureSpec.makeMeasureSpec(LIST_WIDTH, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(LIST_HEIGHT, MeasureSpec.EXACTLY)
+        )
+        parent.layout(0, 0, LIST_WIDTH, LIST_HEIGHT)
+        list.measure(
+            MeasureSpec.makeMeasureSpec(LIST_WIDTH, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(LIST_HEIGHT, MeasureSpec.EXACTLY)
+        )
+        list.layout(0, 0, LIST_WIDTH, LIST_HEIGHT)
+        list.playVideo()
+
+        assertTrue("the list is attached to a window", list.isAttachedToWindow)
+        assertEquals("rows that got the player, all holders: " + adapter.holders.map { it.attachCount }, 2, adapter.holders.sumOf { it.attachCount })
+        verify(exactly = 2) { handle.initExoplayer(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a list that is released and was never attached again shows no video`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        list.playVideo()
+        list.releasePlayer()
+
+        list.playVideo()
+
+        assertEquals(1, row.attachCount)
+    }
+
     private companion object {
 
         const val LIST_WIDTH = 1080
