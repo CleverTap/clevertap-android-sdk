@@ -164,6 +164,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static volatile ICleverTapLiveUpdateNotificationFactory sLiveUpdateNotificationFactory;
 
+    private static volatile boolean sLiveUpdateBroadcastUnsubscribeWorkerEnabled = false;
+
     private static final HashMap<String,NotificationRenderedListener> sNotificationRenderedListenerMap = new HashMap<>();
 
     private final Context context;
@@ -944,9 +946,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task.execute("handleLiveUpdateDismissed", () -> {
             instance.getCoreState().getAnalyticsManager()
                     .raiseLiveUpdateLifecycleEvent(notification, Constants.LIVE_UPDATE_STATE_DISMISSED);
-            // Broadcast mode: a dismissed run no longer needs its FCM topic.
-            instance.getCoreState().getPushProviders().getLiveUpdateBroadcastManager()
-                    .onDismissed(notification);
             return null;
         });
     }
@@ -3571,6 +3570,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @Nullable
     public static ICleverTapLiveUpdateNotificationFactory getLiveUpdateNotificationFactory() {
         return sLiveUpdateNotificationFactory;
+    }
+
+    /**
+     * Opt-in: when enabled, each broadcast Live Update START schedules a WorkManager job that
+     * unsubscribes this install from the run's FCM topic at its {@code dismissal_date}, even if the
+     * app is not running. Disabled by default: the topic is then unsubscribed by its End, or when a
+     * push for the expired run (or the next broadcast START) arrives. No effect on SDK init.
+     * Call in {@code Application.onCreate}.
+     */
+    public static void setLiveUpdateBroadcastUnsubscribeWorkerEnabled(boolean enabled) {
+        sLiveUpdateBroadcastUnsubscribeWorkerEnabled = enabled;
+    }
+
+    public static boolean isLiveUpdateBroadcastUnsubscribeWorkerEnabled() {
+        return sLiveUpdateBroadcastUnsubscribeWorkerEnabled;
     }
 
     /** @noinspection unused*/

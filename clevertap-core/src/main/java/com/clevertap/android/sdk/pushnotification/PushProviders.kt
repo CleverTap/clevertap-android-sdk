@@ -149,6 +149,16 @@ class PushProviders internal constructor(
                 }
             }
 
+            // Broadcast Live Update control messages (START subscribes, End unsubscribes) act at
+            // receipt, independent of rendering. Only pushes carrying wzrk_topic reach the manager,
+            // so 1:1 Live Updates never load its store.
+            if (isLiveUpdate && LiveUpdateBroadcast.topic(extras) != null) {
+                if (!liveUpdateBroadcastManager.onReceived(extras)) {
+                    return
+                }
+                scheduleBroadcastExpiryIfStart(context, extras)
+            }
+
             // Live Update pushes: a client-supplied factory renders them unless the
             // payload has a pt_id (see below).
             // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
@@ -657,9 +667,6 @@ class PushProviders internal constructor(
         task.execute("asyncFindAvailableCTPushProviders") {
             findAvailableCTPushProviders()
             findNonEnabledPushTypes()
-            // Catch up on broadcast topics whose dismissal_date passed while the expiry worker
-            // could not run (force-stop, worker dropped).
-            liveUpdateBroadcastManager.pruneExpired()
         }
     }
 
@@ -1107,11 +1114,15 @@ class PushProviders internal constructor(
     }
 
     /**
-     * A broadcast START schedules its topic unsubscription at `dismissal_date` (else START + 12h).
-     * dismissal_date governs only the topic subscription — the notification itself is untouched.
+     * Opt-in ([CleverTapAPI.setLiveUpdateBroadcastUnsubscribeWorkerEnabled]): a broadcast START
+     * schedules its topic unsubscription at `dismissal_date` (else START + 12h). Off by default — a
+     * late topic push is then caught at receipt instead. dismissal_date governs only the topic
+     * subscription; the notification itself is untouched.
      */
     private fun scheduleBroadcastExpiryIfStart(context: Context, extras: Bundle) {
-        if (!LiveUpdateBroadcast.isStart(extras) || !LiveUpdateBroadcast.isBroadcast(extras)) {
+        if (!CleverTapAPI.isLiveUpdateBroadcastUnsubscribeWorkerEnabled() ||
+            !LiveUpdateBroadcast.isStart(extras) || !LiveUpdateBroadcast.isBroadcast(extras)
+        ) {
             return
         }
         val topic = LiveUpdateBroadcast.topic(extras) ?: return
@@ -1159,9 +1170,6 @@ class PushProviders internal constructor(
             // first-render tracking. See LiveUpdateLifecycle.
             val state = LiveUpdateLifecycle.state(extras.getString(Constants.WZRK_LIVE_UPDATE_EVENT))
             analyticsManager.raiseLiveUpdateLifecycleEvent(extras, state)
-            // Broadcast mode: subscribe to the run's topic on START, unsubscribe on End.
-            liveUpdateBroadcastManager.onRendered(extras)
-            scheduleBroadcastExpiryIfStart(context, extras)
         }
 
         val ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE)

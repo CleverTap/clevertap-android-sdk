@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Fires at a broadcast Live Update's `dismissal_date` and unsubscribes this install from the run's
- * FCM topic. A no-op when End or Dismiss already closed the run. Inexact by design (Doze/standby
- * may delay it); PushProviders also sweeps overdue runs at SDK init and on every broadcast START.
+ * FCM topic. Opt-in via CleverTapAPI.setLiveUpdateBroadcastUnsubscribeWorkerEnabled. A no-op when
+ * End already closed the run. Inexact by design (Doze/standby may delay it).
  */
 class CTLiveUpdateExpiryWork(context: Context, params: WorkerParameters) : Worker(context, params) {
 
