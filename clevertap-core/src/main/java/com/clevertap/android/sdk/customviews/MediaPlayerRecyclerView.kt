@@ -197,15 +197,6 @@ class MediaPlayerRecyclerView : RecyclerView {
         stopVideo()
     }
 
-    /** Where every video was left, to give to a new list (for example after a rotation). */
-    fun saveVideoStates(): Bundle {
-        rememberPlayingVideo()
-        return states.save()
-    }
-
-    /** Takes back what [saveVideoStates] returned. A null or empty bundle changes nothing. */
-    fun restoreVideoStates(saved: Bundle?) = states.restore(saved)
-
     /** Stops the video and releases the player; the next [playVideo] after a restart creates a new one. */
     fun releasePlayer() {
         released = true

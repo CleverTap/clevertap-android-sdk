@@ -598,7 +598,6 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
 
         fragment.onViewStateRestored(saved)
 
-        verify(exactly = 0) { media.restoreVideoStates(any()) }
         assertEquals(null, activity.videoStates.stateOf("m1", "url1"))
     }
 

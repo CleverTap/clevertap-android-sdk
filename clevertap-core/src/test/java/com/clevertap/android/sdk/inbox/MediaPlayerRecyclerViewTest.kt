@@ -119,6 +119,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     private lateinit var surface: View
     private lateinit var list: MediaPlayerRecyclerView
     private lateinit var adapter: VideoRowsAdapter
+    private lateinit var states: InboxVideoStates
 
     @Before
     @Throws(Exception::class)
@@ -132,7 +133,8 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     /** Lays the list out with [rows] video rows; three of them fit on screen. */
     private fun showList(rows: Int, videoPositions: Set<Int>? = null) {
         adapter = VideoRowsAdapter(appCtx, rows, videoPositions)
-        list = MediaPlayerRecyclerView(appCtx, handle).apply {
+        states = InboxVideoStates()
+        list = MediaPlayerRecyclerView(appCtx, handle, states).apply {
             layoutManager = LinearLayoutManager(appCtx)
             adapter = this@MediaPlayerRecyclerViewTest.adapter
             measure(
@@ -141,6 +143,12 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
             )
             layout(0, 0, LIST_WIDTH, LIST_HEIGHT)
         }
+    }
+
+    /** What the list would give to a new screen: the places of all videos, including the one playing now. */
+    private fun savedStates(): Bundle {
+        list.rememberPlayingVideo()
+        return states.save()
     }
 
     private fun rowAt(position: Int) = list.findViewHolderForAdapterPosition(position) as VideoRowHolder
@@ -371,11 +379,11 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
         every { handle.currentPositionMs() } returns 12_000L
         every { handle.playerVolume() } returns 1f
-        val saved = list.saveVideoStates() // the video is still playing
+        val saved = savedStates() // the video is still playing
         list.releasePlayer() // the old list goes away
 
         showList(rows = 6, videoPositions = setOf(0)) // what a rotation builds
-        list.restoreVideoStates(saved)
+        states.restore(saved)
         list.playVideo()
 
         verify(exactly = 1) { handle.setPlayerVolume(1f) }
@@ -388,7 +396,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
         every { handle.currentPositionMs() } returns 7_000L
         every { handle.playerVolume() } returns 1f
-        val saved = list.saveVideoStates()
+        val saved = savedStates()
 
         val parcel = Parcel.obtain()
         val restored: Bundle?
@@ -401,7 +409,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         }
         list.releasePlayer() // the old list goes away
         showList(rows = 6, videoPositions = setOf(0))
-        list.restoreVideoStates(restored)
+        states.restore(restored)
         list.playVideo()
 
         verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 7_000L) }
@@ -419,7 +427,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         every { handle.currentPositionMs() } returns 9_000L
         every { handle.playerVolume() } returns 0f
 
-        val saved = list.saveVideoStates()
+        val saved = savedStates()
 
         val stopped = saved.getBundle("message0")
         val playing = saved.getBundle("message3")
@@ -442,7 +450,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         // The row now shows another message while it is still attached and playing.
         row.messageIdValue = "another-message"
         row.mediaUrlValue = "another-url"
-        val saved = list.saveVideoStates()
+        val saved = savedStates()
 
         val started = saved.getBundle("message0")
         assertNotNull("the place was not saved for the message that was playing", started)
@@ -455,8 +463,8 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     fun `restoring no states keeps every video starting muted from the beginning`() {
         showList(rows = 1)
 
-        list.restoreVideoStates(null)
-        list.restoreVideoStates(Bundle())
+        states.restore(null)
+        states.restore(Bundle())
         list.playVideo()
 
         verify(exactly = 1) { handle.setPlayerVolume(0f) }
@@ -595,7 +603,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
             putBundle("message1", Bundle()) // has no media url
         }
 
-        list.restoreVideoStates(broken)
+        states.restore(broken)
         list.playVideo()
 
         verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
@@ -608,7 +616,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         list.playVideo()
         every { handle.currentPositionMs() } returns 9_000L
 
-        val saved = list.saveVideoStates()
+        val saved = savedStates()
 
         assertTrue(saved.isEmpty)
         verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
