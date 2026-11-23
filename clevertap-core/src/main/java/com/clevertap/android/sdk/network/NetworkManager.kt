@@ -342,6 +342,7 @@ internal class NetworkManager constructor(
                     requestBody,
                     endpointId
                 )
+                deviceInfo.onHeaderSent(queueHeader)
             }
             return networkCall(eventGroup, requestBody, headersDoneListener, isUserSwitchFlush)
         } catch (e: Exception) {

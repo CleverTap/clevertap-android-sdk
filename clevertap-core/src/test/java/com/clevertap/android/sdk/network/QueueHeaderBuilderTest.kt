@@ -69,9 +69,25 @@ class QueueHeaderBuilderTest {
         builder.buildHeader(null)
 
         verifyOrder {
-            deviceInfo.refreshPushStatus()
+            deviceInfo.refreshPushStatus(any())
             deviceInfo.appLaunchedFields
         }
+    }
+
+    @Test
+    fun `buildHeader leaves out the launch fields once a request has delivered them`() {
+        every { deviceInfo.appLaunchedFields } answers {
+            JSONObject().put("Make", "Google").put("ram", 8).put("cpu", 8).put("exitRsn", 6)
+        }
+
+        val before = builder.buildHeader(null)!!.getJSONObject("af")
+        every { deviceInfo.isLaunchFieldsSent } returns true
+        val after = builder.buildHeader(null)!!.getJSONObject("af")
+
+        assertEquals(8, before.getInt("ram"))
+        assertEquals(6, before.getInt("exitRsn"))
+        listOf("ram", "cpu", "exitRsn").forEach { assertFalse(after.has(it), "$it should be left out") }
+        assertEquals("Google", after.getString("Make"))
     }
 
     @Test

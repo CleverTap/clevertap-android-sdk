@@ -65,9 +65,16 @@ class DeviceSignalsTest : BaseTestCase() {
 
     @Test
     @Config(sdk = [33])
+    fun `battery level is left out when the device does not report it`() {
+        // Nothing set on the shadow, so the capacity property is unsupported.
+        assertNull(DeviceState.read(appCtx, Configuration()).batt)
+    }
+
+    @Test
+    @Config(sdk = [33])
     fun `read returns battery, data saver and bold text`() {
         val battery = shadowOf(appCtx.getSystemService(Context.BATTERY_SERVICE) as BatteryManager)
-        battery.setIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY, 47)
+        battery.setLongProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY, 47)
         appCtx.sendStickyBroadcast(
             Intent(Intent.ACTION_BATTERY_CHANGED).putExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_FULL)
         )

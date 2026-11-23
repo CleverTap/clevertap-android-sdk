@@ -6,6 +6,8 @@ import android.content.res.Configuration
 import android.os.PowerManager
 import android.provider.Settings
 import com.clevertap.android.shared.test.BaseTestCase
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -21,6 +23,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @RunWith(RobolectricTestRunner::class)
 class DeviceStateTest : BaseTestCase() {
+
+    // The pending count is shared by all tests, so a read left over from one would skew the next.
+    @Before
+    @After
+    fun waitForReads() = awaitNoPendingReads()
 
     @Test
     fun `thermalLevel maps the seven android statuses onto the four ios states`() {
@@ -164,16 +171,23 @@ class DeviceStateTest : BaseTestCase() {
         val finished = CountDownLatch(1)
         var interrupted = true
 
+        val started = CountDownLatch(1)
+
         // Spins like a system call that never looks at the interrupt flag.
-        val result = readOrNull("stuck read", timeoutMs = 100) {
+        val read = startRead("stuck read", timeoutMs = 100) {
+            started.countDown()
             while (!release.get()) Thread.yield()
             interrupted = Thread.currentThread().isInterrupted
             finished.countDown()
             1
         }
-
-        release.set(true)
-        assertNull(result)
+        try {
+            // A read cancelled while still queued never runs, so wait for it to start before timing it out.
+            assertTrue(started.await(5, TimeUnit.SECONDS))
+            assertNull(read.get())
+        } finally {
+            release.set(true)
+        }
         assertTrue(finished.await(5, TimeUnit.SECONDS))
         assertFalse(interrupted)
     }
@@ -216,4 +230,9 @@ class DeviceStateTest : BaseTestCase() {
     private fun configWithNight(night: Int) = Configuration().apply {
         uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or night
     }
+}
+
+internal fun awaitNoPendingReads() {
+    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+    while (pendingReads.get() > 0 && System.nanoTime() < deadline) Thread.sleep(5)
 }

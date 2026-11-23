@@ -18,6 +18,7 @@ import android.graphics.Insets;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -101,6 +103,9 @@ public class DeviceInfo {
 
         private final String locale;
 
+        // True when a read timed out, so its values here are fallbacks and not what the device reported.
+        private final boolean unfinished;
+
         DeviceCachedInfo() {
             // One read per system service. They use only DeviceInfo fields, not this object's, so starting them
             // here is safe.
@@ -138,6 +143,9 @@ public class DeviceInfo {
             dpi = windowSize.localDpi;
 
             appBucket = bucketRead != null ? bucketRead.get() : null;
+
+            unfinished = packageRead.getUnfinished() || telephonyRead.getUnfinished() || windowRead.getUnfinished()
+                    || (bucketRead != null && bucketRead.getUnfinished());
         }
 
         // One getPackageInfo for both version values, plus the feature lookups, all on PackageManager.
@@ -421,7 +429,15 @@ public class DeviceInfo {
 
     private boolean adIdRun = false;
 
-    private DeviceCachedInfo cachedInfo;
+    private static final int READ_RETRIES = 2;
+
+    private static final long READ_RETRY_GAP_MS = 5_000L;
+
+    private volatile DeviceCachedInfo cachedInfo;
+
+    private final AtomicInteger cachedInfoRetriesLeft = new AtomicInteger(READ_RETRIES);
+
+    private volatile long cachedInfoLastReadMs;
 
     private final CleverTapInstanceConfig config;
 
@@ -464,6 +480,13 @@ public class DeviceInfo {
 
     // Can't change while the app runs, so read once off the main thread at init.
     private volatile DeviceSpecs deviceSpecs;
+
+    private final AtomicInteger deviceSpecsRetriesLeft = new AtomicInteger(READ_RETRIES);
+
+    private volatile long deviceSpecsLastReadMs;
+
+    // Device id the launch fields (CTJsonConverter.LAUNCH_AF_KEYS) were delivered for, null if not yet.
+    private volatile String launchFieldsSentFor;
 
     /**
      * Returns the integer identifier for the default app icon.
@@ -646,18 +669,29 @@ public class DeviceInfo {
     }
 
     /**
-     * Wifi, radio, bluetooth, metered and data saver state, read live for each af build. One read for all,
-     * so the values can't disagree. Null if it didn't finish.
+     * Wifi, radio, bluetooth, metered and data saver state, read live for each af build. Metered and data
+     * saver are new, so they get their own read and a slow one can't drop wifi, radio and bluetooth.
      */
-    @Nullable
+    @NonNull
     public LiveNetworkInfo getLiveNetworkInfo() {
-        return DeviceStateKt.existingReadOrNull("network info", () -> new LiveNetworkInfo(
-                DeviceStateKt.catchOrNull("wifi", this::readWifiConnected),
-                DeviceStateKt.catchOrNull("radio", this::readNetworkType),
-                DeviceStateKt.catchOrNull("bluetooth state", this::readBluetoothEnabled),
-                DeviceStateKt.catchOrNull("metered network", () -> DeviceState.readMetered(context)),
-                DeviceStateKt.catchOrNull("data saver", () -> DeviceState.readDataSaver(context))
-        ));
+        DeviceRead<LiveNetworkInfo> existingRead = DeviceStateKt.startExistingRead("network info",
+                () -> new LiveNetworkInfo(
+                        DeviceStateKt.catchOrNull("wifi", this::readWifiConnected),
+                        DeviceStateKt.catchOrNull("radio", this::readNetworkType),
+                        DeviceStateKt.catchOrNull("bluetooth state", this::readBluetoothEnabled),
+                        null, null));
+        DeviceRead<LiveNetworkInfo> addedRead = DeviceStateKt.startRead("metered and data saver",
+                () -> new LiveNetworkInfo(null, null, null,
+                        DeviceStateKt.catchOrNull("metered network", () -> DeviceState.readMetered(context)),
+                        DeviceStateKt.catchOrNull("data saver", () -> DeviceState.readDataSaver(context))));
+        LiveNetworkInfo existing = existingRead.get();
+        LiveNetworkInfo added = addedRead.get();
+        return new LiveNetworkInfo(
+                existing != null ? existing.wifi : null,
+                existing != null ? existing.radio : null,
+                existing != null ? existing.bluetoothEnabled : null,
+                added != null ? added.metered : null,
+                added != null ? added.lowData : null);
     }
 
     public static class LiveNetworkInfo {
@@ -861,7 +895,7 @@ public class DeviceInfo {
         return lastExit != null ? lastExit.getImportance() : null;
     }
 
-    /** AnrTypes code on the last exit record, API 37 and up. The system can attach it to any exit reason. */
+    /** AnrTypes code on the last exit record, API 37 and up. Only set when that exit was an ANR. */
     @Nullable
     public Integer getLastAnrType() {
         DeviceSpecs.Anr anr = getLastAnr();
@@ -886,6 +920,21 @@ public class DeviceInfo {
         return lastExit != null ? lastExit.getAnr() : null;
     }
 
+    /** True once a request has delivered the launch fields for the current device id, so headers can drop them. */
+    public boolean isLaunchFieldsSent() {
+        String deviceId = getDeviceID();
+        return deviceId != null && deviceId.equals(launchFieldsSentFor);
+    }
+
+    /** Call when a request with this header succeeded. A failed request leaves the fields in the next header. */
+    public void onHeaderSent(@Nullable JSONObject header) {
+        JSONObject appFields = header != null ? header.optJSONObject("af") : null;
+        // ram comes from the same read as the last exit, so with it present that read had finished.
+        if (appFields != null && appFields.has("ram") && !getDeviceSpecs().getUnfinished()) {
+            launchFieldsSentFor = header.optString("g", null);
+        }
+    }
+
     private DeviceSpecs getDeviceSpecs() {
         DeviceSpecs specs = deviceSpecs;
         if (specs == null) {
@@ -896,8 +945,24 @@ public class DeviceInfo {
             // Off the main thread, reading twice is harmless.
             specs = DeviceSpecs.read(context);
             deviceSpecs = specs;
+            deviceSpecsLastReadMs = SystemClock.elapsedRealtime();
+        } else if (specs.getUnfinished() && canRetryRead(deviceSpecsRetriesLeft, deviceSpecsLastReadMs)) {
+            // Same as cached info, a timed out read is not kept for the session.
+            deviceSpecsLastReadMs = SystemClock.elapsedRealtime();
+            DeviceSpecs retried = DeviceSpecs.read(context);
+            if (!retried.getUnfinished()) {
+                deviceSpecs = retried;
+                specs = retried;
+            }
         }
         return specs;
+    }
+
+    // Off the main thread only, a few times and spaced out, so retries can't stack waits in one header.
+    private static boolean canRetryRead(AtomicInteger retriesLeft, long lastReadMs) {
+        return Looper.myLooper() != Looper.getMainLooper()
+                && SystemClock.elapsedRealtime() - lastReadMs >= READ_RETRY_GAP_MS
+                && retriesLeft.get() > 0 && retriesLeft.getAndDecrement() > 0;
     }
 
     /**
@@ -946,10 +1011,9 @@ public class DeviceInfo {
         }
     }
 
-    /** Re-reads only push permission, so pushStatus matches ddnd in the same header. */
-    @WorkerThread
-    public void refreshPushStatus() {
-        Integer pushStatus = DeviceState.readPushStatus(context);
+    /** Stores the notification setting the header read for ddnd, so pushStatus matches it without a second read. */
+    public void refreshPushStatus(boolean notificationsEnabled) {
+        Integer pushStatus = DeviceState.pushStatus(notificationsEnabled);
         synchronized (deviceStateLock) {
             latestPushStatus = pushStatus;
             pushStatusGeneration++;
@@ -964,7 +1028,8 @@ public class DeviceInfo {
         return activityConfiguration == null ? state : state.withDisplay(activityConfiguration);
     }
 
-    private DeviceState getDeviceState() {
+    @NonNull
+    public DeviceState getDeviceState() {
         DeviceState state = deviceState;
         if (state != null) {
             return state;
@@ -1029,21 +1094,6 @@ public class DeviceInfo {
         taskDeviceSpecs.execute("initDeviceSpecs", () -> {
             getDeviceSpecs();
             return null;
-        });
-
-        Task<String> task = CTExecutorFactory.executors(config).ioTask();
-        // callback on main thread
-        task.addOnSuccessListener(deviceId -> {
-            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
-                    "DeviceID initialized successfully!" + Thread.currentThread());
-            // No need to put getDeviceID() on background thread because prefs already loaded
-            CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(deviceId);
-        });
-        task.execute("initDeviceID", new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return initDeviceID(cleverTapID);
-            }
         });
     }
 
@@ -1203,10 +1253,32 @@ public class DeviceInfo {
     }
 
     private DeviceCachedInfo getDeviceCachedInfo() {
-        if (cachedInfo == null) {
-            cachedInfo = new DeviceCachedInfo();
+        DeviceCachedInfo info = cachedInfo;
+        if (info == null) {
+            info = new DeviceCachedInfo();
+            cachedInfo = info;
+            cachedInfoLastReadMs = SystemClock.elapsedRealtime();
+        } else if (info.unfinished) {
+            info = retryCachedInfo(info);
         }
-        return cachedInfo;
+        return info;
+    }
+
+    // A timed out read left fallbacks like a 0 window size. Read again and keep the result only if nothing
+    // timed out, so a slow start is not cached for good.
+    private DeviceCachedInfo retryCachedInfo(DeviceCachedInfo info) {
+        if (!canRetryRead(cachedInfoRetriesLeft, cachedInfoLastReadMs)) {
+            return info;
+        }
+        cachedInfoLastReadMs = SystemClock.elapsedRealtime();
+        DeviceCachedInfo retried = new DeviceCachedInfo();
+        if (retried.unfinished) {
+            return info;
+        }
+        // The count is saved to preferences async, so the one in memory can be ahead of what was just read.
+        retried.localInAppCount = Math.max(retried.localInAppCount, info.localInAppCount);
+        cachedInfo = retried;
+        return retried;
     }
 
     private String getDeviceIdStorageKey() {

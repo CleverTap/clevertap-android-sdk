@@ -15,6 +15,7 @@ import android.net.ConnectivityManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Looper
+import androidx.annotation.VisibleForTesting
 import android.os.PowerManager
 import android.provider.Settings
 import java.util.concurrent.Callable
@@ -52,7 +53,8 @@ private const val MAX_PENDING_READS = 64
 private val readExecutor: Executor = Dispatchers.IO.limitedParallelism(MAX_PARALLEL_READS).asExecutor()
 
 // Reads started and not yet finished. Capped so reads queued behind stuck ones can't pile up.
-private val pendingReads = AtomicInteger()
+@VisibleForTesting
+internal val pendingReads = AtomicInteger()
 
 /**
  * A read running on readExecutor. Start the slow reads of one snapshot before getting any of them,
@@ -65,9 +67,17 @@ internal class DeviceRead<T> internal constructor(
     private val startNanos: Long
 ) {
 
+    // True when the read timed out or was skipped, not when it failed, so the caller can try it again.
+    @Volatile
+    var unfinished = false
+        private set
+
     /** Null if the read failed or ran past its timeout, counted from [startRead], so its af key is left out. */
     fun get(): T? {
-        if (future == null) return null
+        if (future == null) {
+            unfinished = true
+            return null
+        }
         return try {
             val waitedNanos = System.nanoTime() - startNanos
             val leftNanos = (TimeUnit.MILLISECONDS.toNanos(timeoutMs) - waitedNanos).coerceAtLeast(0L)
@@ -76,7 +86,10 @@ internal class DeviceRead<T> internal constructor(
             // No interrupt. The thread is Dispatchers.IO's, and the flag would stay set for its next task.
             future.cancel(false)
             when (t) {
-                is TimeoutException -> Logger.v("Reading $name for the app fields timed out after $timeoutMs ms, leaving it out")
+                is TimeoutException -> {
+                    unfinished = true
+                    Logger.v("Reading $name for the app fields timed out after $timeoutMs ms, leaving it out")
+                }
                 is InterruptedException -> {
                     Thread.currentThread().interrupt()
                     Logger.v("Interrupted while reading $name for the app fields")
@@ -207,10 +220,12 @@ internal data class DeviceState(
             boldText = boldText(configuration)
         )
 
-        /** Reads only push permission. Makes a system call, so call it off the main thread. */
+        /** Null below API 24, where the framework can't report the notification setting. */
         @JvmStatic
-        fun readPushStatus(context: Context): Int? =
-            readOrNull("notification permission") { queryPushStatus(context) }
+        fun pushStatus(notificationsEnabled: Boolean): Int? {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return null
+            return if (notificationsEnabled) PUSH_STATUS_ALLOWED else PUSH_STATUS_DENIED
+        }
 
         /** Maps Android's 7 thermal statuses to the iOS 0 to 3 scale (nominal, fair, serious, critical). */
         @JvmStatic
@@ -286,7 +301,10 @@ internal data class DeviceState(
         private fun readBattery(context: Context): BatteryValues = BatteryValues(
             batt = catchOrNull("battery level") {
                 val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
-                batteryManager?.let { batteryBand(it.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)) }
+                // Not getIntProperty, which returns 0 for an unsupported property when the app targets below API 28.
+                batteryManager?.getLongProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                    ?.takeIf { it in 0..100 }
+                    ?.let { batteryBand(it.toInt()) }
             },
             chg = catchOrNull("charging state") { readCharging(context) }
         )
@@ -299,7 +317,7 @@ internal data class DeviceState(
         private fun queryPushStatus(context: Context): Int? {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return null
             val notificationManager = context.getSystemService(NotificationManager::class.java) ?: return null
-            return if (notificationManager.areNotificationsEnabled()) PUSH_STATUS_ALLOWED else PUSH_STATUS_DENIED
+            return pushStatus(notificationManager.areNotificationsEnabled())
         }
 
         // Last battery broadcast, no receiver registered. isCharging() lagged on the emulator, this didn't.
@@ -344,13 +362,15 @@ internal data class DeviceSpecs(
     val ram: Int?,
     val cpu: Int?,
     val instSrc: String?,
-    val lastExit: LastExit? = null
+    val lastExit: LastExit? = null,
+    // True when a read timed out, so DeviceInfo reads again instead of keeping this for the session.
+    val unfinished: Boolean = false
 ) {
 
     /** How this process last died, from ApplicationExitInfo. Its REASON_ and IMPORTANCE_ codes are sent as is. */
     data class LastExit(val reason: Int, val status: Int, val importance: Int, val anr: Anr? = null)
 
-    /** From ApplicationExitInfo.AnrInfo, which the system can attach to any exit reason. AnrTypes code sent as is. */
+    /** From ApplicationExitInfo.AnrInfo, read only for REASON_ANR. AnrTypes code sent as is. */
     data class Anr(val type: Int, val timeoutMs: Long, val userPerceptible: Boolean)
 
     companion object {
@@ -373,12 +393,14 @@ internal data class DeviceSpecs(
             }
             val instSrc = startRead("install source") { readInstaller(context) }
             val activityValues = activity.get()
+            val installer = instSrc.get()
             return DeviceSpecs(
                 ram = activityValues?.first,
                 // In process, no system service call, so no need for a read thread.
                 cpu = Runtime.getRuntime().availableProcessors(),
-                instSrc = instSrc.get(),
-                lastExit = activityValues?.second
+                instSrc = installer,
+                lastExit = activityValues?.second,
+                unfinished = activity.unfinished || instSrc.unfinished
             )
         }
 
@@ -399,6 +421,8 @@ internal data class DeviceSpecs(
 
         private fun readAnr(exitInfo: ApplicationExitInfo): Anr? {
             if (Build.VERSION.SDK_INT < API_ANR_INFO) return null
+            // The docs say it is set only for REASON_ANR, but an Android 17 emulator also set it on other exits.
+            if (exitInfo.reason != ApplicationExitInfo.REASON_ANR) return null
             return exitInfo.anrInfo?.let { Anr(it.anrType, it.timeoutMillis, it.isUserPerceptible) }
         }
 

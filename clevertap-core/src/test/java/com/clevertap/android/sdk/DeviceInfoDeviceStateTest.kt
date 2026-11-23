@@ -3,6 +3,7 @@ package com.clevertap.android.sdk
 import android.app.NotificationManager
 import android.content.res.Configuration
 import android.telephony.TelephonyManager
+import com.clevertap.android.sdk.network.NetworkMonitor
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
@@ -10,11 +11,17 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import io.mockk.verify
+import org.json.JSONObject
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowSystemClock
+import java.time.Duration
+import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -25,6 +32,10 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class DeviceInfoDeviceStateTest : BaseTestCase() {
+
+    @Before
+    @After
+    fun waitForReads() = awaitNoPendingReads()
 
     private val notificationShadow
         get() = shadowOf(appCtx.getSystemService(NotificationManager::class.java))
@@ -125,7 +136,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         assertEquals(DeviceState.PUSH_STATUS_ALLOWED, deviceInfo.getPushStatus())
 
         notificationShadow.setNotificationsEnabled(false)
-        deviceInfo.refreshPushStatus()
+        deviceInfo.refreshPushStatus(appCtx.areAppNotificationsEnabled())
 
         assertEquals(DeviceState.PUSH_STATUS_DENIED, deviceInfo.getPushStatus())
         assertEquals(true, deviceInfo.isDarkMode())
@@ -172,7 +183,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         deviceInfo.prepareDeviceStateRefresh().call()
         val queued = deviceInfo.prepareDeviceStateRefresh()
         notificationShadow.setNotificationsEnabled(false)
-        deviceInfo.refreshPushStatus()
+        deviceInfo.refreshPushStatus(appCtx.areAppNotificationsEnabled())
 
         notificationShadow.setNotificationsEnabled(true)
         queued.call()
@@ -184,7 +195,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
     fun `a lazy read that starts after refreshPushStatus stores its own push status`() {
         val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
         notificationShadow.setNotificationsEnabled(false)
-        deviceInfo.refreshPushStatus()
+        deviceInfo.refreshPushStatus(appCtx.areAppNotificationsEnabled())
 
         notificationShadow.setNotificationsEnabled(true)
 
@@ -196,7 +207,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         notificationShadow.setNotificationsEnabled(true)
         val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
 
-        deviceInfo.refreshPushStatus()
+        deviceInfo.refreshPushStatus(appCtx.areAppNotificationsEnabled())
 
         assertEquals(DeviceState.PUSH_STATUS_ALLOWED, deviceInfo.getPushStatus())
         assertNull(deviceInfo.getCpuCores())
@@ -210,7 +221,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
                 notificationShadow.setNotificationsEnabled(true)
                 val older = callOriginal()
                 notificationShadow.setNotificationsEnabled(false)
-                deviceInfo.refreshPushStatus()
+                deviceInfo.refreshPushStatus(appCtx.areAppNotificationsEnabled())
                 older
             }
             return block()
@@ -228,12 +239,10 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
     fun `app fields carry the device state keys`() {
         val deviceInfo = mockk<DeviceInfo>(relaxed = true)
         every { deviceInfo.context } returns appCtx
-        every { deviceInfo.isLowPowerMode() } returns true
-        every { deviceInfo.getThermalLevel() } returns 3
-        every { deviceInfo.isDarkMode() } returns false
-        every { deviceInfo.getTextSize() } returns 1.3
-        every { deviceInfo.isReduceMotion() } returns true
-        every { deviceInfo.getPushStatus() } returns DeviceState.PUSH_STATUS_ALLOWED
+        every { deviceInfo.deviceState } returns deviceState(
+            lowPower = true, thermal = 3, darkMode = false, textSize = 1.3, reduceMotion = true,
+            pushStatus = DeviceState.PUSH_STATUS_ALLOWED
+        )
 
         val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
 
@@ -243,18 +252,15 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         assertEquals(1.3, appFields.get("textSize"))
         assertEquals(true, appFields.get("reduceMotion"))
         assertEquals(DeviceState.PUSH_STATUS_ALLOWED, appFields.get("pushStatus"))
+        // One read of the state, so dark mode and text size come from the same configuration.
+        verify(exactly = 1) { deviceInfo.deviceState }
     }
 
     @Test
     fun `app fields leave out device state values that are unknown`() {
         val deviceInfo = mockk<DeviceInfo>(relaxed = true)
         every { deviceInfo.context } returns appCtx
-        every { deviceInfo.isLowPowerMode() } returns null
-        every { deviceInfo.getThermalLevel() } returns null
-        every { deviceInfo.isDarkMode() } returns null
-        every { deviceInfo.getTextSize() } returns null
-        every { deviceInfo.isReduceMotion() } returns null
-        every { deviceInfo.getPushStatus() } returns null
+        every { deviceInfo.deviceState } returns deviceState()
 
         val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), false, false)
 
@@ -269,12 +275,10 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
     fun `app fields carry the battery, network, accessibility and device spec keys`() {
         val deviceInfo = mockk<DeviceInfo>(relaxed = true)
         every { deviceInfo.context } returns appCtx
-        every { deviceInfo.getBatteryLevel() } returns 40
-        every { deviceInfo.isCharging() } returns true
+        every { deviceInfo.deviceState } returns deviceState(batt = 40, chg = true, boldText = false)
         every { deviceInfo.getRamTier() } returns 8
         every { deviceInfo.getCpuCores() } returns 8
         every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(null, null, null, false, true)
-        every { deviceInfo.isBoldText() } returns false
         every { deviceInfo.getInstallSource() } returns "com.android.vending"
 
         val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), true, false)
@@ -294,12 +298,10 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
     fun `app fields leave out battery, network, accessibility and device spec values that are unknown`() {
         val deviceInfo = mockk<DeviceInfo>(relaxed = true)
         every { deviceInfo.context } returns appCtx
-        every { deviceInfo.getBatteryLevel() } returns null
-        every { deviceInfo.isCharging() } returns null
+        every { deviceInfo.deviceState } returns deviceState()
         every { deviceInfo.getRamTier() } returns null
         every { deviceInfo.getCpuCores() } returns null
         every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(null, null, null, null, null)
-        every { deviceInfo.isBoldText() } returns null
         every { deviceInfo.getInstallSource() } returns null
 
         val appFields = CTJsonConverter.from(deviceInfo, CoreMetaData(), true, false)
@@ -347,7 +349,7 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
     fun `app fields leave out wifi, radio and bluetooth when their read did not finish or reporting is off`() {
         val deviceInfo = mockk<DeviceInfo>(relaxed = true)
         every { deviceInfo.context } returns appCtx
-        every { deviceInfo.liveNetworkInfo } returns null
+        every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(null, null, null, null, null)
 
         val unfinished = CTJsonConverter.from(deviceInfo, CoreMetaData(), true, false)
         every { deviceInfo.liveNetworkInfo } returns DeviceInfo.LiveNetworkInfo(true, "4G", false, true, false)
@@ -369,6 +371,27 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         assertNotNull(info)
         assertNull(info.radio)
         assertNull(deviceInfo.getNetworkType())
+    }
+
+    @Test
+    fun `a stalled metered read does not drop wifi, radio and bluetooth`() {
+        val networkMonitor = mockk<NetworkMonitor>(relaxed = true)
+        every { networkMonitor.getNetworkTypeString() } returns "4G"
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), networkMonitor)
+        val release = CountDownLatch(1)
+        mockkObject(DeviceState.Companion)
+        try {
+            every { DeviceState.readMetered(any()) } answers { release.await(); true }
+
+            val info = deviceInfo.getLiveNetworkInfo()
+
+            assertEquals("4G", info.radio)
+            assertNull(info.metered)
+            assertNull(info.lowData)
+        } finally {
+            release.countDown()
+            unmockkObject(DeviceState.Companion)
+        }
     }
 
     @Test
@@ -439,6 +462,81 @@ class DeviceInfoDeviceStateTest : BaseTestCase() {
         assertEquals("in", deviceInfo.getCountryCode())
         assertTrue(deviceInfo.getDPI() > 0)
     }
+
+    @Test
+    fun `a timed out cached info read is not kept, it is read again off the main thread after a gap`() {
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+        val release = CountDownLatch(1)
+        // A full queue skips the cached info reads, the same as a timeout.
+        val stuck = (0 until 64).map { startRead("stuck read $it", timeoutMs = 10_000) { release.await(); it } }
+
+        val skipped = offMainThread { deviceInfo.getDPI() }
+        release.countDown()
+        stuck.forEach { it.get() }
+        deviceInfo.incrementLocalInAppCount()
+        val tooSoon = offMainThread { deviceInfo.getDPI() }
+        ShadowSystemClock.advanceBy(Duration.ofSeconds(6))
+        val onMain = deviceInfo.getDPI()
+        val retried = offMainThread { deviceInfo.getDPI() }
+
+        assertEquals(0, skipped)
+        assertEquals(0, tooSoon)
+        assertEquals(0, onMain)
+        assertTrue(retried > 0)
+        assertEquals(1, deviceInfo.getLocalInAppCount())
+    }
+
+    @Test
+    fun `a timed out specs read is not kept, it is read again off the main thread after a gap`() {
+        val deviceInfo = DeviceInfo(appCtx, cleverTapInstanceConfig, null, CoreMetaData(), null)
+        mockkObject(DeviceSpecs.Companion)
+        try {
+            every { DeviceSpecs.read(any()) } returnsMany listOf(
+                DeviceSpecs(ram = null, cpu = 8, instSrc = null, unfinished = true),
+                DeviceSpecs(ram = 4, cpu = 8, instSrc = "store")
+            )
+
+            val timedOut = offMainThread { deviceInfo.getRamTier() }
+            val tooSoon = offMainThread { deviceInfo.getRamTier() }
+            ShadowSystemClock.advanceBy(Duration.ofSeconds(6))
+            val onMain = deviceInfo.getRamTier()
+            val retried = offMainThread { deviceInfo.getRamTier() }
+
+            assertNull(timedOut)
+            assertNull(tooSoon)
+            assertNull(onMain)
+            assertEquals(4, retried)
+            verify(exactly = 2) { DeviceSpecs.read(any()) }
+        } finally {
+            unmockkObject(DeviceSpecs.Companion)
+        }
+    }
+
+    @Test
+    fun `launch fields count as sent only after a header that carried them, and only for that device id`() {
+        val deviceInfo = MockDeviceInfo(appCtx, cleverTapInstanceConfig, "id", CoreMetaData())
+        fun header(deviceId: String, key: String) =
+            JSONObject().put("g", deviceId).put("af", JSONObject().put(key, 8))
+
+        val atStart = deviceInfo.isLaunchFieldsSent
+        deviceInfo.onHeaderSent(header("id", "cpu"))
+        val afterHeaderWithoutRam = deviceInfo.isLaunchFieldsSent
+        deviceInfo.onHeaderSent(header("id", "ram"))
+        val afterHeaderWithRam = deviceInfo.isLaunchFieldsSent
+        deviceInfo.onHeaderSent(header("another id", "ram"))
+        val afterOtherDeviceId = deviceInfo.isLaunchFieldsSent
+
+        assertFalse(atStart)
+        assertFalse(afterHeaderWithoutRam)
+        assertTrue(afterHeaderWithRam)
+        assertFalse(afterOtherDeviceId)
+    }
+
+    private fun deviceState(
+        lowPower: Boolean? = null, thermal: Int? = null, darkMode: Boolean? = null, textSize: Double? = null,
+        reduceMotion: Boolean? = null, pushStatus: Int? = null, batt: Int? = null, chg: Boolean? = null,
+        boldText: Boolean? = null
+    ) = DeviceState(lowPower, thermal, darkMode, textSize, reduceMotion, pushStatus, batt, chg, boldText)
 
     // Robolectric runs tests on the main looper, so off-main reads run here.
     private fun <T> offMainThread(block: () -> T): T {
