@@ -77,6 +77,17 @@ class PushProviders internal constructor(
 
     private val pushRenderingLock = Any()
 
+    /** Owns the FCM topic lifetime of broadcast Live Updates (one prefs store per install). */
+    val liveUpdateBroadcastManager: LiveUpdateBroadcastManager by lazy {
+        LiveUpdateBroadcastManager(
+            store = LiveUpdateTopicStore(StorageHelper.getPreferences(context, LiveUpdateTopicStore.PREFS_NAMESPACE)),
+            subscriber = FcmLiveUpdateTopicSubscriber(accountId = config.accountId, logger = config.logger),
+            clock = clock,
+            accountId = config.accountId,
+            logger = config.logger
+        )
+    }
+
     private var tokenRefreshListener: DevicePushTokenRefreshListener? = null
 
     init {
@@ -1130,6 +1141,8 @@ class PushProviders internal constructor(
             // first-render tracking. See LiveUpdateLifecycle.
             val state = LiveUpdateLifecycle.state(extras.getString(Constants.WZRK_LIVE_UPDATE_EVENT))
             analyticsManager.raiseLiveUpdateLifecycleEvent(extras, state)
+            // Broadcast mode: subscribe to the run's topic on START, unsubscribe on End.
+            liveUpdateBroadcastManager.onRendered(extras)
         }
 
         val ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE)
