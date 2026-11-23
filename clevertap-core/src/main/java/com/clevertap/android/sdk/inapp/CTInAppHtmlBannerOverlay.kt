@@ -132,7 +132,9 @@ internal class CTInAppHtmlBannerOverlay(
             webView.setOnLongClickListener(this)
 
             if (isJsEnabled) {
-                val instance = CleverTapAPI.instanceWithConfig(activity, config)
+                // Application context, not the Activity: instanceWithConfig may retain the Context
+                // for the instance's lifetime, which would leak the Activity.
+                val instance = CleverTapAPI.instanceWithConfig(activity.applicationContext, config)
                 webView.setJavaScriptInterface(CTWebInterface(instance, host))
             }
 
