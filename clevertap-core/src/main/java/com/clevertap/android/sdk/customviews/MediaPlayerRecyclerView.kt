@@ -26,15 +26,12 @@ import com.clevertap.android.sdk.video.inbox.Media3Handle
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 class MediaPlayerRecyclerView : RecyclerView {
 
-    /** Where a video was left, for the media it was playing. */
-    private class VideoState(val mediaUrl: String, val positionMs: Long, val volume: Float)
-
     /** The message and media the player was started for. The row may show another one later. */
     private class PlayingVideo(val messageId: String?, val mediaUrl: String?)
 
     private val handle: InboxVideoPlayerHandle
     private val rect = Rect()
-    private val videoStates = mutableMapOf<String, VideoState>()
+    private val states: InboxVideoStates
     private val onScrollListener: OnScrollListener = object : OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
@@ -64,6 +61,7 @@ class MediaPlayerRecyclerView : RecyclerView {
      * {@inheritDoc}
      */
     constructor(context: Context) : super(context) {
+        states = InboxVideoStates()
         handle = createHandle()
         registerListeners()
     }
@@ -75,6 +73,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         context: Context,
         attrs: AttributeSet
     ) : super(context, attrs) {
+        states = InboxVideoStates()
         handle = createHandle()
         registerListeners()
     }
@@ -87,6 +86,7 @@ class MediaPlayerRecyclerView : RecyclerView {
         attrs: AttributeSet,
         defStyleAttr: Int
     ) : super(context, attrs, defStyleAttr) {
+        states = InboxVideoStates()
         handle = createHandle()
         registerListeners()
     }
@@ -95,9 +95,21 @@ class MediaPlayerRecyclerView : RecyclerView {
     @VisibleForTesting
     internal constructor(
         context: Context,
-        handle: InboxVideoPlayerHandle
+        handle: InboxVideoPlayerHandle,
+        states: InboxVideoStates = InboxVideoStates()
     ) : super(context) {
         this.handle = handle
+        this.states = states
+        registerListeners()
+    }
+
+    /** The lists of one inbox screen share [states], so a video keeps its place across its tabs. */
+    internal constructor(
+        context: Context,
+        states: InboxVideoStates
+    ) : super(context) {
+        this.states = states
+        handle = createHandle()
         registerListeners()
     }
 
@@ -146,7 +158,7 @@ class MediaPlayerRecyclerView : RecyclerView {
             return
         }
         initPlayer()
-        val savedState = savedStateOf(messageId, mediaUrl)
+        val savedState = states.stateOf(messageId, mediaUrl)
         val volume = savedState?.volume ?: MUTED_VOLUME
         handle.setPlayerVolume(volume)
         // Set before addMediaPlayer(), because the player callbacks read playingHolder
@@ -187,36 +199,12 @@ class MediaPlayerRecyclerView : RecyclerView {
 
     /** Where every video was left, to give to a new list (for example after a rotation). */
     fun saveVideoStates(): Bundle {
-        rememberVideoState()
-        val saved = Bundle()
-        for ((messageId, state) in videoStates) {
-            saved.putBundle(
-                messageId,
-                Bundle().apply {
-                    putString(KEY_MEDIA_URL, state.mediaUrl)
-                    putLong(KEY_POSITION_MS, state.positionMs)
-                    putFloat(KEY_VOLUME, state.volume)
-                }
-            )
-        }
-        return saved
+        rememberPlayingVideo()
+        return states.save()
     }
 
     /** Takes back what [saveVideoStates] returned. A null or empty bundle changes nothing. */
-    fun restoreVideoStates(saved: Bundle?) {
-        if (saved == null) {
-            return
-        }
-        for (messageId in saved.keySet()) {
-            val state = saved.getBundle(messageId) ?: continue
-            val mediaUrl = state.getString(KEY_MEDIA_URL) ?: continue
-            videoStates[messageId] = VideoState(
-                mediaUrl = mediaUrl,
-                positionMs = state.getLong(KEY_POSITION_MS),
-                volume = state.getFloat(KEY_VOLUME)
-            )
-        }
-    }
+    fun restoreVideoStates(saved: Bundle?) = states.restore(saved)
 
     /** Stops the video and releases the player; the next [playVideo] after a restart creates a new one. */
     fun releasePlayer() {
@@ -314,7 +302,7 @@ class MediaPlayerRecyclerView : RecyclerView {
     /** Saves the place, clears the row's container and stops the player, which stays alive. */
     private fun stopVideo() {
         val holder = playingHolder ?: return
-        rememberVideoState()
+        rememberPlayingVideo()
         holder.playerRemoved() // removes all the views from video container
         handle.stop()
         playingHolder = null
@@ -322,19 +310,12 @@ class MediaPlayerRecyclerView : RecyclerView {
     }
 
     /** Saves the place under the message the player was started for, not the row's current one. */
-    private fun rememberVideoState() {
+    /** Saves the place of the video that is playing now into the shared states. */
+    fun rememberPlayingVideo() {
         val video = playingVideo ?: return
         val messageId = video.messageId ?: return
         val mediaUrl = video.mediaUrl ?: return
-        videoStates[messageId] = VideoState(mediaUrl, handle.currentPositionMs(), handle.playerVolume())
-    }
-
-    /** The saved state of the message, only if its media is still the same. */
-    private fun savedStateOf(messageId: String?, mediaUrl: String?): VideoState? {
-        if (messageId == null) {
-            return null
-        }
-        return videoStates[messageId]?.takeIf { it.mediaUrl == mediaUrl }
+        states.remember(messageId, InboxVideoStates.VideoState(mediaUrl, handle.currentPositionMs(), handle.playerVolume()))
     }
 
     private companion object {
@@ -342,9 +323,5 @@ class MediaPlayerRecyclerView : RecyclerView {
         /** A video that was never played starts muted. */
         const val MUTED_VOLUME = 0f
         const val FULL_VOLUME = 1f
-
-        const val KEY_MEDIA_URL = "mediaUrl"
-        const val KEY_POSITION_MS = "positionMs"
-        const val KEY_VOLUME = "volume"
     }
 }

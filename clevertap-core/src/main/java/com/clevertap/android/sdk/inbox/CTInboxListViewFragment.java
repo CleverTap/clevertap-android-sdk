@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.OptIn;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -35,6 +36,7 @@ import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.customviews.InboxVideoStates;
 import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView;
 import com.clevertap.android.sdk.customviews.VerticalSpaceItemDecoration;
 import com.clevertap.android.sdk.video.VideoLibChecker;
@@ -59,7 +61,7 @@ public class CTInboxListViewFragment extends Fragment {
         void messageDidShow(CTInboxMessage inboxMessage, Bundle data);
     }
 
-    String accountId;
+    CleverTapInstanceConfig config;
 
     private static final String VIDEO_STATES_KEY = "videoStates";
 
@@ -70,6 +72,8 @@ public class CTInboxListViewFragment extends Fragment {
     LinearLayout linearLayout;
 
     MediaPlayerRecyclerView mediaRecyclerView;
+
+    private InboxVideoStates ownVideoStates;
 
     RecyclerView recyclerView;
 
@@ -93,7 +97,7 @@ public class CTInboxListViewFragment extends Fragment {
         super.onAttach(context);
         Bundle bundle = getArguments();
         if (bundle != null) {
-            accountId = bundle.getString("config");
+            config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
             tabPosition = bundle.getInt("position", -1);
             updateInboxMessages();
@@ -119,9 +123,7 @@ public class CTInboxListViewFragment extends Fragment {
         Bundle bundle = getArguments();
         if (bundle == null) return null;
         final String filter = bundle.getString("filter", null);
-        Context ctx = getContext();
-        if (ctx == null) return null;
-        CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(ctx.getApplicationContext(), accountId);
+        CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
         if (cleverTapAPI == null) return null;
         Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
         ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
@@ -155,11 +157,23 @@ public class CTInboxListViewFragment extends Fragment {
         noMessageView.setVisibility(View.VISIBLE);
     }
 
+    /** In the inbox screen the tabs share the screen's states; a fragment outside it keeps its own. */
+    @VisibleForTesting
+    InboxVideoStates videoStates() {
+        if (getActivity() instanceof CTInboxActivity) {
+            return ((CTInboxActivity) getActivity()).getVideoStates();
+        }
+        if (ownVideoStates == null) {
+            ownVideoStates = new InboxVideoStates();
+        }
+        return ownVideoStates;
+    }
+
     private void buildListView() {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
         if (haveVideoPlayerSupport) {
-            mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
+            mediaRecyclerView = new MediaPlayerRecyclerView(getActivity(), videoStates());
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -199,7 +213,9 @@ public class CTInboxListViewFragment extends Fragment {
                 if (mediaRecyclerView.getLayoutManager() != null) {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
-                mediaRecyclerView.restoreVideoStates(savedInstanceState.getBundle(VIDEO_STATES_KEY));
+                if (ownVideoStates != null) {
+                    mediaRecyclerView.restoreVideoStates(savedInstanceState.getBundle(VIDEO_STATES_KEY));
+                }
             }
 
             if (recyclerView != null) {
@@ -249,7 +265,10 @@ public class CTInboxListViewFragment extends Fragment {
                 outState.putParcelable("recyclerLayoutState",
                         mediaRecyclerView.getLayoutManager().onSaveInstanceState());
             }
-            outState.putBundle(VIDEO_STATES_KEY, mediaRecyclerView.saveVideoStates());
+            mediaRecyclerView.rememberPlayingVideo(); // into the states the activity or this fragment keeps
+            if (ownVideoStates != null) {
+                outState.putBundle(VIDEO_STATES_KEY, ownVideoStates.save());
+            }
         }
 
         if (recyclerView != null) {
@@ -426,9 +445,7 @@ public class CTInboxListViewFragment extends Fragment {
 
         // If the V2 fetch endpoint was already disabled this session, disable the widget
         // before registering the listener so no zombie callback is ever attached.
-        Context ctx = getContext();
-        CleverTapAPI api = ctx != null
-                ? CleverTapAPI.getGlobalInstance(ctx.getApplicationContext(), accountId) : null;
+        CleverTapAPI api = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
         if (api != null && api.isInboxFetchDisabledForSession()) {
             swipeRefreshLayout.setEnabled(false);
             return;
@@ -436,11 +453,8 @@ public class CTInboxListViewFragment extends Fragment {
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
             // Re-resolve at swipe time — do not capture the outer `api` reference, as the
-            // listener lambda can fire long after onCreateView (e.g. after rotation). Use
-            // getContext() (not requireContext()) since the fragment may be detached by then.
-            Context refreshCtx = getContext();
-            CleverTapAPI refreshApi = refreshCtx != null
-                    ? CleverTapAPI.getGlobalInstance(refreshCtx.getApplicationContext(), accountId) : null;
+            // listener lambda can fire long after onCreateView (e.g. after rotation).
+            CleverTapAPI refreshApi = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
             if (refreshApi == null) {
                 swipeRefreshLayout.setRefreshing(false);
                 return;

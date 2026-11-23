@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.FetchInboxCallback
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.customviews.InboxVideoStates
 import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
@@ -388,13 +389,13 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         mockkStatic(CleverTapAPI::class)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
-            every { CleverTapAPI.getGlobalInstance(any(), any()) } returns api
+            every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
             every { api.isInboxFetchDisabledForSession } returns false
             val callbackSlot = slot<FetchInboxCallback>()
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
-            every { fragment.context } returns appCtx
+            every { fragment.requireContext() } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }
 
@@ -417,13 +418,13 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         mockkStatic(CleverTapAPI::class)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
-            every { CleverTapAPI.getGlobalInstance(any(), any()) } returns api
+            every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
             every { api.isInboxFetchDisabledForSession } returns false
             val callbackSlot = slot<FetchInboxCallback>()
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
-            every { fragment.context } returns appCtx
+            every { fragment.requireContext() } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }
 
@@ -483,31 +484,109 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         verify(exactly = 0) { media.onRestartPlayer() }
     }
 
+    private fun inboxActivity(): CTInboxActivity = Robolectric.buildActivity(CTInboxActivity::class.java).setup().get()
+
+    private fun states(url: String, positionMs: Long) =
+        InboxVideoStates.VideoState(url, positionMs, 1f)
+
     @Test
-    fun test_onSaveInstanceState_keeps_the_video_states_of_the_media_recycler() {
+    fun test_videoStates_outside_the_inbox_screen_are_kept_by_the_fragment_for_all_its_views() {
+        val fragment = viewReadyFragment()
+
+        val first = fragment.videoStates()
+        val second = fragment.videoStates() // what a rebuilt view asks for
+
+        assertSame(first, second)
+    }
+
+    @Test
+    fun test_videoStates_inside_the_inbox_screen_are_the_ones_of_the_activity() {
+        val fragment = viewReadyFragment()
+        val activity = inboxActivity()
+        every { fragment.activity } returns activity
+
+        assertSame(activity.videoStates, fragment.videoStates())
+    }
+
+    @Test
+    fun test_videoStates_the_tabs_of_one_inbox_screen_share_the_same_states() {
+        val activity = inboxActivity()
+        val first = viewReadyFragment().also { every { it.activity } returns activity }
+        val second = viewReadyFragment().also { every { it.activity } returns activity }
+
+        assertSame(first.videoStates(), second.videoStates())
+    }
+
+    @Test
+    fun test_videoStates_two_inbox_screens_do_not_share_states() {
+        val first = viewReadyFragment().also { every { it.activity } returns inboxActivity() }
+        val second = viewReadyFragment().also { every { it.activity } returns inboxActivity() }
+
+        assertTrue(first.videoStates() !== second.videoStates())
+    }
+
+    @Test
+    fun test_onSaveInstanceState_puts_the_playing_video_into_the_shared_states() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
-        val states = Bundle().apply { putString("message0", "state") }
-        every { media.saveVideoStates() } returns states
         fragment.mediaRecyclerView = media
+        every { fragment.activity } returns inboxActivity()
+        fragment.videoStates()
+
+        fragment.onSaveInstanceState(Bundle())
+
+        verify(exactly = 1) { media.rememberPlayingVideo() }
+    }
+
+    @Test
+    fun test_onSaveInstanceState_inside_the_inbox_screen_leaves_the_states_to_the_activity() {
+        val fragment = viewReadyFragment()
+        every { fragment.activity } returns inboxActivity()
+        fragment.mediaRecyclerView = mockk(relaxed = true)
+        fragment.videoStates().remember("m1", states("url1", 5_000L))
         val outState = Bundle()
 
         fragment.onSaveInstanceState(outState)
 
-        assertSame(states, outState.getBundle("videoStates"))
+        assertEquals(null, outState.getBundle("videoStates"))
     }
 
     @Test
-    fun test_onViewStateRestored_gives_the_video_states_back_to_the_media_recycler() {
+    fun test_onSaveInstanceState_outside_the_inbox_screen_keeps_the_states_of_the_fragment() {
+        val fragment = viewReadyFragment()
+        fragment.mediaRecyclerView = mockk(relaxed = true)
+        fragment.videoStates().remember("m1", states("url1", 5_000L))
+        val outState = Bundle()
+
+        fragment.onSaveInstanceState(outState)
+
+        assertEquals(5_000L, outState.getBundle("videoStates")!!.getBundle("m1")!!.getLong("positionMs"))
+    }
+
+    @Test
+    fun test_onViewStateRestored_outside_the_inbox_screen_gives_the_states_back_to_the_media_recycler() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
-        val states = Bundle().apply { putString("message0", "state") }
         fragment.mediaRecyclerView = media
-        val saved = Bundle().apply { putBundle("videoStates", states) }
+        fragment.videoStates()
+        val saved = Bundle().apply { putBundle("videoStates", Bundle().apply { putString("m1", "state") }) }
 
         fragment.onViewStateRestored(saved)
 
-        verify(exactly = 1) { media.restoreVideoStates(states) }
+        verify(exactly = 1) { media.restoreVideoStates(any()) }
+    }
+
+    @Test
+    fun test_onViewStateRestored_inside_the_inbox_screen_leaves_the_states_to_the_activity() {
+        val fragment = viewReadyFragment()
+        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
+        fragment.mediaRecyclerView = media
+        every { fragment.activity } returns inboxActivity()
+        val saved = Bundle().apply { putBundle("videoStates", Bundle().apply { putString("m1", "state") }) }
+
+        fragment.onViewStateRestored(saved)
+
+        verify(exactly = 0) { media.restoreVideoStates(any()) }
     }
 
     @Test

@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.clevertap.android.sdk.customviews.InboxVideoStates
 import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView
 import com.clevertap.android.sdk.video.InboxVideoPlayerHandle
 import com.clevertap.android.shared.test.BaseTestCase
@@ -731,6 +732,99 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
     }
 
+    /** A tab list of the same inbox screen: its own player handle, the [states] of the screen. */
+    private fun tab(states: InboxVideoStates, tabHandle: InboxVideoPlayerHandle = handle): MediaPlayerRecyclerView {
+        val tabAdapter = VideoRowsAdapter(appCtx, 3, null)
+        return MediaPlayerRecyclerView(appCtx, tabHandle, states).apply {
+            layoutManager = LinearLayoutManager(appCtx)
+            adapter = tabAdapter
+            measure(
+                MeasureSpec.makeMeasureSpec(LIST_WIDTH, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(LIST_HEIGHT, MeasureSpec.EXACTLY)
+            )
+            layout(0, 0, LIST_WIDTH, LIST_HEIGHT)
+        }
+    }
+
+    @Test
+    fun `a message keeps its place when another tab of the screen shows it`() {
+        val states = InboxVideoStates()
+        val first = tab(states)
+        val second = tab(states)
+        every { handle.currentPositionMs() } returns 7_000L
+        every { handle.playerVolume() } returns 1f
+        first.playVideo()
+        first.releasePlayer() // the first tab is paused when the user goes to the second
+
+        second.onRestartPlayer()
+
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 7_000L) }
+        verify(exactly = 1) { handle.setPlayerVolume(1f) }
+    }
+
+    @Test
+    fun `lists with their own states do not share places`() {
+        val first = tab(InboxVideoStates())
+        val second = tab(InboxVideoStates())
+        every { handle.currentPositionMs() } returns 7_000L
+        first.playVideo()
+        first.releasePlayer()
+
+        second.onRestartPlayer()
+
+        verify(exactly = 0) { handle.startPlaying(any(), any(), any(), any(), 7_000L) }
+        verify(exactly = 2) { handle.startPlaying(any(), "url0", false, true, InboxVideoPlayerHandle.DEFAULT_START_POSITION) }
+    }
+
+    @Test
+    fun `the states of the screen survive a new list that is built for the same screen`() {
+        val states = InboxVideoStates()
+        val old = tab(states)
+        every { handle.currentPositionMs() } returns 4_000L
+        old.playVideo()
+        old.releasePlayer() // the view is destroyed, for example when the fragment goes to the back stack
+
+        val rebuilt = tab(states)
+        rebuilt.onRestartPlayer()
+
+        verify(exactly = 1) { handle.startPlaying(any(), "url0", false, true, 4_000L) }
+    }
+
+    @Test
+    fun `remembering the playing video puts its place into the shared states`() {
+        val states = InboxVideoStates()
+        val list = tab(states)
+        every { handle.currentPositionMs() } returns 6_000L
+        every { handle.playerVolume() } returns 1f
+        list.playVideo()
+
+        list.rememberPlayingVideo()
+
+        assertEquals(6_000L, states.stateOf("message0", "url0")!!.positionMs)
+        assertEquals(1f, states.stateOf("message0", "url0")!!.volume, 0f)
+    }
+
+    @Test
+    fun `remembering with no video playing remembers nothing`() {
+        val states = InboxVideoStates()
+        val list = tab(states)
+
+        list.rememberPlayingVideo()
+
+        assertTrue(states.save().isEmpty)
+    }
+
+    @Test
+    fun `the row is found through its view holder and not through the tag of its view`() {
+        showList(rows = 1)
+        val row = rowAt(0)
+        row.itemView.tag = null
+
+        list.playVideo()
+
+        assertEquals(1, row.attachCount)
+    }
+
     @Test
     fun `a list that is attached again starts a video after it was released on detach`() {
         showList(rows = 1)
@@ -765,17 +859,6 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         val row = rowAt(0)
         list.playVideo()
         list.releasePlayer()
-
-        list.playVideo()
-
-        assertEquals(1, row.attachCount)
-    }
-
-    @Test
-    fun `the row is found through its view holder and not through the tag of its view`() {
-        showList(rows = 1)
-        val row = rowAt(0)
-        row.itemView.tag = null
 
         list.playVideo()
 
