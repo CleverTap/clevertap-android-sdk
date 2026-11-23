@@ -48,7 +48,7 @@ class LiveUpdateBroadcastManagerTest {
         every { store.all() } returns emptyList()
         val saved = slot<LiveUpdateTopicEntry>()
 
-        manager.onRendered(push(event = "start", dismissal = "${NOW + 60}"))
+        manager.onReceived(push(event = "start", dismissal = "${NOW + 60}"))
 
         verify { store.put(capture(saved)) }
         verify { subscriber.subscribe(TOPIC) }
@@ -60,7 +60,7 @@ class LiveUpdateBroadcastManagerTest {
         every { store.all() } returns emptyList()
         val saved = slot<LiveUpdateTopicEntry>()
 
-        manager.onRendered(push(event = "start"))
+        manager.onReceived(push(event = "start"))
 
         verify { store.put(capture(saved)) }
         assertEquals(NOW + Constants.LIVE_UPDATE_DEFAULT_LIFETIME_SECONDS, saved.captured.expiresAtSeconds)
@@ -68,27 +68,34 @@ class LiveUpdateBroadcastManagerTest {
 
     @Test
     fun `1-to-1 START does not subscribe`() {
-        manager.onRendered(push(event = "start", type = "0"))
+        manager.onReceived(push(event = "start", type = "0"))
 
         verify(exactly = 0) { subscriber.subscribe(any()) }
     }
 
     @Test
-    fun `End without wzrk_topic resolves the topic by activity id and unsubscribes`() {
-        every { store.findByActivityId(ACTIVITY) } returns entry(TOPIC)
+    fun `End with wzrk_topic unsubscribes the run`() {
         every { store.remove(TOPIC) } returns entry(TOPIC)
 
-        manager.onRendered(push(event = "end", topic = null))
+        manager.onReceived(push(event = "end"))
 
         verify { subscriber.unsubscribe(TOPIC) }
     }
 
     @Test
-    fun `dismiss of an already closed run does not unsubscribe twice`() {
+    fun `End for an already closed run does not unsubscribe again`() {
         every { store.remove(TOPIC) } returns null
 
-        manager.onDismissed(push(event = "update"))
+        manager.onReceived(push(event = "end"))
 
+        verify(exactly = 0) { subscriber.unsubscribe(any()) }
+    }
+
+    @Test
+    fun `topic update neither subscribes nor unsubscribes`() {
+        manager.onReceived(push(event = "update"))
+
+        verify(exactly = 0) { subscriber.subscribe(any()) }
         verify(exactly = 0) { subscriber.unsubscribe(any()) }
     }
 
@@ -100,7 +107,7 @@ class LiveUpdateBroadcastManagerTest {
         every { store.all() } returnsMany listOf(listOf(expired, oldest, newer), listOf(oldest, newer))
         every { store.remove(any()) } answers { entry(firstArg()) }
 
-        manager.onRendered(push(event = "start"))
+        manager.onReceived(push(event = "start"))
 
         verify { subscriber.unsubscribe("old") }
         verify { subscriber.unsubscribe("a") }

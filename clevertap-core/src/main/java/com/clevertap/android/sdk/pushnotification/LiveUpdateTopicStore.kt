@@ -17,7 +17,7 @@ data class LiveUpdateTopicEntry(
 /**
  * Persists the broadcast topics this install is subscribed to. FCM topics are per install (not per
  * CleverTap account), so this is one store per process, keyed by topic. It is the source of truth
- * for "is this run still open" — an entry is removed exactly once, by End, Dismiss or expiry.
+ * for "is this run still open" — an entry is removed exactly once, by End or expiry.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
@@ -43,10 +43,6 @@ class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
     @Synchronized
     fun get(topic: String): LiveUpdateTopicEntry? =
         prefs.getString(topic, null)?.let { parse(topic, it) }
-
-    @Synchronized
-    fun findByActivityId(activityId: String): LiveUpdateTopicEntry? =
-        all().firstOrNull { it.activityId == activityId }
 
     @Synchronized
     fun all(): List<LiveUpdateTopicEntry> =

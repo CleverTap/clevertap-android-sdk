@@ -148,6 +148,15 @@ class PushProviders internal constructor(
                 }
             }
 
+            // Broadcast Live Update control messages (START subscribes, End unsubscribes) act at
+            // receipt, independent of rendering. Only pushes carrying wzrk_topic reach the manager,
+            // so 1:1 Live Updates never load its store.
+            if (isLiveUpdate && LiveUpdateBroadcast.topic(extras) != null &&
+                !liveUpdateBroadcastManager.onReceived(extras)
+            ) {
+                return
+            }
+
             // Live Update pushes: a client-supplied factory renders them unless the
             // payload has a pt_id (see below).
             // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
@@ -1141,8 +1150,6 @@ class PushProviders internal constructor(
             // first-render tracking. See LiveUpdateLifecycle.
             val state = LiveUpdateLifecycle.state(extras.getString(Constants.WZRK_LIVE_UPDATE_EVENT))
             analyticsManager.raiseLiveUpdateLifecycleEvent(extras, state)
-            // Broadcast mode: subscribe to the run's topic on START, unsubscribe on End.
-            liveUpdateBroadcastManager.onRendered(extras)
         }
 
         val ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE)

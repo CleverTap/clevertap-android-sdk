@@ -8,13 +8,15 @@ import com.clevertap.android.sdk.ILogger
 import com.clevertap.android.sdk.utils.Clock
 
 /**
- * Owns the FCM topic subscription lifetime of broadcast Live Updates:
- * - broadcast START rendered → subscribe to `wzrk_topic` and record the run;
- * - End rendered / user Dismiss → unsubscribe and drop the run;
+ * Owns the FCM topic subscription lifetime of broadcast Live Updates. It acts only on the control
+ * messages, at receipt (independent of whether they render):
+ * - broadcast START → subscribe to `wzrk_topic` and record the run;
+ * - End carrying `wzrk_topic` → unsubscribe and drop the run;
  * - before every subscribe → prune expired runs and evict the oldest past [softCap], since FCM caps
  *   an install at 2,000 topic subscriptions and every broadcast uses a new topic.
  *
- * Rendering and lifecycle events are untouched — those stay on the 1:1 path.
+ * Topic updates, user dismissal, rendering and lifecycle events are untouched — they stay on the
+ * 1:1 path. A swiped-away run stays subscribed, so its next update re-posts the notification.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 class LiveUpdateBroadcastManager(
@@ -26,37 +28,28 @@ class LiveUpdateBroadcastManager(
     private val softCap: Int = DEFAULT_SOFT_CAP
 ) {
 
-    /** Called after any Live Update is rendered (both render modes). */
-    @WorkerThread
-    fun onRendered(extras: Bundle) {
-        when {
-            LiveUpdateBroadcast.isEnd(extras) -> closeRun(extras, "end")
-            LiveUpdateBroadcast.isStart(extras) && LiveUpdateBroadcast.isBroadcast(extras) -> openRun(extras)
-        }
-    }
-
-    /** Called when the user swipes the Live Update away. */
-    @WorkerThread
-    fun onDismissed(extras: Bundle) {
-        closeRun(extras, "dismiss")
-    }
-
     /**
-     * Unsubscribes every run whose expiry has passed. Returns the closed entries so the caller can
-     * finish them (cancel the notification, raise Ended).
+     * Called on receipt of a Live Update push that carries `wzrk_topic`, after the `wzrk_pid` dedupe
+     * and before rendering. Returns whether the push should still be rendered.
      */
     @WorkerThread
-    fun pruneExpired(): List<LiveUpdateTopicEntry> {
-        val now = clock.currentTimeSeconds()
-        return store.all().filter { it.expiresAtSeconds <= now }.mapNotNull { close(it.topic, "expired") }
+    fun onReceived(extras: Bundle): Boolean {
+        val topic = LiveUpdateBroadcast.topic(extras) ?: return true
+        when {
+            LiveUpdateBroadcast.isStart(extras) && LiveUpdateBroadcast.isBroadcast(extras) -> openRun(topic, extras)
+            LiveUpdateBroadcast.isEnd(extras) -> close(topic, "end")
+        }
+        return true
     }
 
-    private fun openRun(extras: Bundle) {
-        val topic = LiveUpdateBroadcast.topic(extras)
-        if (topic == null) {
-            logger.debug(accountId, "Live Update broadcast START without wzrk_topic; not subscribing.")
-            return
-        }
+    /** Unsubscribes every run whose expiry has passed. */
+    @WorkerThread
+    fun pruneExpired() {
+        val now = clock.currentTimeSeconds()
+        store.all().filter { it.expiresAtSeconds <= now }.forEach { close(it.topic, "expired") }
+    }
+
+    private fun openRun(topic: String, extras: Bundle) {
         pruneExpired()
         evictOverCap()
         val now = clock.currentTimeSeconds()
@@ -72,14 +65,6 @@ class LiveUpdateBroadcastManager(
         subscriber.subscribe(topic)
     }
 
-    /** Resolves the run from `wzrk_topic`, or — when a topic push omits it — from `wzrk_activityId`. */
-    private fun closeRun(extras: Bundle, reason: String) {
-        val topic = LiveUpdateBroadcast.topic(extras)
-            ?: extras.getString(Constants.WZRK_LIVE_UPDATE_ID)?.let { store.findByActivityId(it)?.topic }
-            ?: return
-        close(topic, reason)
-    }
-
     private fun evictOverCap() {
         val entries = store.all()
         if (entries.size < softCap) {
@@ -90,11 +75,10 @@ class LiveUpdateBroadcastManager(
             .forEach { close(it.topic, "cap") }
     }
 
-    private fun close(topic: String, reason: String): LiveUpdateTopicEntry? {
-        val entry = store.remove(topic) ?: return null
+    private fun close(topic: String, reason: String) {
+        store.remove(topic) ?: return
         logger.verbose(accountId, "Live Update broadcast: closing $topic ($reason)")
         subscriber.unsubscribe(topic)
-        return entry
     }
 
     companion object {

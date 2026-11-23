@@ -944,9 +944,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task.execute("handleLiveUpdateDismissed", () -> {
             instance.getCoreState().getAnalyticsManager()
                     .raiseLiveUpdateLifecycleEvent(notification, Constants.LIVE_UPDATE_STATE_DISMISSED);
-            // Broadcast mode: a dismissed run no longer needs its FCM topic.
-            instance.getCoreState().getPushProviders().getLiveUpdateBroadcastManager()
-                    .onDismissed(notification);
             return null;
         });
     }
