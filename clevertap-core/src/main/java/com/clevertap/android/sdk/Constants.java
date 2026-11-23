@@ -354,11 +354,21 @@ public interface Constants {
     // --- Live Updates: broadcast mode ---
     // A broadcast START arrives 1:1 on the device token; the SDK then subscribes to its FCM topic,
     // on which every later update/end for that run is delivered.
-    /** "0" = 1:1 (default when absent), "1" = broadcast. */
+    /** "0" = 1:1 (default when absent), "1" = broadcast. Analytics only — flows into evtData; the
+     *  SDK's topic handling is driven by {@link #WZRK_TOPIC_ACTION}, never by this. */
     String WZRK_LIVE_UPDATE_ACTIVITY_TYPE = "wzrk_activityType";
     String LIVE_UPDATE_ACTIVITY_TYPE_BROADCAST = "1";
     /** FCM topic for this broadcast run. A new topic per broadcast. */
     String WZRK_LIVE_UPDATE_TOPIC = "wzrk_topic";
+    /** Topic subscription control, independent of the Live Activity lifecycle ({@code wzrk_la_event}):
+     *  {@link #TOPIC_ACTION_SUBSCRIBE} or {@link #TOPIC_ACTION_UNSUBSCRIBE} the install to/from
+     *  {@code wzrk_topic}. May ride a Live Update push or come alone (then it is never rendered). */
+    String WZRK_TOPIC_ACTION = "wzrk_topic_action";
+    String TOPIC_ACTION_SUBSCRIBE = "sub";
+    String TOPIC_ACTION_UNSUBSCRIBE = "unsub";
+    /** On a {@code sub} message: "true" makes a user swipe-away of the run's notification also
+     *  unsubscribe the topic. Default false (swipe only raises Dismissed). */
+    String WZRK_TOPIC_UNSUB_ON_DISMISS = "wzrk_topic_unsub_on_dismiss";
     /** Epoch seconds of this broadcast run's START. */
     String WZRK_LIVE_UPDATE_RUN_ID = "wzrk_runId";
     /** Epoch seconds at which the Live Update is removed even if no End arrives. */

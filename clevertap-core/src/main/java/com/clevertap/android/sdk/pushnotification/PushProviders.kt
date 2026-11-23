@@ -133,6 +133,13 @@ class PushProviders internal constructor(
                 PushNotificationHandler.surfaceLiveUpdatePayload(extras)
             }
 
+            // Broadcast topic subscription control (wzrk_topic_action), independent of the Live
+            // Activity lifecycle. Acts at receipt; a pure control message stops here unrendered.
+            // Only pushes carrying wzrk_topic reach the manager, so nothing else loads its store.
+            if (LiveUpdateBroadcast.topic(extras) != null && !liveUpdateBroadcastManager.onReceived(extras)) {
+                return
+            }
+
             val isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equals("true", ignoreCase = true)
             if (isSilent) {
                 analyticsManager.pushNotificationViewedEvent(extras)
@@ -146,15 +153,6 @@ class PushProviders internal constructor(
                     config.logger.debug(config.accountId, "Push Notification already rendered, not showing again")
                     return
                 }
-            }
-
-            // Broadcast Live Update control messages (START subscribes, End unsubscribes) act at
-            // receipt, independent of rendering. Only pushes carrying wzrk_topic reach the manager,
-            // so 1:1 Live Updates never load its store.
-            if (isLiveUpdate && LiveUpdateBroadcast.topic(extras) != null &&
-                !liveUpdateBroadcastManager.onReceived(extras)
-            ) {
-                return
             }
 
             // Live Update pushes: a client-supplied factory renders them unless the
