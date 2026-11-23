@@ -15,6 +15,7 @@
 
 #### Bug Fixes
 * **Push Primer On Foldables:** Fixes the app closing when the push primer is shown after a fold.
+* **Half-Interstitial In-App:** Fixes the In-App being cut off in portrait on unfolded foldables.
 * **App Inbox Video Container:** Fixes an old video container showing next to another message in App Inbox after a video row was scrolled off screen.
 
 #### Notes
