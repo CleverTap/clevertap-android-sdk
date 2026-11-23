@@ -1066,18 +1066,18 @@ class UtilsTest {
     fun `raiseNotificationClicked should use instanceWithConfig when config is provided`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushNotificationClickedEvent(mockBundle) } just Runs
 
             Utils.raiseNotificationClicked(mockContext, mockBundle, mockConfig)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushNotificationClickedEvent(mockBundle) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
         }
@@ -1099,7 +1099,7 @@ class UtilsTest {
             // Then
             verify { CleverTapAPI.getDefaultInstance(mockContext) }
             verify { mockInstance.pushNotificationClickedEvent(mockBundle) }
-            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+            verify(exactly = 0) { CleverTapAPI.getGlobalInstance(any(), any()) }
         }
     }
 
@@ -1107,15 +1107,20 @@ class UtilsTest {
     fun `raiseNotificationClicked should not call pushNotificationClickedEvent when instance is null with config`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
 
         // When
         mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254: when getGlobalInstance can't resolve (persisted record missing), the click
+            // path falls back to instanceWithConfig. Here that also returns null (truly
+            // unresolvable), so no event is pushed.
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseNotificationClicked(mockContext, mockBundle, mockConfig)
 
             // Then
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             // No verification for pushNotificationClickedEvent as instance is null
         }
@@ -1609,7 +1614,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with Bundle with null instance`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val eventName = "test_event"
 
         every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
@@ -1618,11 +1623,14 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254 fallback: unresolved via getGlobalInstance → instanceWithConfig, also null.
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
 
             // Then
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
         }
@@ -1632,7 +1640,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with Bundle should use instanceWithConfig when config is provided`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val eventName = "test_event"
         val eventProps = hashMapOf<String, Any>("prop1" to "value1")
@@ -1643,13 +1651,13 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
         }
@@ -1677,7 +1685,7 @@ class UtilsTest {
             // Then
             verify { CleverTapAPI.getDefaultInstance(mockContext) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
-            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+            verify(exactly = 0) { CleverTapAPI.getGlobalInstance(any(), any()) }
         }
     }
 
@@ -1685,7 +1693,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with Bundle should not push event when eventName is null`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
 
         every { mockBundle.keySet() } returns setOf("pt_event_property_prop1")
@@ -1693,12 +1701,12 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
         }
     }
@@ -1707,7 +1715,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with Bundle should not push event when eventName is empty`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
 
         every { mockBundle.keySet() } returns setOf("pt_event_name", "pt_event_property_prop1")
@@ -1716,12 +1724,12 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
         }
     }
@@ -1731,7 +1739,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with key when instance is null`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val key = "test_key"
         val value = "test_value"
@@ -1745,12 +1753,15 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254 fallback: unresolved via getGlobalInstance → instanceWithConfig, also null.
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
             verify { mockBundle.getString(key) }
@@ -1761,7 +1772,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with key should use instanceWithConfig when config is provided`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val key = "test_key"
         val value = "test_value"
@@ -1775,13 +1786,13 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
             verify { mockBundle.getString(key) }
@@ -1813,7 +1824,7 @@ class UtilsTest {
             // Then
             verify { CleverTapAPI.getDefaultInstance(mockContext) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
-            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+            verify(exactly = 0) { CleverTapAPI.getGlobalInstance(any(), any()) }
             verify { mockBundle.getString(key) }
         }
     }
@@ -1822,7 +1833,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with key should not push event when eventName is null`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val key = "test_key"
         val value = "test_value"
@@ -1833,12 +1844,12 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
         }
     }
@@ -1847,7 +1858,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with key should not push event when eventName is empty`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val key = "test_key"
         val value = "test_value"
@@ -1859,12 +1870,12 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
         }
     }
@@ -1873,7 +1884,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with key should handle null value from bundle`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val key = "test_key"
         val eventName = "test_event"
@@ -1886,13 +1897,13 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
             verify { mockBundle.getString(key) }
         }
@@ -1902,7 +1913,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with key should replace matching property value when pkey matches`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val key = "test_key"
         val value = "replacement_value"
@@ -1916,13 +1927,13 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushEvent(eventName, expectedProps) }
         }
     }
@@ -1931,7 +1942,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent with key should use original value when no pkey match found`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val key = "test_key"
         val value = "no_match_value"
@@ -1945,13 +1956,13 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushEvent(eventName, expectedProps) }
         }
     }
@@ -1996,7 +2007,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent should use instanceWithConfig when config is provided`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val eventName = "test_event"
         val eventProps = hashMapOf<String,Any>().apply {
@@ -2006,13 +2017,13 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
             verify(exactly = 0) { CleverTapAPI.getDefaultInstance(any()) }
         }
@@ -2038,7 +2049,7 @@ class UtilsTest {
             // Then
             verify { CleverTapAPI.getDefaultInstance(mockContext) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
-            verify(exactly = 0) { CleverTapAPI.instanceWithConfig(any(), any()) }
+            verify(exactly = 0) { CleverTapAPI.getGlobalInstance(any(), any()) }
         }
     }
 
@@ -2046,7 +2057,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent should not call pushEvent when instance is null with config`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val eventName = "test_event"
         val eventProps = hashMapOf<String, Any>().apply {
             put("key1", "value1")
@@ -2054,11 +2065,14 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns null
+            // SDK-6254 fallback: unresolved via getGlobalInstance → instanceWithConfig, also null.
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
 
             // Then
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
             // No verification for pushEvent as instance is null
         }
@@ -2089,7 +2103,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent should not call pushEvent when event name is null`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val eventProps = hashMapOf<String, Any>().apply {
             put("key1", "value1")
@@ -2097,13 +2111,13 @@ class UtilsTest {
 
         // When
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(any(), any()) } just Runs
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, null, eventProps)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
         }
     }
@@ -2112,21 +2126,21 @@ class UtilsTest {
     fun `raiseCleverTapEvent should not call pushEvent when event name is empty`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val eventProps = hashMapOf<String, Any>().apply {
             put("key1", "value1")
         }
         
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(any(), any()) } just Runs
 
             // When
             Utils.raiseCleverTapEvent(mockContext, mockConfig, "", eventProps)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify(exactly = 0) { mockInstance.pushEvent(any(), any()) }
         }
     }
@@ -2135,20 +2149,20 @@ class UtilsTest {
     fun `raiseCleverTapEvent should call pushEvent with empty properties when eventProps is empty`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val eventName = "test_event"
         val eventProps = hashMapOf<String, Any>()
         
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             // When
             Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
 
             // Then
-            verify { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) }
+            verify { CleverTapAPI.getGlobalInstance(mockContext, any()) }
             verify { mockInstance.pushEvent(eventName, eventProps) }
         }
     }
@@ -2228,7 +2242,7 @@ class UtilsTest {
     fun `raiseCleverTapEvent should verify method call order`() {
         // Given
         val mockContext = mockk<Context>()
-        val mockConfig = mockk<CleverTapInstanceConfig>()
+        val mockConfig = mockk<CleverTapInstanceConfig>(relaxed = true)
         val mockInstance = mockk<CleverTapAPI>()
         val eventName = "order_test_event"
         val eventProps = hashMapOf<String, Any>().apply {
@@ -2236,7 +2250,7 @@ class UtilsTest {
         }
         
         mockkStatic(CleverTapAPI::class) {
-            every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
+            every { CleverTapAPI.getGlobalInstance(mockContext, any()) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
             // When
@@ -2244,7 +2258,7 @@ class UtilsTest {
 
             // Then
             verifyOrder {
-                CleverTapAPI.instanceWithConfig(mockContext, mockConfig)
+                CleverTapAPI.getGlobalInstance(mockContext, any())
                 mockInstance.pushEvent(eventName, eventProps)
             }
         }

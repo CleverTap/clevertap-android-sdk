@@ -75,19 +75,25 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             }
             styleConfig = extras.getParcelable("styleConfig");
             Bundle configBundle = extras.getBundle("configBundle");
-            if (configBundle != null) {
-                config = configBundle.getParcelable("config");
+            // Resolve the live instance by accountId rather than rebuilding it from a serialized
+            // config copy in the intent (SDK-6254); derive config from the resolved instance.
+            String accountId = configBundle != null ? configBundle.getString("config") : null;
+            cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), accountId);
+            if (cleverTapAPI == null) {
+                throw new IllegalArgumentException();
             }
-            cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
-            if (cleverTapAPI != null) {
-                setListener(cleverTapAPI);
-                pushPermissionHandler = new PushPermissionHandler(
-                        config,
-                        cleverTapAPI.getCoreState().getCallbackManager().getPushPermissionResponseListenerList());
-            }
+            config = cleverTapAPI.getCoreState().getConfig();
+            setListener(cleverTapAPI);
+            pushPermissionHandler = new PushPermissionHandler(
+                    config,
+                    cleverTapAPI.getCoreState().getCallbackManager().getPushPermissionResponseListenerList());
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
+            // Resolution failed before cleverTapAPI/styleConfig were assigned (e.g. the account
+            // could not be resolved). Finish so we don't leave an empty activity on screen, and
+            // let onDestroy's null-guards skip the cleanup that would otherwise NPE.
+            finish();
             return;
         }
 
@@ -118,7 +124,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         tabLayout = linearLayout.findViewById(R.id.tab_layout);
         viewPager = linearLayout.findViewById(R.id.view_pager);
         Bundle bundle = new Bundle();
-        bundle.putParcelable("config", config);
+        bundle.putString("config", config.getAccountId());
         bundle.putParcelable("styleConfig", styleConfig);
 
         if (!styleConfig.isUsingTabs()) {
@@ -235,10 +241,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     protected void onDestroy() {
-        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
-        coreMetaData.setAppInboxActivity(null);
+        // Guard the failure path: if onCreate caught before assigning these, cleanup would NPE.
+        if (cleverTapAPI != null) {
+            CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+            coreMetaData.setAppInboxActivity(null);
+        }
 
-        if (styleConfig.isUsingTabs()) {
+        if (styleConfig != null && styleConfig.isUsingTabs()) {
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
                 if (fragment instanceof CTInboxListViewFragment) {

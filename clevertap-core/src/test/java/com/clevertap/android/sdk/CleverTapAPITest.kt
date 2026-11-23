@@ -12,6 +12,7 @@ import com.clevertap.android.shared.test.Constant
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -67,6 +68,31 @@ class CleverTapAPITest : BaseTestCase() {
             ""
         )
         assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
+    }
+
+    @Test
+    fun handleNotificationClicked_deliversClickForNotLoadedAccount_insteadOfDropping() {
+        // SDK-6356: account A is loaded in the registry; account B is NOT loaded, but its config is
+        // persisted on disk. A click for B must still be recorded (was silently dropped because the
+        // old lookup only rebuilt when the registry was empty).
+        initializeCleverTapAPI() // seeds Constant.ACC_ID -> cleverTapAPI (account A)
+
+        val accountB = "B_ACCOUNT"
+        val configB = CleverTapInstanceConfig.createInstance(application, accountB, "token_b")
+        StorageHelper.putString(application, "instance:$accountB", configB.toJSONString())
+
+        val rebuiltB = mockk<CleverTapAPI>(relaxed = true)
+        mockkStatic(CleverTapAPI::class) {
+            // createInstanceIfAvailable() reads the persisted config and rebuilds via instanceWithConfig.
+            every {
+                CleverTapAPI.instanceWithConfig(any(), match { it.accountId == accountB }, any())
+            } returns rebuiltB
+
+            val bundle = Bundle().apply { putString(Constants.WZRK_ACCT_ID_KEY, accountB) }
+            CleverTapAPI.handleNotificationClicked(application, bundle)
+
+            verify { rebuiltB.pushNotificationClickedEvent(bundle) }
+        }
     }
 
     @Test
