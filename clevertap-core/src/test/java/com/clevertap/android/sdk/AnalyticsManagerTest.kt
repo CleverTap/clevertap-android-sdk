@@ -15,7 +15,10 @@ import com.clevertap.android.sdk.inapp.InAppPreviewHandler
 import com.clevertap.android.sdk.inbox.CTInboxController
 import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
+import com.clevertap.android.sdk.task.CTExecutors
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.sdk.task.Task
+import java.util.concurrent.Callable
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.sdk.utils.Clock
 import com.clevertap.android.sdk.utils.UriHelper
@@ -678,6 +681,57 @@ class AnalyticsManagerTest {
 
         verify {
             validationPipelineProvider wasNot called
+        }
+    }
+
+    @Test
+    fun `test_pushProfile checks device id at execution time so a profile pushed before the id resolves is kept`() {
+        // SDK-6254: the device-id null check moved from the caller's thread into the queued job.
+        // A profile pushed right after start-up on a first launch (device id not resolved yet) must
+        // NOT be dropped at call time — it must wait on the serial queue and be pushed once the
+        // device-id barrier resolves the id. Capture the queued task, then resolve the id, then run
+        // it, and assert the profile is pushed.
+        val executors = mockk<CTExecutors>()
+        val task = mockk<Task<Void>>(relaxed = true)
+        val queuedJob = slot<Callable<Void>>()
+        every { executors.postAsyncSafelyTask<Void>() } returns task
+        every { task.execute(any(), capture(queuedJob)) } returns Unit
+
+        val sut = AnalyticsManager(
+            context,
+            cleverTapInstanceConfig,
+            eventQueueManager,
+            validationPipelineProvider,
+            validationConfig,
+            coreState.coreMetaData,
+            coreState.deviceInfo,
+            coreState.callbackManager,
+            coreState.controllerManager,
+            coreState.cTLockManager,
+            timeProvider,
+            executors,
+            localDataStore,
+            inAppPreviewHandler,
+            pushPreviewStore
+        )
+
+        val profile = mapOf("key1" to "value1")
+        mockEventDataValidation(validationPipelineProvider, profile)
+
+        // Device id not resolved yet when the app calls pushProfile.
+        every { coreState.deviceInfo.deviceID } returns null
+        sut.pushProfile(profile)
+
+        // The task was queued (not dropped at call time), and nothing pushed yet.
+        verify(exactly = 0) { eventQueueManager.pushBasicProfile(any(), any(), any()) }
+
+        // The device-id barrier resolves the id, then the queued job runs.
+        every { coreState.deviceInfo.deviceID } returns "1234"
+        queuedJob.captured.call()
+
+        val expectedJson = JSONObject().put("key1", "value1")
+        verify {
+            eventQueueManager.pushBasicProfile(match { expectedJson.isEqualTo(it) }, any(), any())
         }
     }
 

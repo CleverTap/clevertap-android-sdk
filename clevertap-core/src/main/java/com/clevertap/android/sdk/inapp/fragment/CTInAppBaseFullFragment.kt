@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp.fragment
 
 import android.view.Gravity
 import android.view.View
+import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.core.view.ViewCompat
@@ -26,8 +27,319 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
         })
     }
 
+    /**
+     * Sets up the close button of a full screen in-app: it dismisses the in-app when clicked, and it is
+     * shown only when the in-app asks for it. The host activity finishes itself when it gets the dismiss.
+     * [CTInAppNotification.showCloseButton] is read from the "close" key of the in-app.
+     */
+    fun setupCloseButton(closeImageView: CloseImageView) {
+        closeImageView.setOnClickListener {
+            triggerCloseButtonAction()
+        }
+
+        closeImageView.visibility = if (inAppNotification.showCloseButton) View.VISIBLE else View.GONE
+    }
+
+    override fun cleanup() {
+        if (mediaHandler !is NoOpMediaHandler) {
+            lifecycle.removeObserver(mediaHandler)
+            mediaHandler.cleanup()
+        }
+    }
+
+    override fun generateListener() {
+        val context = context
+        if (context is InAppNotificationActivity) {
+            setListener(context as InAppListener)
+        }
+    }
+
+    /**
+     * Checks if a devices is a tablet or a handset based on smallest width qualifier which specifies the smallest of
+     * the screen's two sides, regardless of the device's current orientation.<br></br>
+     * for example,<br></br> 600dp: a 7” tablet (600x1024 mdpi)
+     * <br></br>480dp: a large phone screen ~5" (480x800 mdpi)
+     *
+     * Adopting this method to determine if a device is tablet over manually calculating diagonal of device due to
+     * some OEM issues. [#116](https://github.com/CleverTap/clevertap-android-sdk/issues/116)
+     *
+     * @return true if device screen's smallest width, independent of orientation is >= 600dp else false
+     */
+    fun isTablet(): Boolean {
+        if (Utils.isActivityDead(activity)) {
+            return false
+        }
+
+        try {
+            return resources.getBoolean(R.bool.ctIsTablet)
+        } catch (_: Exception) {
+            // resource not found
+            Logger.d("Failed to decide whether device is a smart phone or tablet!")
+            return false
+        }
+    }
+
+    /**
+     * Sizes a half-interstitial card in portrait once it has been laid out. [isTabletInApp] is read at
+     * layout time and says whether the in-app was made for tablets.
+     *
+     * The card is sized once, with the screen size at that time. This is correct because
+     * `InAppNotificationActivity` declares only `configChanges="keyboardHidden"`, so a rotation, resize or
+     * fold change recreates the activity and the fragment. If the activity starts to handle `orientation` or
+     * `screenSize` itself, the card must be sized again on such a change.
+     */
+    fun addHalfInterstitialPortraitLayoutListener(
+        relativeLayout: RelativeLayout?,
+        closeImageView: CloseImageView,
+        isTabletInApp: () -> Boolean
+    ) {
+        relativeLayout?.viewTreeObserver
+            ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
+                    val isTablet = isTablet()
+                    when {
+                        isTabletInApp() && isTablet -> redrawHalfInterstitialInApp(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                        isTablet -> redrawHalfInterstitialMobileInAppOnTablet(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                        else -> redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView)
+                    }
+                    relativeLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                }
+            })
+    }
+
+    /**
+     * Sizes a half-interstitial card in landscape once it has been laid out. [isTabletInApp] is read at
+     * layout time and says whether the in-app was made for tablets.
+     *
+     * Like the portrait helper, it sizes the card only once (see there for why this is enough).
+     */
+    fun addHalfInterstitialLandscapeLayoutListener(
+        relativeLayout: RelativeLayout?,
+        closeImageView: CloseImageView,
+        isTabletInApp: () -> Boolean
+    ) {
+        relativeLayout?.viewTreeObserver
+            ?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    val layoutParams = relativeLayout.layoutParams as FrameLayout.LayoutParams
+                    val isTablet = isTablet()
+                    when {
+                        isTabletInApp() && isTablet -> redrawLandscapeHalfInterstitialTabletInApp(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                        isTablet -> redrawLandscapeHalfInterstitialMobileInAppOnTablet(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                        else -> redrawLandscapeHalfInterstitialInApp(
+                            relativeLayout, layoutParams, closeImageView
+                        )
+                    }
+                    relativeLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                }
+            })
+    }
+
+    fun redrawHalfInterstitialInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        val fittedHeight = fittedHalfInterstitialHeight(
+            cardWidth = relativeLayout.measuredWidth,
+            cardHeight = relativeLayout.measuredHeight,
+            barHeight = systemBarOverlap(relativeLayout)
+        )
+        if (fittedHeight != null) {
+            // The card would be taller than the screen, so fit the height and make it narrower.
+            layoutParams.height = fittedHeight
+            layoutParams.width = (fittedHeight / HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        } else {
+            layoutParams.height = (relativeLayout.measuredWidth * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        }
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawHalfInterstitialMobileInAppOnTablet(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.setMargins(
+            getScaledPixels(140),
+            getScaledPixels(140),
+            getScaledPixels(140),
+            getScaledPixels(140)
+        )
+        layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(210)
+        layoutParams.height = (layoutParams.width * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeHalfInterstitialInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.width = (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeHalfInterstitialMobileInAppOnTablet(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.setMargins(
+            getScaledPixels(140),
+            getScaledPixels(100),
+            getScaledPixels(140),
+            getScaledPixels(100)
+        )
+        layoutParams.height = relativeLayout.measuredHeight - getScaledPixels(130)
+        layoutParams.width = (layoutParams.height * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        layoutParams.gravity = Gravity.CENTER
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeHalfInterstitialTabletInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.width = (relativeLayout.measuredHeight * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
+        layoutParams.gravity = Gravity.CENTER
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawInterstitialInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.height = (relativeLayout.measuredWidth * INTERSTITIAL_ASPECT_RATIO).toInt()
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawInterstitialMobileInAppOnTablet(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        fl: FrameLayout,
+        closeImageView: CloseImageView
+    ) {
+        val aspectHeight = ((relativeLayout.measuredWidth - getScaledPixels(200)) * INTERSTITIAL_ASPECT_RATIO).toInt()
+        val requiredHeight = fl.measuredHeight - getScaledPixels(280)
+
+        if (aspectHeight > requiredHeight) {
+            layoutParams.height = requiredHeight
+            layoutParams.width = (requiredHeight / INTERSTITIAL_ASPECT_RATIO).toInt()
+        } else {
+            layoutParams.height = aspectHeight
+            layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(
+                200
+            )
+        }
+
+        layoutParams.setMargins(
+            getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140)
+        )
+
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawInterstitialTabletInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        fl: FrameLayout,
+        closeImageView: CloseImageView
+    ) {
+        val aspectHeight = (relativeLayout.measuredWidth * INTERSTITIAL_ASPECT_RATIO).toInt()
+        val requiredHeight = fl.measuredHeight - getScaledPixels(80)
+
+        if (aspectHeight > requiredHeight) {
+            layoutParams.height = requiredHeight
+            layoutParams.width = (requiredHeight / INTERSTITIAL_ASPECT_RATIO).toInt()
+        } else {
+            layoutParams.height = aspectHeight
+        }
+
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeInterstitialInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        closeImageView: CloseImageView
+    ) {
+        layoutParams.width = (relativeLayout.measuredHeight * INTERSTITIAL_ASPECT_RATIO).toInt()
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeInterstitialMobileInAppOnTablet(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        fl: FrameLayout,
+        closeImageView: CloseImageView
+    ) {
+        val aspectWidth = ((relativeLayout.measuredHeight - getScaledPixels(120)) * INTERSTITIAL_ASPECT_RATIO).toInt()
+        val requiredWidth = fl.measuredWidth - getScaledPixels(280)
+
+        if (aspectWidth > requiredWidth) {
+            layoutParams.width = requiredWidth
+            layoutParams.height = (requiredWidth / INTERSTITIAL_ASPECT_RATIO).toInt()
+        } else {
+            layoutParams.width = aspectWidth
+            layoutParams.height = (relativeLayout.measuredHeight - getScaledPixels(120))
+        }
+
+        layoutParams.setMargins(
+            getScaledPixels(140), getScaledPixels(100), getScaledPixels(140), getScaledPixels(100)
+        )
+        layoutParams.gravity = Gravity.CENTER
+        relativeLayout.setLayoutParams(layoutParams)
+
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
+    fun redrawLandscapeInterstitialTabletInApp(
+        relativeLayout: RelativeLayout,
+        layoutParams: FrameLayout.LayoutParams,
+        fl: FrameLayout,
+        closeImageView: CloseImageView
+    ) {
+        val aspectWidth = (relativeLayout.measuredHeight * INTERSTITIAL_ASPECT_RATIO).toInt()
+        val requiredWidth = fl.measuredWidth - getScaledPixels(80)
+
+        if (aspectWidth > requiredWidth) {
+            layoutParams.width = requiredWidth
+            layoutParams.height = (requiredWidth / INTERSTITIAL_ASPECT_RATIO).toInt()
+        } else {
+            layoutParams.width = aspectWidth
+        }
+
+        layoutParams.gravity = Gravity.CENTER
+        relativeLayout.setLayoutParams(layoutParams)
+        addCloseImageView(relativeLayout, closeImageView)
+    }
+
     companion object {
-        private const val HALF_INTERSTITIAL_ASPECT_RATIO = 1.3f
+        internal const val HALF_INTERSTITIAL_ASPECT_RATIO = 1.3f
+        internal const val INTERSTITIAL_ASPECT_RATIO = 1.78f
 
         /**
          * Returns the height the half-interstitial card must be reduced to so that it fits the
@@ -68,197 +380,5 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
             val overlapBottom = maxOf(0, containerTop + container.height - (windowHeight - bars.bottom))
             return maxOf(overlapTop, overlapBottom)
         }
-    }
-
-    override fun cleanup() {
-        if (mediaHandler !is NoOpMediaHandler) {
-            lifecycle.removeObserver(mediaHandler)
-            mediaHandler.cleanup()
-        }
-    }
-
-    override fun generateListener() {
-        val context = context
-        if (context is InAppNotificationActivity) {
-            setListener(context as InAppListener)
-        }
-    }
-
-    /**
-     * Checks if a devices is a tablet or a handset based on smallest width qualifier which specifies the smallest of
-     * the screen's two sides, regardless of the device's current orientation.<br></br>
-     * for example,<br></br> 600dp: a 7” tablet (600x1024 mdpi)
-     * <br></br>480dp: a large phone screen ~5" (480x800 mdpi)
-     *
-     * Adopting this method to determine if a device is tablet over manually calculating diagonal of device due to
-     * some OEM issues. [#116](https://github.com/CleverTap/clevertap-android-sdk/issues/116)
-     *
-     * @return true if device screen's smallest width, independent of orientation is >= 600dp else false
-     */
-    fun isTablet(): Boolean {
-            if (Utils.isActivityDead(activity)) {
-                return false
-            }
-
-            try {
-                return resources.getBoolean(R.bool.ctIsTablet)
-            } catch (_: Exception) {
-                // resource not found
-                Logger.d("Failed to decide whether device is a smart phone or tablet!")
-                return false
-            }
-        }
-
-    fun redrawHalfInterstitialInApp(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        closeImageView: CloseImageView
-    ) {
-        val fittedHeight = fittedHalfInterstitialHeight(
-            cardWidth = relativeLayout.measuredWidth,
-            cardHeight = relativeLayout.measuredHeight,
-            barHeight = systemBarOverlap(relativeLayout)
-        )
-        if (fittedHeight != null) {
-            // The card would be taller than the screen, so fit the height and make it narrower.
-            layoutParams.height = fittedHeight
-            layoutParams.width = (fittedHeight / HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
-        } else {
-            layoutParams.height = (relativeLayout.measuredWidth * HALF_INTERSTITIAL_ASPECT_RATIO).toInt()
-        }
-        relativeLayout.setLayoutParams(layoutParams)
-        addCloseImageView(relativeLayout, closeImageView)
-    }
-
-    fun redrawHalfInterstitialMobileInAppOnTablet(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        closeImageView: CloseImageView
-    ) {
-        layoutParams.setMargins(
-            getScaledPixels(140),
-            getScaledPixels(140),
-            getScaledPixels(140),
-            getScaledPixels(140)
-        )
-        layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(210)
-        layoutParams.height = (layoutParams.width * 1.3f).toInt()
-        relativeLayout.setLayoutParams(layoutParams)
-        addCloseImageView(relativeLayout, closeImageView)
-    }
-
-    fun redrawInterstitialInApp(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        closeImageView: CloseImageView
-    ) {
-        layoutParams.height = (relativeLayout.measuredWidth * 1.78f).toInt()
-        relativeLayout.setLayoutParams(layoutParams)
-        addCloseImageView(relativeLayout, closeImageView)
-    }
-
-    fun redrawInterstitialMobileInAppOnTablet(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        fl: FrameLayout,
-        closeImageView: CloseImageView
-    ) {
-        val aspectHeight = ((relativeLayout.measuredWidth - getScaledPixels(200)) * 1.78f).toInt()
-        val requiredHeight = fl.measuredHeight - getScaledPixels(280)
-
-        if (aspectHeight > requiredHeight) {
-            layoutParams.height = requiredHeight
-            layoutParams.width = (requiredHeight / 1.78f).toInt()
-        } else {
-            layoutParams.height = aspectHeight
-            layoutParams.width = relativeLayout.measuredWidth - getScaledPixels(
-                200
-            )
-        }
-
-        layoutParams.setMargins(
-            getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140)
-        )
-
-        relativeLayout.setLayoutParams(layoutParams)
-        addCloseImageView(relativeLayout, closeImageView)
-    }
-
-    fun redrawInterstitialTabletInApp(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        fl: FrameLayout,
-        closeImageView: CloseImageView
-    ) {
-        val aspectHeight = (relativeLayout.measuredWidth * 1.78f).toInt()
-        val requiredHeight = fl.measuredHeight - getScaledPixels(80)
-
-        if (aspectHeight > requiredHeight) {
-            layoutParams.height = requiredHeight
-            layoutParams.width = (requiredHeight / 1.78f).toInt()
-        } else {
-            layoutParams.height = aspectHeight
-        }
-
-        relativeLayout.setLayoutParams(layoutParams)
-        addCloseImageView(relativeLayout, closeImageView)
-    }
-
-    fun redrawLandscapeInterstitialInApp(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        closeImageView: CloseImageView
-    ) {
-        layoutParams.width = (relativeLayout.measuredHeight * 1.78f).toInt()
-        layoutParams.gravity = Gravity.CENTER_HORIZONTAL
-        relativeLayout.setLayoutParams(layoutParams)
-        addCloseImageView(relativeLayout, closeImageView)
-    }
-
-    fun redrawLandscapeInterstitialMobileInAppOnTablet(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        fl: FrameLayout,
-        closeImageView: CloseImageView
-    ) {
-        val aspectWidth = ((relativeLayout.measuredHeight - getScaledPixels(120)) * 1.78f).toInt()
-        val requiredWidth = fl.measuredWidth - getScaledPixels(280)
-
-        if (aspectWidth > requiredWidth) {
-            layoutParams.width = requiredWidth
-            layoutParams.height = (requiredWidth / 1.78f).toInt()
-        } else {
-            layoutParams.width = aspectWidth
-            layoutParams.height = (relativeLayout.measuredHeight - getScaledPixels(120))
-        }
-
-        layoutParams.setMargins(
-            getScaledPixels(140), getScaledPixels(100), getScaledPixels(140), getScaledPixels(100)
-        )
-        layoutParams.gravity = Gravity.CENTER
-        relativeLayout.setLayoutParams(layoutParams)
-
-        addCloseImageView(relativeLayout, closeImageView)
-    }
-
-    fun redrawLandscapeInterstitialTabletInApp(
-        relativeLayout: RelativeLayout,
-        layoutParams: FrameLayout.LayoutParams,
-        fl: FrameLayout,
-        closeImageView: CloseImageView
-    ) {
-        val aspectWidth = (relativeLayout.measuredHeight * 1.78f).toInt()
-        val requiredWidth = fl.measuredWidth - getScaledPixels(80)
-
-        if (aspectWidth > requiredWidth) {
-            layoutParams.width = requiredWidth
-            layoutParams.height = (requiredWidth / 1.78f).toInt()
-        } else {
-            layoutParams.width = aspectWidth
-        }
-
-        layoutParams.gravity = Gravity.CENTER
-        relativeLayout.setLayoutParams(layoutParams)
-        addCloseImageView(relativeLayout, closeImageView)
     }
 }
