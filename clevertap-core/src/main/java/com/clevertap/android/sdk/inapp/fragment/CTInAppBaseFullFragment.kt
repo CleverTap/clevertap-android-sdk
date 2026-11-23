@@ -28,14 +28,14 @@ internal abstract class CTInAppBaseFullFragment : CTInAppBaseFragment() {
     }
 
     /**
-     * Sets up the close button of a full screen in-app: it closes the in-app when clicked, and it is
-     * shown only when the in-app asks for it. [CTInAppNotification.isHideCloseButton] is read from the
-     * "close" key of the in-app, so `true` means that the close button is shown.
+     * Sets up the close button of a full screen in-app: it dismisses the in-app when clicked, and it is
+     * shown only when the in-app asks for it. The host activity finishes itself when it gets the dismiss.
+     * [CTInAppNotification.isHideCloseButton] is read from the "close" key of the in-app, so `true`
+     * means that the close button is shown.
      */
     fun setupCloseButton(closeImageView: CloseImageView) {
         closeImageView.setOnClickListener {
             triggerCloseButtonAction()
-            activity?.finish()
         }
 
         closeImageView.visibility = if (inAppNotification.isHideCloseButton) View.VISIBLE else View.GONE

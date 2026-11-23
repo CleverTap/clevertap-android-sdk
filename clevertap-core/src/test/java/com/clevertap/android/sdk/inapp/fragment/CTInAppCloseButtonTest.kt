@@ -31,6 +31,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -76,7 +77,7 @@ class CTInAppCloseButtonTest {
     }
 
     @Test
-    fun `clicking the close button dismisses the in-app and closes the activity`() {
+    fun `clicking the close button dismisses the in-app and does not finish the host activity`() {
         for (kind in Kind.values()) {
             val shown = show(kind, close = true)
             val listener = mockk<InAppListener>(relaxed = true)
@@ -94,7 +95,9 @@ class CTInAppCloseButtonTest {
                 )
             }
             verify(exactly = 1) { listener.inAppNotificationDidDismiss(any(), any()) }
-            assertTrue(shown.host.isFinishing, "${kind.name} did not close the activity")
+            // The activity that owns the in-app finishes itself when it gets the dismiss. The fragment
+            // must not finish a host it does not own.
+            assertFalse(shown.host.isFinishing, "${kind.name} finished the host activity")
         }
     }
 
