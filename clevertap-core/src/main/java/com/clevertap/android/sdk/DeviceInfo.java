@@ -17,6 +17,8 @@ import android.content.res.Configuration;
 import android.graphics.Insets;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -27,6 +29,7 @@ import android.view.WindowMetrics;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -51,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -99,32 +103,71 @@ public class DeviceInfo {
 
         private final String locale;
 
+        // True when a read timed out, so its values here are fallbacks and not what the device reported.
+        private final boolean unfinished;
+
         DeviceCachedInfo() {
-            versionName = getVersionName();
+            // One read per system service. They use only DeviceInfo fields, not this object's, so starting them
+            // here is safe.
+            DeviceRead<PackageValues> packageRead = DeviceStateKt.startExistingRead("package info", this::readPackageValues);
+            DeviceRead<TelephonyValues> telephonyRead = DeviceStateKt.startExistingRead("telephony", this::readTelephonyValues);
+            DeviceRead<WindowSize> windowRead = DeviceStateKt.startExistingRead("window size", this::getWindowSizeData);
+            DeviceRead<String> bucketRead = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                    ? DeviceStateKt.startExistingRead("app standby bucket", this::getAppBucket)
+                    : null;
+
             osName = getOsName();
             osVersion = getOsVersion();
             manufacturer = getManufacturer();
             model = getModel();
-            carrier = getCarrier();
-            build = getBuild();
-            bluetoothVersion = getBluetoothVersion();
-            countryCode = getCountryCode();
             sdkVersion = getSdkVersion();
-
-            WindowSize result = getWindowSizeData();
-
-            width = result.width;
-            height = result.height;
-            dpi = result.localDpi;
-
-
             localInAppCount = getLocalInAppCountFromPreference();
             locale = getDeviceLocale();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                appBucket = getAppBucket();
-            } else {
-                appBucket = null;
+
+            PackageValues packageValues = packageRead.get();
+            versionName = packageValues != null ? packageValues.versionName : null;
+            build = packageValues != null ? packageValues.build : 0;
+            bluetoothVersion = packageValues != null ? packageValues.bluetoothVersion : null;
+
+            TelephonyValues telephonyValues = telephonyRead.get();
+            carrier = telephonyValues != null ? telephonyValues.carrier : null;
+            countryCode = telephonyValues != null && telephonyValues.countryCode != null
+                    ? telephonyValues.countryCode : "";
+
+            WindowSize windowSize = windowRead.get();
+            if (windowSize == null) {
+                windowSize = new WindowSize(0, 0, 0);
             }
+            width = windowSize.width;
+            height = windowSize.height;
+            dpi = windowSize.localDpi;
+
+            appBucket = bucketRead != null ? bucketRead.get() : null;
+
+            unfinished = packageRead.getUnfinished() || telephonyRead.getUnfinished() || windowRead.getUnfinished()
+                    || (bucketRead != null && bucketRead.getUnfinished());
+        }
+
+        // One getPackageInfo for both version values, plus the feature lookups, all on PackageManager.
+        private PackageValues readPackageValues() {
+            PackageInfo packageInfo = DeviceStateKt.catchOrNull("package info", this::getPackageInfo);
+            String bluetooth = DeviceStateKt.catchOrNull("bluetooth version", this::getBluetoothVersion);
+            return new PackageValues(
+                    packageInfo != null ? packageInfo.versionName : null,
+                    packageInfo != null ? packageInfo.versionCode : 0,
+                    bluetooth
+            );
+        }
+
+        private TelephonyValues readTelephonyValues() {
+            TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            if (manager == null) {
+                return null;
+            }
+            return new TelephonyValues(
+                    DeviceStateKt.catchOrNull("carrier", manager::getNetworkOperatorName),
+                    DeviceStateKt.catchOrNull("sim country", manager::getSimCountryIso)
+            );
         }
 
         @NonNull
@@ -191,41 +234,13 @@ public class DeviceInfo {
             return bluetoothVersion;
         }
 
-        private int getBuild() {
-            PackageInfo packageInfo;
+        private PackageInfo getPackageInfo() {
             try {
-                packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                return packageInfo.versionCode;
+                return context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             } catch (PackageManager.NameNotFoundException e) {
-                getConfigLogger().debug(config.getAccountId(), "Unable to get app build", e);
+                getConfigLogger().debug(config.getAccountId(), "Unable to get app version and build", e);
+                return null;
             }
-            return 0;
-        }
-
-        private String getCarrier() {
-            try {
-                TelephonyManager manager = (TelephonyManager) context
-                        .getSystemService(Context.TELEPHONY_SERVICE);
-                if (manager != null) {
-                    return manager.getNetworkOperatorName();
-                }
-
-            } catch (Exception e) {
-                // Failed to get network operator name from network
-            }
-            return null;
-        }
-
-        private String getCountryCode() {
-            try {
-                TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                if (tm != null) {
-                    return tm.getSimCountryIso();
-                }
-            } catch (Throwable ignore) {
-                return "";
-            }
-            return "";
         }
 
         private String getManufacturer() {
@@ -282,17 +297,6 @@ public class DeviceInfo {
             return BuildConfig.VERSION_CODE;
         }
 
-        private String getVersionName() {
-            PackageInfo packageInfo;
-            try {
-                packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                return packageInfo.versionName;
-            } catch (PackageManager.NameNotFoundException e) {
-                getConfigLogger().debug(config.getAccountId(), "Unable to get app version", e);
-            }
-            return null;
-        }
-
         private String getDeviceLocale() {
             String language = Locale.getDefault().getLanguage();
             if ("".equals(language)) {
@@ -326,6 +330,28 @@ public class DeviceInfo {
             this.localDpi = localDpi;
             this.width = width;
             this.height = height;
+        }
+    }
+
+    private static class PackageValues {
+        final String versionName;
+        final int build;
+        final String bluetoothVersion;
+
+        PackageValues(String versionName, int build, String bluetoothVersion) {
+            this.versionName = versionName;
+            this.build = build;
+            this.bluetoothVersion = bluetoothVersion;
+        }
+    }
+
+    private static class TelephonyValues {
+        final String carrier;
+        final String countryCode;
+
+        TelephonyValues(String carrier, String countryCode) {
+            this.carrier = carrier;
+            this.countryCode = countryCode;
         }
     }
 
@@ -403,7 +429,15 @@ public class DeviceInfo {
 
     private boolean adIdRun = false;
 
-    private DeviceCachedInfo cachedInfo;
+    private static final int READ_RETRIES = 2;
+
+    private static final long READ_RETRY_GAP_MS = 5_000L;
+
+    private volatile DeviceCachedInfo cachedInfo;
+
+    private final AtomicInteger cachedInfoRetriesLeft = new AtomicInteger(READ_RETRIES);
+
+    private volatile long cachedInfoLastReadMs;
 
     private final CleverTapInstanceConfig config;
 
@@ -427,6 +461,33 @@ public class DeviceInfo {
 
     private final  NetworkMonitor networkMonitor;
 
+    // Read at init and on each resume, push status per request header.
+    private volatile DeviceState deviceState;
+
+    // Guards deviceState. Each refresh takes a generation so only the newest result is stored.
+    private final Object deviceStateLock = new Object();
+
+    private long deviceStateGeneration = 0;
+
+    // Bumped on each push only refresh, guarded by deviceStateLock. A full read that overlaps one keeps its value.
+    private long pushStatusGeneration = 0;
+
+    // Last push only read, guarded by deviceStateLock. Kept even before the first full read is stored.
+    private Integer latestPushStatus;
+
+    // Last resumed activity's configuration, guarded by deviceStateLock. Its display values win.
+    private Configuration activityConfiguration;
+
+    // Can't change while the app runs, so read once off the main thread at init.
+    private volatile DeviceSpecs deviceSpecs;
+
+    private final AtomicInteger deviceSpecsRetriesLeft = new AtomicInteger(READ_RETRIES);
+
+    private volatile long deviceSpecsLastReadMs;
+
+    // Device id the launch fields (CTJsonConverter.LAUNCH_AF_KEYS) were delivered for, null if not yet.
+    private volatile String launchFieldsSentFor;
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -449,24 +510,28 @@ public class DeviceInfo {
 
         if (sDeviceType == NULL) {
 
-            try {
+            Boolean isTv = DeviceStateKt.existingReadOrNull("ui mode", () -> {
                 UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
-                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-                    sDeviceType = TV;
-                    return sDeviceType;
-                }
-            } catch (Exception e) {
-                //uiModeManager or context is null
-                Logger.d(TAG, "Failed to decide whether device is a TV!", e);
+                return uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+            });
+            if (Boolean.TRUE.equals(isTv)) {
+                sDeviceType = TV;
+                return sDeviceType;
             }
 
+            @DeviceType int type;
             try {
-                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
+                type = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
             } catch (Exception e) {
                 // resource not found or context is null
                 Logger.d(TAG, "Failed to decide whether device is a smart phone or tablet!", e);
-                sDeviceType = UNKNOWN;
+                type = UNKNOWN;
             }
+            // Not cached when the TV check failed or timed out, so a TV isn't reported as a phone for the session.
+            if (isTv == null) {
+                return type;
+            }
+            sDeviceType = type;
         }
         return sDeviceType;
     }
@@ -595,8 +660,60 @@ public class DeviceInfo {
     }
 
     public String getNetworkType() {
+        return DeviceStateKt.existingReadOrNull("radio", this::readNetworkType);
+    }
+
+    private String readNetworkType() {
         if (networkMonitor == null) return null;
         return networkMonitor.getNetworkTypeString();
+    }
+
+    /**
+     * Wifi, radio, bluetooth, metered and data saver state, read live for each af build. Metered and data
+     * saver are new, so they get their own read and a slow one can't drop wifi, radio and bluetooth.
+     */
+    @NonNull
+    public LiveNetworkInfo getLiveNetworkInfo() {
+        DeviceRead<LiveNetworkInfo> existingRead = DeviceStateKt.startExistingRead("network info",
+                () -> new LiveNetworkInfo(
+                        DeviceStateKt.catchOrNull("wifi", this::readWifiConnected),
+                        DeviceStateKt.catchOrNull("radio", this::readNetworkType),
+                        DeviceStateKt.catchOrNull("bluetooth state", this::readBluetoothEnabled),
+                        null, null));
+        DeviceRead<LiveNetworkInfo> addedRead = DeviceStateKt.startRead("metered and data saver",
+                () -> new LiveNetworkInfo(null, null, null,
+                        DeviceStateKt.catchOrNull("metered network", () -> DeviceState.readMetered(context)),
+                        DeviceStateKt.catchOrNull("data saver", () -> DeviceState.readDataSaver(context))));
+        LiveNetworkInfo existing = existingRead.get();
+        LiveNetworkInfo added = addedRead.get();
+        return new LiveNetworkInfo(
+                existing != null ? existing.wifi : null,
+                existing != null ? existing.radio : null,
+                existing != null ? existing.bluetoothEnabled : null,
+                added != null ? added.metered : null,
+                added != null ? added.lowData : null);
+    }
+
+    public static class LiveNetworkInfo {
+        @Nullable
+        public final Boolean wifi;
+        @Nullable
+        public final String radio;
+        @Nullable
+        public final Boolean bluetoothEnabled;
+        @Nullable
+        public final Boolean metered;
+        @Nullable
+        public final Boolean lowData;
+
+        LiveNetworkInfo(@Nullable Boolean wifi, @Nullable String radio, @Nullable Boolean bluetoothEnabled,
+                @Nullable Boolean metered, @Nullable Boolean lowData) {
+            this.wifi = wifi;
+            this.radio = radio;
+            this.bluetoothEnabled = bluetoothEnabled;
+            this.metered = metered;
+            this.lowData = lowData;
+        }
     }
 
     public String getOsName() {
@@ -654,20 +771,18 @@ public class DeviceInfo {
     @SuppressLint("MissingPermission")
     @SuppressWarnings("MissingPermission")
     public Boolean isBluetoothEnabled() {
-        Boolean isBluetoothEnabled = null;
-        try {
-            PackageManager pm = context.getPackageManager();
-            int hasBluetoothPermission = pm.checkPermission(Manifest.permission.BLUETOOTH, context.getPackageName());
-            if (hasBluetoothPermission == PackageManager.PERMISSION_GRANTED) {
-                BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                if (bluetoothAdapter != null) {
-                    isBluetoothEnabled = bluetoothAdapter.isEnabled();
-                }
-            }
-        } catch (Throwable e) {
-            // do nothing since we don't have permissions
+        return DeviceStateKt.existingReadOrNull("bluetooth state", this::readBluetoothEnabled);
+    }
+
+    @SuppressLint("MissingPermission")
+    private Boolean readBluetoothEnabled() {
+        PackageManager pm = context.getPackageManager();
+        int hasBluetoothPermission = pm.checkPermission(Manifest.permission.BLUETOOTH, context.getPackageName());
+        if (hasBluetoothPermission != PackageManager.PERMISSION_GRANTED) {
+            return null;
         }
-        return isBluetoothEnabled;
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        return bluetoothAdapter != null ? bluetoothAdapter.isEnabled() : null;
     }
 
     public boolean isErrorDeviceId() {
@@ -682,6 +797,10 @@ public class DeviceInfo {
     }
 
     public Boolean isWifiConnected() {
+        return DeviceStateKt.existingReadOrNull("wifi", this::readWifiConnected);
+    }
+
+    private Boolean readWifiConnected() {
         if (PackageManager.PERMISSION_GRANTED != context
                 .checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
             return null;
@@ -696,6 +815,245 @@ public class DeviceInfo {
     }
 
 
+
+    @Nullable
+    public Boolean isLowPowerMode() {
+        return getDeviceState().getLowPower();
+    }
+
+    @Nullable
+    public Integer getThermalLevel() {
+        return getDeviceState().getThermal();
+    }
+
+    @Nullable
+    public Boolean isDarkMode() {
+        return getDeviceState().getDarkMode();
+    }
+
+    @Nullable
+    public Double getTextSize() {
+        return getDeviceState().getTextSize();
+    }
+
+    @Nullable
+    public Boolean isReduceMotion() {
+        return getDeviceState().getReduceMotion();
+    }
+
+    @Nullable
+    public Integer getPushStatus() {
+        return getDeviceState().getPushStatus();
+    }
+
+    @Nullable
+    public Integer getBatteryLevel() {
+        return getDeviceState().getBatt();
+    }
+
+    @Nullable
+    public Boolean isCharging() {
+        return getDeviceState().getChg();
+    }
+
+    @Nullable
+    public Boolean isBoldText() {
+        return getDeviceState().getBoldText();
+    }
+
+    @Nullable
+    public Integer getRamTier() {
+        return getDeviceSpecs().getRam();
+    }
+
+    @Nullable
+    public Integer getCpuCores() {
+        return getDeviceSpecs().getCpu();
+    }
+
+    @Nullable
+    public String getInstallSource() {
+        return getDeviceSpecs().getInstSrc();
+    }
+
+    /** ApplicationExitInfo reason of this process's last death, API 30 and up. Null when there is no record. */
+    @Nullable
+    public Integer getLastExitReason() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getReason() : null;
+    }
+
+    @Nullable
+    public Integer getLastExitStatus() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getStatus() : null;
+    }
+
+    @Nullable
+    public Integer getLastExitImportance() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getImportance() : null;
+    }
+
+    /** AnrTypes code on the last exit record, API 37 and up. Only set when that exit was an ANR. */
+    @Nullable
+    public Integer getLastAnrType() {
+        DeviceSpecs.Anr anr = getLastAnr();
+        return anr != null ? anr.getType() : null;
+    }
+
+    /** How long the system waited before declaring the ANR, in milliseconds. */
+    @Nullable
+    public Long getLastAnrTimeoutMs() {
+        DeviceSpecs.Anr anr = getLastAnr();
+        return anr != null ? anr.getTimeoutMs() : null;
+    }
+
+    @Nullable
+    public Boolean isLastAnrUserPerceptible() {
+        DeviceSpecs.Anr anr = getLastAnr();
+        return anr != null ? anr.getUserPerceptible() : null;
+    }
+
+    private DeviceSpecs.Anr getLastAnr() {
+        DeviceSpecs.LastExit lastExit = getDeviceSpecs().getLastExit();
+        return lastExit != null ? lastExit.getAnr() : null;
+    }
+
+    /** True once a request has delivered the launch fields for the current device id, so headers can drop them. */
+    public boolean isLaunchFieldsSent() {
+        String deviceId = getDeviceID();
+        return deviceId != null && deviceId.equals(launchFieldsSentFor);
+    }
+
+    /** Call when a request with this header succeeded. A failed request leaves the fields in the next header. */
+    public void onHeaderSent(@Nullable JSONObject header) {
+        JSONObject appFields = header != null ? header.optJSONObject("af") : null;
+        // ram comes from the same read as the last exit, so with it present that read had finished.
+        if (appFields != null && appFields.has("ram") && !getDeviceSpecs().getUnfinished()) {
+            launchFieldsSentFor = header.optString("g", null);
+        }
+    }
+
+    private DeviceSpecs getDeviceSpecs() {
+        DeviceSpecs specs = deviceSpecs;
+        if (specs == null) {
+            // Not read yet. No system calls on the main thread, so leave the values out until the init read lands.
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                return DeviceSpecs.UNKNOWN;
+            }
+            // Off the main thread, reading twice is harmless.
+            specs = DeviceSpecs.read(context);
+            deviceSpecs = specs;
+            deviceSpecsLastReadMs = SystemClock.elapsedRealtime();
+        } else if (specs.getUnfinished() && canRetryRead(deviceSpecsRetriesLeft, deviceSpecsLastReadMs)) {
+            // Same as cached info, a timed out read is not kept for the session.
+            deviceSpecsLastReadMs = SystemClock.elapsedRealtime();
+            DeviceSpecs retried = DeviceSpecs.read(context);
+            if (!retried.getUnfinished()) {
+                deviceSpecs = retried;
+                specs = retried;
+            }
+        }
+        return specs;
+    }
+
+    // Off the main thread only, a few times and spaced out, so retries can't stack waits in one header.
+    private static boolean canRetryRead(AtomicInteger retriesLeft, long lastReadMs) {
+        return Looper.myLooper() != Looper.getMainLooper()
+                && SystemClock.elapsedRealtime() - lastReadMs >= READ_RETRY_GAP_MS
+                && retriesLeft.get() > 0 && retriesLeft.getAndDecrement() > 0;
+    }
+
+    /**
+     * Returns a task that re-reads the device state, to run off the main thread.
+     * Only the newest prepared task's result is stored.
+     */
+    Callable<Void> prepareDeviceStateRefresh() {
+        final long generation;
+        synchronized (deviceStateLock) {
+            generation = ++deviceStateGeneration;
+        }
+        return () -> {
+            refreshDeviceState(generation);
+            return null;
+        };
+    }
+
+    // Dropped if a newer refresh was prepared.
+    @WorkerThread
+    private void refreshDeviceState(long generation) {
+        final long pushGeneration;
+        synchronized (deviceStateLock) {
+            pushGeneration = pushStatusGeneration;
+        }
+        DeviceState state = DeviceState.read(context, context.getResources().getConfiguration());
+        synchronized (deviceStateLock) {
+            if (generation == deviceStateGeneration) {
+                deviceState = withActivityDisplay(withLatestPushStatus(state, pushGeneration));
+            }
+        }
+    }
+
+    // Callers hold deviceStateLock. A push only refresh ran during this read, so keep what the last header sent.
+    private DeviceState withLatestPushStatus(DeviceState state, long pushGeneration) {
+        return pushGeneration == pushStatusGeneration ? state : state.withPushStatus(latestPushStatus);
+    }
+
+    /** Stores a resumed activity's display values. No system calls, so safe on the main thread. */
+    void updateDisplayState(Configuration activityConfig) {
+        Configuration copy = new Configuration(activityConfig);
+        synchronized (deviceStateLock) {
+            activityConfiguration = copy;
+            if (deviceState != null) {
+                deviceState = deviceState.withDisplay(copy);
+            }
+        }
+    }
+
+    /** Stores the notification setting the header read for ddnd, so pushStatus matches it without a second read. */
+    public void refreshPushStatus(boolean notificationsEnabled) {
+        Integer pushStatus = DeviceState.pushStatus(notificationsEnabled);
+        synchronized (deviceStateLock) {
+            latestPushStatus = pushStatus;
+            pushStatusGeneration++;
+            if (deviceState != null) {
+                deviceState = deviceState.withPushStatus(pushStatus);
+            }
+        }
+    }
+
+    // Callers hold deviceStateLock.
+    private DeviceState withActivityDisplay(DeviceState state) {
+        return activityConfiguration == null ? state : state.withDisplay(activityConfiguration);
+    }
+
+    @NonNull
+    public DeviceState getDeviceState() {
+        DeviceState state = deviceState;
+        if (state != null) {
+            return state;
+        }
+        // Not read yet. On the main thread, send only display values and a push status already read, no system call.
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            synchronized (deviceStateLock) {
+                DeviceState displayOnly = DeviceState.displayOnly(context.getResources().getConfiguration());
+                return withActivityDisplay(displayOnly.withPushStatus(latestPushStatus));
+            }
+        }
+        final long pushGeneration;
+        synchronized (deviceStateLock) {
+            pushGeneration = pushStatusGeneration;
+        }
+        state = DeviceState.read(context, context.getResources().getConfiguration());
+        synchronized (deviceStateLock) {
+            // Keep a value a refresh stored meanwhile.
+            if (deviceState == null) {
+                deviceState = withActivityDisplay(withLatestPushStatus(state, pushGeneration));
+            }
+            return deviceState;
+        }
+    }
 
     void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
@@ -726,6 +1084,16 @@ public class DeviceInfo {
                 getDeviceCachedInfo();
                 return null;
             }
+        });
+
+        // Own task, so it doesn't wait behind the snapshot above or get skipped if that throws.
+        Task<Void> taskDeviceState = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceState.execute("initDeviceState", prepareDeviceStateRefresh());
+
+        Task<Void> taskDeviceSpecs = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceSpecs.execute("initDeviceSpecs", () -> {
+            getDeviceSpecs();
+            return null;
         });
     }
 
@@ -885,10 +1253,32 @@ public class DeviceInfo {
     }
 
     private DeviceCachedInfo getDeviceCachedInfo() {
-        if (cachedInfo == null) {
-            cachedInfo = new DeviceCachedInfo();
+        DeviceCachedInfo info = cachedInfo;
+        if (info == null) {
+            info = new DeviceCachedInfo();
+            cachedInfo = info;
+            cachedInfoLastReadMs = SystemClock.elapsedRealtime();
+        } else if (info.unfinished) {
+            info = retryCachedInfo(info);
         }
-        return cachedInfo;
+        return info;
+    }
+
+    // A timed out read left fallbacks like a 0 window size. Read again and keep the result only if nothing
+    // timed out, so a slow start is not cached for good.
+    private DeviceCachedInfo retryCachedInfo(DeviceCachedInfo info) {
+        if (!canRetryRead(cachedInfoRetriesLeft, cachedInfoLastReadMs)) {
+            return info;
+        }
+        cachedInfoLastReadMs = SystemClock.elapsedRealtime();
+        DeviceCachedInfo retried = new DeviceCachedInfo();
+        if (retried.unfinished) {
+            return info;
+        }
+        // The count is saved to preferences async, so the one in memory can be ahead of what was just read.
+        retried.localInAppCount = Math.max(retried.localInAppCount, info.localInAppCount);
+        cachedInfo = retried;
+        return retried;
     }
 
     private String getDeviceIdStorageKey() {

@@ -12,6 +12,7 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
+import com.clevertap.android.sdk.DeviceState;
 import com.clevertap.android.sdk.ILogger;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -72,7 +73,15 @@ public class CTJsonConverter {
             "GoogleAdID", Constants.MULTI_USER_PREFIX + "GoogleAdID", "GoogleAdIDLimit",
             "Make", "Model", "Carrier", "useIP", "OS", "wdt", "hgt", "dpi", "dt", "locale", "abckt", "lib",
             "proxyDomain", "spikyProxyDomain", "sslpin", "fcmsid", "cc",
-            "wifi", "BluetoothEnabled", "BluetoothVersion", "Radio", "LIAMC")));
+            "wifi", "BluetoothEnabled", "BluetoothVersion", "Radio", "LIAMC",
+            "lowPower", "thermal", "darkMode", "textSize", "reduceMotion", "pushStatus", "batt", "chg",
+            "ram", "cpu", "boldText", "instSrc", "exitRsn", "exitStatus", "exitImp",
+            "anrType", "anrTimeout", "anrUser", "metered", "lowData")));
+
+    // Keys from() writes that can't change while the app runs. The request header sends them until one
+    // request has delivered them, see QueueHeaderBuilder. Keep in sync with from().
+    public static final List<String> LAUNCH_AF_KEYS = Collections.unmodifiableList(Arrays.asList(
+            "ram", "cpu", "instSrc", "exitRsn", "exitStatus", "exitImp", "anrType", "anrTimeout", "anrUser"));
 
     public static JSONObject from(DeviceInfo deviceInfo, CoreMetaData coreMetaData, boolean enableNetworkInfoReporting
             , boolean deviceIsMultiUser) throws JSONException {
@@ -111,6 +120,28 @@ public class CTJsonConverter {
             evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
             evtData.put("locale", deviceInfo.getLocale());
 
+            // Same keys as iOS. putOpt leaves out values that can't be read.
+            // One snapshot, so a display update between two reads can't mix old and new values in one payload.
+            final DeviceState deviceState = deviceInfo.getDeviceState();
+            evtData.putOpt("lowPower", deviceState.getLowPower());
+            evtData.putOpt("thermal", deviceState.getThermal());
+            evtData.putOpt("darkMode", deviceState.getDarkMode());
+            evtData.putOpt("textSize", deviceState.getTextSize());
+            evtData.putOpt("reduceMotion", deviceState.getReduceMotion());
+            evtData.putOpt("pushStatus", deviceState.getPushStatus());
+            evtData.putOpt("batt", deviceState.getBatt());
+            evtData.putOpt("chg", deviceState.getChg());
+            evtData.putOpt("ram", deviceInfo.getRamTier());
+            evtData.putOpt("cpu", deviceInfo.getCpuCores());
+            evtData.putOpt("boldText", deviceState.getBoldText());
+            evtData.putOpt("instSrc", deviceInfo.getInstallSource());
+            evtData.putOpt("exitRsn", deviceInfo.getLastExitReason());
+            evtData.putOpt("exitStatus", deviceInfo.getLastExitStatus());
+            evtData.putOpt("exitImp", deviceInfo.getLastExitImportance());
+            evtData.putOpt("anrType", deviceInfo.getLastAnrType());
+            evtData.putOpt("anrTimeout", deviceInfo.getLastAnrTimeoutMs());
+            evtData.putOpt("anrUser", deviceInfo.isLastAnrUserPerceptible());
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 evtData.put("abckt", deviceInfo.getAppBucket());
             }
@@ -144,24 +175,16 @@ public class CTJsonConverter {
             }
 
             if (enableNetworkInfoReporting) {
-                final Boolean isWifi = deviceInfo.isWifiConnected();
-                if (isWifi != null) {
-                    evtData.put("wifi", isWifi);
-                }
-
-                final Boolean isBluetoothEnabled = deviceInfo.isBluetoothEnabled();
-                if (isBluetoothEnabled != null) {
-                    evtData.put("BluetoothEnabled", isBluetoothEnabled);
-                }
+                final DeviceInfo.LiveNetworkInfo networkInfo = deviceInfo.getLiveNetworkInfo();
+                evtData.putOpt("wifi", networkInfo.wifi);
+                evtData.putOpt("BluetoothEnabled", networkInfo.bluetoothEnabled);
+                evtData.putOpt("Radio", networkInfo.radio);
+                evtData.putOpt("metered", networkInfo.metered);
+                evtData.putOpt("lowData", networkInfo.lowData);
 
                 final String bluetoothVersion = deviceInfo.getBluetoothVersion();
                 if (bluetoothVersion != null) {
                     evtData.put("BluetoothVersion", bluetoothVersion);
-                }
-
-                final String radio = deviceInfo.getNetworkType();
-                if (radio != null) {
-                    evtData.put("Radio", radio);
                 }
             }
             //Adds an extra field to send local inApp count in queueData.

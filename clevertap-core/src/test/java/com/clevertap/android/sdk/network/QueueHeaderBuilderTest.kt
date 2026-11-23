@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.validation.ValidationResultStack
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verifyOrder
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
@@ -61,6 +62,32 @@ class QueueHeaderBuilderTest {
 
         assertNotNull(header)
         assertEquals(caller, header!!.optString(Constants.D_SRC))
+    }
+
+    @Test
+    fun `buildHeader refreshes the push status before reading the app fields`() {
+        builder.buildHeader(null)
+
+        verifyOrder {
+            deviceInfo.refreshPushStatus(any())
+            deviceInfo.appLaunchedFields
+        }
+    }
+
+    @Test
+    fun `buildHeader leaves out the launch fields once a request has delivered them`() {
+        every { deviceInfo.appLaunchedFields } answers {
+            JSONObject().put("Make", "Google").put("ram", 8).put("cpu", 8).put("exitRsn", 6)
+        }
+
+        val before = builder.buildHeader(null)!!.getJSONObject("af")
+        every { deviceInfo.isLaunchFieldsSent } returns true
+        val after = builder.buildHeader(null)!!.getJSONObject("af")
+
+        assertEquals(8, before.getInt("ram"))
+        assertEquals(6, before.getInt("exitRsn"))
+        listOf("ram", "cpu", "exitRsn").forEach { assertFalse(after.has(it), "$it should be left out") }
+        assertEquals("Google", after.getString("Make"))
     }
 
     @Test

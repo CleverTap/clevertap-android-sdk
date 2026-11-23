@@ -38,11 +38,13 @@ internal class QueueHeaderBuilder(
             addCaller(header, caller)
             addDeviceId(header)
             addType(header)
-            addAppFields(header)
+            // One read of the notification setting per header, shared by pushStatus in af and ddnd.
+            val notificationsEnabled = context.areAppNotificationsEnabled()
+            addAppFields(header, notificationsEnabled)
             addIJ(header)
             addConfigFields(header)
             addIdentities(header)
-            addDoNotDisturb(header)
+            addDoNotDisturb(header, notificationsEnabled)
             addBackgroundPing(header)
             addRenderedTargetList(header)
             addInstallReferrerData(header)
@@ -80,8 +82,13 @@ internal class QueueHeaderBuilder(
         header.put("type", "meta")
     }
 
-    private fun addAppFields(header: JSONObject) {
+    private fun addAppFields(header: JSONObject, notificationsEnabled: Boolean) {
+        deviceInfo.refreshPushStatus(notificationsEnabled)
         val appFields = deviceInfo.appLaunchedFields
+        // These can't change while the app runs, so leave them out once a request has delivered them.
+        if (deviceInfo.isLaunchFieldsSent) {
+            CTJsonConverter.LAUNCH_AF_KEYS.forEach { appFields.remove(it) }
+        }
         if (coreMetaData.isWebInterfaceInitializedExternally) {
             appFields.put("wv_init", true)
         }
@@ -114,8 +121,8 @@ internal class QueueHeaderBuilder(
         header.put("ct_pi", IdentityRepoFactory.getRepo(context, config, validationResultStack).identitySet.toString())
     }
 
-    private fun addDoNotDisturb(header: JSONObject) {
-        header.put("ddnd", !(context.areAppNotificationsEnabled() && (controllerManager.pushProviders == null || controllerManager.pushProviders.isNotificationSupported)))
+    private fun addDoNotDisturb(header: JSONObject, notificationsEnabled: Boolean) {
+        header.put("ddnd", !(notificationsEnabled && (controllerManager.pushProviders == null || controllerManager.pushProviders.isNotificationSupported)))
     }
 
     private fun addBackgroundPing(header: JSONObject) {

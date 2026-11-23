@@ -1441,7 +1441,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Use this method to enable device network-related information tracking, including IP address.
+     * Use this method to enable device network-related information tracking, including IP address,
+     * Wi-Fi, radio type, Bluetooth, metered network and Data Saver state.
      * This reporting is disabled by default.  To re-disable tracking call this method with enabled set to false.
      *
      * @param value boolean Whether device network info reporting should be enabled/disabled.
