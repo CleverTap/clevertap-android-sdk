@@ -564,16 +564,26 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     }
 
     @Test
-    fun test_onViewStateRestored_outside_the_inbox_screen_gives_the_states_back_to_the_media_recycler() {
+    fun test_onViewStateRestored_outside_the_inbox_screen_gives_the_states_back_to_the_fragment() {
         val fragment = viewReadyFragment()
-        val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
-        fragment.mediaRecyclerView = media
-        fragment.videoStates()
-        val saved = Bundle().apply { putBundle("videoStates", Bundle().apply { putString("m1", "state") }) }
+        val earlier = InboxVideoStates().apply { remember("m1", states("url1", 5_000L)) }
+        val saved = Bundle().apply { putBundle("videoStates", earlier.save()) }
 
         fragment.onViewStateRestored(saved)
 
-        verify(exactly = 1) { media.restoreVideoStates(any()) }
+        assertEquals(5_000L, fragment.videoStates().stateOf("m1", "url1")!!.positionMs)
+    }
+
+    @Test
+    fun test_onViewStateRestored_outside_the_inbox_screen_works_before_the_list_is_built() {
+        val fragment = viewReadyFragment()
+        fragment.mediaRecyclerView = null
+        val earlier = InboxVideoStates().apply { remember("m1", states("url1", 7_000L)) }
+        val saved = Bundle().apply { putBundle("videoStates", earlier.save()) }
+
+        fragment.onViewStateRestored(saved)
+
+        assertEquals(7_000L, fragment.videoStates().stateOf("m1", "url1")!!.positionMs)
     }
 
     @Test
@@ -581,12 +591,15 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         val fragment = viewReadyFragment()
         val media = mockk<MediaPlayerRecyclerView>(relaxed = true)
         fragment.mediaRecyclerView = media
-        every { fragment.activity } returns inboxActivity()
-        val saved = Bundle().apply { putBundle("videoStates", Bundle().apply { putString("m1", "state") }) }
+        val activity = inboxActivity()
+        every { fragment.activity } returns activity
+        val earlier = InboxVideoStates().apply { remember("m1", states("url1", 5_000L)) }
+        val saved = Bundle().apply { putBundle("videoStates", earlier.save()) }
 
         fragment.onViewStateRestored(saved)
 
         verify(exactly = 0) { media.restoreVideoStates(any()) }
+        assertEquals(null, activity.videoStates.stateOf("m1", "url1"))
     }
 
     @Test

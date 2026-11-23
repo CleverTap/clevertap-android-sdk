@@ -18,10 +18,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import androidx.annotation.OptIn;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.Fragment;
 import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -62,7 +62,6 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     String accountId;
-
 
     boolean haveVideoPlayerSupport = VideoLibChecker.haveVideoPlayerSupport;
 
@@ -214,9 +213,10 @@ public class CTInboxListViewFragment extends Fragment {
                 if (mediaRecyclerView.getLayoutManager() != null) {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
-                if (ownVideoStates != null) {
-                    mediaRecyclerView.restoreVideoStates(savedInstanceState.getBundle(CTInboxActivity.VIDEO_STATES_KEY));
-                }
+            }
+            if (!(getActivity() instanceof CTInboxActivity)) {
+                // Outside the inbox screen the fragment keeps its own states, even before its list is built
+                videoStates().restore(savedInstanceState.getBundle(CTInboxActivity.VIDEO_STATES_KEY));
             }
 
             if (recyclerView != null) {
