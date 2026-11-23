@@ -35,9 +35,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Tests the close button of the half-interstitial, half-interstitial image, interstitial image, cover and
- * cover image fragments. The "close" key of the in-app says whether the close button is shown, and it is
- * read into [CTInAppNotification.showCloseButton].
+ * Tests the close button of the half-interstitial, half-interstitial image, interstitial, interstitial image,
+ * cover and cover image fragments. The "close" key of the in-app says whether the close button is shown, and
+ * it is read into [CTInAppNotification.showCloseButton].
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-port")
@@ -113,7 +113,9 @@ class CTInAppCloseButtonTest {
 
     // ---------------------------------------------------------------------------------------
 
-    private enum class Kind { HALF_INTERSTITIAL, HALF_INTERSTITIAL_IMAGE, INTERSTITIAL_IMAGE, COVER, COVER_IMAGE }
+    private enum class Kind {
+        HALF_INTERSTITIAL, HALF_INTERSTITIAL_IMAGE, INTERSTITIAL, INTERSTITIAL_IMAGE, COVER, COVER_IMAGE
+    }
 
     private class Shown(
         val host: FragmentActivity,
@@ -159,6 +161,7 @@ class CTInAppCloseButtonTest {
     private fun mediaInAppJson(kind: Kind): JSONObject {
         val type = when (kind) {
             Kind.HALF_INTERSTITIAL_IMAGE -> "half-interstitial-image"
+            Kind.INTERSTITIAL -> "interstitial"
             Kind.INTERSTITIAL_IMAGE -> "interstitial-image"
             Kind.COVER -> "cover"
             else -> "cover-image"
@@ -173,7 +176,7 @@ class CTInAppCloseButtonTest {
                 "mediaLandscape",
                 JSONObject().put("content_type", "image/png").put("url", "https://example.com/b.png")
             )
-        if (kind == Kind.COVER) {
+        if (kind == Kind.COVER || kind == Kind.INTERSTITIAL) {
             json.put("title", JSONObject().put("text", "Title").put("color", "#000000"))
             json.put("message", JSONObject().put("text", "Message").put("color", "#000000"))
             json.put("buttons", JSONArray())
@@ -184,6 +187,7 @@ class CTInAppCloseButtonTest {
     private fun fragmentFor(kind: Kind): CTInAppBaseFullFragment = when (kind) {
         Kind.HALF_INTERSTITIAL -> CTInAppNativeHalfInterstitialFragment()
         Kind.HALF_INTERSTITIAL_IMAGE -> CTInAppNativeHalfInterstitialImageFragment()
+        Kind.INTERSTITIAL -> CTInAppNativeInterstitialFragment()
         Kind.INTERSTITIAL_IMAGE -> CTInAppNativeInterstitialImageFragment()
         Kind.COVER -> CTInAppNativeCoverFragment()
         Kind.COVER_IMAGE -> CTInAppNativeCoverImageFragment()
@@ -192,6 +196,7 @@ class CTInAppCloseButtonTest {
     private fun frameIdFor(kind: Kind): Int = when (kind) {
         Kind.HALF_INTERSTITIAL -> R.id.inapp_half_interstitial_frame_layout
         Kind.HALF_INTERSTITIAL_IMAGE -> R.id.inapp_half_interstitial_image_frame_layout
+        Kind.INTERSTITIAL -> R.id.inapp_interstitial_frame_layout
         Kind.INTERSTITIAL_IMAGE -> R.id.inapp_interstitial_image_frame_layout
         Kind.COVER -> R.id.inapp_cover_frame_layout
         Kind.COVER_IMAGE -> R.id.inapp_cover_image_frame_layout
