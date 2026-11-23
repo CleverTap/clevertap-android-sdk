@@ -11,9 +11,7 @@ data class LiveUpdateTopicEntry(
     val activityId: String?,
     val accountId: String?,
     val subscribedAtSeconds: Long,
-    val expiresAtSeconds: Long,
-    /** `wzrk_*` keys of the START, replayed on the Ended event raised at expiry for attribution. */
-    val attributes: Map<String, String> = emptyMap()
+    val expiresAtSeconds: Long
 )
 
 /**
@@ -31,7 +29,6 @@ class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
             .put(KEY_ACCOUNT_ID, entry.accountId)
             .put(KEY_SUBSCRIBED_AT, entry.subscribedAtSeconds)
             .put(KEY_EXPIRES_AT, entry.expiresAtSeconds)
-            .put(KEY_ATTRIBUTES, JSONObject(entry.attributes))
         prefs.edit().putString(entry.topic, json.toString()).apply()
     }
 
@@ -62,10 +59,7 @@ class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
             activityId = json.optString(KEY_ACTIVITY_ID).takeIf { it.isNotEmpty() },
             accountId = json.optString(KEY_ACCOUNT_ID).takeIf { it.isNotEmpty() },
             subscribedAtSeconds = json.optLong(KEY_SUBSCRIBED_AT),
-            expiresAtSeconds = json.optLong(KEY_EXPIRES_AT),
-            attributes = json.optJSONObject(KEY_ATTRIBUTES)?.let { attrs ->
-                attrs.keys().asSequence().associateWith { attrs.optString(it) }
-            } ?: emptyMap()
+            expiresAtSeconds = json.optLong(KEY_EXPIRES_AT)
         )
     } catch (t: Throwable) {
         null
@@ -77,6 +71,5 @@ class LiveUpdateTopicStore(private val prefs: SharedPreferences) {
         private const val KEY_ACCOUNT_ID = "acc"
         private const val KEY_SUBSCRIBED_AT = "s"
         private const val KEY_EXPIRES_AT = "e"
-        private const val KEY_ATTRIBUTES = "w"
     }
 }

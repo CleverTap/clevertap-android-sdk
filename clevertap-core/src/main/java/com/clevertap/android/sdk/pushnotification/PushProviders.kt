@@ -85,8 +85,7 @@ class PushProviders internal constructor(
             subscriber = FcmLiveUpdateTopicSubscriber(accountId = config.accountId, logger = config.logger),
             clock = clock,
             accountId = config.accountId,
-            logger = config.logger,
-            onExpired = { entry -> finishExpiredLiveUpdate(entry) }
+            logger = config.logger
         )
     }
 
@@ -658,6 +657,9 @@ class PushProviders internal constructor(
         task.execute("asyncFindAvailableCTPushProviders") {
             findAvailableCTPushProviders()
             findNonEnabledPushTypes()
+            // Catch up on broadcast topics whose dismissal_date passed while the expiry worker
+            // could not run (force-stop, worker dropped).
+            liveUpdateBroadcastManager.pruneExpired()
         }
     }
 
@@ -956,12 +958,6 @@ class PushProviders internal constructor(
 
         nb.setPriority(priorityInt)
 
-        // Live Update with a dismissal_date (always, for broadcast): the OS removes it on time even
-        // if no End ever arrives. No-op below API 26; the expiry worker covers those.
-        if (LiveUpdateRouter.isLiveUpdate(extras)) {
-            liveUpdateTimeoutMillis(extras)?.let { nb.setTimeoutAfter(it) }
-        }
-
         //remove sound for fallback notif
         if (iNotificationRenderer is AudibleNotification) {
             nb = (iNotificationRenderer as AudibleNotification).setSound(context, extras, nb, config)
@@ -1039,7 +1035,6 @@ class PushProviders internal constructor(
         // Guarantee the notification lands in a real channel (same fallback as core push). This may
         // rebuild the notification, so resolve the channel BEFORE attaching the dismiss intent.
         notification = ensureLiveUpdateChannel(context, notification, notificationManager)
-        notification = applyLiveUpdateTimeout(context, notification, extras)
 
         // Respect a user-blocked channel: don't post (or record lifecycle/Viewed) for a notification
         // nobody will see — same gate triggerNotification applies to core pushes.
@@ -1112,55 +1107,17 @@ class PushProviders internal constructor(
     }
 
     /**
-     * Millis until this Live Update must be removed: its `dismissal_date`, or for a broadcast run the
-     * START + 12h default. Null for a 1:1 Live Update without a dismissal_date (lives until End).
+     * A broadcast START schedules its topic unsubscription at `dismissal_date` (else START + 12h).
+     * dismissal_date governs only the topic subscription — the notification itself is untouched.
      */
-    private fun liveUpdateTimeoutMillis(extras: Bundle): Long? {
-        val hasDismissalDate = extras.getString(Constants.WZRK_LIVE_UPDATE_DISMISSAL_DATE) != null
-        if (!hasDismissalDate && !LiveUpdateBroadcast.isBroadcast(extras)) {
-            return null
-        }
-        val nowSeconds = clock.currentTimeSeconds()
-        return (LiveUpdateBroadcast.expiresAtSeconds(extras, nowSeconds) - nowSeconds)
-            .coerceAtLeast(1) * 1000
-    }
-
-    /** Factory (Mode A) notifications arrive already built, so the timeout is set via recoverBuilder. */
-    private fun applyLiveUpdateTimeout(context: Context, notification: Notification, extras: Bundle): Notification {
-        val timeout = liveUpdateTimeoutMillis(extras) ?: return notification
-        if (VERSION.SDK_INT < VERSION_CODES.O) {
-            return notification
-        }
-        return try {
-            Notification.Builder.recoverBuilder(context, notification).setTimeoutAfter(timeout).build()
-        } catch (t: Throwable) {
-            config.logger.debug(config.accountId, "Live Update: could not apply dismissal_date timeout.", t)
-            notification
-        }
-    }
-
     private fun scheduleBroadcastExpiryIfStart(context: Context, extras: Bundle) {
         if (!LiveUpdateBroadcast.isStart(extras) || !LiveUpdateBroadcast.isBroadcast(extras)) {
             return
         }
         val topic = LiveUpdateBroadcast.topic(extras) ?: return
-        val delay = liveUpdateTimeoutMillis(extras) ?: return
-        CTLiveUpdateExpiryWork.schedule(context, topic, config.accountId, delay)
-    }
-
-    /**
-     * A broadcast run reached its dismissal_date without an End: remove its notification (already
-     * gone on API 26+ via setTimeoutAfter) and raise Ended, replaying the START's wzrk_ attribution.
-     */
-    private fun finishExpiredLiveUpdate(entry: LiveUpdateTopicEntry) {
-        LiveUpdateRouter.stableId(entry.activityId)?.let { id ->
-            (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(id)
-        }
-        val extras = Bundle().apply {
-            entry.attributes.forEach { (key, value) -> putString(key, value) }
-            putString(Constants.WZRK_LIVE_UPDATE_EVENT, Constants.WZRK_LIVE_UPDATE_EVENT_END)
-        }
-        analyticsManager.raiseLiveUpdateLifecycleEvent(extras, Constants.LIVE_UPDATE_STATE_ENDED)
+        val nowSeconds = clock.currentTimeSeconds()
+        val delayMillis = (LiveUpdateBroadcast.expiresAtSeconds(extras, nowSeconds) - nowSeconds) * 1000
+        CTLiveUpdateExpiryWork.schedule(context, topic, config.accountId, delayMillis)
     }
 
     /**

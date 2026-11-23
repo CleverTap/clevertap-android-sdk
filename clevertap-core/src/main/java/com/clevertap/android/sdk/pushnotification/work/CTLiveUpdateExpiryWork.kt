@@ -11,10 +11,9 @@ import com.clevertap.android.sdk.Logger
 import java.util.concurrent.TimeUnit
 
 /**
- * Fires at a broadcast Live Update's `dismissal_date` and expires the run on the owning instance:
- * unsubscribe the topic, remove the notification, raise Ended. A no-op when End or Dismiss already
- * closed the run. Inexact by design (Doze may delay it) — on API 26+ the OS already removed the
- * notification on time via `setTimeoutAfter`; this only has to catch up on topic + event.
+ * Fires at a broadcast Live Update's `dismissal_date` and unsubscribes this install from the run's
+ * FCM topic. A no-op when End or Dismiss already closed the run. Inexact by design (Doze/standby
+ * may delay it); PushProviders also sweeps overdue runs at SDK init and on every broadcast START.
  */
 class CTLiveUpdateExpiryWork(context: Context, params: WorkerParameters) : Worker(context, params) {
 

@@ -10,7 +10,7 @@ import com.clevertap.android.sdk.utils.Clock
 /**
  * Owns the FCM topic subscription lifetime of broadcast Live Updates:
  * - broadcast START rendered → subscribe to `wzrk_topic` and record the run;
- * - End rendered / user Dismiss → unsubscribe and drop the run;
+ * - End rendered / user Dismiss / `dismissal_date` reached → unsubscribe and drop the run;
  * - before every subscribe → prune expired runs and evict the oldest past [softCap], since FCM caps
  *   an install at 2,000 topic subscriptions and every broadcast uses a new topic.
  *
@@ -23,9 +23,7 @@ class LiveUpdateBroadcastManager(
     private val clock: Clock,
     private val accountId: String,
     private val logger: ILogger,
-    private val softCap: Int = DEFAULT_SOFT_CAP,
-    /** Finishes a run closed by expiry: remove the notification, raise Ended. */
-    private val onExpired: (LiveUpdateTopicEntry) -> Unit = {}
+    private val softCap: Int = DEFAULT_SOFT_CAP
 ) {
 
     /** Called after any Live Update is rendered (both render modes). */
@@ -43,10 +41,13 @@ class LiveUpdateBroadcastManager(
         closeRun(extras, "dismiss")
     }
 
-    /** Expiry for one run (fired by the scheduled worker). No-op if End/Dismiss already closed it. */
+    /**
+     * Unsubscribes a run at its `dismissal_date` (fired by the scheduled worker). No-op if End/Dismiss
+     * already closed it. Only the topic is affected — the notification stays as it is.
+     */
     @WorkerThread
     fun expire(topic: String) {
-        close(topic, "expired")?.let(onExpired)
+        close(topic, "expired")
     }
 
     /** Expires every run past its expiry — fallback for a worker the OS delayed or dropped. */
@@ -71,11 +72,7 @@ class LiveUpdateBroadcastManager(
                 activityId = extras.getString(Constants.WZRK_LIVE_UPDATE_ID),
                 accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY),
                 subscribedAtSeconds = now,
-                expiresAtSeconds = LiveUpdateBroadcast.expiresAtSeconds(extras, now),
-                attributes = extras.keySet()
-                    .filter { it.startsWith(Constants.WZRK_PREFIX) }
-                    .mapNotNull { key -> extras.getString(key)?.let { key to it } }
-                    .toMap()
+                expiresAtSeconds = LiveUpdateBroadcast.expiresAtSeconds(extras, now)
             )
         )
         subscriber.subscribe(topic)
