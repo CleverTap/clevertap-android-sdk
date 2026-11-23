@@ -22,8 +22,10 @@ class LiveUpdateBroadcastManagerTest {
         clock = clock,
         accountId = "acc",
         logger = mockk<ILogger>(relaxed = true),
-        softCap = 2
+        softCap = 2,
+        onExpired = { expired += it }
     )
+    private val expired = mutableListOf<LiveUpdateTopicEntry>()
 
     private fun push(
         event: String,
@@ -106,6 +108,31 @@ class LiveUpdateBroadcastManagerTest {
         verify { subscriber.unsubscribe("a") }
         verify(exactly = 0) { subscriber.unsubscribe("b") }
         verify { subscriber.subscribe(TOPIC) }
+    }
+
+    @Test
+    fun `expire finishes an open run once and ignores an already closed one`() {
+        every { store.remove(TOPIC) } returnsMany listOf(entry(TOPIC), null)
+
+        manager.expire(TOPIC)
+        manager.expire(TOPIC)
+
+        assertEquals(1, expired.size)
+        verify(exactly = 1) { subscriber.unsubscribe(TOPIC) }
+    }
+
+    @Test
+    fun `START replays the wzrk_ keys for the expiry Ended event`() {
+        val bundle = push(event = "start")
+        every { bundle.keySet() } returns setOf("wzrk_id", "title")
+        every { bundle.getString("wzrk_id") } returns "1793858699_20261106"
+        every { store.all() } returns emptyList()
+        val saved = slot<LiveUpdateTopicEntry>()
+
+        manager.onRendered(bundle)
+
+        verify { store.put(capture(saved)) }
+        assertEquals(mapOf("wzrk_id" to "1793858699_20261106"), saved.captured.attributes)
     }
 
     private companion object {

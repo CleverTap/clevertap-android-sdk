@@ -23,7 +23,9 @@ class LiveUpdateBroadcastManager(
     private val clock: Clock,
     private val accountId: String,
     private val logger: ILogger,
-    private val softCap: Int = DEFAULT_SOFT_CAP
+    private val softCap: Int = DEFAULT_SOFT_CAP,
+    /** Finishes a run closed by expiry: remove the notification, raise Ended. */
+    private val onExpired: (LiveUpdateTopicEntry) -> Unit = {}
 ) {
 
     /** Called after any Live Update is rendered (both render modes). */
@@ -41,14 +43,17 @@ class LiveUpdateBroadcastManager(
         closeRun(extras, "dismiss")
     }
 
-    /**
-     * Unsubscribes every run whose expiry has passed. Returns the closed entries so the caller can
-     * finish them (cancel the notification, raise Ended).
-     */
+    /** Expiry for one run (fired by the scheduled worker). No-op if End/Dismiss already closed it. */
     @WorkerThread
-    fun pruneExpired(): List<LiveUpdateTopicEntry> {
+    fun expire(topic: String) {
+        close(topic, "expired")?.let(onExpired)
+    }
+
+    /** Expires every run past its expiry — fallback for a worker the OS delayed or dropped. */
+    @WorkerThread
+    fun pruneExpired() {
         val now = clock.currentTimeSeconds()
-        return store.all().filter { it.expiresAtSeconds <= now }.mapNotNull { close(it.topic, "expired") }
+        store.all().filter { it.expiresAtSeconds <= now }.forEach { expire(it.topic) }
     }
 
     private fun openRun(extras: Bundle) {
@@ -66,7 +71,11 @@ class LiveUpdateBroadcastManager(
                 activityId = extras.getString(Constants.WZRK_LIVE_UPDATE_ID),
                 accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY),
                 subscribedAtSeconds = now,
-                expiresAtSeconds = LiveUpdateBroadcast.expiresAtSeconds(extras, now)
+                expiresAtSeconds = LiveUpdateBroadcast.expiresAtSeconds(extras, now),
+                attributes = extras.keySet()
+                    .filter { it.startsWith(Constants.WZRK_PREFIX) }
+                    .mapNotNull { key -> extras.getString(key)?.let { key to it } }
+                    .toMap()
             )
         )
         subscriber.subscribe(topic)
