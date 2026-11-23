@@ -79,7 +79,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             boolean showFallbackSettings) {
         if (!activity.getClass().equals(InAppNotificationActivity.class)) {
             Intent intent = new Intent(activity, InAppNotificationActivity.class);
-            intent.putExtra(INTENT_EXTRA_CT_CONFIG, config.getAccountId());
+            intent.putExtra(INTENT_EXTRA_CT_CONFIG, config);
             intent.putExtra(INTENT_EXTRA_DISPLAY_PUSH_PERMISSION_PROMPT, true);
             intent.putExtra(INTENT_EXTRA_PUSH_PERMISSION_FALLBACK_TO_SETTINGS, showFallbackSettings);
             activity.startActivity(intent);
@@ -95,7 +95,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         // Only the id is sent; the in-app is read from InAppController. Sending the whole object
         // can exceed the Binder limit for large HTML (TransactionTooLargeException, SDK-6299).
         intent.putExtra(Constants.INAPP_ID_KEY, inAppNotification.getCampaignId());
-        intent.putExtra(INTENT_EXTRA_CT_CONFIG, config.getAccountId());
+        intent.putExtra(INTENT_EXTRA_CT_CONFIG, config);
         config.getLogger().verbose(config.getAccountId(),
                 "Launching InAppNotificationActivity with in-app id: " + inAppNotification.getCampaignId());
         context.startActivity(intent);
@@ -149,15 +149,12 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
 
 
-            // Resolve the live instance by accountId rather than rebuilding it from a serialized
-            // config copy passed in the intent (which would diverge on a cold start). SDK-6254.
-            String accountId = intentExtras.getString(INTENT_EXTRA_CT_CONFIG);
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), accountId);
-            if (cleverTapAPI == null) {
+            config = intentExtras.getParcelable(INTENT_EXTRA_CT_CONFIG);
+            if (config == null) {
                 throw new IllegalArgumentException();
             }
-            CoreState ctState = cleverTapAPI.getCoreState();
-            config = ctState.getConfig();
+
+            CoreState ctState = CleverTapAPI.instanceWithConfig(this, config).getCoreState();
 
             pushPermissionHandler = new PushPermissionHandler(
                     config,
@@ -255,11 +252,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 return false;
             }
             String inAppId = extras.getString(Constants.INAPP_ID_KEY);
-            String accountId = extras.getString(INTENT_EXTRA_CT_CONFIG);
-            if (inAppId == null || accountId == null) {
+            CleverTapInstanceConfig restoreConfig = extras.getParcelable(INTENT_EXTRA_CT_CONFIG);
+            if (inAppId == null || restoreConfig == null) {
                 return false;
             }
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), accountId);
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, restoreConfig);
             if (cleverTapAPI == null) {
                 return false;
             }
@@ -607,7 +604,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         restoreTimeoutHandler.removeCallbacksAndMessages(null);
 
         if (config != null) {
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(getApplicationContext(), config.getAccountId());
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this, config);
             if (cleverTapAPI != null) {
                 CoreState ctState = cleverTapAPI.getCoreState();
                 if (ctState != null) {
