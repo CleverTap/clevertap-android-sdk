@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.ContextCompat;
@@ -131,6 +132,11 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
 
+        // The shared player view may still sit in another row; a view can have only one parent.
+        final ViewGroup previousParent = (ViewGroup) videoSurfaceView.getParent();
+        if (previousParent != null) {
+            previousParent.removeView(videoSurfaceView);
+        }
         frameLayout.addView(videoSurfaceView);
         frameLayout.setBackgroundColor(Color.parseColor(message.getBgColor()));
 
@@ -260,6 +266,18 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         mainButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 6));
         secondaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0));
         tertiaryButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0));
+    }
+
+    /** Id of the message this holder currently shows, or null before the first bind. */
+    @Nullable
+    public String getMessageId() {
+        return message != null ? message.getMessageId() : null;
+    }
+
+    /** Media url of the message this holder currently shows, or null before the first bind. */
+    @Nullable
+    public String getMediaUrl() {
+        return firstContentItem != null ? firstContentItem.getMedia() : null;
     }
 
     public boolean needsMediaPlayer() {

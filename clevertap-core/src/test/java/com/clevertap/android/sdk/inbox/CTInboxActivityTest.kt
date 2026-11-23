@@ -9,12 +9,15 @@ import androidx.viewpager.widget.ViewPager
 import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.customviews.InboxVideoStates
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,13 +62,13 @@ class CTInboxActivityTest : BaseTestCase() {
 
     /** Launches CTInboxActivity with real inbox extras (no-tabs style config). */
     private fun launchNoTabsInboxActivity(messageCount: Int): CTInboxActivity {
-        every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
+        every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
         every { cleverTapAPI.inboxMessageCount } returns messageCount
         every { cleverTapAPI.allInboxMessages } returns arrayListOf()
 
         val intent = Intent(appCtx, CTInboxActivity::class.java).apply {
             putExtra("styleConfig", CTInboxStyleConfig())
-            putExtra("configBundle", Bundle().apply { putString("config", cleverTapInstanceConfig.accountId) })
+            putExtra("configBundle", Bundle().apply { putParcelable("config", cleverTapInstanceConfig) })
         }
         val controller = Robolectric.buildActivity(CTInboxActivity::class.java, intent)
         controller.get().setTheme(androidx.appcompat.R.style.Theme_AppCompat)
@@ -92,7 +95,7 @@ class CTInboxActivityTest : BaseTestCase() {
     fun `activity recreation does not duplicate the list fragment`() {
         mockkStatic(CleverTapAPI::class)
         try {
-            every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
+            every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
             every { cleverTapAPI.inboxMessageCount } returns 1
             every { cleverTapAPI.allInboxMessages } returns arrayListOf()
             // Theme must survive recreation: applicationInfo.theme is what the recreated
@@ -101,7 +104,7 @@ class CTInboxActivityTest : BaseTestCase() {
 
             val intent = Intent(appCtx, CTInboxActivity::class.java).apply {
                 putExtra("styleConfig", CTInboxStyleConfig())
-                putExtra("configBundle", Bundle().apply { putString("config", cleverTapInstanceConfig.accountId) })
+                putExtra("configBundle", Bundle().apply { putParcelable("config", cleverTapInstanceConfig) })
             }
             val controller = Robolectric.buildActivity(CTInboxActivity::class.java, intent).setup()
             controller.get().supportFragmentManager.executePendingTransactions()
@@ -193,5 +196,73 @@ class CTInboxActivityTest : BaseTestCase() {
             .onPageScrollStateChanged(ViewPager.SCROLL_STATE_IDLE)
 
         assertEquals(0, inboxTab.onPageSettledCalls)
+    }
+
+    private fun statesWith(messageId: String, positionMs: Long): Bundle = Bundle().apply {
+        putBundle(
+            messageId,
+            Bundle().apply {
+                putString("mediaUrl", "url-$messageId")
+                putLong("positionMs", positionMs)
+                putFloat("volume", 1f)
+            }
+        )
+    }
+
+    @Test
+    fun `the screen keeps one set of video states for all its tabs`() {
+        val activity = Robolectric.buildActivity(CTInboxActivity::class.java).setup().get()
+
+        assertSame(activity.videoStates, activity.videoStates)
+    }
+
+    @Test
+    fun `the video states are put in the saved state of the screen`() {
+        val controller = Robolectric.buildActivity(CTInboxActivity::class.java).setup()
+        controller.get().videoStates.restore(statesWith("m1", 6_000L))
+
+        val out = Bundle()
+        controller.saveInstanceState(out)
+
+        assertEquals(6_000L, out.getBundle("videoStates")!!.getBundle("m1")!!.getLong("positionMs"))
+    }
+
+    @Test
+    fun `a screen where no video played saves no video states`() {
+        val controller = Robolectric.buildActivity(CTInboxActivity::class.java).setup()
+
+        val out = Bundle()
+        controller.saveInstanceState(out)
+
+        assertNull(out.getBundle("videoStates"))
+    }
+
+    @Test
+    fun `the video states come back in the new screen after a rotation`() {
+        val first = Robolectric.buildActivity(CTInboxActivity::class.java).setup()
+        first.get().videoStates.restore(statesWith("m1", 6_000L))
+        val out = Bundle()
+        first.saveInstanceState(out)
+
+        val second = Robolectric.buildActivity(CTInboxActivity::class.java).create(out).get()
+
+        assertEquals(6_000L, second.videoStates.stateOf("m1", "url-m1")!!.positionMs)
+    }
+
+    @Test
+    fun `a new screen without saved state starts with no video states`() {
+        val activity = Robolectric.buildActivity(CTInboxActivity::class.java).create(null).get()
+
+        assertNull(activity.videoStates.stateOf("m1", "url-m1"))
+        assertEquals(true, activity.videoStates.save().isEmpty)
+    }
+
+    @Test
+    fun `two screens do not share video states`() {
+        val first = Robolectric.buildActivity(CTInboxActivity::class.java).setup().get()
+        val second = Robolectric.buildActivity(CTInboxActivity::class.java).setup().get()
+        first.videoStates.restore(statesWith("m1", 6_000L))
+
+        assertNull(second.videoStates.stateOf("m1", "url-m1"))
     }
 }

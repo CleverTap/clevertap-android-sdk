@@ -305,22 +305,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    /**
-     * Resolves the {@link CleverTapAPI} instance for {@code _accountId} (or the default instance when
-     * {@code _accountId} is {@code null}).
-     *
-     * <p><b>Threading / cost:</b> if the instance is already loaded in memory it is returned directly
-     * (cheap, any thread). Otherwise it is reconstructed from the account's <b>persisted</b> config in
-     * SharedPreferences, which does <b>disk I/O and full instance construction</b> — prefer a
-     * background thread when the instance may not be loaded (see
-     * {@link #createInstanceIfAvailable(Context, String, String)}, which is {@code @WorkerThread}).</p>
-     *
-     * <p>This "resolve, else rebuild from persisted config" path is what keeps notification/deeplink
-     * handling working across a cold start, process re-creation after memory pressure, and aggressive
-     * OEM process kills — the persisted config (written on init) is the source of truth, never a
-     * serialized config passed through an Intent. Returns {@code null} only when no instance is loaded
-     * and no persisted config exists for the account.</p>
-     */
     public static @Nullable
     CleverTapAPI getGlobalInstance(Context context, String _accountId) {
         return fromAccountId(context, _accountId);
@@ -834,18 +818,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return getDefaultInstance(context, null);
     }
 
-    // Returns the loaded instance for _accountId (in-memory, cheap) or, when none is loaded,
-    // reconstructs it from the persisted config via createInstanceIfAvailable (disk I/O).
-    //
-    // SDK-6254: the persisted-config fallback now also runs when the store is non-empty but this
-    // account is simply not loaded yet. The old code returned null in that case, which dropped
-    // events for a not-yet-loaded account (e.g. a multi-account push / in-app / inbox for an account
-    // other than the one currently in memory). Callers that previously relied on the null (no-op)
-    // behaviour now get a lazily reconstructed instance instead.
-    //
-    // Cost: cheap in-memory lookup when the account is loaded; otherwise delegates to
-    // createInstanceIfAvailable (@WorkerThread — reads SharedPreferences and constructs the instance).
     private static CleverTapAPI fromAccountId(final Context context, final String _accountId) {
+        if (CleverTapInstanceStore.isEmpty()) {
+            return createInstanceIfAvailable(context, _accountId);
+        }
+
         for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
             boolean shouldProcess = false;
             if (instance != null) {
@@ -859,7 +836,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         }
 
-        return createInstanceIfAvailable(context, _accountId);
+        return null;// failed to get instance
     }
 
     public static HashMap<String, CleverTapAPI> getInstances() {
@@ -901,13 +878,26 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             // no-op
         }
 
-        // Resolve via fromAccountId (the same path handleLiveUpdateDismissed uses): it matches a
-        // loaded instance AND falls back to rebuilding from the persisted config. The old bespoke
-        // lookup only rebuilt when the registry was empty, so a click for a not-yet-loaded account
-        // in a multi-account app (another account already loaded) was silently dropped (SDK-6356).
-        final CleverTapAPI instance = fromAccountId(context, _accountId);
-        if (instance != null) {
-            instance.pushNotificationClickedEvent(notification);
+        if (CleverTapInstanceStore.isEmpty()) {
+            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
+            if (instance != null) {
+                instance.pushNotificationClickedEvent(notification);
+            }
+            return;
+        }
+
+        for (CleverTapAPI instance : CleverTapInstanceStore.all()) {
+            boolean shouldProcess = false;
+            if (instance != null) {
+                shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
+                        || instance
+                        .getAccountId()
+                        .equals(_accountId);
+            }
+            if (shouldProcess) {
+                instance.pushNotificationClickedEvent(notification);
+                break;
+            }
         }
     }
 
@@ -3160,9 +3150,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         Intent intent = new Intent(context, CTInboxActivity.class);
         intent.putExtra("styleConfig", _styleConfig);
         Bundle configBundle = new Bundle();
-        // Pass only the accountId; the activity resolves the live instance by id instead of
-        // rebuilding it from a serialized config copy (SDK-6254).
-        configBundle.putString("config", getConfig().getAccountId());
+        configBundle.putParcelable("config", getConfig());
         intent.putExtra("configBundle", configBundle);
         try {
             Activity currentActivity = CoreMetaData.getCurrentActivity();
@@ -3349,17 +3337,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return createInstanceIfAvailable(context, _accountId, null);
     }
 
-    /**
-     * Reconstructs the instance for {@code _accountId} from persisted state when it is not already
-     * loaded: reads the account's config from SharedPreferences ({@code "instance:<accountId>"}) and
-     * builds a fresh {@link CleverTapAPI}. For a {@code null} accountId it resolves the default
-     * instance from the manifest.
-     *
-     * <p><b>{@code @WorkerThread}:</b> this performs disk I/O (SharedPreferences read) and full
-     * instance construction; do not call it on the main thread. Returns {@code null} when no persisted
-     * config exists for the account (e.g. the SDK never completed a session for it).</p>
-     */
-    @WorkerThread
     private static @Nullable
     CleverTapAPI createInstanceIfAvailable(
             Context context,
