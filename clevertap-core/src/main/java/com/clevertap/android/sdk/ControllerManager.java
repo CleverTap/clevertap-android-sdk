@@ -288,24 +288,24 @@ public class ControllerManager {
                 callbackManager._notifyInboxInitialized();
                 return;
             }
-            if (deviceInfo.getDeviceID() != null) {
-                setCTInboxController(
-                        new CTInboxController(
-                                config,
-                                deviceInfo.getDeviceID(),
-                                baseDatabaseManager.loadDBAdapter(context),
-                                ctLockManager,
-                                callbackManager,
-                                VideoLibChecker.haveVideoPlayerSupport,
-                                inboxDeleteCoordinator
-                        )
-                );
-                callbackManager._notifyInboxInitialized();
-                if (inboxDeleteCoordinator != null) {
-                    inboxDeleteCoordinator.retryPending(deviceInfo.getDeviceID());
-                }
-            } else {
-                config.getLogger().info("CRITICAL : No device ID found!");
+            // On-queue (@WorkerThread, ordered after the device-id barrier): the id is non-null,
+            // so the old "if getDeviceID() != null" guard and its CRITICAL-no-id branch are dead
+            // (SDK-6254).
+            final String deviceId = deviceInfo.requireDeviceID();
+            setCTInboxController(
+                    new CTInboxController(
+                            config,
+                            deviceId,
+                            baseDatabaseManager.loadDBAdapter(context),
+                            ctLockManager,
+                            callbackManager,
+                            VideoLibChecker.haveVideoPlayerSupport,
+                            inboxDeleteCoordinator
+                    )
+            );
+            callbackManager._notifyInboxInitialized();
+            if (inboxDeleteCoordinator != null) {
+                inboxDeleteCoordinator.retryPending(deviceId);
             }
         }
     }

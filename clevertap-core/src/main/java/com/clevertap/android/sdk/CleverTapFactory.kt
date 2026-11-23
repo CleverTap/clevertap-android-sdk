@@ -690,8 +690,8 @@ internal object CleverTapFactory {
         val deviceScopedInit = executors.postAsyncSafelyTask<Unit>()
         deviceScopedInit.execute("initDeviceScopedState") {
             // Read the device id already resolved and cached by Job 1 (resolveDeviceId), which ran
-            // first on this serial queue. No re-resolution here.
-            val deviceId = deviceInfo.getDeviceID()
+            // first on this serial queue. Non-null by the barrier contract (hence requireDeviceID).
+            val deviceId = deviceInfo.requireDeviceID()
 
             // Each device-scoped component is built in its own guarded step. A failure in one
             // (e.g. a storage error while opening the in-app store) must NOT skip the others — on

@@ -222,14 +222,14 @@ public class LocalDataStore {
 
     @WorkerThread
     public boolean updateUserEventLog(String eventName) {
-        String deviceID = deviceInfo.getDeviceID();
+        String deviceID = deviceInfo.requireDeviceID();
         String normalizedEventName = getOrPutNormalizedEventName(eventName);
         return updateEventByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
 
     @WorkerThread
     private boolean upsertUserEventLogsInBulk(Set<Pair<String, String>> setOfActualAndNormalizedEventNamePair) {
-        String deviceID = deviceInfo.getDeviceID();
+        String deviceID = deviceInfo.requireDeviceID();
         DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
         boolean upsertEventByDeviceID = dbAdapter.userEventLogDAO()
                 .upsertEventsByDeviceIdAndNormalizedEventName(deviceID, setOfActualAndNormalizedEventNamePair);
@@ -252,7 +252,7 @@ public class LocalDataStore {
 
     @WorkerThread
     public boolean insertUserEventLog(String eventName) {
-        String deviceID = deviceInfo.getDeviceID();
+        String deviceID = deviceInfo.requireDeviceID();
         String normalizedEventName = getOrPutNormalizedEventName(eventName);
         long rowId = insertEvent(deviceID, eventName, normalizedEventName);
         return rowId >= 0;
@@ -268,7 +268,7 @@ public class LocalDataStore {
 
     @WorkerThread
     public boolean isUserEventLogExists(String eventName) {
-        String deviceID = deviceInfo.getDeviceID();
+        String deviceID = deviceInfo.requireDeviceID();
         String normalizedEventName = getOrPutNormalizedEventName(eventName);
         return eventExistsByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
     }
@@ -290,7 +290,7 @@ public class LocalDataStore {
             return false;
         }
 
-        String deviceID = deviceInfo.getDeviceID();
+        String deviceID = deviceInfo.requireDeviceID();
         int count = readEventCountByDeviceIdAndNormalizedEventName(deviceID, normalizedEventName);
         if (count > 1) {
             userNormalizedEventLogKeys.add(normalizedEventName);

@@ -1318,9 +1318,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         });
         task = coreState.getExecutors().postAsyncSafelyTask();
         task.execute("recordDeviceIDErrors", () -> {
-            if (coreState.getDeviceInfo().getDeviceID() != null) {
-                coreState.getLoginController().recordDeviceIDErrors();
-            }
+            // On the serial queue, ordered after the device-id barrier → the id is non-null, so the
+            // old "if getDeviceID() != null" guard around this call is dead (SDK-6254).
+            coreState.getLoginController().recordDeviceIDErrors();
             return null;
         });
     }
@@ -1640,13 +1640,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Returns a unique identifier by which CleverTap identifies this user.
      *
-     * @return The user identifier currently being used to identify this user.
+     * @return The user identifier currently being used to identify this user, or {@code null} if
+     * the device id has not been resolved yet (e.g. called on a first launch before the SDK has
+     * finished initialising it).
      *
      * <p><br><span style="color:red;background:#ffcc99" >&#9888; this method may take a long time to return,
      * so you should not call it from the application main thread</span></p>
+     *
+     * <p style="color:red;font-size: 25px;margin-left:10px">&#9760;</p>
+     * <b><span style="color:#4d2e00;background:#ffcc99" >Deprecated — the device id is resolved
+     * asynchronously, so this synchronous getter can return {@code null} on a first launch.</span></b><br>
+     * <code>Use {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener)} instead</code>, which
+     * delivers the id on the main thread as soon as it is available.
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     @WorkerThread
+    @Deprecated
+    @Nullable
     public String getCleverTapID() {
         return coreState.getDeviceInfo().getDeviceID();
     }

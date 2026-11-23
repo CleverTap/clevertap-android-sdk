@@ -155,7 +155,7 @@ public class LoginController {
                     }
 
                     localDataStore.changeUser();
-                    callbackManager.notifyUserProfileInitialized(deviceInfo.getDeviceID());
+                    callbackManager.notifyUserProfileInitialized(deviceInfo.requireDeviceID());
 
                     // Restore state of opt out and system events from storage
                     deviceInfo.setCurrentUserOptOutStateFromStorage();
@@ -177,7 +177,7 @@ public class LoginController {
 
                     notifyChangeUserCallback();
 
-                    controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
+                    controllerManager.getInAppFCManager().changeUser(deviceInfo.requireDeviceID());
                     // Native Display (ND) frequency caps (SDK-6055): repoint ND counters to the new
                     // user too. Null-guarded — ndFCManager can still be null on the async device-id path.
                     if (controllerManager.getNdFCManager() != null) {
@@ -197,7 +197,7 @@ public class LoginController {
         synchronized (changeUserCallbackList) {
             for (ChangeUserCallback callback : changeUserCallbackList) {
                 if (callback != null) {
-                    callback.onChangeUser(deviceInfo.getDeviceID(), config.getAccountId());
+                    callback.onChangeUser(deviceInfo.requireDeviceID(), config.getAccountId());
                 }
             }
         }
@@ -239,7 +239,7 @@ public class LoginController {
         }
 
         try {
-            final String currentGUID = deviceInfo.getDeviceID();
+            final String currentGUID = deviceInfo.requireDeviceID();
             if (currentGUID == null) {
                 return;
             }
@@ -323,7 +323,7 @@ public class LoginController {
         CTFeatureFlagsController ctFeatureFlagsController = controllerManager.getCTFeatureFlagsController();
         if (ctFeatureFlagsController != null && ctFeatureFlagsController
                 .isInitialized()) {
-            ctFeatureFlagsController.resetWithGuid(deviceInfo.getDeviceID());
+            ctFeatureFlagsController.resetWithGuid(deviceInfo.requireDeviceID());
             ctFeatureFlagsController.fetchFeatureFlags();
         }else {
             config.getLogger().verbose(config.getAccountId(),

@@ -27,6 +27,7 @@ import android.view.WindowMetrics;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -559,9 +560,41 @@ public class DeviceInfo {
         return getDeviceCachedInfo().dpi;
     }
 
+    /**
+     * The device id for this install.
+     *
+     * <p><b>Nullability (SDK-6254):</b> this is {@code null} only in the narrow window before the
+     * device-id barrier has resolved it — i.e. on a first launch, when read off the per-account
+     * serial queue before {@link #initDeviceID(String)} has run. Once resolved it is always
+     * non-null. Code that runs <b>on the per-account serial queue</b> (inside a
+     * {@code postAsyncSafelyTask} job, which is always ordered after the device-id barrier) should
+     * use {@link #requireDeviceID()} instead and treat the id as non-null.</p>
+     */
+    @Nullable
     public String getDeviceID() {
         String currentId = _getDeviceID();
         return currentId != null ? currentId : getFallBackDeviceID();
+    }
+
+    /**
+     * The device id, guaranteed non-null — for callers that run on the per-account serial queue.
+     *
+     * <p>The device-id barrier resolves the id as the first job on that queue, so every job ordered
+     * behind it observes a resolved id. Call this only from such on-queue code (hence
+     * {@link WorkerThread}); it throws if the id is somehow still unresolved, which on the serial
+     * queue indicates a broken ordering invariant rather than a normal state. A throw here is caught
+     * by the queue's per-job error handling, so it fails that one job rather than crashing the app.</p>
+     */
+    @NonNull
+    @WorkerThread
+    public String requireDeviceID() {
+        String id = getDeviceID();
+        if (id == null) {
+            throw new IllegalStateException(
+                    "Device id not resolved. requireDeviceID() must be called on the per-account "
+                            + "serial queue, which is always ordered after the device-id barrier.");
+        }
+        return id;
     }
 
     public String getGoogleAdID() {
