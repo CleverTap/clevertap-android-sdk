@@ -33,9 +33,11 @@
 
         <TextView
             android:id="@+id/half_interstitial_title"
-            android:layout_width="256dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"
             android:layout_marginTop="34dp"
             android:gravity="center"
             android:textColor="@android:color/black"
@@ -44,10 +46,12 @@
 
         <TextView
             android:id="@+id/half_interstitial_message"
-            android:layout_width="256dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/half_interstitial_title"
             android:layout_centerHorizontal="true"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"
             android:layout_marginTop="30dp"
             android:gravity="center"
             android:textSize="@dimen/txt_size_inapp_half_message" />
