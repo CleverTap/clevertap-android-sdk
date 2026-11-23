@@ -132,6 +132,32 @@ internal object CleverTapFactory {
         val inAppDelayManager = InAppSchedulerFactory.createDelayedInAppScheduler(accountId,config.logger)
         val inAppInActionManager = InAppSchedulerFactory.createInActionScheduler(accountId,config.logger)
 
+        // SDK-6254: create DeviceInfo and CallbackManager up front so the device-id resolution can
+        // be posted as the FIRST job on the per-account serial queue — ahead of the encryption
+        // migration and in-app DAO load. Resolving the id first gets the ID / profile listener
+        // callbacks out early (they no longer wait for migration, which can be slow on the first
+        // launch after an app upgrade). The device-scoped STORES are still built later — after
+        // migration — because they read migrated/decrypted data (see the device-scoped job below).
+        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, networkMonitor)
+        val callbackManager: BaseCallbackManager = CallbackManager(config, deviceInfo)
+
+        // Job 1 of the device-id barrier: resolve the device id. Posted before the migration/DAO
+        // tasks so it is the first job on the serial queue. initDeviceID resolves the GUID/GAID (or
+        // a fallback UUID) and caches it in DeviceInfo; it reads/writes plaintext prefs and does not
+        // depend on the encryption migration, so it is safe to run first. The success listener runs
+        // on the default callback executor (MAIN), preserving the documented main-thread delivery of
+        // the ID / profile listeners. Decoupling the notification from the store build also makes
+        // the "always notify once the id resolves" semantics structural (a store failure in Job 2
+        // can no longer suppress it).
+        val deviceIdResolve = executors.postAsyncSafelyTask<String>()
+        deviceIdResolve.addOnSuccessListener { deviceId ->
+            callbackManager.notifyUserProfileInitialized(deviceId)
+            callbackManager.notifyCleverTapIDChanged(deviceId)
+        }
+        deviceIdResolve.execute("resolveDeviceId") {
+            deviceInfo.initDeviceID(cleverTapID)
+        }
+
         val fileResourceProviderInit = executors.ioTask<Unit>()
         fileResourceProviderInit.execute("initFileResourceProvider") {
             FileResourceProvider.initInstance(context, config.logger, networkMonitor)
@@ -206,9 +232,9 @@ internal object CleverTapFactory {
             )
         }
 
-        val deviceInfo = DeviceInfo(context, config, cleverTapID, coreMetaData, networkMonitor)
+        // DeviceInfo is created earlier (above) so the device-id resolution can be posted first.
         // Native Display stores self-create lazily once the device id resolves (SDK-6055) — set
-        // before the device-id barrier (end of this method) primes the ND evaluator state.
+        // before the device-scoped job (end of this method) primes the ND evaluator state.
         storeRegistry.ndStoreProvider = NdStoreProvider(context, deviceInfo, config.accountId)
         deviceInfo.cacheDeviceInfoAsync()
 
@@ -226,7 +252,8 @@ internal object CleverTapFactory {
 
         getInstance(context, config)
 
-        val callbackManager: BaseCallbackManager = CallbackManager(config, deviceInfo)
+        // callbackManager is created earlier (above) so the device-id resolution job can notify the
+        // ID / profile listeners as soon as the id resolves.
 
         val sessionManager = SessionManager(config, coreMetaData, validationConfig, localDataStore)
 
@@ -635,52 +662,44 @@ internal object CleverTapFactory {
             inboxV2Bridge
         )
 
-        // SDK-6254: device-id barrier. Resolve the device id, then build every device-id-dependent
-        // component exactly once, ahead of every app-initiated task on the per-account serial queue.
-        // The rest of the SDK's work runs on this same queue and is ordered behind it, so it never
-        // observes a half-built device-scoped state. This replaces the old main-thread CleverTapAPI
-        // .deviceIDCreated() callback that DeviceInfo used to reach back into.
-        //
-        // Note on ordering: this is NOT the very first job on the queue — two framework setup tasks
-        // ("migratingEncryption" and "loadInAppsDao" above) are posted earlier. That is intended:
-        // the stores built below read migrated/decrypted data, so the encryption migration must run
-        // first. What matters is that the barrier is posted here, before the constructor returns, so
-        // it is ordered ahead of every *app-initiated* task (see point 1).
+        // SDK-6254: device-id barrier — Job 2 (device-scoped state). The device id is resolved by
+        // the "resolveDeviceId" job posted near the top of this method (Job 1), which is the FIRST
+        // job on the per-account serial queue. This job builds every device-id-dependent component
+        // exactly once, and is posted here — after the "migratingEncryption" and "loadInAppsDao"
+        // tasks — on purpose: the stores built below read migrated/decrypted data, so the encryption
+        // migration must run first. The queue order is therefore:
+        //     resolveDeviceId → migratingEncryption → loadInAppsDao → initDeviceScopedState → app work
+        // Every app-initiated task is ordered behind this one, so it never observes a half-built
+        // device-scoped state. This replaces the old main-thread CleverTapAPI.deviceIDCreated()
+        // callback that DeviceInfo used to reach back into.
         //
         // ORDERING CONTRACT — do not break:
-        //  1. This MUST be posted here, inside getCoreState(), which runs synchronously in the
+        //  1. Both jobs MUST be posted inside getCoreState(), which runs synchronously in the
         //     CleverTapAPI constructor BEFORE asyncStartup() and before the constructor returns.
-        //     That is what makes it enqueue ahead of every app-initiated task: the app can only
+        //     That is what makes them enqueue ahead of every app-initiated task: the app can only
         //     call public methods once it holds the (not-yet-returned) instance.
         //  2. Public "action" methods (pushEvent/pushProfile/onUserLogin/push-token/in-app
         //     evaluation …) all enqueue onto this SAME per-account serial queue
         //     (postAsyncSafelyTask, keyed by accountId) via EventQueueManager, so they are
-        //     ordered AFTER this barrier and see a fully-built device-scoped state.
+        //     ordered AFTER this job and see a fully-built device-scoped state.
         //  3. Off-queue readers (e.g. InAppResponse) must keep their null-guards — the barrier
         //     orders the serial queue, it does not make these fields non-null for other threads.
-        // If you move this call earlier/out of getCoreState, or route an action method off this
-        // queue, you reintroduce the dropped-in-apps / login-race window this fixed.
-        val deviceScopedInit = executors.postAsyncSafelyTask<String>()
-        // The device-scoped build runs in execute() on the serial queue and returns the resolved
-        // device id. The success listener runs on the default callback executor (MAIN), so the
-        // ID / profile listener callbacks keep their documented main-thread delivery — the same
-        // mechanism the old ioTask-based deviceIDCreated() used.
-        deviceScopedInit.addOnSuccessListener { deviceId ->
-            callbackManager.notifyUserProfileInitialized(deviceId)
-            callbackManager.notifyCleverTapIDChanged(deviceId)
-        }
+        // If you move either job out of getCoreState, reorder Job 2 before the migration task, or
+        // route an action method off this queue, you reintroduce the dropped-in-apps / login-race /
+        // stale-encryption window this fixed.
+        val deviceScopedInit = executors.postAsyncSafelyTask<Unit>()
         deviceScopedInit.execute("initDeviceScopedState") {
-            val deviceId = deviceInfo.initDeviceID(cleverTapID)
+            // Read the device id already resolved and cached by Job 1 (resolveDeviceId), which ran
+            // first on this serial queue. No re-resolution here.
+            val deviceId = deviceInfo.getDeviceID()
 
             // Each device-scoped component is built in its own guarded step. A failure in one
             // (e.g. a storage error while opening the in-app store) must NOT skip the others — on
             // develop these were separate serial-queue tasks, so one throwing never stopped the
             // rest; keep that isolation here (SDK-6254). Failures are logged at INFO (visible at
-            // the SDK's default log level, unlike verbose) with the failing component named.
-            //
-            // A failure also must NOT suppress the ID / profile listener notifications: the device
-            // id is still returned below so the success listener always fires ("always notify",
-            // matching the old deviceIDCreated() semantics).
+            // the SDK's default log level, unlike verbose) with the failing component named. The
+            // ID / profile listener notifications are owned by Job 1 and are unaffected by any
+            // failure here.
             //
             // This barrier is the single, once-per-instance writer of these fields (getCoreState
             // runs once per instance; this job is the only place that builds the stores / FC
@@ -758,10 +777,6 @@ internal object CleverTapFactory {
                     ?.takeIf { it.settings.guid.isNullOrEmpty() }
                     ?.setGuidAndInit(deviceId)
             }
-
-            // Hand the resolved device id to the success listener (registered above), which fires
-            // on the main thread to notify the ID / profile listeners — always, once the id resolved.
-            deviceId
         }
 
         return CoreState(
