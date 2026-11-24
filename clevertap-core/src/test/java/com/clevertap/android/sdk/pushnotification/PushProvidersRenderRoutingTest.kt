@@ -264,4 +264,74 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
         verify(exactly = 0) { dbAdapter.storeUninstallTimestamp() }
         verify(atLeast = 1) { renderer.getTitle(any(), any()) }
     }
+
+    // --- Broadcast: topic keys must not change how a push renders (any PT, core, or factory) ---
+
+    private fun broadcastLiveUpdate(event: String, action: String? = null) = baseBundle().apply {
+        putString(Constants.WZRK_LIVE_UPDATE, "true")
+        putString(Constants.WZRK_LIVE_UPDATE_ID, "run_1")
+        putString(Constants.WZRK_LIVE_UPDATE_EVENT, event)
+        putString(Constants.WZRK_LIVE_UPDATE_TOPIC, "ct_la_topic_1")
+        action?.let { putString(Constants.WZRK_TOPIC_ACTION, it) }
+    }
+
+    @Test
+    fun `broadcast start + subscribe via factory (Mode A) - renders and raises Started`() {
+        createChannel("la_ch")
+        mockkStatic(CleverTapAPI::class)
+        val factory = mockk<ICleverTapLiveUpdateNotificationFactory>()
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns factory
+        every { factory.onCreateNotification(any(), any()) } returns factoryNotification("la_ch")
+        val extras = broadcastLiveUpdate(
+            event = Constants.WZRK_LIVE_UPDATE_EVENT_START,
+            action = Constants.TOPIC_ACTION_SUBSCRIBE
+        ).apply { putString("wzrk_cid", "la_ch") }
+
+        buildSut()._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        verify(exactly = 1) { factory.onCreateNotification(appCtx, extras) }
+        verify(exactly = 1) {
+            analyticsManager.raiseLiveUpdateLifecycleEvent(extras, Constants.LIVE_UPDATE_STATE_STARTED)
+        }
+    }
+
+    @Test
+    fun `broadcast topic update with any pt_id (Mode B) - proceeds to the template renderer`() {
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns mockk(relaxed = true)
+        val extras = broadcastLiveUpdate(event = Constants.WZRK_LIVE_UPDATE_EVENT_UPDATE)
+            .apply { putString("pt_id", "pt_manual_carousel") }
+
+        buildSut()._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        // pt_id wins over the registered factory, exactly as for 1:1.
+        verify(atLeast = 1) { renderer.getTitle(any(), any()) }
+    }
+
+    @Test
+    fun `broadcast end + unsubscribe via core renderer - proceeds to render`() {
+        mockkStatic(CleverTapAPI::class)
+        every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns null
+        val extras = broadcastLiveUpdate(
+            event = Constants.WZRK_LIVE_UPDATE_EVENT_END,
+            action = Constants.TOPIC_ACTION_UNSUBSCRIBE
+        )
+
+        buildSut()._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        verify(atLeast = 1) { renderer.getTitle(any(), any()) }
+    }
+
+    @Test
+    fun `subscription-only control message - never rendered`() {
+        val extras = baseBundle().apply {
+            putString(Constants.WZRK_LIVE_UPDATE_TOPIC, "ct_la_topic_1")
+            putString(Constants.WZRK_TOPIC_ACTION, Constants.TOPIC_ACTION_UNSUBSCRIBE)
+        }
+
+        buildSut()._createNotification(appCtx, extras, Constants.EMPTY_NOTIFICATION_ID)
+
+        verify(exactly = 0) { renderer.getMessage(any()) }
+        verify(exactly = 0) { analyticsManager.raiseLiveUpdateLifecycleEvent(any(), any()) }
+    }
 }
