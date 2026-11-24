@@ -364,9 +364,9 @@ public interface Constants {
      *  {@link #TOPIC_ACTION_SUBSCRIBE} or {@link #TOPIC_ACTION_UNSUBSCRIBE} the install to/from
      *  {@code wzrk_topic}. May ride a Live Update push or come alone (then it is never rendered). */
     String WZRK_TOPIC_ACTION = "wzrk_topic_action";
-    String TOPIC_ACTION_SUBSCRIBE = "sub";
-    String TOPIC_ACTION_UNSUBSCRIBE = "unsub";
-    /** On a {@code sub} message: "true" makes a user swipe-away of the run's notification also
+    String TOPIC_ACTION_SUBSCRIBE = "subscribe";
+    String TOPIC_ACTION_UNSUBSCRIBE = "unsubscribe";
+    /** On a {@code subscribe} message: "true" makes a user swipe-away of the run's notification also
      *  unsubscribe the topic. Default false (swipe only raises Dismissed). */
     String WZRK_TOPIC_UNSUB_ON_DISMISS = "wzrk_topic_unsub_on_dismiss";
     /** Epoch seconds of this broadcast run's START. */
