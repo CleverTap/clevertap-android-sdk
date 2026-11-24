@@ -93,13 +93,23 @@ class LiveUpdateBroadcastManagerTest {
     }
 
     @Test
-    fun `unsubscribe unsubscribes once and is idempotent`() {
-        every { store.remove(TOPIC) } returnsMany listOf(entry(TOPIC), null)
+    fun `unsubscribe reaches FCM even with no local record`() {
+        every { store.remove(TOPIC) } returns null
 
-        manager.onReceived(push(action = "unsubscribe"))
         manager.onReceived(push(action = "unsubscribe"))
 
         verify(exactly = 1) { subscriber.unsubscribe(TOPIC) }
+    }
+
+    @Test
+    fun `topic push for an unknown run is adopted without subscribing`() {
+        val saved = slot<LiveUpdateTopicEntry>()
+
+        manager.onReceived(push(dismissal = "${NOW + 60}"))
+
+        verify { store.put(capture(saved)) }
+        assertEquals(NOW + 60, saved.captured.expiresAtSeconds)
+        verify(exactly = 0) { subscriber.subscribe(any()) }
     }
 
     @Test
