@@ -40,6 +40,7 @@ import com.clevertap.android.sdk.pushnotification.work.CTWorkManagerAccessor
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.Task
 import com.clevertap.android.sdk.utils.Clock
+import com.clevertap.android.sdk.pushnotification.work.CTLiveUpdateExpiryWork
 import com.clevertap.android.sdk.validation.ValidationError
 import com.clevertap.android.sdk.validation.ValidationResultFactory
 import com.clevertap.android.sdk.validation.ValidationResultStack
@@ -136,8 +137,11 @@ class PushProviders internal constructor(
             // Broadcast topic subscription control (wzrk_topic_action), independent of the Live
             // Activity lifecycle. Acts at receipt; a pure control message stops here unrendered.
             // Only pushes carrying wzrk_topic reach the manager, so nothing else loads its store.
-            if (LiveUpdateBroadcast.topic(extras) != null && !liveUpdateBroadcastManager.onReceived(extras)) {
-                return
+            if (LiveUpdateBroadcast.topic(extras) != null) {
+                if (!liveUpdateBroadcastManager.onReceived(extras)) {
+                    return
+                }
+                scheduleBroadcastExpiryIfSubscribe(context, extras)
             }
 
             val isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equals("true", ignoreCase = true)
@@ -1107,6 +1111,22 @@ class PushProviders internal constructor(
             }
         }
         return result
+    }
+
+    /**
+     * Opt-in ([CleverTapAPI.setLiveUpdateBroadcastUnsubscribeWorkerEnabled]): a `subscribe` message
+     * schedules its topic unsubscription at `dismissal_date` (else START + 12h). Off by default — a
+     * late topic push is then caught at receipt instead. dismissal_date governs only the topic
+     * subscription; the notification itself is untouched.
+     */
+    private fun scheduleBroadcastExpiryIfSubscribe(context: Context, extras: Bundle) {
+        if (!CleverTapAPI.isLiveUpdateBroadcastUnsubscribeWorkerEnabled() || !LiveUpdateBroadcast.isSubscribe(extras)) {
+            return
+        }
+        val topic = LiveUpdateBroadcast.topic(extras) ?: return
+        val nowSeconds = clock.currentTimeSeconds()
+        val delayMillis = (LiveUpdateBroadcast.expiresAtSeconds(extras, nowSeconds) - nowSeconds) * 1000
+        CTLiveUpdateExpiryWork.schedule(context, topic, config.accountId, delayMillis)
     }
 
     /**

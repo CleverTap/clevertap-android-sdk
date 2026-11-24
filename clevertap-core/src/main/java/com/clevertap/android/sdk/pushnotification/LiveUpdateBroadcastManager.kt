@@ -14,6 +14,8 @@ import com.clevertap.android.sdk.utils.Clock
  * - `subscribe` → subscribe to `wzrk_topic` and record the run (+ its expiry and dismiss behaviour);
  * - `unsubscribe` → unsubscribe and drop the run;
  * - user swipe-away → unsubscribe only if the run opted in via `wzrk_topic_unsub_on_dismiss`;
+ * - any other push for a run past its `dismissal_date` → unsubscribe and drop the push (catches
+ *   late pushes without scheduled work; the optional expiry worker calls [expire] on time);
  * - before every subscribe → prune expired runs and evict the oldest past [softCap], since FCM caps
  *   an install at 2,000 topic subscriptions and every broadcast uses a new topic.
  *
@@ -51,11 +53,25 @@ class LiveUpdateBroadcastManager(
             }
             else -> {
                 adoptIfUnknown(topic, extras)
+                if (isExpired(topic)) {
+                    logger.debug(accountId, "Broadcast topic $topic is past dismissal_date; dropping push.")
+                    close(topic, "expired")
+                    return false
+                }
                 false
             }
         }
         return !isControl || LiveUpdateRouter.isLiveUpdate(extras)
     }
+
+    /** Unsubscribes a run at its `dismissal_date` (optional worker). No-op if already closed. */
+    @WorkerThread
+    fun expire(topic: String) {
+        close(topic, "expired")
+    }
+
+    private fun isExpired(topic: String): Boolean =
+        store.get(topic)?.let { it.expiresAtSeconds <= clock.currentTimeSeconds() } ?: false
 
     /** Called when the user swipes away a notification that carries `wzrk_topic`. */
     @WorkerThread

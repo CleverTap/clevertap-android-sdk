@@ -149,6 +149,25 @@ class LiveUpdateBroadcastManagerTest {
         verify { subscriber.subscribe(TOPIC) }
     }
 
+    @Test
+    fun `push for a run past dismissal_date is dropped and unsubscribes`() {
+        every { store.get(TOPIC) } returns entry(TOPIC, expiresAt = NOW)
+        every { store.remove(TOPIC) } returns entry(TOPIC, expiresAt = NOW)
+
+        assertFalse(manager.onReceived(push()))
+        verify { subscriber.unsubscribe(TOPIC) }
+    }
+
+    @Test
+    fun `expire unsubscribes once and ignores an already closed run`() {
+        every { store.remove(TOPIC) } returnsMany listOf(entry(TOPIC), null)
+
+        manager.expire(TOPIC)
+        manager.expire(TOPIC)
+
+        verify(exactly = 1) { subscriber.unsubscribe(TOPIC) }
+    }
+
     private companion object {
         const val NOW = 1_793_943_903L
         const val TOPIC = "ct_la_topic"
