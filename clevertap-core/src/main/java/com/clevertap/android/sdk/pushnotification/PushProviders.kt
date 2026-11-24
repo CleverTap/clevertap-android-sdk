@@ -1114,7 +1114,7 @@ class PushProviders internal constructor(
     }
 
     /**
-     * Opt-in ([CleverTapAPI.setLiveUpdateBroadcastUnsubscribeWorkerEnabled]): a `sub` message
+     * Opt-in ([CleverTapAPI.setLiveUpdateBroadcastUnsubscribeWorkerEnabled]): a `subscribe` message
      * schedules its topic unsubscription at `dismissal_date` (else START + 12h). Off by default — a
      * late topic push is then caught at receipt instead. dismissal_date governs only the topic
      * subscription; the notification itself is untouched.
