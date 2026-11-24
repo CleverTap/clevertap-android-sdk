@@ -77,6 +77,17 @@ class PushProviders internal constructor(
 
     private val pushRenderingLock = Any()
 
+    /** Owns the FCM topic lifetime of broadcast Live Updates (one prefs store per install). */
+    val liveUpdateBroadcastManager: LiveUpdateBroadcastManager by lazy {
+        LiveUpdateBroadcastManager(
+            store = LiveUpdateTopicStore(StorageHelper.getPreferences(context, LiveUpdateTopicStore.PREFS_NAMESPACE)),
+            subscriber = FcmLiveUpdateTopicSubscriber(accountId = config.accountId, logger = config.logger),
+            clock = clock,
+            accountId = config.accountId,
+            logger = config.logger
+        )
+    }
+
     private var tokenRefreshListener: DevicePushTokenRefreshListener? = null
 
     init {
@@ -120,6 +131,13 @@ class PushProviders internal constructor(
             val isLiveUpdate = LiveUpdateRouter.isLiveUpdate(extras)
             if (isLiveUpdate) {
                 PushNotificationHandler.surfaceLiveUpdatePayload(extras)
+            }
+
+            // Broadcast topic subscription control (wzrk_topic_action), independent of the Live
+            // Activity lifecycle. Acts at receipt; a pure control message stops here unrendered.
+            // Only pushes carrying wzrk_topic reach the manager, so nothing else loads its store.
+            if (LiveUpdateBroadcast.topic(extras) != null && !liveUpdateBroadcastManager.onReceived(extras)) {
+                return
             }
 
             val isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equals("true", ignoreCase = true)
