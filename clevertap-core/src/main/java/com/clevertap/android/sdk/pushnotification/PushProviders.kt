@@ -89,6 +89,14 @@ class PushProviders internal constructor(
         )
     }
 
+    /** Drops stale / out-of-order Live Updates (FCM guarantees no delivery order). */
+    private val liveUpdateOrderGuard: LiveUpdateOrderGuard by lazy {
+        LiveUpdateOrderGuard(
+            prefs = StorageHelper.getPreferences(context, LiveUpdateOrderGuard.PREFS_NAMESPACE),
+            clock = clock
+        )
+    }
+
     private var tokenRefreshListener: DevicePushTokenRefreshListener? = null
 
     init {
@@ -163,6 +171,16 @@ class PushProviders internal constructor(
             // payload has a pt_id (see below).
             // Mirrors the iOS wzrk_la marker; the SDK owns the notification id + lifecycle events.
             if (isLiveUpdate) {
+                // A stale update (older seq/timestamp than one already shown for this activity, or
+                // anything after its End) is dropped unrendered and raises no event — iOS parity.
+                if (!liveUpdateOrderGuard.accept(extras)) {
+                    config.logger.debug(
+                        config.accountId,
+                        "Live Update is older than the one already shown for this activity; dropping."
+                    )
+                    return
+                }
+
                 // Mode is decided by whether the payload carries a pt_id (surfaced from `data` at
                 // the gate): pt_id present => Mode B (SDK/Push Template renders, and it takes
                 // precedence over a client factory); pt_id absent => Mode A (client factory renders

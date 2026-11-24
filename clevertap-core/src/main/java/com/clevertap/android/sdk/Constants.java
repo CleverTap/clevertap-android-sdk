@@ -375,6 +375,12 @@ public interface Constants {
     String WZRK_LIVE_UPDATE_DISMISSAL_DATE = "dismissal_date";
     /** Fallback lifetime when dismissal_date is absent/invalid: START + 12h. */
     long LIVE_UPDATE_DEFAULT_LIFETIME_SECONDS = 12 * 60 * 60;
+    /** Optional monotonic sequence of a Live Update within its activity; orders out-of-order
+     *  deliveries. Falls back to {@link #LIVE_UPDATE_TIMESTAMP} when absent. */
+    String WZRK_LIVE_UPDATE_SEQ = "wzrk_la_seq";
+    /** Epoch seconds the backend stamped on the push; the ordering fallback (iOS ActivityKit
+     *  drops updates whose timestamp is older than the activity's current one). */
+    String LIVE_UPDATE_TIMESTAMP = "timestamp";
     // Note: a missing Live Update channel falls back to the shared push fallback channel
     // (FCM_FALLBACK_NOTIFICATION_CHANNEL_ID via CTXtensions.getOrCreateChannel), not a bespoke one.
 
