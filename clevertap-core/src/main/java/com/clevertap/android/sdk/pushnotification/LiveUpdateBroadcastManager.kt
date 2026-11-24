@@ -44,10 +44,15 @@ class LiveUpdateBroadcastManager(
                 true
             }
             LiveUpdateBroadcast.isUnsubscribe(extras) -> {
-                close(topic, "unsubscribe")
+                // Unsubscribe even with no local record: the device may have been subscribed
+                // server-side (batchAdd) or the record lost.
+                close(topic, "unsubscribe", force = true)
                 true
             }
-            else -> false
+            else -> {
+                adoptIfUnknown(topic, extras)
+                false
+            }
         }
         return !isControl || LiveUpdateRouter.isLiveUpdate(extras)
     }
@@ -71,18 +76,31 @@ class LiveUpdateBroadcastManager(
     private fun openRun(topic: String, extras: Bundle) {
         pruneExpired()
         evictOverCap()
-        val now = clock.currentTimeSeconds()
-        store.put(
-            LiveUpdateTopicEntry(
-                topic = topic,
-                activityId = extras.getString(Constants.WZRK_LIVE_UPDATE_ID),
-                accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY),
-                subscribedAtSeconds = now,
-                expiresAtSeconds = LiveUpdateBroadcast.expiresAtSeconds(extras, now),
-                unsubscribeOnDismiss = LiveUpdateBroadcast.unsubscribeOnDismiss(extras)
-            )
-        )
+        store.put(newEntry(topic, extras))
         subscriber.subscribe(topic)
+    }
+
+    /**
+     * A topic push for a run this install has no record of (subscribed server-side, or the record
+     * was lost) is adopted, so expiry and the dismiss flag still apply to it. No subscribe call: the
+     * push arriving on the topic proves the install is already subscribed.
+     */
+    private fun adoptIfUnknown(topic: String, extras: Bundle) {
+        if (store.get(topic) == null) {
+            store.put(newEntry(topic, extras))
+        }
+    }
+
+    private fun newEntry(topic: String, extras: Bundle): LiveUpdateTopicEntry {
+        val now = clock.currentTimeSeconds()
+        return LiveUpdateTopicEntry(
+            topic = topic,
+            activityId = extras.getString(Constants.WZRK_LIVE_UPDATE_ID),
+            accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY),
+            subscribedAtSeconds = now,
+            expiresAtSeconds = LiveUpdateBroadcast.expiresAtSeconds(extras, now),
+            unsubscribeOnDismiss = LiveUpdateBroadcast.unsubscribeOnDismiss(extras)
+        )
     }
 
     private fun evictOverCap() {
@@ -95,8 +113,11 @@ class LiveUpdateBroadcastManager(
             .forEach { close(it.topic, "cap") }
     }
 
-    private fun close(topic: String, reason: String) {
-        store.remove(topic) ?: return
+    /** Closes a run once; [force] unsubscribes even when there is no record of it. */
+    private fun close(topic: String, reason: String, force: Boolean = false) {
+        if (store.remove(topic) == null && !force) {
+            return
+        }
         logger.verbose(accountId, "Live Update broadcast: closing $topic ($reason)")
         subscriber.unsubscribe(topic)
     }
