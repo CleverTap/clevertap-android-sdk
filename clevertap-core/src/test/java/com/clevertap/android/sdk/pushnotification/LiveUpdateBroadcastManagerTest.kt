@@ -55,11 +55,11 @@ class LiveUpdateBroadcastManagerTest {
     ) = LiveUpdateTopicEntry(topic, ACTIVITY, "acc", subscribedAt, expiresAt, unsubOnDismiss)
 
     @Test
-    fun `sub subscribes and records the run with dismissal_date and dismiss flag`() {
+    fun `subscribe subscribes and records the run with dismissal_date and dismiss flag`() {
         every { store.all() } returns emptyList()
         val saved = slot<LiveUpdateTopicEntry>()
 
-        manager.onReceived(push(action = "sub", laEvent = "start", dismissal = "${NOW + 60}", unsubOnDismiss = "true"))
+        manager.onReceived(push(action = "subscribe", laEvent = "start", dismissal = "${NOW + 60}", unsubOnDismiss = "true"))
 
         verify { store.put(capture(saved)) }
         verify { subscriber.subscribe(TOPIC) }
@@ -68,11 +68,11 @@ class LiveUpdateBroadcastManagerTest {
     }
 
     @Test
-    fun `sub without dismissal_date expires at runId plus 12h`() {
+    fun `subscribe without dismissal_date expires at runId plus 12h`() {
         every { store.all() } returns emptyList()
         val saved = slot<LiveUpdateTopicEntry>()
 
-        manager.onReceived(push(action = "sub"))
+        manager.onReceived(push(action = "subscribe"))
 
         verify { store.put(capture(saved)) }
         assertEquals(NOW + Constants.LIVE_UPDATE_DEFAULT_LIFETIME_SECONDS, saved.captured.expiresAtSeconds)
@@ -86,18 +86,18 @@ class LiveUpdateBroadcastManagerTest {
     }
 
     @Test
-    fun `live activity end without unsub keeps the subscription`() {
+    fun `live activity end without unsubscribe keeps the subscription`() {
         manager.onReceived(push(laEvent = "end"))
 
         verify(exactly = 0) { subscriber.unsubscribe(any()) }
     }
 
     @Test
-    fun `unsub unsubscribes once and is idempotent`() {
+    fun `unsubscribe unsubscribes once and is idempotent`() {
         every { store.remove(TOPIC) } returnsMany listOf(entry(TOPIC), null)
 
-        manager.onReceived(push(action = "unsub"))
-        manager.onReceived(push(action = "unsub"))
+        manager.onReceived(push(action = "unsubscribe"))
+        manager.onReceived(push(action = "unsubscribe"))
 
         verify(exactly = 1) { subscriber.unsubscribe(TOPIC) }
     }
@@ -106,8 +106,8 @@ class LiveUpdateBroadcastManagerTest {
     fun `pure control message is not rendered, piggybacked one is`() {
         every { store.all() } returns emptyList()
 
-        assertFalse(manager.onReceived(push(action = "sub", liveUpdate = false)))
-        assertTrue(manager.onReceived(push(action = "sub", laEvent = "start")))
+        assertFalse(manager.onReceived(push(action = "subscribe", liveUpdate = false)))
+        assertTrue(manager.onReceived(push(action = "subscribe", laEvent = "start")))
         assertTrue(manager.onReceived(push()))
     }
 
@@ -124,14 +124,14 @@ class LiveUpdateBroadcastManagerTest {
     }
 
     @Test
-    fun `sub prunes expired runs and evicts the oldest at the cap`() {
+    fun `subscribe prunes expired runs and evicts the oldest at the cap`() {
         val expired = entry("old", expiresAt = NOW - 1)
         val oldest = entry("a", subscribedAt = 1)
         val newer = entry("b", subscribedAt = 2)
         every { store.all() } returnsMany listOf(listOf(expired, oldest, newer), listOf(oldest, newer))
         every { store.remove(any()) } answers { entry(firstArg()) }
 
-        manager.onReceived(push(action = "sub"))
+        manager.onReceived(push(action = "subscribe"))
 
         verify { subscriber.unsubscribe("old") }
         verify { subscriber.unsubscribe("a") }

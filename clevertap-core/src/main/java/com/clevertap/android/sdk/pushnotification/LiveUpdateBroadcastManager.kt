@@ -9,10 +9,10 @@ import com.clevertap.android.sdk.utils.Clock
 
 /**
  * Owns the FCM topic subscription lifetime of broadcast pushes. Driven only by the explicit
- * subscription keys — `wzrk_topic_action` (`sub` / `unsub`) + `wzrk_topic` — never by the Live
+ * subscription keys — `wzrk_topic_action` (`subscribe` / `unsubscribe`) + `wzrk_topic` — never by the Live
  * Activity lifecycle (`wzrk_la_event`), which stays on the 1:1 path with its own events:
- * - `sub` → subscribe to `wzrk_topic` and record the run (+ its expiry and dismiss behaviour);
- * - `unsub` → unsubscribe and drop the run;
+ * - `subscribe` → subscribe to `wzrk_topic` and record the run (+ its expiry and dismiss behaviour);
+ * - `unsubscribe` → unsubscribe and drop the run;
  * - user swipe-away → unsubscribe only if the run opted in via `wzrk_topic_unsub_on_dismiss`;
  * - any other push for a run past its `dismissal_date` → unsubscribe and drop the push (catches
  *   late pushes without scheduled work; the optional expiry worker calls [expire] on time);
@@ -46,7 +46,7 @@ class LiveUpdateBroadcastManager(
                 true
             }
             LiveUpdateBroadcast.isUnsubscribe(extras) -> {
-                close(topic, "unsub")
+                close(topic, "unsubscribe")
                 true
             }
             isExpired(topic) -> {
