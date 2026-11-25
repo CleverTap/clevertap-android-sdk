@@ -71,7 +71,7 @@ class TimerTemplateHandlerTest {
         mockkStatic(Utils::class)
         mockkObject(ValidatorFactory)
         mockkStatic(PushNotificationUtil::class)
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         mockkConstructor(TemplateRenderer::class)
 
         // Default mock behaviors

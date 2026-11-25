@@ -54,8 +54,8 @@ class InAppNotificationActivityTest {
 
     @Before
     fun setUp() {
-        config = CleverTapInstanceConfig.createInstance(context, "TEST", "TEST")
-        mockkStatic(CleverTapAPI::class)
+        config = CleverTapInstanceConfig.createInstance(context, "TEST", "TEST")!!
+        mockkObject(CleverTapAPI.Companion)
         val coreState = mockk<CoreState>(relaxed = true)
         every { coreState.inAppController } returns mockInAppController
         val cleverTapAPI = mockk<CleverTapAPI>(relaxed = true)

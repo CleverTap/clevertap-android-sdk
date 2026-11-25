@@ -55,10 +55,10 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
                 }
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template
-                    CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType)
+                    CleverTapAPI.getNotificationHandler()!!.onMessageReceived(applicationContext, message, pushType)
                 } else if (isForSignedCall(message) && CleverTapAPI.getSignedCallNotificationHandler() != null) {
                     // handle voip push payload
-                    CleverTapAPI.getSignedCallNotificationHandler()
+                    CleverTapAPI.getSignedCallNotificationHandler()!!
                         .onMessageReceived(applicationContext, message, pushType)
                 } else {
                     // render core push

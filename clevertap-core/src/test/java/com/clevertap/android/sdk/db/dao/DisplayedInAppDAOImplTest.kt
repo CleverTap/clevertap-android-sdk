@@ -43,7 +43,7 @@ class DisplayedInAppDAOImplTest {
     fun setUp() {
         context = RuntimeEnvironment.getApplication().applicationContext
         logger = mockk(relaxed = true)
-        val config = CleverTapInstanceConfig.createInstance(context, "accountID", "token", "sk1")
+        val config = CleverTapInstanceConfig.createInstance(context, "accountID", "token", "sk1")!!
         databaseHelper = DatabaseHelper(context, config.accountId, dbName, logger)
         dao = DisplayedInAppDAOImpl(databaseHelper, logger, TestClock(mockTime))
     }

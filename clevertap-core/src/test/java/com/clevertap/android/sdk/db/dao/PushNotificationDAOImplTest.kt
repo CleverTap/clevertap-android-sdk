@@ -25,7 +25,7 @@ class PushNotificationDAOImplTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)
+        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, accID, accToken, accRegion)!!
         testClock = TestClock()
         dbHelper = DatabaseHelper(
             context = appCtx,

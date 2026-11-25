@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.inbox
 
 import android.content.Intent
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -79,7 +81,7 @@ class CTInboxActivityTest : BaseTestCase() {
 
     @Test
     fun `no-tabs empty inbox creates the list fragment so pull-to-refresh exists`() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         try {
             val activity = launchNoTabsInboxActivity(messageCount = 0)
 
@@ -87,13 +89,13 @@ class CTInboxActivityTest : BaseTestCase() {
             assertTrue(fragment != null)
             assertEquals(View.GONE, activity.findViewById<TextView>(R.id.no_message_view).visibility)
         } finally {
-            unmockkStatic(CleverTapAPI::class)
+            unmockkObject(CleverTapAPI.Companion)
         }
     }
 
     @Test
     fun `activity recreation does not duplicate the list fragment`() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         try {
             every { CleverTapAPI.instanceWithConfig(any(), any()) } returns cleverTapAPI
             every { cleverTapAPI.inboxMessageCount } returns 1
@@ -118,7 +120,7 @@ class CTInboxActivityTest : BaseTestCase() {
             recreated.supportFragmentManager.executePendingTransactions()
             assertEquals(1, inboxFragmentCount(recreated))
         } finally {
-            unmockkStatic(CleverTapAPI::class)
+            unmockkObject(CleverTapAPI.Companion)
         }
     }
 
@@ -127,14 +129,14 @@ class CTInboxActivityTest : BaseTestCase() {
 
     @Test
     fun `no-tabs non-empty inbox still creates the list fragment`() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         try {
             val activity = launchNoTabsInboxActivity(messageCount = 3)
 
             val fragment = activity.supportFragmentManager.fragments.firstOrNull { it is CTInboxListViewFragment }
             assertTrue(fragment != null)
         } finally {
-            unmockkStatic(CleverTapAPI::class)
+            unmockkObject(CleverTapAPI.Companion)
         }
     }
 

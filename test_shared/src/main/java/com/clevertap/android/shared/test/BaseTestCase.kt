@@ -47,7 +47,7 @@ abstract class BaseTestCase {
             application,
             Constant.ACC_ID,
             Constant.ACC_TOKEN
-        ).apply {
+        )!!.apply {
             // intentional
             customHandshakeDomain = null
         }

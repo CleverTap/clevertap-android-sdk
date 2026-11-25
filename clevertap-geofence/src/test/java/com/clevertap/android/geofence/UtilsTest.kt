@@ -1,6 +1,7 @@
 package com.clevertap.android.geofence
 
 import android.Manifest
+import io.mockk.mockkObject
 import android.location.Location
 import android.os.Build
 import com.clevertap.android.geofence.fakes.CTGeofenceSettingsFake.getSettings
@@ -159,7 +160,7 @@ class UtilsTest : BaseTestCase() {
                 actualWhenSettingsNonNullAndCTApiIsNull
             )
 
-            mockkStatic(CleverTapAPI::class) {
+            mockkObject(CleverTapAPI.Companion) {
                 every { CleverTapAPI.getGlobalInstance(any(), any()) } returns cleverTapAPI
 
                 val actualWhenSettingsNonNullAndCTApiNonNull =

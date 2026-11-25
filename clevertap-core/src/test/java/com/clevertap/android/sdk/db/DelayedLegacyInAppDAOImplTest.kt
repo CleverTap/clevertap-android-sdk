@@ -57,7 +57,7 @@ class DelayedLegacyInAppDAOImplTest {
             accID,
             accToken,
             accRegion
-        )
+        )!!
 
         databaseHelper = DatabaseHelper(context, config.accountId, "test_ct_delayed_inapps", logger)
         testClock = spyk(TestClock(MOCK_TIME))

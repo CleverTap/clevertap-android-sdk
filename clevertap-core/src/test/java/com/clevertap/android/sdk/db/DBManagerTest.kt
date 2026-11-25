@@ -34,7 +34,7 @@ class DBManagerTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, "accountId", "accountToken")
+        instanceConfig = CleverTapInstanceConfig.createInstance(appCtx, "accountId", "accountToken")!!
         lockManager = CTLockManager()
         dbEncryptionHandler = DBEncryptionHandler(TestCryptHandler(), TestLogger(), EncryptionLevel.NONE)
         dbManager = DBManager(

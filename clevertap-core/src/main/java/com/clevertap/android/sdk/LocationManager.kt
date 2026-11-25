@@ -3,7 +3,7 @@ package com.clevertap.android.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
-import com.clevertap.android.sdk.CleverTapAPI.isAppForeground
+import com.clevertap.android.sdk.CleverTapAPI.Companion.isAppForeground
 import com.clevertap.android.sdk.events.BaseEventQueueManager
 import java.util.concurrent.Future
 import org.json.JSONObject

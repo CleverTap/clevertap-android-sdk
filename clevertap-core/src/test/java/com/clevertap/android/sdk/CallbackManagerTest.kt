@@ -30,7 +30,7 @@ class CallbackManagerTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
 
-        config = CleverTapInstanceConfig.createDefaultInstance(application, "id", "token", "region")
+        config = CleverTapInstanceConfig.createInstanceWithManifest(ManifestInfo.getInstance(application), "id", "token", "region", true)
         coreMetaData = CoreMetaData()
         deviceInfo = DeviceInfo(application, config, "clevertapId", coreMetaData, null)
         callbackManager = CallbackManager(config, deviceInfo)
