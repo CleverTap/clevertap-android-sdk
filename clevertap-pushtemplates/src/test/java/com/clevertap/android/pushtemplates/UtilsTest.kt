@@ -1070,7 +1070,7 @@ class UtilsTest {
         val mockInstance = mockk<CleverTapAPI>()
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushNotificationClickedEvent(mockBundle) } just Runs
 
@@ -1090,7 +1090,7 @@ class UtilsTest {
         val mockInstance = mockk<CleverTapAPI>()
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushNotificationClickedEvent(mockBundle) } just Runs
 
@@ -1110,7 +1110,7 @@ class UtilsTest {
         val mockConfig = mockk<CleverTapInstanceConfig>()
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseNotificationClicked(mockContext, mockBundle, mockConfig)
@@ -1127,7 +1127,7 @@ class UtilsTest {
         val mockContext = mockk<Context>()
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns null
 
             Utils.raiseNotificationClicked(mockContext, mockBundle, null)
@@ -1617,7 +1617,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
@@ -1642,7 +1642,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -1668,7 +1668,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -1692,7 +1692,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
@@ -1715,7 +1715,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle)
@@ -1744,7 +1744,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -1774,7 +1774,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -1804,7 +1804,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "test_value"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -1832,7 +1832,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
@@ -1858,7 +1858,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "value1"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, mockBundle, key)
@@ -1885,7 +1885,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "original_value"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -1915,7 +1915,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "replacement_value" // Case insensitive match
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
 
@@ -1944,7 +1944,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_prop1") } returns "original_value"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
 
@@ -1980,7 +1980,7 @@ class UtilsTest {
         every { mockBundle.getString("pt_event_property_session_id") } returns "session_123"
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, expectedProps) } just Runs
 
@@ -2005,7 +2005,7 @@ class UtilsTest {
         }
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -2029,7 +2029,7 @@ class UtilsTest {
         }
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -2053,7 +2053,7 @@ class UtilsTest {
         }
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns null
 
             Utils.raiseCleverTapEvent(mockContext, mockConfig, eventName, eventProps)
@@ -2074,7 +2074,7 @@ class UtilsTest {
         }
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns null
 
             Utils.raiseCleverTapEvent(mockContext, null, eventName, eventProps)
@@ -2096,7 +2096,7 @@ class UtilsTest {
         }
 
         // When
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(any(), any()) } just Runs
 
@@ -2118,7 +2118,7 @@ class UtilsTest {
             put("key1", "value1")
         }
         
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(any(), any()) } just Runs
 
@@ -2140,7 +2140,7 @@ class UtilsTest {
         val eventName = "test_event"
         val eventProps = hashMapOf<String, Any>()
         
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -2163,7 +2163,7 @@ class UtilsTest {
             put("key1", "value1")
         }
         
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(any(), any()) } just Runs
 
@@ -2190,7 +2190,7 @@ class UtilsTest {
             put("nested_object", mapOf("inner_key" to "inner_value"))
         }
         
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -2211,7 +2211,7 @@ class UtilsTest {
         val eventName = "test_event"
         val eventProps: HashMap<String, Any>? = null
         
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -2235,7 +2235,7 @@ class UtilsTest {
             put("test_key", "test_value")
         }
         
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.instanceWithConfig(mockContext, mockConfig) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 
@@ -2260,7 +2260,7 @@ class UtilsTest {
             put("key", "value")
         }
         
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDefaultInstance(mockContext) } returns mockInstance
             every { mockInstance.pushEvent(eventName, eventProps) } just Runs
 

@@ -1,6 +1,7 @@
 package com.clevertap.android.hms
 
 import android.os.Bundle
+import io.mockk.mockkObject
 import com.clevertap.android.hms.HmsConstants.HPS
 import com.clevertap.android.hms.HmsTestConstants.Companion.HMS_TOKEN
 import com.clevertap.android.sdk.CleverTapAPI
@@ -44,7 +45,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
     fun testCreateNotification_Invalid_Message_Throws_Exception() {
         val bundle = Bundle()
         every { parser.toBundle(any()) } returns bundle
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.createNotification(application, bundle) } throws
                 RuntimeException("Something went wrong")
 
@@ -81,7 +82,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
 
     @Test
     fun testOnNewToken_Failure() {
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every {
                 CleverTapAPI.tokenRefresh(any(), eq(HMS_TOKEN), eq(HPS))
             } throws RuntimeException("Something Went Wrong")
