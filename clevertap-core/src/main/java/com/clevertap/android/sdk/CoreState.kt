@@ -85,7 +85,7 @@ internal open class CoreState(
     @Deprecated("")
     private fun initProductConfig(context: Context?) {
         if (this.config.isAnalyticsOnly) {
-            this.config.getLogger()
+            this.config.logger
                 .debug(
                     this.config.accountId,
                     "Product Config is not enabled for this instance"
@@ -93,7 +93,7 @@ internal open class CoreState(
             return
         }
         if (this.controllerManager.ctProductConfigController == null) {
-            this.config.getLogger().verbose(
+            this.config.logger.verbose(
                 config.accountId + ":async_deviceID",
                 "Initializing Product Config with device Id = " + this.deviceInfo.getDeviceID()
             )

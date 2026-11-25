@@ -75,8 +75,9 @@ class QueueHeaderBuilderTest {
 
     @Test
     fun `header object is null when accountId and accountToken are null`() {
-        every { config.accountId } returns null
-        every { config.accountToken } returns null
+        // accountId/accountToken are non-null in Kotlin; simulate a corrupt config returning null.
+        every { config.accountId } answers { nullOf<String>() }
+        every { config.accountToken } answers { nullOf<String>() }
 
         val header = builder.buildHeader("caller")
         assertNull(header)
@@ -210,3 +211,7 @@ class QueueHeaderBuilderTest {
         assertEquals(ndCountsJson.toString(), header.optJSONArray("ndtlc")?.toString())
     }
 }
+
+// Erased generic cast: returns null typed as T without a runtime null check.
+@Suppress("UNCHECKED_CAST")
+private fun <T> nullOf(): T = null as T

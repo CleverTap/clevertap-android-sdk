@@ -44,7 +44,7 @@ class CTInAppNativeHalfInterstitialFragmentTest {
 
     @Before
     fun setUp() {
-        config = CleverTapInstanceConfig.createInstance(context, "TEST", "TEST")
+        config = CleverTapInstanceConfig.createInstance(context, "TEST", "TEST")!!
         savedDeviceType = deviceTypeField.getInt(null)
         mockkObject(InAppController.Companion)
     }

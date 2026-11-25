@@ -1,675 +1,675 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getDefaultPushTypes;
-import static com.clevertap.android.sdk.utils.CTJsonConverter.toArray;
+import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
+import android.text.TextUtils
 
-import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.text.TextUtils;
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.Constants.IdentityType
+import com.clevertap.android.sdk.cryption.EncryptionLevel
+import com.clevertap.android.sdk.login.LoginConstants
+import com.clevertap.android.sdk.pushnotification.PushConstants
+import com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getDefaultPushTypes
+import com.clevertap.android.sdk.pushnotification.PushType
+import com.clevertap.android.sdk.utils.CTJsonConverter.toArray
 
-import com.clevertap.android.sdk.Constants.IdentityType;
-import com.clevertap.android.sdk.cryption.EncryptionLevel;
-import com.clevertap.android.sdk.login.LoginConstants;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
-import com.clevertap.android.sdk.pushnotification.PushType;
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.ArrayList
+import java.util.Arrays
 
-import java.util.ArrayList;
-import java.util.Arrays;
+open class CleverTapInstanceConfig : Parcelable {
 
-public class CleverTapInstanceConfig implements Parcelable {
+    private var _accountId: String? = null
+    private var _accountRegion: String? = null
+    private var _accountToken: String? = null
+    private var _proxyDomain: String? = null
+    private var _spikyProxyDomain: String? = null
+    private var _customHandshakeDomain: String? = null
+    private val _pushTypes: ArrayList<PushType> = getDefaultPushTypes()
+    private var _analyticsOnly = false
+    private var _backgroundSync = false
+    private var _beta = false
+    private var _createdPostAppLaunch = false
+    private var _debugLevel = 0
+    private var _disableAppLaunchedEvent = false
+    private var _enableCustomCleverTapId = false
+    private var _fcmSenderId: String? = null
+    private var _isDefaultInstance = false
+    private var _logger: Logger? = null
+    private var _packageName: String? = null
+    private var _personalization = false
+    private var _identityKeys: Array<String>? = Constants.NULL_STRING_ARRAY
+    private var _sslPinning = false
+    private var _useGoogleAdId = false
+    private var _encryptionLevel = 0
+    private var _encryptionInTransit: String? = null
 
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CleverTapInstanceConfig> CREATOR
-            = new Parcelable.Creator<CleverTapInstanceConfig>() {
-        @Override
-        public CleverTapInstanceConfig createFromParcel(Parcel in) {
-            return new CleverTapInstanceConfig(in);
+    internal constructor(config: CleverTapInstanceConfig) {
+        this._accountId = config._accountId
+        this._accountToken = config._accountToken
+        this._accountRegion = config._accountRegion
+        this._proxyDomain = config._proxyDomain
+        this._spikyProxyDomain = config._spikyProxyDomain
+        this._customHandshakeDomain = config._customHandshakeDomain
+        this._isDefaultInstance = config._isDefaultInstance
+        this._analyticsOnly = config._analyticsOnly
+        this._personalization = config._personalization
+        this._debugLevel = config._debugLevel
+        this._logger = config._logger
+        this._useGoogleAdId = config._useGoogleAdId
+        this._disableAppLaunchedEvent = config._disableAppLaunchedEvent
+        this._createdPostAppLaunch = config._createdPostAppLaunch
+        this._sslPinning = config._sslPinning
+        this._backgroundSync = config._backgroundSync
+        this._enableCustomCleverTapId = config._enableCustomCleverTapId
+        this._fcmSenderId = config._fcmSenderId
+        this._packageName = config._packageName
+        this._beta = config._beta
+        this._identityKeys = config._identityKeys
+        this._encryptionLevel = config._encryptionLevel
+        for (pushType in config._pushTypes) {
+            addPushType(pushType)
         }
-
-        @Override
-        public CleverTapInstanceConfig[] newArray(int size) {
-            return new CleverTapInstanceConfig[size];
-        }
-    };
-
-    private String accountId;
-    private String accountRegion;
-    private String accountToken;
-    private String proxyDomain;
-    private String spikyProxyDomain;
-    private String customHandshakeDomain;
-    @NonNull private final ArrayList<PushType> pushTypes = getDefaultPushTypes();
-    private boolean analyticsOnly;
-    private boolean backgroundSync;
-    private boolean beta;
-    private boolean createdPostAppLaunch;
-    private int debugLevel;
-    private boolean disableAppLaunchedEvent;
-    private boolean enableCustomCleverTapId;
-    private String fcmSenderId;
-    private boolean isDefaultInstance;
-    private Logger logger;
-    private String packageName;
-    private boolean personalization;
-    private String[] identityKeys = Constants.NULL_STRING_ARRAY;
-    private boolean sslPinning;
-    private boolean useGoogleAdId;
-    private int encryptionLevel;
-    private String encryptionInTransit;
-
-    /**
-     * Creates a CleverTapInstanceConfig with meta data from manifest file
-     * @param context Application context
-     * @return CleverTapInstanceConfig
-     */
-    @SuppressWarnings("unused")
-    public static CleverTapInstanceConfig getDefaultInstance(Context context) {
-        ManifestInfo info = ManifestInfo.getInstance(context);
-        String accountId = info.getAccountId();
-        String accountToken = info.getAccountToken();
-        if (accountId == null || accountToken == null) {
-            Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default CleverTapInstanceConfig");
-            return null;
-        }
-        return CleverTapInstanceConfig.createInstanceWithManifest(
-                info,
-                accountId,
-                accountToken,
-                info.getAccountRegion(),
-                true
-        );
+        this._encryptionInTransit = config._encryptionInTransit
     }
 
-    @SuppressWarnings("unused")
-    public static CleverTapInstanceConfig createInstance(
-            Context context,
-            @NonNull String accountId,
-            @NonNull String accountToken
+    private constructor(
+        manifest: ManifestInfo,
+        accountId: String?,
+        accountToken: String?,
+        accountRegion: String?,
+        isDefault: Boolean
     ) {
-        return CleverTapInstanceConfig.createInstance(context, accountId, accountToken, null);
-    }
+        this._accountId = accountId
+        this._accountToken = accountToken
+        this._accountRegion = accountRegion
+        this._isDefaultInstance = isDefault
+        this._analyticsOnly = false
+        this._personalization = true
+        this._debugLevel = CleverTapAPI.LogLevel.INFO.intValue()
+        this._logger = Logger(this._debugLevel)
+        this._createdPostAppLaunch = false
 
-    @SuppressWarnings({"unused"})
-    public static CleverTapInstanceConfig createInstance(
-            @NonNull Context context,
-            @NonNull String accountId,
-            @NonNull String accountToken,
-            @Nullable String accountRegion
-    ) {
-        //noinspection ConstantConditions
-        if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
-            return null;
-        }
-        ManifestInfo manifestInfo = ManifestInfo.getInstance(context);
-        return CleverTapInstanceConfig.createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, false);
-    }
-
-
-    // convenience to construct the internal only default config
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    protected static CleverTapInstanceConfig createDefaultInstance(
-            @NonNull Context context,
-            @NonNull String accountId,
-            @NonNull String accountToken,
-            @Nullable String accountRegion
-    ) {
-        ManifestInfo manifestInfo = ManifestInfo.getInstance(context);
-        return CleverTapInstanceConfig.createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, true);
-    }
-
-    static CleverTapInstanceConfig createInstanceWithManifest(
-            @NonNull ManifestInfo manifest,
-            @NonNull String accountId,
-            @NonNull String accountToken,
-            @Nullable String accountRegion,
-            boolean isDefaultInstance
-    ) {
-        return new CleverTapInstanceConfig(manifest, accountId, accountToken, accountRegion, isDefaultInstance);
-    }
-
-    // for internal use only!
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    @Nullable
-    protected static CleverTapInstanceConfig createInstance(@NonNull String jsonString) {
-        try {
-            return new CleverTapInstanceConfig(jsonString);
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    CleverTapInstanceConfig(CleverTapInstanceConfig config) {
-        this.accountId = config.accountId;
-        this.accountToken = config.accountToken;
-        this.accountRegion = config.accountRegion;
-        this.proxyDomain = config.proxyDomain;
-        this.spikyProxyDomain = config.spikyProxyDomain;
-        this.customHandshakeDomain = config.customHandshakeDomain;
-        this.isDefaultInstance = config.isDefaultInstance;
-        this.analyticsOnly = config.analyticsOnly;
-        this.personalization = config.personalization;
-        this.debugLevel = config.debugLevel;
-        this.logger = config.logger;
-        this.useGoogleAdId = config.useGoogleAdId;
-        this.disableAppLaunchedEvent = config.disableAppLaunchedEvent;
-        this.createdPostAppLaunch = config.createdPostAppLaunch;
-        this.sslPinning = config.sslPinning;
-        this.backgroundSync = config.backgroundSync;
-        this.enableCustomCleverTapId = config.enableCustomCleverTapId;
-        this.fcmSenderId = config.fcmSenderId;
-        this.packageName = config.packageName;
-        this.beta = config.beta;
-        this.identityKeys = config.identityKeys;
-        this.encryptionLevel = config.encryptionLevel;
-        for (PushType pushType: config.pushTypes) {
-            addPushType(pushType);
-        }
-        this.encryptionInTransit = config.encryptionInTransit;
-    }
-
-    private CleverTapInstanceConfig(
-            ManifestInfo manifest,
-            String accountId,
-            String accountToken,
-            String accountRegion,
-            boolean isDefault
-    ) {
-        this.accountId = accountId;
-        this.accountToken = accountToken;
-        this.accountRegion = accountRegion;
-        this.isDefaultInstance = isDefault;
-        this.analyticsOnly = false;
-        this.personalization = true;
-        this.debugLevel = CleverTapAPI.LogLevel.INFO.intValue();
-        this.logger = new Logger(this.debugLevel);
-        this.createdPostAppLaunch = false;
-
-        this.useGoogleAdId = manifest.useGoogleAdId();
-        this.disableAppLaunchedEvent = manifest.isAppLaunchedDisabled();
-        this.sslPinning = manifest.isSSLPinningEnabled();
-        this.backgroundSync = manifest.isBackgroundSync();
-        this.fcmSenderId = manifest.getFCMSenderId();
-        this.packageName = manifest.getPackageName();
-        this.enableCustomCleverTapId = manifest.useCustomId();
-        this.beta = manifest.enableBeta();
+        this._useGoogleAdId = manifest.useGoogleAdId()
+        this._disableAppLaunchedEvent = manifest.isAppLaunchedDisabled
+        this._sslPinning = manifest.isSSLPinningEnabled
+        this._backgroundSync = manifest.isBackgroundSync
+        this._fcmSenderId = manifest.fcmSenderId
+        this._packageName = manifest.packageName
+        this._enableCustomCleverTapId = manifest.useCustomId()
+        this._beta = manifest.enableBeta()
         /*
          * For default instance, use manifest meta, otherwise use from setter field
          */
-        if (isDefaultInstance) {
-            this.encryptionLevel = manifest.getEncryptionLevel();
-            identityKeys = manifest.getProfileKeys();
-            log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
-                    .toString(identityKeys));
+        if (_isDefaultInstance) {
+            this._encryptionLevel = manifest.encryptionLevel
+            _identityKeys = manifest.profileKeys
+            log(
+                LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
+                    .toString(_identityKeys)
+            )
         } else {
-            this.encryptionLevel = 0;
+            this._encryptionLevel = 0
         }
-        buildPushProvidersFromManifest(manifest);
+        buildPushProvidersFromManifest(manifest)
 
-        String fromManifest = manifest.getEncryptionInTransit();
-        this.encryptionInTransit = fromManifest != null ? fromManifest : "0";
+        val fromManifest = manifest.encryptionInTransit
+        this._encryptionInTransit = fromManifest ?: "0"
     }
 
-    private void buildPushProvidersFromManifest(ManifestInfo manifest) {
+    private fun buildPushProvidersFromManifest(manifest: ManifestInfo) {
         try {
-            String provider1 = manifest.getVendorOneProvider();
+            val provider1 = manifest.vendorOneProvider
             if (provider1 != null) {
-                String[] splits = provider1.split(",");
-                if (splits != null && splits.length == 4) {
-                    PushType pushType = new PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim());
-                    addPushType(pushType);
+                val splits = provider1.split(",").dropLastWhile { it.isEmpty() }.toTypedArray()
+                if (splits.size == 4) {
+                    val pushType = PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim())
+                    addPushType(pushType)
                 }
             }
-            String provider2 = manifest.getVendorTwoProvider();
+            val provider2 = manifest.vendorTwoProvider
             if (provider2 != null) {
-                String[] splits = provider2.split(",");
-                if (splits != null && splits.length == 4) {
-                    PushType pushType = new PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim());
-                    addPushType(pushType);
+                val splits = provider2.split(",").dropLastWhile { it.isEmpty() }.toTypedArray()
+                if (splits.size == 4) {
+                    val pushType = PushType(splits[0].trim(), splits[1].trim(), splits[2].trim(), splits[3].trim())
+                    addPushType(pushType)
                 }
             }
-        } catch (Exception e) {
-            Logger.v("There was some problem in loading push providers from manifest");
+        } catch (e: Exception) {
+            Logger.v("There was some problem in loading push providers from manifest")
         }
     }
 
-    private CleverTapInstanceConfig(String jsonString) throws Throwable {
+    @Throws(Throwable::class)
+    private constructor(jsonString: String?) {
         try {
-            JSONObject configJsonObject = new JSONObject(jsonString);
+            val configJsonObject = JSONObject(jsonString)
             if (configJsonObject.has(KEY_ACCOUNT_ID)) {
-                this.accountId = configJsonObject.getString(KEY_ACCOUNT_ID);
+                this._accountId = configJsonObject.getString(KEY_ACCOUNT_ID)
             }
             if (configJsonObject.has(KEY_ACCOUNT_TOKEN)) {
-                this.accountToken = configJsonObject.getString(KEY_ACCOUNT_TOKEN);
+                this._accountToken = configJsonObject.getString(KEY_ACCOUNT_TOKEN)
             }
             if (configJsonObject.has(KEY_PROXY_DOMAIN)) {
-                this.proxyDomain = configJsonObject.getString(KEY_PROXY_DOMAIN);
+                this._proxyDomain = configJsonObject.getString(KEY_PROXY_DOMAIN)
             }
             if (configJsonObject.has(KEY_SPIKY_PROXY_DOMAIN)) {
-                this.spikyProxyDomain = configJsonObject.getString(KEY_SPIKY_PROXY_DOMAIN);
+                this._spikyProxyDomain = configJsonObject.getString(KEY_SPIKY_PROXY_DOMAIN)
             }
             if (configJsonObject.has(KEY_CUSTOM_HANDSHAKE_DOMAIN)) {
-                this.customHandshakeDomain = configJsonObject.optString(KEY_CUSTOM_HANDSHAKE_DOMAIN, null);
+                this._customHandshakeDomain = configJsonObject.optString(KEY_CUSTOM_HANDSHAKE_DOMAIN, null)
             }
             if (configJsonObject.has(KEY_ACCOUNT_REGION)) {
-                this.accountRegion = configJsonObject.getString(KEY_ACCOUNT_REGION);
+                this._accountRegion = configJsonObject.getString(KEY_ACCOUNT_REGION)
             }
             if (configJsonObject.has(KEY_ANALYTICS_ONLY)) {
-                this.analyticsOnly = configJsonObject.getBoolean(KEY_ANALYTICS_ONLY);
+                this._analyticsOnly = configJsonObject.getBoolean(KEY_ANALYTICS_ONLY)
             }
             if (configJsonObject.has(KEY_DEFAULT_INSTANCE)) {
-                this.isDefaultInstance = configJsonObject.getBoolean(KEY_DEFAULT_INSTANCE);
+                this._isDefaultInstance = configJsonObject.getBoolean(KEY_DEFAULT_INSTANCE)
             }
             if (configJsonObject.has(KEY_USE_GOOGLE_AD_ID)) {
-                this.useGoogleAdId = configJsonObject.getBoolean(KEY_USE_GOOGLE_AD_ID);
+                this._useGoogleAdId = configJsonObject.getBoolean(KEY_USE_GOOGLE_AD_ID)
             }
             if (configJsonObject.has(KEY_DISABLE_APP_LAUNCHED)) {
-                this.disableAppLaunchedEvent = configJsonObject.getBoolean(KEY_DISABLE_APP_LAUNCHED);
+                this._disableAppLaunchedEvent = configJsonObject.getBoolean(KEY_DISABLE_APP_LAUNCHED)
             }
             if (configJsonObject.has(KEY_PERSONALIZATION)) {
-                this.personalization = configJsonObject.getBoolean(KEY_PERSONALIZATION);
+                this._personalization = configJsonObject.getBoolean(KEY_PERSONALIZATION)
             }
             if (configJsonObject.has(KEY_DEBUG_LEVEL)) {
-                this.debugLevel = configJsonObject.getInt(KEY_DEBUG_LEVEL);
+                this._debugLevel = configJsonObject.getInt(KEY_DEBUG_LEVEL)
             }
-            this.logger = new Logger(this.debugLevel);
+            this._logger = Logger(this._debugLevel)
 
             if (configJsonObject.has(KEY_PACKAGE_NAME)) {
-                this.packageName = configJsonObject.getString(KEY_PACKAGE_NAME);
+                this._packageName = configJsonObject.getString(KEY_PACKAGE_NAME)
             }
             if (configJsonObject.has(KEY_CREATED_POST_APP_LAUNCH)) {
-                this.createdPostAppLaunch = configJsonObject.getBoolean(KEY_CREATED_POST_APP_LAUNCH);
+                this._createdPostAppLaunch = configJsonObject.getBoolean(KEY_CREATED_POST_APP_LAUNCH)
             }
             if (configJsonObject.has(KEY_SSL_PINNING)) {
-                this.sslPinning = configJsonObject.getBoolean(KEY_SSL_PINNING);
+                this._sslPinning = configJsonObject.getBoolean(KEY_SSL_PINNING)
             }
             if (configJsonObject.has(KEY_BACKGROUND_SYNC)) {
-                this.backgroundSync = configJsonObject.getBoolean(KEY_BACKGROUND_SYNC);
+                this._backgroundSync = configJsonObject.getBoolean(KEY_BACKGROUND_SYNC)
             }
             if (configJsonObject.has(KEY_ENABLE_CUSTOM_CT_ID)) {
-                this.enableCustomCleverTapId = configJsonObject.getBoolean(KEY_ENABLE_CUSTOM_CT_ID);
+                this._enableCustomCleverTapId = configJsonObject.getBoolean(KEY_ENABLE_CUSTOM_CT_ID)
             }
             if (configJsonObject.has(KEY_FCM_SENDER_ID)) {
-                this.fcmSenderId = configJsonObject.getString(KEY_FCM_SENDER_ID);
+                this._fcmSenderId = configJsonObject.getString(KEY_FCM_SENDER_ID)
             }
             if (configJsonObject.has(KEY_BETA)) {
-                this.beta = configJsonObject.getBoolean(KEY_BETA);
+                this._beta = configJsonObject.getBoolean(KEY_BETA)
             }
             if (configJsonObject.has(KEY_IDENTITY_TYPES)) {
-                this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(KEY_IDENTITY_TYPES));
+                @Suppress("UNCHECKED_CAST")
+                this._identityKeys = toArray<Any>(configJsonObject.getJSONArray(KEY_IDENTITY_TYPES)) as Array<String>
             }
-            if (configJsonObject.has(KEY_ENCRYPTION_LEVEL)){
-                this.encryptionLevel = configJsonObject.getInt(KEY_ENCRYPTION_LEVEL);
+            if (configJsonObject.has(KEY_ENCRYPTION_LEVEL)) {
+                this._encryptionLevel = configJsonObject.getInt(KEY_ENCRYPTION_LEVEL)
             }
             if (configJsonObject.has(KEY_PUSH_TYPES)) {
-                JSONArray pushTypesArray = configJsonObject.getJSONArray(KEY_PUSH_TYPES);
-                for (int i = 0; i < pushTypesArray.length(); i++) {
-                    JSONObject pushTypeJo = pushTypesArray.getJSONObject(i);
-                    PushType pushType = PushType.fromJSONObject(pushTypeJo);
+                val pushTypesArray = configJsonObject.getJSONArray(KEY_PUSH_TYPES)
+                for (i in 0 until pushTypesArray.length()) {
+                    val pushTypeJo = pushTypesArray.getJSONObject(i)
+                    val pushType = PushType.fromJSONObject(pushTypeJo)
                     if (pushType != null) {
-                        addPushType(pushType);
+                        addPushType(pushType)
                     }
                 }
             }
-            this.encryptionInTransit = configJsonObject.optString(KEY_ENCRYPTION_IN_TRANSIT, "0");
-        } catch (Throwable t) {
-            Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
-            throw (t);
+            this._encryptionInTransit = configJsonObject.optString(KEY_ENCRYPTION_IN_TRANSIT, "0")
+        } catch (t: Throwable) {
+            Logger.v("Error constructing CleverTapInstanceConfig from JSON: $jsonString: ", t.cause)
+            throw (t)
         }
     }
 
-    private CleverTapInstanceConfig(Parcel in) {
-        accountId = in.readString();
-        accountToken = in.readString();
-        accountRegion = in.readString();
-        proxyDomain = in.readString();
-        spikyProxyDomain = in.readString();
-        customHandshakeDomain = in.readString();
-        analyticsOnly = in.readByte() != 0x00;
-        isDefaultInstance = in.readByte() != 0x00;
-        useGoogleAdId = in.readByte() != 0x00;
-        disableAppLaunchedEvent = in.readByte() != 0x00;
-        personalization = in.readByte() != 0x00;
-        debugLevel = in.readInt();
-        createdPostAppLaunch = in.readByte() != 0x00;
-        sslPinning = in.readByte() != 0x00;
-        backgroundSync = in.readByte() != 0x00;
-        enableCustomCleverTapId = in.readByte() != 0x00;
-        fcmSenderId = in.readString();
-        packageName = in.readString();
-        logger = new Logger(debugLevel);
-        beta = in.readByte() != 0x00;
-        identityKeys = in.createStringArray();
-        encryptionLevel = in.readInt();
-        encryptionInTransit = in.readString();
+    private constructor(`in`: Parcel) {
+        _accountId = `in`.readString()
+        _accountToken = `in`.readString()
+        _accountRegion = `in`.readString()
+        _proxyDomain = `in`.readString()
+        _spikyProxyDomain = `in`.readString()
+        _customHandshakeDomain = `in`.readString()
+        _analyticsOnly = `in`.readByte().toInt() != 0x00
+        _isDefaultInstance = `in`.readByte().toInt() != 0x00
+        _useGoogleAdId = `in`.readByte().toInt() != 0x00
+        _disableAppLaunchedEvent = `in`.readByte().toInt() != 0x00
+        _personalization = `in`.readByte().toInt() != 0x00
+        _debugLevel = `in`.readInt()
+        _createdPostAppLaunch = `in`.readByte().toInt() != 0x00
+        _sslPinning = `in`.readByte().toInt() != 0x00
+        _backgroundSync = `in`.readByte().toInt() != 0x00
+        _enableCustomCleverTapId = `in`.readByte().toInt() != 0x00
+        _fcmSenderId = `in`.readString()
+        _packageName = `in`.readString()
+        _logger = Logger(_debugLevel)
+        _beta = `in`.readByte().toInt() != 0x00
+        _identityKeys = `in`.createStringArray()
+        _encryptionLevel = `in`.readInt()
+        _encryptionInTransit = `in`.readString()
         try {
-            JSONArray allowedTypesJsonArray = new JSONArray(in.readString());
-            for (int i = 0; i < allowedTypesJsonArray.length(); i++) {
-                PushType pushType = PushType.fromJSONObject(allowedTypesJsonArray.getJSONObject(i));
+            val allowedTypesJsonArray = JSONArray(`in`.readString())
+            for (i in 0 until allowedTypesJsonArray.length()) {
+                val pushType = PushType.fromJSONObject(allowedTypesJsonArray.getJSONObject(i))
                 if (pushType != null) {
-                    addPushType(pushType);
+                    addPushType(pushType)
                 }
             }
-        } catch (JSONException e) {
-            Logger.v("Error in loading push providers from parcel, using firebase");
-        }
-
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public void enablePersonalization(boolean enablePersonalization) {
-        this.personalization = enablePersonalization;
-    }
-
-    public String getAccountId() {
-        return accountId;
-    }
-
-    @SuppressWarnings({"unused"})
-    public String getAccountRegion() {
-        return accountRegion;
-    }
-
-    @SuppressWarnings({"unused"})
-    public String getAccountToken() {
-        return accountToken;
-    }
-
-    @NonNull
-    public ArrayList<PushType> getPushTypes() {
-        return pushTypes;
-    }
-
-    public void addPushType(@NonNull PushType allowedPushType) {
-        if (!pushTypes.contains(allowedPushType)) {
-            this.pushTypes.add(allowedPushType);
+        } catch (e: JSONException) {
+            Logger.v("Error in loading push providers from parcel, using firebase")
         }
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public int getDebugLevel() {
-        return debugLevel;
+    override fun describeContents(): Int {
+        return 0
     }
 
-    public String getProxyDomain() {
-        return proxyDomain;
+    open fun enablePersonalization(enablePersonalization: Boolean) {
+        this._personalization = enablePersonalization
     }
 
-    public void setProxyDomain(String proxyDomain) {
-        this.proxyDomain = proxyDomain;
-    }
+    /**
+     * The CleverTap account ID. Every public factory rejects a null account ID, so this is non-null
+     * for any config created through the public API.
+     */
+    open val accountId: String
+        get() = _accountId!!
 
-    public String getSpikyProxyDomain() {
-        return spikyProxyDomain;
-    }
+    open val accountRegion: String?
+        get() = _accountRegion
 
-    public void setSpikyProxyDomain(String spikyProxyDomain) {
-        this.spikyProxyDomain = spikyProxyDomain;
-    }
+    /**
+     * The CleverTap account token. Every public factory rejects a null token, so this is non-null
+     * for any config created through the public API.
+     */
+    open val accountToken: String
+        get() = _accountToken!!
 
-    public String getCustomHandshakeDomain() {
-        return customHandshakeDomain;
-    }
+    open val pushTypes: ArrayList<PushType>
+        get() = _pushTypes
 
-    public void setCustomHandshakeDomain(String handshakeDomain) {
-        this.customHandshakeDomain = handshakeDomain;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setDebugLevel(CleverTapAPI.LogLevel debugLevel) {
-        setDebugLevel(debugLevel.intValue());
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setDebugLevel(int debugLevel) {
-        this.debugLevel = debugLevel;
-        if (logger != null) {
-            logger.setDebugLevel(debugLevel);
+    open fun addPushType(allowedPushType: PushType) {
+        if (!_pushTypes.contains(allowedPushType)) {
+            this._pushTypes.add(allowedPushType)
         }
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public String getFcmSenderId() {
-        return fcmSenderId;
-    }
-
-    public Logger getLogger() {
-        if (logger == null) {
-            logger = new Logger(this.debugLevel);
-        }
-        return logger;
-    }
-
-    public String getPackageName() {
-        return packageName;
-    }
-
-    public String[] getIdentityKeys() {
-        return identityKeys;
-    }
-
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public boolean isAnalyticsOnly() {
-        return analyticsOnly;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setAnalyticsOnly(boolean analyticsOnly) {
-        this.analyticsOnly = analyticsOnly;
-    }
-
-    public boolean isBeta() {
-        return beta;
-    }
-
-    public boolean isDefaultInstance() {
-        return isDefaultInstance;
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void log(@NonNull String tag, @NonNull String message) {
-        logger.verbose(getDefaultSuffix(tag), message);
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {
-        logger.verbose(getDefaultSuffix(tag), message, throwable);
-    }
-
-    public void setIdentityKeys(@IdentityType String... identityKeys) {
-        if (!isDefaultInstance) {
-            this.identityKeys = identityKeys;
-            log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
-                    .toString(this.identityKeys));
-        }
-    }
-
-    @SuppressWarnings({"unused"})
-    public void useGoogleAdId(boolean value) {
-        this.useGoogleAdId = value;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(accountId);
-        dest.writeString(accountToken);
-        dest.writeString(accountRegion);
-        dest.writeString(proxyDomain);
-        dest.writeString(spikyProxyDomain);
-        dest.writeString(customHandshakeDomain);
-        dest.writeByte((byte) (analyticsOnly ? 0x01 : 0x00));
-        dest.writeByte((byte) (isDefaultInstance ? 0x01 : 0x00));
-        dest.writeByte((byte) (useGoogleAdId ? 0x01 : 0x00));
-        dest.writeByte((byte) (disableAppLaunchedEvent ? 0x01 : 0x00));
-        dest.writeByte((byte) (personalization ? 0x01 : 0x00));
-        dest.writeInt(debugLevel);
-        dest.writeByte((byte) (createdPostAppLaunch ? 0x01 : 0x00));
-        dest.writeByte((byte) (sslPinning ? 0x01 : 0x00));
-        dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
-        dest.writeByte((byte) (enableCustomCleverTapId ? 0x01 : 0x00));
-        dest.writeString(fcmSenderId);
-        dest.writeString(packageName);
-        dest.writeByte((byte) (beta ? 0x01 : 0x00));
-        dest.writeStringArray(identityKeys);
-        dest.writeInt(encryptionLevel);
-        dest.writeString(encryptionInTransit);
-        String allowTypesString = getPushTypesArray().toString();
-        dest.writeString(allowTypesString);
-    }
-
-    public boolean getEnableCustomCleverTapId() {
-        return enableCustomCleverTapId;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setEnableCustomCleverTapId(boolean enableCustomCleverTapId) {
-        this.enableCustomCleverTapId = enableCustomCleverTapId;
-    }
-
-    @RestrictTo(Scope.LIBRARY)
-    public boolean isBackgroundSync() {
-        return backgroundSync;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setBackgroundSync(boolean backgroundSync) {
-        this.backgroundSync = backgroundSync;
-    }
-
-    public boolean isCreatedPostAppLaunch() {
-        return createdPostAppLaunch;
-    }
-
-    boolean isDisableAppLaunchedEvent() {
-        return disableAppLaunchedEvent;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setDisableAppLaunchedEvent(boolean disableAppLaunchedEvent) {
-        this.disableAppLaunchedEvent = disableAppLaunchedEvent;
-    }
-
-    boolean isPersonalizationEnabled() {
-        return personalization;
-    }
-
-    public boolean isSslPinningEnabled() {
-        return sslPinning;
-    }
-
-    boolean isUseGoogleAdId() {
-        return useGoogleAdId;
-    }
-
-    void setCreatedPostAppLaunch() {
-        this.createdPostAppLaunch = true;
-    }
-    public void setEncryptionLevel(EncryptionLevel encryptionLevel) {
-        this.encryptionLevel = encryptionLevel.intValue();
-    }
-    public int getEncryptionLevel() {
-        return encryptionLevel;
-    }
-
-    public void setEncryptionInTransit(boolean encryptionInTransit) {
-        this.encryptionInTransit = encryptionInTransit ? "1" : "0";
-    }
-
-    public boolean isEncryptionInTransitEnabled() {
-        try {
-            return Integer.parseInt(encryptionInTransit) > 0;
-        } catch (NumberFormatException e) {
-            Logger.v("Invalid value passed in manifest for encryption in transit");
-            return false;
-        }
-    }
-
-    //Keys used by the SDK
-    private static final String KEY_ACCOUNT_ID = "accountId";
-    private static final String KEY_ACCOUNT_TOKEN = "accountToken";
-    private static final String KEY_ACCOUNT_REGION = "accountRegion";
-    private static final String KEY_PROXY_DOMAIN = "proxyDomain";
-    private static final String KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain";
-    private static final String KEY_CUSTOM_HANDSHAKE_DOMAIN = "customHandshakeDomain";
-    private static final String KEY_FCM_SENDER_ID = "fcmSenderId";
-    private static final String KEY_ANALYTICS_ONLY = "analyticsOnly";
-    private static final String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
-    private static final String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";
-    private static final String KEY_DISABLE_APP_LAUNCHED = "disableAppLaunchedEvent";
-    private static final String KEY_PERSONALIZATION = "personalization";
-    private static final String KEY_DEBUG_LEVEL = "debugLevel";
-    private static final String KEY_CREATED_POST_APP_LAUNCH = "createdPostAppLaunch";
-    private static final String KEY_SSL_PINNING = "sslPinning";
-    private static final String KEY_BACKGROUND_SYNC = "backgroundSync";
-    private static final String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
-    private static final String KEY_BETA = "beta";
-    private static final String KEY_IDENTITY_TYPES = "identityTypes";
-    private static final String KEY_PACKAGE_NAME = "packageName";
-    public static final String KEY_ENCRYPTION_LEVEL = "encryptionLevel";
-    private static final String KEY_PUSH_TYPES = "allowedPushTypes";
-    private static final String KEY_ENCRYPTION_IN_TRANSIT = "encryptionInTransit";
-    String toJSONString() {
-        JSONObject configJsonObject = new JSONObject();
-        try {
-            configJsonObject.put(KEY_ACCOUNT_ID, getAccountId());
-            configJsonObject.put(KEY_ACCOUNT_TOKEN, getAccountToken());
-            configJsonObject.put(KEY_ACCOUNT_REGION, getAccountRegion());
-            configJsonObject.put(KEY_PROXY_DOMAIN, getProxyDomain());
-            configJsonObject.put(KEY_SPIKY_PROXY_DOMAIN, getSpikyProxyDomain());
-            configJsonObject.put(KEY_CUSTOM_HANDSHAKE_DOMAIN, getCustomHandshakeDomain());
-            configJsonObject.put(KEY_FCM_SENDER_ID, getFcmSenderId());
-            configJsonObject.put(KEY_ANALYTICS_ONLY, isAnalyticsOnly());
-            configJsonObject.put(KEY_DEFAULT_INSTANCE, isDefaultInstance());
-            configJsonObject.put(KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId());
-            configJsonObject.put(KEY_DISABLE_APP_LAUNCHED, isDisableAppLaunchedEvent());
-            configJsonObject.put(KEY_PERSONALIZATION, isPersonalizationEnabled());
-            configJsonObject.put(KEY_DEBUG_LEVEL, getDebugLevel());
-            configJsonObject.put(KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch());
-            configJsonObject.put(KEY_SSL_PINNING, isSslPinningEnabled());
-            configJsonObject.put(KEY_BACKGROUND_SYNC, isBackgroundSync());
-            configJsonObject.put(KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
-            configJsonObject.put(KEY_PACKAGE_NAME, getPackageName());
-            configJsonObject.put(KEY_BETA, isBeta());
-            configJsonObject.put(KEY_ENCRYPTION_LEVEL , getEncryptionLevel());
-            configJsonObject.put(KEY_ENCRYPTION_IN_TRANSIT , encryptionInTransit);
-            JSONArray pushTypesArray = getPushTypesArray();
-            configJsonObject.put(KEY_PUSH_TYPES, pushTypesArray);
-
-            return configJsonObject.toString();
-        } catch (Throwable e) {
-            Logger.v("Unable to convert config to JSON : ", e.getCause());
-            return null;
-        }
-    }
-
-    @NonNull
-    private JSONArray getPushTypesArray() {
-        JSONArray pushTypesArray = new JSONArray();
-        for (PushType pushType : getPushTypes()) {
-            // fcm is always loaded by default.
-            if (pushType != PushConstants.FCM) {
-                pushTypesArray.put(pushType.toJSONObject());
+    /**
+     * Debug level of this instance. Setting it also updates this instance's [logger].
+     */
+    open var debugLevel: Int
+        get() = _debugLevel
+        set(debugLevel) {
+            this._debugLevel = debugLevel
+            val currentLogger = _logger
+            if (currentLogger != null) {
+                currentLogger.setDebugLevel(debugLevel)
             }
         }
-        return pushTypesArray;
+
+    open var proxyDomain: String?
+        get() = _proxyDomain
+        set(proxyDomain) {
+            this._proxyDomain = proxyDomain
+        }
+
+    open var spikyProxyDomain: String?
+        get() = _spikyProxyDomain
+        set(spikyProxyDomain) {
+            this._spikyProxyDomain = spikyProxyDomain
+        }
+
+    open var customHandshakeDomain: String?
+        get() = _customHandshakeDomain
+        set(handshakeDomain) {
+            this._customHandshakeDomain = handshakeDomain
+        }
+
+    open fun setDebugLevel(debugLevel: CleverTapAPI.LogLevel) {
+        this.debugLevel = debugLevel.intValue()
     }
 
-    private String getDefaultSuffix(@NonNull String tag) {
-        return "[" + ((!TextUtils.isEmpty(tag) ? ":" + tag : "") + ":" + accountId + "]");
+    open val fcmSenderId: String?
+        get() = _fcmSenderId
+
+    open val logger: Logger
+        get() {
+            var currentLogger = _logger
+            if (currentLogger == null) {
+                currentLogger = Logger(this._debugLevel)
+                _logger = currentLogger
+            }
+            return currentLogger
+        }
+
+    open val packageName: String?
+        get() = _packageName
+
+    /**
+     * Identity keys used for user login. Set them with [setIdentityKeys].
+     */
+    open val identityKeys: Array<String>?
+        get() = _identityKeys
+
+    open var isAnalyticsOnly: Boolean
+        get() = _analyticsOnly
+        set(analyticsOnly) {
+            this._analyticsOnly = analyticsOnly
+        }
+
+    open val isBeta: Boolean
+        get() = _beta
+
+    open val isDefaultInstance: Boolean
+        get() = _isDefaultInstance
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    open fun log(tag: String, message: String) {
+        logger.verbose(getDefaultSuffix(tag), message)
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    open fun log(tag: String, message: String, throwable: Throwable?) {
+        logger.verbose(getDefaultSuffix(tag), message, throwable)
+    }
+
+    open fun setIdentityKeys(@IdentityType vararg identityKeys: String) {
+        if (!_isDefaultInstance) {
+            @Suppress("UNCHECKED_CAST")
+            this._identityKeys = identityKeys as Array<String>
+            log(
+                LoginConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
+                    .toString(this._identityKeys)
+            )
+        }
+    }
+
+    open fun useGoogleAdId(value: Boolean) {
+        this._useGoogleAdId = value
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(_accountId)
+        dest.writeString(_accountToken)
+        dest.writeString(_accountRegion)
+        dest.writeString(_proxyDomain)
+        dest.writeString(_spikyProxyDomain)
+        dest.writeString(_customHandshakeDomain)
+        dest.writeByte((if (_analyticsOnly) 0x01 else 0x00).toByte())
+        dest.writeByte((if (_isDefaultInstance) 0x01 else 0x00).toByte())
+        dest.writeByte((if (_useGoogleAdId) 0x01 else 0x00).toByte())
+        dest.writeByte((if (_disableAppLaunchedEvent) 0x01 else 0x00).toByte())
+        dest.writeByte((if (_personalization) 0x01 else 0x00).toByte())
+        dest.writeInt(_debugLevel)
+        dest.writeByte((if (_createdPostAppLaunch) 0x01 else 0x00).toByte())
+        dest.writeByte((if (_sslPinning) 0x01 else 0x00).toByte())
+        dest.writeByte((if (_backgroundSync) 0x01 else 0x00).toByte())
+        dest.writeByte((if (_enableCustomCleverTapId) 0x01 else 0x00).toByte())
+        dest.writeString(_fcmSenderId)
+        dest.writeString(_packageName)
+        dest.writeByte((if (_beta) 0x01 else 0x00).toByte())
+        dest.writeStringArray(_identityKeys)
+        dest.writeInt(_encryptionLevel)
+        dest.writeString(_encryptionInTransit)
+        val allowTypesString = getPushTypesArray().toString()
+        dest.writeString(allowTypesString)
+    }
+
+    open var enableCustomCleverTapId: Boolean
+        get() = _enableCustomCleverTapId
+        set(enableCustomCleverTapId) {
+            this._enableCustomCleverTapId = enableCustomCleverTapId
+        }
+
+    /**
+     * Background sync flag. The getter is SDK-internal (`@RestrictTo(LIBRARY)`), the setter is public API.
+     */
+    open var isBackgroundSync: Boolean
+        @RestrictTo(Scope.LIBRARY)
+        get() = _backgroundSync
+        set(backgroundSync) {
+            this._backgroundSync = backgroundSync
+        }
+
+    open val isCreatedPostAppLaunch: Boolean
+        get() = _createdPostAppLaunch
+
+    /**
+     * Whether the App Launched event is disabled. The getter was package-private in Java and is
+     * SDK-internal (`@RestrictTo(LIBRARY)`); the setter is public API.
+     */
+    open var isDisableAppLaunchedEvent: Boolean
+        @RestrictTo(Scope.LIBRARY)
+        get() = _disableAppLaunchedEvent
+        set(disableAppLaunchedEvent) {
+            this._disableAppLaunchedEvent = disableAppLaunchedEvent
+        }
+
+    @get:JvmName("isPersonalizationEnabled")
+    internal val isPersonalizationEnabled: Boolean
+        get() = _personalization
+
+    open val isSslPinningEnabled: Boolean
+        get() = _sslPinning
+
+    @get:JvmName("isUseGoogleAdId")
+    internal val isUseGoogleAdId: Boolean
+        get() = _useGoogleAdId
+
+    @JvmName("setCreatedPostAppLaunch")
+    internal fun setCreatedPostAppLaunch() {
+        this._createdPostAppLaunch = true
+    }
+
+    open fun setEncryptionLevel(encryptionLevel: EncryptionLevel) {
+        this._encryptionLevel = encryptionLevel.intValue()
+    }
+
+    open val encryptionLevel: Int
+        get() = _encryptionLevel
+
+    open fun setEncryptionInTransit(encryptionInTransit: Boolean) {
+        this._encryptionInTransit = if (encryptionInTransit) "1" else "0"
+    }
+
+    open val isEncryptionInTransitEnabled: Boolean
+        get() {
+            try {
+                return Integer.parseInt(_encryptionInTransit) > 0
+            } catch (e: NumberFormatException) {
+                Logger.v("Invalid value passed in manifest for encryption in transit")
+                return false
+            }
+        }
+
+    @JvmName("toJSONString")
+    internal fun toJSONString(): String? {
+        val configJsonObject = JSONObject()
+        try {
+            configJsonObject.put(KEY_ACCOUNT_ID, _accountId)
+            configJsonObject.put(KEY_ACCOUNT_TOKEN, _accountToken)
+            configJsonObject.put(KEY_ACCOUNT_REGION, accountRegion)
+            configJsonObject.put(KEY_PROXY_DOMAIN, proxyDomain)
+            configJsonObject.put(KEY_SPIKY_PROXY_DOMAIN, spikyProxyDomain)
+            configJsonObject.put(KEY_CUSTOM_HANDSHAKE_DOMAIN, customHandshakeDomain)
+            configJsonObject.put(KEY_FCM_SENDER_ID, fcmSenderId)
+            configJsonObject.put(KEY_ANALYTICS_ONLY, isAnalyticsOnly)
+            configJsonObject.put(KEY_DEFAULT_INSTANCE, isDefaultInstance)
+            configJsonObject.put(KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId)
+            configJsonObject.put(KEY_DISABLE_APP_LAUNCHED, isDisableAppLaunchedEvent)
+            configJsonObject.put(KEY_PERSONALIZATION, isPersonalizationEnabled)
+            configJsonObject.put(KEY_DEBUG_LEVEL, debugLevel)
+            configJsonObject.put(KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch)
+            configJsonObject.put(KEY_SSL_PINNING, isSslPinningEnabled)
+            configJsonObject.put(KEY_BACKGROUND_SYNC, isBackgroundSync)
+            configJsonObject.put(KEY_ENABLE_CUSTOM_CT_ID, enableCustomCleverTapId)
+            configJsonObject.put(KEY_PACKAGE_NAME, packageName)
+            configJsonObject.put(KEY_BETA, isBeta)
+            configJsonObject.put(KEY_ENCRYPTION_LEVEL, encryptionLevel)
+            configJsonObject.put(KEY_ENCRYPTION_IN_TRANSIT, _encryptionInTransit)
+            val pushTypesArray = getPushTypesArray()
+            configJsonObject.put(KEY_PUSH_TYPES, pushTypesArray)
+
+            return configJsonObject.toString()
+        } catch (e: Throwable) {
+            Logger.v("Unable to convert config to JSON : ", e.cause)
+            return null
+        }
+    }
+
+    private fun getPushTypesArray(): JSONArray {
+        val pushTypesArray = JSONArray()
+        for (pushType in pushTypes) {
+            // fcm is always loaded by default.
+            if (pushType !== PushConstants.FCM) {
+                pushTypesArray.put(pushType.toJSONObject())
+            }
+        }
+        return pushTypesArray
+    }
+
+    private fun getDefaultSuffix(tag: String): String {
+        return "[" + ((if (!TextUtils.isEmpty(tag)) ":$tag" else "") + ":" + _accountId + "]")
+    }
+
+    companion object {
+
+        @JvmField
+        val CREATOR: Parcelable.Creator<CleverTapInstanceConfig> =
+            object : Parcelable.Creator<CleverTapInstanceConfig> {
+                override fun createFromParcel(`in`: Parcel): CleverTapInstanceConfig {
+                    return CleverTapInstanceConfig(`in`)
+                }
+
+                override fun newArray(size: Int): Array<CleverTapInstanceConfig?> {
+                    return arrayOfNulls(size)
+                }
+            }
+
+        //Keys used by the SDK
+        private const val KEY_ACCOUNT_ID = "accountId"
+        private const val KEY_ACCOUNT_TOKEN = "accountToken"
+        private const val KEY_ACCOUNT_REGION = "accountRegion"
+        private const val KEY_PROXY_DOMAIN = "proxyDomain"
+        private const val KEY_SPIKY_PROXY_DOMAIN = "spikyProxyDomain"
+        private const val KEY_CUSTOM_HANDSHAKE_DOMAIN = "customHandshakeDomain"
+        private const val KEY_FCM_SENDER_ID = "fcmSenderId"
+        private const val KEY_ANALYTICS_ONLY = "analyticsOnly"
+        private const val KEY_DEFAULT_INSTANCE = "isDefaultInstance"
+        private const val KEY_USE_GOOGLE_AD_ID = "useGoogleAdId"
+        private const val KEY_DISABLE_APP_LAUNCHED = "disableAppLaunchedEvent"
+        private const val KEY_PERSONALIZATION = "personalization"
+        private const val KEY_DEBUG_LEVEL = "debugLevel"
+        private const val KEY_CREATED_POST_APP_LAUNCH = "createdPostAppLaunch"
+        private const val KEY_SSL_PINNING = "sslPinning"
+        private const val KEY_BACKGROUND_SYNC = "backgroundSync"
+        private const val KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId"
+        private const val KEY_BETA = "beta"
+        private const val KEY_IDENTITY_TYPES = "identityTypes"
+        private const val KEY_PACKAGE_NAME = "packageName"
+        const val KEY_ENCRYPTION_LEVEL = "encryptionLevel"
+        private const val KEY_PUSH_TYPES = "allowedPushTypes"
+        private const val KEY_ENCRYPTION_IN_TRANSIT = "encryptionInTransit"
+
+        /**
+         * Creates a CleverTapInstanceConfig with meta data from manifest file
+         * @param context Application context
+         * @return CleverTapInstanceConfig, or `null` if the account ID or token is missing from the manifest
+         */
+        @JvmStatic
+        fun getDefaultInstance(context: Context?): CleverTapInstanceConfig? {
+            val info = ManifestInfo.getInstance(context)
+            val accountId = info.accountId
+            val accountToken = info.accountToken
+            if (accountId == null || accountToken == null) {
+                Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default CleverTapInstanceConfig")
+                return null
+            }
+            return createInstanceWithManifest(
+                info,
+                accountId,
+                accountToken,
+                info.accountRegion,
+                true
+            )
+        }
+
+        /**
+         * Creates a CleverTapInstanceConfig for an additional instance.
+         *
+         * @return the config, or `null` if [accountId] or [accountToken] is null
+         */
+        @JvmStatic
+        fun createInstance(
+            context: Context?,
+            accountId: String?,
+            accountToken: String?
+        ): CleverTapInstanceConfig? {
+            return createInstance(context, accountId, accountToken, null)
+        }
+
+        /**
+         * Creates a CleverTapInstanceConfig for an additional instance.
+         *
+         * @return the config, or `null` if [accountId] or [accountToken] is null
+         */
+        @JvmStatic
+        fun createInstance(
+            context: Context?,
+            accountId: String?,
+            accountToken: String?,
+            accountRegion: String?
+        ): CleverTapInstanceConfig? {
+            if (accountId == null || accountToken == null) {
+                Logger.i("CleverTap accountId and accountToken cannot be null")
+                return null
+            }
+            val manifestInfo = ManifestInfo.getInstance(context)
+            return createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, false)
+        }
+
+        // convenience to construct the internal only default config
+        @JvmStatic
+        protected fun createDefaultInstance(
+            context: Context,
+            accountId: String,
+            accountToken: String,
+            accountRegion: String?
+        ): CleverTapInstanceConfig {
+            val manifestInfo = ManifestInfo.getInstance(context)
+            return createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, true)
+        }
+
+        @JvmStatic
+        @JvmName("createInstanceWithManifest")
+        internal fun createInstanceWithManifest(
+            manifest: ManifestInfo,
+            accountId: String?,
+            accountToken: String?,
+            accountRegion: String?,
+            isDefaultInstance: Boolean
+        ): CleverTapInstanceConfig {
+            return CleverTapInstanceConfig(manifest, accountId, accountToken, accountRegion, isDefaultInstance)
+        }
+
+        // for internal use only!
+        @JvmStatic
+        protected fun createInstance(jsonString: String?): CleverTapInstanceConfig? {
+            try {
+                return CleverTapInstanceConfig(jsonString)
+            } catch (t: Throwable) {
+                return null
+            }
+        }
     }
 }

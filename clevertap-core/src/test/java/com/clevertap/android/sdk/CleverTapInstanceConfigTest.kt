@@ -142,7 +142,11 @@ class CleverTapInstanceConfigTest {
             true
         )
         val jsonString = originalConfig.toJSONString()
-        val configFromJson = CleverTapInstanceConfig.createInstance(jsonString)!!
+        // createInstance(String) is protected static (Java API shape); reach it reflectively from the test.
+        val configFromJson = CleverTapInstanceConfig::class.java
+            .getDeclaredMethod("createInstance", String::class.java)
+            .apply { isAccessible = true }
+            .invoke(null, jsonString) as CleverTapInstanceConfig
 
         assertEquals(
             originalConfig.isEncryptionInTransitEnabled,

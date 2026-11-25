@@ -110,7 +110,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
                 rl.addView(closeImageView, closeIvLp)
             }
         } catch (t: Throwable) {
-            config.getLogger().verbose(config.accountId, "Fragment view not created", t)
+            config.logger.verbose(config.accountId, "Fragment view not created", t)
             return null
         }
         return inAppView
@@ -156,7 +156,7 @@ internal abstract class CTInAppBaseFullHtmlFragment : CTInAppBaseFullFragment() 
             webView?.cleanup(inAppNotification.isJsEnabled)
             webView = null
         } catch (e: Exception) {
-            config.getLogger().verbose("cleanupWebView -> there was a crash in cleanup", e)
+            config.logger.verbose("cleanupWebView -> there was a crash in cleanup", e)
             //no-op; we are anyway destroying everything. This is just for safety.
         }
     }

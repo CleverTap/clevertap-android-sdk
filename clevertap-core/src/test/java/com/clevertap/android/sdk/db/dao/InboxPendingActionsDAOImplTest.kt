@@ -26,7 +26,7 @@ class InboxPendingActionsDAOImplTest : BaseTestCase() {
 
     override fun setUp() {
         super.setUp()
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, "test_pending_actions_db", config.logger)
         dao = InboxPendingActionsDAOImpl(dbHelper, config.logger, TestClock())
     }

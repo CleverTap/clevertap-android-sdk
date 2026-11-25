@@ -49,7 +49,7 @@ class LocalDataStoreTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         val metaData = CoreMetaData()
-        defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
+        defConfig = CleverTapInstanceConfig.createInstanceWithManifest(ManifestInfo.getInstance(appCtx), "id", "token", "region", true)
         cryptHandler = CryptHandler(
             mockk<CryptRepository>(relaxed = true),
             mockk<CryptFactory>(relaxed = true),
@@ -69,7 +69,7 @@ class LocalDataStoreTest : BaseTestCase() {
             profileStateTraverserMock,
             nestedJsonBuilderMock
         )
-        config = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
+        config = CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")!!
         localDataStoreWithConfig = LocalDataStore(
             appCtx,
             config,

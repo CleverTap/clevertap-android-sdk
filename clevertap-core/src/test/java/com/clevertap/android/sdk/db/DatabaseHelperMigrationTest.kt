@@ -67,7 +67,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
         )
         seed.close()
 
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         // Opening a writable connection forces onUpgrade(6, 7).
@@ -88,7 +88,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
     fun `upgrade from v6 creates pending-action tables`() {
         seedV6Database().close()
 
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         dbHelper.readableDatabase.use { upgraded ->
@@ -130,7 +130,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
     fun `upgrade from v7 creates pushPreviews table`() {
         seedV7Database().close()
 
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         dbHelper.readableDatabase.use { upgraded ->
@@ -143,7 +143,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
     fun `upgrade from v6 also creates pushPreviews table`() {
         seedV6Database().close()
 
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         dbHelper.readableDatabase.use { upgraded ->
@@ -153,7 +153,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
 
     @Test
     fun `fresh install creates pushPreviews with a unique preview key`() {
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         dbHelper.writableDatabase.use { db ->
@@ -172,7 +172,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
 
     @Test
     fun `fresh install creates inboxMessages with source column already present`() {
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         dbHelper.readableDatabase.use { db ->
@@ -205,7 +205,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
             )
         }
 
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         // Opening a connection forces onUpgrade(7, 8).
@@ -228,7 +228,7 @@ class DatabaseHelperMigrationTest : BaseTestCase() {
 
     @Test
     fun `fresh install creates the displayed in-app table`() {
-        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")
+        val config = CleverTapInstanceConfig.createInstance(appCtx, "acc-1", "token")!!
         dbHelper = DatabaseHelper(appCtx, config.accountId, dbName, config.logger)
 
         dbHelper.readableDatabase.use { db ->

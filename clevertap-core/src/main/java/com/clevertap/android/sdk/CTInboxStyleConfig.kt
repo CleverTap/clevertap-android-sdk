@@ -1,311 +1,292 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import com.clevertap.android.sdk.inbox.CTInboxActivity;
-import java.util.ArrayList;
-import java.util.Arrays;
+import android.os.Parcel
+import android.os.Parcelable
+import com.clevertap.android.sdk.inbox.CTInboxActivity
+import java.util.ArrayList
+import java.util.Arrays
 
 /**
- * This class has all the parameters required to configure the styling of your {@link CTInboxActivity}
- * All the setter methods are public and the object of this class is made immutable by {@link CleverTapAPI}
+ * This class has all the parameters required to configure the styling of your [CTInboxActivity]
+ * All the setter methods are public and the object of this class is made immutable by [CleverTapAPI]
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
-public class CTInboxStyleConfig implements Parcelable {
+@Suppress("unused", "MemberVisibilityCanBePrivate")
+open class CTInboxStyleConfig : Parcelable {
 
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInboxStyleConfig> CREATOR
-            = new Parcelable.Creator<CTInboxStyleConfig>() {
-        @Override
-        public CTInboxStyleConfig createFromParcel(Parcel in) {
-            return new CTInboxStyleConfig(in);
+    private var _backButtonColor: String? = null
+
+    private var _firstTabTitle: String? = null
+
+    private var _inboxBackgroundColor: String? = null
+
+    private var _navBarColor: String? = null
+
+    private var _navBarTitle: String? = null
+
+    private var _navBarTitleColor: String? = null
+
+    private var _noMessageViewText: String? = null
+
+    private var _noMessageViewTextColor: String? = null
+
+    private var _selectedTabColor: String? = null
+
+    private var _selectedTabIndicatorColor: String? = null
+
+    private var _tabBackgroundColor: String? = null
+
+    private var _tabs: Array<String?>? = null
+
+    private var _unselectedTabColor: String? = null
+
+    constructor() {
+        _navBarColor = "#FFFFFF"
+        _navBarTitle = "App Inbox"
+        _navBarTitleColor = "#333333"
+        _inboxBackgroundColor = "#D3D4DA"
+        _backButtonColor = "#333333"
+        _selectedTabColor = "#1C84FE"
+        _unselectedTabColor = "#808080"
+        _selectedTabIndicatorColor = "#1C84FE"
+        _tabBackgroundColor = "#FFFFFF"
+        _tabs = arrayOfNulls(0)
+        _noMessageViewText = "No Message(s) to show"
+        _noMessageViewTextColor = "#000000"
+        _firstTabTitle = "ALL"
+    }
+
+    internal constructor(config: CTInboxStyleConfig) {
+        _navBarColor = config._navBarColor
+        _navBarTitle = config._navBarTitle
+        _navBarTitleColor = config._navBarTitleColor
+        _inboxBackgroundColor = config._inboxBackgroundColor
+        _backButtonColor = config._backButtonColor
+        _selectedTabColor = config._selectedTabColor
+        _unselectedTabColor = config._unselectedTabColor
+        _selectedTabIndicatorColor = config._selectedTabIndicatorColor
+        _tabBackgroundColor = config._tabBackgroundColor
+        val configTabs = config._tabs
+        _tabs = if (configTabs == null) arrayOfNulls(0) else Arrays.copyOf(configTabs, configTabs.size)
+        _noMessageViewText = config._noMessageViewText
+        _noMessageViewTextColor = config._noMessageViewTextColor
+        _firstTabTitle = config._firstTabTitle
+    }
+
+    protected constructor(`in`: Parcel) {
+        _navBarColor = `in`.readString()
+        _navBarTitle = `in`.readString()
+        _navBarTitleColor = `in`.readString()
+        _inboxBackgroundColor = `in`.readString()
+        _tabs = `in`.createStringArray()
+        _backButtonColor = `in`.readString()
+        _selectedTabColor = `in`.readString()
+        _unselectedTabColor = `in`.readString()
+        _selectedTabIndicatorColor = `in`.readString()
+        _tabBackgroundColor = `in`.readString()
+        _noMessageViewText = `in`.readString()
+        _noMessageViewTextColor = `in`.readString()
+        _firstTabTitle = `in`.readString()
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    /**
+     * The color of the back button on the top navigation toolbar.
+     *
+     * Setter: sets the color of the back button on the top navigation toolbar
+     * (String - hexcode of the color).
+     */
+    open var backButtonColor: String?
+        get() = _backButtonColor
+        set(backButtonColor) {
+            _backButtonColor = backButtonColor
         }
 
-        @Override
-        public CTInboxStyleConfig[] newArray(int size) {
-            return new CTInboxStyleConfig[size];
+    /**
+     * The title of the first tab of the App Inbox.
+     *
+     * Setter: sets the title of the first tab of the App Inbox (String - title of the first tab).
+     */
+    open var firstTabTitle: String?
+        get() = _firstTabTitle
+        set(title) {
+            _firstTabTitle = title
         }
-    };
-
-    private final static int MAX_TABS = 2;
-
-    private String backButtonColor;
-
-    private String firstTabTitle;
-
-    private String inboxBackgroundColor;
-
-    private String navBarColor;
-
-    private String navBarTitle;
-
-    private String navBarTitleColor;
-
-    private String noMessageViewText;
-
-    private String noMessageViewTextColor;
-
-    private String selectedTabColor;
-
-    private String selectedTabIndicatorColor;
-
-    private String tabBackgroundColor;
-
-    private String[] tabs;
-
-    private String unselectedTabColor;
-
-    public CTInboxStyleConfig() {
-        this.navBarColor = "#FFFFFF";
-        this.navBarTitle = "App Inbox";
-        this.navBarTitleColor = "#333333";
-        this.inboxBackgroundColor = "#D3D4DA";
-        this.backButtonColor = "#333333";
-        this.selectedTabColor = "#1C84FE";
-        this.unselectedTabColor = "#808080";
-        this.selectedTabIndicatorColor = "#1C84FE";
-        this.tabBackgroundColor = "#FFFFFF";
-        this.tabs = new String[0];
-        this.noMessageViewText = "No Message(s) to show";
-        this.noMessageViewTextColor = "#000000";
-        this.firstTabTitle = "ALL";
-    }
-
-    CTInboxStyleConfig(CTInboxStyleConfig config) {
-        this.navBarColor = config.navBarColor;
-        this.navBarTitle = config.navBarTitle;
-        this.navBarTitleColor = config.navBarTitleColor;
-        this.inboxBackgroundColor = config.inboxBackgroundColor;
-        this.backButtonColor = config.backButtonColor;
-        this.selectedTabColor = config.selectedTabColor;
-        this.unselectedTabColor = config.unselectedTabColor;
-        this.selectedTabIndicatorColor = config.selectedTabIndicatorColor;
-        this.tabBackgroundColor = config.tabBackgroundColor;
-        this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
-        this.noMessageViewText = config.noMessageViewText;
-        this.noMessageViewTextColor = config.noMessageViewTextColor;
-        this.firstTabTitle = config.firstTabTitle;
-    }
-
-    protected CTInboxStyleConfig(Parcel in) {
-        navBarColor = in.readString();
-        navBarTitle = in.readString();
-        navBarTitleColor = in.readString();
-        inboxBackgroundColor = in.readString();
-        tabs = in.createStringArray();
-        backButtonColor = in.readString();
-        selectedTabColor = in.readString();
-        unselectedTabColor = in.readString();
-        selectedTabIndicatorColor = in.readString();
-        tabBackgroundColor = in.readString();
-        noMessageViewText = in.readString();
-        noMessageViewTextColor = in.readString();
-        firstTabTitle = in.readString();
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public String getBackButtonColor() {
-        return backButtonColor;
-    }
 
     /**
-     * Sets the color of the back button on the top navigation toolbar
+     * The background color for the entire inbox.
      *
-     * @param backButtonColor String - hexcode of the color
+     * Setter: sets the background color for the entire inbox (String - hexcode of the color).
      */
-    public void setBackButtonColor(String backButtonColor) {
-        this.backButtonColor = backButtonColor;
-    }
-
-    public String getFirstTabTitle() {
-        return firstTabTitle;
-    }
+    open var inboxBackgroundColor: String?
+        get() = _inboxBackgroundColor
+        set(inboxBackgroundColor) {
+            _inboxBackgroundColor = inboxBackgroundColor
+        }
 
     /**
-     * Sets the title of the first tab of the App Inbox
+     * The color for the top navigation toolbar.
      *
-     * @param title String - title of the first tab
+     * Setter: sets the color for the top navigation toolbar (String - hexcode of the color).
      */
-    public void setFirstTabTitle(String title) {
-        firstTabTitle = title;
-    }
-
-    public String getInboxBackgroundColor() {
-        return inboxBackgroundColor;
-    }
+    open var navBarColor: String?
+        get() = _navBarColor
+        set(navBarColor) {
+            _navBarColor = navBarColor
+        }
 
     /**
-     * Sets the background color for the entire inbox
+     * The text for the top navigation toolbar.
      *
-     * @param inboxBackgroundColor - String - hexcode of the color
+     * Setter: sets the text for the top navigation toolbar (String).
      */
-    public void setInboxBackgroundColor(String inboxBackgroundColor) {
-        this.inboxBackgroundColor = inboxBackgroundColor;
-    }
-
-    public String getNavBarColor() {
-        return navBarColor;
-    }
+    open var navBarTitle: String?
+        get() = _navBarTitle
+        set(navBarTitle) {
+            _navBarTitle = navBarTitle
+        }
 
     /**
-     * Sets the color for the top navigation toolbar
+     * The color for the title in the top navigation toolbar.
      *
-     * @param navBarColor String - hexcode of the color
+     * Setter: sets the color for the title in the top navigation toolbar (String - hexcode of the color).
      */
-    public void setNavBarColor(String navBarColor) {
-        this.navBarColor = navBarColor;
-    }
-
-    public String getNavBarTitle() {
-        return navBarTitle;
-    }
+    open var navBarTitleColor: String?
+        get() = _navBarTitleColor
+        set(navBarTitleColor) {
+            _navBarTitleColor = navBarTitleColor
+        }
 
     /**
-     * Sets the text for the top navigation toolbar
+     * The text for when there are no messages in the App Inbox.
      *
-     * @param navBarTitle String
+     * Setter: sets the text for when there are no messages in the App Inbox (String).
      */
-    public void setNavBarTitle(String navBarTitle) {
-        this.navBarTitle = navBarTitle;
-    }
-
-    public String getNavBarTitleColor() {
-        return navBarTitleColor;
-    }
+    open var noMessageViewText: String?
+        get() = _noMessageViewText
+        set(noMessageViewText) {
+            _noMessageViewText = noMessageViewText
+        }
 
     /**
-     * Sets the color for the title in the top navigation toolbar
+     * The color of the text for when there are no messages in the App Inbox.
      *
-     * @param navBarTitleColor String - hexcode of the color
+     * Setter: sets the color of the text for when there are no messages in the App Inbox
+     * (String - hexcode of the color).
      */
-    public void setNavBarTitleColor(String navBarTitleColor) {
-        this.navBarTitleColor = navBarTitleColor;
-    }
-
-    public String getNoMessageViewText() {
-        return noMessageViewText;
-    }
+    open var noMessageViewTextColor: String?
+        get() = _noMessageViewTextColor
+        set(noMessageViewTextColor) {
+            _noMessageViewTextColor = noMessageViewTextColor
+        }
 
     /**
-     * Sets the text for when there are no messages in the App Inbox
+     * The color of the selected tab.
      *
-     * @param noMessageViewText String
+     * Setter: sets the color of the selected tab (String - hexcode of the color).
      */
-    public void setNoMessageViewText(String noMessageViewText) {
-        this.noMessageViewText = noMessageViewText;
-    }
-
-    public String getNoMessageViewTextColor() {
-        return noMessageViewTextColor;
-    }
+    open var selectedTabColor: String?
+        get() = _selectedTabColor
+        set(selectedTabColor) {
+            _selectedTabColor = selectedTabColor
+        }
 
     /**
-     * Sets the color of the text for when there are no messages in the App Inbox
+     * The color of the indicator of the selected tab.
      *
-     * @param noMessageViewTextColor String - hexcode of the color
+     * Setter: sets the color of the indicator of the selected tab (String - hexcode of the color).
      */
-    public void setNoMessageViewTextColor(String noMessageViewTextColor) {
-        this.noMessageViewTextColor = noMessageViewTextColor;
-    }
-
-    public String getSelectedTabColor() {
-        return selectedTabColor;
-    }
+    open var selectedTabIndicatorColor: String?
+        get() = _selectedTabIndicatorColor
+        set(selectedTabIndicatorColor) {
+            _selectedTabIndicatorColor = selectedTabIndicatorColor
+        }
 
     /**
-     * Sets the color of the selected tab
+     * The background color for the tabs.
      *
-     * @param selectedTabColor String - hexcode of the color
+     * Setter: sets the background color for the tabs (String - hexcode of the color).
      */
-    public void setSelectedTabColor(String selectedTabColor) {
-        this.selectedTabColor = selectedTabColor;
-    }
-
-    public String getSelectedTabIndicatorColor() {
-        return selectedTabIndicatorColor;
-    }
+    open var tabBackgroundColor: String?
+        get() = _tabBackgroundColor
+        set(tabBackgroundColor) {
+            _tabBackgroundColor = tabBackgroundColor
+        }
 
     /**
-     * Sets the color of the indicator of the selected tab
+     * The names of the optional two tabs. Reading returns a copy (never `null`).
      *
-     * @param selectedTabIndicatorColor String - hexcode of the color
-     */
-    public void setSelectedTabIndicatorColor(String selectedTabIndicatorColor) {
-        this.selectedTabIndicatorColor = selectedTabIndicatorColor;
-    }
-
-    public String getTabBackgroundColor() {
-        return tabBackgroundColor;
-    }
-
-    /**
-     * Sets the background color for the tabs
-     *
-     * @param tabBackgroundColor String - hexcode of the color
-     */
-    public void setTabBackgroundColor(String tabBackgroundColor) {
-        this.tabBackgroundColor = tabBackgroundColor;
-    }
-
-    public ArrayList<String> getTabs() {
-        return this.tabs == null ? new ArrayList<String>() : new ArrayList<>(Arrays.asList(this.tabs));
-    }
-
-    /**
-     * Sets the name of the optional two tabs.
+     * Setter: sets the name of the optional two tabs.
      * The contents of the tabs are filtered based on the name of the tab.
-     *
-     * @param tabs ArrayList of Strings
+     * A `null` or empty list is ignored; only the first two entries are kept.
      */
-    public void setTabs(ArrayList<String> tabs) {
-        if (tabs == null || tabs.size() <= 0) {
-            return;
+    open var tabs: ArrayList<String>?
+        get() {
+            val current = _tabs
+            @Suppress("UNCHECKED_CAST")
+            return if (current == null) ArrayList() else ArrayList(Arrays.asList(*current)) as ArrayList<String>
         }
+        set(tabs) {
+            if (tabs == null || tabs.size <= 0) {
+                return
+            }
 
-        ArrayList<String> toAdd;
-        if (tabs.size() > MAX_TABS) {
-            toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
-        } else {
-            toAdd = tabs;
+            val toAdd: ArrayList<String> = if (tabs.size > MAX_TABS) {
+                ArrayList(tabs.subList(0, MAX_TABS))
+            } else {
+                tabs
+            }
+            _tabs = toAdd.toTypedArray<String?>()
         }
-        this.tabs = toAdd.toArray(new String[0]);
-    }
-
-    public String getUnselectedTabColor() {
-        return unselectedTabColor;
-    }
 
     /**
-     * Sets the color of the unselected tab
+     * The color of the unselected tab.
      *
-     * @param unselectedTabColor String - hexcode of the color
+     * Setter: sets the color of the unselected tab (String - hexcode of the color).
      */
-    public void setUnselectedTabColor(String unselectedTabColor) {
-        this.unselectedTabColor = unselectedTabColor;
+    open var unselectedTabColor: String?
+        get() = _unselectedTabColor
+        set(unselectedTabColor) {
+            _unselectedTabColor = unselectedTabColor
+        }
+
+    open val isUsingTabs: Boolean
+        get() {
+            val current = _tabs
+            return current != null && current.isNotEmpty()
+        }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(_navBarColor)
+        dest.writeString(_navBarTitle)
+        dest.writeString(_navBarTitleColor)
+        dest.writeString(_inboxBackgroundColor)
+        dest.writeStringArray(_tabs)
+        dest.writeString(_backButtonColor)
+        dest.writeString(_selectedTabColor)
+        dest.writeString(_unselectedTabColor)
+        dest.writeString(_selectedTabIndicatorColor)
+        dest.writeString(_tabBackgroundColor)
+        dest.writeString(_noMessageViewText)
+        dest.writeString(_noMessageViewTextColor)
+        dest.writeString(_firstTabTitle)
     }
 
-    public boolean isUsingTabs() {
-        return (tabs != null && tabs.length > 0);
-    }
+    companion object {
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(navBarColor);
-        dest.writeString(navBarTitle);
-        dest.writeString(navBarTitleColor);
-        dest.writeString(inboxBackgroundColor);
-        dest.writeStringArray(tabs);
-        dest.writeString(backButtonColor);
-        dest.writeString(selectedTabColor);
-        dest.writeString(unselectedTabColor);
-        dest.writeString(selectedTabIndicatorColor);
-        dest.writeString(tabBackgroundColor);
-        dest.writeString(noMessageViewText);
-        dest.writeString(noMessageViewTextColor);
-        dest.writeString(firstTabTitle);
+        @JvmField
+        val CREATOR: Parcelable.Creator<CTInboxStyleConfig> = object : Parcelable.Creator<CTInboxStyleConfig> {
+            override fun createFromParcel(`in`: Parcel): CTInboxStyleConfig {
+                return CTInboxStyleConfig(`in`)
+            }
+
+            override fun newArray(size: Int): Array<CTInboxStyleConfig?> {
+                return arrayOfNulls(size)
+            }
+        }
+
+        private const val MAX_TABS = 2
     }
 }

@@ -25,7 +25,7 @@ class NetworkRepoTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         // Create a real config instance - this will use actual SharedPreferences via Robolectric
-        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", accountRegion)
+        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", accountRegion)!!
     }
     
     private fun createNetworkRepo(clock: Clock = Clock.SYSTEM): NetworkRepo {
@@ -549,7 +549,7 @@ class NetworkRepoTest : BaseTestCase() {
         val currentDelay = 5000
         val networkRetryCount = 10
         // Create config with null region
-        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", null)
+        config = CleverTapInstanceConfig.createInstance(appCtx, accountId, "test-token", null)!!
         networkRepo = createNetworkRepo()
 
         // When
@@ -697,8 +697,8 @@ class NetworkRepoTest : BaseTestCase() {
     @Test
     fun `different config instances should have separate storage`() {
         // Given
-        val config1 = CleverTapInstanceConfig.createInstance(appCtx, "account1", "token1", "us1")
-        val config2 = CleverTapInstanceConfig.createInstance(appCtx, "account2", "token2", "eu1")
+        val config1 = CleverTapInstanceConfig.createInstance(appCtx, "account1", "token1", "us1")!!
+        val config2 = CleverTapInstanceConfig.createInstance(appCtx, "account2", "token2", "eu1")!!
         val networkRepo1 = NetworkRepo(appCtx, config1)
         val networkRepo2 = NetworkRepo(appCtx, config2)
 
