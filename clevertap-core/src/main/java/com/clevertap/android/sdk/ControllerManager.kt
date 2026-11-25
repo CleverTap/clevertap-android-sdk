@@ -143,7 +143,8 @@ internal open class ControllerManager(
                     inboxDeleteCoordinator
                 )
                 callbackManager._notifyInboxInitialized()
-                inboxDeleteCoordinator?.retryPending(deviceInfo.deviceID)
+                // Java passed the re-read id straight to the non-null Kotlin parameter.
+                inboxDeleteCoordinator?.retryPending(deviceInfo.deviceID!!)
             } else {
                 config.logger.info("CRITICAL : No device ID found!")
             }

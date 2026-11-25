@@ -1016,7 +1016,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_setMultiValuesForKey() {
         // Arrange
         val key = "Languages"
-        val values = arrayListOf("English", "Spanish", "French")
+        val values = arrayListOf<String?>("English", "Spanish", "French")
 
         // Act
         initializeCleverTapAPI()

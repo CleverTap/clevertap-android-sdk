@@ -191,7 +191,7 @@ class InAppFCManagerTest : BaseTestCase() {
         fcManager.didShow(appCtx, inApp1)
         fcManager.didShow(appCtx, inApp2)
 
-        val countsMap = countsToMap(fcManager.getInAppsCount(appCtx))
+        val countsMap = countsToMap(fcManager.getInAppsCount(appCtx)!!)
 
         assertEquals(2, countsMap[id1]!!.todayCount)
         assertEquals(2, countsMap[id1]!!.lifetimeCount)
@@ -209,7 +209,7 @@ class InAppFCManagerTest : BaseTestCase() {
 
         fcManager.didShow(appCtx, inApp1)
         fcManager.didShow(appCtx, inApp2)
-        assertEquals(2, fcManager.getInAppsCount(appCtx).length())
+        assertEquals(2, fcManager.getInAppsCount(appCtx)!!.length())
 
         val jsonResponse = JSONObject(
             """
@@ -218,7 +218,7 @@ class InAppFCManagerTest : BaseTestCase() {
         )
 
         fcManager.processResponse(appCtx, jsonResponse)
-        assertEquals(0, fcManager.getInAppsCount(appCtx).length())
+        assertEquals(0, fcManager.getInAppsCount(appCtx)!!.length())
     }
 
     @Test
@@ -248,13 +248,13 @@ class InAppFCManagerTest : BaseTestCase() {
 
         fcManager.didShow(appCtx, inApp1)
         fcManager.didShow(appCtx, inApp2)
-        assertEquals(2, fcManager.getInAppsCount(appCtx).length())
+        assertEquals(2, fcManager.getInAppsCount(appCtx)!!.length())
 
         fcManager.changeUser("newDeviceId")
-        assertEquals(0, fcManager.getInAppsCount(appCtx).length())
+        assertEquals(0, fcManager.getInAppsCount(appCtx)!!.length())
 
         fcManager.didShow(appCtx, inApp1)
-        assertEquals(1, fcManager.getInAppsCount(appCtx).length())
+        assertEquals(1, fcManager.getInAppsCount(appCtx)!!.length())
     }
 
     @Test
@@ -265,14 +265,14 @@ class InAppFCManagerTest : BaseTestCase() {
 
         fcManager.didShow(appCtx, inApp)
 
-        var countsMap = countsToMap(fcManager.getInAppsCount(appCtx))
+        var countsMap = countsToMap(fcManager.getInAppsCount(appCtx)!!)
         assertEquals(1, countsMap[id]!!.todayCount)
         assertEquals(1, countsMap[id]!!.lifetimeCount)
 
         // not advancing the clock should increment the previous daily counts
         fcManager = createInAppFCManager()
         fcManager.didShow(appCtx, inApp)
-        countsMap = countsToMap(fcManager.getInAppsCount(appCtx))
+        countsMap = countsToMap(fcManager.getInAppsCount(appCtx)!!)
         assertEquals(2, countsMap[id]!!.todayCount)
         assertEquals(2, countsMap[id]!!.lifetimeCount)
 
@@ -280,7 +280,7 @@ class InAppFCManagerTest : BaseTestCase() {
         //advancing the clock should reset the todayCount
         fcManager = createInAppFCManager()
         fcManager.didShow(appCtx, inApp)
-        countsMap = countsToMap(fcManager.getInAppsCount(appCtx))
+        countsMap = countsToMap(fcManager.getInAppsCount(appCtx)!!)
         assertEquals(1, countsMap[id]!!.todayCount)
         assertEquals(3, countsMap[id]!!.lifetimeCount)
     }

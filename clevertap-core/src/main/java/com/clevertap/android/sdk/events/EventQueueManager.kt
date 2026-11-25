@@ -417,7 +417,7 @@ internal class EventQueueManager(
 
                         /*If key is present in IdentitySet and removeFromSharedPrefs is true then
                         proceed to removing PII key(Email) from shared prefs*/
-                        if (isProfileKey && !deviceInfo.isErrorDeviceId()) {
+                        if (isProfileKey && !deviceInfo.isErrorDeviceId) {
                             try {
                                 if (removeFromSharedPrefs) {
                                     // Remove the value associated with the GUID

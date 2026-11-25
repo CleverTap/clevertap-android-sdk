@@ -1,244 +1,197 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import static com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson;
-import static com.clevertap.android.sdk.utils.CTJsonConverter.getWzrkFields;
+import android.content.Context
+import android.location.Location
+import android.net.Uri
+import android.os.Bundle
+import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.AnalyticsManagerBundler.wzrkBundleToJson
+import com.clevertap.android.sdk.events.BaseEventQueueManager
+import com.clevertap.android.sdk.events.FlattenedEventData
+import com.clevertap.android.sdk.inapp.CTInAppNotification
+import com.clevertap.android.sdk.inapp.InAppPreviewHandler
+import com.clevertap.android.sdk.inbox.CTInboxMessage
+import com.clevertap.android.sdk.inbox.EventSuppressor
+import com.clevertap.android.sdk.profile.ProfileCommand
+import com.clevertap.android.sdk.profile.traversal.ProfileOperation
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewPayload
+import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore
+import com.clevertap.android.sdk.response.CleverTapResponse
+import com.clevertap.android.sdk.response.DisplayUnitResponse
+import com.clevertap.android.sdk.response.InboxResponse
+import com.clevertap.android.sdk.task.CTExecutors
+import com.clevertap.android.sdk.utils.CTJsonConverter
+import com.clevertap.android.sdk.utils.CTJsonConverter.getWzrkFields
+import com.clevertap.android.sdk.utils.Clock
+import com.clevertap.android.sdk.utils.JsonFlattener
+import com.clevertap.android.sdk.utils.UriHelper
+import com.clevertap.android.sdk.validation.ValidationConfig
+import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
+import java.util.ArrayList
+import java.util.Collections.emptyMap
+import java.util.Collections.emptySet
+import java.util.HashMap
+import java.util.Locale
+import java.util.concurrent.Callable
+import java.util.concurrent.Future
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
+internal open class AnalyticsManager(
+    private val context: Context,
+    private val config: CleverTapInstanceConfig,
+    private val baseEventQueueManager: BaseEventQueueManager,
+    private val validationPipelineProvider: ValidationPipelineProvider,
+    private val validationConfig: ValidationConfig,
+    private val coreMetaData: CoreMetaData,
+    private val deviceInfo: DeviceInfo,
+    private val callbackManager: BaseCallbackManager,
+    private val controllerManager: ControllerManager,
+    private val ctLockManager: CTLockManager,
+    private val currentTimeProvider: Clock,
+    private val executors: CTExecutors,
+    private val localDataStore: LocalDataStore,
+    private val inAppPreviewHandler: InAppPreviewHandler,
+    private val pushPreviewStore: PushPreviewStore
+) : BaseAnalyticsManager() {
 
-import android.content.Context;
-import android.location.Location;
-import android.net.Uri;
-import android.os.Bundle;
+    private val installReferrerMap = HashMap<String, Int>(8)
+    private val notificationMapLock = Any()
+    private val inboxViewedSuppressor = EventSuppressor(2_000L)
+    private val inboxClickedSuppressor = EventSuppressor(5_000L)
 
-import androidx.annotation.WorkerThread;
+    private val notificationIdTagMap = HashMap<String?, Long>()
+    private val notificationViewedIdTagMap = HashMap<String?, Long>()
 
-import com.clevertap.android.sdk.displayunits.DisplayUnitCache;
-import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.events.BaseEventQueueManager;
-import com.clevertap.android.sdk.events.FlattenedEventData;
-import com.clevertap.android.sdk.inapp.CTInAppNotification;
-import com.clevertap.android.sdk.inapp.InAppPreviewHandler;
-import com.clevertap.android.sdk.inbox.CTInboxController;
-import com.clevertap.android.sdk.inbox.CTInboxMessage;
-import com.clevertap.android.sdk.inbox.EventSuppressor;
-import com.clevertap.android.sdk.profile.ProfileCommand;
-import com.clevertap.android.sdk.profile.traversal.ProfileOperation;
-import com.clevertap.android.sdk.profile.traversal.ProfileChange;
-import com.clevertap.android.sdk.pushnotification.preview.PushPreviewPayload;
-import com.clevertap.android.sdk.pushnotification.preview.PushPreviewStore;
-import com.clevertap.android.sdk.response.CleverTapResponse;
-import com.clevertap.android.sdk.response.DisplayUnitResponse;
-import com.clevertap.android.sdk.response.InboxResponse;
-import com.clevertap.android.sdk.task.CTExecutors;
-import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.utils.CTJsonConverter;
-import com.clevertap.android.sdk.utils.Clock;
-import com.clevertap.android.sdk.utils.JsonFlattener;
-import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.validation.ValidationConfig;
-import com.clevertap.android.sdk.validation.pipeline.ChargedEventItemsValidationResult;
-import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider;
-import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult;
-import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult;
-import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.Future;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-public class AnalyticsManager extends BaseAnalyticsManager {
-
-    private final CTLockManager ctLockManager;
-    private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
-    private final BaseEventQueueManager baseEventQueueManager;
-    private final BaseCallbackManager callbackManager;
-    private final CleverTapInstanceConfig config;
-    private final Context context;
-    private final ControllerManager controllerManager;
-    private final CoreMetaData coreMetaData;
-    private final DeviceInfo deviceInfo;
-    private final ValidationPipelineProvider validationPipelineProvider;
-    private final ValidationConfig validationConfig;
-    private final Clock currentTimeProvider;
-    private final CTExecutors executors;
-    private final Object notificationMapLock = new Object();
-    private final LocalDataStore localDataStore;
-    private final InAppPreviewHandler inAppPreviewHandler;
-    private final PushPreviewStore pushPreviewStore;
-    private final EventSuppressor inboxViewedSuppressor = new EventSuppressor(2_000L);
-    private final EventSuppressor inboxClickedSuppressor = new EventSuppressor(5_000L);
-
-    private final HashMap<String, Long> notificationIdTagMap = new HashMap<>();
-    private final HashMap<String, Long> notificationViewedIdTagMap = new HashMap<>();
-
-    AnalyticsManager(
-            Context context,
-            CleverTapInstanceConfig config,
-            BaseEventQueueManager baseEventQueueManager,
-            ValidationPipelineProvider validationPipelineProvider,
-            ValidationConfig validationConfig,
-            CoreMetaData coreMetaData,
-            DeviceInfo deviceInfo,
-            BaseCallbackManager callbackManager, ControllerManager controllerManager,
-            final CTLockManager ctLockManager,
-            Clock currentTimeProvider,
-            CTExecutors executors,
-            LocalDataStore localDataStore,
-            InAppPreviewHandler inAppPreviewHandler,
-            PushPreviewStore pushPreviewStore
-    ) {
-        this.context = context;
-        this.config = config;
-        this.baseEventQueueManager = baseEventQueueManager;
-        this.validationPipelineProvider = validationPipelineProvider;
-        this.validationConfig = validationConfig;
-        this.coreMetaData = coreMetaData;
-        this.deviceInfo = deviceInfo;
-        this.callbackManager = callbackManager;
-        this.ctLockManager = ctLockManager;
-        this.controllerManager = controllerManager;
-        this.currentTimeProvider = currentTimeProvider;
-        this.executors = executors;
-        this.localDataStore = localDataStore;
-        this.inAppPreviewHandler = inAppPreviewHandler;
-        this.pushPreviewStore = pushPreviewStore;
+    override fun addMultiValuesForKey(key: String?, values: ArrayList<String?>?) {
+        config.logger.verbose(config.accountId, "addMultiValuesForKey: key=$key, values=$values")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("addMultiValuesForKey", Callable<Void?> {
+            _handleMultiValues(values, key, ProfileCommand.ADD)
+            null
+        })
     }
 
-    @Override
-    public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
-        config.getLogger().verbose(config.getAccountId(), "addMultiValuesForKey: key=" + key + ", values=" + values);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("addMultiValuesForKey", () -> {
-            _handleMultiValues(values, key, ProfileCommand.ADD);
-            return null;
-        });
+    override fun incrementValue(key: String?, value: Number?) {
+        config.logger.verbose(config.accountId, "incrementValue: key=$key, value=$value")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("incrementValue", Callable<Void?> {
+            _constructIncrementDecrementValues(value, key, ProfileCommand.INCREMENT)
+            null
+        })
     }
 
-    @Override
-    public void incrementValue(String key, Number value) {
-        config.getLogger().verbose(config.getAccountId(), "incrementValue: key=" + key + ", value=" + value);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("incrementValue", () -> {
-            _constructIncrementDecrementValues(value,key, ProfileCommand.INCREMENT);
-            return null;
-        });
-    }
-
-    @Override
-    public void decrementValue(String key, Number value) {
-        config.getLogger().verbose(config.getAccountId(), "decrementValue: key=" + key + ", value=" + value);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("decrementValue", () -> {
-            _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT);
-            return null;
-        });
+    override fun decrementValue(key: String?, value: Number?) {
+        config.logger.verbose(config.accountId, "decrementValue: key=$key, value=$value")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("decrementValue", Callable<Void?> {
+            _constructIncrementDecrementValues(value, key, ProfileCommand.DECREMENT)
+            null
+        })
     }
 
     /**
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method manually
      */
-    @Override
-    public void fetchFeatureFlags() {
-        if (config.isAnalyticsOnly()) {
-            return;
+    override fun fetchFeatureFlags() {
+        if (config.isAnalyticsOnly) {
+            return
         }
-        JSONObject event = new JSONObject();
-        JSONObject notif = new JSONObject();
+        val event = JSONObject()
+        val notif = JSONObject()
         try {
-            notif.put("t", Constants.FETCH_TYPE_FF);
-            event.put("evtName", Constants.WZRK_FETCH);
-            event.put("evtData", notif);
-        } catch (JSONException e) {
+            notif.put("t", Constants.FETCH_TYPE_FF)
+            event.put("evtName", Constants.WZRK_FETCH)
+            event.put("evtData", notif)
+        } catch (e: JSONException) {
             // should not happen
         }
-        sendFetchEvent(event);
+        sendFetchEvent(event)
     }
 
     //Event
-    @Override
-    public void forcePushAppLaunchedEvent() {
-        coreMetaData.setAppLaunchPushed(false);
-        pushAppLaunchedEvent();
+    override fun forcePushAppLaunchedEvent() {
+        coreMetaData.isAppLaunchPushed = false
+        pushAppLaunchedEvent()
     }
 
-    @Override
-    public void pushAppLaunchedEvent() {
+    override fun pushAppLaunchedEvent() {
         //Will not run for Apps which disable App Launched event
-        if (config.isDisableAppLaunchedEvent()) {
-            coreMetaData.setAppLaunchPushed(true);
-            config.getLogger()
-                    .debug(config.getAccountId(), "App Launched Events disabled in the Android Manifest file");
-            return;
+        if (config.isDisableAppLaunchedEvent) {
+            coreMetaData.isAppLaunchPushed = true
+            config.logger
+                .debug(config.accountId, "App Launched Events disabled in the Android Manifest file")
+            return
         }
-        if (coreMetaData.isAppLaunchPushed()) {
-            config.getLogger()
-                    .verbose(config.getAccountId(), "App Launched has already been triggered. Will not trigger it ");
-            return;
+        if (coreMetaData.isAppLaunchPushed) {
+            config.logger
+                .verbose(config.accountId, "App Launched has already been triggered. Will not trigger it ")
+            return
         } else {
-            config.getLogger().verbose(config.getAccountId(), "Firing App Launched event");
+            config.logger.verbose(config.accountId, "Firing App Launched event")
         }
-        coreMetaData.setAppLaunchPushed(true);
-        JSONObject event = new JSONObject();
+        coreMetaData.isAppLaunchPushed = true
+        val event = JSONObject()
         try {
-            event.put("evtName", Constants.APP_LAUNCHED_EVENT);
+            event.put("evtName", Constants.APP_LAUNCHED_EVENT)
 
-            event.put("evtData", deviceInfo.getAppLaunchedFields());
-        } catch (Throwable t) {
+            event.put("evtData", deviceInfo.appLaunchedFields)
+        } catch (t: Throwable) {
             // We won't get here
         }
 
         // Flattened data is an empty map since AppLaunched fields are attached separately before inapp evaluation. AppLaunched Fields never have nesting
-        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, new FlattenedEventData.EventProperties(emptyMap()));
+        baseEventQueueManager.queueEvent(
+            context, event, Constants.RAISED_EVENT,
+            FlattenedEventData.EventProperties(emptyMap())
+        )
     }
 
-    @Override
-    public void pushDefineVarsEvent(JSONObject data){
-        baseEventQueueManager.queueEvent(context, data, Constants.DEFINE_VARS_EVENT);
+    override fun pushDefineVarsEvent(data: JSONObject?) {
+        baseEventQueueManager.queueEvent(context, data, Constants.DEFINE_VARS_EVENT)
     }
 
-    @Override
-    public void pushDisplayUnitClickedEventForID(String unitID) {
-        JSONObject event = new JSONObject();
+    override fun pushDisplayUnitClickedEventForID(unitID: String?) {
+        val event = JSONObject()
 
         try {
-            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
 
             //wzrk fields
-            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            val cache = controllerManager.displayUnitCache
             if (cache != null) {
-                CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
+                val displayUnit = cache.getDisplayUnitForID(unitID)
                 if (displayUnit != null) {
-                    JSONObject eventExtraData = displayUnit.getWZRKFields();
+                    val eventExtraData = displayUnit.wzrkFields
                     if (eventExtraData != null) {
-                        event.put("evtData", eventExtraData);
+                        event.put("evtData", eventExtraData)
                         try {
-                            coreMetaData.setWzrkParams(eventExtraData);
-                        } catch (Throwable t) {
+                            coreMetaData.wzrkParams = eventExtraData
+                        } catch (t: Throwable) {
                             // no-op
                         }
-                        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(eventExtraData));
+                        baseEventQueueManager.queueEvent(
+                            context, event, Constants.RAISED_EVENT,
+                            getFlattenedEventProperties(eventExtraData)
+                        )
                     }
                 }
             }
-
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             // We won't get here
-            config.getLogger().verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit clicked event" + t);
+            config.logger.verbose(
+                config.accountId,
+                Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit clicked event" + t
+            )
         }
     }
 
     /**
      * Raises a Native Display element click event.
      *
-     * Element-level analog of {@link #pushDisplayUnitClickedEventForID(String)} — for
+     * Element-level analog of [pushDisplayUnitClickedEventForID] — for
      * Native Display units that host multiple interactive child elements (buttons,
      * images, etc.), this method records which child element was clicked alongside
      * the existing wzrk_* campaign attribution.
@@ -247,460 +200,488 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      * action metadata injected by the BE) are merged verbatim first; the cached
      * unit's wzrk_* fields are then layered on top.
      */
-    @Override
-    public void pushDisplayUnitElementClickedEventForID(
-            String unitID,
-            HashMap<String, Object> additionalProperties) {
-        JSONObject event = new JSONObject();
+    override fun pushDisplayUnitElementClickedEventForID(
+        unitID: String?,
+        additionalProperties: HashMap<String, Any>?
+    ) {
+        val event = JSONObject()
         try {
-            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
 
-            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            val cache = controllerManager.displayUnitCache
             if (cache == null) {
-                config.getLogger().verbose(config.getAccountId(),
-                        Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no display-unit cache installed");
-                return;
+                config.logger.verbose(
+                    config.accountId,
+                    Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no display-unit cache installed"
+                )
+                return
             }
-            CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
+            val displayUnit = cache.getDisplayUnitForID(unitID)
             if (displayUnit == null) {
-                config.getLogger().verbose(config.getAccountId(),
-                        Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no unit found for id: " + unitID);
-                return;
+                config.logger.verbose(
+                    config.accountId,
+                    Constants.FEATURE_DISPLAY_UNIT + "Element click dropped — no unit found for id: " + unitID
+                )
+                return
             }
 
-            JSONObject eventExtraData = new JSONObject();
-            mergeAdditionalProperties(eventExtraData, additionalProperties);
-            JSONObject cachedWzrkFields = displayUnit.getWZRKFields();
+            val eventExtraData = JSONObject()
+            mergeAdditionalProperties(eventExtraData, additionalProperties)
+            val cachedWzrkFields = displayUnit.wzrkFields
             if (cachedWzrkFields != null) {
-                Iterator<String> it = cachedWzrkFields.keys();
+                val it = cachedWzrkFields.keys()
                 while (it.hasNext()) {
-                    String k = it.next();
+                    val k = it.next()
                     try {
-                        eventExtraData.put(k, cachedWzrkFields.get(k));
-                    } catch (JSONException ignored) {
+                        eventExtraData.put(k, cachedWzrkFields.get(k))
+                    } catch (ignored: JSONException) {
                     }
                 }
             }
 
-            event.put("evtData", eventExtraData);
+            event.put("evtData", eventExtraData)
             try {
-                coreMetaData.setWzrkParams(filterWzrkFields(eventExtraData));
-            } catch (Throwable t) {
+                coreMetaData.wzrkParams = filterWzrkFields(eventExtraData)
+            } catch (t: Throwable) {
                 // no-op
             }
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
-                    getFlattenedEventProperties(eventExtraData));
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT
-                            + "Failed to push Display Unit element clicked event" + t);
+            baseEventQueueManager.queueEvent(
+                context, event, Constants.RAISED_EVENT,
+                getFlattenedEventProperties(eventExtraData)
+            )
+        } catch (t: Throwable) {
+            config.logger.verbose(
+                config.accountId,
+                Constants.FEATURE_DISPLAY_UNIT
+                        + "Failed to push Display Unit element clicked event" + t
+            )
         }
     }
 
     /**
-     * Merge caller-supplied {@code additionalProperties} verbatim into the click
-     * event's {@code evtData}. The {@code wzrk_*} namespace is enforced by the
-     * caller of this helper — by layering the cached unit's {@code wzrk_*}
+     * Merge caller-supplied `additionalProperties` verbatim into the click
+     * event's `evtData`. The `wzrk_*` namespace is enforced by the
+     * caller of this helper — by layering the cached unit's `wzrk_*`
      * fields on top after this merge, so server-controlled attribution wins
      * over any same-named caller key.
      */
-    private void mergeAdditionalProperties(JSONObject eventData,
-            HashMap<String, Object> extras) {
+    private fun mergeAdditionalProperties(
+        eventData: JSONObject,
+        extras: HashMap<String, Any>?
+    ) {
         if (extras == null || extras.isEmpty()) {
-            return;
+            return
         }
-        for (Map.Entry<String, Object> entry : extras.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
+        // Keys/values may be null when the map came from Java.
+        for ((key: String?, value: Any?) in extras) {
             if (key == null || key.isEmpty() || value == null) {
-                continue;
+                continue
             }
             try {
-                eventData.put(key, value);
-            } catch (JSONException ignored) {
+                eventData.put(key, value)
+            } catch (ignored: JSONException) {
                 // skip unserialisable entries
             }
         }
     }
 
     /**
-     * Project only the {@code wzrk_*} keys back out of the merged event data so
-     * {@link CoreMetaData#setWzrkParams(JSONObject)} retains its existing
-     * server-namespace contract (it feeds {@code wzrk_ref} batch headers; caller-
+     * Project only the `wzrk_*` keys back out of the merged event data so
+     * [CoreMetaData.wzrkParams] retains its existing
+     * server-namespace contract (it feeds `wzrk_ref` batch headers; caller-
      * supplied non-wzrk extras must not ride along on unrelated subsequent events).
      */
-    private JSONObject filterWzrkFields(JSONObject merged) {
-        JSONObject out = new JSONObject();
-        Iterator<String> it = merged.keys();
+    private fun filterWzrkFields(merged: JSONObject): JSONObject {
+        val out = JSONObject()
+        val it = merged.keys()
         while (it.hasNext()) {
-            String k = it.next();
+            val k = it.next()
             if (k.startsWith(Constants.WZRK_PREFIX)) {
                 try {
-                    out.put(k, merged.get(k));
-                } catch (JSONException ignored) {
+                    out.put(k, merged.get(k))
+                } catch (ignored: JSONException) {
                 }
             }
         }
-        return out;
+        return out
     }
 
     /**
      * Raises a Native Display element view event.
      *
-     * Viewed analog of {@link #pushDisplayUnitElementClickedEventForID(String, HashMap)} —
+     * Viewed analog of [pushDisplayUnitElementClickedEventForID] —
      * records that a single child element of a unit came on screen (e.g. one carousel
      * slide) instead of the whole unit.
      *
      * Caller's additionalProperties are merged verbatim first; the cached unit's
      * wzrk_* fields are then layered on top, so server-controlled attribution wins.
      */
-    @Override
-    public void pushDisplayUnitElementViewedEventForID(
-            String unitID,
-            HashMap<String, Object> additionalProperties) {
-        JSONObject event = new JSONObject();
+    override fun pushDisplayUnitElementViewedEventForID(
+        unitID: String?,
+        additionalProperties: HashMap<String, Any>?
+    ) {
+        val event = JSONObject()
         try {
-            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
 
-            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            val cache = controllerManager.displayUnitCache
             if (cache == null) {
-                config.getLogger().verbose(config.getAccountId(),
-                        Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no display-unit cache installed");
-                return;
+                config.logger.verbose(
+                    config.accountId,
+                    Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no display-unit cache installed"
+                )
+                return
             }
-            CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
+            val displayUnit = cache.getDisplayUnitForID(unitID)
             if (displayUnit == null) {
-                config.getLogger().verbose(config.getAccountId(),
-                        Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no unit found for id: " + unitID);
-                return;
+                config.logger.verbose(
+                    config.accountId,
+                    Constants.FEATURE_DISPLAY_UNIT + "Element view dropped — no unit found for id: " + unitID
+                )
+                return
             }
 
-            JSONObject eventExtraData = new JSONObject();
-            mergeAdditionalProperties(eventExtraData, additionalProperties);
-            JSONObject cachedWzrkFields = displayUnit.getWZRKFields();
+            val eventExtraData = JSONObject()
+            mergeAdditionalProperties(eventExtraData, additionalProperties)
+            val cachedWzrkFields = displayUnit.wzrkFields
             if (cachedWzrkFields != null) {
-                Iterator<String> it = cachedWzrkFields.keys();
+                val it = cachedWzrkFields.keys()
                 while (it.hasNext()) {
-                    String k = it.next();
+                    val k = it.next()
                     try {
-                        eventExtraData.put(k, cachedWzrkFields.get(k));
-                    } catch (JSONException ignored) {
+                        eventExtraData.put(k, cachedWzrkFields.get(k))
+                    } catch (ignored: JSONException) {
                     }
                 }
             }
 
-            event.put("evtData", eventExtraData);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT,
-                    getFlattenedEventProperties(eventExtraData));
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT
-                            + "Failed to push Display Unit element viewed event" + t);
+            event.put("evtData", eventExtraData)
+            baseEventQueueManager.queueEvent(
+                context, event, Constants.RAISED_EVENT,
+                getFlattenedEventProperties(eventExtraData)
+            )
+        } catch (t: Throwable) {
+            config.logger.verbose(
+                config.accountId,
+                Constants.FEATURE_DISPLAY_UNIT
+                        + "Failed to push Display Unit element viewed event" + t
+            )
         }
     }
 
-    @Override
-    public void pushDisplayUnitViewedEventForID(String unitID) {
-        JSONObject event = new JSONObject();
+    override fun pushDisplayUnitViewedEventForID(unitID: String?) {
+        val event = JSONObject()
 
         try {
-            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
 
             //wzrk fields
-            DisplayUnitCache cache = controllerManager.getDisplayUnitCache();
+            val cache = controllerManager.displayUnitCache
             if (cache != null) {
-                CleverTapDisplayUnit displayUnit = cache.getDisplayUnitForID(unitID);
+                val displayUnit = cache.getDisplayUnitForID(unitID)
                 if (displayUnit != null) {
                     // The viewed event is the ND impression hook.
-                    NdFCManager ndFCManager = controllerManager.getNdFCManager();
+                    val ndFCManager = controllerManager.ndFCManager
                     if (ndFCManager != null) {
-                        JSONObject unitJson = displayUnit.getJsonObject();
+                        val unitJson = displayUnit.jsonObject
                         // Key on the stable campaign id (ti), not unitID (= wzrk_id, which rotates daily);
                         // the evaluator's whenLimits are keyed by ti. Mirrors in-app's InAppFCManager, which
                         // records by inapp.getId() (ti). didShow no-ops on a null/empty id.
-                        String ndCampaignId = unitJson.optString(Constants.INAPP_ID_IN_PAYLOAD);
+                        // (Java dereferenced unitJson without a null check; the NPE is caught below.)
+                        val ndCampaignId = unitJson!!.optString(Constants.INAPP_ID_IN_PAYLOAD)
                         // Count toward the global ndmp/ndtlc budget only for units inside the ND fcap regime
                         // and not globally excluded (shared predicate — the gate and App-Launched trim read the
                         // same NdFCManager helpers, so the three can never disagree). Exempt units still record
                         // a session impression inside didShow, but must not spend a global slot — the server
                         // caps against these counts and would otherwise starve ceiling-bound campaigns.
-                        ndFCManager.didShow(ndCampaignId, NdFCManager.countsTowardCaps(unitJson));
+                        ndFCManager.didShow(ndCampaignId, NdFCManager.countsTowardCaps(unitJson))
                     }
 
-                    JSONObject eventExtras = displayUnit.getWZRKFields();
+                    val eventExtras = displayUnit.wzrkFields
                     if (eventExtras != null) {
-                        event.put("evtData", eventExtras);
-                        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(eventExtras));
+                        event.put("evtData", eventExtras)
+                        baseEventQueueManager.queueEvent(
+                            context, event, Constants.RAISED_EVENT,
+                            getFlattenedEventProperties(eventExtras)
+                        )
                     }
                 }
             }
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             // We won't get here
-            config.getLogger().verbose(config.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit viewed event" + t);
+            config.logger.verbose(
+                config.accountId,
+                Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit viewed event" + t
+            )
         }
     }
 
-    @Override
-    @SuppressWarnings({"unused"})
-    public void pushError(final String errorMessage, final int errorCode) {
-        final HashMap<String, Object> props = new HashMap<>();
-        props.put("Error Message", errorMessage);
-        props.put("Error Code", errorCode);
+    override fun pushError(errorMessage: String?, errorCode: Int) {
+        val props = HashMap<String, Any?>()
+        props["Error Message"] = errorMessage
+        props["Error Code"] = errorCode
 
         try {
-            final String activityName = CoreMetaData.getCurrentActivityName();
+            val activityName = CoreMetaData.getCurrentActivityName()
             if (activityName != null) {
-                props.put("Location", activityName);
+                props["Location"] = activityName
             } else {
-                props.put("Location", "Unknown");
+                props["Location"] = "Unknown"
             }
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             // Ignore
-            props.put("Location", "Unknown");
+            props["Location"] = "Unknown"
         }
 
-        pushEvent("Error Occurred", props);
+        pushEvent("Error Occurred", props)
     }
 
-    @Override
-    public void pushEvent(String eventName, Map<String, Object> eventActions) {
-        config.getLogger().verbose(config.getAccountId(), "pushEvent: eventName=" + eventName + ", eventActions=" + eventActions);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("pushEvent", () -> {
-            _pushEvent(eventName, eventActions);
-            return null;
-        });
+    override fun pushEvent(eventName: String?, eventActions: Map<String, Any?>?) {
+        config.logger.verbose(config.accountId, "pushEvent: eventName=$eventName, eventActions=$eventActions")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("pushEvent", Callable<Void?> {
+            _pushEvent(eventName, eventActions)
+            null
+        })
     }
 
     @WorkerThread
-    private void _pushEvent(String eventName, Map<String, Object> eventActions) {
-        JSONObject event = new JSONObject();
+    private fun _pushEvent(eventName: String?, eventActions: Map<String, Any?>?) {
+        val event = JSONObject()
         try {
             // Validate event name with regular config
-            EventNameValidationResult nameValidationResult = validationPipelineProvider.getEventNamePipeline()
-                .execute(eventName, validationConfig);
+            val nameValidationResult = validationPipelineProvider.eventNamePipeline
+                .execute(eventName, validationConfig)
 
             // Check for an error
             if (nameValidationResult.shouldDrop()) {
-                return;
+                return
             }
 
             // Create config WITHOUT restrictedMultiValueFields for event data
-            ValidationConfig eventConfig = new ValidationConfig.Builder()
+            val eventConfig = ValidationConfig.Builder()
                 .from(validationConfig)
                 .setRestrictedMultiValueFields(emptySet())
-                .build();
+                .build()
 
             // Validate event data with modified config (no restrictions on multi-value fields)
-            EventDataValidationResult dataValidationResult = validationPipelineProvider.getEventDataPipeline()
-                .execute(eventActions, eventConfig);
+            val dataValidationResult = validationPipelineProvider.eventDataPipeline
+                .execute(eventActions, eventConfig)
 
             if (dataValidationResult.shouldDrop()) {
-                return;
+                return
             }
 
-            JSONObject eventData = dataValidationResult.getCleanedData();
-            FlattenedEventData flattenedData = getFlattenedEventProperties(eventData);
-            event.put("evtName", nameValidationResult.getCleanedName());
-            event.put("evtData", eventData);
+            val eventData = dataValidationResult.cleanedData
+            val flattenedData = getFlattenedEventProperties(eventData)
+            event.put("evtName", nameValidationResult.cleanedName)
+            event.put("evtData", eventData)
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, flattenedData);
-        } catch (Throwable t) {
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, flattenedData)
+        } catch (t: Throwable) {
             // We won't get here
         }
     }
 
     /**
-     * Raises the Notification Clicked event, if {@code clicked} is true,
-     * otherwise the Notification Viewed event, if {@code clicked} is false.
+     * Raises the Notification Clicked event, if `clicked` is true,
+     * otherwise the Notification Viewed event, if `clicked` is false.
      *
      * @param clicked    Whether or not this notification was clicked
      * @param data       The data to be attached as the event data
      * @param customData Additional data such as form input to to be added to the event data
      */
-    @Override
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public void pushInAppNotificationStateEvent(boolean clicked, CTInAppNotification data, Bundle customData) {
-        JSONObject event = new JSONObject();
+    override fun pushInAppNotificationStateEvent(clicked: Boolean, data: CTInAppNotification?, customData: Bundle?) {
+        val event = JSONObject()
         try {
-            JSONObject notif = getWzrkFields(data);
+            val notif = getWzrkFields(data)
 
             if (customData != null) {
-                for (String x : customData.keySet()) {
-
-                    Object value = customData.get(x);
-                    if (value instanceof Map) {
+                for (x in customData.keySet()) {
+                    @Suppress("DEPRECATION")
+                    val value = customData.get(x)
+                    if (value is Map<*, *>) {
                         // Nested payloads (e.g. wzrk_data for a key-values action) are carried as a
                         // Map and emitted as a nested JSON object.
-                        notif.put(x, new JSONObject((Map<?, ?>) value));
+                        notif.put(x, JSONObject(value))
                     } else if (value != null) {
-                        notif.put(x, value);
+                        notif.put(x, value)
                     }
                 }
             }
 
             if (clicked) {
                 try {
-                    coreMetaData.setWzrkParams(notif);
-                } catch (Throwable t) {
+                    coreMetaData.wzrkParams = notif
+                } catch (t: Throwable) {
                     // no-op
                 }
-                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
             } else {
-                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
             }
 
-            event.put("evtData", notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
-        } catch (Throwable ignored) {
+            event.put("evtData", notif)
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
+        } catch (ignored: Throwable) {
             // We won't get here
         }
     }
 
-    @Override
-    public void pushInstallReferrer(String url) {
+    override fun pushInstallReferrer(url: String?) {
         try {
-            config.getLogger().verbose(config.getAccountId(), "Referrer received: " + url);
+            config.logger.verbose(config.accountId, "Referrer received: $url")
 
             if (url == null) {
-                return;
+                return
             }
-            int now = (int) (System.currentTimeMillis() / 1000);
+            val now = (System.currentTimeMillis() / 1000).toInt()
 
-            //noinspection Constant Conditions
-            if (installReferrerMap.containsKey(url) && now - installReferrerMap.get(url) < 10) {
-                config.getLogger()
-                        .verbose(config.getAccountId(),
-                                "Skipping install referrer due to duplicate within 10 seconds");
-                return;
+            if (installReferrerMap.containsKey(url) && now - installReferrerMap[url]!! < 10) {
+                config.logger
+                    .verbose(
+                        config.accountId,
+                        "Skipping install referrer due to duplicate within 10 seconds"
+                    )
+                return
             }
 
-            installReferrerMap.put(url, now);
+            installReferrerMap[url] = now
 
-            Uri uri = Uri.parse("wzrk://track?install=true&" + url);
+            val uri = Uri.parse("wzrk://track?install=true&$url")
 
-            pushDeepLink(uri, true);
-        } catch (Throwable t) {
+            pushDeepLink(uri, true)
+        } catch (t: Throwable) {
             // no-op
         }
     }
 
-    @Override
-    public synchronized void pushInstallReferrer(String source, String medium, String campaign) {
+    @Synchronized
+    override fun pushInstallReferrer(source: String?, medium: String?, campaign: String?) {
+        var source = source
+        var medium = medium
+        var campaign = campaign
         if (source == null && medium == null && campaign == null) {
-            return;
+            return
         }
         try {
             // If already pushed, don't send it again
-            int status = StorageHelper.getInt(context, "app_install_status", 0);
+            val status = StorageHelper.getInt(context, "app_install_status", 0)
             if (status != 0) {
-                Logger.d("Install referrer has already been set. Will not override it");
-                return;
+                Logger.d("Install referrer has already been set. Will not override it")
+                return
             }
-            StorageHelper.putInt(context, "app_install_status", 1);
+            StorageHelper.putInt(context, "app_install_status", 1)
 
             if (source != null) {
-                source = Uri.encode(source);
+                source = Uri.encode(source)
             }
             if (medium != null) {
-                medium = Uri.encode(medium);
+                medium = Uri.encode(medium)
             }
             if (campaign != null) {
-                campaign = Uri.encode(campaign);
+                campaign = Uri.encode(campaign)
             }
 
-            String uriStr = "wzrk://track?install=true";
+            var uriStr = "wzrk://track?install=true"
             if (source != null) {
-                uriStr += "&utm_source=" + source;
+                uriStr += "&utm_source=$source"
             }
             if (medium != null) {
-                uriStr += "&utm_medium=" + medium;
+                uriStr += "&utm_medium=$medium"
             }
             if (campaign != null) {
-                uriStr += "&utm_campaign=" + campaign;
+                uriStr += "&utm_campaign=$campaign"
             }
 
-            Uri uri = Uri.parse(uriStr);
-            pushDeepLink(uri, true);
-        } catch (Throwable t) {
-            Logger.v("Failed to push install referrer", t);
+            val uri = Uri.parse(uriStr)
+            pushDeepLink(uri, true)
+        } catch (t: Throwable) {
+            Logger.v("Failed to push install referrer", t)
         }
     }
 
-    @Override
-    public void pushNotificationClickedEvent(final Bundle extras) {
-
-        if (config.isAnalyticsOnly()) {
-            config.getLogger()
-                    .debug(config.getAccountId(),
-                            "is Analytics Only - will not process Notification Clicked event.");
-            return;
+    override fun pushNotificationClickedEvent(extras: Bundle?) {
+        if (config.isAnalyticsOnly) {
+            config.logger
+                .debug(
+                    config.accountId,
+                    "is Analytics Only - will not process Notification Clicked event."
+                )
+            return
         }
 
-        if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Push notification not from CleverTap - will not process Notification Clicked event.");
-            return;
+        @Suppress("DEPRECATION")
+        if (extras == null || extras.isEmpty || extras.get(Constants.NOTIFICATION_TAG) == null) {
+            config.logger.debug(
+                config.accountId,
+                "Push notification not from CleverTap - will not process Notification Clicked event."
+            )
+            return
         }
 
-        String accountId = null;
+        var accountId: String? = null
         try {
-            accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
-        } catch (Throwable t) {
+            accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY)
+        } catch (t: Throwable) {
             // no-op
         }
 
-        boolean shouldProcess = (accountId == null && config.isDefaultInstance())
-                || config.getAccountId().equals(accountId);
+        val shouldProcess = (accountId == null && config.isDefaultInstance) || config.accountId == accountId
 
         if (!shouldProcess) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Push notification not targeted at this instance, not processing Notification Clicked Event");
-            return;
+            config.logger.debug(
+                config.accountId,
+                "Push notification not targeted at this instance, not processing Notification Clicked Event"
+            )
+            return
         }
 
         if (PushPreviewPayload.hasPreviewFields(extras)) {
             // SDK-6282: the tapped intent may come from anywhere. Render only the copy
             // the SDK saved when the push arrived, never the intent's own content.
-            renderTrustedPushPreview(extras);
-            return;
+            renderTrustedPushPreview(extras)
+            return
         }
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras);
-            return;
+            config.logger.debug(
+                config.accountId,
+                "Push notification ID Tag is null, not processing Notification Clicked event for:  $extras"
+            )
+            return
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (5 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(
-                dedupeCheckKey(extras),
-                notificationIdTagMap,
-                Constants.NOTIFICATION_ID_TAG_INTERVAL
-        );
+        val isDuplicate = checkDuplicateNotificationIds(
+            dedupeCheckKey(extras),
+            notificationIdTagMap,
+            Constants.NOTIFICATION_ID_TAG_INTERVAL
+        )
         if (isDuplicate) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Already processed Notification Clicked event for " + extras
-                            + ", dropping duplicate.");
-            return;
+            config.logger.debug(
+                config.accountId,
+                "Already processed Notification Clicked event for " + extras
+                        + ", dropping duplicate."
+            )
+            return
         }
 
         try {
             // convert bundle to json
-            JSONObject notif = wzrkBundleToJson(extras);
-            JSONObject event = AnalyticsManagerBundler.notificationClickedJson(notif);
+            val notif = wzrkBundleToJson(extras)
+            val event = AnalyticsManagerBundler.notificationClickedJson(notif)
 
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
-            coreMetaData.setWzrkParams(notif);
-        } catch (Throwable t) {
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
+            coreMetaData.wzrkParams = notif
+        } catch (t: Throwable) {
             // We won't get here
         }
-        if (callbackManager.getPushNotificationListener() != null) {
-            callbackManager.getPushNotificationListener()
-                    .onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
+        if (callbackManager.pushNotificationListener != null) {
+            callbackManager.pushNotificationListener
+                ?.onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras))
         } else {
-            Logger.d("CTPushNotificationListener is not set");
+            Logger.d("CTPushNotificationListener is not set")
         }
     }
 
@@ -712,532 +693,560 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      * Example: a launch intent that carries its own wzrk_inapp but was never received
      * as a push finds no stored copy and renders nothing.
      */
-    private void renderTrustedPushPreview(final Bundle extras) {
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("renderTrustedPushPreview", () -> {
+    private fun renderTrustedPushPreview(extras: Bundle) {
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("renderTrustedPushPreview", Callable<Void?> {
             try {
-                Bundle trusted = pushPreviewStore.find(extras);
-                if (trusted == null) {
-                    return null; // the store already logged why
-                }
+                val trusted = pushPreviewStore.find(extras)
+                    ?: return@Callable null // the store already logged why
                 if (trusted.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_TYPE_KEY)) {
-                    inAppPreviewHandler.handleInAppPreview(trusted);
+                    inAppPreviewHandler.handleInAppPreview(trusted)
                 } else if (trusted.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-                    handleInboxPreview(trusted);
+                    handleInboxPreview(trusted)
                 } else if (trusted.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-                    handleSendTestForDisplayUnits(trusted);
+                    handleSendTestForDisplayUnits(trusted)
                 }
-            } catch (Throwable t) {
+            } catch (t: Throwable) {
                 // A tap must never crash the app, whatever the extras contain.
-                config.getLogger().verbose(config.getAccountId(), "Failed to process push preview", t);
+                config.logger.verbose(config.accountId, "Failed to process push preview", t)
             }
-            return null;
-        });
+            null
+        })
     }
 
-    private void handleInboxPreview(Bundle extras) {
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("testInboxNotification", () -> {
+    private fun handleInboxPreview(extras: Bundle) {
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("testInboxNotification", Callable<Void?> {
             try {
-                Logger.v("Received inbox via push payload: " + extras
-                        .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                JSONObject r = new JSONObject();
-                JSONArray inboxNotifs = new JSONArray();
-                r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
-                JSONObject testPushObject = new JSONObject(
-                        extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
-                inboxNotifs.put(testPushObject);
+                Logger.v(
+                    "Received inbox via push payload: " + extras
+                        .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)
+                )
+                val r = JSONObject()
+                val inboxNotifs = JSONArray()
+                r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs)
+                // A missing payload throws here (caught below), as in Java.
+                val testPushObject = JSONObject(
+                    extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)!!
+                )
+                testPushObject.put("_id", (System.currentTimeMillis() / 1000).toString())
+                inboxNotifs.put(testPushObject)
 
-                CleverTapResponse cleverTapResponse = new InboxResponse(config, ctLockManager, callbackManager, controllerManager);
-                cleverTapResponse.processResponse(r, null, context);
-            } catch (Throwable t) {
-                Logger.v("Failed to process inbox message from push notification payload", t);
+                val cleverTapResponse: CleverTapResponse =
+                    InboxResponse(config, ctLockManager, callbackManager, controllerManager)
+                cleverTapResponse.processResponse(r, null, context)
+            } catch (t: Throwable) {
+                Logger.v("Failed to process inbox message from push notification payload", t)
             }
-            return null;
-        });
+            null
+        })
     }
 
     /**
      * Pushes the Notification Viewed event to CleverTap.
      *
-     * @param extras The {@link Bundle} object that contains the
-     *               notification details
+     * @param extras The [Bundle] object that contains the
+     * notification details
      */
-    @Override
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public void pushNotificationViewedEvent(Bundle extras) {
-
-        if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Push notification: " + (extras == null ? "NULL" : extras.toString())
-                            + " not from CleverTap - will not process Notification Viewed event.");
-            return;
+    override fun pushNotificationViewedEvent(extras: Bundle?) {
+        @Suppress("DEPRECATION")
+        if (extras == null || extras.isEmpty || extras.get(Constants.NOTIFICATION_TAG) == null) {
+            config.logger.debug(
+                config.accountId,
+                "Push notification: " + (extras?.toString() ?: "NULL")
+                        + " not from CleverTap - will not process Notification Viewed event."
+            )
+            return
         }
 
         // SDK-6282: custom renderers call this after showing the notification. It is the
         // trusted sighting for apps that do not use the SDK's rendering. Must run before the
         // wzrk_id and dedupe checks below, because every Send Test carries wzrk_id "0_0".
         // An analytics-only instance never renders a preview, so it has nothing to remember.
-        if (!config.isAnalyticsOnly()) {
-            pushPreviewStore.remember(extras);
+        if (!config.isAnalyticsOnly) {
+            pushPreviewStore.remember(extras)
         }
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG)
-                || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Viewed event for:  " + extras);
-            return;
+            || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)
+        ) {
+            config.logger.debug(
+                config.accountId,
+                "Push notification ID Tag is null, not processing Notification Viewed event for:  $extras"
+            )
+            return
         }
 
         // Check for dupe notification views; if same notficationdId within specified time interval (2 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(
-                dedupeCheckKey(extras),
-                notificationViewedIdTagMap,
-                Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL
-        );
+        val isDuplicate = checkDuplicateNotificationIds(
+            dedupeCheckKey(extras),
+            notificationViewedIdTagMap,
+            Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL
+        )
         if (isDuplicate) {
-            config.getLogger().debug(config.getAccountId(),
-                    "Already processed Notification Viewed event for " + extras + ", dropping duplicate.");
-            return;
+            config.logger.debug(
+                config.accountId,
+                "Already processed Notification Viewed event for $extras, dropping duplicate."
+            )
+            return
         }
 
-        config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras);
+        config.logger.debug("Recording Notification Viewed event for notification:  $extras")
 
         try {
-            JSONObject notif = wzrkBundleToJson(extras);
-            JSONObject event = AnalyticsManagerBundler.notificationViewedJson(notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
-
-        } catch (JSONException e) {
-            config.getLogger().debug("Failed to recording Notification Viewed " + e);
+            val notif = wzrkBundleToJson(extras)
+            val event = AnalyticsManagerBundler.notificationViewedJson(notif)
+            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif))
+        } catch (e: JSONException) {
+            config.logger.debug("Failed to recording Notification Viewed $e")
         }
     }
 
     /**
      * Raises the single "Live Activity" lifecycle event (mirrors iOS' Live Activity event).
-     * The wzrk_* keys from the push become the event data, plus a {@code state} field
+     * The wzrk_* keys from the push become the event data, plus a `state` field
      * ("Started"/"Updated"/"Ended"/"Dismissed"). Routed through the Notification Viewed
      * pipeline so it is attributed exactly like a push impression.
      *
-     * <p>Must be called on a worker thread — it queues the event synchronously via
-     * {@code baseEventQueueManager.queueEvent(...)} ({@link WorkerThread}), mirroring
-     * {@link #pushNotificationViewedEvent(Bundle)}. Render-path callers are already on a worker;
-     * the dismiss path (main-thread receiver) dispatches via {@code postAsyncSafelyTask}.</p>
+     * Must be called on a worker thread — it queues the event synchronously via
+     * `baseEventQueueManager.queueEvent(...)` ([WorkerThread]), mirroring
+     * [pushNotificationViewedEvent]. Render-path callers are already on a worker;
+     * the dismiss path (main-thread receiver) dispatches via `postAsyncSafelyTask`.
      *
      * @param extras the Live Update push payload.
-     * @param state  one of {@link Constants#LIVE_UPDATE_STATE_STARTED},
-     *               {@link Constants#LIVE_UPDATE_STATE_UPDATED},
-     *               {@link Constants#LIVE_UPDATE_STATE_ENDED},
-     *               {@link Constants#LIVE_UPDATE_STATE_DISMISSED}.
+     * @param state  one of [Constants.LIVE_UPDATE_STATE_STARTED],
+     * [Constants.LIVE_UPDATE_STATE_UPDATED],
+     * [Constants.LIVE_UPDATE_STATE_ENDED],
+     * [Constants.LIVE_UPDATE_STATE_DISMISSED].
      */
     @WorkerThread
-    public void raiseLiveUpdateLifecycleEvent(Bundle extras, String state) {
-        if (extras == null || extras.isEmpty()) {
-            return;
+    fun raiseLiveUpdateLifecycleEvent(extras: Bundle?, state: String) {
+        if (extras == null || extras.isEmpty) {
+            return
         }
         try {
-            JSONObject notif = wzrkBundleToJson(extras);
-            JSONObject event = AnalyticsManagerBundler.liveUpdateEventJson(notif, state);
-            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif));
+            val notif = wzrkBundleToJson(extras)
+            val event = AnalyticsManagerBundler.liveUpdateEventJson(notif, state)
+            baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT, getFlattenedEventProperties(notif))
             // Log only the state + the (non-sensitive) in-place activity id, not the whole payload —
             // the bundle can carry title/message/deep-link PII that shouldn't hit Logcat (CWE-532).
-            config.getLogger().debug(config.getAccountId(),
-                    "Recorded Live Activity event (" + state + ") for activityId: "
-                            + extras.getString(Constants.WZRK_LIVE_UPDATE_ID));
-        } catch (JSONException e) {
-            config.getLogger().debug("Failed to record Live Activity event " + e);
+            config.logger.debug(
+                config.accountId,
+                "Recorded Live Activity event (" + state + ") for activityId: "
+                        + extras.getString(Constants.WZRK_LIVE_UPDATE_ID)
+            )
+        } catch (e: JSONException) {
+            config.logger.debug("Failed to record Live Activity event $e")
         }
     }
 
-    @Override
-    public void pushProfile(final Map<String, Object> profile) {
-        config.getLogger().verbose(config.getAccountId(), "pushProfile: profile=" + profile);
+    override fun pushProfile(profile: Map<String, Any?>?) {
+        config.logger.verbose(config.accountId, "pushProfile: profile=$profile")
         if (profile == null || profile.isEmpty()) {
-            return;
+            return
         }
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("profilePush", () -> {
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("profilePush", Callable<Void?> {
             // SDK-6254: check the device id on the serial queue, not on the caller's thread. The
             // device-id barrier resolves the id as the first job on this same per-account queue, so
             // by the time this job runs the id is present. Checking on the caller's thread instead
             // would silently drop a profile pushed right after start-up on a first launch — before
             // the id had resolved — which is exactly when the first profile data arrives.
-            if (deviceInfo.getDeviceID() == null) {
-                config.getLogger().verbose(config.getAccountId(),
-                        "pushProfile: device id not available, dropping profile");
-                return null;
+            if (deviceInfo.deviceID == null) {
+                config.logger.verbose(
+                    config.accountId,
+                    "pushProfile: device id not available, dropping profile"
+                )
+                return@Callable null
             }
-            _push(profile);
-            return null;
-        });
+            _push(profile)
+            null
+        })
     }
 
-    @Override
-    public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
-        config.getLogger().verbose(config.getAccountId(), "removeMultiValuesForKey: key=" + key + ", values=" + values);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("removeMultiValuesForKey", () -> {
-            _handleMultiValues(values, key, ProfileCommand.REMOVE);
-            return null;
-        });
+    override fun removeMultiValuesForKey(key: String?, values: ArrayList<String?>?) {
+        config.logger.verbose(config.accountId, "removeMultiValuesForKey: key=$key, values=$values")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("removeMultiValuesForKey", Callable<Void?> {
+            _handleMultiValues(values, key, ProfileCommand.REMOVE)
+            null
+        })
     }
 
-    @Override
-    public void removeValueForKey(final String key) {
-        config.getLogger().verbose(config.getAccountId(), "removeValueForKey: key=" + key);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("removeValueForKey", () -> {
-            _removeValueForKey(key);
-            return null;
-        });
+    override fun removeValueForKey(key: String?) {
+        config.logger.verbose(config.accountId, "removeValueForKey: key=$key")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("removeValueForKey", Callable<Void?> {
+            _removeValueForKey(key)
+            null
+        })
     }
 
-    @Override
-    public void sendDataEvent(final JSONObject event) {
-        baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT);
+    override fun sendDataEvent(event: JSONObject?) {
+        baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT)
     }
 
-    public void pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
-        config.getLogger().verbose(config.getAccountId(), "pushChargedEvent: chargeDetails=" + chargeDetails + ", items=" + items);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("pushChargedEvent", () -> {
-            _pushChargedEvent(chargeDetails, items);
-            return null;
-        });
+    fun pushChargedEvent(chargeDetails: HashMap<String, Any>?, items: ArrayList<HashMap<String, Any>>?) {
+        config.logger.verbose(config.accountId, "pushChargedEvent: chargeDetails=$chargeDetails, items=$items")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("pushChargedEvent", Callable<Void?> {
+            _pushChargedEvent(chargeDetails, items)
+            null
+        })
     }
 
     @WorkerThread
-    private void _pushChargedEvent(HashMap<String, Object> chargeDetails, ArrayList<HashMap<String, Object>> items) {
-
+    private fun _pushChargedEvent(chargeDetails: HashMap<String, Any>?, items: ArrayList<HashMap<String, Any>>?) {
         if (chargeDetails == null || items == null) {
-            config.getLogger().debug(config.getAccountId(), "Invalid Charged event: details and or items is null");
-            return;
+            config.logger.debug(config.accountId, "Invalid Charged event: details and or items is null")
+            return
         }
 
-        ChargedEventItemsValidationResult validationResult = validationPipelineProvider.getChargedEventItemsValidationPipeline().execute(items, validationConfig);
+        val validationResult =
+            validationPipelineProvider.chargedEventItemsValidationPipeline.execute(items, validationConfig)
         if (validationResult.shouldDrop()) {
-            return;
+            return
         }
 
-        JSONObject chargedEvent = new JSONObject();
+        val chargedEvent = JSONObject()
         try {
             // Validate charged event details
-            EventDataValidationResult detailsResult = validationPipelineProvider.getEventDataPipeline().execute(chargeDetails, validationConfig);
+            val detailsResult = validationPipelineProvider.eventDataPipeline.execute(chargeDetails, validationConfig)
 
             if (detailsResult.shouldDrop()) {
-                return;
+                return
             }
 
-            JSONObject evtData = detailsResult.getCleanedData();
+            val evtData = detailsResult.cleanedData
 
             // Validate each item
-            JSONArray jsonItemsArray = new JSONArray();
-            for (HashMap<String, Object> map : items) {
-                EventDataValidationResult itemResult = validationPipelineProvider.getEventDataPipeline().execute(map, validationConfig);
+            val jsonItemsArray = JSONArray()
+            for (map in items) {
+                val itemResult = validationPipelineProvider.eventDataPipeline.execute(map, validationConfig)
 
                 if (!itemResult.shouldDrop()) {
-                    JSONObject itemDetails = itemResult.getCleanedData();
-                    jsonItemsArray.put(itemDetails);
+                    val itemDetails = itemResult.cleanedData
+                    jsonItemsArray.put(itemDetails)
                 }
             }
-            evtData.put("Items", jsonItemsArray);
+            evtData.put("Items", jsonItemsArray)
 
-            chargedEvent.put("evtName", Constants.CHARGED_EVENT);
-            chargedEvent.put("evtData", evtData);
+            chargedEvent.put("evtName", Constants.CHARGED_EVENT)
+            chargedEvent.put("evtData", evtData)
 
-            FlattenedEventData flattenedData = getFlattenedEventProperties(evtData);
-            baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT, flattenedData);
-        } catch (Throwable t) {
+            val flattenedData = getFlattenedEventProperties(evtData)
+            baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT, flattenedData)
+        } catch (t: Throwable) {
             // We won't get here
         }
     }
 
-    synchronized void pushDeepLink(Uri uri, boolean install) {
+    @Synchronized
+    fun pushDeepLink(uri: Uri?, install: Boolean) {
         if (uri == null) {
-            return;
+            return
         }
 
         try {
-            JSONObject referrer = UriHelper.getUrchinFromUri(uri);
+            val referrer = UriHelper.getUrchinFromUri(uri)
             if (referrer.has("us")) {
-                coreMetaData.setSource(referrer.get("us").toString());
+                coreMetaData.source = referrer.get("us").toString()
             }
             if (referrer.has("um")) {
-                coreMetaData.setMedium(referrer.get("um").toString());
+                coreMetaData.medium = referrer.get("um").toString()
             }
             if (referrer.has("uc")) {
-                coreMetaData.setCampaign(referrer.get("uc").toString());
+                coreMetaData.campaign = referrer.get("uc").toString()
             }
 
-            referrer.put("referrer", uri.toString());
+            referrer.put("referrer", uri.toString())
             if (install) {
-                referrer.put("install", true);
+                referrer.put("install", true)
             }
-            recordPageEventWithExtras(referrer);
-
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to push deep link", t);
+            recordPageEventWithExtras(referrer)
+        } catch (t: Throwable) {
+            config.logger.verbose(config.accountId, "Failed to push deep link", t)
         }
     }
 
-    @Deprecated
-    Future<?> raiseEventForSignedCall(String eventName, JSONObject dcEventProperties) {
+    @Deprecated("Signed Call events are raised through CleverTapAPI#pushSignedCallEvent, which is deprecated.")
+    fun raiseEventForSignedCall(eventName: String?, dcEventProperties: JSONObject?): Future<*>? {
+        var future: Future<*>? = null
 
-        Future<?> future = null;
-
-        JSONObject event = new JSONObject();
+        val event = JSONObject()
         try {
-            event.put("evtName", eventName);
-            event.put("evtData", dcEventProperties);
+            event.put("evtName", eventName)
+            event.put("evtData", dcEventProperties)
 
-            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
-        } catch (JSONException e) {
-            config.getLogger().debug(config.getAccountId(), Constants.LOG_TAG_SIGNED_CALL +
-                    "JSON Exception when raising Signed Call event "
-                    + eventName + " - " + e.getLocalizedMessage());
+            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT)
+        } catch (e: JSONException) {
+            config.logger.debug(
+                config.accountId, Constants.LOG_TAG_SIGNED_CALL +
+                        "JSON Exception when raising Signed Call event "
+                        + eventName + " - " + e.localizedMessage
+            )
         }
 
-        return future;
+        return future
     }
 
-    Future<?> raiseEventForGeofences(String eventName, JSONObject geofenceProperties) {
+    fun raiseEventForGeofences(eventName: String?, geofenceProperties: JSONObject): Future<*>? {
+        var future: Future<*>? = null
 
-        Future<?> future = null;
-
-        JSONObject event = new JSONObject();
+        val event = JSONObject()
         try {
-            event.put("evtName", eventName);
-            event.put("evtData", geofenceProperties);
+            event.put("evtName", eventName)
+            event.put("evtData", geofenceProperties)
 
-            Location location = new Location("");
-            location.setLatitude(geofenceProperties.getDouble("triggered_lat"));
-            location.setLongitude(geofenceProperties.getDouble("triggered_lng"));
+            val location = Location("")
+            location.latitude = geofenceProperties.getDouble("triggered_lat")
+            location.longitude = geofenceProperties.getDouble("triggered_lng")
 
-            geofenceProperties.remove("triggered_lat");
-            geofenceProperties.remove("triggered_lng");
+            geofenceProperties.remove("triggered_lat")
+            geofenceProperties.remove("triggered_lng")
 
-            coreMetaData.setLocationFromUser(location);
+            coreMetaData.locationFromUser = location
 
-            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(geofenceProperties));
-        } catch (JSONException e) {
-            config.getLogger().debug(config.getAccountId(), Constants.LOG_TAG_GEOFENCES +
-                    "JSON Exception when raising GeoFence event "
-                    + eventName + " - " + e.getLocalizedMessage());
+            future = baseEventQueueManager.queueEvent(
+                context, event, Constants.RAISED_EVENT,
+                getFlattenedEventProperties(geofenceProperties)
+            )
+        } catch (e: JSONException) {
+            config.logger.debug(
+                config.accountId, Constants.LOG_TAG_GEOFENCES +
+                        "JSON Exception when raising GeoFence event "
+                        + eventName + " - " + e.localizedMessage
+            )
         }
 
-        return future;
+        return future
     }
 
-    void recordPageEventWithExtras(JSONObject extras) {
+    fun recordPageEventWithExtras(extras: JSONObject?) {
         try {
-            JSONObject jsonObject = new JSONObject();
+            val jsonObject = JSONObject()
             // Add the extras
             if (extras != null && extras.length() > 0) {
-                Iterator keys = extras.keys();
+                val keys: Iterator<*> = extras.keys()
                 while (keys.hasNext()) {
                     try {
-                        String key = (String) keys.next();
-                        jsonObject.put(key, extras.getString(key));
-                    } catch (ClassCastException ignore) {
+                        val key = keys.next() as String
+                        jsonObject.put(key, extras.getString(key))
+                    } catch (ignore: ClassCastException) {
                         // Really won't get here
                     }
                 }
             }
-            baseEventQueueManager.queueEvent(context, jsonObject, Constants.PAGE_EVENT);
-        } catch (Throwable t) {
+            baseEventQueueManager.queueEvent(context, jsonObject, Constants.PAGE_EVENT)
+        } catch (t: Throwable) {
             // We won't get here
         }
     }
 
-    void setMultiValuesForKey(final String key, final ArrayList<String> values) {
-        config.getLogger().verbose(config.getAccountId(), "setMultiValuesForKey: key=" + key + ", values=" + values);
-        Task<Void> task = executors.postAsyncSafelyTask();
-        task.execute("setMultiValuesForKey", () -> {
-            _handleMultiValues(values, key, ProfileCommand.SET);
-            return null;
-        });
+    fun setMultiValuesForKey(key: String?, values: ArrayList<String?>?) {
+        config.logger.verbose(config.accountId, "setMultiValuesForKey: key=$key, values=$values")
+        val task = executors.postAsyncSafelyTask<Void?>()
+        task.execute("setMultiValuesForKey", Callable<Void?> {
+            _handleMultiValues(values, key, ProfileCommand.SET)
+            null
+        })
     }
 
-
-    private void _handleMultiValues(ArrayList<String> values, String key, ProfileCommand command) {
+    private fun _handleMultiValues(values: ArrayList<String?>?, key: String?, command: ProfileCommand) {
         if (key == null) {
-            return;
+            return
         }
 
-        Map<String, ArrayList<String>> eventData = new HashMap<>();
-        eventData.put(key, values);
+        val eventData: MutableMap<String, ArrayList<String?>?> = HashMap()
+        eventData[key] = values
 
-        EventDataValidationResult eventDataValidationResult = validationPipelineProvider.getMultiValueDataPipeline().execute(eventData, validationConfig);
+        val eventDataValidationResult =
+            validationPipelineProvider.multiValueDataPipeline.execute(eventData, validationConfig)
 
         if (eventDataValidationResult.shouldDrop()) {
-            return;
+            return
         }
 
         try {
-            _pushMultiValue(eventDataValidationResult.getCleanedData().getJSONArray(key), key, command);
-        } catch (JSONException e) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to handle Multi Values for key" + key, e);
+            _pushMultiValue(eventDataValidationResult.cleanedData.getJSONArray(key), key, command)
+        } catch (e: JSONException) {
+            config.logger.verbose(config.accountId, "Failed to handle Multi Values for key$key", e)
         }
     }
 
-    private void _constructIncrementDecrementValues(Number value, String key, ProfileCommand command) {
+    private fun _constructIncrementDecrementValues(value: Number?, key: String?, command: ProfileCommand) {
+        var key = key
         if (value == null) {
-            return;
+            return
         }
         try {
-            PropertyKeyValidationResult keyResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key, validationConfig);
+            val keyResult = validationPipelineProvider.propertyKeyPipeline.execute(key, validationConfig)
 
             if (keyResult.shouldDrop()) {
-                return;
+                return
             }
 
-            key = keyResult.getCleanedKey();
+            key = keyResult.cleanedKey
 
-            JSONObject profileCommand = new JSONObject().put(command.getCommandString(), value);
-            JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
+            val profileCommand = JSONObject().put(command.commandString, value)
+            val profileUpdate = JSONObject().put(key, profileCommand)
 
-            ProfileOperation operation = command.getOperation();
+            val operation = command.operation
 
-            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, value, operation));
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key " + key, t);
+            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, value, operation))
+        } catch (t: Throwable) {
+            config.logger.verbose(config.accountId, "Failed to update profile value for key $key", t)
         }
     }
 
-    private void _push(Map<String, Object> profile) {
+    private fun _push(profile: Map<String, Any?>) {
         try {
             // Validate profile data
-            EventDataValidationResult profileResult = validationPipelineProvider.getEventDataPipeline().execute(profile, validationConfig);
+            val profileResult = validationPipelineProvider.eventDataPipeline.execute(profile, validationConfig)
 
             if (profileResult.shouldDrop()) {
-                return;
+                return
             }
 
-            JSONObject cleanedProfile = profileResult.getCleanedData();
-            config.getLogger()
-                    .verbose(config.getAccountId(), "Constructed custom profile: " + cleanedProfile);
+            val cleanedProfile = profileResult.cleanedData
+            config.logger
+                .verbose(config.accountId, "Constructed custom profile: $cleanedProfile")
 
-            baseEventQueueManager.pushBasicProfile(cleanedProfile, false, mergeProfileChanges(cleanedProfile, ProfileOperation.UPDATE));
-
-        } catch (Throwable t) {
+            baseEventQueueManager.pushBasicProfile(
+                cleanedProfile, false,
+                mergeProfileChanges(cleanedProfile, ProfileOperation.UPDATE)
+            )
+        } catch (t: Throwable) {
             // Will not happen
-            config.getLogger().verbose(config.getAccountId(), "Failed to push profile", t);
+            config.logger.verbose(config.accountId, "Failed to push profile", t)
         }
     }
 
-    private void _removeValueForKey(String key) {
+    private fun _removeValueForKey(key: String?) {
+        var key = key
         try {
-            PropertyKeyValidationResult keyValidationResult = validationPipelineProvider.getPropertyKeyPipeline().execute(key, validationConfig);
+            val keyValidationResult = validationPipelineProvider.propertyKeyPipeline.execute(key, validationConfig)
 
             if (keyValidationResult.shouldDrop()) {
-                return;
+                return
             }
 
-            key = keyValidationResult.getCleanedKey();
+            key = keyValidationResult.cleanedKey
 
             // If key contains "Identity" then do not remove from SQLDb and shared prefs
-            if (key.toLowerCase().contains("identity")) {
-                config.getLogger().verbose(config.getAccountId(),
-                    "Cannot remove value for key " + key + " from user profile");
-                return;
+            if (key.lowercase(Locale.getDefault()).contains("identity")) {
+                config.logger.verbose(
+                    config.accountId,
+                    "Cannot remove value for key $key from user profile"
+                )
+                return
             }
 
             // Send the delete command
-            ProfileCommand command = ProfileCommand.DELETE;
-            JSONObject profileCommand = new JSONObject().put(command.getCommandString(), true);
-            JSONObject profileUpdate = new JSONObject().put(key, profileCommand);
+            val command = ProfileCommand.DELETE
+            val profileCommand = JSONObject().put(command.commandString, true)
+            val profileUpdate = JSONObject().put(key, profileCommand)
 
             //Set removeFromSharedPrefs to true to remove PII keys from shared prefs.
-            baseEventQueueManager.pushBasicProfile(profileUpdate, true, mergeProfileChanges(key, Constants.DELETE_MARKER, command.getOperation()));
+            baseEventQueueManager.pushBasicProfile(
+                profileUpdate, true,
+                mergeProfileChanges(key, Constants.DELETE_MARKER, command.operation)
+            )
 
-            config.getLogger().verbose(config.getAccountId(),
-                "removing value for key " + key + " from user profile");
-
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(),
-                "Failed to remove profile value for key " + key, t);
+            config.logger.verbose(
+                config.accountId,
+                "removing value for key $key from user profile"
+            )
+        } catch (t: Throwable) {
+            config.logger.verbose(
+                config.accountId,
+                "Failed to remove profile value for key $key", t
+            )
         }
     }
 
-    private void _pushMultiValue(JSONArray originalValues, String key, ProfileCommand command) {
+    private fun _pushMultiValue(originalValues: JSONArray, key: String, command: ProfileCommand) {
         try {
-            JSONObject profileCommand = new JSONObject();
-            profileCommand.put(command.getCommandString(), originalValues);
+            val profileCommand = JSONObject()
+            profileCommand.put(command.commandString, originalValues)
 
-            JSONObject profileUpdate = new JSONObject();
-            profileUpdate.put(key, profileCommand);
+            val profileUpdate = JSONObject()
+            profileUpdate.put(key, profileCommand)
 
-            ProfileOperation operation = command.getOperation();
-            baseEventQueueManager.pushBasicProfile(profileUpdate, false, mergeProfileChanges(key, originalValues, operation));
+            val operation = command.operation
+            baseEventQueueManager.pushBasicProfile(
+                profileUpdate, false,
+                mergeProfileChanges(key, originalValues, operation)
+            )
 
-            config.getLogger().verbose(config.getAccountId(),
-                "Constructed multi-value profile push: " + profileUpdate);
-
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(),
-                "Error pushing multiValue for key " + key, t);
+            config.logger.verbose(
+                config.accountId,
+                "Constructed multi-value profile push: $profileUpdate"
+            )
+        } catch (t: Throwable) {
+            config.logger.verbose(
+                config.accountId,
+                "Error pushing multiValue for key $key", t
+            )
         }
     }
 
-    String dedupeCheckKey(Bundle extras) {
+    fun dedupeCheckKey(extras: Bundle): String? {
         // This flag is used so that we can release in phased manner, eventually the check has to go away.
-        Object doDedupeCheck = extras.get(Constants.WZRK_DEDUPE);
+        @Suppress("DEPRECATION")
+        val doDedupeCheck = extras.get(Constants.WZRK_DEDUPE)
 
-        boolean check = false;
+        var check = false
         if (doDedupeCheck != null) {
-            if (doDedupeCheck instanceof String) {
-                check = "true".equalsIgnoreCase((String) doDedupeCheck);
+            if (doDedupeCheck is String) {
+                check = "true".equals(doDedupeCheck, ignoreCase = true)
             }
-            if (doDedupeCheck instanceof Boolean) {
-                check = (Boolean) doDedupeCheck;
+            if (doDedupeCheck is Boolean) {
+                check = doDedupeCheck
             }
         }
 
-        String notificationIdTag;
-        if (check) {
-            notificationIdTag = extras.getString(Constants.WZRK_PUSH_ID);
+        val notificationIdTag: String? = if (check) {
+            extras.getString(Constants.WZRK_PUSH_ID)
         } else {
-            notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
+            extras.getString(Constants.NOTIFICATION_ID_TAG)
         }
-        return notificationIdTag;
+        return notificationIdTag
     }
 
-    private boolean checkDuplicateNotificationIds(
-            String notificationIdTag,
-            HashMap<String, Long> notificationTagMap,
-            int interval
-    ) {
-        synchronized (notificationMapLock) {
+    private fun checkDuplicateNotificationIds(
+        notificationIdTag: String?,
+        notificationTagMap: HashMap<String?, Long>,
+        interval: Int
+    ): Boolean {
+        synchronized(notificationMapLock) {
             // default to false; only return true if we are sure we've seen this one before
-            boolean isDupe = false;
+            var isDupe = false
             try {
-                long now = currentTimeProvider.currentTimeMillis();
+                val now = currentTimeProvider.currentTimeMillis()
                 if (notificationTagMap.containsKey(notificationIdTag)) {
-                    long timestamp;
-                    // noinspection ConstantConditions
-                    timestamp = notificationTagMap.get(notificationIdTag);
+                    val timestamp: Long = notificationTagMap[notificationIdTag]!!
                     // same notificationId within time internal treat as dupe
                     if (now - timestamp < interval) {
-                        isDupe = true;
+                        isDupe = true
                     }
                 }
-                notificationTagMap.put(notificationIdTag, now);
-            } catch (Throwable ignored) {
+                notificationTagMap[notificationIdTag] = now
+            } catch (ignored: Throwable) {
                 // no-op
             }
-            return isDupe;
+            return isDupe
         }
     }
 
-    public void sendPingEvent(final JSONObject eventObject) {
+    fun sendPingEvent(eventObject: JSONObject?) {
         baseEventQueueManager
-                .queueEvent(context, eventObject, Constants.PING_EVENT);
+            .queueEvent(context, eventObject, Constants.PING_EVENT)
     }
 
-    public void sendFetchEvent(final JSONObject eventObject) {
+    override fun sendFetchEvent(eventObject: JSONObject?) {
         baseEventQueueManager
-                .queueEvent(context, eventObject, Constants.FETCH_EVENT);
+            .queueEvent(context, eventObject, Constants.FETCH_EVENT)
     }
 
     /**
@@ -1245,100 +1254,109 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      *
      * @param extras - bundled data of notification payload
      */
-    private void handleSendTestForDisplayUnits(Bundle extras) {
+    private fun handleSendTestForDisplayUnits(extras: Bundle) {
         try {
-            JSONObject r = CTJsonConverter.displayUnitFromExtras(extras);
+            val r = CTJsonConverter.displayUnitFromExtras(extras)
 
-            CleverTapResponse cleverTapResponse = new DisplayUnitResponse(config, callbackManager, controllerManager);
-            cleverTapResponse.processResponse(r, null, context);
-
-        } catch (Throwable t) {
-            Logger.v("Failed to process Display Unit from push notification payload", t);
+            val cleverTapResponse: CleverTapResponse = DisplayUnitResponse(config, callbackManager, controllerManager)
+            cleverTapResponse.processResponse(r, null, context)
+        } catch (t: Throwable) {
+            Logger.v("Failed to process Display Unit from push notification payload", t)
         }
     }
 
     /**
-     * Raises the Notification Clicked event, if {@code clicked} is true,
-     * otherwise the Notification Viewed event, if {@code clicked} is false.
+     * Raises the Notification Clicked event, if `clicked` is true,
+     * otherwise the Notification Viewed event, if `clicked` is false.
      *
      * @param clicked    Whether or not this notification was clicked
      * @param data       The data to be attached as the event data
      * @param customData Additional data such as form input to to be added to the event data
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
-        String msgId = data.getMessageId();
+    fun pushInboxMessageStateEvent(clicked: Boolean, data: CTInboxMessage, customData: Bundle?) {
+        val msgId = data.messageId
 
-        if (!clicked && data.isRead() && isV2InboxMessage(msgId)) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "Inbox: Skipping Viewed for " + msgId + " — already read on another device (V2)");
-            return;
+        if (!clicked && data.isRead && isV2InboxMessage(msgId)) {
+            config.logger.verbose(
+                config.accountId,
+                "Inbox: Skipping Viewed for $msgId — already read on another device (V2)"
+            )
+            return
         }
 
-        EventSuppressor gate = clicked ? inboxClickedSuppressor : inboxViewedSuppressor;
+        val gate = if (clicked) inboxClickedSuppressor else inboxViewedSuppressor
         if (msgId != null && gate.shouldSuppress(msgId)) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "Inbox: " + (clicked ? "Clicked" : "Viewed") + " suppressed for " + msgId);
-            return;
+            config.logger.verbose(
+                config.accountId,
+                "Inbox: " + (if (clicked) "Clicked" else "Viewed") + " suppressed for " + msgId
+            )
+            return
         }
 
-        JSONObject event = new JSONObject();
+        val event = JSONObject()
         try {
-            JSONObject notif = getWzrkFields(data);
+            val notif = getWzrkFields(data)
             if (isV2InboxMessage(msgId)) {
-                notif.put(Constants.WZRK_MID, msgId);
+                notif.put(Constants.WZRK_MID, msgId)
             }
 
             if (customData != null) {
-                for (String x : customData.keySet()) {
-
-                    Object value = customData.get(x);
+                for (x in customData.keySet()) {
+                    @Suppress("DEPRECATION")
+                    val value = customData.get(x)
                     if (value != null) {
-                        notif.put(x, value);
+                        notif.put(x, value)
                     }
                 }
             }
 
             if (clicked) {
                 try {
-                    coreMetaData.setWzrkParams(notif);
-                } catch (Throwable t) {
+                    coreMetaData.wzrkParams = notif
+                } catch (t: Throwable) {
                     // no-op
                 }
-                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME)
             } else {
-                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME)
             }
 
-            event.put("evtData", notif);
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif));
-        } catch (Throwable ignored) {
+            event.put("evtData", notif)
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
+        } catch (ignored: Throwable) {
             // We won't get here
         }
     }
 
     /**
-     * V1 inbox messages must NOT carry {@code wzrk_mid} in Viewed/Clicked events —
+     * V1 inbox messages must NOT carry `wzrk_mid` in Viewed/Clicked events —
      * the backend rejects them. Safe defaults: null id, null controller, or
      * an id the controller doesn't know about all fall through to V1 behavior.
      */
-    private boolean isV2InboxMessage(String msgId) {
-        if (msgId == null) return false;
-        CTInboxController controller = controllerManager.getCTInboxController();
-        return controller != null && controller.isV2Message(msgId);
+    private fun isV2InboxMessage(msgId: String?): Boolean {
+        if (msgId == null) return false
+        val controller = controllerManager.ctInboxController
+        return controller != null && controller.isV2Message(msgId)
     }
 
-    private FlattenedEventData getFlattenedEventProperties(JSONObject properties) {
-        return new FlattenedEventData.EventProperties(JsonFlattener.flatten(properties));
+    private fun getFlattenedEventProperties(properties: JSONObject): FlattenedEventData {
+        return FlattenedEventData.EventProperties(JsonFlattener.flatten(properties))
     }
 
-    private FlattenedEventData.ProfileChanges mergeProfileChanges(String key, Object originalValues, ProfileOperation operation) {
-        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(key, originalValues, operation);
-        return new FlattenedEventData.ProfileChanges(profileChanges);
+    private fun mergeProfileChanges(
+        key: String,
+        originalValues: Any?,
+        operation: ProfileOperation
+    ): FlattenedEventData.ProfileChanges {
+        val profileChanges = localDataStore.processProfileTree(key, originalValues, operation)
+        return FlattenedEventData.ProfileChanges(profileChanges)
     }
 
-    private FlattenedEventData.ProfileChanges mergeProfileChanges(JSONObject originalValues, ProfileOperation operation){
-        Map<String, ProfileChange> profileChanges = localDataStore.processProfileTree(originalValues, operation);
-        return new FlattenedEventData.ProfileChanges(profileChanges);
+    private fun mergeProfileChanges(
+        originalValues: JSONObject,
+        operation: ProfileOperation
+    ): FlattenedEventData.ProfileChanges {
+        val profileChanges = localDataStore.processProfileTree(originalValues, operation)
+        return FlattenedEventData.ProfileChanges(profileChanges)
     }
 }
