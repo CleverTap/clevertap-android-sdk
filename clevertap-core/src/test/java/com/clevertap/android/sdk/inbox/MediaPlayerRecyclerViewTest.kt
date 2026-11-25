@@ -713,13 +713,13 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     }
 
     @Test
-    fun `a tab released on pause resumes where it was left when it restarts`() {
+    fun `a tab released when another tab comes to rest resumes where it was left when it restarts`() {
         showList(rows = 6, videoPositions = setOf(0))
         every { handle.currentPositionMs() } returns 9_000L
         every { handle.playerVolume() } returns 1f
         list.playVideo()
 
-        list.releasePlayer() // what the tab does when it is paused
+        list.releasePlayer() // what the tab does when another tab comes to rest
         list.onRestartPlayer() // what the tab does when it is resumed
 
         verify(exactly = 1) { handle.release() }
@@ -728,13 +728,13 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
     }
 
     @Test
-    fun `a tab released on pause shows no video until it is resumed`() {
+    fun `a tab released when another tab comes to rest shows no video until it is resumed`() {
         showList(rows = 1)
         val row = rowAt(0)
         list.playVideo()
         list.releasePlayer()
 
-        list.playVideo() // a late play while the tab is paused
+        list.playVideo() // a late play while the tab is hidden
 
         assertEquals(0, row.container.childCount)
         verify(exactly = 1) { handle.initExoplayer(any(), any(), any()) }
@@ -762,7 +762,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         every { handle.currentPositionMs() } returns 7_000L
         every { handle.playerVolume() } returns 1f
         first.playVideo()
-        first.releasePlayer() // the first tab is paused when the user goes to the second
+        first.releasePlayer() // the first tab is hidden when the user goes to the second
 
         second.onRestartPlayer()
 

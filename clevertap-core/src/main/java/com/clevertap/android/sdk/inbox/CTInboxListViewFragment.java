@@ -249,10 +249,8 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        // A tab that is not the current one must not keep a player and its decoder
+    /** Releases this tab's player when another tab is chosen. A dialog or split-screen pause does not; onStop() does. */
+    void onPageHidden() {
         if (mediaRecyclerView != null) {
             mediaRecyclerView.releasePlayer();
         }
