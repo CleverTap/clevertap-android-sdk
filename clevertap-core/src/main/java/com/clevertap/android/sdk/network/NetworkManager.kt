@@ -351,7 +351,7 @@ internal class NetworkManager constructor(
                 config.accountId,
                 "An exception occurred while sending the queue, will retry: ", e)
             if (callbackManager.failureFlushListener != null) {
-                callbackManager.failureFlushListener.failureFlush(context)
+                callbackManager.failureFlushListener?.failureFlush(context)
             }
             return false
         }
@@ -751,11 +751,11 @@ internal class NetworkManager constructor(
         networkRepo.setDomain(domainName)
         ctApiWrapper.ctApi.cachedDomain = domainName
 
-        if (callbackManager.scDomainListener != null) {
+        if (callbackManager.getSCDomainListener() != null) {
             if (domainName != null) {
-                callbackManager.scDomainListener.onSCDomainAvailable(Utils.getSCDomain(domainName))
+                callbackManager.getSCDomainListener()?.onSCDomainAvailable(Utils.getSCDomain(domainName))
             } else {
-                callbackManager.scDomainListener.onSCDomainUnavailable()
+                callbackManager.getSCDomainListener()?.onSCDomainUnavailable()
             }
         }
     }

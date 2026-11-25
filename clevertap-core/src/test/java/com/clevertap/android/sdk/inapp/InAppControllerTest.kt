@@ -124,7 +124,7 @@ class InAppControllerTest {
 
         mockInAppListener = mockk(relaxed = true)
         every { mockInAppListener.beforeShow(any()) } returns true
-        every { mockCallbackManager.inAppNotificationListener } returns mockInAppListener
+        every { mockCallbackManager.getInAppNotificationListener() } returns mockInAppListener
 
         mockManifestInfo = mockk()
         every { mockManifestInfo.excludedActivities } returns EXCLUDED_ACTIVITY_NAME

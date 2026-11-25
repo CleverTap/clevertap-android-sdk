@@ -62,7 +62,7 @@ internal class EventQueueManager(
 
     init {
 
-        callbackManager.setFailureFlushListener(this)
+        callbackManager.failureFlushListener = this
     }
 
 
@@ -320,7 +320,7 @@ internal class EventQueueManager(
         if (eventMediator.isChargedEvent(event)) {
             val chargeDetails = eventMediator.getChargedEventDetails(event)
             val chargedItems = eventMediator.getChargedEventItemDetails(event)
-            inAppController.onQueueChargedEvent(chargeDetails, chargedItems, userLocation)
+            inAppController!!.onQueueChargedEvent(chargeDetails, chargedItems, userLocation)
             nativeDisplayController?.onQueueChargedEvent(chargeDetails, chargedItems, userLocation)
             return
         }
@@ -329,7 +329,7 @@ internal class EventQueueManager(
         if (flattenedEventData is ProfileChanges) {
             val flattenedProfileChanges = flattenedEventData.changes
             val userAttributeChangedProperties = flattenedProfileChanges.toNestedMap()
-            inAppController.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
+            inAppController!!.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
             nativeDisplayController?.onQueueProfileEvent(userAttributeChangedProperties, userLocation)
             return
         }
@@ -341,7 +341,7 @@ internal class EventQueueManager(
 
         // Queue event if: (offline AND is regular event) OR (online AND NOT app launched event)
         if ((isOffline && isRegularEvent) || (!isOffline && !isAppLaunchedEvent)) {
-            inAppController.onQueueEvent(eventName, flattenedEventProps, userLocation)
+            inAppController!!.onQueueEvent(eventName, flattenedEventProps, userLocation)
             nativeDisplayController?.onQueueEvent(eventName, flattenedEventProps, userLocation)
         }
     }

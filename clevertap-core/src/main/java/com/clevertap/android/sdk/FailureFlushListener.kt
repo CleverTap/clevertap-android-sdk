@@ -1,8 +1,11 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.content.Context;
+import android.content.Context
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope
 
-public interface FailureFlushListener {
+@RestrictTo(Scope.LIBRARY_GROUP)
+fun interface FailureFlushListener {
 
-    void failureFlush(Context context);
+    fun failureFlush(context: Context)
 }

@@ -393,7 +393,7 @@ internal class InAppController(
                 if (keyValues?.isNotEmpty() == true) {
                     if (callbackManager.getInAppNotificationButtonListener() != null) {
                         callbackManager.getInAppNotificationButtonListener()
-                            .onInAppButtonClick(keyValues)
+                            ?.onInAppButtonClick(keyValues)
                     }
                 }
             }

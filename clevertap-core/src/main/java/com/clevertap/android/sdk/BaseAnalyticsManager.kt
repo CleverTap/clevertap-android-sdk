@@ -1,64 +1,67 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.os.Bundle;
-import com.clevertap.android.sdk.inapp.CTInAppNotification;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import org.json.JSONObject;
+import android.os.Bundle
+import com.clevertap.android.sdk.inapp.CTInAppNotification
+import java.util.ArrayList
+import java.util.HashMap
+import org.json.JSONObject
 
-public abstract class BaseAnalyticsManager {
+// @JvmSuppressWildcards keeps the Java-facing generic signatures (e.g. Map<String, Object>)
+// identical to the former Java declarations.
+@JvmSuppressWildcards
+internal abstract class BaseAnalyticsManager {
 
-    public abstract void addMultiValuesForKey(String key, ArrayList<String> values);
+    abstract fun addMultiValuesForKey(key: String?, values: ArrayList<String?>?)
 
-    public abstract void incrementValue(String key, Number value);
+    abstract fun incrementValue(key: String?, value: Number?)
 
-    public abstract void decrementValue(String key, Number value);
+    abstract fun decrementValue(key: String?, value: Number?)
 
-    public abstract void fetchFeatureFlags();
+    abstract fun fetchFeatureFlags()
 
     //Event
-    public abstract void forcePushAppLaunchedEvent();
+    abstract fun forcePushAppLaunchedEvent()
 
-    public abstract void pushAppLaunchedEvent();
+    abstract fun pushAppLaunchedEvent()
 
-    public abstract void pushDefineVarsEvent(JSONObject data);
+    abstract fun pushDefineVarsEvent(data: JSONObject?)
 
-    public abstract void pushDisplayUnitClickedEventForID(String unitID);
+    abstract fun pushDisplayUnitClickedEventForID(unitID: String?)
 
-    public abstract void pushDisplayUnitElementClickedEventForID(
-            String unitID, HashMap<String, Object> additionalProperties);
+    abstract fun pushDisplayUnitElementClickedEventForID(
+        unitID: String?, additionalProperties: HashMap<String, Any>?
+    )
 
-    public abstract void pushDisplayUnitElementViewedEventForID(
-            String unitID, HashMap<String, Object> additionalProperties);
+    abstract fun pushDisplayUnitElementViewedEventForID(
+        unitID: String?, additionalProperties: HashMap<String, Any>?
+    )
 
-    public abstract void pushDisplayUnitViewedEventForID(String unitID);
+    abstract fun pushDisplayUnitViewedEventForID(unitID: String?)
 
-    @SuppressWarnings({"unused"})
-    public abstract void pushError(String errorMessage, int errorCode);
+    abstract fun pushError(errorMessage: String?, errorCode: Int)
 
-    public abstract void pushEvent(String eventName, Map<String, Object> eventActions);
+    abstract fun pushEvent(eventName: String?, eventActions: Map<String, Any?>?)
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public abstract void pushInAppNotificationStateEvent(boolean clicked, CTInAppNotification data,
-            Bundle customData);
+    abstract fun pushInAppNotificationStateEvent(
+        clicked: Boolean, data: CTInAppNotification?,
+        customData: Bundle?
+    )
 
-    public abstract void pushInstallReferrer(String url);
+    abstract fun pushInstallReferrer(url: String?)
 
-    public abstract void pushInstallReferrer(String source, String medium, String campaign);
+    abstract fun pushInstallReferrer(source: String?, medium: String?, campaign: String?)
 
-    public abstract void pushNotificationClickedEvent(Bundle extras);
+    abstract fun pushNotificationClickedEvent(extras: Bundle?)
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public abstract void pushNotificationViewedEvent(Bundle extras);
+    abstract fun pushNotificationViewedEvent(extras: Bundle?)
 
-    public abstract void pushProfile(Map<String, Object> profile);
+    abstract fun pushProfile(profile: Map<String, Any?>?)
 
-    public abstract void removeMultiValuesForKey(String key, ArrayList<String> values);
+    abstract fun removeMultiValuesForKey(key: String?, values: ArrayList<String?>?)
 
-    public abstract void removeValueForKey(String key);
+    abstract fun removeValueForKey(key: String?)
 
-    public abstract void sendDataEvent(JSONObject event);
+    abstract fun sendDataEvent(event: JSONObject?)
 
-    public abstract void sendFetchEvent(final JSONObject eventObject);
+    abstract fun sendFetchEvent(eventObject: JSONObject?)
 }

@@ -1,135 +1,105 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.content.Context;
-
-import androidx.annotation.RestrictTo;
-import androidx.annotation.WorkerThread;
-
-import com.clevertap.android.sdk.events.EventDetail;
-import com.clevertap.android.sdk.usereventlogs.UserEventLog;
-import com.clevertap.android.sdk.validation.ValidationConfig;
+import android.content.Context
+import androidx.annotation.RestrictTo
+import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.validation.ValidationConfig
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class SessionManager extends BaseSessionManager {
+internal open class SessionManager(
+    private val config: CleverTapInstanceConfig,
+    coreMetaData: CoreMetaData,
+    private val validationConfig: ValidationConfig?,
+    private val localDataStore: LocalDataStore
+) : BaseSessionManager() {
 
-    private long appLastSeen = 0;
+    var appLastSeen: Long = 0
 
-    private int lastVisitTime;
-    private long userLastVisitTs;
+    var lastVisitTime: Int = 0
+        private set
 
-    private final CoreMetaData cleverTapMetaData;
+    var userLastVisitTs: Long = 0
+        private set
 
-    private final CleverTapInstanceConfig config;
-
-    private final LocalDataStore localDataStore;
-
-    private final ValidationConfig validationConfig;
-
-    public SessionManager(CleverTapInstanceConfig config, CoreMetaData coreMetaData, ValidationConfig validationConfig,
-            LocalDataStore localDataStore) {
-        this.config = config;
-        cleverTapMetaData = coreMetaData;
-        this.validationConfig = validationConfig;
-        this.localDataStore = localDataStore;
-    }
+    private val cleverTapMetaData: CoreMetaData = coreMetaData
 
     // SessionManager/session management
-    public void checkTimeoutSession() {
+    fun checkTimeoutSession() {
         if (appLastSeen <= 0) {
-            return;
+            return
         }
-        long now = System.currentTimeMillis();
+        val now = System.currentTimeMillis()
         if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
-            config.getLogger().verbose(config.getAccountId(), "Session Timed Out");
-            destroySession();
+            config.logger.verbose(config.accountId, "Session Timed Out")
+            destroySession()
         }
     }
 
-    @Override
-    public void destroySession() {
-        cleverTapMetaData.setCurrentSessionId(0);
-        cleverTapMetaData.setRelaxNetwork(false);
-        cleverTapMetaData.setAppLaunchPushed(false);
-        if (cleverTapMetaData.isFirstSession()) {
-            cleverTapMetaData.setFirstSession(false);
+    override fun destroySession() {
+        cleverTapMetaData.currentSessionId = 0
+        cleverTapMetaData.isRelaxNetwork = false
+        cleverTapMetaData.isAppLaunchPushed = false
+        if (cleverTapMetaData.isFirstSession) {
+            cleverTapMetaData.isFirstSession = false
         }
-        config.getLogger().verbose(config.getAccountId(), "Session destroyed; Session ID is now 0");
-        cleverTapMetaData.clearSource();
-        cleverTapMetaData.clearMedium();
-        cleverTapMetaData.clearCampaign();
-        cleverTapMetaData.clearWzrkParams();
+        config.logger.verbose(config.accountId, "Session destroyed; Session ID is now 0")
+        cleverTapMetaData.clearSource()
+        cleverTapMetaData.clearMedium()
+        cleverTapMetaData.clearCampaign()
+        cleverTapMetaData.clearWzrkParams()
     }
 
-    public long getAppLastSeen() {
-        return appLastSeen;
-    }
-
-    public void setAppLastSeen(final long appLastSeen) {
-        this.appLastSeen = appLastSeen;
-    }
-
-    public int getLastVisitTime() {
-        return lastVisitTime;
-    }
-
-    @Override
-    public void lazyCreateSession(Context context) {
+    override fun lazyCreateSession(context: Context) {
         if (!cleverTapMetaData.inCurrentSession()) {
-            cleverTapMetaData.setFirstRequestInSession(true);
-            if (validationConfig != null) {
-                validationConfig.updateDiscardedEventNames(null);
-            }
-            createSession(context);
+            cleverTapMetaData.isFirstRequestInSession = true
+            validationConfig?.updateDiscardedEventNames(null)
+            createSession(context)
         }
     }
 
     //Session
-    void setLastVisitTime() {
-        EventDetail ed = localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT);
-        if (ed == null) {
-            lastVisitTime = -1;
-        } else {
-            lastVisitTime = ed.getLastTime();
-        }
+    fun setLastVisitTime() {
+        val ed = localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT)
+        lastVisitTime = ed?.lastTime ?: -1
     }
+
     @WorkerThread
-    void setUserLastVisitTs() {
-        UserEventLog appLaunchedEventLog = localDataStore.readUserEventLog(Constants.APP_LAUNCHED_EVENT);
-        userLastVisitTs = appLaunchedEventLog != null ? appLaunchedEventLog.getLastTs() : -1;
+    fun setUserLastVisitTs() {
+        val appLaunchedEventLog = localDataStore.readUserEventLog(Constants.APP_LAUNCHED_EVENT)
+        userLastVisitTs = appLaunchedEventLog?.lastTs ?: -1
     }
 
-    private void createSession(final Context context) {
-        int sessionId = getNow();
-        cleverTapMetaData.setCurrentSessionId(sessionId);
+    private fun createSession(context: Context) {
+        val sessionId = now
+        cleverTapMetaData.currentSessionId = sessionId
 
-        config.getLogger().verbose(config.getAccountId(),
-                "Session created with ID: " + cleverTapMetaData.getCurrentSessionId());
+        config.logger.verbose(
+            config.accountId,
+            "Session created with ID: " + cleverTapMetaData.currentSessionId
+        )
 
-        final int lastSessionID = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.SESSION_ID_LAST, 0);
-        final int lastSessionTime = StorageHelper.getIntFromPrefs(context, config.getAccountId(), Constants.LAST_SESSION_EPOCH, 0);
+        val lastSessionID = StorageHelper.getIntFromPrefs(context, config.accountId, Constants.SESSION_ID_LAST, 0)
+        val lastSessionTime = StorageHelper.getIntFromPrefs(context, config.accountId, Constants.LAST_SESSION_EPOCH, 0)
         if (lastSessionTime > 0) {
-            cleverTapMetaData.setLastSessionLength(lastSessionTime - lastSessionID);
+            cleverTapMetaData.lastSessionLength = lastSessionTime - lastSessionID
         }
 
-        config.getLogger().verbose(config.getAccountId(),
-                "Last session length: " + cleverTapMetaData.getLastSessionLength() + " seconds");
+        config.logger.verbose(
+            config.accountId,
+            "Last session length: " + cleverTapMetaData.lastSessionLength + " seconds"
+        )
 
         if (lastSessionID == 0) {
-            cleverTapMetaData.setFirstSession(true);
+            cleverTapMetaData.isFirstSession = true
         }
         StorageHelper.putInt(
-                context,
-                config.getAccountId(),
-                Constants.SESSION_ID_LAST,
-                cleverTapMetaData.getCurrentSessionId()
-        );
+            context,
+            config.accountId,
+            Constants.SESSION_ID_LAST,
+            cleverTapMetaData.currentSessionId
+        )
     }
 
-    int getNow() {
-        return (int) (System.currentTimeMillis() / 1000);
-    }
-
-    public long getUserLastVisitTs() {
-        return userLastVisitTs;
-    }
+    val now: Int
+        get() = (System.currentTimeMillis() / 1000).toInt()
 }

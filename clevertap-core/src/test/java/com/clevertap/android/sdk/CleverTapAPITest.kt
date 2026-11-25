@@ -936,7 +936,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_addMultiValuesForKey() {
         // Arrange
         val key = "Skills"
-        val values = arrayListOf("Java", "Kotlin", "Android", "Mobile Development")
+        val values = arrayListOf<String?>("Java", "Kotlin", "Android", "Mobile Development")
 
         // Act
         initializeCleverTapAPI()
@@ -1000,7 +1000,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_removeMultiValuesForKey() {
         // Arrange
         val key = "OldInterests"
-        val values = arrayListOf("Sports", "Movies", "Music")
+        val values = arrayListOf<String?>("Sports", "Movies", "Music")
 
         // Act
         initializeCleverTapAPI()
