@@ -32,14 +32,14 @@ class CTDisplayUnitControllerTest : BaseTestCase() {
     @Test
     fun test_updateDisplayUnits_whenListIsNull_cacheIsEmpty() {
         ctDisplayUnitController.updateDisplayUnits(null)
-        Assert.assertNull(ctDisplayUnitController.allDisplayUnits)
+        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
         Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID("12121212"))
     }
 
     @Test
     fun test_updateDisplayUnits_whenListIsEmpty_cacheIsEmpty() {
         ctDisplayUnitController.updateDisplayUnits(emptyList())
-        Assert.assertNull(ctDisplayUnitController.allDisplayUnits)
+        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
     }
 
     @Test
@@ -51,19 +51,19 @@ class CTDisplayUnitControllerTest : BaseTestCase() {
     @Test
     fun test_reset() {
         ctDisplayUnitController.updateDisplayUnits(mockDisplayUnits(1))
-        Assert.assertNotNull(ctDisplayUnitController.allDisplayUnits)
-        Assert.assertTrue(ctDisplayUnitController.allDisplayUnits!!.size == 1)
+        Assert.assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
+        Assert.assertTrue(ctDisplayUnitController.getAllDisplayUnits()!!.size == 1)
 
         ctDisplayUnitController.reset()
-        Assert.assertNull(ctDisplayUnitController.allDisplayUnits)
+        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
         Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID("mock-notification-id"))
     }
 
     @Test
     fun test_updateDisplayUnits_validList_populatesCache() {
         ctDisplayUnitController.updateDisplayUnits(mockDisplayUnits(1))
-        Assert.assertNotNull(ctDisplayUnitController.allDisplayUnits)
-        Assert.assertTrue(ctDisplayUnitController.allDisplayUnits!!.size > 0)
+        Assert.assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
+        Assert.assertTrue(ctDisplayUnitController.getAllDisplayUnits()!!.size > 0)
         val displayUnit = ctDisplayUnitController.getDisplayUnitForID("mock-notification-id")
         Assert.assertNotNull(displayUnit)
         Assert.assertTrue(displayUnit is CleverTapDisplayUnit)
@@ -72,9 +72,9 @@ class CTDisplayUnitControllerTest : BaseTestCase() {
     @Test
     fun test_updateDisplayUnits_replacesPreviousCache() {
         ctDisplayUnitController.updateDisplayUnits(mockDisplayUnits(1))
-        Assert.assertNotNull(ctDisplayUnitController.allDisplayUnits)
+        Assert.assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
 
         ctDisplayUnitController.updateDisplayUnits(emptyList())
-        Assert.assertNull(ctDisplayUnitController.allDisplayUnits)
+        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
     }
 }

@@ -1,15 +1,13 @@
-package com.clevertap.android.sdk.displayunits;
+package com.clevertap.android.sdk.displayunits
 
-import android.text.TextUtils;
-import android.util.Log;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.clevertap.android.sdk.Constants;
+import android.text.TextUtils
+import android.util.Log
+import com.clevertap.android.sdk.Constants
 
 /**
  * supported Display Unit Types
  */
-public enum CTDisplayUnitType {
+enum class CTDisplayUnitType(@JvmField val type: String) {
 
     SIMPLE("simple"),
     SIMPLE_WITH_IMAGE("simple-image"),
@@ -18,44 +16,32 @@ public enum CTDisplayUnitType {
     MESSAGE_WITH_ICON("message-icon"),
     CUSTOM_KEY_VALUE("custom-key-value");
 
-    public final String type;
+    override fun toString(): String {
+        return type
+    }
 
-    /**
-     * Returns the display type instance using the string value
-     *
-     * @param type - string value of the type provided from the feed.
-     * @return CTDisplayUnitType
-     */
-    @Nullable
-    public static CTDisplayUnitType type(@NonNull String type) {
+    companion object {
 
-        if (!TextUtils.isEmpty(type)) {
-            switch (type) {
-                case "simple":
-                    return SIMPLE;
-                case "simple-image":
-                    return SIMPLE_WITH_IMAGE;
-                case "carousel":
-                    return CAROUSEL;
-                case "carousel-image":
-                    return CAROUSEL_WITH_IMAGE;
-                case "message-icon":
-                    return MESSAGE_WITH_ICON;
-                case "custom-key-value":
-                    return CUSTOM_KEY_VALUE;
+        /**
+         * Returns the display type instance using the string value
+         *
+         * @param type - string value of the type provided from the feed.
+         * @return CTDisplayUnitType
+         */
+        @JvmStatic
+        fun type(type: String): CTDisplayUnitType? {
+            if (!TextUtils.isEmpty(type)) {
+                when (type) {
+                    "simple" -> return SIMPLE
+                    "simple-image" -> return SIMPLE_WITH_IMAGE
+                    "carousel" -> return CAROUSEL
+                    "carousel-image" -> return CAROUSEL_WITH_IMAGE
+                    "message-icon" -> return MESSAGE_WITH_ICON
+                    "custom-key-value" -> return CUSTOM_KEY_VALUE
+                }
             }
+            Log.d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type")
+            return null
         }
-        Log.d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type");
-        return null;
-    }
-
-    CTDisplayUnitType(String type) {
-        this.type = type;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return type;
     }
 }

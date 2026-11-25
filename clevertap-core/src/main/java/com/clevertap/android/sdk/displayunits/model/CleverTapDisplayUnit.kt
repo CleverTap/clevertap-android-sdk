@@ -1,147 +1,88 @@
-package com.clevertap.android.sdk.displayunits.model;
+package com.clevertap.android.sdk.displayunits.model
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.text.TextUtils;
-import androidx.annotation.NonNull;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitType;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import android.os.Parcel
+import android.os.Parcelable
+import android.text.TextUtils
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitType
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * This model class holds the data of an individual Display Unit.
  */
-public class CleverTapDisplayUnit implements Parcelable {
-
-    public static final Creator<CleverTapDisplayUnit> CREATOR = new Creator<CleverTapDisplayUnit>() {
-        @Override
-        public CleverTapDisplayUnit createFromParcel(Parcel in) {
-            return new CleverTapDisplayUnit(in);
-        }
-
-        @Override
-        public CleverTapDisplayUnit[] newArray(int size) {
-            return new CleverTapDisplayUnit[size];
-        }
-    };
+open class CleverTapDisplayUnit : Parcelable {
 
     /**
      * Background Color
      */
-    private String bgColor;
+    private var bgColorValue: String? = null
 
     /**
      * List of Display Content Items
      */
-    private ArrayList<CleverTapDisplayUnitContent> contents;
+    private var contentsValue: ArrayList<CleverTapDisplayUnitContent>? = null
 
     /**
      * Custom Key Value Pairs
      */
-    private HashMap<String, String> customExtras;
+    private var customExtrasValue: HashMap<String, String>? = null
 
-    private String error;
+    private var errorValue: String? = null
 
-    private JSONObject jsonObject;
+    private var jsonObjectValue: JSONObject? = null
 
     /**
      * Display Type Could be (banner,carousel,custom key value etc.)
      */
-    private CTDisplayUnitType type;
+    private var typeValue: CTDisplayUnitType? = null
 
     /**
      * Display unit identifier
      */
-    private String unitID;
-
-    /**
-     * static method to convert json to Display Unit
-     *
-     * @param jsonObject - Display Unit Item in Json form
-     * @return - CleverTapDisplayUnit - always returns non-null instance
-     */
-    @NonNull
-    public static CleverTapDisplayUnit toDisplayUnit(JSONObject jsonObject) {
-        //logic to convert json obj to item
-        try {
-            String unitID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
-                    .getString(Constants.NOTIFICATION_ID_TAG) : Constants.TEST_IDENTIFIER;
-            CTDisplayUnitType displayUnitType = jsonObject.has(Constants.KEY_TYPE) ? CTDisplayUnitType
-                    .type(jsonObject.getString(Constants.KEY_TYPE)) : null;
-
-            String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
-
-            JSONArray contentArray = jsonObject.has(Constants.KEY_CONTENT) ? jsonObject
-                    .getJSONArray(Constants.KEY_CONTENT) : null;
-            ArrayList<CleverTapDisplayUnitContent> contentArrayList = new ArrayList<>();
-            if (contentArray != null) {
-                for (int i = 0; i < contentArray.length(); i++) {
-                    CleverTapDisplayUnitContent displayUnitContent = CleverTapDisplayUnitContent
-                            .toContent(contentArray.getJSONObject(i));
-                    if (TextUtils.isEmpty(displayUnitContent.getError())) {
-                        contentArrayList.add(displayUnitContent);
-                    }
-                }
-            }
-            JSONObject customKV = null;
-            //custom KV can be added to Display unit of any types, no need to add type check here
-            if (jsonObject.has(Constants.KEY_CUSTOM_KV)) {
-                customKV = jsonObject.getJSONObject(Constants.KEY_CUSTOM_KV);
-            }
-            return new CleverTapDisplayUnit(jsonObject, unitID, displayUnitType, bgColor, contentArrayList, customKV,
-                    null);
-        } catch (Exception e) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT,
-                    "Unable to init CleverTapDisplayUnit with JSON - " + e.getLocalizedMessage());
-            return new CleverTapDisplayUnit(null, "", null, null, null, null,
-                    "Error Creating Display Unit from JSON : " + e.getLocalizedMessage());
-        }
-    }
+    private var unitIDValue: String? = null
 
     //constructors
-    private CleverTapDisplayUnit(JSONObject jsonObject, String unitID, CTDisplayUnitType type,
-            String bgColor, ArrayList<CleverTapDisplayUnitContent> contentArray,
-            JSONObject kvObject, String error) {
-        this.jsonObject = jsonObject;
-        this.unitID = unitID;
-        this.type = type;
-        this.bgColor = bgColor;
-        this.contents = contentArray;
-        this.customExtras = getKeyValues(kvObject);
-        this.error = error;
+    private constructor(
+        jsonObject: JSONObject?, unitID: String?, type: CTDisplayUnitType?,
+        bgColor: String?, contentArray: ArrayList<CleverTapDisplayUnitContent>?,
+        kvObject: JSONObject?, error: String?
+    ) {
+        this.jsonObjectValue = jsonObject
+        this.unitIDValue = unitID
+        this.typeValue = type
+        this.bgColorValue = bgColor
+        this.contentsValue = contentArray
+        this.customExtrasValue = getKeyValues(kvObject)
+        this.errorValue = error
     }
 
-    @SuppressWarnings("unchecked")
-    private CleverTapDisplayUnit(Parcel in) {
+    @Suppress("UNCHECKED_CAST", "DEPRECATION")
+    private constructor(`in`: Parcel) {
         try {
-            this.unitID = in.readString();
-            this.type = (CTDisplayUnitType) in.readValue(CTDisplayUnitType.class.getClassLoader());
-            this.bgColor = in.readString();
+            this.unitIDValue = `in`.readString()
+            this.typeValue = `in`.readValue(CTDisplayUnitType::class.java.classLoader) as CTDisplayUnitType?
+            this.bgColorValue = `in`.readString()
 
-            if (in.readByte() == 0x01) {
-                contents = new ArrayList<>();
-                in.readList(contents, CleverTapDisplayUnitContent.class.getClassLoader());
+            if (`in`.readByte().toInt() == 0x01) {
+                contentsValue = ArrayList()
+                `in`.readList(contentsValue!!, CleverTapDisplayUnitContent::class.java.classLoader)
             } else {
-                contents = null;
+                contentsValue = null
             }
 
-            this.customExtras = in.readHashMap(null);
-            this.jsonObject = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-            this.error = in.readString();
-        } catch (Exception e) {
-            error = "Error Creating Display Unit from parcel : " + e.getLocalizedMessage();
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, error);
+            this.customExtrasValue = `in`.readHashMap(null) as HashMap<String, String>?
+            this.jsonObjectValue = if (`in`.readByte().toInt() == 0x00) null else JSONObject(`in`.readString()!!)
+            this.errorValue = `in`.readString()
+        } catch (e: Exception) {
+            errorValue = "Error Creating Display Unit from parcel : " + e.localizedMessage
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, errorValue)
         }
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    override fun describeContents(): Int {
+        return 0
     }
 
     /**
@@ -149,166 +90,194 @@ public class CleverTapDisplayUnit implements Parcelable {
      *
      * @return String
      */
-    @SuppressWarnings("unused")
-    public String getBgColor() {
-        return bgColor;
+    open fun getBgColor(): String? {
+        return bgColorValue
     }
+
+    /** Kotlin property syntax, equivalent to [getBgColor]. */
+    val bgColor: String?
+        @JvmSynthetic @JvmName("ktGetBgColor") inline get() = getBgColor()
 
     /**
      * Getter for the list of Content Display Unit Items.
      *
      * @return ArrayList<CleverTapDisplayUnitContent>
      */
-    @SuppressWarnings("unused")
-    public ArrayList<CleverTapDisplayUnitContent> getContents() {
-        return contents;
+    open fun getContents(): ArrayList<CleverTapDisplayUnitContent>? {
+        return contentsValue
     }
+
+    /** Kotlin property syntax, equivalent to [getContents]. */
+    val contents: ArrayList<CleverTapDisplayUnitContent>?
+        @JvmSynthetic @JvmName("ktGetContents") inline get() = getContents()
 
     /**
      * Getter for the Key Value pairs of the Display Unit
      *
      * @return HashMap<String, String>
      */
-    @SuppressWarnings("unused")
-    public HashMap<String, String> getCustomExtras() {
-        return customExtras;
+    open fun getCustomExtras(): HashMap<String, String>? {
+        return customExtrasValue
     }
+
+    /** Kotlin property syntax, equivalent to [getCustomExtras]. */
+    val customExtras: HashMap<String, String>?
+        @JvmSynthetic @JvmName("ktGetCustomExtras") inline get() = getCustomExtras()
 
     /**
-     * Returns the per-item {@code wzrk_*} attribution for the content item at
-     * {@code contentIndex}, including server-supplied element ID/index, title-based
+     * Returns the per-item `wzrk_*` attribution for the content item at
+     * `contentIndex`, including server-supplied element ID/index, title-based
      * CTA, and Android action/data fields.
-     * <p>
+     *
      * Ready for use with display unit element click/view events. Returns an empty
      * map when the index is invalid or no item-level attribution exists, in which
-     * case only unit-level {@code wzrk_*} attribution is recorded. Applies to all
+     * case only unit-level `wzrk_*` attribution is recorded. Applies to all
      * Native Display types.
      *
-     * @param contentIndex zero-based index into {@link #getContents()}
+     * @param contentIndex zero-based index into [getContents]
      * @return item-level attribution; never null
      */
-    @NonNull
-    @SuppressWarnings("unused")
-    public HashMap<String, Object> getMetaDataForContent(int contentIndex) {
-        if (contents == null || contentIndex < 0 || contentIndex >= contents.size()) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT,
-                    "Content index " + contentIndex + " out of range for unit " + unitID);
-            return new HashMap<>();
+    open fun getMetaDataForContent(contentIndex: Int): HashMap<String, Any?> {
+        val contents = contentsValue
+        if (contents == null || contentIndex < 0 || contentIndex >= contents.size) {
+            Logger.d(
+                Constants.FEATURE_DISPLAY_UNIT,
+                "Content index $contentIndex out of range for unit $unitIDValue"
+            )
+            return HashMap()
         }
         // Defensive copy: prevent callers from modifying stored attribution.
-        HashMap<String, Object> metaData = contents.get(contentIndex).getMetaData();
-        return metaData != null ? new HashMap<>(metaData) : new HashMap<>();
+        val metaData = contents[contentIndex].getMetaData()
+        return if (metaData != null) HashMap(metaData) else HashMap()
     }
 
-    public String getError() {
-        return error;
+    open fun getError(): String? {
+        return errorValue
     }
+
+    /** Kotlin property syntax, equivalent to [getError]. */
+    val error: String?
+        @JvmSynthetic @JvmName("ktGetError") inline get() = getError()
 
     /**
      * Getter for the JsonObject corresponding to the CleverTapDisplayUnit object
      *
      * @return JSONObject
      */
-    public JSONObject getJsonObject() {
-        return jsonObject;
+    open fun getJsonObject(): JSONObject? {
+        return jsonObjectValue
     }
 
+    /** Kotlin property syntax, equivalent to [getJsonObject]. */
+    val jsonObject: JSONObject?
+        @JvmSynthetic @JvmName("ktGetJsonObject") inline get() = getJsonObject()
+
     /**
-     * Getter for the DisplayUnitType of the Display Unit, Refer{@link CTDisplayUnitType}
+     * Getter for the DisplayUnitType of the Display Unit, Refer[CTDisplayUnitType]
      *
      * @return CTDisplayUnitType
      */
-    @SuppressWarnings("unused")
-    public CTDisplayUnitType getType() {
-        return type;
+    open fun getType(): CTDisplayUnitType? {
+        return typeValue
     }
+
+    /** Kotlin property syntax, equivalent to [getType]. */
+    val type: CTDisplayUnitType?
+        @JvmSynthetic @JvmName("ktGetType") inline get() = getType()
 
     /**
      * Getter for the unitId of the Display Unit
      *
      * @return String
      */
-    public String getUnitID() {
-        return unitID;
+    open fun getUnitID(): String? {
+        return unitIDValue
     }
+
+    /** Kotlin property syntax, equivalent to [getUnitID]. */
+    val unitID: String?
+        @JvmSynthetic @JvmName("ktGetUnitID") inline get() = getUnitID()
 
     /**
      * Getter for the WiZRK fields obj to be passed in the data for recording event.
      *
      * @return JSONObject
      */
-    public JSONObject getWZRKFields() {
+    open fun getWZRKFields(): JSONObject? {
         try {
+            val jsonObject = jsonObjectValue
             if (jsonObject != null) {
-                Iterator<String> iterator = jsonObject.keys();
-                JSONObject object = new JSONObject();
+                val iterator = jsonObject.keys()
+                val `object` = JSONObject()
                 while (iterator.hasNext()) {
-                    String keyName = iterator.next();
+                    val keyName = iterator.next()
                     if (keyName.startsWith(Constants.WZRK_PREFIX)) {
-                        object.put(keyName, jsonObject.get(keyName));
+                        `object`.put(keyName, jsonObject.get(keyName))
                     }
                 }
-                return object;
+                return `object`
             }
-        } catch (Exception e) {
+        } catch (e: Exception) {
             //no op
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting WiZRK fields " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting WiZRK fields " + e.localizedMessage)
         }
-        return null;
+        return null
     }
 
-    @NonNull
-    @Override
-    public String toString() {
+    /** Kotlin property syntax, equivalent to [getWZRKFields]. */
+    val wzrkFields: JSONObject?
+        @JvmSynthetic @JvmName("ktGetWZRKFields") inline get() = getWZRKFields()
+
+    override fun toString(): String {
         try {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("[");
-            stringBuilder.append(" Unit id- ").append(unitID);
-            stringBuilder.append(", Type- ").append((type != null ? type.toString() : null));
-            stringBuilder.append(", bgColor- ").append(bgColor);
-            if (contents != null && !contents.isEmpty()) {
-                for (int i = 0; i < contents.size(); i++) {
-                    CleverTapDisplayUnitContent item = contents.get(i);
+            val stringBuilder = StringBuilder()
+            stringBuilder.append("[")
+            stringBuilder.append(" Unit id- ").append(unitIDValue)
+            stringBuilder.append(", Type- ").append(typeValue?.toString())
+            stringBuilder.append(", bgColor- ").append(bgColorValue)
+            val contents = contentsValue
+            if (contents != null && contents.isNotEmpty()) {
+                for (i in contents.indices) {
+                    val item: CleverTapDisplayUnitContent? = contents[i]
                     if (item != null) {
-                        stringBuilder.append(", Content Item:").append(i).append(" ").append(item.toString());
-                        stringBuilder.append("\n");
+                        stringBuilder.append(", Content Item:").append(i).append(" ").append(item.toString())
+                        stringBuilder.append("\n")
                     }
                 }
             }
-            if (customExtras != null) {
-                stringBuilder.append(", Custom KV:").append(customExtras);
+            if (customExtrasValue != null) {
+                stringBuilder.append(", Custom KV:").append(customExtrasValue)
             }
-            stringBuilder.append(", JSON -").append(jsonObject);
-            stringBuilder.append(", Error-").append(error);
-            stringBuilder.append(" ]");
-            return stringBuilder.toString();
-        } catch (Exception e) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Exception in toString:" + e);
+            stringBuilder.append(", JSON -").append(jsonObjectValue)
+            stringBuilder.append(", Error-").append(errorValue)
+            stringBuilder.append(" ]")
+            return stringBuilder.toString()
+        } catch (e: Exception) {
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Exception in toString:$e")
         }
-        return super.toString();
+        return super.toString()
     }
 
-    @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(unitID);
-        parcel.writeValue(type);
-        parcel.writeString(bgColor);
+    override fun writeToParcel(parcel: Parcel, i: Int) {
+        parcel.writeString(unitIDValue)
+        parcel.writeValue(typeValue)
+        parcel.writeString(bgColorValue)
 
-        if (contents == null) {
-            parcel.writeByte((byte) (0x00));
+        if (contentsValue == null) {
+            parcel.writeByte(0x00.toByte())
         } else {
-            parcel.writeByte((byte) (0x01));
-            parcel.writeList(contents);
+            parcel.writeByte(0x01.toByte())
+            parcel.writeList(contentsValue)
         }
 
-        parcel.writeMap(customExtras);
-        if (jsonObject == null) {
-            parcel.writeByte((byte) (0x00));
+        parcel.writeMap(customExtrasValue)
+        if (jsonObjectValue == null) {
+            parcel.writeByte(0x00.toByte())
         } else {
-            parcel.writeByte((byte) (0x01));
-            parcel.writeString(jsonObject.toString());
+            parcel.writeByte(0x01.toByte())
+            parcel.writeString(jsonObjectValue.toString())
         }
-        parcel.writeString(error);
+        parcel.writeString(errorValue)
     }
 
     /**
@@ -316,30 +285,95 @@ public class CleverTapDisplayUnit implements Parcelable {
      *
      * @param kvObj - Custom Key Values
      */
-    HashMap<String, String> getKeyValues(JSONObject kvObj) {
+    internal fun getKeyValues(kvObj: JSONObject?): HashMap<String, String>? {
         try {
             if (kvObj != null) {
-                Iterator<String> keys = kvObj.keys();
+                val keys: Iterator<String>? = kvObj.keys()
                 if (keys != null) {
-                    String key, value;
-                    HashMap<String, String> hashMap = null;
+                    var key: String
+                    var value: String
+                    var hashMap: HashMap<String, String>? = null
                     while (keys.hasNext()) {
-                        key = keys.next();
-                        value = kvObj.getString(key);
+                        key = keys.next()
+                        value = kvObj.getString(key)
                         if (!TextUtils.isEmpty(key)) {
                             if (hashMap == null) {
-                                hashMap = new HashMap<>();
+                                hashMap = HashMap()
                             }
-                            hashMap.put(key, value);
+                            hashMap[key] = value
                         }
                     }
-                    return hashMap;
+                    return hashMap
                 }
             }
-        } catch (Exception e) {
+        } catch (e: Exception) {
             //no op
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting Key Value Pairs " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting Key Value Pairs " + e.localizedMessage)
         }
-        return null;
+        return null
+    }
+
+    companion object {
+
+        @JvmField
+        val CREATOR: Parcelable.Creator<CleverTapDisplayUnit> = object : Parcelable.Creator<CleverTapDisplayUnit> {
+            override fun createFromParcel(`in`: Parcel): CleverTapDisplayUnit {
+                return CleverTapDisplayUnit(`in`)
+            }
+
+            override fun newArray(size: Int): Array<CleverTapDisplayUnit?> {
+                return arrayOfNulls(size)
+            }
+        }
+
+        /**
+         * static method to convert json to Display Unit
+         *
+         * @param jsonObject - Display Unit Item in Json form
+         * @return - CleverTapDisplayUnit - always returns non-null instance
+         */
+        @JvmStatic
+        fun toDisplayUnit(jsonObject: JSONObject?): CleverTapDisplayUnit {
+            //logic to convert json obj to item
+            try {
+                val unitID = if (jsonObject!!.has(Constants.NOTIFICATION_ID_TAG)) jsonObject
+                    .getString(Constants.NOTIFICATION_ID_TAG) else Constants.TEST_IDENTIFIER
+                val displayUnitType = if (jsonObject.has(Constants.KEY_TYPE)) CTDisplayUnitType
+                    .type(jsonObject.getString(Constants.KEY_TYPE)) else null
+
+                val bgColor = if (jsonObject.has(Constants.KEY_BG)) jsonObject.getString(Constants.KEY_BG) else ""
+
+                val contentArray: JSONArray? = if (jsonObject.has(Constants.KEY_CONTENT)) jsonObject
+                    .getJSONArray(Constants.KEY_CONTENT) else null
+                val contentArrayList = ArrayList<CleverTapDisplayUnitContent>()
+                if (contentArray != null) {
+                    for (i in 0 until contentArray.length()) {
+                        val displayUnitContent = CleverTapDisplayUnitContent
+                            .toContent(contentArray.getJSONObject(i))
+                        if (TextUtils.isEmpty(displayUnitContent.getError())) {
+                            contentArrayList.add(displayUnitContent)
+                        }
+                    }
+                }
+                var customKV: JSONObject? = null
+                //custom KV can be added to Display unit of any types, no need to add type check here
+                if (jsonObject.has(Constants.KEY_CUSTOM_KV)) {
+                    customKV = jsonObject.getJSONObject(Constants.KEY_CUSTOM_KV)
+                }
+                return CleverTapDisplayUnit(
+                    jsonObject, unitID, displayUnitType, bgColor, contentArrayList, customKV,
+                    null
+                )
+            } catch (e: Exception) {
+                Logger.d(
+                    Constants.FEATURE_DISPLAY_UNIT,
+                    "Unable to init CleverTapDisplayUnit with JSON - " + e.localizedMessage
+                )
+                return CleverTapDisplayUnit(
+                    null, "", null, null, null, null,
+                    "Error Creating Display Unit from JSON : " + e.localizedMessage
+                )
+            }
+        }
     }
 }

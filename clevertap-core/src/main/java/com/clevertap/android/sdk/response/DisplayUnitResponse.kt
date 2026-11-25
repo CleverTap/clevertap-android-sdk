@@ -244,7 +244,7 @@ internal class DisplayUnitResponse(
             if (!hasMergeableUnit(gated)) {
                 return
             }
-            val merged = mergeByUnitId(existing = cache.allDisplayUnits, incoming = gated)
+            val merged = mergeByUnitId(existing = cache.getAllDisplayUnits(), incoming = gated)
             cache.updateDisplayUnits(merged)
             callbackManager.notifyDisplayUnitsLoaded(merged)
             return

@@ -1,18 +1,16 @@
-package com.clevertap.android.sdk.displayunits;
+package com.clevertap.android.sdk.displayunits
 
-import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import java.util.ArrayList;
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 
 /**
  * Listener for Display Unit Callbacks
  */
-public interface DisplayUnitListener {
+fun interface DisplayUnitListener {
 
     /**
      * Provides the list of currently running Display Unit campaigns
      *
-     * @param units - list of Display units {@link CleverTapDisplayUnit}
+     * @param units - list of Display units [CleverTapDisplayUnit]
      */
-    void onDisplayUnitsLoaded(ArrayList<CleverTapDisplayUnit> units);
-
+    fun onDisplayUnitsLoaded(units: ArrayList<CleverTapDisplayUnit>)
 }
