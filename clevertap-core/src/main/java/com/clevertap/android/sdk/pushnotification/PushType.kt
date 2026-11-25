@@ -18,26 +18,50 @@ open class PushType(
     messagingSDKClassName: String?
 ) {
 
-    open val ctProviderClassName: String? = className
+    private val _ctProviderClassName: String? = className
 
-    open val messagingSDKClassName: String? = messagingSDKClassName
+    open fun getCtProviderClassName(): String? = _ctProviderClassName
 
-    open val tokenPrefKey: String = prefKey
+    /** Kotlin property syntax, equivalent to [getCtProviderClassName]. */
+    val ctProviderClassName: String?
+        @JvmSynthetic @JvmName("ktGetCtProviderClassName") inline get() = getCtProviderClassName()
 
-    open val type: String = type
+    private val _messagingSDKClassName: String? = messagingSDKClassName
+
+    open fun getMessagingSDKClassName(): String? = _messagingSDKClassName
+
+    /** Kotlin property syntax, equivalent to [getMessagingSDKClassName]. */
+    val messagingSDKClassName: String?
+        @JvmSynthetic @JvmName("ktGetMessagingSDKClassName") inline get() = getMessagingSDKClassName()
+
+    private val _tokenPrefKey: String = prefKey
+
+    open fun getTokenPrefKey(): String = _tokenPrefKey
+
+    /** Kotlin property syntax, equivalent to [getTokenPrefKey]. */
+    val tokenPrefKey: String
+        @JvmSynthetic @JvmName("ktGetTokenPrefKey") inline get() = getTokenPrefKey()
+
+    private val _type: String = type
+
+    open fun getType(): String = _type
+
+    /** Kotlin property syntax, equivalent to [getType]. */
+    val type: String
+        @JvmSynthetic @JvmName("ktGetType") inline get() = getType()
 
     override fun toString(): String {
-        return " [PushType:$type] "
+        return " [PushType:$_type] "
     }
 
     // Method to convert PushType to JSONObject
     open fun toJSONObject(): JSONObject? {
         val jsonObject = JSONObject()
         try {
-            jsonObject.put("ctProviderClassName", ctProviderClassName)
-            jsonObject.put("messagingSDKClassName", messagingSDKClassName)
-            jsonObject.put("tokenPrefKey", tokenPrefKey)
-            jsonObject.put("type", type)
+            jsonObject.put("ctProviderClassName", _ctProviderClassName)
+            jsonObject.put("messagingSDKClassName", _messagingSDKClassName)
+            jsonObject.put("tokenPrefKey", _tokenPrefKey)
+            jsonObject.put("type", _type)
         } catch (e: JSONException) {
             return null
         }
@@ -51,14 +75,14 @@ open class PushType(
         if (other !is PushType) {
             return false
         }
-        return ctProviderClassName == other.ctProviderClassName &&
-                messagingSDKClassName == other.messagingSDKClassName &&
-                tokenPrefKey == other.tokenPrefKey &&
-                type == other.type
+        return _ctProviderClassName == other._ctProviderClassName &&
+                _messagingSDKClassName == other._messagingSDKClassName &&
+                _tokenPrefKey == other._tokenPrefKey &&
+                _type == other._type
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(ctProviderClassName, messagingSDKClassName, tokenPrefKey, type)
+        return Objects.hash(_ctProviderClassName, _messagingSDKClassName, _tokenPrefKey, _type)
     }
 
     companion object {
