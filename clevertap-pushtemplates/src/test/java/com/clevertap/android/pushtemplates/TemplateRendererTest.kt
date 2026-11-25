@@ -129,7 +129,7 @@ class TemplateRendererTest {
         mockkObject(TemplateDataFactory)
         mockkObject(ValidatorFactory)
         mockkStatic(Utils::class)
-        mockkStatic(ManifestInfo::class)
+        mockkObject(ManifestInfo.Companion)
 
         // Default bundle setup
         testBundle.putString(PTConstants.PT_ID, "pt_carousel")

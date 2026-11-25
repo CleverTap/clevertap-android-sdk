@@ -86,7 +86,7 @@ class InAppControllerTest {
 
     @Before
     fun setUp() {
-        mockkStatic(CoreMetaData::class)
+        mockkObject(CoreMetaData.Companion)
         every { CoreMetaData.isAppForeground() } returns true
         // Default to a FragmentActivity — the normal host for header/footer in-apps.
         every { CoreMetaData.getCurrentActivity() } returns mockk<FragmentActivity>(relaxed = true)

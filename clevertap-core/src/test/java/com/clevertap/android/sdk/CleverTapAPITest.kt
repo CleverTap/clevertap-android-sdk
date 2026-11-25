@@ -217,7 +217,7 @@ class CleverTapAPITest : BaseTestCase() {
         with(manifestInfo) {
             assertNotEquals(expectedAccountId, accountId)
             assertNotEquals(expectedToken, accountToken)
-            assertNotEquals(expectedRegion, accountRegion)
+            assertNotEquals(expectedRegion, getAccountRegion())
         }
     }
 
@@ -240,7 +240,7 @@ class CleverTapAPITest : BaseTestCase() {
         with(manifestInfo) {
             assertEquals(expectedAccountId, accountId)
             assertEquals(expectedToken, accountToken)
-            assertEquals(expectedRegion, accountRegion)
+            assertEquals(expectedRegion, getAccountRegion())
         }
     }
 

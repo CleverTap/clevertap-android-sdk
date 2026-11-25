@@ -1,406 +1,225 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.app.Activity;
-import android.location.Location;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.utils.CTJsonConverter;
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import org.json.JSONObject;
+import android.app.Activity
+import android.location.Location
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope
+import com.clevertap.android.sdk.utils.CTJsonConverter
+import java.lang.ref.WeakReference
+import java.util.HashMap
+import java.util.concurrent.ConcurrentHashMap
+import org.json.JSONObject
 
 /**
  * This class stores run time state of CleverTap's instance
  */
-@RestrictTo(Scope.LIBRARY)
-public class CoreMetaData extends CleverTapMetaData {
+@RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
+open class CoreMetaData : CleverTapMetaData() {
 
-    private static boolean appForeground = false;
+    private var appInboxActivityReference: WeakReference<Activity?>? = null
 
-    private static WeakReference<Activity> currentActivity;
+    var appInstallTime: Long = 0
 
-    private WeakReference<Activity> appInboxActivity;
+    private var appLaunchPushed = false
 
-    private static int activityCount = 0;
+    private val appLaunchPushedLock = Any()
 
-    private long appInstallTime = 0;
+    private var currentScreenName: String? = null
 
-    private boolean appLaunchPushed = false;
+    var currentSessionId: Int = 0
 
-    private final Object appLaunchPushedLock = new Object();
+    private var currentUserOptedOut = false
 
-    private String currentScreenName = null;
+    private var allowSystemEvents = true
 
-    private int currentSessionId = 0;
+    var isFirstRequestInSession: Boolean = false
 
-    private boolean currentUserOptedOut = false;
+    //Session
+    var isFirstSession: Boolean = false
 
-    private boolean allowSystemEvents = true;
+    var geofenceSDKVersion: Int = 0
 
-    private boolean firstRequestInSession = false;
+    var isInstallReferrerDataSent: Boolean = false
 
-    private boolean firstSession = false;
+    var isBgPing: Boolean = false
 
-    private int geofenceSDKVersion = 0;
+    var isLocationForGeofence: Boolean = false
 
-    private boolean installReferrerDataSent = false;
+    var isProductConfigRequested: Boolean = false
 
-    private boolean isBgPing = false;
+    //Session
+    var lastSessionLength: Int = 0
 
-    private boolean isLocationForGeofence = false;
+    var locationFromUser: Location? = null
 
-    private boolean isProductConfigRequested;
-
-    private int lastSessionLength = 0;
-
-    private Location locationFromUser = null;
-
-    private boolean offline;
+    var isOffline: Boolean = false
 
     /**
-     * Flag indicating whether the {@link CTWebInterface} is initialized from outside of the SDK.
-     * <p>
-     * When this flag is true, it means that the {@link CTWebInterface} has been initialized externally, typically by the application.
-     * </p>
+     * Flag indicating whether the [CTWebInterface] is initialized from outside of the SDK.
+     *
+     * When this flag is true, it means that the [CTWebInterface] has been initialized externally, typically by the application.
      */
-    private boolean webInterfaceInitializedExternally;
+    var isWebInterfaceInitializedExternally: Boolean = false
 
     /**
      * Last notification received on device from CleverTap in an active session of a process(before process is killed)
      */
 
-    private final Object optOutFlagLock = new Object();
+    private val optOutFlagLock = Any()
 
     // Concurrent because modules register from their own threads while the network thread reads it
-    private final Map<String, Integer> customSdkVersions = new ConcurrentHashMap<>();
+    private val customSdkVersions: MutableMap<String, Int> = ConcurrentHashMap()
 
-    // Versions registered by modules for every instance, so they apply whether or not an instance exists yet
-    private static final Map<String, Integer> sharedCustomSdkVersions = new ConcurrentHashMap<>();
+    var referrerClickTime: Long = 0
 
-    private long referrerClickTime = 0;
+    private var sourceValue: String? = null
+    private var mediumValue: String? = null
+    private var campaignValue: String? = null
 
-    private String source = null, medium = null, campaign = null;
+    private var wzrkParamsValue: JSONObject? = null
 
-    private JSONObject wzrkParams = null;
+    var isRelaxNetwork: Boolean = false
 
-    private boolean relaxNetwork = false;
+    private var freshAppLaunchSent = false
+    private val freshAppLaunchLock = Any()
 
-    private static int initialAppEnteredForegroundTime = 0;
-    private boolean freshAppLaunchSent = false;
-    private final Object freshAppLaunchLock = new Object();
-
-    public static Activity getCurrentActivity() {
-        return (currentActivity == null) ? null : currentActivity.get();
-    }
-    static int getInitialAppEnteredForegroundTime() {
-        return initialAppEnteredForegroundTime;
-    }
-
-    public static void setCurrentActivity(@Nullable Activity activity) {
-        if (activity == null) {
-            currentActivity = null;
-            return;
+    // Setter wraps the activity in a WeakReference; getter returns null once it is collected.
+    var appInboxActivity: Activity?
+        get() = appInboxActivityReference?.get()
+        set(activity) {
+            appInboxActivityReference = WeakReference(activity)
         }
-        if (!activity.getLocalClassName().contains("InAppNotificationActivity")) {
-            currentActivity = new WeakReference<>(activity);
-        }
+
+    fun setCurrentScreenName(currentScreenName: String?) {
+        this.currentScreenName = currentScreenName
     }
 
-    public static String getCurrentActivityName() {
-        Activity current = getCurrentActivity();
-        return (current != null) ? current.getLocalClassName() : null;
+    @Synchronized
+    fun clearCampaign() {
+        campaignValue = null
     }
 
-    public void setAppInboxActivity(@Nullable Activity activity) {
-        appInboxActivity = new WeakReference<>(activity);
+    @Synchronized
+    fun clearMedium() {
+        mediumValue = null
     }
 
-    public Activity getAppInboxActivity() {
-        return (appInboxActivity == null) ? null : appInboxActivity.get();
+    @Synchronized
+    fun clearSource() {
+        sourceValue = null
     }
 
-    public static boolean isAppForeground() {
-        return appForeground;
-    }
-
-    public static void setAppForeground(boolean isForeground) {
-        appForeground = isForeground;
-    }
-
-    static void setInitialAppEnteredForegroundTime(final int initialAppEnteredForegroundTime) {
-        CoreMetaData.initialAppEnteredForegroundTime = initialAppEnteredForegroundTime;
-    }
-
-    public long getAppInstallTime() {
-        return appInstallTime;
-    }
-
-    public void setAppInstallTime(final long appInstallTime) {
-        this.appInstallTime = appInstallTime;
-    }
-
-    public Location getLocationFromUser() {
-        return locationFromUser;
-    }
-
-    public void setLocationFromUser(final Location locationFromUser) {
-        this.locationFromUser = locationFromUser;
-    }
-
-    public boolean isProductConfigRequested() {
-        return isProductConfigRequested;
-    }
-
-    public void setProductConfigRequested(final boolean productConfigRequested) {
-        isProductConfigRequested = productConfigRequested;
-    }
-
-    public void setCurrentScreenName(final String currentScreenName) {
-        this.currentScreenName = currentScreenName;
-    }
-
-    synchronized void clearCampaign() {
-        campaign = null;
-    }
-
-    synchronized void clearMedium() {
-        medium = null;
-    }
-
-    synchronized void clearSource() {
-        source = null;
-    }
-
-    synchronized void clearWzrkParams() {
-        wzrkParams = null;
-    }
-
-    public static int getActivityCount() {
-        return activityCount;
-    }
-
-    synchronized void setCampaign(String campaign) {
-        if (this.campaign == null) {
-            this.campaign = campaign;
-        }
-    }
-
-    public synchronized String getCampaign() {
-        return campaign;
-    }
-
-    public int getCurrentSessionId() {
-        return currentSessionId;
-    }
-
-    public int getGeofenceSDKVersion() {
-        return geofenceSDKVersion;
-    }
-
-    public void setGeofenceSDKVersion(int geofenceSDKVersion) {
-        this.geofenceSDKVersion = geofenceSDKVersion;
-    }
-
-    public int getCustomSdkVersion(String customSdkName) {
-        Integer version = customSdkVersions.get(customSdkName);
-        if (version == null) {
-            version = sharedCustomSdkVersions.get(customSdkName);
-        }
-        return version!=null ? version : 0;
-    }
-
-    public void setCustomSdkVersion(String customSdkName,int customSdkVersion) {
-        customSdkVersions.put(customSdkName,customSdkVersion);
-    }
-
-    static void setSharedCustomSdkVersion(String customSdkName, int customSdkVersion) {
-        // Shared versions reach af for every instance, so they must not replace a built-in af field
-        if (CTJsonConverter.RESERVED_AF_KEYS.contains(customSdkName)) {
-            Logger.v("Ignoring SDK version for reserved af key " + customSdkName);
-            return;
-        }
-        sharedCustomSdkVersions.put(customSdkName, customSdkVersion);
-    }
-
-    public Map<String,Integer> getAllCustomSdkVersions(){
-        Map<String, Integer> allCustomSdkVersions = new HashMap<>(sharedCustomSdkVersions);
-        allCustomSdkVersions.putAll(customSdkVersions);
-        return allCustomSdkVersions;
-    }
-
-    void setLastSessionLength(final int lastSessionLength) {
-        this.lastSessionLength = lastSessionLength;
-    }
-
-    //Session
-    public int getLastSessionLength() {
-        return lastSessionLength;
+    @Synchronized
+    fun clearWzrkParams() {
+        wzrkParamsValue = null
     }
 
     // only set if not already set during the session
-    synchronized void setMedium(String medium) {
-        if (this.medium == null) {
-            this.medium = medium;
+    @get:Synchronized
+    @set:Synchronized
+    var campaign: String?
+        get() = campaignValue
+        set(campaign) {
+            if (this.campaignValue == null) {
+                this.campaignValue = campaign
+            }
         }
+
+    fun getCustomSdkVersion(customSdkName: String): Int {
+        var version = customSdkVersions[customSdkName]
+        if (version == null) {
+            version = sharedCustomSdkVersions[customSdkName]
+        }
+        return version ?: 0
     }
 
-    public synchronized String getMedium() {
-        return medium;
+    fun setCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
+        customSdkVersions[customSdkName] = customSdkVersion
     }
 
-    void setReferrerClickTime(final long referrerClickTime) {
-        this.referrerClickTime = referrerClickTime;
-    }
+    val allCustomSdkVersions: MutableMap<String, Int>
+        get() {
+            val allCustomSdkVersions: MutableMap<String, Int> = HashMap(sharedCustomSdkVersions)
+            allCustomSdkVersions.putAll(customSdkVersions)
+            return allCustomSdkVersions
+        }
 
-    public long getReferrerClickTime() {
-        return referrerClickTime;
-    }
-
-    public synchronized String getSource() {
-        return source;
-    }
+    // only set if not already set during the session
+    @get:Synchronized
+    @set:Synchronized
+    var medium: String?
+        get() = mediumValue
+        set(medium) {
+            if (this.mediumValue == null) {
+                this.mediumValue = medium
+            }
+        }
 
     //UTM
     // only set if not already set during the session
-    synchronized void setSource(String source) {
-        if (this.source == null) {
-            this.source = source;
+    @get:Synchronized
+    @set:Synchronized
+    var source: String?
+        get() = sourceValue
+        set(source) {
+            if (this.sourceValue == null) {
+                this.sourceValue = source
+            }
         }
-    }
 
-    public String getScreenName() {
-        return currentScreenName;
-    }
+    val screenName: String?
+        get() = currentScreenName
 
-    public synchronized void setWzrkParams(JSONObject wzrkParams) {
-        if (this.wzrkParams == null) {
-            this.wzrkParams = wzrkParams;
+    // only set if not already set during the session
+    @get:Synchronized
+    @set:Synchronized
+    var wzrkParams: JSONObject?
+        get() = wzrkParamsValue
+        set(wzrkParams) {
+            if (this.wzrkParamsValue == null) {
+                this.wzrkParamsValue = wzrkParams
+            }
         }
+
+    fun inCurrentSession(): Boolean {
+        return currentSessionId > 0
     }
 
-    public synchronized JSONObject getWzrkParams() {
-        return wzrkParams;
-    }
-
-    public boolean inCurrentSession() {
-        return currentSessionId > 0;
-    }
-
-    void setAppLaunchPushed(boolean pushed) {
-        synchronized (appLaunchPushedLock) {
-            appLaunchPushed = pushed;
+    var isAppLaunchPushed: Boolean
+        get() {
+            synchronized(appLaunchPushedLock) {
+                return appLaunchPushed
+            }
         }
-    }
-
-    public boolean isAppLaunchPushed() {
-        synchronized (appLaunchPushedLock) {
-            return appLaunchPushed;
+        set(pushed) {
+            synchronized(appLaunchPushedLock) {
+                appLaunchPushed = pushed
+            }
         }
-    }
 
-    public boolean isBgPing() {
-        return isBgPing;
-    }
-
-    public void setBgPing(final boolean bgPing) {
-        isBgPing = bgPing;
-    }
-
-    public void setCurrentUserOptedOut(boolean enable) {
-        synchronized (optOutFlagLock) {
-            currentUserOptedOut = enable;
+    var isCurrentUserOptedOut: Boolean
+        get() {
+            synchronized(optOutFlagLock) {
+                return currentUserOptedOut
+            }
         }
-    }
-
-    public boolean isCurrentUserOptedOut() {
-        synchronized (optOutFlagLock) {
-            return currentUserOptedOut;
+        set(enable) {
+            synchronized(optOutFlagLock) {
+                currentUserOptedOut = enable
+            }
         }
-    }
 
-    public void setEnabledSystemEvents(boolean enable) {
-        synchronized (optOutFlagLock) {
-            allowSystemEvents = enable;
+    var enabledSystemEvents: Boolean
+        get() {
+            synchronized(optOutFlagLock) {
+                return allowSystemEvents
+            }
         }
-    }
-
-    public boolean getEnabledSystemEvents() {
-        synchronized (optOutFlagLock) {
-            return allowSystemEvents;
+        set(enable) {
+            synchronized(optOutFlagLock) {
+                allowSystemEvents = enable
+            }
         }
-    }
-
-    public boolean isFirstRequestInSession() {
-        return firstRequestInSession;
-    }
-
-    public void setFirstRequestInSession(boolean firstRequestInSession) {
-        this.firstRequestInSession = firstRequestInSession;
-    }
-
-    void setFirstSession(final boolean firstSession) {
-        this.firstSession = firstSession;
-    }
-
-    //Session
-    public boolean isFirstSession() {
-        return firstSession;
-    }
-
-    void setInstallReferrerDataSent(final boolean installReferrerDataSent) {
-        this.installReferrerDataSent = installReferrerDataSent;
-    }
-
-    public boolean isInstallReferrerDataSent() {
-        return installReferrerDataSent;
-    }
-
-    public boolean isLocationForGeofence() {
-        return isLocationForGeofence;
-    }
-
-    public void setLocationForGeofence(boolean locationForGeofence) {
-        isLocationForGeofence = locationForGeofence;
-    }
-
-    void setOffline(boolean value) {
-        offline = value;
-    }
-
-    void setCurrentSessionId(int sessionId) {
-        this.currentSessionId = sessionId;
-    }
-
-    public boolean isOffline() {
-        return offline;
-    }
-
-    public void setWebInterfaceInitializedExternally(boolean isInitialized) {
-        this.webInterfaceInitializedExternally = isInitialized;
-    }
-
-    public boolean isWebInterfaceInitializedExternally() {
-        return webInterfaceInitializedExternally;
-    }
-
-    public static void setActivityCount(final int count) {
-        activityCount = count;
-    }
-
-    static void incrementActivityCount() {
-        activityCount++;
-    }
-
-    public boolean isRelaxNetwork() {
-        return relaxNetwork;
-    }
-
-    public void setRelaxNetwork(boolean relaxNetwork) {
-        this.relaxNetwork = relaxNetwork;
-    }
 
     /**
      * Checks if CT instance should send fresh app launch flag (fl: true).
@@ -408,18 +227,100 @@ public class CoreMetaData extends CleverTapMetaData {
      * 1. App has been foregrounded (initialAppEnteredForegroundTime > 0)
      * 2. This instance has NOT yet sent fl:true
      */
-    public boolean isFreshAppLaunch() {
-        synchronized (freshAppLaunchLock) {
-            return getInitialAppEnteredForegroundTime() > 0 && !freshAppLaunchSent;
+    val isFreshAppLaunch: Boolean
+        get() {
+            synchronized(freshAppLaunchLock) {
+                return getInitialAppEnteredForegroundTime() > 0 && !freshAppLaunchSent
+            }
         }
-    }
 
     /**
      * Marks that this instance has sent the fresh app launch flag.
      */
-    public void setFreshAppLaunchSent() {
-        synchronized (freshAppLaunchLock) {
-            freshAppLaunchSent = true;
+    fun setFreshAppLaunchSent() {
+        synchronized(freshAppLaunchLock) {
+            freshAppLaunchSent = true
+        }
+    }
+
+    companion object {
+
+        private var appForeground = false
+
+        private var currentActivity: WeakReference<Activity>? = null
+
+        private var activityCount = 0
+
+        // Versions registered by modules for every instance, so they apply whether or not an instance exists yet
+        private val sharedCustomSdkVersions: MutableMap<String, Int> = ConcurrentHashMap()
+
+        private var initialAppEnteredForegroundTime = 0
+
+        @JvmStatic
+        fun getCurrentActivity(): Activity? {
+            return currentActivity?.get()
+        }
+
+        @JvmStatic
+        fun getInitialAppEnteredForegroundTime(): Int {
+            return initialAppEnteredForegroundTime
+        }
+
+        @JvmStatic
+        fun setCurrentActivity(activity: Activity?) {
+            if (activity == null) {
+                currentActivity = null
+                return
+            }
+            if (!activity.localClassName.contains("InAppNotificationActivity")) {
+                currentActivity = WeakReference(activity)
+            }
+        }
+
+        @JvmStatic
+        fun getCurrentActivityName(): String? {
+            val current = getCurrentActivity()
+            return current?.localClassName
+        }
+
+        @JvmStatic
+        fun isAppForeground(): Boolean {
+            return appForeground
+        }
+
+        @JvmStatic
+        fun setAppForeground(isForeground: Boolean) {
+            appForeground = isForeground
+        }
+
+        @JvmStatic
+        fun setInitialAppEnteredForegroundTime(initialAppEnteredForegroundTime: Int) {
+            this.initialAppEnteredForegroundTime = initialAppEnteredForegroundTime
+        }
+
+        @JvmStatic
+        fun getActivityCount(): Int {
+            return activityCount
+        }
+
+        @JvmStatic
+        fun setSharedCustomSdkVersion(customSdkName: String, customSdkVersion: Int) {
+            // Shared versions reach af for every instance, so they must not replace a built-in af field
+            if (CTJsonConverter.RESERVED_AF_KEYS.contains(customSdkName)) {
+                Logger.v("Ignoring SDK version for reserved af key $customSdkName")
+                return
+            }
+            sharedCustomSdkVersions[customSdkName] = customSdkVersion
+        }
+
+        @JvmStatic
+        fun setActivityCount(count: Int) {
+            activityCount = count
+        }
+
+        @JvmStatic
+        fun incrementActivityCount() {
+            activityCount++
         }
     }
 }

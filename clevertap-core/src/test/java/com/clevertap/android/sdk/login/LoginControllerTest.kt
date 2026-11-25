@@ -196,7 +196,7 @@ class LoginControllerTest : BaseTestCase() {
         }
 
         verifyOrder {
-            coreMetaData.setCurrentUserOptedOut(false)
+            coreMetaData.isCurrentUserOptedOut = false
             pushProviders.forcePushDeviceToken(false)
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
