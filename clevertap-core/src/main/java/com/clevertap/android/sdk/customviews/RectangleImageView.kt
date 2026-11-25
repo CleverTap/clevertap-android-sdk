@@ -1,32 +1,25 @@
-package com.clevertap.android.sdk.customviews;
+package com.clevertap.android.sdk.customviews
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.util.AttributeSet;
-import android.widget.ImageView;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.util.AttributeSet
+import android.widget.ImageView
 
-@SuppressWarnings("SuspiciousNameCombination")
+@Suppress("SuspiciousNameCombination")
 @SuppressLint("AppCompatCustomView")
-public class RectangleImageView extends ImageView {
+internal open class RectangleImageView : ImageView {
 
-    public RectangleImageView(Context context) {
-        super(context);
-    }
+    constructor(context: Context) : super(context)
 
-    public RectangleImageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    public RectangleImageView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-    }
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
-        float width = getMeasuredWidth() * 0.5625f;
-        int finalWidth = Math.round(width);
-        setMeasuredDimension(getMeasuredWidth(), finalWidth);
+        val width = measuredWidth * 0.5625f
+        val finalWidth = Math.round(width)
+        setMeasuredDimension(measuredWidth, finalWidth)
     }
 }

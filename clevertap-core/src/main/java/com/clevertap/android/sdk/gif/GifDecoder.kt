@@ -1,266 +1,210 @@
 /**
  * Copyright (c) 2013 Xcellent Creations, Inc.
  * Copyright 2014 Google, Inc. All rights reserved.
- * <p>
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
  * including without limitation the rights to use, copy, modify, merge, publish, distribute,
  * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * <p>
+ *
  * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
- * <p>
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
  * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.clevertap.android.sdk.gif;
+package com.clevertap.android.sdk.gif
 
-import android.graphics.Bitmap;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.clevertap.android.sdk.Logger;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
+import android.graphics.Bitmap
+import com.clevertap.android.sdk.Logger
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.Arrays
 
-@SuppressWarnings({"unused", "WeakerAccess"})
-class GifDecoder {
+@Suppress("unused", "MemberVisibilityCanBePrivate")
+internal class GifDecoder(private val bitmapProvider: BitmapProvider) {
 
     /**
-     * An interface that can be used to provide reused {@link android.graphics.Bitmap}s to avoid GCs
-     * from constantly allocating {@link android.graphics.Bitmap}s for every frame.
+     * An interface that can be used to provide reused [android.graphics.Bitmap]s to avoid GCs
+     * from constantly allocating [android.graphics.Bitmap]s for every frame.
      */
     interface BitmapProvider {
 
         /**
-         * Returns an {@link Bitmap} with exactly the given dimensions and config.
+         * Returns an [Bitmap] with exactly the given dimensions and config.
          *
-         * @param width  The width in pixels of the desired {@link android.graphics.Bitmap}.
-         * @param height The height in pixels of the desired {@link android.graphics.Bitmap}.
-         * @param config The {@link android.graphics.Bitmap.Config} of the desired {@link
-         *               android.graphics.Bitmap}.
+         * @param width  The width in pixels of the desired [android.graphics.Bitmap].
+         * @param height The height in pixels of the desired [android.graphics.Bitmap].
+         * @param config The [android.graphics.Bitmap.Config] of the desired [android.graphics.Bitmap].
          */
-        @NonNull
-        Bitmap obtain(int width, int height, Bitmap.Config config);
+        fun obtain(width: Int, height: Int, config: Bitmap.Config): Bitmap
 
         /**
          * Returns a byte array used for decoding and generating the frame bitmap.
          *
          * @param size the size of the byte array to obtain
          */
-        byte[] obtainByteArray(int size);
+        fun obtainByteArray(size: Int): ByteArray
 
         /**
          * Returns an int array used for decoding/generating the frame bitmaps.
          */
-        int[] obtainIntArray(int size);
+        fun obtainIntArray(size: Int): IntArray
 
         /**
          * Releases the given byte array back to the pool.
          */
-        void release(byte[] bytes);
+        fun release(bytes: ByteArray)
 
         /**
          * Releases the given Bitmap back to the pool.
          */
-        void release(Bitmap bitmap);
+        fun release(bitmap: Bitmap)
 
         /**
          * Release the given array back to the pool.
          */
-        void release(int[] array);
+        fun release(array: IntArray)
     }
-
-    /**
-     * File read status: No errors.
-     */
-    static final int STATUS_OK = 0;
-
-    /**
-     * File read status: Error decoding file (may be partially decoded).
-     */
-    static final int STATUS_FORMAT_ERROR = 1;
-
-    /**
-     * File read status: Unable to open source.
-     */
-    static final int STATUS_OPEN_ERROR = 2;
-
-    /**
-     * Unable to fully decode the current frame.
-     */
-    static final int STATUS_PARTIAL_DECODE = 3;
-
-    static final int LOOP_FOREVER = -1;
-
-    private static final String TAG = GifDecoder.class.getSimpleName();
-
-    /**
-     * max decoder pixel stack size.
-     */
-    private static final int MAX_STACK_SIZE = 4096;
-
-    /**
-     * GIF Disposal Method meaning take no action.
-     */
-    private static final int DISPOSAL_UNSPECIFIED = 0;
-
-    /**
-     * GIF Disposal Method meaning leave canvas from previous frame.
-     */
-    private static final int DISPOSAL_NONE = 1;
-
-    /**
-     * GIF Disposal Method meaning clear canvas to background color.
-     */
-    private static final int DISPOSAL_BACKGROUND = 2;
-
-    /**
-     * GIF Disposal Method meaning clear canvas to frame before last.
-     */
-    private static final int DISPOSAL_PREVIOUS = 3;
-
-    private static final int NULL_CODE = -1;
-
-    private static final int INITIAL_FRAME_POINTER = -1;
-
-    private static final int BYTES_PER_INTEGER = 4;
-
-    // Temporary buffer for block reading. Reads 16k chunks from the native buffer for processing,
-    // to greatly reduce JNI overhead.
-    private static final int WORK_BUFFER_SIZE = 16384;
 
     // Global File Header values and parsing flags.
     // Active color table.
-    private int[] act;
-
-    private final BitmapProvider bitmapProvider;
+    private var act: IntArray? = null
 
     // Raw data read working array.
-    private byte[] block;
+    private var block: ByteArray? = null
 
-    private int downsampledHeight;
+    private var downsampledHeight = 0
 
-    private int downsampledWidth;
+    private var downsampledWidth = 0
 
-    private int framePointer;
+    private var framePointer = 0
 
-    private GifHeader header;
+    private var header: GifHeader? = GifHeader()
 
-    private boolean isFirstFrameTransparent;
+    private var isFirstFrameTransparent = false
 
-    private int loopIndex;
+    /**
+     * Gets the number of loops that have been shown.
+     *
+     * @return iteration count.
+     */
+    var loopIndex = 0
+        private set
 
-    private byte[] mainPixels;
+    private var mainPixels: ByteArray? = null
 
-    private int[] mainScratch;
+    private var mainScratch: IntArray? = null
 
-    private GifHeaderParser parser;
+    private var parser: GifHeaderParser? = null
 
     // Private color table that can be modified if needed.
-    private final int[] pct = new int[256];
+    private val pct = IntArray(256)
 
-    private byte[] pixelStack;
+    private var pixelStack: ByteArray? = null
 
     // LZW decoder working arrays.
-    private short[] prefix;
+    private var prefix: ShortArray? = null
 
-    private Bitmap previousImage;
+    private var previousImage: Bitmap? = null
 
     // Raw GIF data from input source.
-    private ByteBuffer rawData;
+    private var rawData: ByteBuffer? = null
 
-    private int sampleSize;
+    private var sampleSize = 0
 
-    private boolean savePrevious;
+    private var savePrevious = false
 
-    private int status;
+    /**
+     * Returns the current status of the decoder.
+     *
+     * Status will update per frame to allow the caller to tell whether or not the current frame
+     * was decoded successfully and/or completely. Format and open failures persist across frames.
+     */
+    var status = 0
+        private set
 
-    private byte[] suffix;
+    private var suffix: ByteArray? = null
 
-    @Nullable
-    private byte[] workBuffer;
+    private var workBuffer: ByteArray? = null
 
-    private int workBufferPosition = 0;
+    private var workBufferPosition = 0
 
-    private int workBufferSize = 0;
+    private var workBufferSize = 0
 
-    GifDecoder(BitmapProvider provider, GifHeader gifHeader, ByteBuffer rawData) {
-        this(provider, gifHeader, rawData, 1 /*sampleSize*/);
+    constructor(provider: BitmapProvider, gifHeader: GifHeader, rawData: ByteBuffer) : this(
+        provider,
+        gifHeader,
+        rawData,
+        1 /*sampleSize*/
+    )
+
+    constructor(
+        provider: BitmapProvider, gifHeader: GifHeader, rawData: ByteBuffer,
+        sampleSize: Int
+    ) : this(provider) {
+        setData(gifHeader, rawData, sampleSize)
     }
 
-    GifDecoder(BitmapProvider provider, GifHeader gifHeader, ByteBuffer rawData,
-            int sampleSize) {
-        this(provider);
-        setData(gifHeader, rawData, sampleSize);
-    }
-
-    GifDecoder(BitmapProvider provider) {
-        this.bitmapProvider = provider;
-        header = new GifHeader();
-    }
-
-    GifDecoder() {
-        this(new SimpleBitmapProvider());
-    }
+    constructor() : this(SimpleBitmapProvider())
 
     /**
      * Move the animation frame counter forward.
      *
      * @return boolean specifying if animation should continue or if loopCount has been fulfilled.
      */
-    boolean advance() {
-        if (header.frameCount <= 0) {
-            return false;
+    fun advance(): Boolean {
+        if (header!!.frameCount <= 0) {
+            return false
         }
 
         if (framePointer == getFrameCount() - 1) {
-            loopIndex++;
+            loopIndex++
         }
 
-        if (header.loopCount != LOOP_FOREVER && loopIndex > header.loopCount) {
-            return false;
+        if (header!!.loopCount != LOOP_FOREVER && loopIndex > header!!.loopCount) {
+            return false
         }
 
-        framePointer = (framePointer + 1) % header.frameCount;
-        return true;
+        framePointer = (framePointer + 1) % header!!.frameCount
+        return true
     }
 
-    void clear() {
-        header = null;
+    fun clear() {
+        header = null
         if (mainPixels != null) {
-            bitmapProvider.release(mainPixels);
+            bitmapProvider.release(mainPixels!!)
         }
         if (mainScratch != null) {
-            bitmapProvider.release(mainScratch);
+            bitmapProvider.release(mainScratch!!)
         }
         if (previousImage != null) {
-            bitmapProvider.release(previousImage);
+            bitmapProvider.release(previousImage!!)
         }
-        previousImage = null;
-        rawData = null;
-        isFirstFrameTransparent = false;
+        previousImage = null
+        rawData = null
+        isFirstFrameTransparent = false
         if (block != null) {
-            bitmapProvider.release(block);
+            bitmapProvider.release(block!!)
         }
         if (workBuffer != null) {
-            bitmapProvider.release(workBuffer);
+            bitmapProvider.release(workBuffer!!)
         }
     }
 
     /**
-     * Returns an estimated byte size for this decoder based on the data provided to {@link
-     * #setData(GifHeader, byte[])}, as well as internal buffers.
+     * Returns an estimated byte size for this decoder based on the data provided to
+     * [setData], as well as internal buffers.
      */
-    int getByteSize() {
-        return rawData.limit() + mainPixels.length + (mainScratch.length * BYTES_PER_INTEGER);
+    fun getByteSize(): Int {
+        return rawData!!.limit() + mainPixels!!.size + (mainScratch!!.size * BYTES_PER_INTEGER)
     }
 
     /**
@@ -268,12 +212,12 @@ class GifDecoder {
      *
      * @return frame index.
      */
-    int getCurrentFrameIndex() {
-        return framePointer;
+    fun getCurrentFrameIndex(): Int {
+        return framePointer
     }
 
-    ByteBuffer getData() {
-        return rawData;
+    fun getData(): ByteBuffer? {
+        return rawData
     }
 
     /**
@@ -282,12 +226,12 @@ class GifDecoder {
      * @param n int index of frame.
      * @return delay in milliseconds.
      */
-    int getDelay(int n) {
-        int delay = -1;
-        if ((n >= 0) && (n < header.frameCount)) {
-            delay = header.frames.get(n).delay;
+    fun getDelay(n: Int): Int {
+        var delay = -1
+        if ((n >= 0) && (n < header!!.frameCount)) {
+            delay = header!!.frames[n].delay
         }
-        return delay;
+        return delay
     }
 
     /**
@@ -295,12 +239,12 @@ class GifDecoder {
      *
      * @return frame count.
      */
-    int getFrameCount() {
-        return header.frameCount;
+    fun getFrameCount(): Int {
+        return header!!.frameCount
     }
 
-    int getHeight() {
-        return header.height;
+    fun getHeight(): Int {
+        return header!!.height
     }
 
     /**
@@ -308,28 +252,19 @@ class GifDecoder {
      *
      * @return iteration count if one was specified, else 1.
      */
-    int getLoopCount() {
-        return header.loopCount;
-    }
-
-    /**
-     * Gets the number of loops that have been shown.
-     *
-     * @return iteration count.
-     */
-    int getLoopIndex() {
-        return loopIndex;
+    fun getLoopCount(): Int {
+        return header!!.loopCount
     }
 
     /**
      * Gets display duration for the upcoming frame in ms.
      */
-    int getNextDelay() {
-        if (header.frameCount <= 0 || framePointer < 0) {
-            return 0;
+    fun getNextDelay(): Int {
+        if (header!!.frameCount <= 0 || framePointer < 0) {
+            return 0
         }
 
-        return getDelay(framePointer);
+        return getDelay(framePointer)
     }
 
     /**
@@ -337,67 +272,59 @@ class GifDecoder {
      *
      * @return Bitmap representation of frame.
      */
-    synchronized Bitmap getNextFrame() {
-        if (header.frameCount <= 0 || framePointer < 0) {
+    @Synchronized
+    fun getNextFrame(): Bitmap? {
+        if (header!!.frameCount <= 0 || framePointer < 0) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.d(TAG, "unable to decode frame, frameCount=" + header.frameCount + " framePointer="
-                    + framePointer);
+            Logger.d(
+                TAG, "unable to decode frame, frameCount=" + header!!.frameCount + " framePointer="
+                        + framePointer
+            )
             //}
-            status = STATUS_FORMAT_ERROR;
+            status = STATUS_FORMAT_ERROR
         }
         if (status == STATUS_FORMAT_ERROR || status == STATUS_OPEN_ERROR) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.d(TAG, "Unable to decode frame, status=" + status);
+            Logger.d(TAG, "Unable to decode frame, status=$status")
             //}
-            return null;
+            return null
         }
-        status = STATUS_OK;
+        status = STATUS_OK
 
-        GifFrame currentFrame = header.frames.get(framePointer);
-        GifFrame previousFrame = null;
-        int previousIndex = framePointer - 1;
+        val currentFrame = header!!.frames[framePointer]
+        var previousFrame: GifFrame? = null
+        val previousIndex = framePointer - 1
         if (previousIndex >= 0) {
-            previousFrame = header.frames.get(previousIndex);
+            previousFrame = header!!.frames[previousIndex]
         }
 
         // Set the appropriate color table.
-        act = currentFrame.lct != null ? currentFrame.lct : header.gct;
+        act = if (currentFrame.lct != null) currentFrame.lct else header!!.gct
         if (act == null) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.d(TAG, "No Valid Color Table for frame #" + framePointer);
+            Logger.d(TAG, "No Valid Color Table for frame #$framePointer")
             //}
             // No color table defined.
-            status = STATUS_FORMAT_ERROR;
-            return null;
+            status = STATUS_FORMAT_ERROR
+            return null
         }
 
         // Reset the transparent pixel in the color table
         if (currentFrame.transparency) {
             // Prepare local copy of color table ("pct = act"), see #1068
-            System.arraycopy(act, 0, pct, 0, act.length);
+            System.arraycopy(act!!, 0, pct, 0, act!!.size)
             // Forget about act reference from shared header object, use copied version
-            act = pct;
+            act = pct
             // Set transparent color if specified.
-            act[currentFrame.transIndex] = 0;
+            act!![currentFrame.transIndex] = 0
         }
 
         // Transfer pixel data to image.
-        return setPixels(currentFrame, previousFrame);
+        return setPixels(currentFrame, previousFrame)
     }
 
-    /**
-     * Returns the current status of the decoder.
-     *
-     * <p> Status will update per frame to allow the caller to tell whether or not the current frame
-     * was decoded successfully and/or completely. Format and open failures persist across frames.
-     * </p>
-     */
-    int getStatus() {
-        return status;
-    }
-
-    int getWidth() {
-        return header.width;
+    fun getWidth(): Int {
+        return header!!.width
     }
 
     /**
@@ -406,35 +333,33 @@ class GifDecoder {
      * @param is containing GIF file.
      * @return read status code (0 = no errors).
      */
-    int read(InputStream is, int contentLength) {
-        if (is != null) {
+    fun read(`is`: InputStream?, contentLength: Int): Int {
+        if (`is` != null) {
             try {
-                int capacity = (contentLength > 0) ? (contentLength + 4096) : 16384;
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream(capacity);
-                int nRead;
-                byte[] data = new byte[16384];
-                while ((nRead = is.read(data, 0, data.length)) != -1) {
-                    buffer.write(data, 0, nRead);
+                val capacity = if (contentLength > 0) (contentLength + 4096) else 16384
+                val buffer = ByteArrayOutputStream(capacity)
+                var nRead: Int
+                val data = ByteArray(16384)
+                while (`is`.read(data, 0, data.size).also { nRead = it } != -1) {
+                    buffer.write(data, 0, nRead)
                 }
-                buffer.flush();
+                buffer.flush()
 
-                read(buffer.toByteArray());
-            } catch (IOException e) {
-                Logger.d(TAG, "Error reading data from stream", e);
+                read(buffer.toByteArray())
+            } catch (e: IOException) {
+                Logger.d(TAG, "Error reading data from stream", e)
             }
         } else {
-            status = STATUS_OPEN_ERROR;
+            status = STATUS_OPEN_ERROR
         }
 
         try {
-            if (is != null) {
-                is.close();
-            }
-        } catch (IOException e) {
-            Logger.d(TAG, "Error closing stream", e);
+            `is`?.close()
+        } catch (e: IOException) {
+            Logger.d(TAG, "Error closing stream", e)
         }
 
-        return status;
+        return status
     }
 
     /**
@@ -443,70 +368,76 @@ class GifDecoder {
      * @param data containing GIF file.
      * @return read status code (0 = no errors).
      */
-    synchronized int read(byte[] data) {
-        this.header = getHeaderParser().setData(data).parseHeader();
+    @Synchronized
+    fun read(data: ByteArray?): Int {
+        this.header = getHeaderParser().setData(data).parseHeader()
         if (data != null) {
-            setData(header, data);
+            setData(header!!, data)
         }
 
-        return status;
+        return status
     }
 
     /**
      * Resets the frame pointer to before the 0th frame, as if we'd never used this decoder to
      * decode any frames.
      */
-    void resetFrameIndex() {
-        framePointer = INITIAL_FRAME_POINTER;
+    fun resetFrameIndex() {
+        framePointer = INITIAL_FRAME_POINTER
     }
 
     /**
      * Resets the loop index to the first loop.
      */
-    void resetLoopIndex() {
-        loopIndex = 0;
+    fun resetLoopIndex() {
+        loopIndex = 0
     }
 
-    synchronized void setData(GifHeader header, byte[] data) {
-        setData(header, ByteBuffer.wrap(data));
+    @Synchronized
+    fun setData(header: GifHeader, data: ByteArray) {
+        setData(header, ByteBuffer.wrap(data))
     }
 
-    synchronized void setData(GifHeader header, ByteBuffer buffer) {
-        setData(header, buffer, 1);
+    @Synchronized
+    fun setData(header: GifHeader, buffer: ByteBuffer) {
+        setData(header, buffer, 1)
     }
 
-    synchronized void setData(GifHeader header, ByteBuffer buffer, int sampleSize) {
+    @Synchronized
+    fun setData(header: GifHeader, buffer: ByteBuffer, sampleSize: Int) {
+        var sampleSize = sampleSize
         if (sampleSize <= 0) {
-            throw new IllegalArgumentException("Sample size must be >=0, not: " + sampleSize);
+            throw IllegalArgumentException("Sample size must be >=0, not: $sampleSize")
         }
         // Make sure sample size is a power of 2.
-        sampleSize = Integer.highestOneBit(sampleSize);
-        this.status = STATUS_OK;
-        this.header = header;
-        isFirstFrameTransparent = false;
-        framePointer = INITIAL_FRAME_POINTER;
-        resetLoopIndex();
+        sampleSize = Integer.highestOneBit(sampleSize)
+        this.status = STATUS_OK
+        this.header = header
+        isFirstFrameTransparent = false
+        framePointer = INITIAL_FRAME_POINTER
+        resetLoopIndex()
         // Initialize the raw data buffer.
-        rawData = buffer.asReadOnlyBuffer();
-        rawData.position(0);
-        rawData.order(ByteOrder.LITTLE_ENDIAN);
+        val rawData = buffer.asReadOnlyBuffer()
+        this.rawData = rawData
+        rawData.position(0)
+        rawData.order(ByteOrder.LITTLE_ENDIAN)
 
         // No point in specially saving an old frame if we're never going to use it.
-        savePrevious = false;
-        for (GifFrame frame : header.frames) {
+        savePrevious = false
+        for (frame in header.frames) {
             if (frame.dispose == DISPOSAL_PREVIOUS) {
-                savePrevious = true;
-                break;
+                savePrevious = true
+                break
             }
         }
 
-        this.sampleSize = sampleSize;
-        downsampledWidth = header.width / sampleSize;
-        downsampledHeight = header.height / sampleSize;
+        this.sampleSize = sampleSize
+        downsampledWidth = header.width / sampleSize
+        downsampledHeight = header.height / sampleSize
         // Now that we know the size, init scratch arrays.
 
-        mainPixels = bitmapProvider.obtainByteArray(header.width * header.height);
-        mainScratch = bitmapProvider.obtainIntArray(downsampledWidth * downsampledHeight);
+        mainPixels = bitmapProvider.obtainByteArray(header.width * header.height)
+        mainScratch = bitmapProvider.obtainIntArray(downsampledWidth * downsampledHeight)
     }
 
     /**
@@ -514,221 +445,255 @@ class GifDecoder {
      *
      * @return boolean true if the move was successful
      */
-    boolean setFrameIndex(int frame) {
+    fun setFrameIndex(frame: Int): Boolean {
         if (frame < INITIAL_FRAME_POINTER || frame >= getFrameCount()) {
-            return false;
+            return false
         }
-        framePointer = frame;
-        return true;
+        framePointer = frame
+        return true
     }
 
-    private int averageColorsNear(int positionInMainPixels, int maxPositionInMainPixels,
-            int currentFrameIw) {
-        int alphaSum = 0;
-        int redSum = 0;
-        int greenSum = 0;
-        int blueSum = 0;
+    private fun averageColorsNear(
+        positionInMainPixels: Int, maxPositionInMainPixels: Int,
+        currentFrameIw: Int
+    ): Int {
+        val mainPixels = mainPixels!!
+        val act = act!!
+        var alphaSum = 0
+        var redSum = 0
+        var greenSum = 0
+        var blueSum = 0
 
-        int totalAdded = 0;
+        var totalAdded = 0
         // Find the pixels in the current row.
-        for (int i = positionInMainPixels;
-                i < positionInMainPixels + sampleSize && i < mainPixels.length
-                        && i < maxPositionInMainPixels; i++) {
-            int currentColorIndex = ((int) mainPixels[i]) & 0xff;
-            int currentColor = act[currentColorIndex];
+        var i = positionInMainPixels
+        while (i < positionInMainPixels + sampleSize && i < mainPixels.size && i < maxPositionInMainPixels) {
+            val currentColorIndex = mainPixels[i].toInt() and 0xff
+            val currentColor = act[currentColorIndex]
             if (currentColor != 0) {
-                alphaSum += currentColor >> 24 & 0x000000ff;
-                redSum += currentColor >> 16 & 0x000000ff;
-                greenSum += currentColor >> 8 & 0x000000ff;
-                blueSum += currentColor & 0x000000ff;
-                totalAdded++;
+                alphaSum += (currentColor shr 24) and 0x000000ff
+                redSum += (currentColor shr 16) and 0x000000ff
+                greenSum += (currentColor shr 8) and 0x000000ff
+                blueSum += currentColor and 0x000000ff
+                totalAdded++
             }
+            i++
         }
         // Find the pixels in the next row.
-        for (int i = positionInMainPixels + currentFrameIw;
-                i < positionInMainPixels + currentFrameIw + sampleSize && i < mainPixels.length
-                        && i < maxPositionInMainPixels; i++) {
-            int currentColorIndex = ((int) mainPixels[i]) & 0xff;
-            int currentColor = act[currentColorIndex];
+        i = positionInMainPixels + currentFrameIw
+        while (i < positionInMainPixels + currentFrameIw + sampleSize && i < mainPixels.size && i < maxPositionInMainPixels) {
+            val currentColorIndex = mainPixels[i].toInt() and 0xff
+            val currentColor = act[currentColorIndex]
             if (currentColor != 0) {
-                alphaSum += currentColor >> 24 & 0x000000ff;
-                redSum += currentColor >> 16 & 0x000000ff;
-                greenSum += currentColor >> 8 & 0x000000ff;
-                blueSum += currentColor & 0x000000ff;
-                totalAdded++;
+                alphaSum += (currentColor shr 24) and 0x000000ff
+                redSum += (currentColor shr 16) and 0x000000ff
+                greenSum += (currentColor shr 8) and 0x000000ff
+                blueSum += currentColor and 0x000000ff
+                totalAdded++
             }
+            i++
         }
-        if (totalAdded == 0) {
-            return 0;
+        return if (totalAdded == 0) {
+            0
         } else {
-            return ((alphaSum / totalAdded) << 24)
-                    | ((redSum / totalAdded) << 16)
-                    | ((greenSum / totalAdded) << 8)
-                    | (blueSum / totalAdded);
+            ((alphaSum / totalAdded) shl 24) or
+                    ((redSum / totalAdded) shl 16) or
+                    ((greenSum / totalAdded) shl 8) or
+                    (blueSum / totalAdded)
         }
     }
 
     /**
      * Decodes LZW image data into pixel array. Adapted from John Cristy's BitmapMagick.
      */
-    private void decodeBitmapData(GifFrame frame) {
-        workBufferSize = 0;
-        workBufferPosition = 0;
+    private fun decodeBitmapData(frame: GifFrame?) {
+        workBufferSize = 0
+        workBufferPosition = 0
         if (frame != null) {
             // Jump to the frame start position.
-            rawData.position(frame.bufferFrameStart);
+            rawData!!.position(frame.bufferFrameStart)
         }
 
-        int npix = (frame == null) ? header.width * header.height : frame.iw * frame.ih;
-        int available, clear, codeMask, codeSize, endOfInformation, inCode, oldCode, bits, code, count,
-                i, datum,
-                dataSize, first, top, bi, pi;
+        val npix = if (frame == null) header!!.width * header!!.height else frame.iw * frame.ih
+        var available: Int
+        val clear: Int
+        var codeMask: Int
+        var codeSize: Int
+        val endOfInformation: Int
+        var inCode: Int
+        var oldCode: Int
+        var bits: Int
+        var code: Int
+        var count: Int
+        var i: Int
+        var datum: Int
+        val dataSize: Int
+        var first: Int
+        var top: Int
+        var bi: Int
+        var pi: Int
 
-        if (mainPixels == null || mainPixels.length < npix) {
+        if (mainPixels == null || mainPixels!!.size < npix) {
             // Allocate new pixel array.
-            mainPixels = bitmapProvider.obtainByteArray(npix);
+            mainPixels = bitmapProvider.obtainByteArray(npix)
         }
         if (prefix == null) {
-            prefix = new short[MAX_STACK_SIZE];
+            prefix = ShortArray(MAX_STACK_SIZE)
         }
         if (suffix == null) {
-            suffix = new byte[MAX_STACK_SIZE];
+            suffix = ByteArray(MAX_STACK_SIZE)
         }
         if (pixelStack == null) {
-            pixelStack = new byte[MAX_STACK_SIZE + 1];
+            pixelStack = ByteArray(MAX_STACK_SIZE + 1)
         }
+        val mainPixels = mainPixels!!
+        val prefix = prefix!!
+        val suffix = suffix!!
+        val pixelStack = pixelStack!!
 
         // Initialize GIF data stream decoder.
-        dataSize = readByte();
-        clear = 1 << dataSize;
-        endOfInformation = clear + 1;
-        available = clear + 2;
-        oldCode = NULL_CODE;
-        codeSize = dataSize + 1;
-        codeMask = (1 << codeSize) - 1;
-        for (code = 0; code < clear; code++) {
+        dataSize = readByte()
+        clear = 1 shl dataSize
+        endOfInformation = clear + 1
+        available = clear + 2
+        oldCode = NULL_CODE
+        codeSize = dataSize + 1
+        codeMask = (1 shl codeSize) - 1
+        code = 0
+        while (code < clear) {
             // XXX ArrayIndexOutOfBoundsException.
-            prefix[code] = 0;
-            suffix[code] = (byte) code;
+            prefix[code] = 0
+            suffix[code] = code.toByte()
+            code++
         }
 
         // Decode GIF pixel stream.
-        datum = bits = count = first = top = pi = bi = 0;
-        for (i = 0; i < npix; ) {
+        pi = 0
+        bi = 0
+        top = 0
+        first = 0
+        count = 0
+        bits = 0
+        datum = 0
+        i = 0
+        while (i < npix) {
             // Load bytes until there are enough bits for a code.
             if (count == 0) {
                 // Read a new data block.
-                count = readBlock();
+                count = readBlock()
                 if (count <= 0) {
-                    status = STATUS_PARTIAL_DECODE;
-                    break;
+                    status = STATUS_PARTIAL_DECODE
+                    break
                 }
-                bi = 0;
+                bi = 0
             }
 
-            datum += (((int) block[bi]) & 0xff) << bits;
-            bits += 8;
-            bi++;
-            count--;
+            datum += (block!![bi].toInt() and 0xff) shl bits
+            bits += 8
+            bi++
+            count--
 
             while (bits >= codeSize) {
                 // Get the next code.
-                code = datum & codeMask;
-                datum >>= codeSize;
-                bits -= codeSize;
+                code = datum and codeMask
+                datum = datum shr codeSize
+                bits -= codeSize
 
                 // Interpret the code.
                 if (code == clear) {
                     // Reset decoder.
-                    codeSize = dataSize + 1;
-                    codeMask = (1 << codeSize) - 1;
-                    available = clear + 2;
-                    oldCode = NULL_CODE;
-                    continue;
+                    codeSize = dataSize + 1
+                    codeMask = (1 shl codeSize) - 1
+                    available = clear + 2
+                    oldCode = NULL_CODE
+                    continue
                 }
 
                 if (code > available) {
-                    status = STATUS_PARTIAL_DECODE;
-                    break;
+                    status = STATUS_PARTIAL_DECODE
+                    break
                 }
 
                 if (code == endOfInformation) {
-                    break;
+                    break
                 }
 
                 if (oldCode == NULL_CODE) {
-                    pixelStack[top++] = suffix[code];
-                    oldCode = code;
-                    first = code;
-                    continue;
+                    pixelStack[top++] = suffix[code]
+                    oldCode = code
+                    first = code
+                    continue
                 }
-                inCode = code;
+                inCode = code
                 if (code >= available) {
-                    pixelStack[top++] = (byte) first;
-                    code = oldCode;
+                    pixelStack[top++] = first.toByte()
+                    code = oldCode
                 }
                 while (code >= clear) {
-                    pixelStack[top++] = suffix[code];
-                    code = prefix[code];
+                    pixelStack[top++] = suffix[code]
+                    code = prefix[code].toInt()
                 }
-                first = ((int) suffix[code]) & 0xff;
-                pixelStack[top++] = (byte) first;
+                first = suffix[code].toInt() and 0xff
+                pixelStack[top++] = first.toByte()
 
                 // Add a new string to the string table.
                 if (available < MAX_STACK_SIZE) {
-                    prefix[available] = (short) oldCode;
-                    suffix[available] = (byte) first;
-                    available++;
-                    if (((available & codeMask) == 0) && (available < MAX_STACK_SIZE)) {
-                        codeSize++;
-                        codeMask += available;
+                    prefix[available] = oldCode.toShort()
+                    suffix[available] = first.toByte()
+                    available++
+                    if (((available and codeMask) == 0) && (available < MAX_STACK_SIZE)) {
+                        codeSize++
+                        codeMask += available
                     }
                 }
-                oldCode = inCode;
+                oldCode = inCode
 
                 while (top > 0) {
                     // Pop a pixel off the pixel stack.
-                    mainPixels[pi++] = pixelStack[--top];
-                    i++;
+                    mainPixels[pi++] = pixelStack[--top]
+                    i++
                 }
             }
         }
 
         // Clear missing pixels.
-        for (i = pi; i < npix; i++) {
-            mainPixels[i] = 0;
+        i = pi
+        while (i < npix) {
+            mainPixels[i] = 0
+            i++
         }
     }
 
-    private void fillRect(int[] dest, GifFrame frame, int bgColor) {
+    private fun fillRect(dest: IntArray, frame: GifFrame, bgColor: Int) {
         // The area used by the graphic must be restored to the background color.
-        int downsampledIH = frame.ih / sampleSize;
-        int downsampledIY = frame.iy / sampleSize;
-        int downsampledIW = frame.iw / sampleSize;
-        int downsampledIX = frame.ix / sampleSize;
-        int topLeft = downsampledIY * downsampledWidth + downsampledIX;
-        int bottomLeft = topLeft + downsampledIH * downsampledWidth;
-        for (int left = topLeft; left < bottomLeft; left += downsampledWidth) {
-            int right = left + downsampledIW;
-            for (int pointer = left; pointer < right; pointer++) {
-                dest[pointer] = bgColor;
+        val downsampledIH = frame.ih / sampleSize
+        val downsampledIY = frame.iy / sampleSize
+        val downsampledIW = frame.iw / sampleSize
+        val downsampledIX = frame.ix / sampleSize
+        val topLeft = downsampledIY * downsampledWidth + downsampledIX
+        val bottomLeft = topLeft + downsampledIH * downsampledWidth
+        var left = topLeft
+        while (left < bottomLeft) {
+            val right = left + downsampledIW
+            for (pointer in left until right) {
+                dest[pointer] = bgColor
             }
+            left += downsampledWidth
         }
     }
 
-    private GifHeaderParser getHeaderParser() {
+    private fun getHeaderParser(): GifHeaderParser {
         if (parser == null) {
-            parser = new GifHeaderParser();
+            parser = GifHeaderParser()
         }
-        return parser;
+        return parser!!
     }
 
-    private Bitmap getNextBitmap() {
-        Bitmap.Config config = isFirstFrameTransparent
-                ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
-        Bitmap result = bitmapProvider.obtain(downsampledWidth, downsampledHeight, config);
-        setAlpha(result);
-        return result;
+    private fun getNextBitmap(): Bitmap {
+        val config = if (isFirstFrameTransparent) Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
+        val result = bitmapProvider.obtain(downsampledWidth, downsampledHeight, config)
+        setAlpha(result)
+        return result
     }
 
     /**
@@ -736,76 +701,76 @@ class GifDecoder {
      *
      * @return number of bytes stored in "buffer".
      */
-    private int readBlock() {
-        int blockSize = readByte();
+    private fun readBlock(): Int {
+        val blockSize = readByte()
         if (blockSize > 0) {
             try {
                 if (block == null) {
-                    block = bitmapProvider.obtainByteArray(255);
+                    block = bitmapProvider.obtainByteArray(255)
                 }
-                final int remaining = workBufferSize - workBufferPosition;
+                val remaining = workBufferSize - workBufferPosition
                 if (remaining >= blockSize) {
                     // Block can be read from the current work buffer.
-                    System.arraycopy(workBuffer, workBufferPosition, block, 0, blockSize);
-                    workBufferPosition += blockSize;
-                } else if (rawData.remaining() + remaining >= blockSize) {
+                    System.arraycopy(workBuffer!!, workBufferPosition, block!!, 0, blockSize)
+                    workBufferPosition += blockSize
+                } else if (rawData!!.remaining() + remaining >= blockSize) {
                     // Block can be read in two passes.
-                    System.arraycopy(workBuffer, workBufferPosition, block, 0, remaining);
-                    workBufferPosition = workBufferSize;
-                    readChunkIfNeeded();
-                    final int secondHalfRemaining = blockSize - remaining;
-                    System.arraycopy(workBuffer, 0, block, remaining, secondHalfRemaining);
-                    workBufferPosition += secondHalfRemaining;
+                    System.arraycopy(workBuffer!!, workBufferPosition, block!!, 0, remaining)
+                    workBufferPosition = workBufferSize
+                    readChunkIfNeeded()
+                    val secondHalfRemaining = blockSize - remaining
+                    System.arraycopy(workBuffer!!, 0, block!!, remaining, secondHalfRemaining)
+                    workBufferPosition += secondHalfRemaining
                 } else {
-                    status = STATUS_FORMAT_ERROR;
+                    status = STATUS_FORMAT_ERROR
                 }
-            } catch (Exception e) {
-                Logger.d(TAG, "Error Reading Block", e);
-                status = STATUS_FORMAT_ERROR;
+            } catch (e: Exception) {
+                Logger.d(TAG, "Error Reading Block", e)
+                status = STATUS_FORMAT_ERROR
             }
         }
-        return blockSize;
+        return blockSize
     }
 
     /**
      * Reads a single byte from the input stream.
      */
-    private int readByte() {
-        try {
-            readChunkIfNeeded();
-            return workBuffer[workBufferPosition++] & 0xFF;
-        } catch (Exception e) {
-            status = STATUS_FORMAT_ERROR;
-            return 0;
+    private fun readByte(): Int {
+        return try {
+            readChunkIfNeeded()
+            workBuffer!![workBufferPosition++].toInt() and 0xFF
+        } catch (e: Exception) {
+            status = STATUS_FORMAT_ERROR
+            0
         }
     }
 
     /**
      * Reads the next chunk for the intermediate work buffer.
      */
-    private void readChunkIfNeeded() {
+    private fun readChunkIfNeeded() {
         if (workBufferSize > workBufferPosition) {
-            return;
+            return
         }
         if (workBuffer == null) {
-            workBuffer = bitmapProvider.obtainByteArray(WORK_BUFFER_SIZE);
+            workBuffer = bitmapProvider.obtainByteArray(WORK_BUFFER_SIZE)
         }
-        workBufferPosition = 0;
-        workBufferSize = Math.min(rawData.remaining(), WORK_BUFFER_SIZE);
-        rawData.get(workBuffer, 0, workBufferSize);
+        workBufferPosition = 0
+        workBufferSize = Math.min(rawData!!.remaining(), WORK_BUFFER_SIZE)
+        rawData!!.get(workBuffer!!, 0, workBufferSize)
     }
 
     /**
      * Creates new frame image from current data (and previous frames as specified by their
      * disposition codes).
      */
-    private Bitmap setPixels(GifFrame currentFrame, GifFrame previousFrame) {
+    private fun setPixels(currentFrame: GifFrame, previousFrame: GifFrame?): Bitmap {
         // Final location of blended pixels.
-        final int[] dest = mainScratch;
+        val dest = mainScratch!!
 
         // clear all pixels when meet first frame
         if (previousFrame == null) {
-            Arrays.fill(dest, 0);
+            Arrays.fill(dest, 0)
         }
 
         // fill in starting image contents based on last image's dispose code
@@ -814,124 +779,190 @@ class GifDecoder {
             // mainScratch and therefore so will our dest array.
             if (previousFrame.dispose == DISPOSAL_BACKGROUND) {
                 // Start with a canvas filled with the background color
-                int c = 0;
+                var c = 0
                 if (!currentFrame.transparency) {
-                    c = header.bgColor;
-                    if (currentFrame.lct != null && header.bgIndex == currentFrame.transIndex) {
-                        c = 0;
+                    c = header!!.bgColor
+                    if (currentFrame.lct != null && header!!.bgIndex == currentFrame.transIndex) {
+                        c = 0
                     }
                 } else if (framePointer == 0) {
-
                     // first frame isn't actually transparent. For now, it's simpler and safer to assume
                     // drawing a transparent background means the GIF contains transparency.
-                    isFirstFrameTransparent = true;
+                    isFirstFrameTransparent = true
                 }
-                fillRect(dest, previousFrame, c);
+                fillRect(dest, previousFrame, c)
             } else if (previousFrame.dispose == DISPOSAL_PREVIOUS) {
                 if (previousImage == null) {
-                    fillRect(dest, previousFrame, 0);
+                    fillRect(dest, previousFrame, 0)
                 } else {
                     // Start with the previous frame
-                    int downsampledIH = previousFrame.ih / sampleSize;
-                    int downsampledIY = previousFrame.iy / sampleSize;
-                    int downsampledIW = previousFrame.iw / sampleSize;
-                    int downsampledIX = previousFrame.ix / sampleSize;
-                    int topLeft = downsampledIY * downsampledWidth + downsampledIX;
-                    previousImage.getPixels(dest, topLeft, downsampledWidth,
-                            downsampledIX, downsampledIY, downsampledIW, downsampledIH);
+                    val downsampledIH = previousFrame.ih / sampleSize
+                    val downsampledIY = previousFrame.iy / sampleSize
+                    val downsampledIW = previousFrame.iw / sampleSize
+                    val downsampledIX = previousFrame.ix / sampleSize
+                    val topLeft = downsampledIY * downsampledWidth + downsampledIX
+                    previousImage!!.getPixels(
+                        dest, topLeft, downsampledWidth,
+                        downsampledIX, downsampledIY, downsampledIW, downsampledIH
+                    )
                 }
             }
         }
 
         // Decode pixels for this frame into the global pixels[] scratch.
-        decodeBitmapData(currentFrame);
+        decodeBitmapData(currentFrame)
 
-        int downsampledIH = currentFrame.ih / sampleSize;
-        int downsampledIY = currentFrame.iy / sampleSize;
-        int downsampledIW = currentFrame.iw / sampleSize;
-        int downsampledIX = currentFrame.ix / sampleSize;
+        val mainPixels = mainPixels!!
+        val downsampledIH = currentFrame.ih / sampleSize
+        val downsampledIY = currentFrame.iy / sampleSize
+        val downsampledIW = currentFrame.iw / sampleSize
+        val downsampledIX = currentFrame.ix / sampleSize
         // Copy each source line to the appropriate place in the destination.
-        int pass = 1;
-        int inc = 8;
-        int iline = 0;
-        boolean isFirstFrame = framePointer == 0;
-        for (int i = 0; i < downsampledIH; i++) {
-            int line = i;
+        var pass = 1
+        var inc = 8
+        var iline = 0
+        val isFirstFrame = framePointer == 0
+        for (i in 0 until downsampledIH) {
+            var line = i
             if (currentFrame.interlace) {
                 if (iline >= downsampledIH) {
-                    pass++;
-                    switch (pass) {
-                        case 2:
-                            iline = 4;
-                            break;
-                        case 3:
-                            iline = 2;
-                            inc = 4;
-                            break;
-                        case 4:
-                            iline = 1;
-                            inc = 2;
-                            break;
-                        default:
-                            break;
+                    pass++
+                    when (pass) {
+                        2 -> iline = 4
+                        3 -> {
+                            iline = 2
+                            inc = 4
+                        }
+
+                        4 -> {
+                            iline = 1
+                            inc = 2
+                        }
+
+                        else -> {}
                     }
                 }
-                line = iline;
-                iline += inc;
+                line = iline
+                iline += inc
             }
-            line += downsampledIY;
+            line += downsampledIY
             if (line < downsampledHeight) {
-                int k = line * downsampledWidth;
+                val k = line * downsampledWidth
                 // Start of line in dest.
-                int dx = k + downsampledIX;
+                var dx = k + downsampledIX
                 // End of dest line.
-                int dlim = dx + downsampledIW;
+                var dlim = dx + downsampledIW
                 if (k + downsampledWidth < dlim) {
                     // Past dest edge.
-                    dlim = k + downsampledWidth;
+                    dlim = k + downsampledWidth
                 }
                 // Start of line in source.
-                int sx = i * sampleSize * currentFrame.iw;
-                int maxPositionInSource = sx + ((dlim - dx) * sampleSize);
+                var sx = i * sampleSize * currentFrame.iw
+                val maxPositionInSource = sx + ((dlim - dx) * sampleSize)
                 while (dx < dlim) {
                     // Map color and insert in destination.
-                    int averageColor;
+                    val averageColor: Int
                     if (sampleSize == 1) {
-                        int currentColorIndex = ((int) mainPixels[sx]) & 0x000000ff;
-                        averageColor = act[currentColorIndex];
+                        val currentColorIndex = mainPixels[sx].toInt() and 0x000000ff
+                        averageColor = act!![currentColorIndex]
                     } else {
                         // This is substantially slower (up to 50ms per frame) than just grabbing the
                         // current color index above, even with a sample size of 1.
-                        averageColor = averageColorsNear(sx, maxPositionInSource, currentFrame.iw);
+                        averageColor = averageColorsNear(sx, maxPositionInSource, currentFrame.iw)
                     }
                     if (averageColor != 0) {
-                        dest[dx] = averageColor;
+                        dest[dx] = averageColor
                     } else if (!isFirstFrameTransparent && isFirstFrame) {
-                        isFirstFrameTransparent = true;
+                        isFirstFrameTransparent = true
                     }
-                    sx += sampleSize;
-                    dx++;
+                    sx += sampleSize
+                    dx++
                 }
             }
         }
 
         // Copy pixels into previous image
-        if (savePrevious && (currentFrame.dispose == DISPOSAL_UNSPECIFIED
-                || currentFrame.dispose == DISPOSAL_NONE)) {
+        if (savePrevious && (currentFrame.dispose == DISPOSAL_UNSPECIFIED ||
+                    currentFrame.dispose == DISPOSAL_NONE)
+        ) {
             if (previousImage == null) {
-                previousImage = getNextBitmap();
+                previousImage = getNextBitmap()
             }
-            previousImage.setPixels(dest, 0, downsampledWidth, 0, 0, downsampledWidth,
-                    downsampledHeight);
+            previousImage!!.setPixels(
+                dest, 0, downsampledWidth, 0, 0, downsampledWidth,
+                downsampledHeight
+            )
         }
 
         // Set pixels for current image.
-        Bitmap result = getNextBitmap();
-        result.setPixels(dest, 0, downsampledWidth, 0, 0, downsampledWidth, downsampledHeight);
-        return result;
+        val result = getNextBitmap()
+        result.setPixels(dest, 0, downsampledWidth, 0, 0, downsampledWidth, downsampledHeight)
+        return result
     }
 
-    private static void setAlpha(Bitmap bitmap) {
-        bitmap.setHasAlpha(true);
+    companion object {
+
+        /**
+         * File read status: No errors.
+         */
+        const val STATUS_OK = 0
+
+        /**
+         * File read status: Error decoding file (may be partially decoded).
+         */
+        const val STATUS_FORMAT_ERROR = 1
+
+        /**
+         * File read status: Unable to open source.
+         */
+        const val STATUS_OPEN_ERROR = 2
+
+        /**
+         * Unable to fully decode the current frame.
+         */
+        const val STATUS_PARTIAL_DECODE = 3
+
+        const val LOOP_FOREVER = -1
+
+        private val TAG = GifDecoder::class.java.simpleName
+
+        /**
+         * max decoder pixel stack size.
+         */
+        private const val MAX_STACK_SIZE = 4096
+
+        /**
+         * GIF Disposal Method meaning take no action.
+         */
+        private const val DISPOSAL_UNSPECIFIED = 0
+
+        /**
+         * GIF Disposal Method meaning leave canvas from previous frame.
+         */
+        private const val DISPOSAL_NONE = 1
+
+        /**
+         * GIF Disposal Method meaning clear canvas to background color.
+         */
+        private const val DISPOSAL_BACKGROUND = 2
+
+        /**
+         * GIF Disposal Method meaning clear canvas to frame before last.
+         */
+        private const val DISPOSAL_PREVIOUS = 3
+
+        private const val NULL_CODE = -1
+
+        private const val INITIAL_FRAME_POINTER = -1
+
+        private const val BYTES_PER_INTEGER = 4
+
+        // Temporary buffer for block reading. Reads 16k chunks from the native buffer for processing,
+        // to greatly reduce JNI overhead.
+        private const val WORK_BUFFER_SIZE = 16384
+
+        private fun setAlpha(bitmap: Bitmap) {
+            bitmap.setHasAlpha(true)
+        }
     }
 }

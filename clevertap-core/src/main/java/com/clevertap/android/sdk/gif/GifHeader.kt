@@ -16,65 +16,50 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.clevertap.android.sdk.gif;
+package com.clevertap.android.sdk.gif
 
-import java.util.ArrayList;
-import java.util.List;
+@Suppress("unused")
+internal class GifHeader {
 
-@SuppressWarnings({"unused"})
-class GifHeader {
-
-    int bgColor;
+    var bgColor = 0
 
     // Background color index.
-    int bgIndex;
+    var bgIndex = 0
 
-    GifFrame currentFrame;
+    var currentFrame: GifFrame? = null
 
-    int frameCount = 0;
+    var frameCount = 0
 
-    List<GifFrame> frames = new ArrayList<>();
+    var frames: MutableList<GifFrame> = ArrayList()
 
-    int[] gct = null;
+    var gct: IntArray? = null
 
     // 1 : global color table flag.
-    boolean gctFlag;
+    var gctFlag = false
 
     // 2-4 : color resolution.
     // 5 : gct sort flag.
     // 6-8 : gct size.
-    int gctSize;
+    var gctSize = 0
 
     // Full image height.
-    int height;
+    var height = 0
 
-    int loopCount = 0;
+    var loopCount = 0
 
     // Pixel aspect ratio.
-    int pixelAspect;
-
-    int status = GifDecoder.STATUS_OK;
-
-    // Logical screen size.
-    // Full image width.
-    int width;
-
-    public int getHeight() {
-        return height;
-    }
-
-    public int getNumFrames() {
-        return frameCount;
-    }
+    var pixelAspect = 0
 
     /**
      * Global status code of GIF data parsing.
      */
-    public int getStatus() {
-        return status;
-    }
+    var status = GifDecoder.STATUS_OK
 
-    public int getWidth() {
-        return width;
+    // Logical screen size.
+    // Full image width.
+    var width = 0
+
+    fun getNumFrames(): Int {
+        return frameCount
     }
 }

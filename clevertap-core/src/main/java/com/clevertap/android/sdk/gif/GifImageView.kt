@@ -1,87 +1,79 @@
-package com.clevertap.android.sdk.gif;
+package com.clevertap.android.sdk.gif
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.AttributeSet;
-import androidx.appcompat.widget.AppCompatImageView;
+import android.content.Context
+import android.graphics.Bitmap
+import android.os.Handler
+import android.os.Looper
+import android.util.AttributeSet
+import androidx.appcompat.widget.AppCompatImageView
 
-@SuppressWarnings({"unused"})
-public class GifImageView extends AppCompatImageView implements Runnable {
+@Suppress("unused")
+internal open class GifImageView : AppCompatImageView, Runnable {
 
-    public interface OnFrameAvailable {
+    fun interface OnFrameAvailable {
 
-        Bitmap onFrameAvailable(Bitmap bitmap);
+        fun onFrameAvailable(bitmap: Bitmap?): Bitmap?
     }
 
-    public interface OnAnimationStop {
+    fun interface OnAnimationStop {
 
-        void onAnimationStop();
+        fun onAnimationStop()
     }
 
-    public interface OnAnimationStart {
+    fun interface OnAnimationStart {
 
-        void onAnimationStart();
+        fun onAnimationStart()
     }
 
-    private static final String TAG = "GifDecoderView";
+    private var animating = false
 
-    private boolean animating;
+    private var animationStartCallback: OnAnimationStart? = null
 
-    private OnAnimationStart animationStartCallback = null;
+    private var animationStopCallback: OnAnimationStop? = null
 
-    private OnAnimationStop animationStopCallback = null;
+    private var animationThread: Thread? = null
 
-    private Thread animationThread;
+    private var frameCallback: OnFrameAvailable? = null
 
-    private OnFrameAvailable frameCallback = null;
+    /**
+     * Custom display duration in milliseconds for the all frames. Should be set before [startAnimation].
+     * Default value = -1, this property will be ignored and default delay from gif file will be used.
+     */
+    open var framesDisplayDuration = -1L
 
-    private long framesDisplayDuration = -1L;
+    private var gifDecoder: GifDecoder? = null
 
-    private GifDecoder gifDecoder;
+    private val handler = Handler(Looper.getMainLooper())
 
-    private final Handler handler = new Handler(Looper.getMainLooper());
+    private var renderFrame = false
 
-    private boolean renderFrame;
+    private var shouldClear = false
 
-    private boolean shouldClear;
+    private var tmpBitmap: Bitmap? = null
 
-    private Bitmap tmpBitmap;
+    private val cleanupRunnable = Runnable {
+        tmpBitmap = null
+        gifDecoder = null
+        animationThread = null
+        shouldClear = false
+    }
 
-    private final Runnable cleanupRunnable = new Runnable() {
-        @Override
-        public void run() {
-            tmpBitmap = null;
-            gifDecoder = null;
-            animationThread = null;
-            shouldClear = false;
+    private val updateResults = Runnable {
+        if (tmpBitmap != null && !tmpBitmap!!.isRecycled) {
+            setImageBitmap(tmpBitmap)
         }
-    };
-
-    private final Runnable updateResults = new Runnable() {
-        @Override
-        public void run() {
-            if (tmpBitmap != null && !tmpBitmap.isRecycled()) {
-                setImageBitmap(tmpBitmap);
-            }
-        }
-    };
-
-    public GifImageView(final Context context, final AttributeSet attrs) {
-        super(context, attrs);
     }
 
-    public GifImageView(final Context context) {
-        super(context);
-    }
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
-    public void clear() {
-        animating = false;
-        renderFrame = false;
-        shouldClear = true;
-        stopAnimation();
-        handler.post(cleanupRunnable);
+    constructor(context: Context) : super(context)
+
+    open fun clear() {
+        animating = false
+        renderFrame = false
+        shouldClear = true
+        stopAnimation()
+        handler.post(cleanupRunnable)
     }
 
     /**
@@ -89,173 +81,149 @@ public class GifImageView extends AppCompatImageView implements Runnable {
      *
      * @return frame count.
      */
-    public int getFrameCount() {
-        return gifDecoder.getFrameCount();
-    }
+    open val frameCount: Int
+        get() = gifDecoder!!.getFrameCount()
 
-    public long getFramesDisplayDuration() {
-        return framesDisplayDuration;
-    }
+    open val gifHeight: Int
+        get() = gifDecoder!!.getHeight()
 
-    /**
-     * Sets custom display duration in milliseconds for the all frames. Should be called before {@link
-     * #startAnimation()}
-     *
-     * @param framesDisplayDuration Duration in milliseconds. Default value = -1, this property will
-     *                              be ignored and default delay from gif file will be used.
-     */
-    public void setFramesDisplayDuration(long framesDisplayDuration) {
-        this.framesDisplayDuration = framesDisplayDuration;
-    }
+    open val gifWidth: Int
+        get() = gifDecoder!!.getWidth()
 
-    public int getGifHeight() {
-        return gifDecoder.getHeight();
-    }
-
-    public int getGifWidth() {
-        return gifDecoder.getWidth();
-    }
-
-    public OnAnimationStop getOnAnimationStop() {
-        return animationStopCallback;
-    }
-
-    public void setOnAnimationStop(OnAnimationStop animationStop) {
-        this.animationStopCallback = animationStop;
-    }
-
-    public OnFrameAvailable getOnFrameAvailable() {
-        return frameCallback;
-    }
-
-    public void setOnFrameAvailable(OnFrameAvailable frameProcessor) {
-        this.frameCallback = frameProcessor;
-    }
-
-    public void gotoFrame(int frame) {
-        if (gifDecoder.getCurrentFrameIndex() == frame) {
-            return;
+    open var onAnimationStop: OnAnimationStop?
+        get() = animationStopCallback
+        set(animationStop) {
+            this.animationStopCallback = animationStop
         }
-        if (gifDecoder.setFrameIndex(frame - 1) && !animating) {
-            renderFrame = true;
-            startAnimationThread();
+
+    open var onFrameAvailable: OnFrameAvailable?
+        get() = frameCallback
+        set(frameProcessor) {
+            this.frameCallback = frameProcessor
+        }
+
+    open fun gotoFrame(frame: Int) {
+        if (gifDecoder!!.getCurrentFrameIndex() == frame) {
+            return
+        }
+        if (gifDecoder!!.setFrameIndex(frame - 1) && !animating) {
+            renderFrame = true
+            startAnimationThread()
         }
     }
 
-    public boolean isAnimating() {
-        return animating;
+    open val isAnimating: Boolean
+        get() = animating
+
+    open fun resetAnimation() {
+        gifDecoder!!.resetLoopIndex()
+        gotoFrame(0)
     }
 
-    public void resetAnimation() {
-        gifDecoder.resetLoopIndex();
-        gotoFrame(0);
-    }
-
-    @Override
-    public void run() {
-        if (animationStartCallback != null) {
-            animationStartCallback.onAnimationStart();
-        }
+    override fun run() {
+        animationStartCallback?.onAnimationStart()
 
         do {
             if (!animating && !renderFrame) {
-                break;
+                break
             }
-            boolean advance = gifDecoder.advance();
+            val advance = gifDecoder!!.advance()
 
             //milliseconds spent on frame decode
-            long frameDecodeTime = 0;
+            var frameDecodeTime: Long = 0
             try {
-                long before = System.nanoTime();
-                tmpBitmap = gifDecoder.getNextFrame();
+                val before = System.nanoTime()
+                tmpBitmap = gifDecoder!!.getNextFrame()
                 if (frameCallback != null) {
-                    tmpBitmap = frameCallback.onFrameAvailable(tmpBitmap);
+                    tmpBitmap = frameCallback!!.onFrameAvailable(tmpBitmap)
                 }
-                frameDecodeTime = (System.nanoTime() - before) / 1000000;
-                handler.post(updateResults);
-            } catch (final ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
+                frameDecodeTime = (System.nanoTime() - before) / 1000000
+                handler.post(updateResults)
+            } catch (e: ArrayIndexOutOfBoundsException) {
+                //Log.w(TAG, e);
+            } catch (e: IllegalArgumentException) {
                 //Log.w(TAG, e);
             }
 
-            renderFrame = false;
+            renderFrame = false
             if (!animating || !advance) {
-                animating = false;
-                break;
+                animating = false
+                break
             }
             try {
-                int delay = gifDecoder.getNextDelay();
+                var delay = gifDecoder!!.getNextDelay()
                 // Sleep for frame duration minus time already spent on frame decode
                 // Actually we need next frame decode duration here,
                 // but I use previous frame time to make code more readable
-                delay -= frameDecodeTime;
+                delay = (delay - frameDecodeTime).toInt()
                 if (delay > 0) {
-                    Thread.sleep(framesDisplayDuration > 0 ? framesDisplayDuration : delay);
+                    Thread.sleep(if (framesDisplayDuration > 0) framesDisplayDuration else delay.toLong())
                 }
-            } catch (final InterruptedException e) {
+            } catch (e: InterruptedException) {
                 // suppress exception
             }
-        } while (animating);
+        } while (animating)
 
         if (shouldClear) {
-            handler.post(cleanupRunnable);
+            handler.post(cleanupRunnable)
         }
-        animationThread = null;
+        animationThread = null
 
-        if (animationStopCallback != null) {
-            animationStopCallback.onAnimationStop();
-        }
+        animationStopCallback?.onAnimationStop()
     }
 
-    public void setBytes(final byte[] bytes) {
-        gifDecoder = new GifDecoder();
+    open fun setBytes(bytes: ByteArray?) {
+        gifDecoder = GifDecoder()
         try {
-            gifDecoder.read(bytes);
-        } catch (final Exception e) {
-            gifDecoder = null;
+            gifDecoder!!.read(bytes)
+        } catch (e: Exception) {
+            gifDecoder = null
             //Log.e(TAG, e.getMessage(), e);
-            return;
+            return
         }
 
         if (animating) {
-            startAnimationThread();
+            startAnimationThread()
         } else {
-            gotoFrame(0);
+            gotoFrame(0)
         }
     }
 
-    public void setOnAnimationStart(OnAnimationStart animationStart) {
-        this.animationStartCallback = animationStart;
+    open fun setOnAnimationStart(animationStart: OnAnimationStart?) {
+        this.animationStartCallback = animationStart
     }
 
-    public void startAnimation() {
-        animating = true;
-        startAnimationThread();
+    open fun startAnimation() {
+        animating = true
+        startAnimationThread()
     }
 
-    public void stopAnimation() {
-        animating = false;
+    open fun stopAnimation() {
+        animating = false
 
         if (animationThread != null) {
-            animationThread.interrupt();
-            animationThread = null;
+            animationThread!!.interrupt()
+            animationThread = null
         }
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        clear();
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        clear()
     }
 
-    private boolean canStart() {
-        return (animating || renderFrame) && gifDecoder != null && animationThread == null;
+    private fun canStart(): Boolean {
+        return (animating || renderFrame) && gifDecoder != null && animationThread == null
     }
 
-    private void startAnimationThread() {
+    private fun startAnimationThread() {
         if (canStart()) {
-            animationThread = new Thread(this);
-            animationThread.start();
+            animationThread = Thread(this)
+            animationThread!!.start()
         }
     }
 
+    private companion object {
+        private const val TAG = "GifDecoderView"
+    }
 }

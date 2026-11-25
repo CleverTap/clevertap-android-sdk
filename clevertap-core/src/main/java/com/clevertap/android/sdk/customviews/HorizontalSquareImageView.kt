@@ -1,32 +1,24 @@
-package com.clevertap.android.sdk.customviews;
+package com.clevertap.android.sdk.customviews
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.util.AttributeSet;
-import android.widget.ImageView;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.util.AttributeSet
+import android.widget.ImageView
 
 @SuppressLint("AppCompatCustomView")
-public class HorizontalSquareImageView extends ImageView {
+internal open class HorizontalSquareImageView : ImageView {
 
-    public HorizontalSquareImageView(Context context) {
-        super(context);
+    constructor(context: Context) : super(context)
+
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        val height = measuredHeight
+        @Suppress("SuspiciousNameCombination")
+        setMeasuredDimension(height, height)
     }
-
-    public HorizontalSquareImageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public HorizontalSquareImageView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        int height = getMeasuredHeight();
-        //noinspection SuspiciousNameCombination
-        setMeasuredDimension(height, height);
-    }
-
 }

@@ -1,38 +1,30 @@
-package com.clevertap.android.sdk.gif;
+package com.clevertap.android.sdk.gif
 
-import android.graphics.Bitmap;
-import androidx.annotation.NonNull;
+import android.graphics.Bitmap
 
-public class SimpleBitmapProvider implements GifDecoder.BitmapProvider {
+internal open class SimpleBitmapProvider : GifDecoder.BitmapProvider {
 
-    @NonNull
-    @Override
-    public Bitmap obtain(int width, int height, Bitmap.Config config) {
-        return Bitmap.createBitmap(width, height, config);
+    override fun obtain(width: Int, height: Int, config: Bitmap.Config): Bitmap {
+        return Bitmap.createBitmap(width, height, config)
     }
 
-    @Override
-    public byte[] obtainByteArray(int size) {
-        return new byte[size];
+    override fun obtainByteArray(size: Int): ByteArray {
+        return ByteArray(size)
     }
 
-    @Override
-    public int[] obtainIntArray(int size) {
-        return new int[size];
+    override fun obtainIntArray(size: Int): IntArray {
+        return IntArray(size)
     }
 
-    @Override
-    public void release(byte[] bytes) {
+    override fun release(bytes: ByteArray) {
         // no-op
     }
 
-    @Override
-    public void release(Bitmap bitmap) {
-        bitmap.recycle();
+    override fun release(bitmap: Bitmap) {
+        bitmap.recycle()
     }
 
-    @Override
-    public void release(int[] array) {
+    override fun release(array: IntArray) {
         // no-op
     }
 }

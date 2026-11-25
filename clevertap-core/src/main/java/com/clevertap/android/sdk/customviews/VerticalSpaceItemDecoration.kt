@@ -1,24 +1,15 @@
-package com.clevertap.android.sdk.customviews;
+package com.clevertap.android.sdk.customviews
 
-import android.graphics.Rect;
-import android.view.View;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-import androidx.recyclerview.widget.RecyclerView;
+import android.graphics.Rect
+import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 
-@RestrictTo(Scope.LIBRARY)
-public class VerticalSpaceItemDecoration extends RecyclerView.ItemDecoration {
+internal open class VerticalSpaceItemDecoration(private val verticalSpaceHeight: Int) : RecyclerView.ItemDecoration() {
 
-    private final int verticalSpaceHeight;
-
-    public VerticalSpaceItemDecoration(int verticalSpaceHeight) {
-        this.verticalSpaceHeight = verticalSpaceHeight;
-    }
-
-    @Override
-    public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent,
-            @NonNull RecyclerView.State state) {
-        outRect.bottom = verticalSpaceHeight;
+    override fun getItemOffsets(
+        outRect: Rect, view: View, parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
+        outRect.bottom = verticalSpaceHeight
     }
 }

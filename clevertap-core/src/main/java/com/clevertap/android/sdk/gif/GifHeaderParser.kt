@@ -16,147 +16,138 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.clevertap.android.sdk.gif;
+package com.clevertap.android.sdk.gif
 
-import com.clevertap.android.sdk.Logger;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
+import com.clevertap.android.sdk.Logger
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.Arrays
 
-class GifHeaderParser {
-
-    private static final String TAG = "GifHeaderParser";
-
-    // The minimum frame delay in hundredths of a second.
-    private static final int MIN_FRAME_DELAY = 2;
-
-    // The default frame delay in hundredths of a second for GIFs with frame delays less than the
-    // minimum.
-    private static final int DEFAULT_FRAME_DELAY = 10;
-
-    private static final int MAX_BLOCK_SIZE = 256;
+internal class GifHeaderParser {
 
     // Raw data read working array.
-    private final byte[] block = new byte[MAX_BLOCK_SIZE];
+    private val block = ByteArray(MAX_BLOCK_SIZE)
 
-    private int blockSize = 0;
+    private var blockSize = 0
 
-    private GifHeader header;
+    private var header: GifHeader? = null
 
-    private ByteBuffer rawData;
+    private var rawData: ByteBuffer? = null
 
-    public void clear() {
-        rawData = null;
-        header = null;
+    fun clear() {
+        rawData = null
+        header = null
     }
 
     /**
      * Determines if the GIF is animated by trying to read in the first 2 frames
      * This method reparses the data even if the header has already been read.
      */
-    @SuppressWarnings("unused")
-    public boolean isAnimated() {
-        readHeader();
+    @Suppress("unused")
+    fun isAnimated(): Boolean {
+        readHeader()
         if (!err()) {
-            readContents(2 /* maxFrames */);
+            readContents(2 /* maxFrames */)
         }
-        return header.frameCount > 1;
+        return header!!.frameCount > 1
     }
 
-    public GifHeaderParser setData(ByteBuffer data) {
-        reset();
-        rawData = data.asReadOnlyBuffer();
-        rawData.position(0);
-        rawData.order(ByteOrder.LITTLE_ENDIAN);
-        return this;
+    fun setData(data: ByteBuffer): GifHeaderParser {
+        reset()
+        val rawData = data.asReadOnlyBuffer()
+        this.rawData = rawData
+        rawData.position(0)
+        rawData.order(ByteOrder.LITTLE_ENDIAN)
+        return this
     }
 
-    public GifHeaderParser setData(byte[] data) {
+    fun setData(data: ByteArray?): GifHeaderParser {
         if (data != null) {
-            setData(ByteBuffer.wrap(data));
+            setData(ByteBuffer.wrap(data))
         } else {
-            rawData = null;
-            header.status = GifDecoder.STATUS_OPEN_ERROR;
+            rawData = null
+            header!!.status = GifDecoder.STATUS_OPEN_ERROR
         }
-        return this;
+        return this
     }
 
-    GifHeader parseHeader() {
+    fun parseHeader(): GifHeader? {
         if (rawData == null) {
-            throw new IllegalStateException("You must call setData() before parseHeader()");
+            throw IllegalStateException("You must call setData() before parseHeader()")
         }
         if (err()) {
-            return header;
+            return header
         }
 
-        readHeader();
+        readHeader()
         if (!err()) {
-            readContents();
-            if (header.frameCount < 0) {
-                header.status = GifDecoder.STATUS_FORMAT_ERROR;
+            readContents()
+            if (header!!.frameCount < 0) {
+                header!!.status = GifDecoder.STATUS_FORMAT_ERROR
             }
         }
 
-        return header;
+        return header
     }
 
-    private boolean err() {
-        return header.status != GifDecoder.STATUS_OK;
+    private fun err(): Boolean {
+        return header!!.status != GifDecoder.STATUS_OK
     }
 
     /**
      * Reads a single byte from the input stream.
      */
-    private int read() {
-        int curByte = 0;
+    private fun read(): Int {
+        var curByte = 0
         try {
-            curByte = rawData.get() & 0xFF;
-        } catch (Exception e) {
-            header.status = GifDecoder.STATUS_FORMAT_ERROR;
+            curByte = rawData!!.get().toInt() and 0xFF
+        } catch (e: Exception) {
+            header!!.status = GifDecoder.STATUS_FORMAT_ERROR
         }
-        return curByte;
+        return curByte
     }
 
     /**
      * Reads next frame image.
      */
-    private void readBitmap() {
+    private fun readBitmap() {
+        val header = header!!
         // (sub)image position & size.
-        header.currentFrame.ix = readShort();
-        header.currentFrame.iy = readShort();
-        header.currentFrame.iw = readShort();
-        header.currentFrame.ih = readShort();
+        header.currentFrame!!.ix = readShort()
+        header.currentFrame!!.iy = readShort()
+        header.currentFrame!!.iw = readShort()
+        header.currentFrame!!.ih = readShort()
 
-        int packed = read();
+        val packed = read()
         // 1 - local color table flag interlace
-        boolean lctFlag = (packed & 0x80) != 0;
-        int lctSize = (int) Math.pow(2, (packed & 0x07) + 1);
+        val lctFlag = (packed and 0x80) != 0
+        val lctSize = Math.pow(2.0, ((packed and 0x07) + 1).toDouble()).toInt()
         // 3 - sort flag
         // 4-5 - reserved lctSize = 2 << (packed & 7); // 6-8 - local color
         // table size
-        header.currentFrame.interlace = (packed & 0x40) != 0;
+        header.currentFrame!!.interlace = (packed and 0x40) != 0
         if (lctFlag) {
             // Read table.
-            header.currentFrame.lct = readColorTable(lctSize);
+            header.currentFrame!!.lct = readColorTable(lctSize)
         } else {
             // No local color table.
-            header.currentFrame.lct = null;
+            header.currentFrame!!.lct = null
         }
 
         // Save this as the decoding position pointer.
-        header.currentFrame.bufferFrameStart = rawData.position();
+        header.currentFrame!!.bufferFrameStart = rawData!!.position()
 
         // False decode pixel data to advance buffer.
-        skipImageData();
+        skipImageData()
 
         if (err()) {
-            return;
+            return
         }
 
-        header.frameCount++;
+        header.frameCount++
         // Add image to frame.
-        header.frames.add(header.currentFrame);
+        header.frames.add(header.currentFrame!!)
     }
 
     /**
@@ -164,28 +155,28 @@ class GifHeaderParser {
      *
      * @return number of bytes stored in "buffer"
      */
-    @SuppressWarnings("UnusedReturnValue")
-    private int readBlock() {
-        blockSize = read();
-        int n = 0;
+    @Suppress("UnusedReturnValue")
+    private fun readBlock(): Int {
+        blockSize = read()
+        var n = 0
         if (blockSize > 0) {
-            int count;
+            var count: Int
             try {
                 while (n < blockSize) {
-                    count = blockSize - n;
-                    rawData.get(block, n, count);
+                    count = blockSize - n
+                    rawData!!.get(block, n, count)
 
-                    n += count;
+                    n += count
                 }
-            } catch (Exception e) {
+            } catch (e: Exception) {
 //                if (Log.isLoggable(TAG, Log.DEBUG)) {
 //                    Log.d(TAG,
 //                            "Error Reading Block n: " + n + " count: " + count + " blockSize: " + blockSize, e);
 //                }
-                header.status = GifDecoder.STATUS_FORMAT_ERROR;
+                header!!.status = GifDecoder.STATUS_FORMAT_ERROR
             }
         }
-        return n;
+        return n
     }
 
     /**
@@ -194,107 +185,99 @@ class GifHeaderParser {
      * @param ncolors int number of colors to read.
      * @return int array containing 256 colors (packed ARGB with full alpha).
      */
-    private int[] readColorTable(int ncolors) {
-        int nbytes = 3 * ncolors;
-        int[] tab = null;
-        byte[] c = new byte[nbytes];
+    private fun readColorTable(ncolors: Int): IntArray? {
+        val nbytes = 3 * ncolors
+        var tab: IntArray? = null
+        val c = ByteArray(nbytes)
 
         try {
-            rawData.get(c);
+            rawData!!.get(c)
 
             // Max size to avoid bounds checks.
-            tab = new int[MAX_BLOCK_SIZE];
-            int i = 0;
-            int j = 0;
+            tab = IntArray(MAX_BLOCK_SIZE)
+            var i = 0
+            var j = 0
             while (i < ncolors) {
-                int r = ((int) c[j++]) & 0xff;
-                int g = ((int) c[j++]) & 0xff;
-                int b = ((int) c[j++]) & 0xff;
-                tab[i++] = 0xff000000 | (r << 16) | (g << 8) | b;
+                val r = c[j++].toInt() and 0xff
+                val g = c[j++].toInt() and 0xff
+                val b = c[j++].toInt() and 0xff
+                tab[i++] = OPAQUE_ALPHA or (r shl 16) or (g shl 8) or b
             }
-        } catch (BufferUnderflowException e) {
+        } catch (e: BufferUnderflowException) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Logger.d(TAG, "Format Error Reading Color Table", e);
+            Logger.d(TAG, "Format Error Reading Color Table", e)
             //}
-            header.status = GifDecoder.STATUS_FORMAT_ERROR;
+            header!!.status = GifDecoder.STATUS_FORMAT_ERROR
         }
 
-        return tab;
+        return tab
     }
 
     /**
      * Main file parser. Reads GIF content blocks.
      */
-    private void readContents() {
-        readContents(Integer.MAX_VALUE /* maxFrames */);
+    private fun readContents() {
+        readContents(Int.MAX_VALUE /* maxFrames */)
     }
 
     /**
      * Main file parser. Reads GIF content blocks. Stops after reading maxFrames
      */
-    private void readContents(int maxFrames) {
+    private fun readContents(maxFrames: Int) {
         // Read GIF file content blocks.
-        boolean done = false;
-        while (!(done || err() || header.frameCount > maxFrames)) {
-            int code = read();
-            switch (code) {
+        var done = false
+        while (!(done || err() || header!!.frameCount > maxFrames)) {
+            var code = read()
+            when (code) {
                 // Image separator.
-                case 0x2C:
+                0x2C -> {
                     // The graphics control extension is optional, but will always come first if it exists.
                     // If one did
                     // exist, there will be a non-null current frame which we should use. However if one
                     // did not exist,
                     // the current frame will be null and we must create it here. See issue #134.
-                    if (header.currentFrame == null) {
-                        header.currentFrame = new GifFrame();
+                    if (header!!.currentFrame == null) {
+                        header!!.currentFrame = GifFrame()
                     }
-                    readBitmap();
-                    break;
+                    readBitmap()
+                }
                 // Extension.
-                case 0x21:
-                    code = read();
-                    switch (code) {
+                0x21 -> {
+                    code = read()
+                    when (code) {
                         // Graphics control extension.
-                        case 0xf9:
+                        0xf9 -> {
                             // Start a new frame.
-                            header.currentFrame = new GifFrame();
-                            readGraphicControlExt();
-                            break;
+                            header!!.currentFrame = GifFrame()
+                            readGraphicControlExt()
+                        }
                         // Application extension.
-                        case 0xff:
-                            readBlock();
-                            String app = "";
-                            for (int i = 0; i < 11; i++) {
-                                app += (char) block[i];
+                        0xff -> {
+                            readBlock()
+                            var app = ""
+                            for (i in 0 until 11) {
+                                app += block[i].toInt().toChar()
                             }
-                            if (app.equals("NETSCAPE2.0")) {
-                                readNetscapeExt();
+                            if (app == "NETSCAPE2.0") {
+                                readNetscapeExt()
                             } else {
                                 // Don't care.
-                                skip();
+                                skip()
                             }
-                            break;
+                        }
                         // Comment extension.
-                        case 0xfe:
-                            skip();
-                            break;
+                        0xfe -> skip()
                         // Plain text extension.
-                        case 0x01:
-                            skip();
-                            break;
+                        0x01 -> skip()
                         // Uninteresting extension.
-                        default:
-                            skip();
+                        else -> skip()
                     }
-                    break;
+                }
                 // Terminator.
-                case 0x3b:
-                    done = true;
-                    break;
+                0x3b -> done = true
                 // Bad byte, but keep going and see what happens break;
-                case 0x00:
-                default:
-                    header.status = GifDecoder.STATUS_FORMAT_ERROR;
+                0x00 -> header!!.status = GifDecoder.STATUS_FORMAT_ERROR
+                else -> header!!.status = GifDecoder.STATUS_FORMAT_ERROR
             }
         }
     }
@@ -302,115 +285,117 @@ class GifHeaderParser {
     /**
      * Reads Graphics Control Extension values.
      */
-    private void readGraphicControlExt() {
+    private fun readGraphicControlExt() {
+        val currentFrame = header!!.currentFrame!!
         // Block size.
-        read();
+        read()
         // Packed fields.
-        int packed = read();
+        val packed = read()
         // Disposal method.
-        header.currentFrame.dispose = (packed & 0x1c) >> 2;
-        if (header.currentFrame.dispose == 0) {
+        currentFrame.dispose = (packed and 0x1c) shr 2
+        if (currentFrame.dispose == 0) {
             // Elect to keep old image if discretionary.
-            header.currentFrame.dispose = 1;
+            currentFrame.dispose = 1
         }
-        header.currentFrame.transparency = (packed & 1) != 0;
+        currentFrame.transparency = (packed and 1) != 0
         // Delay in milliseconds.
-        int delayInHundredthsOfASecond = readShort();
+        var delayInHundredthsOfASecond = readShort()
 
         if (delayInHundredthsOfASecond < MIN_FRAME_DELAY) {
-            delayInHundredthsOfASecond = DEFAULT_FRAME_DELAY;
+            delayInHundredthsOfASecond = DEFAULT_FRAME_DELAY
         }
-        header.currentFrame.delay = delayInHundredthsOfASecond * 10;
+        currentFrame.delay = delayInHundredthsOfASecond * 10
         // Transparent color index
-        header.currentFrame.transIndex = read();
+        currentFrame.transIndex = read()
         // Block terminator
-        read();
+        read()
     }
 
     /**
      * Reads GIF file header information.
      */
-    private void readHeader() {
-        String id = "";
-        for (int i = 0; i < 6; i++) {
-            id += (char) read();
+    private fun readHeader() {
+        var id = ""
+        for (i in 0 until 6) {
+            id += read().toChar()
         }
         if (!id.startsWith("GIF")) {
-            header.status = GifDecoder.STATUS_FORMAT_ERROR;
-            return;
+            header!!.status = GifDecoder.STATUS_FORMAT_ERROR
+            return
         }
-        readLSD();
-        if (header.gctFlag && !err()) {
-            header.gct = readColorTable(header.gctSize);
-            header.bgColor = header.gct[header.bgIndex];
+        readLSD()
+        if (header!!.gctFlag && !err()) {
+            header!!.gct = readColorTable(header!!.gctSize)
+            header!!.bgColor = header!!.gct!![header!!.bgIndex]
         }
     }
 
     /**
      * Reads Logical Screen Descriptor.
      */
-    private void readLSD() {
+    private fun readLSD() {
+        val header = header!!
         // Logical screen size.
-        header.width = readShort();
-        header.height = readShort();
+        header.width = readShort()
+        header.height = readShort()
         // Packed fields
-        int packed = read();
+        val packed = read()
         // 1 : global color table flag.
-        header.gctFlag = (packed & 0x80) != 0;
+        header.gctFlag = (packed and 0x80) != 0
         // 2-4 : color resolution.
         // 5 : gct sort flag.
         // 6-8 : gct size.
-        header.gctSize = 2 << (packed & 7);
+        header.gctSize = 2 shl (packed and 7)
         // Background color index.
-        header.bgIndex = read();
+        header.bgIndex = read()
         // Pixel aspect ratio
-        header.pixelAspect = read();
+        header.pixelAspect = read()
     }
 
     /**
      * Reads Netscape extension to obtain iteration count.
      */
-    private void readNetscapeExt() {
+    private fun readNetscapeExt() {
         do {
-            readBlock();
-            if (block[0] == 1) {
+            readBlock()
+            if (block[0].toInt() == 1) {
                 // Loop count sub-block.
-                int b1 = ((int) block[1]) & 0xff;
-                int b2 = ((int) block[2]) & 0xff;
-                header.loopCount = (b2 << 8) | b1;
-                if (header.loopCount == 0) {
-                    header.loopCount = GifDecoder.LOOP_FOREVER;
+                val b1 = block[1].toInt() and 0xff
+                val b2 = block[2].toInt() and 0xff
+                header!!.loopCount = (b2 shl 8) or b1
+                if (header!!.loopCount == 0) {
+                    header!!.loopCount = GifDecoder.LOOP_FOREVER
                 }
             }
-        } while ((blockSize > 0) && !err());
+        } while ((blockSize > 0) && !err())
     }
 
     /**
      * Reads next 16-bit value, LSB first.
      */
-    private int readShort() {
+    private fun readShort(): Int {
         // Read 16-bit value.
-        return rawData.getShort();
+        return rawData!!.getShort().toInt()
     }
 
-    private void reset() {
-        rawData = null;
-        Arrays.fill(block, (byte) 0);
-        header = new GifHeader();
-        blockSize = 0;
+    private fun reset() {
+        rawData = null
+        Arrays.fill(block, 0.toByte())
+        header = GifHeader()
+        blockSize = 0
     }
 
     /**
      * Skips variable length blocks up to and including next zero length block.
      */
-    private void skip() {
+    private fun skip() {
         try {
-            int blockSize;
+            var blockSize: Int
             do {
-                blockSize = read();
-                rawData.position(rawData.position() + blockSize);
-            } while (blockSize > 0);
-        } catch (IllegalArgumentException ex) {
+                blockSize = read()
+                rawData!!.position(rawData!!.position() + blockSize)
+            } while (blockSize > 0)
+        } catch (ex: IllegalArgumentException) {
             // no-op
         }
     }
@@ -418,10 +403,27 @@ class GifHeaderParser {
     /**
      * Skips LZW image data for a single frame to advance buffer.
      */
-    private void skipImageData() {
+    private fun skipImageData() {
         // lzwMinCodeSize
-        read();
+        read()
         // data sub-blocks
-        skip();
+        skip()
+    }
+
+    private companion object {
+
+        private const val TAG = "GifHeaderParser"
+
+        // The minimum frame delay in hundredths of a second.
+        private const val MIN_FRAME_DELAY = 2
+
+        // The default frame delay in hundredths of a second for GIFs with frame delays less than the
+        // minimum.
+        private const val DEFAULT_FRAME_DELAY = 10
+
+        private const val MAX_BLOCK_SIZE = 256
+
+        // 0xff000000 as a (negative) Int, as in the Java original.
+        private const val OPAQUE_ALPHA = 0xff000000.toInt()
     }
 }

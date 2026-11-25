@@ -16,44 +16,47 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.clevertap.android.sdk.gif;
+package com.clevertap.android.sdk.gif
 
-class GifFrame {
+internal class GifFrame {
 
     /**
      * Index in the raw buffer where we need to start reading to decode.
      */
-    int bufferFrameStart;
+    var bufferFrameStart = 0
 
     /**
      * Delay, in ms, to next frame.
      */
-    int delay;
+    var delay = 0
 
     /**
      * Disposal Method.
      */
-    int dispose;
+    var dispose = 0
 
     /**
      * Control Flag.
      */
-    boolean interlace;
+    var interlace = false
 
-    int ix, iy, iw, ih;
+    var ix = 0
+    var iy = 0
+    var iw = 0
+    var ih = 0
 
     /**
      * Local Color Table.
      */
-    int[] lct;
+    var lct: IntArray? = null
 
     /**
      * Transparency Index.
      */
-    int transIndex;
+    var transIndex = 0
 
     /**
      * Control Flag.
      */
-    boolean transparency;
+    var transparency = false
 }
