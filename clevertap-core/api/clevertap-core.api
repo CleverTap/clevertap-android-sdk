@@ -1,8 +1,14 @@
 public final class com/clevertap/android/sdk/ActivityLifecycleCallback {
+	public static final field Companion Lcom/clevertap/android/sdk/ActivityLifecycleCallback$Companion;
 	public static field registered Z
 	public fun <init> ()V
-	public static fun register (Landroid/app/Application;)V
-	public static fun register (Landroid/app/Application;Ljava/lang/String;)V
+	public static final fun register (Landroid/app/Application;)V
+	public static final fun register (Landroid/app/Application;Ljava/lang/String;)V
+}
+
+public final class com/clevertap/android/sdk/ActivityLifecycleCallback$Companion {
+	public final fun register (Landroid/app/Application;)V
+	public final fun register (Landroid/app/Application;Ljava/lang/String;)V
 }
 
 public final class com/clevertap/android/sdk/AnalyticsManagerBundler {
@@ -39,6 +45,7 @@ public abstract interface class com/clevertap/android/sdk/CTInboxListener {
 
 public class com/clevertap/android/sdk/CTInboxStyleConfig : android/os/Parcelable {
 	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field Companion Lcom/clevertap/android/sdk/CTInboxStyleConfig$Companion;
 	public fun <init> ()V
 	protected fun <init> (Landroid/os/Parcel;)V
 	public fun describeContents ()I
@@ -56,6 +63,33 @@ public class com/clevertap/android/sdk/CTInboxStyleConfig : android/os/Parcelabl
 	public fun getTabs ()Ljava/util/ArrayList;
 	public fun getUnselectedTabColor ()Ljava/lang/String;
 	public fun isUsingTabs ()Z
+	public final synthetic fun ktGetBackButtonColor ()Ljava/lang/String;
+	public final synthetic fun ktGetFirstTabTitle ()Ljava/lang/String;
+	public final synthetic fun ktGetInboxBackgroundColor ()Ljava/lang/String;
+	public final synthetic fun ktGetNavBarColor ()Ljava/lang/String;
+	public final synthetic fun ktGetNavBarTitle ()Ljava/lang/String;
+	public final synthetic fun ktGetNavBarTitleColor ()Ljava/lang/String;
+	public final synthetic fun ktGetNoMessageViewText ()Ljava/lang/String;
+	public final synthetic fun ktGetNoMessageViewTextColor ()Ljava/lang/String;
+	public final synthetic fun ktGetSelectedTabColor ()Ljava/lang/String;
+	public final synthetic fun ktGetSelectedTabIndicatorColor ()Ljava/lang/String;
+	public final synthetic fun ktGetTabBackgroundColor ()Ljava/lang/String;
+	public final synthetic fun ktGetTabs ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetUnselectedTabColor ()Ljava/lang/String;
+	public final synthetic fun ktIsUsingTabs ()Z
+	public final synthetic fun ktSetBackButtonColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetFirstTabTitle (Ljava/lang/String;)V
+	public final synthetic fun ktSetInboxBackgroundColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetNavBarColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetNavBarTitle (Ljava/lang/String;)V
+	public final synthetic fun ktSetNavBarTitleColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetNoMessageViewText (Ljava/lang/String;)V
+	public final synthetic fun ktSetNoMessageViewTextColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetSelectedTabColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetSelectedTabIndicatorColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetTabBackgroundColor (Ljava/lang/String;)V
+	public final synthetic fun ktSetTabs (Ljava/util/ArrayList;)V
+	public final synthetic fun ktSetUnselectedTabColor (Ljava/lang/String;)V
 	public fun setBackButtonColor (Ljava/lang/String;)V
 	public fun setFirstTabTitle (Ljava/lang/String;)V
 	public fun setInboxBackgroundColor (Ljava/lang/String;)V
@@ -70,6 +104,9 @@ public class com/clevertap/android/sdk/CTInboxStyleConfig : android/os/Parcelabl
 	public fun setTabs (Ljava/util/ArrayList;)V
 	public fun setUnselectedTabColor (Ljava/lang/String;)V
 	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/clevertap/android/sdk/CTInboxStyleConfig$Companion {
 }
 
 public final class com/clevertap/android/sdk/CTPreferenceCache {
@@ -93,6 +130,7 @@ public class com/clevertap/android/sdk/CTWebInterface {
 	public fun dismissInAppNotification ()V
 	public fun getSdkVersion ()I
 	public fun incrementValue (Ljava/lang/String;D)V
+	public final synthetic fun ktGetSdkVersion ()I
 	public fun onUserLogin (Ljava/lang/String;)V
 	public fun promptPushPermission (Z)V
 	public fun pushChargedEvent (Ljava/lang/String;Ljava/lang/String;)V
@@ -132,32 +170,34 @@ public final class com/clevertap/android/sdk/CTXtensions {
 }
 
 public class com/clevertap/android/sdk/CleverTapAPI : com/clevertap/android/sdk/inbox/CTInboxActivity$InboxActivityListener {
+	public static final field Companion Lcom/clevertap/android/sdk/CleverTapAPI$Companion;
 	public static final field NOTIFICATION_TAG Ljava/lang/String;
+	public synthetic fun <init> (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun addMultiValueForKey (Ljava/lang/String;Ljava/lang/String;)V
 	public fun addMultiValuesForKey (Ljava/lang/String;Ljava/util/ArrayList;)V
 	public fun addOneTimeVariablesChangedCallback (Lcom/clevertap/android/sdk/variables/callbacks/VariablesChangedCallback;)V
 	public fun addVariablesChangedCallback (Lcom/clevertap/android/sdk/variables/callbacks/VariablesChangedCallback;)V
-	public static fun changeCredentials (Ljava/lang/String;Ljava/lang/String;)V
-	public static fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public fun clearFileResources (Z)V
 	public fun clearInAppResources (Z)V
-	public static fun createNotification (Landroid/content/Context;Landroid/os/Bundle;)V
-	public static fun createNotification (Landroid/content/Context;Landroid/os/Bundle;I)V
-	public static fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;ILjava/lang/String;Z)V
-	public static fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;ILjava/lang/String;ZLjava/lang/String;)V
-	public static fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;IZ)V
-	public static fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;IZLjava/lang/String;)V
-	public static fun createNotificationChannelGroup (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;)V
+	public static final fun createNotification (Landroid/content/Context;Landroid/os/Bundle;)V
+	public static final fun createNotification (Landroid/content/Context;Landroid/os/Bundle;I)V
+	public static final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;ILjava/lang/String;Z)V
+	public static final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;ILjava/lang/String;ZLjava/lang/String;)V
+	public static final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;IZ)V
+	public static final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;IZLjava/lang/String;)V
+	public static final fun createNotificationChannelGroup (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;)V
 	public fun decrementValue (Ljava/lang/String;Ljava/lang/Number;)V
 	public fun defineFileVariable (Ljava/lang/String;)Lcom/clevertap/android/sdk/variables/Var;
 	public fun defineVariable (Ljava/lang/String;Ljava/lang/Object;)Lcom/clevertap/android/sdk/variables/Var;
 	public fun deleteInboxMessage (Lcom/clevertap/android/sdk/inbox/CTInboxMessage;)V
 	public fun deleteInboxMessage (Ljava/lang/String;)V
 	public fun deleteInboxMessagesForIDs (Ljava/util/ArrayList;)V
-	public static fun deleteNotificationChannel (Landroid/content/Context;Ljava/lang/String;)V
-	public static fun deleteNotificationChannelGroup (Landroid/content/Context;Ljava/lang/String;)V
+	public static final fun deleteNotificationChannel (Landroid/content/Context;Ljava/lang/String;)V
+	public static final fun deleteNotificationChannelGroup (Landroid/content/Context;Ljava/lang/String;)V
 	public fun disablePersonalization ()V
 	public fun discardInAppNotifications ()V
 	public fun discardInAppNotifications (Z)V
@@ -184,36 +224,35 @@ public class com/clevertap/android/sdk/CleverTapAPI : com/clevertap/android/sdk/
 	public fun getCleverTapID ()Ljava/lang/String;
 	public fun getCleverTapID (Lcom/clevertap/android/sdk/interfaces/OnInitCleverTapIDListener;)V
 	public fun getCount (Ljava/lang/String;)I
-	public static fun getDebugLevel ()I
-	public static fun getDefaultInstance (Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapAPI;
-	public static fun getDefaultInstance (Landroid/content/Context;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public static final fun getDebugLevel ()I
+	public static final fun getDefaultInstance (Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public static final fun getDefaultInstance (Landroid/content/Context;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
 	public fun getDetails (Ljava/lang/String;)Lcom/clevertap/android/sdk/events/EventDetail;
 	public fun getDevicePushToken (Lcom/clevertap/android/sdk/pushnotification/PushType;)Ljava/lang/String;
 	public fun getDevicePushTokenRefreshListener ()Lcom/clevertap/android/sdk/CleverTapAPI$DevicePushTokenRefreshListener;
 	public fun getDisplayUnitForId (Ljava/lang/String;)Lcom/clevertap/android/sdk/displayunits/model/CleverTapDisplayUnit;
 	public fun getFirstTime (Ljava/lang/String;)I
-	public fun getGeofenceCallback ()Lcom/clevertap/android/sdk/GeofenceCallback;
-	public static fun getGlobalInstance (Landroid/content/Context;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public static final fun getGlobalInstance (Landroid/content/Context;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
 	public fun getHistory ()Ljava/util/Map;
 	public fun getInAppNotificationListener ()Lcom/clevertap/android/sdk/InAppNotificationListener;
 	public fun getInboxMessageCount ()I
 	public fun getInboxMessageForId (Ljava/lang/String;)Lcom/clevertap/android/sdk/inbox/CTInboxMessage;
 	public fun getInboxMessageUnreadCount ()I
-	public static fun getInstances ()Ljava/util/HashMap;
+	public static final fun getInstances ()Ljava/util/HashMap;
 	public fun getLastTime (Ljava/lang/String;)I
-	public static fun getLiveUpdateNotificationFactory ()Lcom/clevertap/android/sdk/pushnotification/ICleverTapLiveUpdateNotificationFactory;
+	public static final fun getLiveUpdateNotificationFactory ()Lcom/clevertap/android/sdk/pushnotification/ICleverTapLiveUpdateNotificationFactory;
 	public fun getLocale ()Ljava/lang/String;
 	public fun getLocation ()Landroid/location/Location;
-	public static fun getNotificationBitmapWithTimeout (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;ZJ)Landroid/graphics/Bitmap;
-	public static fun getNotificationBitmapWithTimeoutAndSize (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;ZJI)Landroid/graphics/Bitmap;
-	public static fun getNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
-	public static fun getNotificationInfo (Landroid/os/Bundle;)Lcom/clevertap/android/sdk/pushnotification/NotificationInfo;
+	public static final fun getNotificationBitmapWithTimeout (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;ZJ)Landroid/graphics/Bitmap;
+	public static final fun getNotificationBitmapWithTimeoutAndSize (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;ZJI)Landroid/graphics/Bitmap;
+	public static final fun getNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
+	public static final fun getNotificationInfo (Landroid/os/Bundle;)Lcom/clevertap/android/sdk/pushnotification/NotificationInfo;
 	public fun getPreviousVisitTime ()I
 	public fun getProfile ()Lorg/json/JSONObject;
 	public fun getProperty (Ljava/lang/String;)Ljava/lang/Object;
 	public fun getPushToken (Lcom/clevertap/android/sdk/pushnotification/PushType;)Ljava/lang/String;
 	public fun getScreenCount ()I
-	public static fun getSignedCallNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
+	public static final fun getSignedCallNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
 	public fun getSyncListener ()Lcom/clevertap/android/sdk/SyncListener;
 	public fun getTimeElapsed ()I
 	public fun getTotalVisits ()I
@@ -226,29 +265,68 @@ public class com/clevertap/android/sdk/CleverTapAPI : com/clevertap/android/sdk/
 	public fun getUserLastVisitTs ()J
 	public fun getVariable (Ljava/lang/String;)Lcom/clevertap/android/sdk/variables/Var;
 	public fun getVariableValue (Ljava/lang/String;)Ljava/lang/Object;
-	public static fun handleLiveUpdateDismissed (Landroid/content/Context;Landroid/os/Bundle;)V
+	public static final fun handleLiveUpdateDismissed (Landroid/content/Context;Landroid/os/Bundle;)V
 	public fun incrementValue (Ljava/lang/String;Ljava/lang/Number;)V
 	public fun initializeInbox ()V
-	public static fun instanceWithConfig (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;)Lcom/clevertap/android/sdk/CleverTapAPI;
-	public static fun instanceWithConfig (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
-	public static fun isAppForeground ()Z
+	public static final fun instanceWithConfig (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public static final fun instanceWithConfig (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public static final fun isAppForeground ()Z
 	public fun isDevelopmentMode ()Z
 	public fun isPushPermissionGranted ()Z
+	public final synthetic fun ktGetAccountId ()Ljava/lang/String;
+	public final synthetic fun ktGetAllDisplayUnits ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetAllInboxMessages ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetCTNotificationInboxListener ()Lcom/clevertap/android/sdk/CTInboxListener;
+	public final synthetic fun ktGetCTPushAmpListener ()Lcom/clevertap/android/sdk/pushnotification/amp/CTPushAmpListener;
+	public final synthetic fun ktGetCTPushNotificationListener ()Lcom/clevertap/android/sdk/pushnotification/CTPushNotificationListener;
+	public final synthetic fun ktGetCleverTapAttributionIdentifier ()Ljava/lang/String;
+	public final synthetic fun ktGetCleverTapID ()Ljava/lang/String;
+	public final synthetic fun ktGetDevicePushTokenRefreshListener ()Lcom/clevertap/android/sdk/CleverTapAPI$DevicePushTokenRefreshListener;
+	public final synthetic fun ktGetGeofenceCallback ()Lcom/clevertap/android/sdk/GeofenceCallback;
+	public final synthetic fun ktGetHistory ()Ljava/util/Map;
+	public final synthetic fun ktGetInAppNotificationListener ()Lcom/clevertap/android/sdk/InAppNotificationListener;
+	public final synthetic fun ktGetInboxMessageCount ()I
+	public final synthetic fun ktGetInboxMessageUnreadCount ()I
+	public final synthetic fun ktGetLocale ()Ljava/lang/String;
+	public final synthetic fun ktGetLocation ()Landroid/location/Location;
+	public final synthetic fun ktGetPreviousVisitTime ()I
+	public final synthetic fun ktGetProfile ()Lorg/json/JSONObject;
+	public final synthetic fun ktGetScreenCount ()I
+	public final synthetic fun ktGetSyncListener ()Lcom/clevertap/android/sdk/SyncListener;
+	public final synthetic fun ktGetTimeElapsed ()I
+	public final synthetic fun ktGetTotalVisits ()I
+	public final synthetic fun ktGetUTMDetails ()Lcom/clevertap/android/sdk/UTMDetail;
+	public final synthetic fun ktGetUnreadInboxMessages ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetUserAppLaunchCount ()I
+	public final synthetic fun ktGetUserEventLogHistory ()Ljava/util/Map;
+	public final synthetic fun ktGetUserLastVisitTs ()J
+	public final synthetic fun ktIsDevelopmentMode ()Z
+	public final synthetic fun ktIsInboxFetchDisabledForSession ()Z
+	public final synthetic fun ktIsPushPermissionGranted ()Z
+	public final synthetic fun ktSetCTNotificationInboxListener (Lcom/clevertap/android/sdk/CTInboxListener;)V
+	public final synthetic fun ktSetCTPushAmpListener (Lcom/clevertap/android/sdk/pushnotification/amp/CTPushAmpListener;)V
+	public final synthetic fun ktSetCTPushNotificationListener (Lcom/clevertap/android/sdk/pushnotification/CTPushNotificationListener;)V
+	public final synthetic fun ktSetDevicePushTokenRefreshListener (Lcom/clevertap/android/sdk/CleverTapAPI$DevicePushTokenRefreshListener;)V
+	public final synthetic fun ktSetGeofenceCallback (Lcom/clevertap/android/sdk/GeofenceCallback;)V
+	public final synthetic fun ktSetInAppNotificationListener (Lcom/clevertap/android/sdk/InAppNotificationListener;)V
+	public final synthetic fun ktSetLocale (Ljava/lang/String;)V
+	public final synthetic fun ktSetLocation (Landroid/location/Location;)V
+	public final synthetic fun ktSetSyncListener (Lcom/clevertap/android/sdk/SyncListener;)V
 	public fun markReadInboxMessage (Lcom/clevertap/android/sdk/inbox/CTInboxMessage;)V
 	public fun markReadInboxMessage (Ljava/lang/String;)V
 	public fun markReadInboxMessagesForIDs (Ljava/util/ArrayList;)V
 	public fun messageDidClick (Lcom/clevertap/android/sdk/inbox/CTInboxActivity;ILcom/clevertap/android/sdk/inbox/CTInboxMessage;Landroid/os/Bundle;Ljava/util/HashMap;I)V
 	public fun messageDidShow (Lcom/clevertap/android/sdk/inbox/CTInboxActivity;Lcom/clevertap/android/sdk/inbox/CTInboxMessage;Landroid/os/Bundle;)V
-	public static fun onActivityPaused ()V
-	public static fun onActivityResumed (Landroid/app/Activity;)V
-	public static fun onActivityResumed (Landroid/app/Activity;Ljava/lang/String;)V
+	public static final fun onActivityPaused ()V
+	public static final fun onActivityResumed (Landroid/app/Activity;)V
+	public static final fun onActivityResumed (Landroid/app/Activity;Ljava/lang/String;)V
 	public fun onUserLogin (Ljava/util/Map;)V
 	public fun onUserLogin (Ljava/util/Map;Ljava/lang/String;)V
 	public fun onVariablesChangedAndNoDownloadsPending (Lcom/clevertap/android/sdk/variables/callbacks/VariablesChangedCallback;)V
 	public fun onceVariablesChangedAndNoDownloadsPending (Lcom/clevertap/android/sdk/variables/callbacks/VariablesChangedCallback;)V
 	public fun parseVariables ([Ljava/lang/Object;)V
 	public fun parseVariablesForClasses ([Ljava/lang/Class;)V
-	public static fun processPushNotification (Landroid/content/Context;Landroid/os/Bundle;)V
+	public static final fun processPushNotification (Landroid/content/Context;Landroid/os/Bundle;)V
 	public fun productConfig ()Lcom/clevertap/android/sdk/product_config/CTProductConfigController;
 	public fun promptForPushPermission (Z)V
 	public fun promptPushPrimer (Lorg/json/JSONObject;)V
@@ -275,8 +353,8 @@ public class com/clevertap/android/sdk/CleverTapAPI : com/clevertap/android/sdk/
 	public fun pushRegistrationToken (Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;Z)V
 	public fun pushSignedCallEvent (Ljava/lang/String;Lorg/json/JSONObject;)Ljava/util/concurrent/Future;
 	public fun recordScreen (Ljava/lang/String;)V
-	public static fun registerCustomInAppTemplates (Lcom/clevertap/android/sdk/inapp/customtemplates/TemplateProducer;)V
-	public static fun registerCustomInAppTemplates (Ljava/lang/String;Lcom/clevertap/android/sdk/inapp/customtemplates/TemplatePresenter;Lcom/clevertap/android/sdk/inapp/customtemplates/FunctionPresenter;)V
+	public static final fun registerCustomInAppTemplates (Lcom/clevertap/android/sdk/inapp/customtemplates/TemplateProducer;)V
+	public static final fun registerCustomInAppTemplates (Ljava/lang/String;Lcom/clevertap/android/sdk/inapp/customtemplates/TemplatePresenter;Lcom/clevertap/android/sdk/inapp/customtemplates/FunctionPresenter;)V
 	public fun registerPushPermissionNotificationResponseListener (Lcom/clevertap/android/sdk/PushPermissionResponseListener;)V
 	public fun removeAllOneTimeVariablesChangedCallbacks ()V
 	public fun removeAllVariablesChangedCallbacks ()V
@@ -288,34 +366,33 @@ public class com/clevertap/android/sdk/CleverTapAPI : com/clevertap/android/sdk/
 	public fun removeVariablesChangedCallback (Lcom/clevertap/android/sdk/variables/callbacks/VariablesChangedCallback;)V
 	public fun renderPushNotification (Lcom/clevertap/android/sdk/pushnotification/INotificationRenderer;Landroid/content/Context;Landroid/os/Bundle;)Ljava/util/concurrent/Future;
 	public fun resumeInAppNotifications ()V
-	public static fun setAppForeground (Z)V
+	public static final fun setAppForeground (Z)V
 	public fun setCTFeatureFlagsListener (Lcom/clevertap/android/sdk/CTFeatureFlagsListener;)V
 	public fun setCTInboxMessageListener (Lcom/clevertap/android/sdk/InboxMessageListener;)V
 	public fun setCTNotificationInboxListener (Lcom/clevertap/android/sdk/CTInboxListener;)V
 	public fun setCTProductConfigListener (Lcom/clevertap/android/sdk/product_config/CTProductConfigListener;)V
 	public fun setCTPushAmpListener (Lcom/clevertap/android/sdk/pushnotification/amp/CTPushAmpListener;)V
 	public fun setCTPushNotificationListener (Lcom/clevertap/android/sdk/pushnotification/CTPushNotificationListener;)V
-	public static fun setDebugLevel (I)V
-	public static fun setDebugLevel (Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;)V
+	public static final fun setDebugLevel (I)V
+	public static final fun setDebugLevel (Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;)V
 	public fun setDevicePushTokenRefreshListener (Lcom/clevertap/android/sdk/CleverTapAPI$DevicePushTokenRefreshListener;)V
 	public fun setDisplayUnitCache (Lcom/clevertap/android/sdk/displayunits/DisplayUnitCache;)V
 	public fun setDisplayUnitListener (Lcom/clevertap/android/sdk/displayunits/DisplayUnitListener;)V
-	public fun setGeofenceCallback (Lcom/clevertap/android/sdk/GeofenceCallback;)V
 	public fun setInAppNotificationButtonListener (Lcom/clevertap/android/sdk/InAppNotificationButtonListener;)V
 	public fun setInAppNotificationListener (Lcom/clevertap/android/sdk/InAppNotificationListener;)V
 	public fun setInboxMessageButtonListener (Lcom/clevertap/android/sdk/InboxMessageButtonListener;)V
-	public static fun setInstances (Ljava/util/HashMap;)V
+	public static final fun setInstances (Ljava/util/HashMap;)V
 	public fun setLibrary (Ljava/lang/String;)V
-	public static fun setLiveUpdateNotificationFactory (Lcom/clevertap/android/sdk/pushnotification/ICleverTapLiveUpdateNotificationFactory;)V
+	public static final fun setLiveUpdateNotificationFactory (Lcom/clevertap/android/sdk/pushnotification/ICleverTapLiveUpdateNotificationFactory;)V
 	public fun setLocale (Ljava/lang/String;)V
 	public fun setLocation (Landroid/location/Location;)V
 	public fun setLocationForGeofences (Landroid/location/Location;I)Ljava/util/concurrent/Future;
 	public fun setMultiValuesForKey (Ljava/lang/String;Ljava/util/ArrayList;)V
-	public static fun setNotificationHandler (Lcom/clevertap/android/sdk/interfaces/NotificationHandler;)V
+	public static final fun setNotificationHandler (Lcom/clevertap/android/sdk/interfaces/NotificationHandler;)V
 	public fun setOffline (Z)V
 	public fun setOptOut (Z)V
 	public fun setOptOut (ZZ)V
-	public static fun setSignedCallNotificationHandler (Lcom/clevertap/android/sdk/interfaces/NotificationHandler;)V
+	public static final fun setSignedCallNotificationHandler (Lcom/clevertap/android/sdk/interfaces/NotificationHandler;)V
 	public fun setSyncListener (Lcom/clevertap/android/sdk/SyncListener;)V
 	public fun showAppInbox ()V
 	public fun showAppInbox (Lcom/clevertap/android/sdk/CTInboxStyleConfig;)V
@@ -327,6 +404,50 @@ public class com/clevertap/android/sdk/CleverTapAPI : com/clevertap/android/sdk/
 	public fun variants ()Ljava/util/List;
 }
 
+public final class com/clevertap/android/sdk/CleverTapAPI$Companion {
+	public final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun changeCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun createNotification (Landroid/content/Context;Landroid/os/Bundle;)V
+	public final fun createNotification (Landroid/content/Context;Landroid/os/Bundle;I)V
+	public final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;ILjava/lang/String;Z)V
+	public final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;ILjava/lang/String;ZLjava/lang/String;)V
+	public final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;IZ)V
+	public final fun createNotificationChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;IZLjava/lang/String;)V
+	public final fun createNotificationChannelGroup (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;)V
+	public final fun deleteNotificationChannel (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun deleteNotificationChannelGroup (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun getDebugLevel ()I
+	public final fun getDefaultInstance (Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public final fun getDefaultInstance (Landroid/content/Context;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public final fun getGlobalInstance (Landroid/content/Context;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public final fun getInstances ()Ljava/util/HashMap;
+	public final fun getLiveUpdateNotificationFactory ()Lcom/clevertap/android/sdk/pushnotification/ICleverTapLiveUpdateNotificationFactory;
+	public final fun getNotificationBitmapWithTimeout (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;ZJ)Landroid/graphics/Bitmap;
+	public final fun getNotificationBitmapWithTimeoutAndSize (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;ZJI)Landroid/graphics/Bitmap;
+	public final fun getNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
+	public final fun getNotificationInfo (Landroid/os/Bundle;)Lcom/clevertap/android/sdk/pushnotification/NotificationInfo;
+	public final fun getSignedCallNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
+	public final fun handleLiveUpdateDismissed (Landroid/content/Context;Landroid/os/Bundle;)V
+	public final fun instanceWithConfig (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public final fun instanceWithConfig (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI;
+	public final fun isAppForeground ()Z
+	public final fun onActivityPaused ()V
+	public final fun onActivityResumed (Landroid/app/Activity;)V
+	public final fun onActivityResumed (Landroid/app/Activity;Ljava/lang/String;)V
+	public final fun processPushNotification (Landroid/content/Context;Landroid/os/Bundle;)V
+	public final fun registerCustomInAppTemplates (Lcom/clevertap/android/sdk/inapp/customtemplates/TemplateProducer;)V
+	public final fun registerCustomInAppTemplates (Ljava/lang/String;Lcom/clevertap/android/sdk/inapp/customtemplates/TemplatePresenter;Lcom/clevertap/android/sdk/inapp/customtemplates/FunctionPresenter;)V
+	public final fun setAppForeground (Z)V
+	public final fun setDebugLevel (I)V
+	public final fun setDebugLevel (Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;)V
+	public final fun setInstances (Ljava/util/HashMap;)V
+	public final fun setLiveUpdateNotificationFactory (Lcom/clevertap/android/sdk/pushnotification/ICleverTapLiveUpdateNotificationFactory;)V
+	public final fun setNotificationHandler (Lcom/clevertap/android/sdk/interfaces/NotificationHandler;)V
+	public final fun setSignedCallNotificationHandler (Lcom/clevertap/android/sdk/interfaces/NotificationHandler;)V
+}
+
 public abstract interface class com/clevertap/android/sdk/CleverTapAPI$DevicePushTokenRefreshListener {
 	public abstract fun devicePushTokenDidRefresh (Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;)V
 }
@@ -336,7 +457,8 @@ public final class com/clevertap/android/sdk/CleverTapAPI$LogLevel : java/lang/E
 	public static final field INFO Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;
 	public static final field OFF Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;
 	public static final field VERBOSE Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;
-	public fun intValue ()I
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun intValue ()I
 	public static fun valueOf (Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;
 	public static fun values ()[Lcom/clevertap/android/sdk/CleverTapAPI$LogLevel;
 }
@@ -347,12 +469,16 @@ public final class com/clevertap/android/sdk/CleverTapFileProvider : androidx/co
 
 public class com/clevertap/android/sdk/CleverTapInstanceConfig : android/os/Parcelable {
 	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field Companion Lcom/clevertap/android/sdk/CleverTapInstanceConfig$Companion;
 	public static final field KEY_ENCRYPTION_LEVEL Ljava/lang/String;
+	public synthetic fun <init> (Landroid/os/Parcel;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/clevertap/android/sdk/ManifestInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun addPushType (Lcom/clevertap/android/sdk/pushnotification/PushType;)V
-	protected static fun createDefaultInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
-	public static fun createInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
-	public static fun createInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
-	protected static fun createInstance (Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
+	protected static final fun createDefaultInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
+	public static final fun createInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
+	public static final fun createInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
+	protected static final fun createInstance (Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
 	public fun describeContents ()I
 	public fun enablePersonalization (Z)V
 	public fun getAccountId ()Ljava/lang/String;
@@ -360,7 +486,7 @@ public class com/clevertap/android/sdk/CleverTapInstanceConfig : android/os/Parc
 	public fun getAccountToken ()Ljava/lang/String;
 	public fun getCustomHandshakeDomain ()Ljava/lang/String;
 	public fun getDebugLevel ()I
-	public static fun getDefaultInstance (Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
+	public static final fun getDefaultInstance (Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
 	public fun getEnableCustomCleverTapId ()Z
 	public fun getEncryptionLevel ()I
 	public fun getFcmSenderId ()Ljava/lang/String;
@@ -376,6 +502,36 @@ public class com/clevertap/android/sdk/CleverTapInstanceConfig : android/os/Parc
 	public fun isDefaultInstance ()Z
 	public fun isEncryptionInTransitEnabled ()Z
 	public fun isSslPinningEnabled ()Z
+	public final synthetic fun ktGetAccountId ()Ljava/lang/String;
+	public final synthetic fun ktGetAccountRegion ()Ljava/lang/String;
+	public final synthetic fun ktGetAccountToken ()Ljava/lang/String;
+	public final synthetic fun ktGetCustomHandshakeDomain ()Ljava/lang/String;
+	public final synthetic fun ktGetDebugLevel ()I
+	public final synthetic fun ktGetEnableCustomCleverTapId ()Z
+	public final synthetic fun ktGetEncryptionLevel ()I
+	public final synthetic fun ktGetFcmSenderId ()Ljava/lang/String;
+	public final synthetic fun ktGetIdentityKeys ()[Ljava/lang/String;
+	public final synthetic fun ktGetLogger ()Lcom/clevertap/android/sdk/Logger;
+	public final synthetic fun ktGetPackageName ()Ljava/lang/String;
+	public final synthetic fun ktGetProxyDomain ()Ljava/lang/String;
+	public final synthetic fun ktGetPushTypes ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetSpikyProxyDomain ()Ljava/lang/String;
+	public final synthetic fun ktIsAnalyticsOnly ()Z
+	public final synthetic fun ktIsBackgroundSync ()Z
+	public final synthetic fun ktIsBeta ()Z
+	public final synthetic fun ktIsCreatedPostAppLaunch ()Z
+	public final synthetic fun ktIsDefaultInstance ()Z
+	public final synthetic fun ktIsDisableAppLaunchedEvent ()Z
+	public final synthetic fun ktIsEncryptionInTransitEnabled ()Z
+	public final synthetic fun ktIsSslPinningEnabled ()Z
+	public final synthetic fun ktSetAnalyticsOnly (Z)V
+	public final synthetic fun ktSetBackgroundSync (Z)V
+	public final synthetic fun ktSetCustomHandshakeDomain (Ljava/lang/String;)V
+	public final synthetic fun ktSetDebugLevel (I)V
+	public final synthetic fun ktSetDisableAppLaunchedEvent (Z)V
+	public final synthetic fun ktSetEnableCustomCleverTapId (Z)V
+	public final synthetic fun ktSetProxyDomain (Ljava/lang/String;)V
+	public final synthetic fun ktSetSpikyProxyDomain (Ljava/lang/String;)V
 	public fun setAnalyticsOnly (Z)V
 	public fun setBackgroundSync (Z)V
 	public fun setCustomHandshakeDomain (Ljava/lang/String;)V
@@ -392,21 +548,17 @@ public class com/clevertap/android/sdk/CleverTapInstanceConfig : android/os/Parc
 	public fun writeToParcel (Landroid/os/Parcel;I)V
 }
 
-public abstract interface annotation class com/clevertap/android/sdk/Constants$IdentityType : java/lang/annotation/Annotation {
+public final class com/clevertap/android/sdk/CleverTapInstanceConfig$Companion {
+	public final fun createInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
+	public final fun createInstance (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
+	public final fun getDefaultInstance (Landroid/content/Context;)Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
 }
 
-public abstract interface class com/clevertap/android/sdk/DidClickForHardPermissionListener {
-	public abstract fun didCancelPermissionRequest ()V
-	public abstract fun didClickForHardPermissionWithFallbackSettings (Z)V
+public abstract interface annotation class com/clevertap/android/sdk/Constants$IdentityType : java/lang/annotation/Annotation {
 }
 
 public abstract interface class com/clevertap/android/sdk/FetchInboxCallback {
 	public abstract fun onInboxFetched (Z)V
-}
-
-public abstract interface class com/clevertap/android/sdk/GeofenceCallback {
-	public abstract fun handleGeoFences (Lorg/json/JSONObject;)V
-	public abstract fun triggerLocation ()V
 }
 
 public abstract interface class com/clevertap/android/sdk/ILogger {
@@ -422,23 +574,6 @@ public abstract interface class com/clevertap/android/sdk/ILogger {
 	public abstract fun verbose (Ljava/lang/String;Ljava/lang/String;)V
 	public abstract fun verbose (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public abstract fun verbose (Ljava/lang/String;Ljava/lang/Throwable;)V
-}
-
-public final class com/clevertap/android/sdk/InAppNotificationActivity : androidx/fragment/app/FragmentActivity, com/clevertap/android/sdk/DidClickForHardPermissionListener, com/clevertap/android/sdk/PushPermissionHandler$PushPermissionResultCallback, com/clevertap/android/sdk/inapp/InAppController$RestoredInAppListener, com/clevertap/android/sdk/inapp/InAppDisplayListener, com/clevertap/android/sdk/inapp/InAppListener {
-	public fun <init> ()V
-	public fun didCancelPermissionRequest ()V
-	public fun didClickForHardPermissionWithFallbackSettings (Z)V
-	public fun finish ()V
-	public fun hideInApp ()V
-	public fun inAppNotificationActionTriggered (Lcom/clevertap/android/sdk/inapp/CTInAppNotification;Lcom/clevertap/android/sdk/inapp/CTInAppAction;Ljava/lang/String;Landroid/os/Bundle;Landroid/content/Context;)Landroid/os/Bundle;
-	public fun inAppNotificationDidClick (Lcom/clevertap/android/sdk/inapp/CTInAppNotification;Lcom/clevertap/android/sdk/inapp/CTInAppNotificationButton;ILandroid/content/Context;)Landroid/os/Bundle;
-	public fun inAppNotificationDidDismiss (Lcom/clevertap/android/sdk/inapp/CTInAppNotification;Landroid/os/Bundle;)V
-	public fun inAppNotificationDidShow (Lcom/clevertap/android/sdk/inapp/CTInAppNotification;Landroid/os/Bundle;)V
-	public fun onCreate (Landroid/os/Bundle;)V
-	public fun onPushPermissionResult (Z)V
-	public fun onRequestPermissionsResult (I[Ljava/lang/String;[I)V
-	public fun onRestoreResult (Lcom/clevertap/android/sdk/inapp/CTInAppNotification;)Z
-	public fun showPushPermissionPrompt (Z)V
 }
 
 public abstract interface class com/clevertap/android/sdk/InAppNotificationButtonListener {
@@ -460,31 +595,47 @@ public abstract interface class com/clevertap/android/sdk/InboxMessageListener {
 }
 
 public final class com/clevertap/android/sdk/Logger : com/clevertap/android/sdk/ILogger {
-	public static fun d (Ljava/lang/String;)V
-	public static fun d (Ljava/lang/String;Ljava/lang/String;)V
-	public static fun d (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public static fun d (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static final field Companion Lcom/clevertap/android/sdk/Logger$Companion;
+	public static final fun d (Ljava/lang/String;)V
+	public static final fun d (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun d (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static final fun d (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public fun debug (Ljava/lang/String;)V
 	public fun debug (Ljava/lang/String;Ljava/lang/String;)V
 	public fun debug (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public fun debug (Ljava/lang/String;Ljava/lang/Throwable;)V
-	public static fun i (Ljava/lang/String;)V
-	public static fun i (Ljava/lang/String;Ljava/lang/String;)V
-	public static fun i (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public static fun i (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static final fun i (Ljava/lang/String;)V
+	public static final fun i (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun i (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static final fun i (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public fun info (Ljava/lang/String;)V
 	public fun info (Ljava/lang/String;Ljava/lang/String;)V
 	public fun info (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public fun info (Ljava/lang/String;Ljava/lang/Throwable;)V
-	public fun setDebugLevel (I)V
-	public static fun v (Ljava/lang/String;)V
-	public static fun v (Ljava/lang/String;Ljava/lang/String;)V
-	public static fun v (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public static fun v (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun setDebugLevel (I)V
+	public static final fun v (Ljava/lang/String;)V
+	public static final fun v (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun v (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public static final fun v (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public fun verbose (Ljava/lang/String;)V
 	public fun verbose (Ljava/lang/String;Ljava/lang/String;)V
 	public fun verbose (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public fun verbose (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class com/clevertap/android/sdk/Logger$Companion {
+	public final fun d (Ljava/lang/String;)V
+	public final fun d (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun d (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun d (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun i (Ljava/lang/String;)V
+	public final fun i (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun i (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun i (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun v (Ljava/lang/String;)V
+	public final fun v (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun v (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun v (Ljava/lang/String;Ljava/lang/Throwable;)V
 }
 
 public final class com/clevertap/android/sdk/NdFCManager$Companion {
@@ -518,6 +669,12 @@ public class com/clevertap/android/sdk/UTMDetail {
 	public fun getCampaign ()Ljava/lang/String;
 	public fun getMedium ()Ljava/lang/String;
 	public fun getSource ()Ljava/lang/String;
+	public final synthetic fun ktGetCampaign ()Ljava/lang/String;
+	public final synthetic fun ktGetMedium ()Ljava/lang/String;
+	public final synthetic fun ktGetSource ()Ljava/lang/String;
+	public final synthetic fun ktSetCampaign (Ljava/lang/String;)V
+	public final synthetic fun ktSetMedium (Ljava/lang/String;)V
+	public final synthetic fun ktSetSource (Ljava/lang/String;)V
 	public fun setCampaign (Ljava/lang/String;)V
 	public fun setMedium (Ljava/lang/String;)V
 	public fun setSource (Ljava/lang/String;)V
