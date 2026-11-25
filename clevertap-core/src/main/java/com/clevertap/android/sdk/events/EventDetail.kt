@@ -26,17 +26,17 @@ open class EventDetail(
 
     /** Kotlin property syntax, equivalent to [getCount]. */
     val count: Int
-        @JvmSynthetic @JvmName("ktGetCount") get() = getCount()
+        @JvmSynthetic @JvmName("ktGetCount") inline get() = getCount()
 
     /** Kotlin property syntax, equivalent to [getFirstTime]. */
     val firstTime: Int
-        @JvmSynthetic @JvmName("ktGetFirstTime") get() = getFirstTime()
+        @JvmSynthetic @JvmName("ktGetFirstTime") inline get() = getFirstTime()
 
     /** Kotlin property syntax, equivalent to [getLastTime]. */
     val lastTime: Int
-        @JvmSynthetic @JvmName("ktGetLastTime") get() = getLastTime()
+        @JvmSynthetic @JvmName("ktGetLastTime") inline get() = getLastTime()
 
     /** Kotlin property syntax, equivalent to [getName]. */
     val name: String?
-        @JvmSynthetic @JvmName("ktGetName") get() = getName()
+        @JvmSynthetic @JvmName("ktGetName") inline get() = getName()
 }
