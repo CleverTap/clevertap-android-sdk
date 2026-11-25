@@ -2658,6 +2658,10 @@ public abstract interface class com/clevertap/android/sdk/pushnotification/INoti
 	public abstract fun setSmallIcon (ILandroid/content/Context;)V
 }
 
+public final class com/clevertap/android/sdk/pushnotification/INotificationRenderer$DefaultImpls {
+	public static fun setActionButtons (Lcom/clevertap/android/sdk/pushnotification/INotificationRenderer;Landroid/content/Context;Landroid/os/Bundle;ILandroidx/core/app/NotificationCompat$Builder;Lorg/json/JSONArray;)Landroidx/core/app/NotificationCompat$Builder;
+}
+
 public final class com/clevertap/android/sdk/pushnotification/NotificationInfo {
 	public final field fromCleverTap Z
 	public final field shouldRender Z
