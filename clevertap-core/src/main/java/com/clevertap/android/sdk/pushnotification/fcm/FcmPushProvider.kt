@@ -1,65 +1,55 @@
-package com.clevertap.android.sdk.pushnotification.fcm;
+package com.clevertap.android.sdk.pushnotification.fcm
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.pushnotification.CTPushProvider;
-import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushType;
+import android.annotation.SuppressLint
+import android.content.Context
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.pushnotification.CTPushProvider
+import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
+import com.clevertap.android.sdk.pushnotification.PushType
 
 /**
- * Clevertap's Firebase Plugin Ref: {@link CTPushProvider}
+ * Clevertap's Firebase Plugin Ref: [CTPushProvider]
+ *
+ * Instantiated by reflection from [com.clevertap.android.sdk.pushnotification.PushConstants.CT_FIREBASE_PROVIDER_CLASS]
+ * through the `(CTPushProviderListener, Context, CleverTapInstanceConfig)` constructor.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY)
-@SuppressLint(value = "unused")
-public class FcmPushProvider implements CTPushProvider {
+@SuppressLint("unused")
+internal open class FcmPushProvider @SuppressLint("unused") constructor(
+    ctPushListener: CTPushProviderListener,
+    context: Context,
+    config: CleverTapInstanceConfig
+) : CTPushProvider {
 
-    private IFcmSdkHandler handler;
+    private var handler: IFcmSdkHandler = FcmSdkHandlerImpl(ctPushListener, context, config)
 
-    @SuppressLint(value = "unused")
-    public FcmPushProvider(CTPushProviderListener ctPushListener, Context context, CleverTapInstanceConfig config) {
-        handler = new FcmSdkHandlerImpl(ctPushListener, context, config);
-    }
-
-    @NonNull
-    @Override
-    public PushType getPushType() {
-        return handler.getPushType();
-    }
+    override val pushType: PushType
+        get() = handler.pushType
 
     /**
      * App supports FCM
      *
      * @return boolean true if FCM services are available
      */
-    @Override
-    public boolean isAvailable() {
-        return handler.isAvailable();
-    }
+    override val isAvailable: Boolean
+        get() = handler.isAvailable
 
     /**
      * Device supports FCM
      *
      * @return - true if FCM is supported in the platform
      */
-    @Override
-    public boolean isSupported() {
-        return handler.isSupported();
+    override val isSupported: Boolean
+        get() = handler.isSupported
+
+    override fun minSDKSupportVersionCode(): Int {
+        return 0 // supporting FCM from base version
     }
 
-    @Override
-    public int minSDKSupportVersionCode() {
-        return 0;// supporting FCM from base version
+    override fun requestToken() {
+        handler.requestToken()
     }
 
-    @Override
-    public void requestToken() {
-        handler.requestToken();
-    }
-
-    void setHandler(final IFcmSdkHandler handler) {
-        this.handler = handler;
+    fun setHandler(handler: IFcmSdkHandler) {
+        this.handler = handler
     }
 }

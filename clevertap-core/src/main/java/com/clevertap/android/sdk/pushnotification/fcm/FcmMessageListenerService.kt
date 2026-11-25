@@ -1,24 +1,21 @@
-package com.clevertap.android.sdk.pushnotification.fcm;
+package com.clevertap.android.sdk.pushnotification.fcm
 
-import androidx.annotation.NonNull;
-import com.google.firebase.messaging.FirebaseMessagingService;
-import com.google.firebase.messaging.RemoteMessage;
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
 
 /**
  * Clevertap's Implementation for Firebase Message service
  */
-public class FcmMessageListenerService extends FirebaseMessagingService {
+open class FcmMessageListenerService : FirebaseMessagingService() {
 
-    private IFcmMessageHandler mHandler = new CTFcmMessageHandler();
+    private val mHandler: IFcmMessageHandler = CTFcmMessageHandler()
 
-    @Override
-    public void onMessageReceived(@NonNull RemoteMessage message) {
-        mHandler.createNotification(getApplicationContext(), message);
+    override fun onMessageReceived(message: RemoteMessage) {
+        mHandler.createNotification(applicationContext, message)
     }
 
-    @Override
-    public void onNewToken(@NonNull String token) {
-        super.onNewToken(token);
-        mHandler.onNewToken(getApplicationContext(), token);
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        mHandler.onNewToken(applicationContext, token)
     }
 }

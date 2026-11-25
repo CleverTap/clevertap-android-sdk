@@ -1,14 +1,14 @@
-package com.clevertap.android.sdk.pushnotification.fcm;
+package com.clevertap.android.sdk.pushnotification.fcm
 
-import android.content.Context;
-import androidx.annotation.RestrictTo;
-import com.google.firebase.messaging.RemoteMessage;
+import android.content.Context
+import androidx.annotation.RestrictTo
+import com.google.firebase.messaging.RemoteMessage
 
 /**
  * interface to handle the Firebase notification service receiver callbacks
  */
-@RestrictTo(value = RestrictTo.Scope.LIBRARY)
-public interface IFcmMessageHandler {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+interface IFcmMessageHandler {
 
     /**
      * Creates notification from Firebase Remote message
@@ -16,7 +16,7 @@ public interface IFcmMessageHandler {
      * @param message            - Firebase Remote message
      * @return true if everything is fine & notification is rendered successfully
      */
-    boolean createNotification(final Context applicationContext, RemoteMessage message);
+    fun createNotification(applicationContext: Context?, message: RemoteMessage?): Boolean
 
     /**
      * Processes new token from Firebase
@@ -24,6 +24,6 @@ public interface IFcmMessageHandler {
      * @param token              - fcm token received from Firebase SDK
      * @return true if the token is sent to Clevertap's server
      */
-    boolean onNewToken(Context applicationContext, String token);
+    fun onNewToken(applicationContext: Context?, token: String?): Boolean
 
 }

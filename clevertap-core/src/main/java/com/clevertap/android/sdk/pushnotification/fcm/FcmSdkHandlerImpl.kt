@@ -1,111 +1,98 @@
-package com.clevertap.android.sdk.pushnotification.fcm;
+package com.clevertap.android.sdk.pushnotification.fcm
 
-import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
-import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayServicesAvailable;
-import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvailable;
-
-import android.content.Context;
-import android.text.TextUtils;
-import androidx.annotation.NonNull;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushType;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.messaging.FirebaseMessaging;
+import android.content.Context
+import android.text.TextUtils
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
+import com.clevertap.android.sdk.pushnotification.PushConstants.FCM
+import com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG
+import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
+import com.clevertap.android.sdk.pushnotification.PushType
+import com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayServicesAvailable
+import com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvailable
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
+import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
 
 /**
- * implementation of {@link IFcmMessageHandler}
+ * implementation of [IFcmMessageHandler]
  */
-public class FcmSdkHandlerImpl implements IFcmSdkHandler {
+internal open class FcmSdkHandlerImpl(
+    private val listener: CTPushProviderListener,
+    private val context: Context,
+    private val config: CleverTapInstanceConfig
+) : IFcmSdkHandler {
 
-    private final CleverTapInstanceConfig config;
+    @Suppress("unused")
+    private var manifestInfo: ManifestInfo? = ManifestInfo.getInstance(context)
 
-    private final Context context;
+    override val pushType: PushType
+        get() = FCM
 
-    private final CTPushProviderListener listener;
+    override val isAvailable: Boolean
+        get() {
+            try {
+                if (!isGooglePlayServicesAvailable(context)) {
+                    config.log(LOG_TAG, FCM_LOG_TAG + "Google Play services is currently unavailable.")
+                    return false
+                }
 
-    private ManifestInfo manifestInfo;
-
-    public FcmSdkHandlerImpl(final CTPushProviderListener listener, final Context context,
-            final CleverTapInstanceConfig config) {
-        this.context = context;
-        this.config = config;
-        this.listener = listener;
-        this.manifestInfo = ManifestInfo.getInstance(context);
-    }
-
-    public PushType getPushType() {
-        return FCM;
-    }
-
-    @Override
-    public boolean isAvailable() {
-        try {
-            if (!isGooglePlayServicesAvailable(context)) {
-                config.log(LOG_TAG, FCM_LOG_TAG + "Google Play services is currently unavailable.");
-                return false;
+                val senderId = senderId
+                if (TextUtils.isEmpty(senderId)) {
+                    config
+                        .log(LOG_TAG, FCM_LOG_TAG + "The FCM sender ID is not set. Unable to register for FCM.")
+                    return false
+                }
+            } catch (t: Throwable) {
+                config.log(LOG_TAG, FCM_LOG_TAG + "Unable to register with FCM.", t)
+                return false
             }
-
-            String senderId = getSenderId();
-            if (TextUtils.isEmpty(senderId)) {
-                config
-                        .log(LOG_TAG, FCM_LOG_TAG + "The FCM sender ID is not set. Unable to register for FCM.");
-                return false;
-            }
-        } catch (Throwable t) {
-            config.log(LOG_TAG, FCM_LOG_TAG + "Unable to register with FCM.", t);
-            return false;
+            return true
         }
-        return true;
-    }
 
-    @Override
-    public boolean isSupported() {
-        return isGooglePlayStoreAvailable(context);
-    }
+    override val isSupported: Boolean
+        get() = isGooglePlayStoreAvailable(context)
 
-    @Override
-    public void requestToken() {
+    override fun requestToken() {
         try {
-            config.log(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
+            config.log(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json")
             FirebaseMessaging
-                    .getInstance()
-                    .getToken()
-                    .addOnCompleteListener
-                            (new OnCompleteListener<String>() {
-                                 @Override
-                                 public void onComplete(@NonNull final Task<String> task) {
-                                     if (!task.isSuccessful()) {
-                                         config.log(LOG_TAG,
-                                                 FCM_LOG_TAG + "FCM token using googleservices.json failed",
-                                                 task.getException());
-                                         listener.onNewToken(null, getPushType());
-                                         return;
-                                     }
-                                     String token = task.getResult() != null ? task.getResult() : null;
-                                     config.log(LOG_TAG,
-                                             FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
-                                     listener.onNewToken(token, getPushType());
-                                 }
-                             }
-                            );
-        } catch (Throwable t) {
-            config.log(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
-            listener.onNewToken(null, getPushType());
+                .getInstance()
+                .token
+                .addOnCompleteListener(object : OnCompleteListener<String> {
+                    override fun onComplete(task: Task<String>) {
+                        if (!task.isSuccessful) {
+                            config.log(
+                                LOG_TAG,
+                                FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                task.exception
+                            )
+                            listener.onNewToken(null, pushType)
+                            return
+                        }
+                        val token: String? = if (task.result != null) task.result else null
+                        config.log(
+                            LOG_TAG,
+                            FCM_LOG_TAG + "FCM token using googleservices.json - " + token
+                        )
+                        listener.onNewToken(token, pushType)
+                    }
+                })
+        } catch (t: Throwable) {
+            config.log(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t)
+            listener.onNewToken(null, pushType)
         }
     }
 
-    String getSenderId() {
-        FirebaseApp app = FirebaseApp.getInstance();
-        return app.getOptions().getGcmSenderId();
-    }
+    open val senderId: String?
+        get() {
+            val app = FirebaseApp.getInstance()
+            return app.options.gcmSenderId
+        }
 
-    void setManifestInfo(final ManifestInfo manifestInfo) {
-        this.manifestInfo = manifestInfo;
+    fun setManifestInfo(manifestInfo: ManifestInfo?) {
+        this.manifestInfo = manifestInfo
     }
 }
