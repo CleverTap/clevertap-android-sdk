@@ -237,6 +237,35 @@ Java callers and the binary API are unaffected. Kotlin callers may need small ed
   syntax: use `getAllDisplayUnits()` / `getActionButtonIconKey()`.
 - Previously-public internals are `internal` now (Kotlin callers lose them; Java callers still link).
 
+### Java-client interop audit
+
+BCV only compares erased descriptors, so the Java (pre-migration, `df56c52b6`) and Kotlin release
+bytecode were also compared member by member for every public class plus the 57 SDK classes the
+wrapper SDKs (flutter, react-native, Leanplum, native-ui-kit, segment, rudder) reference, checking
+what javac/the JVM care about but BCV can't see: generic signatures, `throws`, varargs, `final`,
+compile-time constants (`case X:`), interface methods losing default bodies, Kotlin-only types in
+signatures, mangled/removed members on `@RestrictTo` classes, and new Kotlin parameter null-checks.
+
+- **Fixed:** `DisplayUnitCache.updateDisplayUnits` had become `List<? extends CleverTapDisplayUnit>`,
+  which breaks Java implementations' `@Override` → `@JvmSuppressWildcards`.
+- **No issue:** no lost `throws`, varargs or constants; no interface method became abstract; no
+  Kotlin `Function`/`Unit` types in signatures; every member the wrappers call still exists under
+  the same JVM name (only `Utils`' unused implicit constructor is gone).
+- **Harmless by construction:** 12 `CleverTapAPI` parameters now carry `? extends` wildcards
+  (`pushEvent`, `pushProfile`, `onUserLogin`, multi-value and inbox-id methods): strictly more
+  permissive for Java callers, and `CleverTapAPI` cannot be subclassed outside the SDK (its
+  constructors were private/package-private and are now synthetic). Same for the new `final` on
+  `getCoreState()` and on `CoreMetaData`/`LocalDataStore` members (wrappers call, never subclass).
+- **New null-checks:** almost all are on parameters the Java version dereferenced immediately
+  anyway (same NPE, one frame earlier) or that Android always supplies (Parcel, receiver
+  Context/Intent). Real differences, both judged acceptable:
+  - `CleverTapInstanceConfig.setIdentityKeys((String[]) null)` used to store null; the Kotlin
+    `vararg` rejects a null array (normal varargs calls are unaffected; a nullable vararg array is
+    not expressible in Kotlin without losing the varargs flag).
+  - `PushType(type, prefKey, …)` now rejects null `type`/`prefKey`; both wrappers that build
+    `PushType`s (flutter `Utils.mapToPushType`, RN `pushTypeFromReadableMap`) already return early
+    on null, Leanplum passes literals.
+
 ### Possible latent bugs found during conversion (behaviour deliberately preserved)
 
 - `LocalDataStore` static `EXECUTOR_THREAD_ID` written cross-thread without `volatile`.
