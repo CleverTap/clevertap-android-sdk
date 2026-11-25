@@ -1,33 +1,19 @@
-package com.clevertap.android.sdk.task;
+package com.clevertap.android.sdk.task
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.Executor
 
 /**
  * Wrapper class to execute runnable after a task is failed.
- * Ref{@link OnFailureListener}
+ * Ref[OnFailureListener]
  *
- * @param <TResult>
+ * @param TResult
  */
-class FailureExecutable<TResult> extends Executable<TResult> {
+internal class FailureExecutable<TResult>(
+    executor: Executor,
+    val failureListener: OnFailureListener<TResult>
+) : Executable<TResult>(executor) {
 
-    public OnFailureListener<TResult> getFailureListener() {
-        return failureListener;
-    }
-
-    private final OnFailureListener<TResult> failureListener;
-
-    public FailureExecutable(final Executor executor, final OnFailureListener<TResult> listener) {
-        super(executor);
-        failureListener = listener;
-    }
-
-    @Override
-    void execute(final TResult input) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                failureListener.onFailure(input);
-            }
-        });
+    override fun execute(input: TResult) {
+        executor.execute { failureListener.onFailure(input) }
     }
 }

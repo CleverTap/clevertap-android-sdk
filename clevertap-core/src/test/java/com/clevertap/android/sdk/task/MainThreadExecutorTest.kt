@@ -27,7 +27,7 @@ class MainThreadExecutorTest : BaseTestCase() {
     fun test_setMainThreadHandler() {
         val handler = Handler()
         val executor = MainThreadExecutor()
-        executor.setMainThreadHandler(handler)
+        executor.mainThreadHandler = handler
         Assert.assertEquals(executor.mainThreadHandler, handler)
     }
 

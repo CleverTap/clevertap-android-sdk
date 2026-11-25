@@ -1,10 +1,13 @@
-package com.clevertap.android.sdk.task;
+package com.clevertap.android.sdk.task
+
+import androidx.annotation.RestrictTo
 
 /**
  * Interface to provide failure callbacks
- * @param <TResult>
+ * @param TResult
  */
-public interface OnFailureListener<TResult> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+fun interface OnFailureListener<TResult> {
 
-    void onFailure(TResult result);
+    fun onFailure(result: TResult)
 }

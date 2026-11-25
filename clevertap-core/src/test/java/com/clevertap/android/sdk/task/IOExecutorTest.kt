@@ -23,7 +23,7 @@ class IOExecutorTest : BaseTestCase() {
         super.setUp()
         mExecutorService = mockk(relaxed = true)
         executor = IOExecutor()
-        executor.setExecutorService(mExecutorService)
+        executor.executorService = mExecutorService
     }
 
     @Test

@@ -1,17 +1,12 @@
-package com.clevertap.android.sdk.task;
+package com.clevertap.android.sdk.task
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.Executor
 
 /**
  * Stuffs which can be executed on an executor with certain input parameter
- * @param <TResult>
+ * @param TResult
  */
-abstract class Executable<TResult> {
-    protected final Executor executor;
+internal abstract class Executable<TResult>(protected val executor: Executor) {
 
-    Executable(final Executor executor) {
-        this.executor = executor;
-    }
-
-    abstract void execute(final TResult input);
+    abstract fun execute(input: TResult)
 }

@@ -1,142 +1,124 @@
-package com.clevertap.android.sdk.task;
+package com.clevertap.android.sdk.task
 
-import com.clevertap.android.sdk.Logger;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.RunnableFuture;
-import java.util.concurrent.TimeUnit;
+import com.clevertap.android.sdk.Logger
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.FutureTask
+import java.util.concurrent.RunnableFuture
+import java.util.concurrent.TimeUnit
 
 /**
  * Post async safely executor is nothing but a single thread pool executor
  * It's a single pipeline to execute task sequentially
  */
-class PostAsyncSafelyExecutor implements ExecutorService {
+internal class PostAsyncSafelyExecutor : ExecutorService {
 
-    private long EXECUTOR_THREAD_ID = 0;
-    private static final String TAG = "PostAsyncSafelyExecutor";
+    private var EXECUTOR_THREAD_ID: Long = 0
 
-    void setExecutor(final ExecutorService executor) {
-        this.executor = executor;
+    var executor: ExecutorService = Executors.newSingleThreadExecutor()
+
+    @Throws(InterruptedException::class)
+    override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
+        return executor.awaitTermination(timeout, unit)
     }
 
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-
-    @Override
-    public boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
-        return executor.awaitTermination(timeout, unit);
-    }
-
-    @Override
-    public void execute(final Runnable task) {
+    override fun execute(task: Runnable?) {
         if (task == null) {
-            throw new NullPointerException("PostAsyncSafelyExecutor#execute: task can't ne null");
+            throw NullPointerException("PostAsyncSafelyExecutor#execute: task can't ne null")
         }
-        final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
+        val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
         if (executeSync) {
-            task.run();
+            task.run()
         } else {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    EXECUTOR_THREAD_ID = Thread.currentThread().getId();
-                    task.run();
-                }
-            });
+            executor.execute {
+                EXECUTOR_THREAD_ID = Thread.currentThread().id
+                task.run()
+            }
         }
     }
 
-    @Override
-    public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAll: This method is not supported");
+    @Throws(UnsupportedOperationException::class)
+    override fun <T> invokeAll(tasks: MutableCollection<out Callable<T>>?): MutableList<Future<T>> {
+        throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAll: This method is not supported")
     }
 
-    @Override
-    public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks, final long timeout,
-                                         final TimeUnit unit)
-            throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAll: This method is not supported");
+    @Throws(UnsupportedOperationException::class)
+    override fun <T> invokeAll(
+        tasks: MutableCollection<out Callable<T>>?,
+        timeout: Long,
+        unit: TimeUnit?
+    ): MutableList<Future<T>> {
+        throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAll: This method is not supported")
     }
 
-    @Override
-    public <T> T invokeAny(final Collection<? extends Callable<T>> tasks)
-            throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAny: This method is not supported");
+    @Throws(UnsupportedOperationException::class)
+    override fun <T> invokeAny(tasks: MutableCollection<out Callable<T>>?): T {
+        throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAny: This method is not supported")
     }
 
-    @Override
-    public <T> T invokeAny(final Collection<? extends Callable<T>> tasks, final long timeout, final TimeUnit unit)
-            throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAny: This method is not supported");
+    @Throws(UnsupportedOperationException::class)
+    override fun <T> invokeAny(tasks: MutableCollection<out Callable<T>>?, timeout: Long, unit: TimeUnit?): T {
+        throw UnsupportedOperationException("PostAsyncSafelyExecutor#invokeAny: This method is not supported")
     }
 
-    @Override
-    public boolean isShutdown() {
-        return executor.isShutdown();
+    override fun isShutdown(): Boolean {
+        return executor.isShutdown
     }
 
-    @Override
-    public boolean isTerminated() {
-        return executor.isTerminated();
+    override fun isTerminated(): Boolean {
+        return executor.isTerminated
     }
 
-    @Override
-    public void shutdown() {
-        executor.shutdown();
+    override fun shutdown() {
+        executor.shutdown()
     }
 
-    @Override
-    public List<Runnable> shutdownNow() {
-        return executor.shutdownNow();
+    override fun shutdownNow(): MutableList<Runnable> {
+        return executor.shutdownNow()
     }
 
-    @Override
-    public <T> Future<T> submit(final Callable<T> task) {
+    override fun <T> submit(task: Callable<T>?): Future<T>? {
         if (task == null) {
-            throw new NullPointerException("PostAsyncSafelyExecutor#submit: task can't ne null");
+            throw NullPointerException("PostAsyncSafelyExecutor#submit: task can't ne null")
         }
-        Future<T> future = null;
-        final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
+        var future: Future<T>? = null
+        val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
         if (executeSync) {
             try {
-                task.call();
-            } catch (Exception e) {
-                Logger.d(TAG, "Error executing task synchronously", e);
+                task.call()
+            } catch (e: Exception) {
+                Logger.d(TAG, "Error executing task synchronously", e)
             }
         } else {
-            future = executor.submit(new Callable<T>() {
-                @Override
-                public T call() throws Exception {
-                    EXECUTOR_THREAD_ID = Thread.currentThread().getId();
-                    return task.call();
-                }
-            });
+            future = executor.submit(Callable {
+                EXECUTOR_THREAD_ID = Thread.currentThread().id
+                task.call()
+            })
         }
-        return future;
+        return future
     }
 
-    @Override
-    public <T> Future<T> submit(final Runnable task, final T result) {
+    override fun <T> submit(task: Runnable?, result: T): Future<T> {
         if (task == null) {
-            throw new NullPointerException("PostAsyncSafelyExecutor#submit: task can't ne null");
+            throw NullPointerException("PostAsyncSafelyExecutor#submit: task can't ne null")
         }
-        RunnableFuture<T> futureTask = new FutureTask<>(task, result);
-        execute(futureTask);
-        return futureTask;
+        val futureTask: RunnableFuture<T> = FutureTask(task, result)
+        execute(futureTask)
+        return futureTask
     }
 
-    @Override
-    public Future<?> submit(final Runnable task) {
+    override fun submit(task: Runnable?): Future<*> {
         if (task == null) {
-            throw new NullPointerException("PostAsyncSafelyExecutor#submit: task can't ne null");
+            throw NullPointerException("PostAsyncSafelyExecutor#submit: task can't ne null")
         }
-        RunnableFuture<Void> futureTask = new FutureTask<>(task, null);
-        execute(futureTask);
-        return futureTask;
+        val futureTask: RunnableFuture<Void?> = FutureTask(task, null)
+        execute(futureTask)
+        return futureTask
+    }
+
+    private companion object {
+        private const val TAG = "PostAsyncSafelyExecutor"
     }
 }
