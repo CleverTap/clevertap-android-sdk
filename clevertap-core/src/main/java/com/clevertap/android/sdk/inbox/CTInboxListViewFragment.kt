@@ -477,6 +477,7 @@ open class CTInboxListViewFragment : Fragment() {
     internal fun fireUrlThroughIntent(url: String?) {
         try {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url!!.replace("\n", "").replace("\r", "")))
+            val activity = activity
             if (activity != null) {
                 Utils.setPackageNameFromResolveInfoList(activity, intent)
             }

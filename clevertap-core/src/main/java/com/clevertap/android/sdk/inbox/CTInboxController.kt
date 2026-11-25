@@ -23,7 +23,7 @@ import java.util.concurrent.Callable
  */
 internal open class CTInboxController @VisibleForTesting internal constructor(
     private val config: CleverTapInstanceConfig,
-    guid: String,
+    guid: String?,
     private val dbAdapter: DBAdapter,
     private val ctLockManager: CTLockManager,
     private val callbackManager: BaseCallbackManager,
@@ -37,7 +37,8 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     private val messagesLock = Any()
 
     @get:AnyThread
-    val userId: String = guid
+    // Java let a null guid through to dbAdapter.getMessages(), which rejects it; fail at the same point.
+    val userId: String = guid!!
 
     init {
         this.messagesList = this.dbAdapter.getMessages(this.userId)
@@ -46,7 +47,7 @@ internal open class CTInboxController @VisibleForTesting internal constructor(
     // always call async
     @WorkerThread
     constructor(
-        config: CleverTapInstanceConfig, guid: String, adapter: DBAdapter,
+        config: CleverTapInstanceConfig, guid: String?, adapter: DBAdapter,
         ctLockManager: CTLockManager,
         callbackManager: BaseCallbackManager,
         videoSupported: Boolean,

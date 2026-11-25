@@ -102,7 +102,7 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
         setContentView(R.layout.inbox_activity)
 
         val coreMetaData = cleverTapAPI!!.coreState.coreMetaData
-        coreMetaData.setAppInboxActivity(this)
+        coreMetaData.appInboxActivity = this
 
         val styleConfig = styleConfig!!
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
@@ -212,7 +212,7 @@ open class CTInboxActivity : FragmentActivity(), CTInboxListViewFragment.InboxLi
 
     override fun onDestroy() {
         val coreMetaData = cleverTapAPI!!.coreState.coreMetaData
-        coreMetaData.setAppInboxActivity(null)
+        coreMetaData.appInboxActivity = null
 
         if (styleConfig!!.isUsingTabs) {
             val allFragments = supportFragmentManager.fragments
