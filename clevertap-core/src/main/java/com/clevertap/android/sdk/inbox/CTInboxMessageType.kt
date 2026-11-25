@@ -13,7 +13,6 @@ enum class CTInboxMessageType(private val inboxMessageType: String) {
 
     companion object {
 
-        @JvmStatic
         internal fun fromString(type: String): CTInboxMessageType? {
             return when (type) {
                 "simple" -> SimpleMessage

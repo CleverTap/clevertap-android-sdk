@@ -226,7 +226,7 @@ open class CTInboxMessage : Parcelable {
     // (writeToParcel always writes customData, tags and inboxMessageContents); they leave the
     // non-null defaults in place instead of storing null.
     @Suppress("DEPRECATION")
-    private constructor(`in`: Parcel) {
+    internal constructor(`in`: Parcel) {
         try {
             _title = `in`.readString()
             _body = `in`.readString()

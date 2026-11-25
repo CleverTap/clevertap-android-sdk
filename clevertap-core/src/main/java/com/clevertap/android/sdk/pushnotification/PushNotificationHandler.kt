@@ -103,7 +103,6 @@ open class PushNotificationHandler private constructor() : ActionButtonClickHand
          * [LiveUpdatePayloadSurfacer.flatten] — a pure, unit-tested seam. This method just applies
          * the result to the bundle.
          */
-        @JvmStatic
         internal fun surfaceLiveUpdatePayload(message: Bundle) {
             val data = message.getString(Constants.WZRK_LIVE_UPDATE_DATA)
             val toSurface = LiveUpdatePayloadSurfacer.flatten(data, message.keySet())
