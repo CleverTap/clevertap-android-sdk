@@ -199,12 +199,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         }
     }
 
-    /**
-     * Releases the players of the other tabs as soon as a tab is chosen, so two players never overlap,
-     * and tells the tab that has come to rest that it is fully on screen, so its video can start.
-     * onPageSelected() fires while the page is still animating, when rows still measure zero
-     * visible height - only SCROLL_STATE_IDLE means settled, so the video starts there.
-     */
+    /** Hides the other tabs when a tab is chosen, and starts the current tab's video once the pager rests. */
     static ViewPager.OnPageChangeListener createPageSettledListener(final ViewPager pager,
             final CTInboxTabAdapter adapter) {
         return new ViewPager.SimpleOnPageChangeListener() {
