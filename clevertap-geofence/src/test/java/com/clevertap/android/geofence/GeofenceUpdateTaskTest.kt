@@ -13,10 +13,10 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.skyscreamer.jsonassert.JSONAssert
+import kotlin.test.assertEquals
 
 class GeofenceUpdateTaskTest : BaseTestCase() {
 

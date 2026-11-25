@@ -11,6 +11,9 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 internal class CTFeatureFlagFactoryTest : BaseTestCase() {
@@ -38,8 +41,8 @@ internal class CTFeatureFlagFactoryTest : BaseTestCase() {
             callbackManager,
             analyticsManager
         )
-        Assert.assertNotNull(controller)
-        Assert.assertTrue(controller is CTFeatureFlagsController)
+        assertNotNull(controller)
+        assertTrue(controller is CTFeatureFlagsController)
     }
 
     @Test
@@ -51,9 +54,9 @@ internal class CTFeatureFlagFactoryTest : BaseTestCase() {
             callbackManager,
             analyticsManager
         )
-        Assert.assertNotNull(controller.mFileUtils)
-        Assert.assertEquals(controller.config, cleverTapInstanceConfig)
-        Assert.assertEquals(controller.mCallbackManager, callbackManager)
-        Assert.assertEquals(controller.mAnalyticsManager, analyticsManager)
+        assertNotNull(controller.mFileUtils)
+        assertEquals(controller.config, cleverTapInstanceConfig)
+        assertEquals(controller.mCallbackManager, callbackManager)
+        assertEquals(controller.mAnalyticsManager, analyticsManager)
     }
 }

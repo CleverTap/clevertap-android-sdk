@@ -10,11 +10,12 @@ import com.clevertap.android.shared.test.BaseTestCase
 import com.google.firebase.messaging.RemoteMessage
 import io.mockk.every
 import io.mockk.mockkStatic
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTFcmMessageHandlerTest : BaseTestCase() {
@@ -30,13 +31,13 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
 
     @Test
     fun testCreateNotification_Null_Message() {
-        Assert.assertFalse(mHandlerCT.createNotification(application, null))
+        assertFalse(mHandlerCT.createNotification(application, null))
     }
 
     @Test
     fun testCreateNotification_Invalid_Message() {
         //empty bundle
-        Assert.assertFalse(mHandlerCT.createNotification(application, RemoteMessage(Bundle())))
+        assertFalse(mHandlerCT.createNotification(application, RemoteMessage(Bundle())))
     }
 
     @Test
@@ -44,7 +45,7 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
         val bundle = Bundle()
         bundle.putString("title", "Test Title")
         bundle.putString("messagee", "Test Message")
-        Assert.assertFalse(mHandlerCT.createNotification(application, RemoteMessage(bundle)))
+        assertFalse(mHandlerCT.createNotification(application, RemoteMessage(bundle)))
     }
 
     @Test
@@ -54,12 +55,12 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
         bundle.putString("messagee", "Test Message")
         bundle.putString(Constants.NOTIFICATION_TAG, "Some Data")
         val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(bundle))
-        Assert.assertTrue(isSuccess)
+        assertTrue(isSuccess)
     }
 
     @Test
     fun testOnNewToken_Success() {
-        Assert.assertTrue(mHandlerCT.onNewToken(application, FCM_TOKEN))
+        assertTrue(mHandlerCT.onNewToken(application, FCM_TOKEN))
     }
 
     @Test
@@ -72,7 +73,7 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
                     FCM
                 )
             } throws RuntimeException("Something Went Wrong")
-            Assert.assertFalse(mHandlerCT.onNewToken(application, FCM_TOKEN))
+            assertFalse(mHandlerCT.onNewToken(application, FCM_TOKEN))
         }
     }
 }

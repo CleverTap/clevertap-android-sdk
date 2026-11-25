@@ -29,12 +29,12 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class GoogleLocationAdapterTest : BaseTestCase() {
 
@@ -101,18 +101,9 @@ class GoogleLocationAdapterTest : BaseTestCase() {
                 .setMinUpdateDistanceMeters(900f)
                 .build()
 
-        assertEquals(
-            ctGeofenceSettings.interval, actualLocationRequest.intervalMillis
-        )
-        assertEquals(
-            ctGeofenceSettings.fastestInterval,
-            actualLocationRequest.minUpdateIntervalMillis
-        )
-        assertEquals(
-            ctGeofenceSettings.smallestDisplacement,
-            actualLocationRequest.minUpdateDistanceMeters,
-            0f
-        )
+        assertEquals(ctGeofenceSettings.interval, actualLocationRequest.intervalMillis)
+        assertEquals(ctGeofenceSettings.fastestInterval, actualLocationRequest.minUpdateIntervalMillis)
+        assertEquals(ctGeofenceSettings.smallestDisplacement, actualLocationRequest.minUpdateDistanceMeters, absoluteTolerance = 0f)
         assertEquals(Priority.PRIORITY_LOW_POWER, actualLocationRequest.priority)
     }
 
@@ -128,10 +119,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
         val locationAdapter = GoogleLocationAdapter(application)
 
         locationAdapter.getLastLocation { location ->
-            Assert.assertSame(
-                expectedLocation,
-                location
-            )
+            assertSame(expectedLocation, location)
         }
     }
 
@@ -224,9 +212,7 @@ class GoogleLocationAdapterTest : BaseTestCase() {
         // Get WorkInfo and outputData
         val workInfos = workManager.getWorkInfosForUniqueWork(TAG_WORK_LOCATION_UPDATES).get()
         // Assert work is enqueued by locationAdapter.requestLocationUpdates()
-        assertTrue(
-            setOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING).contains(workInfos[0].state)
-        )
+        assertTrue(setOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING).contains(workInfos[0].state))
 
         verify { providerClient.removeLocationUpdates(any<PendingIntent>()) }
         verify { Tasks.await(any()) }

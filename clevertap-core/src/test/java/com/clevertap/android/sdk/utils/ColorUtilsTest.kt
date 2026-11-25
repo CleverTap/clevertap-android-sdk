@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.utils
 
-import junit.framework.TestCase.assertEquals
+import kotlin.test.assertEquals
 import org.junit.Test
 
 class ColorUtilsTest {

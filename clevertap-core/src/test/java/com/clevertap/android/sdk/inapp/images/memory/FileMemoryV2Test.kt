@@ -2,14 +2,14 @@ package com.clevertap.android.sdk.inapp.images.memory
 
 import com.clevertap.android.sdk.ILogger
 import io.mockk.mockk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class FileMemoryV2Test {
 

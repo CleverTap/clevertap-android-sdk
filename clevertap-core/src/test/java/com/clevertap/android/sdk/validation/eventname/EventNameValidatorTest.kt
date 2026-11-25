@@ -6,8 +6,9 @@ import com.clevertap.android.sdk.validation.ValidationError
 import com.clevertap.android.sdk.validation.ValidationOutcome
 import com.clevertap.android.sdk.validation.pipeline.EventNameNormalizationResult
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class EventNameValidatorTest {
 

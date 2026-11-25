@@ -9,11 +9,11 @@ import com.clevertap.android.sdk.cryption.EncryptionLevel
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class LoginInfoProviderTest : BaseTestCase() {
 

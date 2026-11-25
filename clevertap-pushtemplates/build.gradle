@@ -42,6 +42,7 @@ dependencies {
     implementation (libs.android.gif.drawable)
 
     testImplementation (libs.test.junit)
+    testImplementation(libs.test.kotlin.test)
     testImplementation project(':clevertap-core')
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.robolectric)

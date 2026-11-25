@@ -1,11 +1,11 @@
 package com.clevertap.android.sdk.pushnotification
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** Robolectric (for real org.json) tests for flattening the Live Update `data` object. */
 @RunWith(RobolectricTestRunner::class)

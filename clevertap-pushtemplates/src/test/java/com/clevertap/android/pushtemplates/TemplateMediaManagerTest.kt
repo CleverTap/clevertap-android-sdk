@@ -9,11 +9,16 @@ import com.clevertap.android.pushtemplates.media.TemplateRepository
 import com.clevertap.android.sdk.network.DownloadedBitmap
 import io.mockk.*
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNotSame
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class TemplateMediaManagerTest {
@@ -703,10 +708,7 @@ class TemplateMediaManagerTest {
         // Then
         assertSame(raw, templateMediaManager.getStyledImageBitmap(url, null))
         assertSame(raw, templateMediaManager.getStyledImageBitmap(url, ImageBorderData()))
-        assertSame(
-            raw,
-            templateMediaManager.getStyledImageBitmap(url, ImageBorderData(borderWidthValue = 5f))
-        )
+        assertSame(raw, templateMediaManager.getStyledImageBitmap(url, ImageBorderData(borderWidthValue = 5f)))
     }
 
     @Test

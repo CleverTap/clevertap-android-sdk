@@ -17,13 +17,13 @@ import io.mockk.every
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /**
  * The group summary title must come from pt_title or pt_msg, never nt.
@@ -54,10 +54,7 @@ class IconsStyleTest {
 
         val notification = style.builderFromStyle(context, Bundle(), 1, newBuilder()).build()
 
-        assertEquals(
-            "PT message",
-            notification.extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString()
-        )
+        assertEquals("PT message", notification.extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString())
     }
 
     @Test
@@ -66,10 +63,7 @@ class IconsStyleTest {
 
         val notification = style.builderFromStyle(context, Bundle(), 1, newBuilder()).build()
 
-        assertEquals(
-            "PT title",
-            notification.extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString()
-        )
+        assertEquals("PT title", notification.extras.getCharSequence(NotificationCompat.EXTRA_TITLE).toString())
     }
 
     @Test

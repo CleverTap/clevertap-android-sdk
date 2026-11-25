@@ -7,8 +7,11 @@ import com.clevertap.android.sdk.validation.ValidationOutcome
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyNormalizationResult
 import com.clevertap.android.sdk.validation.pipeline.RemovalReason
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class EventPropertyKeyValidatorTest {
 

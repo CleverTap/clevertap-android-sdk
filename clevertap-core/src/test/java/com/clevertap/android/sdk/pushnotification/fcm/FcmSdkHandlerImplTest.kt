@@ -13,10 +13,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class FcmSdkHandlerImplTest : BaseTestCase() {
@@ -37,7 +40,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
     fun isAvailable_Unavailable_PlayServices_Returns_False() {
         mockkStatic(PackageUtils::class) {
             every { PackageUtils.isGooglePlayServicesAvailable(application) } returns false
-            Assert.assertFalse(handler.isAvailable)
+            assertFalse(handler.isAvailable)
         }
     }
 
@@ -53,7 +56,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
                 val options = mockk<FirebaseOptions>(relaxed = true)
                 every { app.options } returns options
                 every { options.gcmSenderId } returns FCM_SENDER_ID
-                Assert.assertTrue(handler.isAvailable)
+                assertTrue(handler.isAvailable)
             }
         }
     }
@@ -70,7 +73,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
                 val options = mockk<FirebaseOptions>(relaxed = true)
                 every { app.options } returns options
                 every { options.gcmSenderId } returns null
-                Assert.assertFalse(handler.isAvailable)
+                assertFalse(handler.isAvailable)
             }
         }
     }
@@ -81,7 +84,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
             every { PackageUtils.isGooglePlayServicesAvailable(application) } throws RuntimeException(
                 "Something Went Wrong"
             )
-            Assert.assertFalse(handler.isAvailable)
+            assertFalse(handler.isAvailable)
         }
     }
 
@@ -89,7 +92,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
     fun isSupported_Returns_True() {
         mockkStatic(PackageUtils::class) {
             every { PackageUtils.isGooglePlayStoreAvailable(application) } returns true
-            Assert.assertTrue(handler.isSupported)
+            assertTrue(handler.isSupported)
         }
     }
 
@@ -97,13 +100,13 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
     fun isSupported_Returns_False() {
         mockkStatic(PackageUtils::class) {
             every { PackageUtils.isGooglePlayStoreAvailable(application) } returns false
-            Assert.assertFalse(handler.isSupported)
+            assertFalse(handler.isSupported)
         }
     }
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(handler.pushType, FCM)
+        assertEquals(handler.pushType, FCM)
     }
 
     @Test
@@ -115,7 +118,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
             every { FirebaseApp.getInstance() } returns app
             every { app.options } returns options
             every { options.gcmSenderId } returns FCM_SENDER_ID
-            Assert.assertEquals(handler.senderId, FCM_SENDER_ID)
+            assertEquals(handler.senderId, FCM_SENDER_ID)
         }
     }
 
@@ -128,7 +131,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
             every { FirebaseApp.getInstance() } returns app
             every { app.options } returns options
             every { options.gcmSenderId } returns null
-            Assert.assertNull(handler.senderId)
+            assertNull(handler.senderId)
         }
     }
 

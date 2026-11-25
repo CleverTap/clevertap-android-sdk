@@ -4,10 +4,10 @@ import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class FcmPushProviderTest : BaseTestCase() {
@@ -44,7 +44,7 @@ class FcmPushProviderTest : BaseTestCase() {
 
     @Test
     fun testMinSDKSupportVersionCode() {
-        Assert.assertEquals(0, provider.minSDKSupportVersionCode())
+        assertEquals(0, provider.minSDKSupportVersionCode())
     }
 
     @Test

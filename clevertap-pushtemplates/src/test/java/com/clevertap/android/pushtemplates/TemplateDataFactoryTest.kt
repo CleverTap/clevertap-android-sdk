@@ -76,12 +76,16 @@ import com.clevertap.android.sdk.Constants
 import io.mockk.*
 import org.json.JSONArray
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.M])
@@ -2143,7 +2147,7 @@ class TemplateDataFactoryTest {
         ) as TimerTemplateData
 
         // Then
-        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+        assertEquals(90.0, result.chronometerGradientDirection, absoluteTolerance = 0.0)
     }
 
     @Test
@@ -2162,7 +2166,7 @@ class TemplateDataFactoryTest {
         ) as TimerTemplateData
 
         // Then
-        assertEquals(45.0, result.chronometerGradientDirection, 0.0)
+        assertEquals(45.0, result.chronometerGradientDirection, absoluteTolerance = 0.0)
     }
 
     @Test
@@ -2322,7 +2326,7 @@ class TemplateDataFactoryTest {
         ) as TimerTemplateData
 
         // Then
-        assertEquals(90.0, result.chronometerGradientDirection, 0.0)
+        assertEquals(90.0, result.chronometerGradientDirection, absoluteTolerance = 0.0)
     }
 
 
@@ -2683,7 +2687,7 @@ class TemplateDataFactoryTest {
             val d = TemplateDataFactory.createTemplateData(
                 TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
             ) as ProgressTemplateData
-            assertNull("pt_dismiss=$value", d.dismissAfter)
+            assertNull(d.dismissAfter, "pt_dismiss=$value")
         }
     }
 
@@ -2715,7 +2719,7 @@ class TemplateDataFactoryTest {
             val d = TemplateDataFactory.createTemplateData(
                 TemplateType.PROGRESS, mockBundle, false, defaultAltText, notificationIdsProvider
             ) as ProgressTemplateData
-            assertNull("pt_subtitle=$value", d.subtitle)
+            assertNull(d.subtitle, "pt_subtitle=$value")
         }
     }
 
@@ -2919,7 +2923,7 @@ class TemplateDataFactoryTest {
                 defaultAltText = defaultAltText,
                 notificationIdsProvider = notificationIdsProvider
             ) as ProductTemplateData
-            assertEquals("linear=$linear", linear == "true", product.isLinear)
+            assertEquals(linear == "true", product.isLinear, "linear=$linear")
         }
     }
 
@@ -2928,11 +2932,11 @@ class TemplateDataFactoryTest {
     fun `border needs both a width and a colour`() {
         // Given / Then
         val widthOnly = ImageBorderData(borderWidthValue = 6f, borderColor = null)
-        assertFalse("a width with no colour must not draw", widthOnly.hasBorder)
+        assertFalse(widthOnly.hasBorder, "a width with no colour must not draw")
         assertFalse(widthOnly.isActive)
 
         val colourOnly = ImageBorderData(borderWidthValue = 0f, borderColor = android.graphics.Color.RED)
-        assertFalse("a colour with no width must not draw", colourOnly.hasBorder)
+        assertFalse(colourOnly.hasBorder, "a colour with no width must not draw")
         assertFalse(colourOnly.isActive)
 
         val pair = ImageBorderData(borderWidthValue = 6f, borderColor = android.graphics.Color.RED)
@@ -2994,9 +2998,9 @@ class TemplateDataFactoryTest {
 
             // Then
             val border = result.mediaData.imageBorderData
-            assertEquals("radius for '$raw'", 0f, border.cornerRadiusPercent)
-            assertEquals("width for '$raw'", 0f, border.borderWidthValue)
-            assertFalse("'$raw' must not activate styling", border.isActive)
+            assertEquals(0f, border.cornerRadiusPercent, "radius for '$raw'")
+            assertEquals(0f, border.borderWidthValue, "width for '$raw'")
+            assertFalse(border.isActive, "'$raw' must not activate styling")
         }
     }
 
@@ -3019,10 +3023,7 @@ class TemplateDataFactoryTest {
         ) as FiveIconsTemplateData
 
         // Then
-        assertTrue(
-            "FiveIconsTemplateData must not expose image styling",
-            fiveIcons::class.java.declaredFields.none { it.name.contains("imageBorder") }
-        )
+        assertTrue(fiveIcons::class.java.declaredFields.none { it.name.contains("imageBorder") }, "FiveIconsTemplateData must not expose image styling")
     }
 
     @Test
@@ -3099,17 +3100,9 @@ class TemplateDataFactoryTest {
         val landscapeHeight = 200
 
         // Then
-        assertEquals(
-            30f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 10f)
-        )
-        assertEquals(
-            20f, NotificationBitmapUtils.resolveCornerRadiusPx(landscapeHeight, 10f)
-        )
-        assertEquals(
-            portraitHeight * 0.5f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 90f)
-        )
-        assertEquals(
-            portraitHeight * 0.1f, NotificationBitmapUtils.resolveBorderWidthPx(portraitHeight, 400f)
-        )
+        assertEquals(30f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 10f))
+        assertEquals(20f, NotificationBitmapUtils.resolveCornerRadiusPx(landscapeHeight, 10f))
+        assertEquals(portraitHeight * 0.5f, NotificationBitmapUtils.resolveCornerRadiusPx(portraitHeight, 90f))
+        assertEquals(portraitHeight * 0.1f, NotificationBitmapUtils.resolveBorderWidthPx(portraitHeight, 400f))
     }
 }

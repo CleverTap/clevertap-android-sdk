@@ -1,8 +1,7 @@
 package com.clevertap.android.sdk.inapp.evaluation
 
 import org.junit.*
-import org.junit.Assert.*
-
+import kotlin.test.assertEquals
 class TriggerOperatorTest {
 
     @Test

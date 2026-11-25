@@ -5,15 +5,15 @@ import android.graphics.Color
 import com.clevertap.android.pushtemplates.ImageBorderData
 import android.os.Build
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.M])
@@ -334,7 +334,7 @@ class NotificationBitmapUtilsTest {
         assertEquals(1f, NotificationBitmapUtils.resolveBorderWidthPx(600, 1f))
         assertEquals(1f, NotificationBitmapUtils.resolveBorderWidthPx(600, 0.5f))
         // Anything already at or above a pixel is left alone.
-        assertEquals(1.2f, NotificationBitmapUtils.resolveBorderWidthPx(600, 2f), 0.0001f)
+        assertEquals(1.2f, NotificationBitmapUtils.resolveBorderWidthPx(600, 2f), absoluteTolerance = 0.0001f)
     }
 
     @Test
@@ -347,8 +347,8 @@ class NotificationBitmapUtilsTest {
         // Then
         assertEquals(100f, radius)
         assertEquals(20f, stroke)
-        assertTrue("stroke radius must stay positive", radius - stroke / 2f > 0f)
-        assertTrue("stroke must fit inside the reference", stroke < reference / 2f)
+        assertTrue(radius - stroke / 2f > 0f, "stroke radius must stay positive")
+        assertTrue(stroke < reference / 2f, "stroke must fit inside the reference")
     }
 
     private fun sourceBitmap(w: Int = width, h: Int = height): Bitmap =
@@ -445,8 +445,7 @@ class NotificationBitmapUtilsTest {
         // Then
         assertEquals(8f, radiusPx)
         assertEquals(40f, strokePx)
-        assertTrue("this case only matters while half the stroke exceeds the radius",
-            strokePx / 2f > radiusPx)
+        assertTrue(strokePx / 2f > radiusPx, "this case only matters while half the stroke exceeds the radius")
 
         val source = sourceBitmap(minDimension, minDimension)
         val result = NotificationBitmapUtils.applyRoundedBorderToBitmap(
@@ -472,10 +471,9 @@ class NotificationBitmapUtilsTest {
 
                 // Then
                 val strokePx = NotificationBitmapUtils.resolveBorderWidthPx(400, width)
-                assertTrue("inset rect inverts at radius=$radius width=$width",
-                    400 - 2 * strokePx > 0f)
-                assertEquals("width at radius=$radius width=$width", 400, result.width)
-                assertEquals("height at radius=$radius width=$width", 400, result.height)
+                assertTrue(400 - 2 * strokePx > 0f, "inset rect inverts at radius=$radius width=$width")
+                assertEquals(400, result.width, "width at radius=$radius width=$width")
+                assertEquals(400, result.height, "height at radius=$radius width=$width")
             }
         }
     }
@@ -493,8 +491,8 @@ class NotificationBitmapUtilsTest {
             bitmapsToRecycle.add(result)
 
             // Then
-            assertEquals("width for ${w}x$h", w, result.width)
-            assertEquals("height for ${w}x$h", h, result.height)
+            assertEquals(w, result.width, "width for ${w}x$h")
+            assertEquals(h, result.height, "height for ${w}x$h")
         }
     }
 
@@ -594,8 +592,8 @@ class NotificationBitmapUtilsTest {
             bitmapsToRecycle.add(result)
 
             // Then
-            assertEquals("width for ${w}x$h", w, result.width)
-            assertEquals("height for ${w}x$h", h, result.height)
+            assertEquals(w, result.width, "width for ${w}x$h")
+            assertEquals(h, result.height, "height for ${w}x$h")
         }
     }
 

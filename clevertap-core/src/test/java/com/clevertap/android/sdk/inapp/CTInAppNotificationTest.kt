@@ -6,12 +6,17 @@ import io.mockk.every
 import io.mockk.mockk
 import org.json.JSONException
 import org.json.JSONObject
-import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.system.measureTimeMillis
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
@@ -164,7 +169,7 @@ class CTInAppNotificationTest {
         assertEquals(100, notification.widthPercentage)
         assertEquals(100, notification.heightPercentage)
         assertEquals(-1, notification.maxPerSession)
-        assertEquals(-1.0, notification.aspectRatio, Double.MIN_VALUE)
+        assertEquals(-1.0, notification.aspectRatio, absoluteTolerance = Double.MIN_VALUE)
 
         assertTrue(notification.isJsEnabled)
         assertEquals("1742969683", notification.id)
@@ -300,7 +305,7 @@ class CTInAppNotificationTest {
         val notification = CTInAppNotification(jo, true)
 
         // assert it is set as default -1.0
-        assertEquals(CTInAppNotification.HTML_DEFAULT_ASPECT_RATIO, notification.aspectRatio, Double.MIN_VALUE)
+        assertEquals(CTInAppNotification.HTML_DEFAULT_ASPECT_RATIO, notification.aspectRatio, absoluteTolerance = Double.MIN_VALUE)
     }
 
     fun parcelizeCheck(jsonObject: JSONObject): Long {
@@ -349,7 +354,7 @@ class CTInAppNotificationTest {
         assertEquals(expected.width, actual.width)
         assertEquals(expected.heightPercentage, actual.heightPercentage)
         assertEquals(expected.widthPercentage, actual.widthPercentage)
-        assertEquals(expected.aspectRatio, actual.aspectRatio, Double.MIN_VALUE)
+        assertEquals(expected.aspectRatio, actual.aspectRatio, absoluteTolerance = Double.MIN_VALUE)
         assertEquals(expected.showCloseButton, actual.showCloseButton)
         assertEquals(expected.html, actual.html)
         assertEquals(expected.id, actual.id)

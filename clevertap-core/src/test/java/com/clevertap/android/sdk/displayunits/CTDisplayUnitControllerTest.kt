@@ -3,11 +3,13 @@ package com.clevertap.android.sdk.displayunits
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.displayunits.model.MockCleverTapDisplayUnit
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTDisplayUnitControllerTest : BaseTestCase() {
@@ -32,49 +34,49 @@ class CTDisplayUnitControllerTest : BaseTestCase() {
     @Test
     fun test_updateDisplayUnits_whenListIsNull_cacheIsEmpty() {
         ctDisplayUnitController.updateDisplayUnits(null)
-        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
-        Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID("12121212"))
+        assertNull(ctDisplayUnitController.getAllDisplayUnits())
+        assertNull(ctDisplayUnitController.getDisplayUnitForID("12121212"))
     }
 
     @Test
     fun test_updateDisplayUnits_whenListIsEmpty_cacheIsEmpty() {
         ctDisplayUnitController.updateDisplayUnits(emptyList())
-        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
+        assertNull(ctDisplayUnitController.getAllDisplayUnits())
     }
 
     @Test
     fun test_getDisplayUnitForID_whenEmptyOrNullUnitID_returnNullDisplayUnit() {
-        Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID(null))
-        Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID(""))
+        assertNull(ctDisplayUnitController.getDisplayUnitForID(null))
+        assertNull(ctDisplayUnitController.getDisplayUnitForID(""))
     }
 
     @Test
     fun test_reset() {
         ctDisplayUnitController.updateDisplayUnits(mockDisplayUnits(1))
-        Assert.assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
-        Assert.assertTrue(ctDisplayUnitController.getAllDisplayUnits()!!.size == 1)
+        assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
+        assertTrue(ctDisplayUnitController.getAllDisplayUnits()!!.size == 1)
 
         ctDisplayUnitController.reset()
-        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
-        Assert.assertNull(ctDisplayUnitController.getDisplayUnitForID("mock-notification-id"))
+        assertNull(ctDisplayUnitController.getAllDisplayUnits())
+        assertNull(ctDisplayUnitController.getDisplayUnitForID("mock-notification-id"))
     }
 
     @Test
     fun test_updateDisplayUnits_validList_populatesCache() {
         ctDisplayUnitController.updateDisplayUnits(mockDisplayUnits(1))
-        Assert.assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
-        Assert.assertTrue(ctDisplayUnitController.getAllDisplayUnits()!!.size > 0)
+        assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
+        assertTrue(ctDisplayUnitController.getAllDisplayUnits()!!.size > 0)
         val displayUnit = ctDisplayUnitController.getDisplayUnitForID("mock-notification-id")
-        Assert.assertNotNull(displayUnit)
-        Assert.assertTrue(displayUnit is CleverTapDisplayUnit)
+        assertNotNull(displayUnit)
+        assertTrue(displayUnit is CleverTapDisplayUnit)
     }
 
     @Test
     fun test_updateDisplayUnits_replacesPreviousCache() {
         ctDisplayUnitController.updateDisplayUnits(mockDisplayUnits(1))
-        Assert.assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
+        assertNotNull(ctDisplayUnitController.getAllDisplayUnits())
 
         ctDisplayUnitController.updateDisplayUnits(emptyList())
-        Assert.assertNull(ctDisplayUnitController.getAllDisplayUnits())
+        assertNull(ctDisplayUnitController.getAllDisplayUnits())
     }
 }

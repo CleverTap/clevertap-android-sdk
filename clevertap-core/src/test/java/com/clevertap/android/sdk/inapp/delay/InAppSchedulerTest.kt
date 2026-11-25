@@ -12,10 +12,10 @@ import io.mockk.verifyOrder
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class InAppSchedulerTest {
 

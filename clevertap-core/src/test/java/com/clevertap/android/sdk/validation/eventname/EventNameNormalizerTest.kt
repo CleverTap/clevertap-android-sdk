@@ -2,8 +2,11 @@ package com.clevertap.android.sdk.validation.eventname
 
 import com.clevertap.android.sdk.validation.ValidationConfig
 import com.clevertap.android.sdk.validation.pipeline.ModificationReason
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class EventNameNormalizerTest {
 

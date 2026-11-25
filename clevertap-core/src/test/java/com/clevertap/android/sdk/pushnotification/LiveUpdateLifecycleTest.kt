@@ -1,8 +1,8 @@
 package com.clevertap.android.sdk.pushnotification
 
 import com.clevertap.android.sdk.Constants
-import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.test.assertEquals
 
 /** Pure-JVM unit tests for the BE-driven wzrk_la_event -> lifecycle-state mapping. */
 class LiveUpdateLifecycleTest {

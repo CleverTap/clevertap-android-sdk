@@ -1,8 +1,8 @@
 package com.clevertap.android.sdk.validation.chargedevent
 
 import com.clevertap.android.sdk.validation.ValidationConfig
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class ChargedEventItemsNormalizerTest {
 

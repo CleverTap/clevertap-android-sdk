@@ -1,17 +1,17 @@
 package com.clevertap.android.sdk.utils
 
 import com.clevertap.android.sdk.TestLogger
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * We do not validate file read/write in unit tests, we will have to make instrumentation tests for
@@ -44,7 +44,7 @@ class DiskMemoryTest {
         assertTrue(result)
         val cachedFile = File(cacheDirectory, "CT_FILE_${diskMemory.hashFunction(key)}")
         assertTrue(cachedFile.exists())
-        assertArrayEquals(data, cachedFile.readBytes())
+        assertContentEquals(data, cachedFile.readBytes())
     }
 
     @Test
@@ -89,7 +89,7 @@ class DiskMemoryTest {
 
         assertNotNull(cachedFile)
         assertTrue(cachedFile!!.exists())
-        assertArrayEquals(data, cachedFile.readBytes())
+        assertContentEquals(data, cachedFile.readBytes())
     }
 
     @Test

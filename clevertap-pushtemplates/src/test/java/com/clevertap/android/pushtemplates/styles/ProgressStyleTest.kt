@@ -9,17 +9,17 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Exercises the pre-16 fallback rendering path (Robolectric runs below API 36 / has no
@@ -227,7 +227,7 @@ class ProgressStyleTest {
                 type?.let { putString("pt_chip_type", it) }
                 putString("pt_chip_text", "12 min")
             }
-            assertEquals("type=$type", android.view.View.GONE, chipVisibility(extras))
+            assertEquals(android.view.View.GONE, chipVisibility(extras), "type=$type")
         }
     }
 

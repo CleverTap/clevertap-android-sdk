@@ -9,6 +9,8 @@ import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class HuaweiNotificationParserTest : BaseTestCase() {
@@ -27,8 +29,8 @@ class HuaweiNotificationParserTest : BaseTestCase() {
     fun testToBundle_Message_Invalid_Content_Return_EmptyBundle() {
         every { message.data } returns null
         val returnedBundle = parser.toBundle(message)!!
-        Assert.assertNotNull(returnedBundle)
-        Assert.assertEquals(0, returnedBundle!!.keySet().size)
+        assertNotNull(returnedBundle)
+        assertEquals(0, returnedBundle!!.keySet().size)
     }
 
     @Test
@@ -37,17 +39,17 @@ class HuaweiNotificationParserTest : BaseTestCase() {
         every { message.data } returns mockJson
 
         val returnedBundle = parser.toBundle(message)!!
-        Assert.assertNotNull(returnedBundle)
-        Assert.assertEquals(2, returnedBundle!!.keySet().size)
-        Assert.assertEquals("Sample Title", returnedBundle!!.getString("Title"))
-        Assert.assertEquals("Sample Message Title", returnedBundle!!.getString("Message"))
+        assertNotNull(returnedBundle)
+        assertEquals(2, returnedBundle!!.keySet().size)
+        assertEquals("Sample Title", returnedBundle!!.getString("Title"))
+        assertEquals("Sample Message Title", returnedBundle!!.getString("Message"))
 
     }
 
     @Test
     fun testToBundle_Message_CleverTap_Message_Return_Not_Null() {
         every { message.data } returns getMockJsonStringClevertapNetwork()
-        Assert.assertNotNull(parser.toBundle(message))
+        assertNotNull(parser.toBundle(message))
     }
 
     private fun getMockJsonStringOutsideNetwork(): String? {

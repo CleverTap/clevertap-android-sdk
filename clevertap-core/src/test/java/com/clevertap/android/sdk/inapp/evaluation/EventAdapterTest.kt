@@ -3,12 +3,12 @@ package com.clevertap.android.sdk.inapp.evaluation
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
-import org.junit.Assert.assertNotEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.assertNotEquals
 
 class EventAdapterTest : BaseTestCase() {
     @Test

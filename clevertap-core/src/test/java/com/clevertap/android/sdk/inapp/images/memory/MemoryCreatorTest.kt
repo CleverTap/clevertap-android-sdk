@@ -2,10 +2,10 @@ package com.clevertap.android.sdk.inapp.images.memory
 
 import com.clevertap.android.sdk.ILogger
 import io.mockk.mockk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class MemoryCreatorTest {
 

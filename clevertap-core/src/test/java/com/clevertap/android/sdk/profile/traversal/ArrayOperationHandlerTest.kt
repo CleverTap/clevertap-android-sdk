@@ -3,9 +3,11 @@ package com.clevertap.android.sdk.profile.traversal
 import com.clevertap.android.sdk.Constants
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ArrayOperationHandlerTest {
 
@@ -505,8 +507,8 @@ class ArrayOperationHandlerTest {
             changes, ProfileOperation.DECREMENT
         ) { _, _, _, _ -> }
 
-        assertEquals(5.3, oldArray.getDouble(0), 0.01)
-        assertEquals(10.4, oldArray.getDouble(1), 0.01)
+        assertEquals(5.3, oldArray.getDouble(0), absoluteTolerance = 0.01)
+        assertEquals(10.4, oldArray.getDouble(1), absoluteTolerance = 0.01)
         assertTrue(changes.containsKey("scores"))
     }
 }

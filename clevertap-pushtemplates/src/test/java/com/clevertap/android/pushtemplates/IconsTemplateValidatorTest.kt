@@ -2,13 +2,13 @@ package com.clevertap.android.pushtemplates
 
 import android.os.Build
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * pt_icons needs at least three icons and deep links. Text is optional.

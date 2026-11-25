@@ -4,11 +4,11 @@ import android.net.Uri
 import android.os.Bundle
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.utils.configMock
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class InAppActionParserTest {
