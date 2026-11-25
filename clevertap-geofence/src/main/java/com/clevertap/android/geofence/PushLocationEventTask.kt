@@ -1,100 +1,94 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-
-import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
-import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
-import com.google.android.gms.location.LocationResult;
-
-import java.util.concurrent.Future;
+import android.content.Context
+import androidx.annotation.WorkerThread
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask.OnCompleteListener
+import com.google.android.gms.location.LocationResult
+import java.util.concurrent.Future
 
 /**
- * A task of type {@link CTGeofenceTask} responsible for sending Location received from OS to
+ * A task of type [CTGeofenceTask] responsible for sending Location received from OS to
  * CleverTap SDK which will in turn send it to server to fetch latest geofence list.
  */
-class PushLocationEventTask implements CTGeofenceTask {
+internal class PushLocationEventTask(
+    context: Context,
+    private val locationResult: LocationResult
+) : CTGeofenceTask {
 
-    private final Context context;
+    private val context: Context = context.applicationContext
 
-    @NonNull
-    private final LocationResult locationResult;
-
-    @Nullable
-    private OnCompleteListener onCompleteListener;
-
-    PushLocationEventTask(Context context, @NonNull LocationResult locationResult) {
-        this.context = context.getApplicationContext();
-        this.locationResult = locationResult;
-    }
+    private var onCompleteListener: OnCompleteListener? = null
 
     /**
-     * Creates {@link com.clevertap.android.sdk.CleverTapAPI} instance if it's null, mostly in killed state and
+     * Creates [com.clevertap.android.sdk.CleverTapAPI] instance if it's null, mostly in killed state and
      * then sends Location to CleverTap SDK which will in turn send it to server to fetch latest geofence list.
-     * Also Location will be delivered to APP on main thread through {@link CTLocationUpdatesListener} and caller
-     * will be notified of completion of the task through {@link OnCompleteListener}
+     * Also Location will be delivered to APP on main thread through [CTLocationUpdatesListener] and caller
+     * will be notified of completion of the task through [OnCompleteListener]
      */
     @WorkerThread
-    @Override
-    public void execute() {
-
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Executing PushLocationEventTask...");
+    override fun execute() {
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Executing PushLocationEventTask..."
+        )
 
         if (!Utils.initCTGeofenceApiIfRequired(context)) {
             // if init fails then return without doing any work
-            sendOnCompleteEvent();
-            return;
+            sendOnCompleteEvent()
+            return
         }
 
         try {
-            Utils.notifyLocationUpdates(context, locationResult.getLastLocation());
+            Utils.notifyLocationUpdates(context, locationResult.lastLocation)
 
-            @SuppressWarnings("ConstantConditions") //getCleverTapApi() won't be null here
-            Future<?> future = null;
+            //getCleverTapApi() won't be null here
+            var future: Future<*>? = null
 
-            if (locationResult.getLastLocation() != null) {
+            if (locationResult.lastLocation != null) {
                 future = CTGeofenceAPI.getInstance(context)
-                        .processTriggeredLocation(locationResult.getLastLocation());
+                    .processTriggeredLocation(locationResult.lastLocation!!)
             }
 
             if (future == null) {
-                CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Dropping location ping event to CT server");
-                return;
+                CTGeofenceAPI.getLogger().verbose(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Dropping location ping event to CT server"
+                )
+                return
             }
 
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Calling future for setLocationForGeofences()");
+            CTGeofenceAPI.getLogger().verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Calling future for setLocationForGeofences()"
+            )
 
-            future.get();
+            future.get()
 
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Finished calling future for setLocationForGeofences()");
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to push location event to CT", e);
+            CTGeofenceAPI.getLogger().verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Finished calling future for setLocationForGeofences()"
+            )
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to push location event to CT", e
+            )
         } finally {
-            sendOnCompleteEvent();
+            sendOnCompleteEvent()
         }
-
-
     }
 
-    @Override
-    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
-        this.onCompleteListener = onCompleteListener;
+    override fun setOnCompleteListener(onCompleteListener: OnCompleteListener) {
+        this.onCompleteListener = onCompleteListener
     }
 
     /**
      * Notifies listeners when task execution completes
      */
-    private void sendOnCompleteEvent() {
+    private fun sendOnCompleteEvent() {
         if (onCompleteListener != null) {
-            onCompleteListener.onComplete();
+            onCompleteListener!!.onComplete()
         }
     }
 }

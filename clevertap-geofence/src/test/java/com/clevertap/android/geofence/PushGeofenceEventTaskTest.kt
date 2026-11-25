@@ -10,6 +10,8 @@ import com.clevertap.android.geofence.fakes.GeofenceJSON
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.sdk.CleverTapAPI
 import com.google.android.gms.location.GeofencingEvent
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
@@ -45,7 +47,7 @@ class PushGeofenceEventTaskTest : BaseTestCase() {
         location = Location("")
         intent = Intent()
 
-        mockkStatic(CTGeofenceAPI::class)
+        mockkObject(CTGeofenceAPI.Companion)
         mockkStatic(Utils::class)
         mockkStatic(FileUtils::class)
         mockkStatic(GeofencingEvent::class)
@@ -59,7 +61,7 @@ class PushGeofenceEventTaskTest : BaseTestCase() {
     @After
     override fun cleanUp() {
         super.cleanUp()
-        unmockkStatic(CTGeofenceAPI::class)
+        unmockkObject(CTGeofenceAPI.Companion)
         unmockkStatic(FileUtils::class)
         unmockkStatic(Utils::class)
         unmockkStatic(GeofencingEvent::class)

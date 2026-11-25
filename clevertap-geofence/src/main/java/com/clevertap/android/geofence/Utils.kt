@@ -1,342 +1,368 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import android.Manifest;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-import androidx.core.content.ContextCompat;
-import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
-import com.clevertap.android.sdk.CleverTapAPI;
-import java.util.ArrayList;
-import java.util.List;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Build
+import androidx.annotation.WorkerThread
+import androidx.core.content.ContextCompat
+import com.clevertap.android.sdk.CleverTapAPI
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
-class Utils {
+internal object Utils {
 
-    private static Boolean isPlayServicesDependencyAvailable;
+    private var isPlayServicesDependencyAvailable: Boolean? = null
 
-    private static Boolean isFusedLocationDependencyAvailable;
+    private var isFusedLocationDependencyAvailable: Boolean? = null
 
-    private static Boolean isConcurrentFuturesDependencyAvailable;
+    private var isConcurrentFuturesDependencyAvailable: Boolean? = null
 
-    static String emptyIfNull(String str) {
-        return str == null ? "" : str;
+    @JvmStatic
+    fun emptyIfNull(str: String?): String {
+        return str ?: ""
     }
 
-    static int getGeofenceSDKVersion() {
-        return BuildConfig.VERSION_CODE;
+    @JvmStatic
+    fun getGeofenceSDKVersion(): Int {
+        return BuildConfig.VERSION_CODE
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    static boolean hasBackgroundLocationPermission(final Context context) {
-        try {
+    @JvmStatic
+    fun hasBackgroundLocationPermission(context: Context?): Boolean {
+        return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                return hasPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+                hasPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             } else {
-                return true;
+                true
             }
-        } catch (Throwable t) {
-            return false;
+        } catch (t: Throwable) {
+            false
         }
     }
 
     /**
      * Checks if Application has provided permission
      *
-     * @param context    application {@link Context}
-     * @param permission for example, {@link Manifest.permission#ACCESS_FINE_LOCATION}
+     * @param context    application [Context]
+     * @param permission for example, [Manifest.permission.ACCESS_FINE_LOCATION]
      */
-    static boolean hasPermission(final Context context, String permission) {
-        try {
-            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
-        } catch (Throwable t) {
-            return false;
+    @JvmStatic
+    fun hasPermission(context: Context?, permission: String?): Boolean {
+        return try {
+            PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context!!, permission!!)
+        } catch (t: Throwable) {
+            false
         }
     }
 
     /**
-     * Creates {@link com.clevertap.android.sdk.CleverTapAPI} instance if it's null and initializes
+     * Creates [com.clevertap.android.sdk.CleverTapAPI] instance if it's null and initializes
      * Geofence SDK, mostly in killed state.
-     * <br>
-     * <b>Must be called from background thread</b>
      *
-     * @param context application {@link Context}
+     * **Must be called from background thread**
+     *
+     * @param context application [Context]
      * @return true if geofence sdk initialized successfully, false otherwise
      */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    @JvmStatic
     @WorkerThread
-    static boolean initCTGeofenceApiIfRequired(@NonNull Context context) {
+    fun initCTGeofenceApiIfRequired(context: Context): Boolean {
+        val ctGeofenceAPI = CTGeofenceAPI.getInstance(context)
 
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(context);
-
-        if (ctGeofenceAPI.getCleverTapApi() == null) {
-            CTGeofenceSettings ctGeofenceSettings = Utils.readSettingsFromFile(context);
+        if (ctGeofenceAPI.cleverTapApi == null) {
+            val ctGeofenceSettings = readSettingsFromFile(context)
             if (ctGeofenceSettings == null) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Could not initialize CT instance! Dropping this call");
-                return false;
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Could not initialize CT instance! Dropping this call"
+                )
+                return false
             }
 
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(context, ctGeofenceSettings.getId());
+            val cleverTapAPI = CleverTapAPI.getGlobalInstance(context, ctGeofenceSettings.id)
 
             if (cleverTapAPI == null) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Critical issue :: After calling  CleverTapAPI.getGlobalInstance also init is failed! Dropping this call");
-                return false;
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Critical issue :: After calling  CleverTapAPI.getGlobalInstance also init is failed! Dropping this call"
+                )
+                return false
             }
 
-            ctGeofenceAPI.init(ctGeofenceSettings, cleverTapAPI);
+            ctGeofenceAPI.init(ctGeofenceSettings, cleverTapAPI)
         }
 
-        return true;
+        return true
     }
 
     /**
      * Checks if Google Play services dependency is available.
      *
-     * @return <code>true</code> if available, otherwise <code>false</code>.
+     * @return `true` if available, otherwise `false`.
      */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    static boolean isConcurrentFuturesDependencyAvailable() {
-
-        if (isConcurrentFuturesDependencyAvailable == null) {//use reflection only once
+    @JvmStatic
+    fun isConcurrentFuturesDependencyAvailable(): Boolean {
+        if (isConcurrentFuturesDependencyAvailable == null) { //use reflection only once
             // concurrent futures
-            try {
-                Class.forName("androidx.concurrent.futures.CallbackToFutureAdapter");
-                isConcurrentFuturesDependencyAvailable = true;
-            } catch (ClassNotFoundException e) {
-                isConcurrentFuturesDependencyAvailable = false;
+            isConcurrentFuturesDependencyAvailable = try {
+                Class.forName("androidx.concurrent.futures.CallbackToFutureAdapter")
+                true
+            } catch (e: ClassNotFoundException) {
+                false
             }
         }
 
-        return isConcurrentFuturesDependencyAvailable;
+        return isConcurrentFuturesDependencyAvailable!!
     }
 
     /**
      * Checks if Google Play services dependency is available for Fused Location.
      *
-     * @return <code>true</code> if available, otherwise <code>false</code>.
+     * @return `true` if available, otherwise `false`.
      */
-    static boolean isFusedLocationApiDependencyAvailable() {
-
-        if (isFusedLocationDependencyAvailable == null) {//use reflection only once
+    @JvmStatic
+    fun isFusedLocationApiDependencyAvailable(): Boolean {
+        if (isFusedLocationDependencyAvailable == null) { //use reflection only once
             if (!isPlayServicesDependencyAvailable()) {
-                isFusedLocationDependencyAvailable = false;
+                isFusedLocationDependencyAvailable = false
             } else {
-                try {
-                    Class.forName("com.google.android.gms.location.FusedLocationProviderClient");
-                    isFusedLocationDependencyAvailable = true;
-                } catch (ClassNotFoundException e) {
-                    isFusedLocationDependencyAvailable = false;
+                isFusedLocationDependencyAvailable = try {
+                    Class.forName("com.google.android.gms.location.FusedLocationProviderClient")
+                    true
+                } catch (e: ClassNotFoundException) {
+                    false
                 }
             }
         }
 
-        return isFusedLocationDependencyAvailable;
+        return isFusedLocationDependencyAvailable!!
     }
 
     /**
-     * Converts {@link JSONObject} to list of {@link com.google.android.gms.location.Geofence} Ids
+     * Converts [JSONObject] to list of [com.google.android.gms.location.Geofence] Ids
      *
      * @param jsonObject containing geofence list
-     * @return list of {@link com.google.android.gms.location.Geofence} Ids
+     * @return list of [com.google.android.gms.location.Geofence] Ids
      */
-    static List<String> jsonToGeoFenceList(@NonNull JSONObject jsonObject) {
-        ArrayList<String> geofenceIdList = new ArrayList<>();
+    @JvmStatic
+    fun jsonToGeoFenceList(jsonObject: JSONObject): List<String> {
+        val geofenceIdList = ArrayList<String>()
         try {
-            JSONArray array = jsonObject.getJSONArray("geofences");
+            val array = jsonObject.getJSONArray("geofences")
 
-            for (int i = 0; i < array.length(); i++) {
-
-                JSONObject object = array.getJSONObject(i);
-                geofenceIdList.add(object.getString(CTGeofenceConstants.KEY_ID));
+            for (i in 0 until array.length()) {
+                val `object` = array.getJSONObject(i)
+                geofenceIdList.add(`object`.getString(CTGeofenceConstants.KEY_ID))
             }
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Could not convert JSON to GeofenceIdList", e);
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Could not convert JSON to GeofenceIdList", e
+            )
         }
-        return geofenceIdList;
+        return geofenceIdList
     }
 
     /**
-     * Notifies Listener for location update on main thread through {@link CTLocationUpdatesListener}
+     * Notifies Listener for location update on main thread through [CTLocationUpdatesListener]
      *
-     * @param context  application {@link Context}
-     * @param location instance of {@link Location}
+     * @param context  application [Context]
+     * @param location instance of [Location]
      */
-    static void notifyLocationUpdates(@NonNull Context context, @Nullable final Location location) {
-        final CTLocationUpdatesListener ctLocationUpdatesListener = CTGeofenceAPI.getInstance(context)
-                .getCtLocationUpdatesListener();
+    @JvmStatic
+    fun notifyLocationUpdates(context: Context, location: Location?) {
+        val ctLocationUpdatesListener = CTGeofenceAPI.getInstance(context)
+            .ctLocationUpdatesListener
 
         if (ctLocationUpdatesListener != null) {
-            com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ctLocationUpdatesListener.onLocationUpdates(location);
-                }
-            });
+            com.clevertap.android.sdk.Utils.runOnUiThread {
+                ctLocationUpdatesListener.onLocationUpdates(location)
+            }
         }
     }
 
     /**
-     * Reads {@link CTGeofenceSettings} from file.
-     * <br>
-     * <b>Must be called from background thread</b>
+     * Reads [CTGeofenceSettings] from file.
      *
-     * @param context application {@link Context}
-     * @return {@link CTGeofenceSettings}, null if no settings found in file
+     * **Must be called from background thread**
+     *
+     * @param context application [Context]
+     * @return [CTGeofenceSettings], null if no settings found in file
      */
+    @JvmStatic
     @WorkerThread
-    @Nullable
-    static CTGeofenceSettings readSettingsFromFile(@NonNull Context context) {
+    fun readSettingsFromFile(context: Context): CTGeofenceSettings? {
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Reading settings from file..."
+        )
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Reading settings from file...");
+        var ctGeofenceSettings: CTGeofenceSettings? = null
 
-        CTGeofenceSettings ctGeofenceSettings = null;
-
-        String settingsString = FileUtils.readFromFile(context,
-                FileUtils.getCachedFullPath(context, CTGeofenceConstants.SETTINGS_FILE_NAME));
-        if (!settingsString.trim().equals("")) {
+        val settingsString = FileUtils.readFromFile(
+            context,
+            FileUtils.getCachedFullPath(context, CTGeofenceConstants.SETTINGS_FILE_NAME)
+        )
+        if (settingsString.trim { it <= ' ' } != "") {
             try {
-                JSONObject jsonObject = new JSONObject(settingsString);
+                val jsonObject = JSONObject(settingsString)
 
-                ctGeofenceSettings = new CTGeofenceSettings.Builder()
-                        .enableBackgroundLocationUpdates(
-                                jsonObject.getBoolean(CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES))
-                        .setLocationAccuracy((byte) jsonObject.getInt(CTGeofenceConstants.KEY_LAST_ACCURACY))
-                        .setLocationFetchMode((byte) jsonObject.getInt(CTGeofenceConstants.KEY_LAST_FETCH_MODE))
-                        .setLogLevel(jsonObject.getInt(CTGeofenceConstants.KEY_LAST_LOG_LEVEL))
-                        .setGeofenceMonitoringCount(jsonObject.getInt(CTGeofenceConstants.KEY_LAST_GEO_COUNT))
-                        .setId(jsonObject.getString(CTGeofenceConstants.KEY_ID))
-                        .setInterval(jsonObject.getLong(CTGeofenceConstants.KEY_LAST_INTERVAL))
-                        .setFastestInterval(jsonObject.getLong(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL))
-                        .setSmallestDisplacement(
-                                (float) jsonObject.getDouble(CTGeofenceConstants.KEY_LAST_DISPLACEMENT))
-                        .setGeofenceNotificationResponsiveness(
-                                jsonObject.getInt(CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS))
-                        .build();
+                ctGeofenceSettings = CTGeofenceSettings.Builder()
+                    .enableBackgroundLocationUpdates(
+                        jsonObject.getBoolean(CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES)
+                    )
+                    .setLocationAccuracy(jsonObject.getInt(CTGeofenceConstants.KEY_LAST_ACCURACY).toByte())
+                    .setLocationFetchMode(jsonObject.getInt(CTGeofenceConstants.KEY_LAST_FETCH_MODE).toByte())
+                    .setLogLevel(jsonObject.getInt(CTGeofenceConstants.KEY_LAST_LOG_LEVEL))
+                    .setGeofenceMonitoringCount(jsonObject.getInt(CTGeofenceConstants.KEY_LAST_GEO_COUNT))
+                    .setId(jsonObject.getString(CTGeofenceConstants.KEY_ID))
+                    .setInterval(jsonObject.getLong(CTGeofenceConstants.KEY_LAST_INTERVAL))
+                    .setFastestInterval(jsonObject.getLong(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL))
+                    .setSmallestDisplacement(
+                        jsonObject.getDouble(CTGeofenceConstants.KEY_LAST_DISPLACEMENT).toFloat()
+                    )
+                    .setGeofenceNotificationResponsiveness(
+                        jsonObject.getInt(CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS)
+                    )
+                    .build()
 
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Read settings successfully from file");
-
-            } catch (Exception e) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to read geofence settings from file");
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Read settings successfully from file"
+                )
+            } catch (e: Exception) {
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Failed to read geofence settings from file"
+                )
             }
         } else {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Settings not found in file...");
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Settings not found in file..."
+            )
         }
 
-        return ctGeofenceSettings;
-
+        return ctGeofenceSettings
     }
 
     /**
-     * Creates sub array from provided {@link JSONArray}
+     * Creates sub array from provided [JSONArray]
      *
-     * @param arr       {@link JSONArray}
+     * @param arr       [JSONArray]
      * @param fromIndex fromIndex
      * @param toIndex   toIndex
      * @return sub array exclusive of toIndex
      * @throws IllegalStateException if fromIndex > toIndex
      */
-    @NonNull
-    static JSONArray subArray(@NonNull JSONArray arr, int fromIndex, int toIndex) {
-
+    @JvmStatic
+    fun subArray(arr: JSONArray, fromIndex: Int, toIndex: Int): JSONArray {
         if (fromIndex > toIndex) {
-            throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+            throw IllegalArgumentException("fromIndex($fromIndex) > toIndex($toIndex)")
         }
 
-        JSONArray jsonArray = new JSONArray();
+        val jsonArray = JSONArray()
 
         try {
-            for (int i = fromIndex; i < toIndex; i++) {
-                jsonArray.put(arr.getJSONObject(i));
+            for (i in fromIndex until toIndex) {
+                jsonArray.put(arr.getJSONObject(i))
             }
-        } catch (JSONException e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to create subArray from JSONArray", e);
+        } catch (e: JSONException) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to create subArray from JSONArray", e
+            )
         }
 
-        return jsonArray;
-
+        return jsonArray
     }
 
     /**
-     * Writes {@link CTGeofenceSettings} to file.
-     * <br>
-     * <b>Must be called from background thread</b>
+     * Writes [CTGeofenceSettings] to file.
      *
-     * @param context            application {@link Context}
-     * @param ctGeofenceSettings new {@link CTGeofenceSettings}
+     * **Must be called from background thread**
+     *
+     * @param context            application [Context]
+     * @param ctGeofenceSettings new [CTGeofenceSettings]
      */
+    @JvmStatic
     @WorkerThread
-    static void writeSettingsToFile(Context context, @NonNull CTGeofenceSettings ctGeofenceSettings) {
+    fun writeSettingsToFile(context: Context, ctGeofenceSettings: CTGeofenceSettings) {
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Writing new settings to file..."
+        )
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Writing new settings to file...");
-
-        JSONObject settings = new JSONObject();
+        val settings = JSONObject()
         try {
-            settings.put(CTGeofenceConstants.KEY_LAST_ACCURACY, ctGeofenceSettings.getLocationAccuracy());
-            settings.put(CTGeofenceConstants.KEY_LAST_FETCH_MODE, ctGeofenceSettings.getLocationFetchMode());
-            settings.put(CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES,
-                    ctGeofenceSettings.isBackgroundLocationUpdatesEnabled());
-            settings.put(CTGeofenceConstants.KEY_LAST_LOG_LEVEL, ctGeofenceSettings.getLogLevel());
-            settings.put(CTGeofenceConstants.KEY_LAST_GEO_COUNT, ctGeofenceSettings.getGeofenceMonitoringCount());
-            settings.put(CTGeofenceConstants.KEY_LAST_INTERVAL, ctGeofenceSettings.getInterval());
-            settings.put(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL, ctGeofenceSettings.getFastestInterval());
-            settings.put(CTGeofenceConstants.KEY_LAST_DISPLACEMENT, ctGeofenceSettings.getSmallestDisplacement());
-            settings.put(CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS,
-                    ctGeofenceSettings.getGeofenceNotificationResponsiveness());
-            settings.put(CTGeofenceConstants.KEY_ID, CTGeofenceAPI.getInstance(context).getAccountId());
+            settings.put(CTGeofenceConstants.KEY_LAST_ACCURACY, ctGeofenceSettings.locationAccuracy)
+            settings.put(CTGeofenceConstants.KEY_LAST_FETCH_MODE, ctGeofenceSettings.locationFetchMode)
+            settings.put(
+                CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES,
+                ctGeofenceSettings.isBackgroundLocationUpdatesEnabled
+            )
+            settings.put(CTGeofenceConstants.KEY_LAST_LOG_LEVEL, ctGeofenceSettings.logLevel)
+            settings.put(CTGeofenceConstants.KEY_LAST_GEO_COUNT, ctGeofenceSettings.geofenceMonitoringCount)
+            settings.put(CTGeofenceConstants.KEY_LAST_INTERVAL, ctGeofenceSettings.interval)
+            settings.put(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL, ctGeofenceSettings.fastestInterval)
+            settings.put(
+                CTGeofenceConstants.KEY_LAST_DISPLACEMENT,
+                ctGeofenceSettings.smallestDisplacement.toDouble()
+            )
+            settings.put(
+                CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS,
+                ctGeofenceSettings.geofenceNotificationResponsiveness
+            )
+            settings.put(CTGeofenceConstants.KEY_ID, CTGeofenceAPI.getInstance(context).accountId)
 
-            boolean writeJsonToFile = FileUtils.writeJsonToFile(context, FileUtils.getCachedDirName(context),
-                    CTGeofenceConstants.SETTINGS_FILE_NAME, settings);
+            val writeJsonToFile = FileUtils.writeJsonToFile(
+                context, FileUtils.getCachedDirName(context),
+                CTGeofenceConstants.SETTINGS_FILE_NAME, settings
+            )
 
             if (writeJsonToFile) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "New settings successfully written to file");
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "New settings successfully written to file"
+                )
             } else {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to write new settings to file");
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Failed to write new settings to file"
+                )
             }
-
-        } catch (JSONException e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to write new settings to file while parsing json");
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to write new settings to file");
+        } catch (e: JSONException) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to write new settings to file while parsing json"
+            )
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to write new settings to file"
+            )
         }
-
     }
 
     /**
      * Checks if Google Play services dependency is available.
      *
-     * @return <code>true</code> if available, otherwise <code>false</code>.
+     * @return `true` if available, otherwise `false`.
      */
-    private static boolean isPlayServicesDependencyAvailable() {
-
-        if (isPlayServicesDependencyAvailable == null) {//use reflection only once
+    private fun isPlayServicesDependencyAvailable(): Boolean {
+        if (isPlayServicesDependencyAvailable == null) { //use reflection only once
             // Play Services
-            try {
-                Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
-                isPlayServicesDependencyAvailable = true;
-            } catch (ClassNotFoundException e) {
-                isPlayServicesDependencyAvailable = false;
+            isPlayServicesDependencyAvailable = try {
+                Class.forName("com.google.android.gms.common.GooglePlayServicesUtil")
+                true
+            } catch (e: ClassNotFoundException) {
+                false
             }
         }
 
-        return isPlayServicesDependencyAvailable;
+        return isPlayServicesDependencyAvailable!!
     }
 }

@@ -1,120 +1,93 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import android.content.Context;
-import android.location.Location;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.concurrent.futures.CallbackToFutureAdapter;
-import androidx.work.ListenableWorker;
-import androidx.work.WorkerParameters;
-
-import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
-import com.clevertap.android.geofence.interfaces.CTLocationCallback;
-import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.concurrent.Future;
+import android.content.Context
+import androidx.concurrent.futures.CallbackToFutureAdapter
+import androidx.work.ListenableWorker
+import androidx.work.WorkerParameters
+import com.clevertap.android.geofence.interfaces.CTLocationCallback
+import com.google.common.util.concurrent.ListenableFuture
+import java.util.concurrent.Future
 
 /**
- * A {@link ListenableWorker} which fetches last known location from OS in foreground as well as in background
+ * A [ListenableWorker] which fetches last known location from OS in foreground as well as in background
  * and in killed state. This will be active when location fetch mode set by client is
- * {@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC}<br>
- * Frequency of location updates depends on {@link CTGeofenceSettings.Builder#setInterval(long)}
+ * [CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC]
+ * Frequency of location updates depends on [CTGeofenceSettings.Builder.setInterval]
  */
-public class BackgroundLocationWork extends ListenableWorker {
-
-    public BackgroundLocationWork(@NonNull Context context, @NonNull WorkerParameters workerParams) {
-        super(context, workerParams);
-    }
+internal class BackgroundLocationWork(context: Context, workerParams: WorkerParameters) :
+    ListenableWorker(context, workerParams) {
 
     /**
-     * Fetches last known location from OS and delivers it to APP through {@link CTLocationUpdatesListener}
-     * <br>
-     * Fetched Location will be passed to {@link CTGeofenceAPI#processTriggeredLocation(Location)} to send it to
+     * Fetches last known location from OS and delivers it to APP through [CTLocationUpdatesListener]
+     *
+     * Fetched Location will be passed to [CTGeofenceAPI.processTriggeredLocation] to send it to
      * server for latest geofence list
      */
-    @NonNull
-    @Override
-    public ListenableFuture<Result> startWork() {
+    override fun startWork(): ListenableFuture<Result> {
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Handling work in BackgroundLocationWork..."
+        )
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Handling work in BackgroundLocationWork...");
+        val listenableFuture: ListenableFuture<Result> = CallbackToFutureAdapter
+            .getFuture { completer ->
+                val ctLocationCallback = CTLocationCallback { location ->
+                    // running on bg thread
 
-        ListenableFuture<Result> listenableFuture = CallbackToFutureAdapter
-                .getFuture(new CallbackToFutureAdapter.Resolver<Result>() {
-                    @Nullable
-                    @Override
-                    public Object attachCompleter(@NonNull final CallbackToFutureAdapter.Completer<Result> completer)
-                            throws Exception {
+                    val cleverTapApi = CTGeofenceAPI.getInstance(applicationContext)
+                        .cleverTapApi
+                    var future: Future<*>? = null
 
-                        final CTLocationCallback ctLocationCallback = new CTLocationCallback() {
-                            @Override
-                            public void onLocationComplete(Location location) {
-
-                                // running on bg thread
-
-                                CleverTapAPI cleverTapApi = CTGeofenceAPI.getInstance(getApplicationContext())
-                                        .getCleverTapApi();
-                                Future<?> future = null;
-
-                                if (cleverTapApi != null && location != null) {
-                                    future = CTGeofenceAPI.getInstance(getApplicationContext())
-                                            .processTriggeredLocation(location);
-                                }
-
-                                try {
-                                    Utils.notifyLocationUpdates(getApplicationContext(), location);
-
-                                    if (future != null) {
-                                        future.get();
-                                    }
-                                } catch (Exception e) {
-                                    CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                            "Exception while processing geofence receiver intent", e);
-                                    if (cleverTapApi != null) {
-                                        cleverTapApi.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                                                "Exception while processing geofence receiver intent");
-                                    }
-                                }
-
-                                completer.set(Result.success());
-
-                                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                        "BackgroundLocationWork is finished");
-                            }
-                        };
-
-                        CTGeofenceTaskManager.getInstance().postAsyncSafely("ProcessLocationWork",
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                        if (!Utils.initCTGeofenceApiIfRequired(getApplicationContext())) {
-                                            // if init fails then return without doing any work
-                                            completer.set(Result.success());
-                                            return;
-                                        }
-
-                                        CTLocationAdapter ctLocationAdapter = CTGeofenceAPI
-                                                .getInstance(getApplicationContext()).getCtLocationAdapter();
-
-                                        if (ctLocationAdapter != null) {
-                                            ctLocationAdapter.getLastLocation(ctLocationCallback);
-                                        } else {
-                                            completer.set(Result.success());
-                                        }
-
-                                    }
-                                });
-
-                        return ctLocationCallback;
+                    if (cleverTapApi != null && location != null) {
+                        future = CTGeofenceAPI.getInstance(applicationContext)
+                            .processTriggeredLocation(location)
                     }
-                });
 
-        return listenableFuture;
+                    try {
+                        Utils.notifyLocationUpdates(applicationContext, location)
 
+                        future?.get()
+                    } catch (e: Exception) {
+                        CTGeofenceAPI.getLogger().debug(
+                            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                            "Exception while processing geofence receiver intent", e
+                        )
+                        cleverTapApi?.pushGeoFenceError(
+                            CTGeofenceConstants.ERROR_CODE,
+                            "Exception while processing geofence receiver intent"
+                        )
+                    }
+
+                    completer.set(Result.success())
+
+                    CTGeofenceAPI.getLogger().debug(
+                        CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                        "BackgroundLocationWork is finished"
+                    )
+                }
+
+                CTGeofenceTaskManager.getInstance().postAsyncSafely(
+                    "ProcessLocationWork",
+                    Runnable {
+                        if (!Utils.initCTGeofenceApiIfRequired(applicationContext)) {
+                            // if init fails then return without doing any work
+                            completer.set(Result.success())
+                            return@Runnable
+                        }
+
+                        val ctLocationAdapter = CTGeofenceAPI
+                            .getInstance(applicationContext).ctLocationAdapter
+
+                        if (ctLocationAdapter != null) {
+                            ctLocationAdapter.getLastLocation(ctLocationCallback)
+                        } else {
+                            completer.set(Result.success())
+                        }
+                    })
+
+                ctLocationCallback
+            }
+
+        return listenableFuture
     }
-
 }

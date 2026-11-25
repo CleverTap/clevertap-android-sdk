@@ -1,10 +1,10 @@
 package com.clevertap.android.geofence
 
-import com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_HIGH
-import com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_MEDIUM
-import com.clevertap.android.geofence.CTGeofenceSettings.DEFAULT_GEO_MONITOR_COUNT
-import com.clevertap.android.geofence.CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC
-import com.clevertap.android.geofence.CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.ACCURACY_HIGH
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.ACCURACY_MEDIUM
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.DEFAULT_GEO_MONITOR_COUNT
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.FETCH_CURRENT_LOCATION_PERIODIC
+import com.clevertap.android.geofence.CTGeofenceSettings.Companion.FETCH_LAST_LOCATION_PERIODIC
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

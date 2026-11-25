@@ -1,359 +1,385 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import static android.app.PendingIntent.FLAG_NO_CREATE;
-import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
-import static com.clevertap.android.geofence.CTGeofenceConstants.TAG_WORK_LOCATION_UPDATES;
-
-import android.annotation.SuppressLint;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.location.Location;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
-
-import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
-import com.clevertap.android.geofence.interfaces.CTLocationCallback;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
-
-import java.util.concurrent.TimeUnit;
+import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_NO_CREATE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.content.Context
+import android.location.Location
+import androidx.annotation.WorkerThread
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
+import com.clevertap.android.geofence.CTGeofenceConstants.TAG_WORK_LOCATION_UPDATES
+import com.clevertap.android.geofence.interfaces.CTLocationAdapter
+import com.clevertap.android.geofence.interfaces.CTLocationCallback
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
+import java.util.concurrent.TimeUnit
 
 /**
- * Communicates with {@link FusedLocationProviderClient} and {@link WorkManager} to
+ * Communicates with [FusedLocationProviderClient] and [WorkManager] to
  * Request/Remove Location updates based on Location fetch modes -
- * ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC}) or
- * ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC}) and config settings
+ * ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC]) or
+ * ([CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC]) and config settings
  */
-class GoogleLocationAdapter implements CTLocationAdapter {
+internal class GoogleLocationAdapter(context: Context) : CTLocationAdapter {
+
+    private var backgroundLocationUpdatesEnabled = false
+
+    private val context: Context = context.applicationContext
+
+    private var fastestInterval: Long = 0
+
+    private val fusedProviderClient: FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(this.context)
+
+    private var interval: Long = 0
 
     /**
-     * Applicable for both fetch modes ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC}) and
-     * ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC})
+     * Applicable only for ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC])
      */
-    static final long INTERVAL_IN_MILLIS = 30 * 60 * 1000L;
+    private var locationAccuracy = Priority.PRIORITY_HIGH_ACCURACY
+
+    private var locationFetchMode = 0
+
+    private var smallestDisplacement = 0f
 
     /**
-     * Applicable only for ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC})
-     */
-    static final long INTERVAL_FASTEST_IN_MILLIS = 30 * 60 * 1000L;
-
-    /**
-     * Applicable only for ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC})
-     */
-    static final float SMALLEST_DISPLACEMENT_IN_METERS = 200;
-
-    /**
-     * Applicable only for ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC})
-     */
-    private static final long FLEX_INTERVAL_IN_MILLIS = 10 * 60 * 1000L;
-
-    private boolean backgroundLocationUpdatesEnabled;
-
-    private final Context context;
-
-    private long fastestInterval;
-
-    private final FusedLocationProviderClient fusedProviderClient;
-
-    private long interval;
-
-    /**
-     * Applicable only for ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC})
-     */
-    private int locationAccuracy = Priority.PRIORITY_HIGH_ACCURACY;
-
-    private int locationFetchMode;
-
-    private float smallestDisplacement;
-
-    GoogleLocationAdapter(@NonNull Context context) {
-        this.context = context.getApplicationContext();
-        fusedProviderClient = LocationServices.getFusedLocationProviderClient(this.context);
-    }
-
-    /**
-     * Gets last known location from {@link FusedLocationProviderClient} and delivers it to caller
-     * through {@link CTLocationCallback}
-     * <br><br>
-     * <b>Must be called from background thread</b>
+     * Gets last known location from [FusedLocationProviderClient] and delivers it to caller
+     * through [CTLocationCallback]
      *
-     * @param callback instance of {@link CTLocationCallback}
+     * **Must be called from background thread**
+     *
+     * @param callback instance of [CTLocationCallback]
      */
     @WorkerThread
-    @Override
-    public void getLastLocation(@NonNull final CTLocationCallback callback) {
+    override fun getLastLocation(callback: CTLocationCallback) {
         //thread safe
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Requesting Last Location..");
+        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Requesting Last Location..")
 
-        Location location = null;
+        var location: Location? = null
         try {
             @SuppressLint("MissingPermission")
-            Task<Location> lastLocation = fusedProviderClient.getLastLocation();
+            val lastLocation: Task<Location> = fusedProviderClient.lastLocation
 
             // blocking task
-            location = Tasks.await(lastLocation);
+            location = Tasks.await(lastLocation)
 
             if (location != null) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "New Location = " + location.getLatitude() + "," +
-                                location.getLongitude());
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "New Location = " + location.latitude + "," +
+                            location.longitude
+                )
             }
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Last location request completed");
-
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to request last location", e);
+            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Last location request completed")
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to request last location", e
+            )
         } finally {
-            callback.onLocationComplete(location);
+            callback.onLocationComplete(location)
         }
-
     }
 
     /**
-     * Helper method to remove location updates for both fetch modes ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC})
+     * Helper method to remove location updates for both fetch modes ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC])
      * and
-     * ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC})
-     * <br><br>
-     * <b>Must be called from background thread</b>
+     * ([CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC])
      *
-     * @param pendingIntent instance of {@link PendingIntent} of type
-     *                      {@link PendingIntentFactory#PENDING_INTENT_LOCATION}
+     * **Must be called from background thread**
+     *
+     * @param pendingIntent instance of [PendingIntent] of type
+     * [PendingIntentFactory.PENDING_INTENT_LOCATION]
      */
     @WorkerThread
-    @Override
-    public void removeLocationUpdates(@Nullable PendingIntent pendingIntent) {
-        clearLocationUpdates(pendingIntent);
-        clearLocationWorkRequest();
+    override fun removeLocationUpdates(pendingIntent: PendingIntent?) {
+        clearLocationUpdates(pendingIntent)
+        clearLocationWorkRequest()
     }
 
     /**
-     * Communicates with {@link FusedLocationProviderClient} and {@link WorkManager} to
+     * Communicates with [FusedLocationProviderClient] and [WorkManager] to
      * Request/Remove Location updates based on Location fetch modes -
-     * ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC}) or
-     * ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC}) and config settings
-     * <br><br>
-     * <b>Must be called from background thread</b>
+     * ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC]) or
+     * ([CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC]) and config settings
+     *
+     * **Must be called from background thread**
      */
     @WorkerThread
-    @Override
-    public void requestLocationUpdates() {
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "requestLocationUpdates() called");
+    override fun requestLocationUpdates() {
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "requestLocationUpdates() called"
+        )
 
-        applySettings(context);
+        applySettings(context)
 
         if (!backgroundLocationUpdatesEnabled) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "not requesting location updates since background location updates is not enabled");
-            if (CTGeofenceAPI.getInstance(context).getCleverTapApi() != null) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "not requesting location updates since background location updates is not enabled"
+            )
+            if (CTGeofenceAPI.getInstance(context).cleverTapApi != null) {
                 CTGeofenceAPI.getInstance(context)
-                        .getCleverTapApi()
-                        .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                                "not requesting location updates since background location updates is not enabled");
+                    .cleverTapApi!!
+                    .pushGeoFenceError(
+                        CTGeofenceConstants.ERROR_CODE,
+                        "not requesting location updates since background location updates is not enabled"
+                    )
             }
-            return;
+            return
         }
 
-        if (locationFetchMode == CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC) {
-
+        if (locationFetchMode == CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC.toInt()) {
             // should get same pendingIntent on each app launch or else instance will leak
-            PendingIntent pendingIntent = PendingIntentFactory.getPendingIntent(context,
-                    PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT);
+            val pendingIntent = PendingIntentFactory.getPendingIntent(
+                context,
+                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT
+            )
 
-            clearLocationWorkRequest();
+            clearLocationWorkRequest()
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "requesting current location periodically..");
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "requesting current location periodically.."
+            )
 
             try {
                 // will overwrite location request if change in location config is detected
                 @SuppressLint("MissingPermission")
-                Task<Void> requestLocationUpdatesTask = fusedProviderClient
-                        .requestLocationUpdates(getLocationRequest(), pendingIntent);
+                val requestLocationUpdatesTask: Task<Void> = fusedProviderClient
+                    .requestLocationUpdates(getLocationRequest(), pendingIntent!!)
 
                 // blocking task
-                Tasks.await(requestLocationUpdatesTask);
+                Tasks.await(requestLocationUpdatesTask)
 
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Finished requesting current location periodically..");
-            } catch (Exception e) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Failed to request location updates", e);
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Finished requesting current location periodically.."
+                )
+            } catch (e: Exception) {
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Failed to request location updates", e
+                )
             }
         } else {
-
             // remove previously registered location request
-            PendingIntent pendingIntent = PendingIntentFactory.getPendingIntent(context,
-                    PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_NO_CREATE);
+            val pendingIntent = PendingIntentFactory.getPendingIntent(
+                context,
+                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_NO_CREATE
+            )
 
-            clearLocationUpdates(pendingIntent);
+            clearLocationUpdates(pendingIntent)
 
             // start periodic work for location updates
-            scheduleManualLocationUpdates();
+            scheduleManualLocationUpdates()
         }
     }
 
     /**
-     * Retrieves config settings from {@link CTGeofenceSettings} provided by client through
-     * {@link CTGeofenceAPI#init(CTGeofenceSettings, CleverTapAPI)}
+     * Retrieves config settings from [CTGeofenceSettings] provided by client through
+     * [CTGeofenceAPI.init]
      *
-     * @param context application {@link Context}
+     * @param context application [Context]
      */
-    private void applySettings(Context context) {
-        CTGeofenceSettings geofenceSettings = CTGeofenceAPI.getInstance(context).getGeofenceSettings();
+    private fun applySettings(context: Context) {
+        var geofenceSettings = CTGeofenceAPI.getInstance(context).geofenceSettings
 
         if (geofenceSettings == null) {
-            geofenceSettings = CTGeofenceAPI.getInstance(context).initDefaultConfig();
+            geofenceSettings = CTGeofenceAPI.getInstance(context).initDefaultConfig()
         }
 
-        locationFetchMode = geofenceSettings.getLocationFetchMode();
-        backgroundLocationUpdatesEnabled = geofenceSettings.isBackgroundLocationUpdatesEnabled();
-        interval = geofenceSettings.getInterval();
-        fastestInterval = geofenceSettings.getFastestInterval();
-        smallestDisplacement = geofenceSettings.getSmallestDisplacement();
+        locationFetchMode = geofenceSettings.locationFetchMode
+        backgroundLocationUpdatesEnabled = geofenceSettings.isBackgroundLocationUpdatesEnabled
+        interval = geofenceSettings.interval
+        fastestInterval = geofenceSettings.fastestInterval
+        smallestDisplacement = geofenceSettings.smallestDisplacement
 
-        int accuracy = geofenceSettings.getLocationAccuracy();
-        switch (accuracy) {
-            case 1:
-                locationAccuracy = Priority.PRIORITY_HIGH_ACCURACY;
-                break;
-            case 2:
-                locationAccuracy = Priority.PRIORITY_BALANCED_POWER_ACCURACY;
-                break;
-            case 3:
-                locationAccuracy = Priority.PRIORITY_LOW_POWER;
-                break;
+        val accuracy = geofenceSettings.locationAccuracy
+        when (accuracy) {
+            1 -> locationAccuracy = Priority.PRIORITY_HIGH_ACCURACY
+            2 -> locationAccuracy = Priority.PRIORITY_BALANCED_POWER_ACCURACY
+            3 -> locationAccuracy = Priority.PRIORITY_LOW_POWER
         }
     }
 
     /**
-     * Removes Location Update of type ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC})
-     * using {@link FusedLocationProviderClient}
-     * <br><br>
-     * <b>Must be called from background thread</b>
+     * Removes Location Update of type ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC])
+     * using [FusedLocationProviderClient]
+     *
+     * **Must be called from background thread**
      */
     @WorkerThread
-    private void clearLocationUpdates(@Nullable PendingIntent pendingIntent) {
+    private fun clearLocationUpdates(pendingIntent: PendingIntent?) {
         if (pendingIntent == null) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Can't stop location updates since provided pendingIntent is null");
-            return;
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Can't stop location updates since provided pendingIntent is null"
+            )
+            return
         }
 
         try {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "removing periodic current location request.."
+            )
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "removing periodic current location request..");
-
-            Task<Void> removeLocationUpdatesTask = fusedProviderClient.removeLocationUpdates(pendingIntent);
+            val removeLocationUpdatesTask: Task<Void> = fusedProviderClient.removeLocationUpdates(pendingIntent)
 
             // blocking task
-            Tasks.await(removeLocationUpdatesTask);
+            Tasks.await(removeLocationUpdatesTask)
 
-            pendingIntent.cancel();
+            pendingIntent.cancel()
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Successfully removed periodic current location request");
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to remove location updates", e);
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Successfully removed periodic current location request"
+            )
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to remove location updates", e
+            )
         }
     }
 
     /**
      * Removes Periodic Location Update work request
      */
-    private void clearLocationWorkRequest() {
-
+    private fun clearLocationWorkRequest() {
         if (!Utils.isConcurrentFuturesDependencyAvailable()) {
-            CTGeofenceAPI.getLogger().info(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "concurrent-futures dependency is missing");
-            return;
+            CTGeofenceAPI.getLogger().info(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "concurrent-futures dependency is missing"
+            )
+            return
         }
 
         try {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "removing periodic last location request..");
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "removing periodic last location request.."
+            )
 
-            WorkManager.getInstance(context).cancelUniqueWork(TAG_WORK_LOCATION_UPDATES);
+            WorkManager.getInstance(context).cancelUniqueWork(TAG_WORK_LOCATION_UPDATES)
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Successfully removed periodic last location request");
-
-        } catch (NoClassDefFoundError t) {
-            CTGeofenceAPI.getLogger().info(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "WorkManager dependency is missing");
-        } catch (Throwable t) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to cancel location work request", t);
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Successfully removed periodic last location request"
+            )
+        } catch (t: NoClassDefFoundError) {
+            CTGeofenceAPI.getLogger().info(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "WorkManager dependency is missing"
+            )
+        } catch (t: Throwable) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to cancel location work request", t
+            )
         }
     }
 
     /**
-     * Builds an instance of {@link LocationRequest} using config settings
+     * Builds an instance of [LocationRequest] using config settings
      *
-     * @return an instance of {@link LocationRequest}
+     * @return an instance of [LocationRequest]
      */
-    private LocationRequest getLocationRequest() {
-        return new LocationRequest.Builder(locationAccuracy, interval)
-                .setMinUpdateIntervalMillis(fastestInterval)
-                .setMinUpdateDistanceMeters(smallestDisplacement)
-                .build();
+    private fun getLocationRequest(): LocationRequest {
+        return LocationRequest.Builder(locationAccuracy, interval)
+            .setMinUpdateIntervalMillis(fastestInterval)
+            .setMinUpdateDistanceMeters(smallestDisplacement)
+            .build()
     }
 
     /**
      * Schedules Periodic Location Update work request using config settings,
      * if work manager dependencies available
      */
-    private void scheduleManualLocationUpdates() {
-
+    private fun scheduleManualLocationUpdates() {
         if (!Utils.isConcurrentFuturesDependencyAvailable()) {
-            CTGeofenceAPI.getLogger().info(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "concurrent-futures dependency is missing");
-            if (CTGeofenceAPI.getInstance(context).getCleverTapApi() != null) {
+            CTGeofenceAPI.getLogger().info(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "concurrent-futures dependency is missing"
+            )
+            if (CTGeofenceAPI.getInstance(context).cleverTapApi != null) {
                 CTGeofenceAPI.getInstance(context)
-                        .getCleverTapApi()
-                        .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                                "concurrent-futures dependency is missing");
+                    .cleverTapApi!!
+                    .pushGeoFenceError(
+                        CTGeofenceConstants.ERROR_CODE,
+                        "concurrent-futures dependency is missing"
+                    )
             }
-            return;
+            return
         }
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Scheduling periodic last location request..");
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Scheduling periodic last location request.."
+        )
 
         try {
-            PeriodicWorkRequest locationRequest = new PeriodicWorkRequest.Builder(BackgroundLocationWork.class,
-                    interval, TimeUnit.MILLISECONDS,
-                    FLEX_INTERVAL_IN_MILLIS, TimeUnit.MILLISECONDS)
-                    .build();
+            val locationRequest = PeriodicWorkRequest.Builder(
+                BackgroundLocationWork::class.java,
+                interval, TimeUnit.MILLISECONDS,
+                FLEX_INTERVAL_IN_MILLIS, TimeUnit.MILLISECONDS
+            )
+                .build()
 
             // schedule unique work request to avoid duplicates
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(TAG_WORK_LOCATION_UPDATES,
-                    ExistingPeriodicWorkPolicy.KEEP, locationRequest);
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                TAG_WORK_LOCATION_UPDATES,
+                ExistingPeriodicWorkPolicy.KEEP, locationRequest
+            )
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Finished scheduling periodic last location request..");
-
-        } catch (NoClassDefFoundError t) {
-            CTGeofenceAPI.getLogger().info(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "WorkManager dependency is missing");
-        } catch (Throwable t) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Failed to request periodic work request", t);
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Finished scheduling periodic last location request.."
+            )
+        } catch (t: NoClassDefFoundError) {
+            CTGeofenceAPI.getLogger().info(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "WorkManager dependency is missing"
+            )
+        } catch (t: Throwable) {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Failed to request periodic work request", t
+            )
         }
     }
 
+    companion object {
+        /**
+         * Applicable for both fetch modes ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC]) and
+         * ([CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC])
+         */
+        const val INTERVAL_IN_MILLIS: Long = 30 * 60 * 1000L
+
+        /**
+         * Applicable only for ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC])
+         */
+        const val INTERVAL_FASTEST_IN_MILLIS: Long = 30 * 60 * 1000L
+
+        /**
+         * Applicable only for ([CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC])
+         */
+        const val SMALLEST_DISPLACEMENT_IN_METERS: Float = 200f
+
+        /**
+         * Applicable only for ([CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC])
+         */
+        private const val FLEX_INTERVAL_IN_MILLIS = 10 * 60 * 1000L
+    }
 }

@@ -1,68 +1,68 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
-import androidx.annotation.Nullable;
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 
 /**
- * A Factory to create {@link PendingIntent} which will be sent to OS to receive geofence updates
- * through {@link CTGeofenceReceiver} and location updates through {@link CTLocationUpdateReceiver}
+ * A Factory to create [PendingIntent] which will be sent to OS to receive geofence updates
+ * through [CTGeofenceReceiver] and location updates through [CTLocationUpdateReceiver]
  */
-class PendingIntentFactory {
+internal object PendingIntentFactory {
 
     /**
      * Type constant to create Location Update PendingIntent
      */
-    static final int PENDING_INTENT_LOCATION = 1;
+    const val PENDING_INTENT_LOCATION: Int = 1
 
     /**
      * Type constant to create Geofence Update PendingIntent
      */
-    static final int PENDING_INTENT_GEOFENCE = 2;
+    const val PENDING_INTENT_GEOFENCE: Int = 2
 
     /**
-     * Creates {@link PendingIntent} based on type and flags provided by caller
+     * Creates [PendingIntent] based on type and flags provided by caller
      *
-     * @param context           Application {@link Context}
-     * @param pendingIntentType {@link #PENDING_INTENT_LOCATION} or {@link #PENDING_INTENT_GEOFENCE}
-     * @param flags             {@link PendingIntent#FLAG_NO_CREATE} or {@link PendingIntent#FLAG_UPDATE_CURRENT}
+     * @param context           Application [Context]
+     * @param pendingIntentType [PENDING_INTENT_LOCATION] or [PENDING_INTENT_GEOFENCE]
+     * @param flags             [PendingIntent.FLAG_NO_CREATE] or [PendingIntent.FLAG_UPDATE_CURRENT]
      */
-    @Nullable
-    static PendingIntent getPendingIntent(@Nullable Context context, int pendingIntentType, int flags) {
-
+    @JvmStatic
+    fun getPendingIntent(context: Context?, pendingIntentType: Int, flags: Int): PendingIntent? {
+        var flags = flags
         if (context == null) {
-            return null;
+            return null
         }
 
-        int broadcastSenderRequestCode;
-        Intent intent;
+        val broadcastSenderRequestCode: Int
+        val intent: Intent
 
-        switch (pendingIntentType) {
-            case PENDING_INTENT_LOCATION:
-                intent = new Intent(context.getApplicationContext(), CTLocationUpdateReceiver.class);
-                intent.setAction(CTGeofenceConstants.ACTION_LOCATION_RECEIVER);
-                broadcastSenderRequestCode = 10100111;
-                break;
-            case PENDING_INTENT_GEOFENCE:
-                intent = new Intent(context.getApplicationContext(), CTGeofenceReceiver.class);
-                intent.setAction(CTGeofenceConstants.ACTION_GEOFENCE_RECEIVER);
-                broadcastSenderRequestCode = 1001001;
-                break;
-            default:
-                throw new IllegalArgumentException("invalid pendingIntentType");
+        when (pendingIntentType) {
+            PENDING_INTENT_LOCATION -> {
+                intent = Intent(context.applicationContext, CTLocationUpdateReceiver::class.java)
+                intent.setAction(CTGeofenceConstants.ACTION_LOCATION_RECEIVER)
+                broadcastSenderRequestCode = 10100111
+            }
+
+            PENDING_INTENT_GEOFENCE -> {
+                intent = Intent(context.applicationContext, CTGeofenceReceiver::class.java)
+                intent.setAction(CTGeofenceConstants.ACTION_GEOFENCE_RECEIVER)
+                broadcastSenderRequestCode = 1001001
+            }
+
+            else -> throw IllegalArgumentException("invalid pendingIntentType")
         }
 
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
             /*require mutable PendingIntent object for requesting device location information*/
-            flags |= PendingIntent.FLAG_MUTABLE;
+            flags = flags or PendingIntent.FLAG_MUTABLE
         }
 
-        return PendingIntent.getBroadcast(context.getApplicationContext(), broadcastSenderRequestCode, intent,
-                flags);
-
+        return PendingIntent.getBroadcast(
+            context.applicationContext, broadcastSenderRequestCode, intent,
+            flags
+        )
     }
-
 }

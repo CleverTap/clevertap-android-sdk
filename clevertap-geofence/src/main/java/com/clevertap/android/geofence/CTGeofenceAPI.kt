@@ -1,542 +1,539 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import static android.app.PendingIntent.FLAG_NO_CREATE;
-import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LATITUDE;
-import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LONGITUDE;
-import static com.clevertap.android.geofence.GoogleLocationAdapter.INTERVAL_IN_MILLIS;
-import static com.clevertap.android.geofence.GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS;
-
-import android.Manifest;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.location.Location;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
-import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener;
-import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
-import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
-import com.clevertap.android.geofence.interfaces.CTLocationCallback;
-import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.GeofenceCallback;
-import java.util.concurrent.Future;
-import org.json.JSONObject;
+import android.Manifest
+import android.app.PendingIntent.FLAG_NO_CREATE
+import android.content.Context
+import android.location.Location
+import androidx.annotation.RestrictTo
+import com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LATITUDE
+import com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LONGITUDE
+import com.clevertap.android.geofence.GoogleLocationAdapter.Companion.INTERVAL_IN_MILLIS
+import com.clevertap.android.geofence.GoogleLocationAdapter.Companion.SMALLEST_DISPLACEMENT_IN_METERS
+import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter
+import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask
+import com.clevertap.android.geofence.interfaces.CTLocationAdapter
+import com.clevertap.android.geofence.interfaces.CTLocationCallback
+import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.GeofenceCallback
+import org.json.JSONObject
+import java.util.concurrent.Future
 
 /**
- * Main Entry point for communicating with Geofence SDK.<br>
+ * Main Entry point for communicating with Geofence SDK.
  * Singleton class Responsible for initializing, activating and deactivating geofence sdk as
- * requested by applications. It implements {@link GeofenceCallback} to communicate with CleverTap SDK
+ * requested by applications. It implements [GeofenceCallback] to communicate with CleverTap SDK
  * for location pings and update of new geofence list.
  */
-public class CTGeofenceAPI implements GeofenceCallback {
+open class CTGeofenceAPI private constructor(context: Context) : GeofenceCallback {
 
-    public interface OnGeofenceApiInitializedListener {
+    fun interface OnGeofenceApiInitializedListener {
 
-        void OnGeofenceApiInitialized();
+        @Suppress("FunctionName")
+        fun OnGeofenceApiInitialized()
     }
 
-    public static final String GEOFENCE_LOG_TAG = "CTGeofence";
+    private var mAccountId: String? = null
 
-    private static CTGeofenceAPI ctGeofenceAPI;
+    internal var cleverTapApi: CleverTapAPI? = null
+        private set
 
-    private static final Logger logger;
+    private val context: Context = context.applicationContext
 
-    private String accountId;
+    internal var ctGeofenceAdapter: CTGeofenceAdapter? = null
+        private set
 
-    @Nullable
-    private CleverTapAPI cleverTapAPI;
+    private var mCtGeofenceEventsListener: CTGeofenceEventsListener? = null
 
-    private final Context context;
+    private var ctGeofenceSettings: CTGeofenceSettings? = null
 
-    @Nullable
-    private CTGeofenceAdapter ctGeofenceAdapter;
+    internal var ctLocationAdapter: CTLocationAdapter? = null
+        private set
 
-    @Nullable
-    private CTGeofenceEventsListener ctGeofenceEventsListener;
+    private var mCtLocationUpdatesListener: CTLocationUpdatesListener? = null
 
-    @Nullable
-    private CTGeofenceSettings ctGeofenceSettings;
+    internal var isActivated = false
+        private set
 
-    @Nullable
-    private CTLocationAdapter ctLocationAdapter;
+    private var onGeofenceApiInitializedListener: OnGeofenceApiInitializedListener? = null
 
-    @Nullable
-    private CTLocationUpdatesListener ctLocationUpdatesListener;
-
-    private boolean isActivated;
-
-    @Nullable
-    private OnGeofenceApiInitializedListener onGeofenceApiInitializedListener;
-
-    /**
-     * Retrieves the {@code default} singleton instance of {@link CTGeofenceAPI}.
-     *
-     * @param context A {@link Context} for Application
-     * @return The singleton instance of {@link CTGeofenceAPI}
-     */
-    @SuppressWarnings("WeakerAccess")
-    @NonNull
-    public static synchronized CTGeofenceAPI getInstance(@NonNull Context context) {
-        if (ctGeofenceAPI == null) {
-            ctGeofenceAPI = new CTGeofenceAPI(context);
-        }
-        return ctGeofenceAPI;
-    }
-
-    public static Logger getLogger() {
-        return logger;
-    }
-
-    private CTGeofenceAPI(Context context) {
-        this.context = context.getApplicationContext();
-
+    init {
         try {
-            ctLocationAdapter = CTLocationFactory.createLocationAdapter(this.context);
-            ctGeofenceAdapter = CTGeofenceFactory.createGeofenceAdapter(this.context);
-        } catch (IllegalStateException e) {
-            if (e.getMessage() != null) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        e.getMessage());
+            ctLocationAdapter = CTLocationFactory.createLocationAdapter(this.context)
+            ctGeofenceAdapter = CTGeofenceFactory.createGeofenceAdapter(this.context)
+        } catch (e: IllegalStateException) {
+            if (e.message != null) {
+                getLogger().debug(
+                    GEOFENCE_LOG_TAG,
+                    e.message
+                )
             }
         }
     }
 
     /**
-     * Unregisters geofences, background location updates and clears file storage and preferences<br>
+     * Unregisters geofences, background location updates and clears file storage and preferences
      * This operation will be sent to queue and get's executed by background thread using
-     * {@link CTGeofenceTaskManager}
+     * [CTGeofenceTaskManager]
      */
-    @SuppressWarnings("unused")
-    public void deactivate() {
-
+    @Suppress("unused")
+    open fun deactivate() {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
-            return;
+            return
         }
 
-        CTGeofenceTaskManager.getInstance().postAsyncSafely("DeactivateApi", new Runnable() {
-            @Override
-            public void run() {
-                // stop geofence monitoring
-                PendingIntent geofencePendingIntent = PendingIntentFactory.getPendingIntent(context,
-                        PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_NO_CREATE);
-                ctGeofenceAdapter.stopGeofenceMonitoring(geofencePendingIntent);
+        CTGeofenceTaskManager.getInstance().postAsyncSafely("DeactivateApi", Runnable {
+            // stop geofence monitoring
+            val geofencePendingIntent = PendingIntentFactory.getPendingIntent(
+                context,
+                PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_NO_CREATE
+            )
+            ctGeofenceAdapter!!.stopGeofenceMonitoring(geofencePendingIntent)
 
-                // stop location updates
-                PendingIntent locationPendingIntent = PendingIntentFactory.getPendingIntent(context,
-                        PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_NO_CREATE);
-                ctLocationAdapter.removeLocationUpdates(locationPendingIntent);
+            // stop location updates
+            val locationPendingIntent = PendingIntentFactory.getPendingIntent(
+                context,
+                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_NO_CREATE
+            )
+            ctLocationAdapter!!.removeLocationUpdates(locationPendingIntent)
 
-                // delete cached files
-                FileUtils.deleteDirectory(context, FileUtils.getCachedDirName(context));
+            // delete cached files
+            FileUtils.deleteDirectory(context, FileUtils.getCachedDirName(context))
 
-                // reset preference
-                GeofenceStorageHelper.putDouble(context
-                        , CTGeofenceConstants.KEY_LATITUDE, DEFAULT_LATITUDE);
-                GeofenceStorageHelper.putDouble(context
-                        , CTGeofenceConstants.KEY_LONGITUDE, DEFAULT_LONGITUDE);
-                GeofenceStorageHelper.putLong(context
-                        , CTGeofenceConstants.KEY_LAST_LOCATION_EP, 0);
+            // reset preference
+            GeofenceStorageHelper.putDouble(
+                context, CTGeofenceConstants.KEY_LATITUDE, DEFAULT_LATITUDE
+            )
+            GeofenceStorageHelper.putDouble(
+                context, CTGeofenceConstants.KEY_LONGITUDE, DEFAULT_LONGITUDE
+            )
+            GeofenceStorageHelper.putLong(
+                context, CTGeofenceConstants.KEY_LAST_LOCATION_EP, 0
+            )
 
-                isActivated = false;
-            }
-        });
-
-
+            isActivated = false
+        })
     }
 
-    @Nullable
-    public CTGeofenceEventsListener getCtGeofenceEventsListener() {
-        return ctGeofenceEventsListener;
+    open fun getCtGeofenceEventsListener(): CTGeofenceEventsListener? {
+        return mCtGeofenceEventsListener
     }
 
-    public void setCtGeofenceEventsListener(@NonNull CTGeofenceEventsListener ctGeofenceEventsListener) {
-        this.ctGeofenceEventsListener = ctGeofenceEventsListener;
+    open fun setCtGeofenceEventsListener(ctGeofenceEventsListener: CTGeofenceEventsListener?) {
+        this.mCtGeofenceEventsListener = ctGeofenceEventsListener
     }
 
-    @Nullable
-    public CTLocationUpdatesListener getCtLocationUpdatesListener() {
-        return ctLocationUpdatesListener;
+    /** Kotlin property syntax, equivalent to [getCtGeofenceEventsListener] / [setCtGeofenceEventsListener]. */
+    var ctGeofenceEventsListener: CTGeofenceEventsListener?
+        @JvmSynthetic @JvmName("ktGetCtGeofenceEventsListener") inline get() = getCtGeofenceEventsListener()
+        @JvmSynthetic @JvmName("ktSetCtGeofenceEventsListener") inline set(value) = setCtGeofenceEventsListener(value)
+
+    open fun getCtLocationUpdatesListener(): CTLocationUpdatesListener? {
+        return mCtLocationUpdatesListener
     }
 
-    public void setCtLocationUpdatesListener(@NonNull CTLocationUpdatesListener ctLocationUpdatesListener) {
-        this.ctLocationUpdatesListener = ctLocationUpdatesListener;
+    open fun setCtLocationUpdatesListener(ctLocationUpdatesListener: CTLocationUpdatesListener?) {
+        this.mCtLocationUpdatesListener = ctLocationUpdatesListener
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public @Nullable
-    CTGeofenceSettings getGeofenceSettings() {
-        return ctGeofenceSettings;
+    /** Kotlin property syntax, equivalent to [getCtLocationUpdatesListener] / [setCtLocationUpdatesListener]. */
+    var ctLocationUpdatesListener: CTLocationUpdatesListener?
+        @JvmSynthetic @JvmName("ktGetCtLocationUpdatesListener") inline get() = getCtLocationUpdatesListener()
+        @JvmSynthetic @JvmName("ktSetCtLocationUpdatesListener") inline set(value) = setCtLocationUpdatesListener(value)
+
+    open fun getGeofenceSettings(): CTGeofenceSettings? {
+        return ctGeofenceSettings
     }
+
+    /** Kotlin property syntax, equivalent to [getGeofenceSettings]. */
+    val geofenceSettings: CTGeofenceSettings?
+        @JvmSynthetic @JvmName("ktGetGeofenceSettings") inline get() = getGeofenceSettings()
 
     /**
-     * Sets geofence API configuration settings with provided {@link CTGeofenceSettings}
+     * Sets geofence API configuration settings with provided [CTGeofenceSettings]
      *
-     * @param ctGeofenceSettings instance of {@link CTGeofenceSettings}
+     * @param ctGeofenceSettings instance of [CTGeofenceSettings]
      */
-    @SuppressWarnings("unused")
-    private void setGeofenceSettings(CTGeofenceSettings ctGeofenceSettings) {
-
+    private fun setGeofenceSettings(ctGeofenceSettings: CTGeofenceSettings?) {
         if (this.ctGeofenceSettings != null) {
-            logger.verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Settings already configured");
-            return;
+            logger.verbose(
+                GEOFENCE_LOG_TAG,
+                "Settings already configured"
+            )
+            return
         }
 
-        this.ctGeofenceSettings = ctGeofenceSettings;
+        this.ctGeofenceSettings = ctGeofenceSettings
     }
 
     /**
-     * Creates {@link GeofenceUpdateTask}(to register list of geofences) and sends it to Queue using
-     * {@link CTGeofenceTaskManager} if application has {@link Manifest.permission#ACCESS_FINE_LOCATION}
-     * and {@link Manifest.permission#ACCESS_BACKGROUND_LOCATION} permissions.<br>
+     * Creates [GeofenceUpdateTask](to register list of geofences) and sends it to Queue using
+     * [CTGeofenceTaskManager] if application has [Manifest.permission.ACCESS_FINE_LOCATION]
+     * and [Manifest.permission.ACCESS_BACKGROUND_LOCATION] permissions.
      * This method is for internal usage only, apps must not call this externally.
      *
-     * @param fenceList instance of {@link JSONObject} containing geofence list to register to OS
+     * @param fenceList instance of [JSONObject] containing geofence list to register to OS
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Override
-    public void handleGeoFences(JSONObject fenceList) {
-
+    override fun handleGeoFences(fenceList: JSONObject?) {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
-            return;
+            return
         }
 
         if (!Utils.hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "We don't have ACCESS_FINE_LOCATION permission! dropping geofence update call");
-            if (this.cleverTapAPI != null) {
-                this.cleverTapAPI.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                        "We don't have ACCESS_FINE_LOCATION permission! Dropping initBackgroundLocationUpdates() call");
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "We don't have ACCESS_FINE_LOCATION permission! dropping geofence update call"
+            )
+            if (this.cleverTapApi != null) {
+                this.cleverTapApi!!.pushGeoFenceError(
+                    CTGeofenceConstants.ERROR_CODE,
+                    "We don't have ACCESS_FINE_LOCATION permission! Dropping initBackgroundLocationUpdates() call"
+                )
             }
-            return;
+            return
         }
 
         if (!Utils.hasBackgroundLocationPermission(context)) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "We don't have ACCESS_BACKGROUND_LOCATION permission! dropping geofence update call");
-            if (this.cleverTapAPI != null) {
-                this.cleverTapAPI.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                        "We don't have ACCESS_BACKGROUND_LOCATION permission! dropping geofence update call");
+            getLogger().debug(
+                GEOFENCE_LOG_TAG,
+                "We don't have ACCESS_BACKGROUND_LOCATION permission! dropping geofence update call"
+            )
+            if (this.cleverTapApi != null) {
+                this.cleverTapApi!!.pushGeoFenceError(
+                    CTGeofenceConstants.ERROR_CODE,
+                    "We don't have ACCESS_BACKGROUND_LOCATION permission! dropping geofence update call"
+                )
             }
-            return;
+            return
         }
 
         if (fenceList == null) {
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Geofence response is null! dropping further processing");
-            return;
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "Geofence response is null! dropping further processing"
+            )
+            return
         }
 
-        GeofenceUpdateTask geofenceUpdateTask = new GeofenceUpdateTask(context, fenceList);
+        val geofenceUpdateTask = GeofenceUpdateTask(context, fenceList)
 
-        CTGeofenceTaskManager.getInstance().postAsyncSafely("ProcessGeofenceUpdates",
-                geofenceUpdateTask);
+        CTGeofenceTaskManager.getInstance().postAsyncSafely(
+            "ProcessGeofenceUpdates",
+            geofenceUpdateTask
+        )
     }
 
     /**
-     * Initializes and activates SDK with provided {@link CTGeofenceSettings} and {@link CleverTapAPI}
+     * Initializes and activates SDK with provided [CTGeofenceSettings] and [CleverTapAPI]
      * instance.
      *
-     * @param ctGeofenceSettings instance of {@link CTGeofenceSettings}.Can be null in which case
-     *                           default settings will be applied.
-     * @param cleverTapAPI       NonNull instance of  {@link CleverTapAPI}.
+     * @param ctGeofenceSettings instance of [CTGeofenceSettings].Can be null in which case
+     * default settings will be applied.
+     * @param cleverTapAPI       NonNull instance of  [CleverTapAPI].
      */
-    public void init(CTGeofenceSettings ctGeofenceSettings, @NonNull CleverTapAPI cleverTapAPI) {
-
+    open fun init(ctGeofenceSettings: CTGeofenceSettings?, cleverTapAPI: CleverTapAPI?) {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
-            return;
+            return
         }
 
-        setCleverTapApi(cleverTapAPI);
-        setGeofenceSettings(ctGeofenceSettings);
-        setAccountId(cleverTapAPI.getAccountId());
-        activate();
+        setCleverTapApi(cleverTapAPI)
+        setGeofenceSettings(ctGeofenceSettings)
+        setAccountId(cleverTapAPI!!.accountId)
+        activate()
     }
 
     /**
-     * Creates {@link LocationUpdateTask}(to register location updates) and sends it to Queue using {@link
-     * CTGeofenceTaskManager}
-     * if application has {@link Manifest.permission#ACCESS_FINE_LOCATION} permission. SDK initialization
-     * callback({@link OnGeofenceApiInitializedListener#OnGeofenceApiInitialized()}) will be raised as soon as
-     * {@link LocationUpdateTask} finishes it's execution.
+     * Creates [LocationUpdateTask](to register location updates) and sends it to Queue using
+     * [CTGeofenceTaskManager]
+     * if application has [Manifest.permission.ACCESS_FINE_LOCATION] permission. SDK initialization
+     * callback([OnGeofenceApiInitializedListener.OnGeofenceApiInitialized]) will be raised as soon as
+     * [LocationUpdateTask] finishes it's execution.
      *
      * @throws IllegalStateException if Geofence SDK is not initialized before calling this method
      */
-    @SuppressWarnings("WeakerAccess")
-    public void initBackgroundLocationUpdates() {
-
+    open fun initBackgroundLocationUpdates() {
         if (ctLocationAdapter == null || ctGeofenceAdapter == null) {
-            return;
+            return
         }
 
         if (!Utils.hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "We don't have ACCESS_FINE_LOCATION permission! Dropping initBackgroundLocationUpdates() call");
-            if (this.cleverTapAPI != null) {
-                this.cleverTapAPI.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                        "We don't have ACCESS_FINE_LOCATION permission! Dropping initBackgroundLocationUpdates() call");
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "We don't have ACCESS_FINE_LOCATION permission! Dropping initBackgroundLocationUpdates() call"
+            )
+            if (this.cleverTapApi != null) {
+                this.cleverTapApi!!.pushGeoFenceError(
+                    CTGeofenceConstants.ERROR_CODE,
+                    "We don't have ACCESS_FINE_LOCATION permission! Dropping initBackgroundLocationUpdates() call"
+                )
             }
-            return;
+            return
         }
 
-        logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "requestBackgroundLocationUpdates() called");
+        logger.debug(
+            GEOFENCE_LOG_TAG,
+            "requestBackgroundLocationUpdates() called"
+        )
 
         if (!isActivated) {
-            throw new IllegalStateException(
-                    "Geofence SDK must be initialized before initBackgroundLocationUpdates()");
+            throw IllegalStateException(
+                "Geofence SDK must be initialized before initBackgroundLocationUpdates()"
+            )
         }
 
-        LocationUpdateTask locationUpdateTask = new LocationUpdateTask(context);
-        locationUpdateTask.setOnCompleteListener(new CTGeofenceTask.OnCompleteListener() {
-            @Override
-            public void onComplete() {
-
-                if (onGeofenceApiInitializedListener != null) {
-                    com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            onGeofenceApiInitializedListener.OnGeofenceApiInitialized();
-                        }
-                    });
+        val locationUpdateTask = LocationUpdateTask(context)
+        locationUpdateTask.setOnCompleteListener(CTGeofenceTask.OnCompleteListener {
+            if (onGeofenceApiInitializedListener != null) {
+                com.clevertap.android.sdk.Utils.runOnUiThread {
+                    onGeofenceApiInitializedListener!!.OnGeofenceApiInitialized()
                 }
             }
-        });
+        })
 
-        CTGeofenceTaskManager.getInstance().postAsyncSafely("IntitializeLocationUpdates",
-                locationUpdateTask);
+        CTGeofenceTaskManager.getInstance().postAsyncSafely(
+            "IntitializeLocationUpdates",
+            locationUpdateTask
+        )
     }
 
     /**
-     * Sets {@link OnGeofenceApiInitializedListener} for Geofence SDK initialized callback on main thread
+     * Sets [OnGeofenceApiInitializedListener] for Geofence SDK initialized callback on main thread
      *
-     * @param onGeofenceApiInitializedListener instance of {@link OnGeofenceApiInitializedListener}
+     * @param onGeofenceApiInitializedListener instance of [OnGeofenceApiInitializedListener]
      */
-    @SuppressWarnings("unused")
-    public void setOnGeofenceApiInitializedListener(
-            @NonNull OnGeofenceApiInitializedListener onGeofenceApiInitializedListener) {
-        this.onGeofenceApiInitializedListener = onGeofenceApiInitializedListener;
+    @Suppress("unused")
+    open fun setOnGeofenceApiInitializedListener(
+        onGeofenceApiInitializedListener: OnGeofenceApiInitializedListener?
+    ) {
+        this.onGeofenceApiInitializedListener = onGeofenceApiInitializedListener
     }
 
     /**
-     * Fetches last known location from OS and delivers it to APP through {@link CTLocationUpdatesListener}
-     * if application has {@link Manifest.permission#ACCESS_FINE_LOCATION} permission.<br>
-     * Fetched Location will be passed to {@link #processTriggeredLocation(Location)} to send it to
+     * Fetches last known location from OS and delivers it to APP through [CTLocationUpdatesListener]
+     * if application has [Manifest.permission.ACCESS_FINE_LOCATION] permission.
+     * Fetched Location will be passed to [processTriggeredLocation] to send it to
      * server for latest geofence list
      *
      * @throws IllegalStateException if Geofence SDK is not initialized before calling this method
      */
-    @SuppressWarnings("unused")
-    @Override
-    public void triggerLocation() {
-
-        if (ctLocationAdapter == null || ctGeofenceAdapter == null || cleverTapAPI == null) {
-            return;
+    @Suppress("unused")
+    override fun triggerLocation() {
+        if (ctLocationAdapter == null || ctGeofenceAdapter == null || cleverTapApi == null) {
+            return
         }
 
-        logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "triggerLocation() called");
+        logger.debug(
+            GEOFENCE_LOG_TAG,
+            "triggerLocation() called"
+        )
 
         if (!Utils.hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "We don't have ACCESS_FINE_LOCATION permission! Dropping triggerLocation() call");
-            if (this.cleverTapAPI != null) {
-                this.cleverTapAPI.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                        "We don't have ACCESS_FINE_LOCATION permission! Dropping triggerLocation() call");
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "We don't have ACCESS_FINE_LOCATION permission! Dropping triggerLocation() call"
+            )
+            if (this.cleverTapApi != null) {
+                this.cleverTapApi!!.pushGeoFenceError(
+                    CTGeofenceConstants.ERROR_CODE,
+                    "We don't have ACCESS_FINE_LOCATION permission! Dropping triggerLocation() call"
+                )
             }
-            return;
+            return
         }
 
         if (!isActivated) {
-            throw new IllegalStateException("Geofence SDK must be initialized before triggerLocation()");
+            throw IllegalStateException("Geofence SDK must be initialized before triggerLocation()")
         }
 
-        CTGeofenceTaskManager.getInstance().postAsyncSafely("TriggerLocation",
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        ctLocationAdapter.getLastLocation(new CTLocationCallback() {
-                            @Override
-                            public void onLocationComplete(Location location) {
-                                //get's called on bg thread
+        CTGeofenceTaskManager.getInstance().postAsyncSafely(
+            "TriggerLocation",
+            Runnable {
+                ctLocationAdapter!!.getLastLocation(CTLocationCallback { location ->
+                    //get's called on bg thread
 
-                                if (location != null) {
-                                    processTriggeredLocation(location);
-                                }
-
-                                Utils.notifyLocationUpdates(context, location);
-                            }
-                        });
+                    if (location != null) {
+                        processTriggeredLocation(location)
                     }
-                });
 
-
+                    Utils.notifyLocationUpdates(context, location)
+                })
+            })
     }
 
-    @NonNull
-    String getAccountId() {
-        return Utils.emptyIfNull(accountId);
-    }
+    internal val accountId: String
+        get() = Utils.emptyIfNull(mAccountId)
 
     /**
-     * Sets CleverTap account id which will be used by SDK to recreate {@link CleverTapAPI}
+     * Sets CleverTap account id which will be used by SDK to recreate [CleverTapAPI]
      * instance when an app is in killed state. Error will be sent to CleverTap in case null or empty.
      *
      * @param accountId CleverTap account id
      */
-    @SuppressWarnings("unused")
-    private void setAccountId(String accountId) {
-
+    private fun setAccountId(accountId: String?) {
         if (accountId == null || accountId.isEmpty()) {
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Account Id is null or empty");
-            if (this.cleverTapAPI != null) {
-                this.cleverTapAPI.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE, "Account Id is null or empty");
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "Account Id is null or empty"
+            )
+            if (this.cleverTapApi != null) {
+                this.cleverTapApi!!.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE, "Account Id is null or empty")
             }
-            return;
+            return
         }
 
-        this.accountId = accountId;
-    }
-
-    @Nullable
-    CleverTapAPI getCleverTapApi() {
-        return cleverTapAPI;
+        this.mAccountId = accountId
     }
 
     /**
-     * Sets {@link CleverTapAPI} instance to be used by SDK
+     * Sets [CleverTapAPI] instance to be used by SDK
      *
-     * @param cleverTapAPI instance of {@link CleverTapAPI}
+     * @param cleverTapAPI instance of [CleverTapAPI]
      */
-    @SuppressWarnings("unused")
-    private void setCleverTapApi(CleverTapAPI cleverTapAPI) {
-        this.cleverTapAPI = cleverTapAPI;
-    }
-
-    @Nullable
-    CTGeofenceAdapter getCtGeofenceAdapter() {
-        return ctGeofenceAdapter;
-    }
-
-    @Nullable
-    CTLocationAdapter getCtLocationAdapter() {
-        return ctLocationAdapter;
+    private fun setCleverTapApi(cleverTapAPI: CleverTapAPI?) {
+        this.cleverTapApi = cleverTapAPI
     }
 
     /**
-     * Creates default instance of {@link CTGeofenceSettings}
+     * Creates default instance of [CTGeofenceSettings]
      *
-     * @return default instance of {@link CTGeofenceSettings}
+     * @return default instance of [CTGeofenceSettings]
      */
-    @NonNull
-    CTGeofenceSettings initDefaultConfig() {
-        return new CTGeofenceSettings.Builder().build();
-    }
-
-    boolean isActivated() {
-        return isActivated;
+    internal fun initDefaultConfig(): CTGeofenceSettings {
+        return CTGeofenceSettings.Builder().build()
     }
 
     /**
-     * Sends Location to CleverTap SDK to send it to server with throttling limit of {@code minimum
-     * 30 minutes} and {@code minimum displacement of 200 meters} between two location pings.<br>
+     * Sends Location to CleverTap SDK to send it to server with throttling limit of `minimum
+     * 30 minutes` and `minimum displacement of 200 meters` between two location pings.
      * Throttling logic is determined by comparing last pinged location and current one using
      * shared preferences
      *
-     * @param location instance of {@link Location}, must be nonnull
+     * @param location instance of [Location], must be nonnull
      * @return a Future representing pending completion of the task of sending location to server,
      * can be null if CleverTap SDK decides not to send it to server
      */
-    @Nullable
-    Future<?> processTriggeredLocation(@NonNull Location location) {
-        Future<?> future = null;
+    internal fun processTriggeredLocation(location: Location): Future<*>? {
+        var future: Future<*>? = null
 
         try {
-            if (cleverTapAPI == null) {
-                return null;
-            }
+            val cleverTapAPI = cleverTapApi ?: return null
 
-            Location lastStoredLocation = new Location("");
+            val lastStoredLocation = Location("")
 
-            lastStoredLocation.setLatitude(GeofenceStorageHelper
-                    .getDouble(context, CTGeofenceConstants.KEY_LATITUDE, DEFAULT_LATITUDE));
-            lastStoredLocation.setLongitude(GeofenceStorageHelper
-                    .getDouble(context, CTGeofenceConstants.KEY_LONGITUDE, DEFAULT_LONGITUDE));
+            lastStoredLocation.latitude = GeofenceStorageHelper
+                .getDouble(context, CTGeofenceConstants.KEY_LATITUDE, DEFAULT_LATITUDE)
+            lastStoredLocation.longitude = GeofenceStorageHelper
+                .getDouble(context, CTGeofenceConstants.KEY_LONGITUDE, DEFAULT_LONGITUDE)
 
-            long lastStoredLocationEPMillis = GeofenceStorageHelper.getLong(context
-                    , CTGeofenceConstants.KEY_LAST_LOCATION_EP, 0);
-            long nowMillis = System.currentTimeMillis();
+            val lastStoredLocationEPMillis = GeofenceStorageHelper.getLong(
+                context, CTGeofenceConstants.KEY_LAST_LOCATION_EP, 0
+            )
+            val nowMillis = System.currentTimeMillis()
 
-            long deltaT = nowMillis - lastStoredLocationEPMillis;
-            float deltaD = location.distanceTo(lastStoredLocation);
+            val deltaT = nowMillis - lastStoredLocationEPMillis
+            val deltaD = location.distanceTo(lastStoredLocation)
 
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Delta T for last two locations = " + deltaT);
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Delta D for last two locations = " + deltaD);
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "Delta T for last two locations = $deltaT"
+            )
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "Delta D for last two locations = $deltaD"
+            )
 
             if (deltaT > INTERVAL_IN_MILLIS && deltaD > SMALLEST_DISPLACEMENT_IN_METERS) {
+                logger.debug(
+                    GEOFENCE_LOG_TAG,
+                    "Sending last location to CleverTap.."
+                )
 
-                logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Sending last location to CleverTap..");
+                future = cleverTapAPI.setLocationForGeofences(location, Utils.getGeofenceSDKVersion())
 
-                future = cleverTapAPI.setLocationForGeofences(location, Utils.getGeofenceSDKVersion());
-
-                GeofenceStorageHelper.putDouble(context
-                        , CTGeofenceConstants.KEY_LATITUDE, location.getLatitude());
-                GeofenceStorageHelper.putDouble(context
-                        , CTGeofenceConstants.KEY_LONGITUDE, location.getLongitude());
-                GeofenceStorageHelper.putLong(context
-                        , CTGeofenceConstants.KEY_LAST_LOCATION_EP, System.currentTimeMillis());
-
+                GeofenceStorageHelper.putDouble(
+                    context, CTGeofenceConstants.KEY_LATITUDE, location.latitude
+                )
+                GeofenceStorageHelper.putDouble(
+                    context, CTGeofenceConstants.KEY_LONGITUDE, location.longitude
+                )
+                GeofenceStorageHelper.putLong(
+                    context, CTGeofenceConstants.KEY_LAST_LOCATION_EP, System.currentTimeMillis()
+                )
             } else {
-                logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Not sending last location to CleverTap");
+                logger.debug(
+                    GEOFENCE_LOG_TAG,
+                    "Not sending last location to CleverTap"
+                )
             }
-
-        } catch (Exception e) {
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Exception while processing last location for geofences", e);
+        } catch (e: Exception) {
+            logger.debug(
+                GEOFENCE_LOG_TAG,
+                "Exception while processing last location for geofences", e
+            )
         }
 
-        return future;
+        return future
     }
 
     /**
-     * Activates SDK by registering {@link GeofenceCallback}
+     * Activates SDK by registering [GeofenceCallback]
      * and background location updates on background thread by
      * reading config settings if provided or will use default settings.
      */
-    @SuppressWarnings("unused")
-    private void activate() {
-
-        if (ctLocationAdapter == null || ctGeofenceAdapter == null || cleverTapAPI == null) {
-            return;
+    private fun activate() {
+        if (ctLocationAdapter == null || ctGeofenceAdapter == null || cleverTapApi == null) {
+            return
         }
 
         if (isActivated) {
-            logger.verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Geofence API already activated! dropping activate() call");
-            return;
+            logger.verbose(
+                GEOFENCE_LOG_TAG,
+                "Geofence API already activated! dropping activate() call"
+            )
+            return
         }
 
         if (ctGeofenceSettings == null) {
-            ctGeofenceSettings = initDefaultConfig();
+            ctGeofenceSettings = initDefaultConfig()
         }
 
-        logger.setDebugLevel(ctGeofenceSettings.getLogLevel());
+        logger.setDebugLevel(ctGeofenceSettings!!.logLevel)
 
-        cleverTapAPI.setGeofenceCallback(this);
-        logger.debug(GEOFENCE_LOG_TAG, "geofence callback registered");
+        cleverTapApi!!.setGeofenceCallback(this)
+        logger.debug(GEOFENCE_LOG_TAG, "geofence callback registered")
 
-        isActivated = true;
-        initBackgroundLocationUpdates();
+        isActivated = true
+        initBackgroundLocationUpdates()
     }
 
-    static {
-        logger = new Logger(Logger.DEBUG);
+    companion object {
+        const val GEOFENCE_LOG_TAG: String = "CTGeofence"
+
+        private var ctGeofenceAPI: CTGeofenceAPI? = null
+
+        private val logger: Logger = Logger(Logger.DEBUG)
+
+        /**
+         * Retrieves the `default` singleton instance of [CTGeofenceAPI].
+         *
+         * @param context A [Context] for Application
+         * @return The singleton instance of [CTGeofenceAPI]
+         */
+        @JvmStatic
+        fun getInstance(context: Context): CTGeofenceAPI {
+            synchronized(CTGeofenceAPI::class.java) {
+                if (ctGeofenceAPI == null) {
+                    ctGeofenceAPI = CTGeofenceAPI(context)
+                }
+                return ctGeofenceAPI!!
+            }
+        }
+
+        @JvmStatic
+        fun getLogger(): Logger {
+            return logger
+        }
     }
 }

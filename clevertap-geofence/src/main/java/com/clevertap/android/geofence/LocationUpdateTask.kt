@@ -1,139 +1,130 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import static android.app.PendingIntent.FLAG_NO_CREATE;
-
-import android.app.PendingIntent;
-import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
-import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_NO_CREATE
+import android.content.Context
+import androidx.annotation.WorkerThread
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask.OnCompleteListener
+import com.clevertap.android.geofence.interfaces.CTLocationAdapter
 
 /**
- * A task of type {@link CTGeofenceTask} responsible for requesting or removing background
- * location updates by comparing {@link CTGeofenceSettings} and {@link PendingIntent}
+ * A task of type [CTGeofenceTask] responsible for requesting or removing background
+ * location updates by comparing [CTGeofenceSettings] and [PendingIntent]
  */
-class LocationUpdateTask implements CTGeofenceTask {
+internal class LocationUpdateTask(context: Context) : CTGeofenceTask {
 
-    private final Context context;
+    private val context: Context = context.applicationContext
 
-    @Nullable
-    private CTGeofenceSettings ctGeofenceSettings;
+    private var ctGeofenceSettings: CTGeofenceSettings? = CTGeofenceAPI.getInstance(this.context).geofenceSettings
 
-    @Nullable
-    private final CTLocationAdapter ctLocationAdapter;
+    private val ctLocationAdapter: CTLocationAdapter? = CTGeofenceAPI.getInstance(this.context).ctLocationAdapter
 
-    @Nullable
-    private OnCompleteListener onCompleteListener;
-
-    LocationUpdateTask(Context context) {
-        this.context = context.getApplicationContext();
-        ctGeofenceSettings = CTGeofenceAPI.getInstance(this.context).getGeofenceSettings();
-        ctLocationAdapter = CTGeofenceAPI.getInstance(this.context).getCtLocationAdapter();
-    }
+    private var onCompleteListener: OnCompleteListener? = null
 
     /**
-     * Writes new {@link CTGeofenceSettings} to file. Requests/Removes Location updates based on change
+     * Writes new [CTGeofenceSettings] to file. Requests/Removes Location updates based on change
      * in config settings and avoids duplicate request of location updates if pending intent
      * already exists in the system and is active
      */
     @WorkerThread
-    @Override
-    public void execute() {
-
+    override fun execute() {
         if (ctLocationAdapter == null) {
-            return;
+            return
         }
 
         if (ctGeofenceSettings == null) {
-            ctGeofenceSettings = CTGeofenceAPI.getInstance(context).initDefaultConfig();
+            ctGeofenceSettings = CTGeofenceAPI.getInstance(context).initDefaultConfig()
         }
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Executing LocationUpdateTask...");
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Executing LocationUpdateTask..."
+        )
 
         // FLAG_NO_CREATE will tell us if pending intent already exists and is active
-        PendingIntent locationPendingIntent = PendingIntentFactory.getPendingIntent(context,
-                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_NO_CREATE);
+        val locationPendingIntent = PendingIntentFactory.getPendingIntent(
+            context,
+            PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_NO_CREATE
+        )
 
         // if background location disabled and if location update request is already registered then remove it
-        if (!this.ctGeofenceSettings.isBackgroundLocationUpdatesEnabled() && locationPendingIntent != null) {
-            ctLocationAdapter.removeLocationUpdates(locationPendingIntent);
+        if (!this.ctGeofenceSettings!!.isBackgroundLocationUpdatesEnabled && locationPendingIntent != null) {
+            ctLocationAdapter.removeLocationUpdates(locationPendingIntent)
         } else if (isRequestLocation(locationPendingIntent)) {
-
             // if background location enabled and if location update request is not already registered
             // or there is change in accuracy or fetch mode settings then request location updates
-            ctLocationAdapter.requestLocationUpdates();
+            ctLocationAdapter.requestLocationUpdates()
         } else {
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Dropping duplicate location update request");
+            CTGeofenceAPI.getLogger().verbose(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Dropping duplicate location update request"
+            )
         }
 
         // write new settings to file
-        Utils.writeSettingsToFile(context, ctGeofenceSettings);
+        Utils.writeSettingsToFile(context, ctGeofenceSettings!!)
 
         if (onCompleteListener != null) {
-            onCompleteListener.onComplete();
+            onCompleteListener!!.onComplete()
         }
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Finished executing LocationUpdateTask");
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Finished executing LocationUpdateTask"
+        )
     }
 
-    @Override
-    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
-        this.onCompleteListener = onCompleteListener;
+    override fun setOnCompleteListener(onCompleteListener: OnCompleteListener) {
+        this.onCompleteListener = onCompleteListener
     }
 
     /**
-     * Helper method for comparing old {@link CTGeofenceSettings} stored in file with current one to
+     * Helper method for comparing old [CTGeofenceSettings] stored in file with current one to
      * determine if location update request is required.
      *
-     * @param locationPendingIntent instance of {@link PendingIntent} of type
-     *                              {@link PendingIntentFactory#PENDING_INTENT_GEOFENCE} or {@link
-     *                              PendingIntentFactory#PENDING_INTENT_LOCATION}
+     * @param locationPendingIntent instance of [PendingIntent] of type
+     * [PendingIntentFactory.PENDING_INTENT_GEOFENCE] or
+     * [PendingIntentFactory.PENDING_INTENT_LOCATION]
      * @return true if location update request is required else false
      */
-    private boolean isRequestLocation(PendingIntent locationPendingIntent) {
+    private fun isRequestLocation(locationPendingIntent: PendingIntent?): Boolean {
+        var lastAccuracy = -1
+        var lastFetchMode = -1
+        var lastInterval: Long = -1
+        var lastFastestInterval: Long = -1
+        var lastDisplacement = -1f
 
-        int lastAccuracy = -1;
-        int lastFetchMode = -1;
-        long lastInterval = -1;
-        long lastFastestInterval = -1;
-        float lastDisplacement = -1;
-
-        @SuppressWarnings("ConstantConditions") // ctGeofenceSettings won't be null
-                int currentAccuracy = ctGeofenceSettings.getLocationAccuracy();
-        int currentFetchMode = ctGeofenceSettings.getLocationFetchMode();
-        long currentInterval = ctGeofenceSettings.getInterval();
-        long currentFastestInterval = ctGeofenceSettings.getFastestInterval();
-        float currentDisplacement = ctGeofenceSettings.getSmallestDisplacement();
+        // ctGeofenceSettings won't be null
+        val ctGeofenceSettings = ctGeofenceSettings!!
+        val currentAccuracy = ctGeofenceSettings.locationAccuracy
+        val currentFetchMode = ctGeofenceSettings.locationFetchMode
+        val currentInterval = ctGeofenceSettings.interval
+        val currentFastestInterval = ctGeofenceSettings.fastestInterval
+        val currentDisplacement = ctGeofenceSettings.smallestDisplacement
 
         // read settings from file
-        CTGeofenceSettings lastGeofenceSettings = Utils.readSettingsFromFile(context);
+        val lastGeofenceSettings = Utils.readSettingsFromFile(context)
         if (lastGeofenceSettings != null) {
-            lastAccuracy = lastGeofenceSettings.getLocationAccuracy();
-            lastFetchMode = lastGeofenceSettings.getLocationFetchMode();
-            lastInterval = lastGeofenceSettings.getInterval();
-            lastFastestInterval = lastGeofenceSettings.getFastestInterval();
-            lastDisplacement = lastGeofenceSettings.getSmallestDisplacement();
+            lastAccuracy = lastGeofenceSettings.locationAccuracy
+            lastFetchMode = lastGeofenceSettings.locationFetchMode
+            lastInterval = lastGeofenceSettings.interval
+            lastFastestInterval = lastGeofenceSettings.fastestInterval
+            lastDisplacement = lastGeofenceSettings.smallestDisplacement
         }
 
-        boolean isCurrentLocationFetchModeChanged =
-                currentFetchMode == CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC &&
-                        (currentAccuracy != lastAccuracy || currentInterval != lastInterval
-                                || currentFastestInterval != lastFastestInterval
-                                || currentDisplacement != lastDisplacement);
+        val isCurrentLocationFetchModeChanged =
+            currentFetchMode == CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC.toInt() &&
+                    (currentAccuracy != lastAccuracy || currentInterval != lastInterval
+                            || currentFastestInterval != lastFastestInterval
+                            || currentDisplacement != lastDisplacement)
 
-        boolean isLastLocationFetchModeChanged =
-                currentFetchMode == CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC &&
-                        currentInterval != lastInterval;
+        val isLastLocationFetchModeChanged =
+            currentFetchMode == CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC.toInt() &&
+                    currentInterval != lastInterval
 
-        return ctGeofenceSettings.isBackgroundLocationUpdatesEnabled() &&
+        return ctGeofenceSettings.isBackgroundLocationUpdatesEnabled &&
                 (locationPendingIntent == null || isCurrentLocationFetchModeChanged
-                        || isLastLocationFetchModeChanged || currentFetchMode != lastFetchMode);
+                        || isLastLocationFetchModeChanged || currentFetchMode != lastFetchMode)
     }
-
-
 }

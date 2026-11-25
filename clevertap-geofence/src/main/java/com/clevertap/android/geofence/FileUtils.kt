@@ -1,120 +1,123 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import android.content.Context;
-import android.text.TextUtils;
+import android.content.Context
+import android.text.TextUtils
+import androidx.annotation.WorkerThread
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileWriter
+import java.io.InputStreamReader
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
+@Suppress("MemberVisibilityCanBePrivate")
+internal object FileUtils {
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-@SuppressWarnings("WeakerAccess")
-public class FileUtils {
-
+    @JvmStatic
     @WorkerThread
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    static void deleteDirectory(Context context, String dirName) {
+    fun deleteDirectory(context: Context?, dirName: String?) {
         if (TextUtils.isEmpty(dirName) || context == null) {
-            return;
+            return
         }
         try {
-            File file = new File(context.getFilesDir(), dirName);
-            if (file.exists() && file.isDirectory()) {
-                String[] children = file.list();
+            val file = File(context.filesDir, dirName!!)
+            if (file.exists() && file.isDirectory) {
+                val children = file.list()
                 if (children != null) {
-                    for (String child : children) {
-                        String isDeleted = new File(file, child).delete() ? "successfully deleted"
-                                : "failed to delete";
-                        CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                child + " :" + isDeleted);
+                    for (child in children) {
+                        val isDeleted = if (File(file, child).delete()) "successfully deleted" else "failed to delete"
+                        CTGeofenceAPI.getLogger().verbose(
+                            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                            "$child :$isDeleted"
+                        )
                     }
                 }
             }
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "deleteDirectory failed for dirName: " + dirName, e);
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger()
+                .debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "deleteDirectory failed for dirName: $dirName", e)
         }
     }
 
-    @SuppressWarnings("UnusedParameters")
-    static String getCachedDirName(Context context) {
+    @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
+    fun getCachedDirName(context: Context?): String {
         return CTGeofenceConstants.CACHED_DIR_NAME /*+ "_" + CTGeofenceAPI.getInstance(context).getAccountId()
-                + "_" + CTGeofenceAPI.getInstance(context).getGuid()*/;
+                + "_" + CTGeofenceAPI.getInstance(context).getGuid()*/
     }
 
-    static String getCachedFullPath(Context context, String fileName) {
-        return getCachedDirName(context) + "/" + fileName;
+    @JvmStatic
+    fun getCachedFullPath(context: Context?, fileName: String?): String {
+        return getCachedDirName(context) + "/" + fileName
     }
 
+    @JvmStatic
     @WorkerThread
-    @NonNull
-    static String readFromFile(Context context, String fileNameWithPath) {
-
-        String content = "";
+    fun readFromFile(context: Context?, fileNameWithPath: String?): String {
+        var content = ""
         //Make sure to use a try-catch statement to catch any errors
         try {
             //Make your FilePath and File
-            String yourFilePath = context.getFilesDir() + "/" + fileNameWithPath;
-            File yourFile = new File(yourFilePath);
+            val yourFilePath = context!!.filesDir.toString() + "/" + fileNameWithPath
+            val yourFile = File(yourFilePath)
 
             if (!yourFile.exists()) {
-                return content;
+                return content
             }
             //Make an InputStream with your File in the constructor
-            InputStream inputStream = new FileInputStream(yourFile);
-            StringBuilder stringBuilder = new StringBuilder();
+            val inputStream = FileInputStream(yourFile)
+            val stringBuilder = StringBuilder()
             //Check to see if your inputStream is null
             //If it isn't use the inputStream to make a InputStreamReader
             //Use that to make a BufferedReader
             //Also create an empty String
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            String receiveString;
+            val inputStreamReader = InputStreamReader(inputStream)
+            val bufferedReader = BufferedReader(inputStreamReader)
+            var receiveString: String?
             //Use a while loop to append the lines from the Buffered reader
-            while ((receiveString = bufferedReader.readLine()) != null) {
-                stringBuilder.append(receiveString);
+            while (bufferedReader.readLine().also { receiveString = it } != null) {
+                stringBuilder.append(receiveString)
             }
             //Close your InputStream and save stringBuilder as a String
-            inputStream.close();
-            content = stringBuilder.toString();
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Exception while reading file: " + fileNameWithPath, e);
+            inputStream.close()
+            content = stringBuilder.toString()
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger()
+                .debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Exception while reading file: $fileNameWithPath", e)
         }
-        return content;
+        return content
     }
 
+    @JvmStatic
     @WorkerThread
-    static boolean writeJsonToFile(Context context, String dirName, String fileName,
-                                   @Nullable JSONObject jsonObject) {
-        boolean isWriteSuccessful = false;
+    fun writeJsonToFile(
+        context: Context?, dirName: String?, fileName: String?,
+        jsonObject: JSONObject?
+    ): Boolean {
+        var isWriteSuccessful = false
         try {
             if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName)) {
-                return false;
+                return false
             }
-            File file = new File(context.getFilesDir(), dirName);
+            val file = File(context!!.filesDir, dirName!!)
             if (!file.exists()) {
                 if (!file.mkdir()) {
-                    return false;
+                    return false
                 }
             }
 
-            File file1 = new File(file, fileName);
-            FileWriter writer = new FileWriter(file1, false);
-            writer.append(jsonObject.toString());
-            writer.flush();
-            writer.close();
-            isWriteSuccessful = true;
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, fileName + ": writeFileOnInternalStorage: successful");
-        } catch (Exception e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "writeJsonToFile failed for fileName: " + fileName, e);
+            val file1 = File(file, fileName!!)
+            val writer = FileWriter(file1, false)
+            writer.append(jsonObject.toString())
+            writer.flush()
+            writer.close()
+            isWriteSuccessful = true
+            CTGeofenceAPI.getLogger()
+                .verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, "$fileName: writeFileOnInternalStorage: successful")
+        } catch (e: Exception) {
+            CTGeofenceAPI.getLogger()
+                .debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "writeJsonToFile failed for fileName: $fileName", e)
         }
-        return isWriteSuccessful;
+        return isWriteSuccessful
     }
 }

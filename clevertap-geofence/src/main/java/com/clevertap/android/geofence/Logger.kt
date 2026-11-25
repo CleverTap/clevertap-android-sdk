@@ -1,132 +1,126 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import android.util.Log;
-import androidx.annotation.IntDef;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import android.util.Log
+import androidx.annotation.IntDef
 
-public final class Logger {
+class Logger internal constructor(@LogLevel level: Int) {
 
-    @IntDef({OFF, INFO, DEBUG, VERBOSE})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface LogLevel {
+    @IntDef(OFF, INFO, DEBUG, VERBOSE)
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class LogLevel
 
-    }
+    @LogLevel
+    private var debugLevel = 0
 
-    public static final int OFF = -1;
-
-    public static final int INFO = 0;
-
-    public static final int DEBUG = 2;
-
-    public static final int VERBOSE = 3;
-
-    private @LogLevel
-    int debugLevel;
-
-    Logger(@LogLevel int level) {
-        setDebugLevel(level);
+    init {
+        setDebugLevel(level)
     }
 
     /**
      * Logs to Debug if the debug level is greater than 1.
      */
-
-    public void debug(String message) {
+    fun debug(message: String?) {
         if (debugLevel > INFO) {
-            Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG, message);
+            Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)
         }
     }
 
-    public void debug(String suffix, String message) {
+    fun debug(suffix: String?, message: String?) {
         if (debugLevel > INFO) {
-            if (message.length() > 4000) {
-                Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000));
-                debug(suffix, message.substring(4000));
+            if (message!!.length > 4000) {
+                Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))
+                debug(suffix, message.substring(4000))
             } else {
-                Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message);
+                Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message)
             }
         }
     }
 
-    public void debug(String suffix, String message, Throwable t) {
+    fun debug(suffix: String?, message: String?, t: Throwable?) {
         if (debugLevel > INFO) {
-            Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t);
+            Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t)
         }
     }
 
-    public void debug(String message, Throwable t) {
+    fun debug(message: String?, t: Throwable?) {
         if (debugLevel > INFO) {
-            Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t);
+            Log.d(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)
         }
     }
 
     /**
      * Logs to Info if the debug level is greater than or equal to 1.
      */
-
-    public void info(String message) {
+    fun info(message: String?) {
         if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message);
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)
         }
     }
 
-    public void info(String suffix, String message) {
+    fun info(suffix: String?, message: String?) {
         if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message);
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message!!)
         }
     }
 
-    public void info(String suffix, String message, Throwable t) {
+    fun info(suffix: String?, message: String?, t: Throwable?) {
         if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t);
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t)
         }
     }
 
-    public void info(String message, Throwable t) {
+    fun info(message: String?, t: Throwable?) {
         if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t);
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void setDebugLevel(@LogLevel int level) {
-        this.debugLevel = level;
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun setDebugLevel(@LogLevel level: Int) {
+        this.debugLevel = level
     }
 
     /**
      * Logs to Verbose if the debug level is greater than 2.
      */
-
-    public void verbose(String message) {
+    fun verbose(message: String?) {
         if (debugLevel > DEBUG) {
-            Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message);
+            Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message!!)
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void verbose(String suffix, String message) {
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun verbose(suffix: String?, message: String?) {
         if (debugLevel > DEBUG) {
-            if (message.length() > 4000) {
-                Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000));
-                verbose(suffix, message.substring(4000));
+            if (message!!.length > 4000) {
+                Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message.substring(0, 4000))
+                verbose(suffix, message.substring(4000))
             } else {
-                Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message);
+                Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message)
             }
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void verbose(String suffix, String message, Throwable t) {
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun verbose(suffix: String?, message: String?, t: Throwable?) {
         if (debugLevel > DEBUG) {
-            Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t);
+            Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t)
         }
     }
 
-    public void verbose(String message, Throwable t) {
+    fun verbose(message: String?, t: Throwable?) {
         if (debugLevel > DEBUG) {
-            Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t);
+            Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t)
         }
     }
 
+    companion object {
+        const val OFF: Int = -1
+
+        const val INFO: Int = 0
+
+        const val DEBUG: Int = 2
+
+        const val VERBOSE: Int = 3
+    }
 }

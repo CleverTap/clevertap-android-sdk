@@ -1,28 +1,20 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import static com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG;
-
-import androidx.annotation.Nullable;
-import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import com.clevertap.android.geofence.CTGeofenceAPI.Companion.GEOFENCE_LOG_TAG
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 /**
  * Provides methods to post tasks/Runnable to a single threaded queue for processing tasks
  * This class is singleton, so only one queue will be created and shared.
  */
-class CTGeofenceTaskManager {
+internal class CTGeofenceTaskManager private constructor() {
 
-    private static CTGeofenceTaskManager taskManager;
+    private var EXECUTOR_THREAD_ID: Long = 0
 
-    private long EXECUTOR_THREAD_ID = 0;
-
-    private ExecutorService es;
-
-    private CTGeofenceTaskManager() {
-        es = Executors.newFixedThreadPool(1);
-    }
+    private var es: ExecutorService = Executors.newFixedThreadPool(1)
 
     /**
      * Use this to safely post a runnable to the async handler.
@@ -32,36 +24,33 @@ class CTGeofenceTaskManager {
      * @param runnable runnable to submit to queue
      * @return a Future representing pending completion of the runnable, can be null in case of nested calls
      */
-    @SuppressWarnings("UnusedParameters")
-    @Nullable
-    Future<?> postAsyncSafely(final String name, final Runnable runnable) {
-        Future<?> future = null;
+    fun postAsyncSafely(name: String, runnable: Runnable): Future<*>? {
+        var future: Future<*>? = null
         try {
-            final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
+            val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
 
             if (executeSync) {
                 // if new task comes from executor thread itself then run it immediately
                 // no need to put it in queue
-                runnable.run();
+                runnable.run()
             } else {
-                future = es.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        EXECUTOR_THREAD_ID = Thread.currentThread().getId();
-                        try {
-                            runnable.run();
-                        } catch (Throwable t) {
-                            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG,
-                                    "Executor service: Failed to complete the scheduled task: " + name, t);
-                        }
+                future = es.submit(Runnable {
+                    EXECUTOR_THREAD_ID = Thread.currentThread().id
+                    try {
+                        runnable.run()
+                    } catch (t: Throwable) {
+                        CTGeofenceAPI.getLogger().verbose(
+                            GEOFENCE_LOG_TAG,
+                            "Executor service: Failed to complete the scheduled task: $name", t
+                        )
                     }
-                });
+                })
             }
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             CTGeofenceAPI.getLogger()
-                    .verbose(GEOFENCE_LOG_TAG, "Failed to submit task: " + name + " to the executor service", t);
+                .verbose(GEOFENCE_LOG_TAG, "Failed to submit task: $name to the executor service", t)
         }
-        return future;
+        return future
     }
 
     /**
@@ -72,47 +61,51 @@ class CTGeofenceTaskManager {
      * @param task Task to submit to queue
      * @return a Future representing pending completion of the task, can be null in case of nested calls
      */
-    @SuppressWarnings("UnusedParameters")
-    @Nullable
-    Future<?> postAsyncSafely(final String name, final CTGeofenceTask task) {
-        Future<?> future = null;
+    fun postAsyncSafely(name: String, task: CTGeofenceTask): Future<*>? {
+        var future: Future<*>? = null
         try {
-            final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
+            val executeSync = Thread.currentThread().id == EXECUTOR_THREAD_ID
 
             if (executeSync) {
                 // if new task comes from executor thread itself then run it immediately
                 // no need to put it in queue
-                task.execute();
+                task.execute()
             } else {
-                future = es.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        EXECUTOR_THREAD_ID = Thread.currentThread().getId();
-                        try {
-                            task.execute();
-                        } catch (Throwable t) {
-                            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG,
-                                    "Executor service: Failed to complete the scheduled task: " + name, t);
-                        }
+                future = es.submit(Runnable {
+                    EXECUTOR_THREAD_ID = Thread.currentThread().id
+                    try {
+                        task.execute()
+                    } catch (t: Throwable) {
+                        CTGeofenceAPI.getLogger().verbose(
+                            GEOFENCE_LOG_TAG,
+                            "Executor service: Failed to complete the scheduled task: $name", t
+                        )
                     }
-                });
+                })
             }
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             CTGeofenceAPI.getLogger()
-                    .verbose(GEOFENCE_LOG_TAG, "Failed to submit task: " + name + " to the executor service", t);
+                .verbose(GEOFENCE_LOG_TAG, "Failed to submit task: $name to the executor service", t)
         }
 
-        return future;
+        return future
     }
 
-    void setExecutorService(ExecutorService es) {
-        this.es = es;
+    fun setExecutorService(es: ExecutorService) {
+        this.es = es
     }
 
-    static synchronized CTGeofenceTaskManager getInstance() {
-        if (taskManager == null) {
-            taskManager = new CTGeofenceTaskManager();
+    companion object {
+        private var taskManager: CTGeofenceTaskManager? = null
+
+        @JvmStatic
+        fun getInstance(): CTGeofenceTaskManager {
+            synchronized(CTGeofenceTaskManager::class.java) {
+                if (taskManager == null) {
+                    taskManager = CTGeofenceTaskManager()
+                }
+                return taskManager!!
+            }
         }
-        return taskManager;
     }
 }

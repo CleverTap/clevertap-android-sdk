@@ -1,91 +1,99 @@
-package com.clevertap.android.geofence;
+package com.clevertap.android.geofence
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
-import androidx.annotation.MainThread;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import androidx.annotation.MainThread
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
- * A {@link BroadcastReceiver} which receives geofence enter/exit event updates in foreground as well as in background
+ * A [BroadcastReceiver] which receives geofence enter/exit event updates in foreground as well as in background
  * and in killed state.
  */
-public class CTGeofenceReceiver extends BroadcastReceiver {
+internal class CTGeofenceReceiver : BroadcastReceiver() {
 
     /**
-     * Timeout to prevent ANR
-     */
-    private static final long BROADCAST_INTENT_TIME_MS = 8000;
-
-    /**
-     * Creates {@link PushGeofenceEventTask} and sends it to Queue using {@link CTGeofenceTaskManager}
+     * Creates [PushGeofenceEventTask] and sends it to Queue using [CTGeofenceTaskManager]
      *
-     * @param context application {@link Context}
-     * @param intent  an instance of {@link Intent} containing triggered
-     *                {@link com.google.android.gms.location.GeofencingEvent}
+     * @param context application [Context]
+     * @param intent  an instance of [Intent] containing triggered
+     * [com.google.android.gms.location.GeofencingEvent]
      */
     @MainThread
-    @Override
-    public void onReceive(final Context context, final Intent intent) {
-
+    override fun onReceive(context: Context, intent: Intent?) {
         if (intent == null) {
-            return;
+            return
         }
 
-        final PendingResult result = goAsync();
+        val result = goAsync()
 
         try {
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Geofence receiver called"
+            )
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Geofence receiver called");
+            val thread: Thread = object : Thread() {
+                override fun run() {
+                    val pushGeofenceEventTask = PushGeofenceEventTask(context, intent)
 
-            Thread thread = new Thread() {
-                public void run() {
-                    PushGeofenceEventTask pushGeofenceEventTask = new PushGeofenceEventTask(context, intent);
-
-                    Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("PushGeofenceEvent",
-                            pushGeofenceEventTask);
+                    val future = CTGeofenceTaskManager.getInstance().postAsyncSafely(
+                        "PushGeofenceEvent",
+                        pushGeofenceEventTask
+                    )
 
                     try {
-                        if (future != null) {
-                            future.get(BROADCAST_INTENT_TIME_MS, TimeUnit.MILLISECONDS);
-                        }
-                    } catch (TimeoutException e) {
-                        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Timeout geofence receiver execution limit of 8 secs", e);
-                    } catch (Exception e) {
-                        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Exception while processing geofence receiver intent", e);
+                        future?.get(BROADCAST_INTENT_TIME_MS, TimeUnit.MILLISECONDS)
+                    } catch (e: TimeoutException) {
+                        CTGeofenceAPI.getLogger().debug(
+                            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                            "Timeout geofence receiver execution limit of 8 secs", e
+                        )
+                    } catch (e: Exception) {
+                        CTGeofenceAPI.getLogger().debug(
+                            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                            "Exception while processing geofence receiver intent", e
+                        )
                     }
 
                     if (result != null) {
-                        result.finish();
+                        result.finish()
 
-                        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                "Geofence receiver Pending Intent is finished");
+                        CTGeofenceAPI.getLogger().debug(
+                            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                            "Geofence receiver Pending Intent is finished"
+                        )
                     }
                 }
-            };
-            thread.start();
-
-        } catch (Exception e) {
-
+            }
+            thread.start()
+        } catch (e: Exception) {
             if (result != null) {
-                result.finish();
+                result.finish()
 
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Geofence receiver Pending Intent is finished");
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Geofence receiver Pending Intent is finished"
+                )
             }
 
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Exception while processing geofence receiver intent", e);
+            CTGeofenceAPI.getLogger().debug(
+                CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Exception while processing geofence receiver intent", e
+            )
         }
 
-        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                "Returning from Geofence receiver");
+        CTGeofenceAPI.getLogger().debug(
+            CTGeofenceAPI.GEOFENCE_LOG_TAG,
+            "Returning from Geofence receiver"
+        )
+    }
+
+    companion object {
+        /**
+         * Timeout to prevent ANR
+         */
+        private const val BROADCAST_INTENT_TIME_MS: Long = 8000
     }
 }
