@@ -165,7 +165,9 @@ internal class PushGeofenceEventTask(context: Context, private val intent: Inten
                                 geofence.put("triggered_lng", triggeringLocation.longitude)
                             }
 
-                            val future: Future<*>
+                            // null when the SDK could not queue the event; future!!.get() below then throws
+                            // inside the try and is logged as a failed push, exactly as the Java version did.
+                            val future: Future<*>?
 
                             val cleverTapApi = CTGeofenceAPI.getInstance(context).cleverTapApi ?: return
 
@@ -200,7 +202,7 @@ internal class PushGeofenceEventTask(context: Context, private val intent: Inten
                                     "Calling future for geofence event with id = " +
                                             triggeredGeofence.requestId
                                 )
-                                future.get()
+                                future!!.get()
 
                                 CTGeofenceAPI.getLogger().verbose(
                                     CTGeofenceAPI.GEOFENCE_LOG_TAG,

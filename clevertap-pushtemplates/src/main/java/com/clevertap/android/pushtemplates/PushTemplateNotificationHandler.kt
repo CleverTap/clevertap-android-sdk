@@ -39,10 +39,7 @@ open class PushTemplateNotificationHandler : ActionButtonClickHandler {
                     PushNotificationUtil.getAccountIdFromNotificationBundle(message)
                 )
             if (cleverTapAPI != null) {
-                // TODO(SDK-6368): use cleverTapAPI.getInstanceConfig() once SDK-6372 lands
-                // (CoreState is Kotlin-internal in core; Java reached it through the @RestrictTo getter.)
-                @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-                val config = cleverTapAPI.coreState.config
+                val config = cleverTapAPI.getInstanceConfig()
                 val templateRenderer: INotificationRenderer =
                     TemplateRenderer(applicationContext!!, message!!, config)
                 cleverTapAPI.renderPushNotificationOnCallerThread(templateRenderer, applicationContext, message)
