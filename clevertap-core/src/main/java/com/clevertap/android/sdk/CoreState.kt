@@ -95,7 +95,7 @@ internal open class CoreState(
         if (this.controllerManager.ctProductConfigController == null) {
             this.config.logger.verbose(
                 config.accountId + ":async_deviceID",
-                "Initializing Product Config with device Id = " + this.deviceInfo.getDeviceID()
+                "Initializing Product Config with device Id = " + this.deviceInfo.deviceID
             )
             val ctProductConfigController = CTProductConfigFactory
                 .getInstance(

@@ -393,7 +393,7 @@ internal class InAppController(
                 if (keyValues?.isNotEmpty() == true) {
                     if (callbackManager.getInAppNotificationButtonListener() != null) {
                         callbackManager.getInAppNotificationButtonListener()
-                            .onInAppButtonClick(keyValues)
+                            ?.onInAppButtonClick(keyValues)
                     }
                 }
             }
@@ -519,7 +519,7 @@ internal class InAppController(
             val listener = callbackManager.getInAppNotificationListener()
             if (listener != null) {
                 val notifKVS = if (inAppNotification.customExtras != null) {
-                    Utils.convertJSONObjectToHashMap(inAppNotification.customExtras)
+                    Utils.convertJSONObjectToHashMap(inAppNotification.customExtras!!)
                 } else {
                     HashMap<String, Any>()
                 }
@@ -1329,7 +1329,7 @@ internal class InAppController(
 
         return if (listener != null) {
             val kvs = if (inAppNotification.customExtras != null) {
-                Utils.convertJSONObjectToHashMap(inAppNotification.customExtras)
+                Utils.convertJSONObjectToHashMap(inAppNotification.customExtras!!)
             } else {
                 HashMap<String, Any>()
             }

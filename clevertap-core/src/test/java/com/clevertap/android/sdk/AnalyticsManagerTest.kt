@@ -28,6 +28,7 @@ import com.clevertap.android.sdk.validation.pipeline.EventDataValidationResult
 import com.clevertap.android.sdk.validation.pipeline.EventNameValidationResult
 import com.clevertap.android.sdk.validation.pipeline.PropertyKeyValidationResult
 import com.clevertap.android.sdk.validation.pipeline.ValidationPipelineProvider
+import io.mockk.mockkObject
 import io.mockk.MockKAnnotations
 import io.mockk.called
 import io.mockk.clearAllMocks
@@ -1014,9 +1015,9 @@ class AnalyticsManagerTest {
         // MockCoreStateKotlin), so reading wzrkParams back reflects the latest set.
         val wzrkParams = coreState.coreMetaData.wzrkParams
         assertNotNull(wzrkParams)
-        assertFalse(wzrkParams.has("action_url"))
-        assertEquals("1234", wzrkParams.optString("wzrk_id"))
-        assertEquals("btn", wzrkParams.optString("wzrk_element_id"))
+        assertFalse(wzrkParams!!.has("action_url"))
+        assertEquals("1234", wzrkParams!!.optString("wzrk_id"))
+        assertEquals("btn", wzrkParams!!.optString("wzrk_element_id"))
     }
 
     @Test
@@ -1036,7 +1037,7 @@ class AnalyticsManagerTest {
         )
         // setWzrkParams is first-write-wins per session, so a view that set it would
         // lock wzrk_ref to the viewed slide and drop the real click.
-        assertEquals("slide2_clicked", coreState.coreMetaData.wzrkParams.optString("wzrk_element_id"))
+        assertEquals("slide2_clicked", coreState.coreMetaData.wzrkParams!!.optString("wzrk_element_id"))
     }
 
     @Test
@@ -1077,7 +1078,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushError should queue error event with activity name is non-null`() {
-        mockkStatic(CoreMetaData::class) {
+        mockkObject(CoreMetaData.Companion) {
             val eventName = "Error Occurred"
             mockCleanEventName(eventName)
             val locationKey = "Location"
@@ -1113,7 +1114,7 @@ class AnalyticsManagerTest {
 
     @Test
     fun `pushError should queue error event with activity name is null`() {
-        mockkStatic(CoreMetaData::class) {
+        mockkObject(CoreMetaData.Companion) {
             val eventName = "Error Occurred"
             mockCleanEventName(eventName)
             val locationKey = "Location"
@@ -1789,8 +1790,8 @@ class AnalyticsManagerTest {
         }
 
         val location = coreState.coreMetaData.locationFromUser
-        assertEquals(lat, location.latitude, 0.0)
-        assertEquals(lng, location.longitude, 0.0)
+        assertEquals(lat, location!!.latitude, 0.0)
+        assertEquals(lng, location!!.longitude, 0.0)
     }
 
     @Test

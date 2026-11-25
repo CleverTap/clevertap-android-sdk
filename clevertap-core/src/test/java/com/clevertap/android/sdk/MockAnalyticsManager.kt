@@ -7,11 +7,11 @@ import java.util.ArrayList
 
 internal class MockAnalyticsManager : BaseAnalyticsManager() {
 
-    override fun addMultiValuesForKey(key: String, values: ArrayList<String>) {}
-    override fun incrementValue(key: String, value: Number) {
+    override fun addMultiValuesForKey(key: String?, values: ArrayList<String?>?) {}
+    override fun incrementValue(key: String?, value: Number?) {
 
     }
-    override fun decrementValue(key: String, value: Number) {
+    override fun decrementValue(key: String?, value: Number?) {
 
     }
 
@@ -22,32 +22,32 @@ internal class MockAnalyticsManager : BaseAnalyticsManager() {
 
     }
 
-    override fun pushDisplayUnitClickedEventForID(unitID: String) {}
+    override fun pushDisplayUnitClickedEventForID(unitID: String?) {}
     override fun pushDisplayUnitElementClickedEventForID(
-        unitID: String,
+        unitID: String?,
         additionalProperties: java.util.HashMap<String, Any>?
     ) {}
     override fun pushDisplayUnitElementViewedEventForID(
-        unitID: String,
+        unitID: String?,
         additionalProperties: java.util.HashMap<String, Any>?
     ) {}
-    override fun pushDisplayUnitViewedEventForID(unitID: String) {}
-    override fun pushError(errorMessage: String, errorCode: Int) {}
-    override fun pushEvent(eventName: String, eventActions: Map<String, Any>) {}
+    override fun pushDisplayUnitViewedEventForID(unitID: String?) {}
+    override fun pushError(errorMessage: String?, errorCode: Int) {}
+    override fun pushEvent(eventName: String?, eventActions: Map<String, Any?>?) {}
     override fun pushInAppNotificationStateEvent(
-        clicked: Boolean, data: CTInAppNotification,
-        customData: Bundle
+        clicked: Boolean, data: CTInAppNotification?,
+        customData: Bundle?
     ) {
     }
 
-    override fun pushInstallReferrer(url: String) {}
-    override fun pushInstallReferrer(source: String, medium: String, campaign: String) {}
-    override fun pushNotificationClickedEvent(extras: Bundle) {}
-    override fun pushNotificationViewedEvent(extras: Bundle) {}
-    override fun pushProfile(profile: Map<String, Any>) {}
-    override fun removeMultiValuesForKey(key: String, values: ArrayList<String>) {}
-    override fun removeValueForKey(key: String) {}
-    override fun sendDataEvent(event: JSONObject) {}
+    override fun pushInstallReferrer(url: String?) {}
+    override fun pushInstallReferrer(source: String?, medium: String?, campaign: String?) {}
+    override fun pushNotificationClickedEvent(extras: Bundle?) {}
+    override fun pushNotificationViewedEvent(extras: Bundle?) {}
+    override fun pushProfile(profile: Map<String, Any?>?) {}
+    override fun removeMultiValuesForKey(key: String?, values: ArrayList<String?>?) {}
+    override fun removeValueForKey(key: String?) {}
+    override fun sendDataEvent(event: JSONObject?) {}
     override fun sendFetchEvent(eventObject: JSONObject?) {
         TODO("Not yet implemented")
     }
