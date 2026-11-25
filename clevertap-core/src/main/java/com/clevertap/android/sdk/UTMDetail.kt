@@ -1,38 +1,11 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-@SuppressWarnings("WeakerAccess")
-public class UTMDetail {
+@Suppress("MemberVisibilityCanBePrivate")
+open class UTMDetail {
 
-    private String campaign;
+    open var campaign: String? = null
 
-    private String medium;
+    open var medium: String? = null
 
-    private String source;
-
-    @SuppressWarnings("unused")
-    public String getCampaign() {
-        return campaign;
-    }
-
-    public void setCampaign(String campaign) {
-        this.campaign = campaign;
-    }
-
-    @SuppressWarnings("unused")
-    public String getMedium() {
-        return medium;
-    }
-
-    public void setMedium(String medium) {
-        this.medium = medium;
-    }
-
-    @SuppressWarnings("unused")
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
+    open var source: String? = null
 }

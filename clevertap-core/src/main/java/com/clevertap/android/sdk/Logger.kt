@@ -1,207 +1,198 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.util.Log;
+import android.util.Log
 
-public final class Logger implements ILogger {
+class Logger internal constructor(level: Int) : ILogger {
 
-    private int debugLevel;
+    private var debugLevel: Int = level
 
-    Logger(int level) {
-        this.debugLevel = level;
-    }
-
-    /**
-     * Logs to Debug if the debug level is greater than 1.
-     */
-    public static void d(String message) {
+    override fun debug(message: String?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.d(Constants.CLEVERTAP_LOG_TAG, message);
+            Log.d(Constants.CLEVERTAP_LOG_TAG, message!!)
         }
     }
 
-    public static void d(String suffix, String message) {
+    override fun debug(suffix: String?, message: String?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
-        }
-    }
-
-    public static void d(String suffix, String message, Throwable t) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
-        }
-    }
-
-    public static void d(String message, Throwable t) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.d(Constants.CLEVERTAP_LOG_TAG, message, t);
-        }
-    }
-
-    /**
-     * Logs to Info if the debug level is greater than or equal to 1.
-     */
-    public static void i(String message) {
-        if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG, message);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public static void i(String suffix, String message) {
-        if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public static void i(String suffix, String message, Throwable t) {
-        if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    public static void i(String message, Throwable t) {
-        if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG, message, t);
-        }
-    }
-
-    /**
-     * Logs to Verbose if the debug level is greater than 2.
-     */
-    public static void v(String message) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            Log.v(Constants.CLEVERTAP_LOG_TAG, message);
-        }
-    }
-
-    public static void v(String suffix, String message) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
-        }
-    }
-
-    public static void v(String suffix, String message, Throwable t) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
-        }
-    }
-
-    public static void v(String message, Throwable t) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            Log.v(Constants.CLEVERTAP_LOG_TAG, message, t);
-        }
-    }
-
-    @Override
-    public void debug(String message) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.d(Constants.CLEVERTAP_LOG_TAG, message);
-        }
-    }
-
-    @Override
-    public void debug(String suffix, String message) {
-        if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            if (message.length() > 4000) {
-                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message.substring(0, 4000));
-                debug(suffix, message.substring(4000));
+            if (message!!.length > 4000) {
+                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message.substring(0, 4000))
+                debug(suffix, message.substring(4000))
             } else {
-                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
+                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message)
             }
         }
     }
 
-    @Override
-    public void debug(String suffix, String message, Throwable t) {
+    override fun debug(suffix: String?, message: String?, t: Throwable?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
+            Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t)
         }
     }
 
-    @Override
-    @SuppressWarnings("unused")
-    public void debug(String message, Throwable t) {
+    override fun debug(message: String?, t: Throwable?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.d(Constants.CLEVERTAP_LOG_TAG, message, t);
+            Log.d(Constants.CLEVERTAP_LOG_TAG, message, t)
         }
     }
 
-    @Override
-    @SuppressWarnings("unused")
-    public void info(String message) {
+    override fun info(message: String?) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG, message);
+            Log.i(Constants.CLEVERTAP_LOG_TAG, message!!)
         }
     }
 
-    @Override
-    public void info(String suffix, String message) {
+    override fun info(suffix: String?, message: String?) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
+            Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message!!)
         }
     }
 
-    @Override
-    @SuppressWarnings("unused")
-    public void info(String suffix, String message, Throwable t) {
+    override fun info(suffix: String?, message: String?, t: Throwable?) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
+            Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t)
         }
     }
 
-    @Override
-    @SuppressWarnings("unused")
-    public void info(String message, Throwable t) {
+    override fun info(message: String?, t: Throwable?) {
         if (getDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
-            Log.i(Constants.CLEVERTAP_LOG_TAG, message, t);
+            Log.i(Constants.CLEVERTAP_LOG_TAG, message, t)
         }
     }
 
-    @Override
-    public void verbose(String message) {
+    override fun verbose(message: String?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            Log.v(Constants.CLEVERTAP_LOG_TAG, message);
+            Log.v(Constants.CLEVERTAP_LOG_TAG, message!!)
         }
     }
 
-    @Override
-    public void verbose(String suffix, String message) {
+    override fun verbose(suffix: String?, message: String?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            if (message.length() > 4000) {
-                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message.substring(0, 4000));
-                verbose(suffix, message.substring(4000));
+            if (message!!.length > 4000) {
+                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message.substring(0, 4000))
+                verbose(suffix, message.substring(4000))
             } else {
-                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
+                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message)
             }
         }
     }
 
-    @Override
-    public void verbose(String suffix, String message, Throwable t) {
+    override fun verbose(suffix: String?, message: String?, t: Throwable?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t);
+            Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t)
         }
     }
 
-    @Override
-    public void verbose(String message, Throwable t) {
+    override fun verbose(message: String?, t: Throwable?) {
         if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
-            Log.v(Constants.CLEVERTAP_LOG_TAG, message, t);
+            Log.v(Constants.CLEVERTAP_LOG_TAG, message, t)
         }
     }
 
-    private int getDebugLevel() {
-        return debugLevel;
+    private fun getDebugLevel(): Int {
+        return debugLevel
     }
 
-    public void setDebugLevel(int level){
-        this.debugLevel = level;
+    fun setDebugLevel(level: Int) {
+        this.debugLevel = level
     }
 
-    private static int getStaticDebugLevel() {
-        return CleverTapAPI.getDebugLevel();
-    }
+    companion object {
 
+        /**
+         * Logs to Debug if the debug level is greater than 1.
+         */
+        @JvmStatic
+        fun d(message: String?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.d(Constants.CLEVERTAP_LOG_TAG, message!!)
+            }
+        }
+
+        @JvmStatic
+        fun d(suffix: String?, message: String?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message!!)
+            }
+        }
+
+        @JvmStatic
+        fun d(suffix: String?, message: String?, t: Throwable?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t)
+            }
+        }
+
+        @JvmStatic
+        fun d(message: String?, t: Throwable?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.d(Constants.CLEVERTAP_LOG_TAG, message, t)
+            }
+        }
+
+        /**
+         * Logs to Info if the debug level is greater than or equal to 1.
+         */
+        @JvmStatic
+        fun i(message: String?) {
+            if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.i(Constants.CLEVERTAP_LOG_TAG, message!!)
+            }
+        }
+
+        @JvmStatic
+        fun i(suffix: String?, message: String?) {
+            if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message!!)
+            }
+        }
+
+        @JvmStatic
+        fun i(suffix: String?, message: String?, t: Throwable?) {
+            if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.i(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t)
+            }
+        }
+
+        @JvmStatic
+        fun i(message: String?, t: Throwable?) {
+            if (getStaticDebugLevel() >= CleverTapAPI.LogLevel.INFO.intValue()) {
+                Log.i(Constants.CLEVERTAP_LOG_TAG, message, t)
+            }
+        }
+
+        /**
+         * Logs to Verbose if the debug level is greater than 2.
+         */
+        @JvmStatic
+        fun v(message: String?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
+                Log.v(Constants.CLEVERTAP_LOG_TAG, message!!)
+            }
+        }
+
+        @JvmStatic
+        fun v(suffix: String?, message: String?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
+                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message!!)
+            }
+        }
+
+        @JvmStatic
+        fun v(suffix: String?, message: String?, t: Throwable?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
+                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message, t)
+            }
+        }
+
+        @JvmStatic
+        fun v(message: String?, t: Throwable?) {
+            if (getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()) {
+                Log.v(Constants.CLEVERTAP_LOG_TAG, message, t)
+            }
+        }
+
+        private fun getStaticDebugLevel(): Int {
+            return CleverTapAPI.getDebugLevel()
+        }
+    }
 }

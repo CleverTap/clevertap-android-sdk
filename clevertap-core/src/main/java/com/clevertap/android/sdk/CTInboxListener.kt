@@ -1,16 +1,16 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.inbox.CTInboxMessage
 
-public interface CTInboxListener {
+interface CTInboxListener {
 
     /**
      * Receives a callback when inbox controller is initialized
      */
-    void inboxDidInitialize();
+    fun inboxDidInitialize()
 
     /**
-     * Receives a callback when inbox controller updates/deletes/marks as read any {@link CTInboxMessage} object
+     * Receives a callback when inbox controller updates/deletes/marks as read any [CTInboxMessage] object
      */
-    void inboxMessagesDidUpdate();
+    fun inboxMessagesDidUpdate()
 }

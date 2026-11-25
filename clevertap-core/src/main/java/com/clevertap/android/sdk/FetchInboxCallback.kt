@@ -1,19 +1,19 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
 /**
- * Callback for {@link CleverTapAPI#fetchInbox(FetchInboxCallback)}.
+ * Callback for [CleverTapAPI.fetchInbox].
  *
- * <p><b>Thread note:</b> invoked on the SDK's network dispatcher thread, not
+ * **Thread note:** invoked on the SDK's network dispatcher thread, not
  * the main thread. Post to the main thread yourself if the callback touches
  * UI.
  */
-public interface FetchInboxCallback {
+fun interface FetchInboxCallback {
 
     /**
-     * @param success {@code true} if messages were fetched and applied to
-     *                the local cache; {@code false} if the fetch was
+     * @param success `true` if messages were fetched and applied to
+     *                the local cache; `false` if the fetch was
      *                throttled, disabled for this session, or failed due to
      *                a network/server error.
      */
-    void onInboxFetched(boolean success);
+    fun onInboxFetched(success: Boolean)
 }

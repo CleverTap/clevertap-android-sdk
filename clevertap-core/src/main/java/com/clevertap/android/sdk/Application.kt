@@ -1,11 +1,10 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-@SuppressWarnings({"unused"})
-public class Application extends android.app.Application {
+@Suppress("unused")
+open class Application : android.app.Application() {
 
-    @Override
-    public void onCreate() {
-        ActivityLifecycleCallback.register(this);
-        super.onCreate();
+    override fun onCreate() {
+        ActivityLifecycleCallback.register(this)
+        super.onCreate()
     }
 }

@@ -1,11 +1,11 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import java.util.HashMap;
+import java.util.HashMap
 
-public interface InAppNotificationButtonListener {
+fun interface InAppNotificationButtonListener {
 
     /**
      * Callback to return a Key Value payload associated with inApp widget click.
      */
-    void onInAppButtonClick(HashMap<String, String> payload);
+    fun onInAppButtonClick(payload: HashMap<String, String>?)
 }

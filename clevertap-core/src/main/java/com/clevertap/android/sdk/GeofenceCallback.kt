@@ -1,10 +1,12 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import org.json.JSONObject;
+import androidx.annotation.RestrictTo
+import org.json.JSONObject
 
-public interface GeofenceCallback {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+interface GeofenceCallback {
 
-    void handleGeoFences(JSONObject jsonObject);
+    fun handleGeoFences(jsonObject: JSONObject?)
 
-    void triggerLocation();
+    fun triggerLocation()
 }

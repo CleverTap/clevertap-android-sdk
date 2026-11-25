@@ -1,31 +1,27 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-public interface ILogger {
-    void debug(String message);
+interface ILogger {
+    fun debug(message: String?)
 
-    void debug(String suffix, String message);
+    fun debug(suffix: String?, message: String?)
 
-    void debug(String suffix, String message, Throwable t);
+    fun debug(suffix: String?, message: String?, t: Throwable?)
 
-    @SuppressWarnings("unused")
-    void debug(String message, Throwable t);
+    fun debug(message: String?, t: Throwable?)
 
-    @SuppressWarnings("unused")
-    void info(String message);
+    fun info(message: String?)
 
-    void info(String suffix, String message);
+    fun info(suffix: String?, message: String?)
 
-    @SuppressWarnings("unused")
-    void info(String suffix, String message, Throwable t);
+    fun info(suffix: String?, message: String?, t: Throwable?)
 
-    @SuppressWarnings("unused")
-    void info(String message, Throwable t);
+    fun info(message: String?, t: Throwable?)
 
-    void verbose(String message);
+    fun verbose(message: String?)
 
-    void verbose(String suffix, String message);
+    fun verbose(suffix: String?, message: String?)
 
-    void verbose(String suffix, String message, Throwable t);
+    fun verbose(suffix: String?, message: String?, t: Throwable?)
 
-    void verbose(String message, Throwable t);
+    fun verbose(message: String?, t: Throwable?)
 }
