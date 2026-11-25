@@ -22,17 +22,14 @@ internal class HmsPushProvider @SuppressLint("unused") constructor(
 
     private var hmsSdkHandler: IHmsSdkHandler = HmsSdkHandler(context, config)
 
-    override fun getPushType(): PushType {
-        return HPS
-    }
+    override val pushType: PushType
+        get() = HPS
 
-    override fun isAvailable(): Boolean {
-        return hmsSdkHandler.isAvailable
-    }
+    override val isAvailable: Boolean
+        get() = hmsSdkHandler.isAvailable
 
-    override fun isSupported(): Boolean {
-        return hmsSdkHandler.isSupported
-    }
+    override val isSupported: Boolean
+        get() = hmsSdkHandler.isSupported
 
     override fun minSDKSupportVersionCode(): Int {
         return MIN_CT_ANDROID_SDK_VERSION
