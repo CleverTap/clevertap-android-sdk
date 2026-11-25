@@ -1,12 +1,12 @@
 package com.clevertap.android.pushtemplates.styles
 
 import android.graphics.Color
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /** Robolectric (for real org.json + android.graphics.Color) tests for the pt_progress parser. */
 @RunWith(RobolectricTestRunner::class)

@@ -10,8 +10,8 @@ import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Assert
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class ConfigurableIdentityRepoTest:BaseTestCase() {
     private lateinit var configurableIdentityRepo: ConfigurableIdentityRepo
@@ -35,7 +35,7 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
     @Test
     fun getIdentitySet(){
         //note: this function does not have any important cases on its own, so we are testing its creator function , i.e loadIdentitySet() which gets called when constructor is called
-        Assert.assertEquals(true,true)
+        assertEquals(true, true)
     }
 
     /**
@@ -87,8 +87,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         println("final result=== $result")
         verify(exactly = 0) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 0) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
-        Assert.assertEquals(true,result.isValid)
-        commonKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
+        assertEquals(true, result.isValid)
+        commonKeys.forEach { assertEquals(true, result.contains(it)) }
     }
 
     @Test
@@ -112,8 +112,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         verify(exactly = 1) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 0) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
-        Assert.assertEquals(true,result.isValid)
-        lipKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
+        assertEquals(true, result.isValid)
+        lipKeys.forEach { assertEquals(true, result.contains(it)) }
     }
 
     @Test
@@ -137,8 +137,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         verify(exactly = 0) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 1) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
-        Assert.assertEquals(true,result.isValid)
-        configKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
+        assertEquals(true, result.isValid)
+        configKeys.forEach { assertEquals(true, result.contains(it)) }
     }
 
     @Test
@@ -163,8 +163,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         verify(exactly = 0) { validationStack.pushValidationResult(any<ValidationResult>()) }
         verify(exactly = 1) { loginInfoProvider.saveIdentityKeysForAccount(any()) }
 
-        Assert.assertEquals(true,result.isValid)
-        defaultKeys.forEach { Assert.assertEquals(true,result.contains(it)) }
+        assertEquals(true, result.isValid)
+        defaultKeys.forEach { assertEquals(true, result.contains(it)) }
     }
 
     @Test
@@ -178,8 +178,8 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
 
         //validations
-        Assert.assertEquals(true,configurableIdentityRepo.hasIdentity(Constants.TYPE_IDENTITY))
-        Assert.assertEquals(true,configurableIdentityRepo.hasIdentity(Constants.TYPE_PHONE))
-        Assert.assertEquals(false,configurableIdentityRepo.hasIdentity(Constants.TYPE_EMAIL))
+        assertEquals(true, configurableIdentityRepo.hasIdentity(Constants.TYPE_IDENTITY))
+        assertEquals(true, configurableIdentityRepo.hasIdentity(Constants.TYPE_PHONE))
+        assertEquals(false, configurableIdentityRepo.hasIdentity(Constants.TYPE_EMAIL))
     }
 }

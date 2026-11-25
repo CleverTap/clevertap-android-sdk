@@ -5,9 +5,11 @@ import android.os.Bundle
 import com.clevertap.android.sdk.utils.CTJsonConverter
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class CustomSdkVersionRegistrationTest : BaseTestCase() {
 
@@ -28,7 +30,7 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
 
         val instance = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)!!
 
-        Assert.assertEquals(20601, instance.getCustomSdkVersion("LaterInstanceModule"))
+        assertEquals(20601, instance.getCustomSdkVersion("LaterInstanceModule"))
     }
 
     @Test
@@ -39,8 +41,8 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
 
         val all = coreMetaData.allCustomSdkVersions
 
-        Assert.assertEquals(1, all["SharedModule"])
-        Assert.assertEquals(2, all["InstanceModule"])
+        assertEquals(1, all["SharedModule"])
+        assertEquals(2, all["InstanceModule"])
     }
 
     @Test
@@ -49,8 +51,8 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
         CoreMetaData.setSharedCustomSdkVersion("OverriddenModule", 1)
         coreMetaData.setCustomSdkVersion("OverriddenModule", 2)
 
-        Assert.assertEquals(2, coreMetaData.allCustomSdkVersions["OverriddenModule"])
-        Assert.assertEquals(2, coreMetaData.getCustomSdkVersion("OverriddenModule"))
+        assertEquals(2, coreMetaData.allCustomSdkVersions["OverriddenModule"])
+        assertEquals(2, coreMetaData.getCustomSdkVersion("OverriddenModule"))
     }
 
     @Test
@@ -63,8 +65,8 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
         ManifestInfo.registerModuleSdkVersions(metaData)
 
         val all = CoreMetaData().allCustomSdkVersions
-        Assert.assertEquals(10400, all["ManifestIntModule"])
-        Assert.assertEquals(10500, all["ManifestStringModule"])
+        assertEquals(10400, all["ManifestIntModule"])
+        assertEquals(10500, all["ManifestStringModule"])
     }
 
     @Test
@@ -79,10 +81,10 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
         ManifestInfo.registerModuleSdkVersions(metaData)
 
         val all = CoreMetaData().allCustomSdkVersions
-        Assert.assertFalse(all.containsKey("ManifestBadModule"))
-        Assert.assertFalse(all.containsKey("ManifestNullModule"))
-        Assert.assertFalse(all.containsKey(""))
-        Assert.assertFalse(all.containsKey("ManifestUnrelatedModule"))
+        assertFalse(all.containsKey("ManifestBadModule"))
+        assertFalse(all.containsKey("ManifestNullModule"))
+        assertFalse(all.containsKey(""))
+        assertFalse(all.containsKey("ManifestUnrelatedModule"))
     }
 
     @Test
@@ -91,8 +93,8 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
         CoreMetaData.setSharedCustomSdkVersion("SDK Version", 10400)
 
         val all = CoreMetaData().allCustomSdkVersions
-        Assert.assertFalse(all.containsKey("Build"))
-        Assert.assertFalse(all.containsKey("SDK Version"))
+        assertFalse(all.containsKey("Build"))
+        assertFalse(all.containsKey("SDK Version"))
     }
 
     @Test
@@ -107,8 +109,8 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
         val coreMetaData = CoreMetaData()
         val deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, "id", coreMetaData)
         val af = CTJsonConverter.from(deviceInfo, coreMetaData, false, false)
-        Assert.assertEquals("1", af.get("Build"))
-        Assert.assertEquals(10400, af.get("gfSDKVersion"))
+        assertEquals("1", af.get("Build"))
+        assertEquals(10400, af.get("gfSDKVersion"))
     }
 
     @Test
@@ -121,9 +123,9 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
         for (multiUser in listOf(false, true)) {
             val af = CTJsonConverter.from(deviceInfo, coreMetaData, true, multiUser)
             // from() swallows errors, so make sure it got to the end
-            Assert.assertTrue(af.has("LIAMC"))
+            assertTrue(af.has("LIAMC"))
             af.keys().asSequence().filterNot { it in customKeys }.forEach {
-                Assert.assertTrue("af key $it missing from RESERVED_AF_KEYS", it in CTJsonConverter.RESERVED_AF_KEYS)
+                assertTrue(it in CTJsonConverter.RESERVED_AF_KEYS, "af key $it missing from RESERVED_AF_KEYS")
             }
         }
     }

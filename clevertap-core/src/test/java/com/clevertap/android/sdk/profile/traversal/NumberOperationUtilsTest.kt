@@ -1,7 +1,8 @@
 package com.clevertap.android.sdk.profile.traversal
 
-import org.junit.Assert.*
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class NumberOperationUtilsTest {
 
@@ -78,7 +79,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.addNumbers(5, 3.5)
 
         assertTrue(result is Double)
-        assertEquals(8.5, result as Double, 0.0001)
+        assertEquals(8.5, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -86,7 +87,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.addNumbers(5.5, 3.5)
 
         assertTrue(result is Double)
-        assertEquals(9.0, result as Double, 0.0001)
+        assertEquals(9.0, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -94,7 +95,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.addNumbers(5.5f, 3.5)
 
         assertTrue(result is Double)
-        assertEquals(9.0, result as Double, 0.0001)
+        assertEquals(9.0, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -102,7 +103,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.addNumbers(5L, 3.5)
 
         assertTrue(result is Double)
-        assertEquals(8.5, result as Double, 0.0001)
+        assertEquals(8.5, result as Double, absoluteTolerance = 0.0001)
     }
 
     // subtractNumbers tests - Int - Int
@@ -203,7 +204,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.subtractNumbers(10, 3.5)
 
         assertTrue(result is Double)
-        assertEquals(6.5, result as Double, 0.0001)
+        assertEquals(6.5, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -211,7 +212,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.subtractNumbers(10.5, 3.5)
 
         assertTrue(result is Double)
-        assertEquals(7.0, result as Double, 0.0001)
+        assertEquals(7.0, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -219,7 +220,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.subtractNumbers(10.5f, 3.5)
 
         assertTrue(result is Double)
-        assertEquals(7.0, result as Double, 0.0001)
+        assertEquals(7.0, result as Double, absoluteTolerance = 0.0001)
     }
 
     // negateNumber tests - Int
@@ -328,7 +329,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.negateNumber(5.5)
 
         assertTrue(result is Double)
-        assertEquals(-5.5, result as Double, 0.0001)
+        assertEquals(-5.5, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -336,7 +337,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.negateNumber(-5.5)
 
         assertTrue(result is Double)
-        assertEquals(5.5, result as Double, 0.0001)
+        assertEquals(5.5, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -344,7 +345,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.negateNumber(0.0)
 
         assertTrue(result is Double)
-        assertEquals(0.0, result as Double, 0.0001)
+        assertEquals(0.0, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -352,7 +353,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.negateNumber(Double.POSITIVE_INFINITY)
 
         assertTrue(result is Double)
-        assertEquals(Double.NEGATIVE_INFINITY, result as Double, 0.0001)
+        assertEquals(Double.NEGATIVE_INFINITY, result as Double, absoluteTolerance = 0.0001)
     }
 
     // negateNumber tests - Other Number types (fallback to Double)
@@ -361,7 +362,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.negateNumber(5.toShort())
 
         assertTrue(result is Double)
-        assertEquals(-5.0, result as Double, 0.0001)
+        assertEquals(-5.0, result as Double, absoluteTolerance = 0.0001)
     }
 
     @Test
@@ -369,7 +370,7 @@ class NumberOperationUtilsTest {
         val result = NumberOperationUtils.negateNumber(5.toByte())
 
         assertTrue(result is Double)
-        assertEquals(-5.0, result as Double, 0.0001)
+        assertEquals(-5.0, result as Double, absoluteTolerance = 0.0001)
     }
 
     // Edge cases and type promotion hierarchy
@@ -415,7 +416,7 @@ class NumberOperationUtilsTest {
         
         assertTrue(result is Float)
         // Float precision issues
-        assertEquals(0.3f, result as Float, 0.0001f)
+        assertEquals(0.3f, result as Float, absoluteTolerance = 0.0001f)
     }
 
     @Test
@@ -424,6 +425,6 @@ class NumberOperationUtilsTest {
         
         assertTrue(result is Double)
         // Double has better precision but still not perfect
-        assertEquals(0.3, result as Double, 0.00001)
+        assertEquals(0.3, result as Double, absoluteTolerance = 0.00001)
     }
 }

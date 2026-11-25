@@ -12,13 +12,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class InAppGifMemoryAccessObjectV1Test {
 
@@ -61,15 +61,9 @@ class InAppGifMemoryAccessObjectV1Test {
         every { mockMemoryCache.get(key) } returns mockData
 
         every { bytesToBitmap(mockByteArray) } returns mockBitmap
-        assertEquals(
-            mockBitmap,
-            inAppGifMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToBitmap)
-        )
+        assertEquals(mockBitmap, inAppGifMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToBitmap))
 
-        assertEquals(
-            mockByteArray,
-            inAppGifMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToByteArray)
-        )
+        assertEquals(mockByteArray, inAppGifMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToByteArray))
         assertEquals(mockFile, inAppGifMemoryAccessObjectV1.fetchInMemoryAndTransform(key, ToFile))
     }
 
@@ -94,19 +88,10 @@ class InAppGifMemoryAccessObjectV1Test {
         every { mockMemoryCache.add(key, mockData) } returns true
 
         every { fileToBitmap(mockFile) } returns mockBitmap
-        assertEquals(
-            mockBitmap,
-            inAppGifMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToBitmap)
-        )
+        assertEquals(mockBitmap, inAppGifMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToBitmap))
 
-        assertEquals(
-            mockByteArray,
-            inAppGifMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToByteArray)
-        )
-        assertEquals(
-            mockFile,
-            inAppGifMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToFile)
-        )
+        assertEquals(mockByteArray, inAppGifMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToByteArray))
+        assertEquals(mockFile, inAppGifMemoryAccessObjectV1.fetchDiskMemoryAndTransform(key, ToFile))
         verify { mockMemoryCache.add(key, mockData) }
     }
 

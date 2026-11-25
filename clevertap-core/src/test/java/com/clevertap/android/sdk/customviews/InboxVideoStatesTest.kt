@@ -3,12 +3,12 @@ package com.clevertap.android.sdk.customviews
 import android.os.Bundle
 import android.os.Parcel
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class InboxVideoStatesTest : BaseTestCase() {
@@ -25,7 +25,7 @@ class InboxVideoStatesTest : BaseTestCase() {
         val found = states.stateOf("m1", "url1")
 
         assertEquals(5_000L, found!!.positionMs)
-        assertEquals(1f, found.volume, 0f)
+        assertEquals(1f, found.volume, absoluteTolerance = 0f)
     }
 
     @Test
@@ -50,7 +50,7 @@ class InboxVideoStatesTest : BaseTestCase() {
         states.remember("m1", state("url1", 2_000L, 1f))
 
         assertEquals(2_000L, states.stateOf("m1", "url1")!!.positionMs)
-        assertEquals(1f, states.stateOf("m1", "url1")!!.volume, 0f)
+        assertEquals(1f, states.stateOf("m1", "url1")!!.volume, absoluteTolerance = 0f)
     }
 
     @Test
@@ -60,7 +60,7 @@ class InboxVideoStatesTest : BaseTestCase() {
 
         assertEquals(1_000L, states.stateOf("m1", "url1")!!.positionMs)
         assertEquals(2_000L, states.stateOf("m2", "url2")!!.positionMs)
-        assertEquals(0f, states.stateOf("m2", "url2")!!.volume, 0f)
+        assertEquals(0f, states.stateOf("m2", "url2")!!.volume, absoluteTolerance = 0f)
     }
 
     @Test
@@ -77,9 +77,9 @@ class InboxVideoStatesTest : BaseTestCase() {
         other.restore(states.save())
 
         assertEquals(5_000L, other.stateOf("m1", "url1")!!.positionMs)
-        assertEquals(1f, other.stateOf("m1", "url1")!!.volume, 0f)
+        assertEquals(1f, other.stateOf("m1", "url1")!!.volume, absoluteTolerance = 0f)
         assertEquals(7_000L, other.stateOf("m2", "url2")!!.positionMs)
-        assertEquals(0f, other.stateOf("m2", "url2")!!.volume, 0f)
+        assertEquals(0f, other.stateOf("m2", "url2")!!.volume, absoluteTolerance = 0f)
     }
 
     @Test

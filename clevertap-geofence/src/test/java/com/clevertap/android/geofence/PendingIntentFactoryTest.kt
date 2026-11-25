@@ -2,9 +2,14 @@ package com.clevertap.android.geofence
 
 import android.app.PendingIntent
 import android.content.ComponentName
-import org.junit.Assert
 import org.junit.Test
 import org.robolectric.Shadows
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNotSame
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class PendingIntentFactoryTest : BaseTestCase() {
     @Test
@@ -16,7 +21,7 @@ class PendingIntentFactoryTest : BaseTestCase() {
             PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_NO_CREATE
         )
 
-        Assert.assertNull(actual)
+        assertNull(actual)
     }
 
     @Test
@@ -28,7 +33,7 @@ class PendingIntentFactoryTest : BaseTestCase() {
             PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        Assert.assertNotNull(actual)
+        assertNotNull(actual)
     }
 
     @Test
@@ -42,23 +47,14 @@ class PendingIntentFactoryTest : BaseTestCase() {
 
         val shadowPendingIntent = Shadows.shadowOf(actual)
 
-        Assert.assertTrue(shadowPendingIntent.isBroadcastIntent)
-        Assert.assertEquals(1001001, shadowPendingIntent.requestCode.toLong())
-        Assert.assertEquals(
-            PendingIntent.FLAG_UPDATE_CURRENT.toLong(),
-            shadowPendingIntent.flags.toLong()
-        )
+        assertTrue(shadowPendingIntent.isBroadcastIntent)
+        assertEquals(1001001, shadowPendingIntent.requestCode.toLong())
+        assertEquals(PendingIntent.FLAG_UPDATE_CURRENT.toLong(), shadowPendingIntent.flags.toLong())
 
         val actualComponentName = ComponentName(application, CTGeofenceReceiver::class.java)
 
-        Assert.assertEquals(
-            CTGeofenceConstants.ACTION_GEOFENCE_RECEIVER,
-            shadowPendingIntent.savedIntent.action
-        )
-        Assert.assertEquals(
-            actualComponentName,
-            shadowPendingIntent.savedIntent.component
-        )
+        assertEquals(CTGeofenceConstants.ACTION_GEOFENCE_RECEIVER, shadowPendingIntent.savedIntent.action)
+        assertEquals(actualComponentName, shadowPendingIntent.savedIntent.component)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -82,23 +78,14 @@ class PendingIntentFactoryTest : BaseTestCase() {
 
         val shadowPendingIntent = Shadows.shadowOf(actual)
 
-        Assert.assertTrue(shadowPendingIntent.isBroadcastIntent)
-        Assert.assertEquals(10100111, shadowPendingIntent.requestCode.toLong())
-        Assert.assertEquals(
-            PendingIntent.FLAG_UPDATE_CURRENT.toLong(),
-            shadowPendingIntent.flags.toLong()
-        )
+        assertTrue(shadowPendingIntent.isBroadcastIntent)
+        assertEquals(10100111, shadowPendingIntent.requestCode.toLong())
+        assertEquals(PendingIntent.FLAG_UPDATE_CURRENT.toLong(), shadowPendingIntent.flags.toLong())
 
         val actualComponentName = ComponentName(application, CTLocationUpdateReceiver::class.java)
 
-        Assert.assertEquals(
-            CTGeofenceConstants.ACTION_LOCATION_RECEIVER,
-            shadowPendingIntent.savedIntent.action
-        )
-        Assert.assertEquals(
-            actualComponentName,
-            shadowPendingIntent.savedIntent.component
-        )
+        assertEquals(CTGeofenceConstants.ACTION_LOCATION_RECEIVER, shadowPendingIntent.savedIntent.action)
+        assertEquals(actualComponentName, shadowPendingIntent.savedIntent.component)
     }
 
     @Test
@@ -108,7 +95,7 @@ class PendingIntentFactoryTest : BaseTestCase() {
             PendingIntentFactory.PENDING_INTENT_LOCATION, PendingIntent.FLAG_NO_CREATE
         )
 
-        Assert.assertNull(actual)
+        assertNull(actual)
     }
 
     @Test
@@ -125,7 +112,7 @@ class PendingIntentFactoryTest : BaseTestCase() {
             PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_NO_CREATE
         )
 
-        Assert.assertSame(actual, actual1)
+        assertSame(actual, actual1)
     }
 
     @Test
@@ -142,7 +129,7 @@ class PendingIntentFactoryTest : BaseTestCase() {
             PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        Assert.assertSame(actual, actual1)
+        assertSame(actual, actual1)
     }
 
     @Test
@@ -161,8 +148,8 @@ class PendingIntentFactoryTest : BaseTestCase() {
             PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_NO_CREATE
         )
 
-        Assert.assertNotSame(actual, actual1)
-        Assert.assertNull(actual1)
+        assertNotSame(actual, actual1)
+        assertNull(actual1)
     }
 
     @Test
@@ -181,6 +168,6 @@ class PendingIntentFactoryTest : BaseTestCase() {
             PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        Assert.assertNotSame(actual, actual1)
+        assertNotSame(actual, actual1)
     }
 }

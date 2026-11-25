@@ -13,9 +13,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertThrows
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -119,7 +119,7 @@ class TemplatesManagerTest {
                 }
             )
         }
-        assertThrows(CustomTemplateException::class.java) {
+        assertFailsWith<CustomTemplateException> {
             createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         }
     }
@@ -135,7 +135,7 @@ class TemplatesManagerTest {
             )
         }
 
-        assertThrows(CustomTemplateException::class.java) {
+        assertFailsWith<CustomTemplateException> {
             createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         }
     }
@@ -154,7 +154,7 @@ class TemplatesManagerTest {
             )
         }
 
-        assertThrows(CustomTemplateException::class.java) {
+        assertFailsWith<CustomTemplateException> {
             createTemplatesManager(getMockedCtInstanceConfig("account", "token"))
         }
     }

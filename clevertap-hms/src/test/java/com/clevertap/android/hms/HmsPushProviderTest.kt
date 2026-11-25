@@ -11,6 +11,7 @@ import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
@@ -51,14 +52,11 @@ class HmsPushProviderTest : BaseTestCase() {
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(pushProvider.pushType, HPS)
+        assertEquals(pushProvider.pushType, HPS)
     }
 
     @Test
     fun minSDKSupportVersionCode() {
-        Assert.assertEquals(
-            pushProvider.minSDKSupportVersionCode().toLong(),
-            MIN_CT_ANDROID_SDK_VERSION.toLong()
-        )
+        assertEquals(pushProvider.minSDKSupportVersionCode().toLong(), MIN_CT_ANDROID_SDK_VERSION.toLong())
     }
 }

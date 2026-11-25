@@ -5,9 +5,12 @@ import com.clevertap.android.sdk.profile.traversal.ProfileOperation
 import io.mockk.mockk
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Comprehensive tests for ProfileStateTraverser with all operations.
@@ -635,7 +638,7 @@ class ProfileStateTraverserTest {
 
         // Verify incremented values
         assertEquals(125, target.getInt("score"))
-        assertEquals(61.0, target.getDouble("points"), 0.001)
+        assertEquals(61.0, target.getDouble("points"), absoluteTolerance = 0.001)
         assertEquals(7, target.getInt("level"))
         assertEquals(100, target.getInt("bonus"))
 
@@ -667,7 +670,7 @@ class ProfileStateTraverserTest {
 
         // Verify new keys are added with source values
         assertEquals(50, target.getInt("newScore"))
-        assertEquals(25.5, target.getDouble("newPoints"), 0.001)
+        assertEquals(25.5, target.getDouble("newPoints"), absoluteTolerance = 0.001)
         assertEquals(10, target.getInt("anotherValue"))
 
         // Verify changes tracked with null oldValue
@@ -776,7 +779,7 @@ class ProfileStateTraverserTest {
         val stats = target.getJSONObject("stats")
         assertEquals(13, stats.getInt("wins"))
         assertEquals(6, stats.getInt("losses"))
-        assertEquals(100.5, stats.getDouble("score"), 0.001) // Unchanged
+        assertEquals(100.5, stats.getDouble("score"), absoluteTolerance = 0.001) // Unchanged
 
         val progress = target.getJSONObject("progress")
         assertEquals(3, progress.getInt("level")) // Unchanged
@@ -879,9 +882,9 @@ class ProfileStateTraverserTest {
         val result = traverser.traverse(target, source, ProfileOperation.INCREMENT)
 
         // Values should be added correctly
-        assertEquals(15.5, target.getDouble("intValue"), 0.001)
-        assertEquals(15.5, target.getDouble("doubleValue"), 0.001)
-        assertEquals(102.3, target.getDouble("mixedValue"), 0.001)
+        assertEquals(15.5, target.getDouble("intValue"), absoluteTolerance = 0.001)
+        assertEquals(15.5, target.getDouble("doubleValue"), absoluteTolerance = 0.001)
+        assertEquals(102.3, target.getDouble("mixedValue"), absoluteTolerance = 0.001)
     }
 
     @Test
@@ -944,7 +947,7 @@ class ProfileStateTraverserTest {
         val stats = target.getJSONObject("stats")
         assertEquals(15, stats.getInt("wins"))
         assertEquals(2, stats.getInt("losses")) // New key added
-        assertEquals(61.0, stats.getDouble("points"), 0.001)
+        assertEquals(61.0, stats.getDouble("points"), absoluteTolerance = 0.001)
         assertEquals("Champion", stats.getString("title")) // Unchanged
 
         // Verify changes
@@ -979,7 +982,7 @@ class ProfileStateTraverserTest {
 
         // Verify decremented values
         assertEquals(75, target.getInt("score"))
-        assertEquals(40.0, target.getDouble("points"), 0.001)
+        assertEquals(40.0, target.getDouble("points"), absoluteTolerance = 0.001)
         assertEquals(3, target.getInt("level"))
         assertEquals(100, target.getInt("bonus"))
 
@@ -1007,7 +1010,7 @@ class ProfileStateTraverserTest {
 
         // Verify new keys are added with negated source values
         assertEquals(-50, target.getInt("newScore"))
-        assertEquals(-25.5, target.getDouble("newPoints"), 0.001)
+        assertEquals(-25.5, target.getDouble("newPoints"), absoluteTolerance = 0.001)
         assertEquals(-10, target.getInt("anotherValue"))
 
         // Verify changes tracked with null oldValue
@@ -1116,7 +1119,7 @@ class ProfileStateTraverserTest {
         val stats = target.getJSONObject("stats")
         assertEquals(75, stats.getInt("health"))
         assertEquals(40, stats.getInt("damage"))
-        assertEquals(75.5, stats.getDouble("defense"), 0.001) // Unchanged
+        assertEquals(75.5, stats.getDouble("defense"), absoluteTolerance = 0.001) // Unchanged
 
         val resources = target.getJSONObject("resources")
         assertEquals(350, resources.getInt("gold"))
@@ -1216,9 +1219,9 @@ class ProfileStateTraverserTest {
         val result = traverser.traverse(target, source, ProfileOperation.DECREMENT)
 
         // Values should be subtracted correctly
-        assertEquals(4.5, target.getDouble("intValue"), 0.001)
-        assertEquals(5.5, target.getDouble("doubleValue"), 0.001)
-        assertEquals(97.7, target.getDouble("mixedValue"), 0.001)
+        assertEquals(4.5, target.getDouble("intValue"), absoluteTolerance = 0.001)
+        assertEquals(5.5, target.getDouble("doubleValue"), absoluteTolerance = 0.001)
+        assertEquals(97.7, target.getDouble("mixedValue"), absoluteTolerance = 0.001)
     }
 
     @Test
@@ -1256,7 +1259,7 @@ class ProfileStateTraverserTest {
         val inventory = target.getJSONObject("inventory")
         assertEquals(400, inventory.getInt("gold"))
         assertEquals(-50, inventory.getInt("silver")) // New key with negated value
-        assertEquals(20.0, inventory.getDouble("gems"), 0.001)
+        assertEquals(20.0, inventory.getDouble("gems"), absoluteTolerance = 0.001)
         assertEquals("Castle", inventory.getString("location")) // Unchanged
 
         // Verify changes
@@ -1550,7 +1553,7 @@ class ProfileStateTraverserTest {
         val metrics = target.getJSONObject("data").getJSONArray("metrics")
         assertEquals(125, metrics.getInt(0)) // 100 + 25
         assertEquals("text", metrics.getString(1)) // Unchanged (non-numeric target)
-        assertEquals(61.0, metrics.getDouble(2), 0.001) // 50.5 + 10.5
+        assertEquals(61.0, metrics.getDouble(2), absoluteTolerance = 0.001) // 50.5 + 10.5
         assertEquals(true, metrics.getBoolean(3)) // Unchanged (non-numeric target)
         assertEquals(40, metrics.getInt(4)) // 25 + 15
 
@@ -1590,7 +1593,7 @@ class ProfileStateTraverserTest {
         val quantities = target.getJSONObject("inventory").getJSONArray("quantities")
         assertEquals(75, quantities.getInt(0)) // 100 - 25
         assertTrue(quantities.get(1) is JSONObject) // Unchanged (non-numeric target)
-        assertEquals(75.5, quantities.getDouble(2), 0.001) // Unchanged (invalid source)
+        assertEquals(75.5, quantities.getDouble(2), absoluteTolerance = 0.001) // Unchanged (invalid source)
         assertEquals(35, quantities.getInt(3)) // 50 - 15
 
         assertEquals(400, target.getJSONObject("inventory").getInt("total"))
@@ -1621,7 +1624,7 @@ class ProfileStateTraverserTest {
         // Verify target is unchanged
         assertEquals("John", target.getString("name"))
         assertEquals(25, target.getInt("age"))
-        assertEquals(100.5, target.getDouble("score"), 0.001)
+        assertEquals(100.5, target.getDouble("score"), absoluteTolerance = 0.001)
         assertEquals(true, target.getBoolean("active"))
 
         // Verify changes contain retrieved values with GET_MARKER
@@ -1734,7 +1737,7 @@ class ProfileStateTraverserTest {
             .getJSONObject("team")
         assertEquals("Bob", team.getString("lead"))
         assertEquals(10, team.getInt("size"))
-        assertEquals(50000.0, team.getDouble("budget"), 0.001)
+        assertEquals(50000.0, team.getDouble("budget"), absoluteTolerance = 0.001)
 
         // Verify deep nested paths
         assertEquals(2, result.changes.size)
@@ -1995,7 +1998,7 @@ class ProfileStateTraverserTest {
         // Verify all values are unchanged
         assertEquals("text", target.getString("string"))
         assertEquals(42, target.getInt("number"))
-        assertEquals(3.14, target.getDouble("double"), 0.001)
+        assertEquals(3.14, target.getDouble("double"), absoluteTolerance = 0.001)
         assertEquals(true, target.getBoolean("boolean"))
         assertTrue(target.isNull("nullValue"))
         assertEquals(2, target.getJSONArray("array").length())

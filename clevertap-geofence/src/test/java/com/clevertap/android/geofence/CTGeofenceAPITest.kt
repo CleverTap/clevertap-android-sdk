@@ -19,12 +19,12 @@ import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertSame
 import org.junit.Test
 import java.util.concurrent.ExecutorService
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertSame
 
 class CTGeofenceAPITest : BaseTestCase() {
 
@@ -271,8 +271,8 @@ class CTGeofenceAPITest : BaseTestCase() {
             application, CTGeofenceConstants.KEY_LONGITUDE, 0.0
         )
 
-        assertEquals(lat, actualLat, 0.0)
-        assertEquals(lng, actualLong, 0.0)
+        assertEquals(lat, actualLat, absoluteTolerance = 0.0)
+        assertEquals(lng, actualLong, absoluteTolerance = 0.0)
 
         verify { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
@@ -311,8 +311,8 @@ class CTGeofenceAPITest : BaseTestCase() {
             application, CTGeofenceConstants.KEY_LONGITUDE, 0.0
         )
 
-        assertEquals(lastPingedLat, actualLat, 0.0)
-        assertEquals(lastPingedLng, actualLong, 0.0)
+        assertEquals(lastPingedLat, actualLat, absoluteTolerance = 0.0)
+        assertEquals(lastPingedLng, actualLong, absoluteTolerance = 0.0)
 
         verify(exactly = 0) { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
@@ -348,8 +348,8 @@ class CTGeofenceAPITest : BaseTestCase() {
             application, CTGeofenceConstants.KEY_LONGITUDE, 0.0
         )
 
-        assertEquals(DEFAULT_LATITUDE, actualLat, 0.0)
-        assertEquals(DEFAULT_LONGITUDE, actualLong, 0.0)
+        assertEquals(DEFAULT_LATITUDE, actualLat, absoluteTolerance = 0.0)
+        assertEquals(DEFAULT_LONGITUDE, actualLong, absoluteTolerance = 0.0)
         verify(exactly = 0) { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
 
@@ -387,8 +387,8 @@ class CTGeofenceAPITest : BaseTestCase() {
             application, CTGeofenceConstants.KEY_LONGITUDE, 0.0
         )
 
-        assertEquals(lastPingedLat, actualLat, 0.0)
-        assertEquals(lastPingedLng, actualLong, 0.0)
+        assertEquals(lastPingedLat, actualLat, absoluteTolerance = 0.0)
+        assertEquals(lastPingedLng, actualLong, absoluteTolerance = 0.0)
         verify(exactly = 0) { cleverTapAPI.setLocationForGeofences(any(), any()) }
     }
 

@@ -2,12 +2,12 @@ package com.clevertap.android.pushtemplates.validators
 
 import com.clevertap.android.pushtemplates.ProgressTemplateData
 import com.clevertap.android.pushtemplates.styles.ProgressPayloadParser
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Validation for the progress template: title is mandatory, plus at least one progress indicator

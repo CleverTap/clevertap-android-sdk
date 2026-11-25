@@ -6,8 +6,8 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.*
 import org.junit.*
-import org.junit.Assert.*
-
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 class VarTest : BaseTestCase() {
 
     private lateinit var ctVariables: CTVariables

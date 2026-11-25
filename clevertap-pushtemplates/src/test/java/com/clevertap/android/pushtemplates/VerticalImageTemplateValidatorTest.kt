@@ -2,11 +2,13 @@ package com.clevertap.android.pushtemplates
 
 import android.os.Build
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
-import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.M])

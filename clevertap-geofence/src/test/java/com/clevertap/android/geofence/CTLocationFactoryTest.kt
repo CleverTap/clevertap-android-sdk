@@ -5,9 +5,9 @@ import com.google.android.gms.common.GoogleApiAvailability
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertNotNull
 
 class CTLocationFactoryTest : BaseTestCase() {
 
@@ -30,7 +30,7 @@ class CTLocationFactoryTest : BaseTestCase() {
                 every { googleApiAvailability.isGooglePlayServicesAvailable(application) } returns ConnectionResult.SUCCESS
 
                 val locationAdapter = CTLocationFactory.createLocationAdapter(application)
-                Assert.assertNotNull(locationAdapter)
+                assertNotNull(locationAdapter)
             }
         }
     }

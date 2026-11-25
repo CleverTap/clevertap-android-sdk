@@ -5,10 +5,11 @@ import android.os.Looper
 import com.clevertap.android.shared.test.BaseTestCase
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class MainThreadExecutorTest : BaseTestCase() {
@@ -28,18 +29,18 @@ class MainThreadExecutorTest : BaseTestCase() {
         val handler = Handler()
         val executor = MainThreadExecutor()
         executor.mainThreadHandler = handler
-        Assert.assertEquals(executor.mainThreadHandler, handler)
+        assertEquals(executor.mainThreadHandler, handler)
     }
 
     @Test
     fun test_execute_whenRunnableRuns_RunsOnMainThread() {
         val executor = MainThreadExecutor()
         val runnable = Runnable {
-            Assert.assertTrue(Looper.myLooper() == Looper.getMainLooper())
+            assertTrue(Looper.myLooper() == Looper.getMainLooper())
         }
         executor.execute(runnable)
 
         //or
-        Assert.assertTrue(executor.mainThreadHandler.looper == Looper.getMainLooper())
+        assertTrue(executor.mainThreadHandler.looper == Looper.getMainLooper())
     }
 }

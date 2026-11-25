@@ -13,12 +13,13 @@ import com.huawei.hms.push.RemoteMessage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
@@ -38,7 +39,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
     @Test
     fun testCreateNotification_Null_Message() {
         val isSuccess = mHandlerCT.createNotification(application, null)
-        Assert.assertFalse(isSuccess)
+        assertFalse(isSuccess)
     }
 
     @Test
@@ -50,7 +51,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
                 RuntimeException("Something went wrong")
 
             val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(bundle))
-            Assert.assertFalse(isSuccess)
+            assertFalse(isSuccess)
         }
     }
 
@@ -61,7 +62,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
         bundle.putString(Constants.NOTIF_MSG,"msg")
         every { parser.toBundle(any()) } returns bundle
         val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(bundle))
-        Assert.assertTrue(isSuccess)
+        assertTrue(isSuccess)
     }
 
     @Test
@@ -72,12 +73,12 @@ class HmsMessageHandlerTest : BaseTestCase() {
         bundle.putString(Constants.NOTIF_MSG,"msg")
         every { parser.toBundle(any()) } returns bundle
         val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(Bundle()))
-        Assert.assertTrue(isSuccess)
+        assertTrue(isSuccess)
     }
 
     @Test
     fun testOnNewToken_Success() {
-        Assert.assertTrue(mHandlerCT.onNewToken(application, HMS_TOKEN))
+        assertTrue(mHandlerCT.onNewToken(application, HMS_TOKEN))
     }
 
     @Test
@@ -86,7 +87,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
             every {
                 CleverTapAPI.tokenRefresh(any(), eq(HMS_TOKEN), eq(HPS))
             } throws RuntimeException("Something Went Wrong")
-            Assert.assertFalse(mHandlerCT.onNewToken(application, HMS_TOKEN))
+            assertFalse(mHandlerCT.onNewToken(application, HMS_TOKEN))
         }
     }
 }

@@ -6,6 +6,8 @@ import io.mockk.spyk
 import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTExecutorFactoryTest : BaseTestCase() {
@@ -18,7 +20,7 @@ class CTExecutorFactoryTest : BaseTestCase() {
     @Test
     fun test_executors_whenConfigNotNull_ShouldReturnValidObject() {
         val executor = CTExecutorFactory.executors(cleverTapInstanceConfig)
-        Assert.assertTrue(executor is CTExecutors)
+        assertTrue(executor is CTExecutors)
     }
 
     @Test
@@ -27,6 +29,6 @@ class CTExecutorFactoryTest : BaseTestCase() {
         val newConfig = spyk(cleverTapInstanceConfig)
         every { newConfig.accountId } returns "312312312312"
         val executorNew = CTExecutorFactory.executors(newConfig)
-        Assert.assertNotEquals(executor, executorNew)
+        assertNotEquals(executor, executorNew)
     }
 }

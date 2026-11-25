@@ -20,9 +20,9 @@ import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class GoogleGeofenceAdapterTest : BaseTestCase() {
 
@@ -117,10 +117,7 @@ class GoogleGeofenceAdapterTest : BaseTestCase() {
             )
         }
 
-        assertEquals(
-            GeofencingRequest.INITIAL_TRIGGER_ENTER,
-            geofencingRequestSlot.captured.initialTrigger
-        )
+        assertEquals(GeofencingRequest.INITIAL_TRIGGER_ENTER, geofencingRequestSlot.captured.initialTrigger)
     }
 
     @Test

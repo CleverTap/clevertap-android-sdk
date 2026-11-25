@@ -5,13 +5,13 @@ import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.network.NetworkRepo
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 
 @RunWith(RobolectricTestRunner::class)
 class CtApiWrapperTest : BaseTestCase() {
@@ -46,9 +46,9 @@ class CtApiWrapperTest : BaseTestCase() {
         assertNotNull(ctApi1)
         assertNotNull(ctApi2)
         assertNotNull(ctApi3)
-        assertEquals(ctApi1,ctApi2)
-        assertEquals(ctApi1,ctApi3)
-        assertEquals(ctApi2,ctApi3)
+        assertEquals(ctApi1, ctApi2)
+        assertEquals(ctApi1, ctApi3)
+        assertEquals(ctApi2, ctApi3)
     }
 
     @Test
@@ -63,8 +63,8 @@ class CtApiWrapperTest : BaseTestCase() {
         assertNotNull(ctApi1)
         assertNotNull(ctApi2)
         assertNotNull(ctApi3)
-        assertNotEquals(ctApi1,ctApi2)
-        assertNotEquals(ctApi1,ctApi3)
-        assertNotEquals(ctApi2,ctApi3)
+        assertNotEquals(ctApi1, ctApi2)
+        assertNotEquals(ctApi1, ctApi3)
+        assertNotEquals(ctApi2, ctApi3)
     }
 }

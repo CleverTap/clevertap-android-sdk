@@ -42,16 +42,16 @@ import io.mockk.verify
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Future
 import kotlin.apply
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class AnalyticsManagerTest {
@@ -1790,8 +1790,8 @@ class AnalyticsManagerTest {
         }
 
         val location = coreState.coreMetaData.locationFromUser
-        assertEquals(lat, location!!.latitude, 0.0)
-        assertEquals(lng, location!!.longitude, 0.0)
+        assertEquals(lat, location!!.latitude, absoluteTolerance = 0.0)
+        assertEquals(lng, location!!.longitude, absoluteTolerance = 0.0)
     }
 
     @Test

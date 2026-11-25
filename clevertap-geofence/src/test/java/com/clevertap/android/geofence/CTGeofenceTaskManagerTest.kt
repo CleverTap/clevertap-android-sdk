@@ -3,19 +3,21 @@ package com.clevertap.android.geofence
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask.OnCompleteListener
 import org.awaitility.Awaitility.await
-import org.junit.Assert
 import org.junit.Test
 import java.util.concurrent.Future
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 class CTGeofenceTaskManagerTest : BaseTestCase() {
 
     @Test
     fun testGetInstance() {
         val instance = CTGeofenceTaskManager.getInstance()
-        Assert.assertNotNull(instance)
+        assertNotNull(instance)
 
         val instance1 = CTGeofenceTaskManager.getInstance()
-        Assert.assertSame(instance, instance1)
+        assertSame(instance, instance1)
     }
 
     @Test
@@ -26,7 +28,7 @@ class CTGeofenceTaskManagerTest : BaseTestCase() {
 
         await().until { isFinish[0] }
 
-        Assert.assertNotNull(future)
+        assertNotNull(future)
     }
 
     @Test
@@ -44,8 +46,8 @@ class CTGeofenceTaskManagerTest : BaseTestCase() {
 
         await().until { isFinish[0] && isFinish[1] }
 
-        Assert.assertNotNull(flatFuture[0])
-        Assert.assertNotNull(flatFuture[1])
+        assertNotNull(flatFuture[0])
+        assertNotNull(flatFuture[1])
     }
 
     @Test
@@ -62,8 +64,8 @@ class CTGeofenceTaskManagerTest : BaseTestCase() {
 
         await().until { isFinish[0] }
 
-        Assert.assertNotNull(future)
-        Assert.assertNull(nestedFuture[0])
+        assertNotNull(future)
+        assertNull(nestedFuture[0])
     }
 
     @Test
@@ -83,7 +85,7 @@ class CTGeofenceTaskManagerTest : BaseTestCase() {
 
         await().until { isFinish[0] }
 
-        Assert.assertNotNull(future)
+        assertNotNull(future)
     }
 
     @Test
@@ -118,8 +120,8 @@ class CTGeofenceTaskManagerTest : BaseTestCase() {
 
         await().until { isFinish[0] && isFinish[1] }
 
-        Assert.assertNotNull(flatFuture[0])
-        Assert.assertNotNull(flatFuture[1])
+        assertNotNull(flatFuture[0])
+        assertNotNull(flatFuture[1])
     }
 
     @Test
@@ -152,8 +154,8 @@ class CTGeofenceTaskManagerTest : BaseTestCase() {
 
         await().until { isFinish[0] }
 
-        Assert.assertNotNull(future)
-        Assert.assertNull(nestedFuture[0])
+        assertNotNull(future)
+        assertNull(nestedFuture[0])
     }
 
     @Test
@@ -179,7 +181,7 @@ class CTGeofenceTaskManagerTest : BaseTestCase() {
 
         await().until { isFinish[0] }
 
-        Assert.assertNotNull(future)
-        Assert.assertNull(nestedFuture[0])
+        assertNotNull(future)
+        assertNull(nestedFuture[0])
     }
 }

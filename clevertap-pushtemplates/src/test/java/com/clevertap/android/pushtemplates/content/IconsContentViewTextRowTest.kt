@@ -18,14 +18,14 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Collapsed shows only icons. Expanded shows the pt_* text sent, without blank lines.
@@ -263,12 +263,9 @@ class IconsContentViewTextRowTest {
         root.layout(0, 0, root.measuredWidth, root.measuredHeight)
 
         val iconHeight = icons.minOf { it.height }
-        assertTrue(
-            "collapsed view is ${px(root.measuredHeight)}dp, past the ${COLLAPSED_ROW_DP}dp row",
-            root.measuredHeight <= dp(COLLAPSED_ROW_DP)
-        )
+        assertTrue(root.measuredHeight <= dp(COLLAPSED_ROW_DP), "collapsed view is ${px(root.measuredHeight)}dp, past the ${COLLAPSED_ROW_DP}dp row")
         // 48dp less 8dp margins on the widest bucket.
-        assertTrue("icons measured ${px(iconHeight)}dp", iconHeight >= dp(30))
+        assertTrue(iconHeight >= dp(30), "icons measured ${px(iconHeight)}dp")
     }
 
     /** Robolectric does not target Android 12+ by default. */

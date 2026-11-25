@@ -17,14 +17,14 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class CleverTapAPITest : BaseTestCase() {
 
@@ -78,10 +78,7 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
 
         // Assert
-        assertTrue(
-            "isCreatedPostAppLaunch must be true",
-            cleverTapInstanceConfig.isCreatedPostAppLaunch
-        )
+        assertTrue(cleverTapInstanceConfig.isCreatedPostAppLaunch, "isCreatedPostAppLaunch must be true")
         verifyCommonConstructorBehavior()
     }
 
@@ -95,10 +92,7 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
 
         // Assert
-        assertTrue(
-            "isCreatedPostAppLaunch must be true",
-            cleverTapInstanceConfig.isCreatedPostAppLaunch
-        )
+        assertTrue(cleverTapInstanceConfig.isCreatedPostAppLaunch, "isCreatedPostAppLaunch must be true")
         verifyCommonConstructorBehavior()
     }
 
@@ -111,10 +105,7 @@ class CleverTapAPITest : BaseTestCase() {
         initializeCleverTapAPI()
 
         // Assert
-        assertFalse(
-            "isCreatedPostAppLaunch must be false",
-            cleverTapInstanceConfig.isCreatedPostAppLaunch
-        )
+        assertFalse(cleverTapInstanceConfig.isCreatedPostAppLaunch, "isCreatedPostAppLaunch must be false")
         verifyCommonConstructorBehavior()
     }
 

@@ -16,7 +16,6 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
-import junit.framework.Assert.assertEquals
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Ignore
@@ -26,6 +25,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class ActivityLifeCycleManagerTest : BaseTestCase() {
@@ -74,7 +74,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
     fun test_activityPaused_whenNotInCurrentSession_LastSessionEpochMustNotBeSavedInPreference() {
         coreState.coreMetaData.currentSessionId = 0
         activityLifeCycleManager.activityPaused()
-        assertEquals(-1,StorageHelper.getInt(appCtx,
+        assertEquals(-1, StorageHelper.getInt(appCtx,
             StorageHelper.storageKeyWithSuffix(cleverTapInstanceConfig.accountId, Constants.LAST_SESSION_EPOCH),-1))
 
     }

@@ -6,10 +6,10 @@ import com.clevertap.android.shared.test.BaseTestCase
 import com.google.firebase.messaging.RemoteMessage
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class FcmNotificationBundleManipulationTest : BaseTestCase() {

@@ -25,17 +25,17 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.robolectric.Robolectric
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTInboxListViewFragmentTest : BaseTestCase() {
@@ -695,7 +695,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
     fun test_onPageSettled_is_a_no_op_without_video_support() {
         // haveVideoPlayerSupport = false leaves mediaRecyclerView null.
         val fragment = viewReadyFragment()
-        assertNull("precondition: this tab has no media recycler", fragment.mediaRecyclerView)
+        assertNull(fragment.mediaRecyclerView, "precondition: this tab has no media recycler")
 
         fragment.onPageSettled()
 

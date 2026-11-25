@@ -15,6 +15,7 @@ import org.junit.*
 import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 internal class ProductConfigSettingsTest : BaseTestCase() {
@@ -32,22 +33,22 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
 
     @Test
     fun aInitTest() {
-        Assert.assertEquals(settings.lastFetchTimeStampInMillis, 0)
-        Assert.assertEquals(settings.nextFetchIntervalInSeconds, DEFAULT_MIN_FETCH_INTERVAL_SECONDS)
+        assertEquals(settings.lastFetchTimeStampInMillis, 0)
+        assertEquals(settings.nextFetchIntervalInSeconds, DEFAULT_MIN_FETCH_INTERVAL_SECONDS)
     }
 
     @Test
     fun testTimestamp() {
         val timeMillis = System.currentTimeMillis()
         settings.lastFetchTimeStampInMillis = timeMillis
-        Assert.assertEquals(timeMillis, settings.lastFetchTimeStampInMillis)
+        assertEquals(timeMillis, settings.lastFetchTimeStampInMillis)
     }
 
     @Test
     fun test_set_guid() {
         val guid = "121212"
         settings.guid = guid
-        Assert.assertEquals(guid, settings.guid)
+        assertEquals(guid, settings.guid)
     }
 
     @Test
@@ -59,7 +60,7 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
         jsonObject.put(CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, 60)
         settings.setARPValue(jsonObject)
 
-        Assert.assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(60 / 2))
+        assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(60 / 2))
 
         // case 2: Server Settings is smaller than default values
         jsonObject = JSONObject()
@@ -67,7 +68,7 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
         jsonObject.put(CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, 60)
         settings.setARPValue(jsonObject)
 
-        Assert.assertEquals(settings.nextFetchIntervalInSeconds, DEFAULT_MIN_FETCH_INTERVAL_SECONDS)
+        assertEquals(settings.nextFetchIntervalInSeconds, DEFAULT_MIN_FETCH_INTERVAL_SECONDS)
     }
 
     @Test
@@ -80,7 +81,7 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
         jsonObject.put(CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, 60)
         settings.setARPValue(jsonObject)
 
-        Assert.assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(60 / 2))
+        assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(60 / 2))
 
 
         settings.setMinimumFetchIntervalInSeconds(TimeUnit.MINUTES.toSeconds(45))
@@ -90,7 +91,7 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
         jsonObject.put(CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, 50)
         settings.setARPValue(jsonObject)
 
-        Assert.assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(45))
+        assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(45))
     }
 
     @Test
@@ -145,14 +146,14 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
         settings.setMinimumFetchIntervalInSeconds(TimeUnit.MINUTES.toSeconds(45))
 
         verify { fileUtils.readFromFile(settings.fullPath) }
-        Assert.assertEquals(settings.lastFetchTimeStampInMillis, timeStamp)
-        Assert.assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(45))
+        assertEquals(settings.lastFetchTimeStampInMillis, timeStamp)
+        assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(45))
 
 
         settings.loadSettings(fileUtils)
         settings.setMinimumFetchIntervalInSeconds(TimeUnit.MINUTES.toSeconds(5))
 
-        Assert.assertEquals(settings.lastFetchTimeStampInMillis, timeStamp)
-        Assert.assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(6))
+        assertEquals(settings.lastFetchTimeStampInMillis, timeStamp)
+        assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(6))
     }
 }

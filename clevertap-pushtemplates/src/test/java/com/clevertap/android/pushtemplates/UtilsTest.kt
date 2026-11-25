@@ -20,7 +20,6 @@ import io.mockk.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,6 +29,11 @@ import java.io.File
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.intArrayOf
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class UtilsTest {
@@ -2592,7 +2596,7 @@ class UtilsTest {
             val result = Utils.isNotificationChannelEnabled(mockChannel)
 
             // Then
-            assertTrue("Should return true for importance level $importance", result)
+            assertTrue(result, "Should return true for importance level $importance")
         }
     }
 
@@ -3145,7 +3149,7 @@ class UtilsTest {
 
         // Then
         // Note: Result depends on keySet iteration order, but should be one of the valid values
-        assertTrue("Result should be one of the timer threshold values", result == 25 || result == 45)
+        assertTrue(result == 25 || result == 45, "Result should be one of the timer threshold values")
     }
 
     @Test
