@@ -277,7 +277,7 @@ open class CTInboxStyleConfig : Parcelable {
      * The contents of the tabs are filtered based on the name of the tab.
      * A `null` or empty list is ignored; only the first two entries are kept.
      */
-    open fun getTabs(): ArrayList<String>? {
+    open fun getTabs(): ArrayList<String> {
         val current = _tabs
         @Suppress("UNCHECKED_CAST")
         return if (current == null) ArrayList() else ArrayList(Arrays.asList(*current)) as ArrayList<String>
