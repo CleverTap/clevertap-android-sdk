@@ -1,128 +1,92 @@
-package com.clevertap.android.geofence.model;
+package com.clevertap.android.geofence.model
 
-import androidx.annotation.NonNull;
-import com.clevertap.android.geofence.CTGeofenceAPI;
-import com.clevertap.android.geofence.CTGeofenceConstants;
-import java.util.ArrayList;
-import java.util.List;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.clevertap.android.geofence.CTGeofenceAPI
+import com.clevertap.android.geofence.CTGeofenceConstants
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
- * Wrapper over {@link com.google.android.gms.location.Geofence}
+ * Wrapper over [com.google.android.gms.location.Geofence]
  */
-public class CTGeofence {
+internal class CTGeofence private constructor(builder: Builder) {
 
-    public static final class Builder {
+    class Builder internal constructor(internal val id: String) {
 
-        private String id;
+        internal var latitude = 0.0
 
-        private double latitude;
+        internal var longitude = 0.0
 
-        private double longitude;
+        internal var radius = 0
 
-        private int radius;
+        internal var transitionType = 0
 
-        private int transitionType;
-
-        Builder(String id) {
-            this.id = id;
+        internal fun build(): CTGeofence {
+            return CTGeofence(this)
         }
 
-        CTGeofence build() {
-            return new CTGeofence(this);
+        internal fun setLatitude(latitude: Double): Builder {
+            this.latitude = latitude
+            return this
         }
 
-        CTGeofence.Builder setLatitude(double latitude) {
-            this.latitude = latitude;
-            return this;
+        internal fun setLongitude(longitude: Double): Builder {
+            this.longitude = longitude
+            return this
         }
 
-        CTGeofence.Builder setLongitude(double longitude) {
-            this.longitude = longitude;
-            return this;
+        internal fun setRadius(radius: Int): Builder {
+            this.radius = radius
+            return this
         }
 
-        CTGeofence.Builder setRadius(int radius) {
-            this.radius = radius;
-            return this;
-        }
-
-        CTGeofence.Builder setTransitionType(int transitionType) {
-            this.transitionType = transitionType;
-            return this;
+        internal fun setTransitionType(transitionType: Int): Builder {
+            this.transitionType = transitionType
+            return this
         }
     }
 
-    private final String id;
+    val id: String = builder.id
 
-    private final double latitude;
+    val latitude: Double = builder.latitude
 
-    private final double longitude;
+    val longitude: Double = builder.longitude
 
-    private final int radius;
+    val radius: Int = builder.radius
 
-    private final int transitionType;
+    val transitionType: Int = builder.transitionType
 
-    /**
-     * Converts {@link JSONObject} containing an array of geofences to list of {@link CTGeofence}
-     *
-     * @param jsonObject containing an array of geofences
-     * @return list of {@link CTGeofence}
-     */
-    @NonNull
-    public static List<CTGeofence> from(@NonNull JSONObject jsonObject) {
+    companion object {
 
-        ArrayList<CTGeofence> geofenceList = new ArrayList<>();
+        /**
+         * Converts [JSONObject] containing an array of geofences to list of [CTGeofence]
+         *
+         * @param jsonObject containing an array of geofences
+         * @return list of [CTGeofence]
+         */
+        @JvmStatic
+        fun from(jsonObject: JSONObject): List<CTGeofence> {
+            val geofenceList = ArrayList<CTGeofence>()
 
-        try {
-            JSONArray array = jsonObject.getJSONArray(CTGeofenceConstants.KEY_GEOFENCES);
+            try {
+                val array = jsonObject.getJSONArray(CTGeofenceConstants.KEY_GEOFENCES)
 
-            for (int i = 0; i < array.length(); i++) {
-
-                JSONObject object = array.getJSONObject(i);
-                CTGeofence geofence = new Builder(String.valueOf(object.getInt(CTGeofenceConstants.KEY_ID)))
-                        .setLatitude(object.getDouble("lat"))
-                        .setLongitude(object.getDouble("lng"))
-                        .setRadius(object.getInt("r"))
-                        .build();
-                geofenceList.add(geofence);
+                for (i in 0 until array.length()) {
+                    val `object` = array.getJSONObject(i)
+                    val geofence = Builder(`object`.getInt(CTGeofenceConstants.KEY_ID).toString())
+                        .setLatitude(`object`.getDouble("lat"))
+                        .setLongitude(`object`.getDouble("lng"))
+                        .setRadius(`object`.getInt("r"))
+                        .build()
+                    geofenceList.add(geofence)
+                }
+            } catch (e: JSONException) {
+                CTGeofenceAPI.getLogger().debug(
+                    CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Could not convert JSON to GeofenceList", e
+                )
             }
-        } catch (JSONException e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Could not convert JSON to GeofenceList", e);
+
+            return geofenceList
         }
-
-        return geofenceList;
-
-    }
-
-    private CTGeofence(Builder builder) {
-        id = builder.id;
-        transitionType = builder.transitionType;
-        latitude = builder.latitude;
-        longitude = builder.longitude;
-        radius = builder.radius;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public int getRadius() {
-        return radius;
-    }
-
-    public int getTransitionType() {
-        return transitionType;
     }
 }

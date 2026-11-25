@@ -1,16 +1,16 @@
-package com.clevertap.android.geofence.interfaces;
+package com.clevertap.android.geofence.interfaces
 
-import android.location.Location;
+import android.location.Location
 
 /**
  * Callback interface to get foreground as well as background location updates from OS.
  */
-public interface CTLocationUpdatesListener {
+fun interface CTLocationUpdatesListener {
 
     /**
      * This method will be invoked on main thread when a location will be available from OS
      *
-     * @param location an instance of {@link Location}
+     * @param location an instance of [Location]
      */
-    void onLocationUpdates(Location location);
+    fun onLocationUpdates(location: Location?)
 }

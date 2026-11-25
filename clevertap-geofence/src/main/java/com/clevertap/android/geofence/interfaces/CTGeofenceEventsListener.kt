@@ -1,49 +1,49 @@
-package com.clevertap.android.geofence.interfaces;
+package com.clevertap.android.geofence.interfaces
 
-import org.json.JSONObject;
+import org.json.JSONObject
 
 /**
  * Callback interface to get geofence enter/exit events from OS.
  */
-public interface CTGeofenceEventsListener {
+interface CTGeofenceEventsListener {
 
     /**
      * This method will be invoked when a user enters geofence. Given below is the JSON structure
-     * for the event :<br>
-     * <code>
-     * <dl><dt>{</dt>
-     *    <dd>"id" : 500043 //geofenceUniqueID,</dd>
-     *    <dd>"gcId" : 1 //geofenceClusterId,</dd>
-     *    <dd>"gcName" : "geofenceClusterName",</dd>
-     *    <dd>"lat" : 19.229493674459807 //geofence Latitude,</dd>
-     *    <dd>"lng" : 72.82329440116882 //geofence Longitude,</dd>
-     *    <dd>"r" : 200 //geofenceRadiusInMeters,</dd>
-     *    <dd>"triggered_lat" : 19.229493674459807 //geofenceTriggeredLatitude,</dd>
-     *    <dd>"triggered_lng" : 72.82329440116882 //geofenceTriggeredLongitude</dd>
-     * }</dl>
-     *  </code>
+     * for the event :
+     * ```
+     * {
+     *    "id" : 500043 //geofenceUniqueID,
+     *    "gcId" : 1 //geofenceClusterId,
+     *    "gcName" : "geofenceClusterName",
+     *    "lat" : 19.229493674459807 //geofence Latitude,
+     *    "lng" : 72.82329440116882 //geofence Longitude,
+     *    "r" : 200 //geofenceRadiusInMeters,
+     *    "triggered_lat" : 19.229493674459807 //geofenceTriggeredLatitude,
+     *    "triggered_lng" : 72.82329440116882 //geofenceTriggeredLongitude
+     * }
+     * ```
      *
-     * @param geofenceEnteredEventProperties {@link JSONObject} containing geofence event details
+     * @param geofenceEnteredEventProperties [JSONObject] containing geofence event details
      */
-    void onGeofenceEnteredEvent(JSONObject geofenceEnteredEventProperties);
+    fun onGeofenceEnteredEvent(geofenceEnteredEventProperties: JSONObject)
 
     /**
      * This method will be invoked when a user exits geofence. Given below is the JSON structure
-     * for the event :<br>
-     * <code>
-     * <dl><dt>{</dt>
-     *    <dd>"id" : 500043 //geofenceUniqueID,</dd>
-     *    <dd>"gcId" : 1 //geofenceClusterId,</dd>
-     *    <dd>"gcName" : "geofenceClusterName",</dd>
-     *    <dd>"lat" : 19.229493674459807 //geofence Latitude,</dd>
-     *    <dd>"lng" : 72.82329440116882 //geofence Longitude,</dd>
-     *    <dd>"r" : 200 //geofenceRadiusInMeters,</dd>
-     *    <dd>"triggered_lat" : 19.229493674459807 //geofenceTriggeredLatitude,</dd>
-     *    <dd>"triggered_lng" : 72.82329440116882 //geofenceTriggeredLongitude</dd>
-     * }</dl>
-     *  </code>
+     * for the event :
+     * ```
+     * {
+     *    "id" : 500043 //geofenceUniqueID,
+     *    "gcId" : 1 //geofenceClusterId,
+     *    "gcName" : "geofenceClusterName",
+     *    "lat" : 19.229493674459807 //geofence Latitude,
+     *    "lng" : 72.82329440116882 //geofence Longitude,
+     *    "r" : 200 //geofenceRadiusInMeters,
+     *    "triggered_lat" : 19.229493674459807 //geofenceTriggeredLatitude,
+     *    "triggered_lng" : 72.82329440116882 //geofenceTriggeredLongitude
+     * }
+     * ```
      *
-     * @param geofenceExitedEventProperties {@link JSONObject} containing geofence event details
+     * @param geofenceExitedEventProperties [JSONObject] containing geofence event details
      */
-    void onGeofenceExitedEvent(JSONObject geofenceExitedEventProperties);
+    fun onGeofenceExitedEvent(geofenceExitedEventProperties: JSONObject)
 }
