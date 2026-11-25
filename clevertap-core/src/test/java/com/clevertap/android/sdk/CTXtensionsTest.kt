@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build.VERSION
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -123,7 +124,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_is_null_and_manifestChannel_is_registered_then_return_manifestChannel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -143,7 +144,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = null | default = not registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_null_then_return_default_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -158,7 +159,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = null | default = registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_is_null_and_manifestChannel_is_null_and_fallback_channel_exists_then_return_fallback_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -179,7 +180,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = not registered | manifest = null | default = not registered
     @Test
     fun test_getOrCreateChannel_when_channel_not_registered_and_manifestChannel_not_available_then_return_default_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -193,7 +194,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = not registered | manifest = not registered | default
     @Test
     fun test_getOrCreateChannel_when_channel_not_registered_and_manifestChannel_not_registered_then_return_default_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -208,7 +209,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = not registered | manifest = null | default = registered
     @Test
     fun test_getOrCreateChannel_when_channel_not_registered_and_manifestChannel_not_available_and_fallback_channel_exists_then_return_fallback_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -229,7 +230,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = not registered | default = not registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_not_registered_and_default_not_registered_then_return_default_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -244,7 +245,7 @@ class CTXtensionsTest : BaseTestCase() {
     //given = null | manifest = not registered | default = registered
     @Test
     fun test_getOrCreateChannel_when_given_channel_null_and_manifestChannel_not_registered_and_default_is_registered_then_return_default_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -265,7 +266,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_getNotificationChannel_throws_exception_return_null() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = mockk<NotificationManager>(relaxed = true)
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -320,7 +321,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_has_low_importance_then_return_manifestChannel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -339,7 +340,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_has_high_importance_then_return_fallback_low_importance_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -358,7 +359,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_null_and_manifestChannel_null_then_return_fallback_low_importance_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -372,7 +373,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_not_registered_and_manifestChannel_null_then_return_fallback_low_importance_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -386,7 +387,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_not_registered_and_manifestChannel_not_registered_then_return_fallback_low_importance_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -400,7 +401,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_low_importance_fallback_channel_already_exists_then_return_it() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -445,7 +446,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_null_and_manifestChannel_registered_then_return_manifestChannel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -464,7 +465,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_null_and_manifestChannel_null_then_return_default_fallback_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -478,7 +479,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_false_and_given_channel_not_registered_then_return_default_fallback_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -493,7 +494,7 @@ class CTXtensionsTest : BaseTestCase() {
     // Edge case tests
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_given_channel_empty_string_then_return_fallback_low_importance_channel() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = application.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val manifestInfo = mockk<ManifestInfo>()
 
@@ -523,7 +524,7 @@ class CTXtensionsTest : BaseTestCase() {
 
     @Test
     fun test_getOrCreateChannel_when_hideHeadsUp_true_and_getNotificationChannel_throws_exception_return_null() {
-        mockkStatic(ManifestInfo::class) {
+        mockkObject(ManifestInfo.Companion) {
             val nm = mockk<NotificationManager>(relaxed = true)
             val manifestInfo = mockk<ManifestInfo>()
 
