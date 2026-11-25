@@ -1,83 +1,68 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import androidx.annotation.WorkerThread;
-import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CTLockManager;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import android.content.Context
+import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.BaseCallbackManager
+import com.clevertap.android.sdk.CTLockManager
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.Logger
+import org.json.JSONArray
+import org.json.JSONObject
 
-public class InboxResponse extends CleverTapResponseDecorator {
+internal open class InboxResponse(
+    private val config: CleverTapInstanceConfig,
+    ctLockManager: CTLockManager,
+    private val callbackManager: BaseCallbackManager,
+    private val controllerManager: ControllerManager
+) : CleverTapResponseDecorator() {
 
-    private final Object inboxControllerLock;
+    private val logger: Logger = config.logger
 
-    private final BaseCallbackManager callbackManager;
+    private val inboxControllerLock: Any = ctLockManager.inboxControllerLock
 
-    private final CleverTapInstanceConfig config;
-
-    private final Logger logger;
-
-    private final ControllerManager controllerManager;
-
-    public InboxResponse(
-            CleverTapInstanceConfig config,
-            CTLockManager ctLockManager,
-            final BaseCallbackManager callbackManager,
-            ControllerManager controllerManager
-    ) {
-        this.config = config;
-        this.callbackManager = callbackManager;
-        logger = this.config.getLogger();
-        inboxControllerLock = ctLockManager.getInboxControllerLock();
-        this.controllerManager = controllerManager;
-    }
-
-    @Override
-    public boolean runsDuringUserSwitch() {
-        return false; // inbox is reset and re-fetched for the new user after the switch
+    override fun runsDuringUserSwitch(): Boolean {
+        return false // inbox is reset and re-fetched for the new user after the switch
     }
 
     //NotificationInbox
     @WorkerThread
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
-
-        if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
-                    "CleverTap instance is configured to analytics only, not processing inbox messages");
-            return;
+    override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
+        val response = jsonBody
+        if (config.isAnalyticsOnly) {
+            logger.verbose(
+                config.accountId,
+                "CleverTap instance is configured to analytics only, not processing inbox messages"
+            )
+            return
         }
 
-        logger.verbose(config.getAccountId(), "Inbox: Processing response");
+        logger.verbose(config.accountId, "Inbox: Processing response")
 
-        if (!response.has(Constants.INBOX_JSON_RESPONSE_KEY)) {
-            logger.verbose(config.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
+        if (!response!!.has(Constants.INBOX_JSON_RESPONSE_KEY)) {
+            logger.verbose(config.accountId, "Inbox: Response JSON object doesn't contain the inbox key")
             // process PushAmp response
-            return;
+            return
         }
         try {
-            _processInboxMessages(response.getJSONArray(Constants.INBOX_JSON_RESPONSE_KEY));
-        } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "InboxResponse: Failed to parse response", t);
+            _processInboxMessages(response.getJSONArray(Constants.INBOX_JSON_RESPONSE_KEY))
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "InboxResponse: Failed to parse response", t)
         }
     }
 
-
     // always call async
     @WorkerThread
-    private void _processInboxMessages(JSONArray messages) {
-        synchronized (inboxControllerLock) {
-            if (controllerManager.getCTInboxController() == null) {
-                controllerManager.initializeInbox();
+    private fun _processInboxMessages(messages: JSONArray) {
+        synchronized(inboxControllerLock) {
+            if (controllerManager.ctInboxController == null) {
+                controllerManager.initializeInbox()
             }
-            if (controllerManager.getCTInboxController() != null) {
-                boolean update = controllerManager.getCTInboxController().updateMessages(messages);
+            if (controllerManager.ctInboxController != null) {
+                val update = controllerManager.ctInboxController!!.updateMessages(messages)
                 if (update) {
-                    callbackManager._notifyInboxMessagesDidUpdate();
+                    callbackManager._notifyInboxMessagesDidUpdate()
                 }
             }
         }

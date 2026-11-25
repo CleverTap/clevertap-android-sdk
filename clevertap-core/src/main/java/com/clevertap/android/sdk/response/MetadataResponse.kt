@@ -1,63 +1,50 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.network.IJRepo;
-import org.json.JSONObject;
+import android.content.Context
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.DeviceInfo
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.network.IJRepo
+import org.json.JSONObject
 
-public class MetadataResponse extends CleverTapResponseDecorator {
+internal open class MetadataResponse(
+    private val config: CleverTapInstanceConfig,
+    private val deviceInfo: DeviceInfo,
+    private val ijRepo: IJRepo
+) : CleverTapResponseDecorator() {
 
-    private final CleverTapInstanceConfig config;
+    private val logger: Logger = config.logger
 
-    private final DeviceInfo deviceInfo;
-
-    private final Logger logger;
-    private final IJRepo ijRepo;
-
-    public MetadataResponse(
-            CleverTapInstanceConfig config,
-            DeviceInfo deviceInfo,
-            IJRepo ijRepo
-    ) {
-        this.config = config;
-        logger = this.config.getLogger();
-        this.deviceInfo = deviceInfo;
-        this.ijRepo = ijRepo;
-    }
-
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
+        val response = jsonBody
         // Always look for a GUID in the response, and if present, then perform a force update
         try {
-            if (response.has("g")) {
-                final String deviceID = response.getString("g");
-                deviceInfo.forceUpdateDeviceId(deviceID);
-                logger.verbose(config.getAccountId(), "Got a new device ID: " + deviceID);
+            if (response!!.has("g")) {
+                val deviceID = response.getString("g")
+                deviceInfo.forceUpdateDeviceId(deviceID)
+                logger.verbose(config.accountId, "Got a new device ID: $deviceID")
             }
-        } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to update device ID!", t);
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "Failed to update device ID!", t)
         }
 
         // Handle i
         try {
-            if (response.has("_i")) {
-                final long i = response.getLong("_i");
-                ijRepo.setI(context, i);
+            if (response!!.has("_i")) {
+                val i = response.getLong("_i")
+                ijRepo.setI(context, i)
             }
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             // Ignore
         }
 
         // Handle j
         try {
-            if (response.has("_j")) {
-                final long j = response.getLong("_j");
-                ijRepo.setJ(context, j);
+            if (response!!.has("_j")) {
+                val j = response.getLong("_j")
+                ijRepo.setJ(context, j)
             }
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             // Ignore
         }
     }

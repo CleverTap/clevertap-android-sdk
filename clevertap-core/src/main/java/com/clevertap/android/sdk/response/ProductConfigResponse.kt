@@ -1,87 +1,84 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.content.Context
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.Logger
+import org.json.JSONException
+import org.json.JSONObject
 
-public class ProductConfigResponse extends CleverTapResponseDecorator {
+internal open class ProductConfigResponse(
+    private val config: CleverTapInstanceConfig,
+    private val coreMetaData: CoreMetaData,
+    private val controllerManager: ControllerManager
+) : CleverTapResponseDecorator() {
 
-    private final CleverTapInstanceConfig config;
+    private val logger: Logger = config.logger
 
-    private final CoreMetaData coreMetaData;
+    override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
+        val response = jsonBody
+        logger.verbose(config.accountId, "Processing Product Config response...")
 
-    private final Logger logger;
-
-    private final ControllerManager controllerManager;
-
-    public ProductConfigResponse(
-            CleverTapInstanceConfig config,
-            CoreMetaData coreMetaData,
-            ControllerManager controllerManager
-    ) {
-        this.config = config;
-        logger = this.config.getLogger();
-        this.coreMetaData = coreMetaData;
-        this.controllerManager = controllerManager;
-    }
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
-        logger.verbose(config.getAccountId(), "Processing Product Config response...");
-
-        if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
-                    "CleverTap instance is configured to analytics only, not processing Product Config response");
-            return;
+        if (config.isAnalyticsOnly) {
+            logger.verbose(
+                config.accountId,
+                "CleverTap instance is configured to analytics only, not processing Product Config response"
+            )
+            return
         }
 
         if (response == null) {
-            logger.verbose(config.getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG
-                    + "Can't parse Product Config Response, JSON response object is null");
-            onProductConfigFailed();
-            return;
+            logger.verbose(
+                config.accountId, Constants.LOG_TAG_PRODUCT_CONFIG
+                        + "Can't parse Product Config Response, JSON response object is null"
+            )
+            onProductConfigFailed()
+            return
         }
 
         if (!response.has(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY)) {
-            logger.verbose(config.getAccountId(),
-                    Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Product Config key");
-            onProductConfigFailed();
-            return;
+            logger.verbose(
+                config.accountId,
+                Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Product Config key"
+            )
+            onProductConfigFailed()
+            return
         }
         try {
             logger
-                    .verbose(config.getAccountId(),
-                            Constants.LOG_TAG_PRODUCT_CONFIG + "Processing Product Config response");
-            parseProductConfigs(response.getJSONObject(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY));
-        } catch (Throwable t) {
-            onProductConfigFailed();
-            logger.verbose(config.getAccountId(),
-                    Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse Product Config response", t);
+                .verbose(
+                    config.accountId,
+                    Constants.LOG_TAG_PRODUCT_CONFIG + "Processing Product Config response"
+                )
+            parseProductConfigs(response.getJSONObject(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY))
+        } catch (t: Throwable) {
+            onProductConfigFailed()
+            logger.verbose(
+                config.accountId,
+                Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse Product Config response", t
+            )
         }
     }
 
-    private void onProductConfigFailed() {
-        if (coreMetaData.isProductConfigRequested()) {
-            if (controllerManager.getCTProductConfigController() != null) {
-                controllerManager.getCTProductConfigController().onFetchFailed();
+    private fun onProductConfigFailed() {
+        if (coreMetaData.isProductConfigRequested) {
+            if (controllerManager.ctProductConfigController != null) {
+                controllerManager.ctProductConfigController!!.onFetchFailed()
             }
-            coreMetaData.setProductConfigRequested(false);
+            coreMetaData.isProductConfigRequested = false
         }
     }
 
-    private void parseProductConfigs(JSONObject responseKV) throws JSONException {
-        JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
+    @Throws(JSONException::class)
+    private fun parseProductConfigs(responseKV: JSONObject) {
+        val kvArray = responseKV.getJSONArray(Constants.KEY_KV)
 
-        if (kvArray != null && controllerManager.getCTProductConfigController() != null) {
-            controllerManager.getCTProductConfigController().onFetchSuccess(responseKV);
+        if (kvArray != null && controllerManager.ctProductConfigController != null) {
+            controllerManager.ctProductConfigController!!.onFetchSuccess(responseKV)
         } else {
-            onProductConfigFailed();
+            onProductConfigFailed()
         }
     }
 }

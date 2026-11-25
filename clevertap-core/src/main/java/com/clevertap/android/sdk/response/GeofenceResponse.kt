@@ -1,67 +1,69 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import org.json.JSONObject;
+import android.content.Context
+import com.clevertap.android.sdk.BaseCallbackManager
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import org.json.JSONObject
 
-public class GeofenceResponse extends CleverTapResponseDecorator {
+internal open class GeofenceResponse(
+    private val config: CleverTapInstanceConfig,
+    private val callbackManager: BaseCallbackManager
+) : CleverTapResponseDecorator() {
 
-    private final BaseCallbackManager callbackManager;
+    private val logger: Logger = config.logger
 
-    private final CleverTapInstanceConfig config;
+    override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
+        val response = jsonBody
+        logger.verbose(config.accountId, "Processing GeoFences response...")
 
-    private final Logger logger;
-
-    public GeofenceResponse(
-            CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager
-    ) {
-        this.config = config;
-        logger = this.config.getLogger();
-        this.callbackManager = callbackManager;
-    }
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
-        logger.verbose(config.getAccountId(), "Processing GeoFences response...");
-
-        if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
-                    "CleverTap instance is configured to analytics only, not processing geofence response");
-            return;
+        if (config.isAnalyticsOnly) {
+            logger.verbose(
+                config.accountId,
+                "CleverTap instance is configured to analytics only, not processing geofence response"
+            )
+            return
         }
 
         if (response == null) {
-            logger.verbose(config.getAccountId(),
-                    Constants.LOG_TAG_GEOFENCES + "Can't parse Geofences Response, JSON response object is null");
-            return;
+            logger.verbose(
+                config.accountId,
+                Constants.LOG_TAG_GEOFENCES + "Can't parse Geofences Response, JSON response object is null"
+            )
+            return
         }
 
         if (!response.has(Constants.GEOFENCES_JSON_RESPONSE_KEY)) {
-            logger.verbose(config.getAccountId(),
-                    Constants.LOG_TAG_GEOFENCES + "JSON object doesn't contain the Geofences key");
-            return;
+            logger.verbose(
+                config.accountId,
+                Constants.LOG_TAG_GEOFENCES + "JSON object doesn't contain the Geofences key"
+            )
+            return
         }
         try {
-            if (callbackManager.getGeofenceCallback() != null) {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("geofences", response.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY));
+            if (callbackManager.geofenceCallback != null) {
+                val jsonObject = JSONObject()
+                jsonObject.put("geofences", response.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY))
 
                 logger
-                        .verbose(config.getAccountId(),
-                                Constants.LOG_TAG_GEOFENCES + "Processing Geofences response");
-                callbackManager.getGeofenceCallback().handleGeoFences(jsonObject);
+                    .verbose(
+                        config.accountId,
+                        Constants.LOG_TAG_GEOFENCES + "Processing Geofences response"
+                    )
+                callbackManager.geofenceCallback!!.handleGeoFences(jsonObject)
             } else {
-                logger.debug(config.getAccountId(),
-                        Constants.LOG_TAG_GEOFENCES + "Geofence SDK has not been initialized to handle the response");
+                logger.debug(
+                    config.accountId,
+                    Constants.LOG_TAG_GEOFENCES + "Geofence SDK has not been initialized to handle the response"
+                )
             }
-        } catch (Throwable t) {
+        } catch (t: Throwable) {
             logger
-                    .verbose(config.getAccountId(),
-                            Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t);
+                .verbose(
+                    config.accountId,
+                    Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t
+                )
         }
     }
 }

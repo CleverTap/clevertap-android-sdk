@@ -1,32 +1,32 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import android.util.Log;
-import androidx.annotation.WorkerThread;
-import org.json.JSONObject;
+import android.content.Context
+import android.util.Log
+import androidx.annotation.WorkerThread
+import org.json.JSONObject
 
 /**
- * Abstract Response that will be wrapped by {@link CleverTapResponseDecorator} objects
+ * Abstract Response that will be wrapped by [CleverTapResponseDecorator] objects
  */
-public abstract class CleverTapResponse {
+internal abstract class CleverTapResponse {
 
     /**
-     * Whether this processor should run while a user switch is in progress. Defaults to {@code true};
-     * processors that must be skipped during a user switch override this to return {@code false}.
-     * Lets {@link ClevertapResponseHandler} decide inclusion polymorphically instead of checking
+     * Whether this processor should run while a user switch is in progress. Defaults to `true`;
+     * processors that must be skipped during a user switch override this to return `false`.
+     * Lets [ClevertapResponseHandler] decide inclusion polymorphically instead of checking
      * concrete types.
      */
-    public boolean runsDuringUserSwitch() {
-        return true;
+    open fun runsDuringUserSwitch(): Boolean {
+        return true
     }
 
     @WorkerThread
-    public void processResponse(
-            final JSONObject jsonBody,
-            final String stringBody,
-            final Context context
+    open fun processResponse(
+        jsonBody: JSONObject?,
+        stringBody: String?,
+        context: Context
     ) {
-        Log.i("CleverTapResponse", "Done processing response!");
+        Log.i("CleverTapResponse", "Done processing response!")
     }
 
     /**
@@ -34,12 +34,12 @@ public abstract class CleverTapResponse {
      * isUserSwitching) override this; the default ignores the context and runs the plain overload.
      */
     @WorkerThread
-    public void processResponse(
-            final JSONObject jsonBody,
-            final String stringBody,
-            final Context context,
-            final ResponseContext responseContext
+    open fun processResponse(
+        jsonBody: JSONObject?,
+        stringBody: String?,
+        context: Context,
+        responseContext: ResponseContext
     ) {
-        processResponse(jsonBody, stringBody, context);
+        processResponse(jsonBody, stringBody, context)
     }
 }

@@ -1,108 +1,49 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
+import android.content.Context
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.network.ArpRepo
+import com.clevertap.android.sdk.product_config.CTProductConfigController
+import com.clevertap.android.sdk.validation.ValidationConfig
+import org.json.JSONException
+import org.json.JSONObject
 
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.network.ArpRepo;
-import com.clevertap.android.sdk.product_config.CTProductConfigController;
-import com.clevertap.android.sdk.validation.ValidationConfig;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import java.util.HashSet;
-import java.util.Set;
+internal open class ARPResponse(
+    private val config: CleverTapInstanceConfig,
+    private val validationConfig: ValidationConfig?,
+    controllerManager: ControllerManager,
+    private val arpRepo: ArpRepo
+) : CleverTapResponseDecorator() {
 
-public class ARPResponse extends CleverTapResponseDecorator {
+    private val ctProductConfigController: CTProductConfigController? = controllerManager.ctProductConfigController
 
-    private final CTProductConfigController ctProductConfigController;
+    private val logger: Logger = config.logger
 
-    private final CleverTapInstanceConfig config;
-
-    private final Logger logger;
-    private final ValidationConfig validationConfig;
-    private final ArpRepo arpRepo;
-
-    public ARPResponse(
-            CleverTapInstanceConfig config,
-            ValidationConfig validationConfig,
-            ControllerManager controllerManager,
-            ArpRepo arpRepo
-    ) {
-        this.config = config;
-        ctProductConfigController = controllerManager.getCTProductConfigController();
-        logger = this.config.getLogger();
-        this.validationConfig = validationConfig;
-        this.arpRepo = arpRepo;
-    }
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
+    override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
+        val response = jsonBody
         // Handle "arp" (additional request parameters)
         try {
-            if (response.has("arp")) {
-                final JSONObject arp = (JSONObject) response.get("arp");
+            if (response!!.has("arp")) {
+                val arp = response.get("arp") as JSONObject
                 if (arp.length() > 0) {
-                    if (ctProductConfigController != null) {
-                        ctProductConfigController.setArpValue(arp);
-                    }
+                    ctProductConfigController?.setArpValue(arp)
                     //Handle Discarded events in ARP
                     try {
-                        processDiscardedEventsList(arp);
-                    } catch (Throwable t) {
+                        processDiscardedEventsList(arp)
+                    } catch (t: Throwable) {
                         logger
-                                .verbose("Error handling discarded events response: " + t.getLocalizedMessage());
+                            .verbose("Error handling discarded events response: " + t.localizedMessage)
                     }
-                    arpRepo.handleARPUpdate(context, arp);
+                    arpRepo.handleARPUpdate(context, arp)
                 }
             }
-        } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), "Failed to process ARP", t);
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, "Failed to process ARP", t)
         }
     }
-
-    /* This method has been moved to ArpRepo class
-    //Saves ARP directly to new namespace
-    private void handleARPUpdate(final Context context, final JSONObject arp) {
-        if (arp == null || arp.length() == 0) {
-            return;
-        }
-
-        final String nameSpaceKey = networkManager.getNewNamespaceARPKey();
-        if (nameSpaceKey == null) {
-            return;
-        }
-
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, nameSpaceKey);
-        final SharedPreferences.Editor editor = prefs.edit();
-
-        final Iterator<String> keys = arp.keys();
-        while (keys.hasNext()) {
-            final String key = keys.next();
-            try {
-                final Object o = arp.get(key);
-                if (o instanceof Number) {
-                    final int update = ((Number) o).intValue();
-                    editor.putInt(key, update);
-                } else if (o instanceof String) {
-                    editor.putString(key, (String) o);
-                } else if (o instanceof Boolean) {
-                    editor.putBoolean(key, (Boolean) o);
-                } else {
-                    logger
-                            .verbose(config.getAccountId(),
-                                    "ARP update for key " + key + " rejected (invalid data type)");
-                }
-            } catch (JSONException e) {
-                // Ignore
-            }
-        }
-        logger.verbose(config.getAccountId(),
-                "Stored ARP for namespace key: " + nameSpaceKey + " values: " + arp.toString());
-        StorageHelper.persist(editor);
-    }*/
 
     /**
      * Dashboard has a feature where marketers can discard event. We get that list in the ARP response,
@@ -110,26 +51,26 @@ public class ARPResponse extends CleverTapResponseDecorator {
      *
      * @param response response from server
      */
-    private void processDiscardedEventsList(JSONObject response) {
+    private fun processDiscardedEventsList(response: JSONObject) {
         if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
-            logger.verbose(config.getAccountId(), "ARP doesn't contain the Discarded Events key");
-            return;
+            logger.verbose(config.accountId, "ARP doesn't contain the Discarded Events key")
+            return
         }
 
         try {
-            Set<String> discardedEventsSet = new HashSet<>();
-            JSONArray discardedEventsArray = response.getJSONArray(Constants.DISCARDED_EVENT_JSON_KEY);
+            val discardedEventsSet: MutableSet<String> = HashSet()
+            val discardedEventsArray = response.getJSONArray(Constants.DISCARDED_EVENT_JSON_KEY)
 
-            for (int i = 0; i < discardedEventsArray.length(); i++) {
-                discardedEventsSet.add(discardedEventsArray.getString(i));
+            for (i in 0 until discardedEventsArray.length()) {
+                discardedEventsSet.add(discardedEventsArray.getString(i))
             }
             if (validationConfig != null) {
-                validationConfig.updateDiscardedEventNames(discardedEventsSet);
+                validationConfig.updateDiscardedEventNames(discardedEventsSet)
             } else {
-                logger.verbose(config.getAccountId(), "ValidationConfig object is NULL");
+                logger.verbose(config.accountId, "ValidationConfig object is NULL")
             }
-        } catch (JSONException e) {
-            logger.verbose(config.getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
+        } catch (e: JSONException) {
+            logger.verbose(config.accountId, "Error parsing discarded events list" + e.localizedMessage)
         }
     }
 }

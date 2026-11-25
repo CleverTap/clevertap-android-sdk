@@ -1,69 +1,72 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.content.Context
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.Logger
+import org.json.JSONException
+import org.json.JSONObject
 
-public class FeatureFlagResponse extends CleverTapResponseDecorator {
+internal open class FeatureFlagResponse(
+    private val config: CleverTapInstanceConfig,
+    private val controllerManager: ControllerManager
+) : CleverTapResponseDecorator() {
 
-    private final CleverTapInstanceConfig config;
+    private val logger: Logger = config.logger
 
-    private final Logger logger;
+    override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context) {
+        val response = jsonBody
+        logger.verbose(config.accountId, "Processing Feature Flags response...")
 
-    private final ControllerManager controllerManager;
-
-    public FeatureFlagResponse(CleverTapInstanceConfig config, ControllerManager controllerManager) {
-        this.config = config;
-        logger = this.config.getLogger();
-        this.controllerManager = controllerManager;
-    }
-
-    @Override
-    public void processResponse(final JSONObject response, final String stringBody, final Context context) {
-        logger.verbose(config.getAccountId(), "Processing Feature Flags response...");
-
-        if (config.isAnalyticsOnly()) {
-            logger.verbose(config.getAccountId(),
-                    "CleverTap instance is configured to analytics only, not processing Feature Flags response");
+        if (config.isAnalyticsOnly) {
+            logger.verbose(
+                config.accountId,
+                "CleverTap instance is configured to analytics only, not processing Feature Flags response"
+            )
             // process product config response
-            return;
+            return
         }
 
         if (response == null) {
-            logger.verbose(config.getAccountId(),
-                    Constants.FEATURE_FLAG_UNIT + "Can't parse Feature Flags Response, JSON response object is null");
-            return;
+            logger.verbose(
+                config.accountId,
+                Constants.FEATURE_FLAG_UNIT + "Can't parse Feature Flags Response, JSON response object is null"
+            )
+            return
         }
 
         if (!response.has(Constants.FEATURE_FLAG_JSON_RESPONSE_KEY)) {
-            logger.verbose(config.getAccountId(),
-                    Constants.FEATURE_FLAG_UNIT + "JSON object doesn't contain the Feature Flags key");
+            logger.verbose(
+                config.accountId,
+                Constants.FEATURE_FLAG_UNIT + "JSON object doesn't contain the Feature Flags key"
+            )
             // process product config response
-            return;
+            return
         }
         try {
             logger
-                    .verbose(config.getAccountId(),
-                            Constants.FEATURE_FLAG_UNIT + "Processing Feature Flags response");
-            parseFeatureFlags(response.getJSONObject(Constants.FEATURE_FLAG_JSON_RESPONSE_KEY));
-        } catch (Throwable t) {
-            logger.verbose(config.getAccountId(), Constants.FEATURE_FLAG_UNIT + "Failed to parse response", t);
+                .verbose(
+                    config.accountId,
+                    Constants.FEATURE_FLAG_UNIT + "Processing Feature Flags response"
+                )
+            parseFeatureFlags(response.getJSONObject(Constants.FEATURE_FLAG_JSON_RESPONSE_KEY))
+        } catch (t: Throwable) {
+            logger.verbose(config.accountId, Constants.FEATURE_FLAG_UNIT + "Failed to parse response", t)
         }
     }
 
-    private void parseFeatureFlags(JSONObject responseKV) throws JSONException {
-        JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
+    @Throws(JSONException::class)
+    private fun parseFeatureFlags(responseKV: JSONObject) {
+        val kvArray = responseKV.getJSONArray(Constants.KEY_KV)
 
-        if (kvArray != null && controllerManager.getCTFeatureFlagsController() != null) {
-            controllerManager.getCTFeatureFlagsController().updateFeatureFlags(responseKV);
-        }else {
-            config.getLogger().verbose(config.getAccountId(),
-                    Constants.FEATURE_FLAG_UNIT + "Can't parse feature flags, CTFeatureFlagsController is null");
+        if (kvArray != null && controllerManager.ctFeatureFlagsController != null) {
+            controllerManager.ctFeatureFlagsController!!.updateFeatureFlags(responseKV)
+        } else {
+            config.logger.verbose(
+                config.accountId,
+                Constants.FEATURE_FLAG_UNIT + "Can't parse feature flags, CTFeatureFlagsController is null"
+            )
         }
     }
 }

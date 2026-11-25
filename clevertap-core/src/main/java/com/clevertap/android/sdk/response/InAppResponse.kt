@@ -1,286 +1,260 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.inapp.InAppController;
-import com.clevertap.android.sdk.inapp.TriggerManager;
-import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager;
-import com.clevertap.android.sdk.inapp.data.CtCacheType;
-import com.clevertap.android.sdk.inapp.data.DurationPartitionedInApps;
-import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
-import com.clevertap.android.sdk.inapp.store.preference.FileStore;
-import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppAssetsStore;
-import com.clevertap.android.sdk.inapp.store.preference.InAppStore;
-import com.clevertap.android.sdk.inapp.store.preference.LegacyInAppStore;
-import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry;
-import com.clevertap.android.sdk.network.ContentFetchItem;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.Task;
-import java.util.Collections;
-import java.util.List;
-import kotlin.Pair;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import android.content.Context
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.ControllerManager
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.TriggerManager
+import com.clevertap.android.sdk.inapp.customtemplates.TemplatesManager
+import com.clevertap.android.sdk.inapp.data.CtCacheType
+import com.clevertap.android.sdk.inapp.data.InAppResponseAdapter
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoFactory
+import com.clevertap.android.sdk.inapp.store.preference.ImpressionStore
+import com.clevertap.android.sdk.inapp.store.preference.InAppStore
+import com.clevertap.android.sdk.inapp.store.preference.StoreRegistry
+import com.clevertap.android.sdk.network.ContentFetchItem
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import org.json.JSONArray
+import org.json.JSONObject
 
-public class InAppResponse extends CleverTapResponseDecorator {
+internal open class InAppResponse(
+    private val config: CleverTapInstanceConfig,
+    private val controllerManager: ControllerManager,
+    private val isSendTest: Boolean,
+    private val storeRegistry: StoreRegistry,
+    private val triggerManager: TriggerManager,
+    private val templatesManager: TemplatesManager,
+    private val coreMetaData: CoreMetaData
+) : CleverTapResponseDecorator() {
 
-    private final CleverTapInstanceConfig config;
+    private val logger: Logger = config.logger
 
-    private final ControllerManager controllerManager;
-
-    private final boolean isSendTest;
-
-    private final Logger logger;
-
-    private final StoreRegistry storeRegistry;
-
-    private final TemplatesManager templatesManager;
-
-    private final TriggerManager triggerManager;
-
-    private final CoreMetaData coreMetaData;
-
-    public InAppResponse(
-            CleverTapInstanceConfig config,
-            ControllerManager controllerManager,
-            final boolean isSendTest,
-            StoreRegistry storeRegistry,
-            TriggerManager triggerManager,
-            final TemplatesManager templatesManager,
-            CoreMetaData coreMetaData
+    override fun processResponse(
+        jsonBody: JSONObject?,
+        stringBody: String?,
+        context: Context
     ) {
-        this.config = config;
-        this.logger = this.config.getLogger();
-        this.controllerManager = controllerManager;
-        this.isSendTest = isSendTest;
-        this.storeRegistry = storeRegistry;
-        this.triggerManager = triggerManager;
-        this.coreMetaData = coreMetaData;
-        this.templatesManager = templatesManager;
+        processResponse(jsonBody, stringBody, context, ResponseContext.DEFAULT)
     }
 
-    @Override
-    public void processResponse(
-            final JSONObject response,
-            final String stringBody,
-            final Context context
+    override fun processResponse(
+        jsonBody: JSONObject?,
+        stringBody: String?,
+        context: Context,
+        responseContext: ResponseContext
     ) {
-        processResponse(response, stringBody, context, ResponseContext.DEFAULT);
-    }
-
-    @Override
-    public void processResponse(
-            final JSONObject response,
-            final String stringBody,
-            final Context context,
-            final ResponseContext responseContext
-    ) {
-        final boolean isUserSwitching = responseContext.isUserSwitching();
-        final boolean isFullResponse = responseContext.isFullResponse();
+        val response = jsonBody
+        val isUserSwitching = responseContext.isUserSwitching
+        val isFullResponse = responseContext.isFullResponse
         try {
-
-            if (config.isAnalyticsOnly()) {
-                logger.verbose(config.getAccountId(),
-                        "CleverTap instance is configured to analytics only, not processing inapp messages");
+            if (config.isAnalyticsOnly) {
+                logger.verbose(
+                    config.accountId,
+                    "CleverTap instance is configured to analytics only, not processing inapp messages"
+                )
                 // process metadata response
-                return;
+                return
             }
 
             if (response == null || response.length() == 0) {
                 logger.verbose(
-                        config.getAccountId(),
-                        "There is no inapps data to handle"
-                );
-                return;
+                    config.accountId,
+                    "There is no inapps data to handle"
+                )
+                return
             }
 
-            InAppResponseAdapter res = new InAppResponseAdapter(response, templatesManager);
-            final ImpressionStore impressionStore = storeRegistry.getImpressionStore();
-            final InAppStore inAppStore = storeRegistry.getInAppStore();
-            final InAppAssetsStore inAppAssetStore = storeRegistry.getInAppAssetsStore();
-            final FileStore fileStore = storeRegistry.getFilesStore();
-            final LegacyInAppStore legacyInAppStore = storeRegistry.getLegacyInAppStore();
+            val res = InAppResponseAdapter(response, templatesManager)
+            val impressionStore = storeRegistry.impressionStore
+            val inAppStore = storeRegistry.inAppStore
+            val inAppAssetStore = storeRegistry.inAppAssetsStore
+            val fileStore = storeRegistry.filesStore
+            val legacyInAppStore = storeRegistry.legacyInAppStore
 
             if (impressionStore == null || inAppStore == null || inAppAssetStore == null || legacyInAppStore == null || fileStore == null) {
-                logger.verbose(config.getAccountId(), "Stores are not initialised, ignoring inapps!!!!");
-                return;
+                logger.verbose(config.accountId, "Stores are not initialised, ignoring inapps!!!!")
+                return
             }
 
-            logger.verbose(config.getAccountId(), "InApp: Processing response");
+            logger.verbose(config.accountId, "InApp: Processing response")
 
-            int perSession = res.getInAppsPerSession();
-            int perDay = res.getInAppsPerDay();
+            val perSession = res.inAppsPerSession
+            val perDay = res.inAppsPerDay
 
-            if (!isSendTest && controllerManager.getInAppFCManager() != null) {
-                Logger.v("Updating InAppFC Limits");
-                controllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
-                controllerManager.getInAppFCManager().processResponse(context, response);
+            if (!isSendTest && controllerManager.inAppFCManager != null) {
+                Logger.v("Updating InAppFC Limits")
+                controllerManager.inAppFCManager!!.updateLimits(context, perDay, perSession)
+                controllerManager.inAppFCManager!!.processResponse(context, response)
             } else {
-                logger.verbose(config.getAccountId(),
-                        "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits");
+                logger.verbose(
+                    config.accountId,
+                    "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits"
+                )
             }
 
-            Pair<Boolean, JSONArray> inappStaleList = res.getStaleInApps();
-            if (inappStaleList.getFirst()) {
-                clearStaleInAppCache(inappStaleList.getSecond(), impressionStore, triggerManager);
+            val inappStaleList = res.staleInApps
+            if (inappStaleList.first) {
+                clearStaleInAppCache(inappStaleList.second!!,impressionStore, triggerManager)
             }
 
-            String mode = res.getInAppMode();
-            if (!mode.isEmpty()) {
-                inAppStore.setMode(mode);
+            val mode = res.inAppMode
+            if (mode.isNotEmpty()) {
+                inAppStore.mode = mode
             }
 
             if (isUserSwitching) {
-                return;
+                return
             }
 
             // If this /a1 carries a content_fetch that can yield an app-launch in-app, open an
             // arbitration window so the app-launch winner below is held and merged with the /content
             // winner rather than shown twice. Content-fetch responses never open a window, and never
             // feed their directive into the Option 2 fast path (so the list stays empty).
-            List<ContentFetchItem> contentFetchItems = Collections.emptyList();
-            if (responseContext.getSource() != CTResponseSource.CONTENT_FETCH) {
-                contentFetchItems = res.getContentFetchItems();
-                controllerManager.getInAppController().openAppLaunchArbitrationWindowIfNeeded(contentFetchItems);
+            var contentFetchItems: List<ContentFetchItem> = emptyList()
+            if (responseContext.source != CTResponseSource.CONTENT_FETCH) {
+                contentFetchItems = res.contentFetchItems
+                controllerManager.inAppController.openAppLaunchArbitrationWindowIfNeeded(contentFetchItems)
             }
 
-            handleLegacyInApps(res);
-            handleAppLaunchInApps(res, contentFetchItems);
-            handleClientSideInApps(res, inAppStore, responseContext.getSource());
-            handleServerSideInAppsMeta(res, inAppStore);
-            preloadAssetsAndEvictStaleFiles(res, context, isFullResponse);
-
-        } catch (Throwable t) {
-            Logger.v("InAppManager: Failed to parse response", t);
+            handleLegacyInApps(res)
+            handleAppLaunchInApps(res, contentFetchItems)
+            handleClientSideInApps(res, inAppStore, responseContext.source)
+            handleServerSideInAppsMeta(res, inAppStore)
+            preloadAssetsAndEvictStaleFiles(res, context, isFullResponse)
+        } catch (t: Throwable) {
+            Logger.v("InAppManager: Failed to parse response", t)
         }
     }
 
     // Legacy SS in-apps: inapp_notifs (NORMAL/DELAYED) + inapp_notifs_meta (IN-ACTION),
     // campaigns WITHOUT advance display rules.
-    private void handleLegacyInApps(InAppResponseAdapter res) {
-        DurationPartitionedInApps.ImmediateAndDelayed partitionedLegacyInApps = res.getPartitionedLegacyInApps();
+    private fun handleLegacyInApps(res: InAppResponseAdapter) {
+        val partitionedLegacyInApps = res.partitionedLegacyInApps
         if (partitionedLegacyInApps.hasImmediateInApps()) {
-            displayInApp(partitionedLegacyInApps.getImmediateInApps());
+            displayInApp(partitionedLegacyInApps.immediateInApps)
         }
         if (partitionedLegacyInApps.hasDelayedInApps()) {
-            scheduleDelayedLegacyInApps(partitionedLegacyInApps.getDelayedInApps());
+            scheduleDelayedLegacyInApps(partitionedLegacyInApps.delayedInApps)
         }
 
-        DurationPartitionedInApps.InActionOnly partitionedLegacyMetaInApps = res.getPartitionedLegacyMetaInApps();
+        val partitionedLegacyMetaInApps = res.partitionedLegacyMetaInApps
         if (partitionedLegacyMetaInApps.hasInActionInApps()) {
-            controllerManager.getInAppController()
-                    .scheduleInActionInApps(partitionedLegacyMetaInApps.getInActionInApps());
+            controllerManager.inAppController
+                .scheduleInActionInApps(partitionedLegacyMetaInApps.inActionInApps)
         }
     }
 
     // App-launch SS in-apps: inapp_notifs_applaunched (NORMAL/DELAYED) + inapp_notifs_applaunched_meta
     // (IN-ACTION), evaluated against the App Launched event.
-    private void handleAppLaunchInApps(InAppResponseAdapter res, List<ContentFetchItem> contentFetchItems) {
-        DurationPartitionedInApps.ImmediateAndDelayed partitionedAppLaunchServerSideInApps = res.getPartitionedAppLaunchServerSideInApps();
+    private fun handleAppLaunchInApps(res: InAppResponseAdapter, contentFetchItems: List<ContentFetchItem>) {
+        val partitionedAppLaunchServerSideInApps = res.partitionedAppLaunchServerSideInApps
         if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
-            controllerManager.getInAppController().onAppLaunchServerSideInAppsResponse(
-                    partitionedAppLaunchServerSideInApps.getImmediateInApps(),
-                    contentFetchItems,
-                    coreMetaData.getLocationFromUser());
+            controllerManager.inAppController.onAppLaunchServerSideInAppsResponse(
+                partitionedAppLaunchServerSideInApps.immediateInApps,
+                contentFetchItems,
+                coreMetaData.locationFromUser
+            )
         }
         if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {
-            controllerManager.getInAppController().onAppLaunchServerSideDelayedInAppsResponse(
-                    partitionedAppLaunchServerSideInApps.getDelayedInApps(),
-                    coreMetaData.getLocationFromUser()
-            );
+            controllerManager.inAppController.onAppLaunchServerSideDelayedInAppsResponse(
+                partitionedAppLaunchServerSideInApps.delayedInApps,
+                coreMetaData.locationFromUser
+            )
         }
 
-        DurationPartitionedInApps.InActionOnly partitionedAppLaunchServerSideMetaInApps = res.getPartitionedAppLaunchServerSideMetaInApps();
+        val partitionedAppLaunchServerSideMetaInApps = res.partitionedAppLaunchServerSideMetaInApps
         if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
-            controllerManager.getInAppController()
-                    .onAppLaunchServerSideInactionInAppsResponse(partitionedAppLaunchServerSideMetaInApps.getInActionInApps(),
-                            coreMetaData.getLocationFromUser());
+            controllerManager.inAppController
+                .onAppLaunchServerSideInactionInAppsResponse(
+                    partitionedAppLaunchServerSideMetaInApps.inActionInApps,
+                    coreMetaData.locationFromUser
+                )
         }
     }
 
     // CS in-apps (inapp_notifs_cs). Guard: storeClientSideInApps is a full replace of a persisted
     // store. A content-fetch response carries only a partial (or empty) set, so applying it here
     // would wipe the client-side campaigns delivered by /a1. Only /a1 is authoritative for CS in-apps.
-    private void handleClientSideInApps(InAppResponseAdapter res, InAppStore inAppStore, CTResponseSource source) {
+    private fun handleClientSideInApps(res: InAppResponseAdapter, inAppStore: InAppStore, source: CTResponseSource) {
         if (source == CTResponseSource.CONTENT_FETCH) {
-            logger.verbose(config.getAccountId(),
-                    "Ignoring inapp_notifs_cs from a content fetch response to protect the client-side store");
-            return;
+            logger.verbose(
+                config.accountId,
+                "Ignoring inapp_notifs_cs from a content fetch response to protect the client-side store"
+            )
+            return
         }
-        DurationPartitionedInApps.ImmediateAndDelayed partitionedClientSideInApps = res.getPartitionedClientSideInApps();
+        val partitionedClientSideInApps = res.partitionedClientSideInApps
         if (partitionedClientSideInApps.hasImmediateInApps()) {
-            inAppStore.storeClientSideInApps(partitionedClientSideInApps.getImmediateInApps());
+            inAppStore.storeClientSideInApps(partitionedClientSideInApps.immediateInApps)
         }
         if (partitionedClientSideInApps.hasDelayedInApps()) {
-            inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.getDelayedInApps());
+            inAppStore.storeClientSideDelayedInApps(partitionedClientSideInApps.delayedInApps)
         }
     }
 
     // SS in-apps metadata (inapp_notifs_ss -> IN-ACTION + NORMAL campaigns WITH advance display rules).
-    private void handleServerSideInAppsMeta(InAppResponseAdapter res, InAppStore inAppStore) {
-        DurationPartitionedInApps.UnknownAndInAction partitionedServerSideInAppsMeta = res.getPartitionedServerSideInAppsMeta();
+    private fun handleServerSideInAppsMeta(res: InAppResponseAdapter, inAppStore: InAppStore) {
+        val partitionedServerSideInAppsMeta = res.partitionedServerSideInAppsMeta
         // delayAfterTrigger only comes within inapp_notifs (Legacy SS, with in-app content)
         if (partitionedServerSideInAppsMeta.hasUnknownDurationInApps()) {
-            inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.getUnknownDurationInApps());
+            inAppStore.storeServerSideInAppsMetaData(partitionedServerSideInAppsMeta.unknownDurationInApps)
         }
         if (partitionedServerSideInAppsMeta.hasInActionInApps()) {
-            inAppStore.storeServerSideInActionMetaData(partitionedServerSideInAppsMeta.getInActionInApps());
+            inAppStore.storeServerSideInActionMetaData(partitionedServerSideInAppsMeta.inActionInApps)
         }
     }
 
-    private void preloadAssetsAndEvictStaleFiles(InAppResponseAdapter res, Context context, boolean isFullResponse) {
-        List<Pair<String, CtCacheType>> preloadAssetsMeta = res.getPreloadAssetsMeta();
+    private fun preloadAssetsAndEvictStaleFiles(res: InAppResponseAdapter, context: Context, isFullResponse: Boolean) {
+        val preloadAssetsMeta: List<Pair<String, CtCacheType>> = res.preloadAssetsMeta
 
-        FileResourcesRepoImpl assetRepo = FileResourcesRepoFactory
-                .createFileResourcesRepo(context, logger, storeRegistry);
-        if (!preloadAssetsMeta.isEmpty()) {
-            assetRepo.preloadFilesAndCache(preloadAssetsMeta);
+        val assetRepo = FileResourcesRepoFactory
+            .createFileResourcesRepo(context, logger, storeRegistry)
+        if (preloadAssetsMeta.isNotEmpty()) {
+            assetRepo.preloadFilesAndCache(preloadAssetsMeta)
         }
 
         if (isFullResponse) {
-            logger.verbose(config.getAccountId(), "Handling cache eviction");
-            assetRepo.cleanupStaleFiles(res.getPreloadAssets());
+            logger.verbose(config.accountId, "Handling cache eviction")
+            assetRepo.cleanupStaleFiles(res.preloadAssets)
         } else {
-            logger.verbose(config.getAccountId(), "Ignoring cache eviction");
+            logger.verbose(config.accountId, "Ignoring cache eviction")
         }
     }
 
-    private void clearStaleInAppCache(JSONArray inappStaleList, ImpressionStore impressionStore,
-            final TriggerManager triggerManager) {
+    private fun clearStaleInAppCache(
+        inappStaleList: JSONArray, impressionStore: ImpressionStore,
+        triggerManager: TriggerManager
+    ) {
         //Stale in-app ids used to remove in-app counts and triggers
-        for (int i = 0; i < inappStaleList.length(); i++) {
-            String inappStaleId = inappStaleList.optString(i);
-            impressionStore.clear(inappStaleId);
-            triggerManager.removeTriggers(inappStaleId);
+        for (i in 0 until inappStaleList.length()) {
+            val inappStaleId = inappStaleList.optString(i)
+            impressionStore.clear(inappStaleId)
+            triggerManager.removeTriggers(inappStaleId)
         }
     }
 
-    private void displayInApp(List<JSONObject> inappNotifsList) {
+    private fun displayInApp(inappNotifsList: List<JSONObject>) {
         // Fire the first notification, if any
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InAppResponse#processResponse", () -> {
-            controllerManager.getInAppController().addInAppNotificationsToQueue(inappNotifsList);
-            return null;
-        });
+        val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>(Constants.TAG_FEATURE_IN_APPS)
+        task.execute("InAppResponse#processResponse") {
+            controllerManager.inAppController.addInAppNotificationsToQueue(inappNotifsList)
+            null
+        }
     }
 
-    private void scheduleDelayedLegacyInApps(List<JSONObject> delayedLegacyInApps) {
-        InAppController inAppController = controllerManager.getInAppController();
+    private fun scheduleDelayedLegacyInApps(delayedLegacyInApps: List<JSONObject>) {
+        val inAppController = controllerManager.inAppController
 
         // Schedule using delay functionality
-        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps, false);
+        inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps, false)
 
-        logger.verbose(config.getAccountId(),
-                "InApp: scheduling " + delayedLegacyInApps.size() +
-                        " delayed in-apps. Active delays: " +
-                        inAppController.getActiveDelayedInAppsCount());
+        logger.verbose(
+            config.accountId,
+            "InApp: scheduling " + delayedLegacyInApps.size +
+                    " delayed in-apps. Active delays: " +
+                    inAppController.getActiveDelayedInAppsCount()
+        )
     }
-
 }

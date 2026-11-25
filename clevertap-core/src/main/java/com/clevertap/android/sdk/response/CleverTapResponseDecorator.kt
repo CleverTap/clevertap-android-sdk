@@ -1,13 +1,14 @@
-package com.clevertap.android.sdk.response;
+package com.clevertap.android.sdk.response
 
-import android.content.Context;
-import org.json.JSONObject;
+import android.content.Context
+import org.json.JSONObject
 
 /**
  * Abstract Decorator that will be used to decorate
- * <br>Extend this class to create different kind of response
+ *
+ * Extend this class to create different kind of response
  */
-abstract class CleverTapResponseDecorator extends CleverTapResponse {
+internal abstract class CleverTapResponseDecorator : CleverTapResponse() {
 
-    public abstract void processResponse(JSONObject jsonBody, String stringBody, Context context);
+    abstract override fun processResponse(jsonBody: JSONObject?, stringBody: String?, context: Context)
 }
