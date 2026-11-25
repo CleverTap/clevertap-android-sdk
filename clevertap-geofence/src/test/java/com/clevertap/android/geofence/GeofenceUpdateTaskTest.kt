@@ -3,6 +3,8 @@ package com.clevertap.android.geofence
 import com.clevertap.android.geofence.fakes.GeofenceJSON
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter
 import com.clevertap.android.geofence.model.CTGeofence
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -29,7 +31,7 @@ class GeofenceUpdateTaskTest : BaseTestCase() {
         ctGeofenceAdapter = mockk(relaxed = true)
         logger = mockk(relaxed = true)
 
-        mockkStatic(CTGeofenceAPI::class)
+        mockkObject(CTGeofenceAPI.Companion)
         mockkStatic(FileUtils::class)
 
         every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
@@ -40,7 +42,7 @@ class GeofenceUpdateTaskTest : BaseTestCase() {
     @After
     override fun cleanUp() {
         super.cleanUp()
-        unmockkStatic(CTGeofenceAPI::class)
+        unmockkObject(CTGeofenceAPI.Companion)
         unmockkStatic(FileUtils::class)
     }
 

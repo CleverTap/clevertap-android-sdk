@@ -3,6 +3,8 @@ package com.clevertap.android.geofence
 import android.app.PendingIntent
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -30,7 +32,7 @@ class LocationUpdateTaskTest : BaseTestCase() {
         logger = mockk(relaxed = true)
         pendingIntent = mockk(relaxed = true)
 
-        mockkStatic(CTGeofenceAPI::class)
+        mockkObject(CTGeofenceAPI.Companion)
         mockkStatic(FileUtils::class)
         mockkStatic(Utils::class)
         mockkStatic(PendingIntentFactory::class)
@@ -43,7 +45,7 @@ class LocationUpdateTaskTest : BaseTestCase() {
     @After
     override fun cleanUp() {
         super.cleanUp()
-        unmockkStatic(CTGeofenceAPI::class)
+        unmockkObject(CTGeofenceAPI.Companion)
         unmockkStatic(FileUtils::class)
         unmockkStatic(Utils::class)
         unmockkStatic(PendingIntentFactory::class)

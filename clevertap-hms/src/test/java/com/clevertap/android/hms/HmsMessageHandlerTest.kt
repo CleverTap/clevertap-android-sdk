@@ -1,7 +1,7 @@
 package com.clevertap.android.hms
 
 import android.os.Bundle
-import com.clevertap.android.hms.HmsConstants.HPS
+import com.clevertap.android.hms.HmsConstants.Companion.HPS
 import com.clevertap.android.hms.HmsTestConstants.Companion.HMS_TOKEN
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants

@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.view.View
 import com.clevertap.android.pushtemplates.ButtonStyle
 import com.clevertap.android.pushtemplates.PTConstants
-import com.clevertap.android.pushtemplates.PTConstants.PT_ACTION_ID
-import com.clevertap.android.pushtemplates.PTConstants.PT_NOTIF_ID
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_ACTION_ID
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_NOTIF_ID
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer

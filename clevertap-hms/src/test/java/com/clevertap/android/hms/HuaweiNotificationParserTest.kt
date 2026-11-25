@@ -26,7 +26,7 @@ class HuaweiNotificationParserTest : BaseTestCase() {
     @Test
     fun testToBundle_Message_Invalid_Content_Return_EmptyBundle() {
         every { message.data } returns null
-        val returnedBundle = parser.toBundle(message)
+        val returnedBundle = parser.toBundle(message)!!
         Assert.assertNotNull(returnedBundle)
         Assert.assertEquals(0, returnedBundle.keySet().size)
     }
@@ -36,7 +36,7 @@ class HuaweiNotificationParserTest : BaseTestCase() {
         val mockJson = getMockJsonStringOutsideNetwork()
         every { message.data } returns mockJson
 
-        val returnedBundle = parser.toBundle(message)
+        val returnedBundle = parser.toBundle(message)!!
         Assert.assertNotNull(returnedBundle)
         Assert.assertEquals(2, returnedBundle.keySet().size)
         Assert.assertEquals("Sample Title", returnedBundle.getString("Title"))

@@ -2,6 +2,7 @@ package com.clevertap.android.geofence
 
 import android.content.BroadcastReceiver
 import android.content.Intent
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -48,7 +49,7 @@ class CTGeofenceReceiverTest : BaseTestCase() {
             isFinished[0] = true
         }
 
-        mockkStatic(CTGeofenceAPI::class) {
+        mockkObject(CTGeofenceAPI.Companion) {
             every { CTGeofenceAPI.getLogger() } returns logger
 
             val intent = Intent()

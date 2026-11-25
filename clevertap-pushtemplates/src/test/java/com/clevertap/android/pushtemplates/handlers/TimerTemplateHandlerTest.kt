@@ -13,9 +13,9 @@ import com.clevertap.android.pushtemplates.IconData
 import com.clevertap.android.pushtemplates.ImageData
 import com.clevertap.android.pushtemplates.MediaData
 import com.clevertap.android.pushtemplates.NotificationBehavior
-import com.clevertap.android.pushtemplates.PTConstants.ONE_SECOND_LONG
-import com.clevertap.android.pushtemplates.PTConstants.PT_JSON
-import com.clevertap.android.pushtemplates.PTConstants.PT_TIMER_MIN_THRESHOLD
+import com.clevertap.android.pushtemplates.PTConstants.Companion.ONE_SECOND_LONG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_JSON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TIMER_MIN_THRESHOLD
 import com.clevertap.android.pushtemplates.PTScaleType
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TimerTemplateData

@@ -2,7 +2,74 @@ package com.clevertap.android.pushtemplates
 
 import android.os.Build
 import android.os.Bundle
-import com.clevertap.android.pushtemplates.PTConstants.*
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_ALT_ALT_TEXT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_ALT_TEXT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BIG_IMG_COLLAPSED_ALT_TEXT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_RADIUS_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_BORDER_WIDTH_DEFAULT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_DL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_NAME
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_BTN_STYLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CANCEL_NOTIF_ID
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BG_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BORDER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_GRAD_CLR1
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_GRAD_CLR2
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_GRAD_DIR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_STYLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_CHRONO_TITLE_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_DEFAULT_DL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_DISMISS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_DISMISS_ON_CLICK
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_FRAMES
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_FRAMES_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_GIF_FRAMES_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_ID
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_IMG_BORDER_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_IMG_BORDER_WIDTH
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_IMG_CORNER_RADIUS
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_INPUT_AUTO_OPEN
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_INPUT_FEEDBACK
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_INPUT_LABEL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_JSON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MANUAL_CAROUSEL_TYPE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_META_CLR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_COLOR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_SUMMARY
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_MSG_SUMMARY_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_NOTIF_ICON
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_ACTION
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_ACTION_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_PRODUCT_DISPLAY_LINEAR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_RENDER_TERMINAL
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SCALE_TYPE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SCALE_TYPE_COLLAPSED
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SMALL_ICON_COLOUR
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SMALL_VIEW
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_STICKY
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_SUBTITLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TEXT1
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TEXT2
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TITLE
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TITLE_ALT
+import com.clevertap.android.pushtemplates.PTConstants.Companion.PT_TITLE_COLOR
 import com.clevertap.android.pushtemplates.content.NotificationBitmapUtils
 import com.clevertap.android.pushtemplates.handlers.TimerTemplateHandler
 import com.clevertap.android.sdk.Constants
@@ -2653,12 +2720,14 @@ class TemplateDataFactoryTest {
     }
 
     private fun stubBorderColor(color: String?) {
+        // createColorMap hands out Bundle.getString() values, which may be null at runtime
+        @Suppress("UNCHECKED_CAST")
         every { Utils.createColorMap(any(), any()) } returns mapOf(
             PT_TITLE_COLOR to SAMPLE_COLOR,
             PT_MSG_COLOR to SAMPLE_COLOR,
             PT_BG to SAMPLE_COLOR,
             PT_IMG_BORDER_CLR to color
-        )
+        ) as Map<String, String>
     }
 
     @Test
