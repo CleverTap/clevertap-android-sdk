@@ -1,22 +1,24 @@
-package com.clevertap.android.sdk.variables.callbacks;
+package com.clevertap.android.sdk.variables.callbacks
 
-import com.clevertap.android.sdk.variables.Var;
+import com.clevertap.android.sdk.variables.Var
 
 /**
  * Callback registered individually to a Var object.
  */
-public abstract class VariableCallback<T> implements Runnable {
-    private Var<T> variable;
+abstract class VariableCallback<T> : Runnable {
 
-    public void setVariable(Var<T> variable) {
-        this.variable = variable;
+    private var variable: Var<T>? = null
+
+    open fun setVariable(variable: Var<T>?) {
+        this.variable = variable
     }
 
-    public void run() {
-        synchronized (variable) {
-            this.onValueChanged(variable);
+    override fun run() {
+        val variable = variable!!
+        synchronized(variable) {
+            this.onValueChanged(variable)
         }
     }
 
-    public abstract void onValueChanged(Var<T> variable);
+    abstract fun onValueChanged(variable: Var<T>)
 }

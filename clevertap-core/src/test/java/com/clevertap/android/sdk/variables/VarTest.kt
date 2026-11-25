@@ -51,7 +51,7 @@ class VarTest : BaseTestCase() {
     fun `define() should return null for null defaultValue when kind is not FILE`() {
         val variableName = "testVar"
         val kind = "string"
-        val result = Var.define<String>(variableName, null, kind, ctVariables)
+        val result = Var.define<String?>(variableName, null, kind, ctVariables)
 
         assertNull(result)
         verify {
@@ -65,11 +65,11 @@ class VarTest : BaseTestCase() {
         val kind = "file"
 
         every { varCache.getVariable<String>("testVar") } returns null
-        val result = Var.define<String>(variableName, null, kind, ctVariables)
+        val result = Var.define<String?>(variableName, null, kind, ctVariables)
 
-        assertEquals(variableName, result.name())
-        assertNull(result.defaultValue())
-        assertEquals(kind, result.kind())
+        assertEquals(variableName, result!!.name())
+        assertNull(result!!.defaultValue())
+        assertEquals(kind, result!!.kind())
     }
 
     @Test
@@ -89,7 +89,7 @@ class VarTest : BaseTestCase() {
         assertEquals("default", result?.defaultValue())
 
         verify {
-            varCache.registerVariable(result)
+            varCache.registerVariable(result!!)
         }
     }
 
@@ -174,7 +174,7 @@ class VarTest : BaseTestCase() {
         every { varCache.filePathFromDisk("https://dummy.pdf") } returns "dummy.a.b"
         val varObj = Var.define("testFileVar", null, "file", ctVariables)
 
-        assertEquals("dummy.a.b", varObj.value() as String)
+        assertEquals("dummy.a.b", varObj!!.value() as String)
     }
 
     @Test
@@ -224,7 +224,7 @@ class VarTest : BaseTestCase() {
         every { varCache.getMergedValueFromComponentArray<String>(any()) } returns "https://dummy.pdf"
         val varObj = Var.define("testFileVar", "default", "file", ctVariables)
 
-        assertEquals("https://dummy.pdf", varObj.rawFileValue())
+        assertEquals("https://dummy.pdf", varObj!!.rawFileValue())
     }
 
 

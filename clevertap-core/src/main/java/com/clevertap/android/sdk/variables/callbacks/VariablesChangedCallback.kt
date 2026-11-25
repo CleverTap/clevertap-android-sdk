@@ -1,14 +1,14 @@
-package com.clevertap.android.sdk.variables.callbacks;
+package com.clevertap.android.sdk.variables.callbacks
 
 /**
  * Variables changed callback.
  *
  * @author Ansh Sachdeva
  */
-public abstract class VariablesChangedCallback implements Runnable {
-    public void run() {
-        this.variablesChanged();
+abstract class VariablesChangedCallback : Runnable {
+    override fun run() {
+        this.variablesChanged()
     }
 
-    public abstract void variablesChanged();
+    abstract fun variablesChanged()
 }

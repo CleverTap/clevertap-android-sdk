@@ -193,7 +193,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val input = mapOf("a" to 1)
     val expected = mapOf("a" to 1)
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -201,7 +201,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val input = mapOf("group.a" to 1)
     val expected = mapOf("group" to mapOf("a" to 1))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -209,7 +209,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     val input = mapOf("group1.group2.a" to 1)
     val expected = mapOf("group1" to mapOf("group2" to mapOf("a" to 1)))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -235,7 +235,7 @@ class CTVariableUtilsTest : BaseTestCase() {
       )
     )
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -248,7 +248,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     )
     val expected = mapOf("a" to mapOf("b" to "b value", "e" to "e value"))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test
@@ -261,7 +261,7 @@ class CTVariableUtilsTest : BaseTestCase() {
     )
     val expected = mapOf("a" to mapOf("b" to "b value", "e" to "e value"))
 
-    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+    assertEquals<Map<String, Any?>>(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 
   @Test

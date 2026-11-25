@@ -1,74 +1,47 @@
-package com.clevertap.android.sdk.variables;
+package com.clevertap.android.sdk.variables
 
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.inapp.data.CtCacheType;
-import com.clevertap.android.sdk.inapp.images.FileResourceProvider;
-import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.variables.repo.VariablesRepo;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import kotlin.Pair;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
+import android.content.Context
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.inapp.data.CtCacheType
+import com.clevertap.android.sdk.inapp.images.FileResourceProvider
+import com.clevertap.android.sdk.inapp.images.repo.FileResourcesRepoImpl
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import com.clevertap.android.sdk.task.OnSuccessListener
+import com.clevertap.android.sdk.variables.repo.VariablesRepo
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.Objects
+import java.util.concurrent.Callable
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Variable cache.
  *
  * @author Ansh Sachdeva.
  */
-public class VarCache {
-    private final Map<String, Object> valuesFromClient = new HashMap<>();
-    private final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
-    private final Map<String, String> defaultKinds = new HashMap<>();
-    private final Context variablesCtx;
-    private final FileResourcesRepoImpl fileResourcesRepoImpl;
-    private final CleverTapInstanceConfig instanceConfig;
-    private final VariablesRepo variablesRepo;
-    public Object merged = null;
-    private Runnable globalCallbacksRunnable = null;
+internal open class VarCache(
+    config: CleverTapInstanceConfig,
+    ctx: Context,
+    private val fileResourcesRepoImpl: FileResourcesRepoImpl,
+    private val variablesRepo: VariablesRepo
+) {
+    private val valuesFromClient: MutableMap<String, Any?> = HashMap()
+    private val vars: MutableMap<String, Var<*>> = ConcurrentHashMap()
+    private val defaultKinds: MutableMap<String, String?> = HashMap()
+    private val variablesCtx: Context = ctx
+    private val instanceConfig: CleverTapInstanceConfig = config
+
+    @JvmField
+    var merged: Any? = null
+    private var globalCallbacksRunnable: Runnable? = null
 
     // README: Do not forget reset the value of new fields in the reset() method.
-    private Map<String, Object> diffs = new HashMap<>();
+    private var diffs: Map<String, Any?> = HashMap()
 
-    @NonNull
-    private List<Map<String, Object>> abVariants = new ArrayList<>();
-
-    public VarCache(
-            CleverTapInstanceConfig config,
-            Context ctx,
-            FileResourcesRepoImpl fileResourcesRepoImpl,
-            VariablesRepo variablesRepo
-    ) {
-        this.variablesCtx = ctx;
-        this.instanceConfig = config;
-        this.fileResourcesRepoImpl = fileResourcesRepoImpl;
-        this.variablesRepo = variablesRepo;
-    }
-
-    private static void log(String msg) {
-        Logger.d("variables", msg);
-    }
-
-    private static void log(String msg, Throwable t) {
-        Logger.d("variables", msg, t);
-    }
+    private var abVariants: List<Map<String, Any?>> = ArrayList()
 
     /**
      * If invoked with a.b.c.d, updates a, a.b, a.b.c, but a.b.c.d is left for the Var.define.
@@ -76,332 +49,331 @@ public class VarCache {
      * @param var
      */
     @VisibleForTesting
-    void mergeVariable(@NonNull Var<?> var) {
+    internal fun mergeVariable(`var`: Var<*>) {
         if (merged == null) {
-            log("mergeVariable() called, but `merged` member is null.");
-            return;
-        } else if (!(merged instanceof Map<?, ?>)) {
-            log("mergeVariable() called, but `merged` member is not of Map type.");
-            return;
+            log("mergeVariable() called, but `merged` member is null.")
+            return
+        } else if (merged !is Map<*, *>) {
+            log("mergeVariable() called, but `merged` member is not of Map type.")
+            return
         }
 
-        String firstComponent = var.nameComponents()[0];
-        Object defaultValue = valuesFromClient.get(firstComponent);
-        Map<String, Object> mergedMap = JsonUtil.uncheckedCast(merged);
-        Object mergedValue = mergedMap.get(firstComponent);
+        val firstComponent = `var`.nameComponents()!![0]
+        val defaultValue = valuesFromClient[firstComponent]
+        val mergedMap: MutableMap<String, Any?> = JsonUtil.uncheckedCast(merged)
+        val mergedValue = mergedMap[firstComponent]
 
-        boolean shouldMerge;
-        if (CTVariableUtils.FILE.equals(var.kind())) {
-            shouldMerge = defaultValue == null && mergedValue != null;
+        val shouldMerge: Boolean = if (CTVariableUtils.FILE == `var`.kind()) {
+            defaultValue == null && mergedValue != null
         } else {
-            shouldMerge = defaultValue != null && !defaultValue.equals(mergedValue);
+            defaultValue != null && defaultValue != mergedValue
         }
 
         if (shouldMerge) {
-            Object newValue = CTVariableUtils.mergeHelper(defaultValue, mergedValue);
+            val newValue = CTVariableUtils.mergeHelper(defaultValue, mergedValue)
 
-            mergedMap.put(firstComponent, newValue);
+            mergedMap[firstComponent] = newValue
 
-            StringBuilder name = new StringBuilder(firstComponent);
-            for (int i = 1; i < var.nameComponents().length; i++) {
-                Var<?> existing = vars.get(name.toString());
-                if (existing != null) {
-                    existing.update();
-                }
-                name.append('.').append(var.nameComponents()[i]);
+            val name = StringBuilder(firstComponent)
+            for (i in 1 until `var`.nameComponents()!!.size) {
+                val existing = vars[name.toString()]
+                existing?.update()
+                name.append('.').append(`var`.nameComponents()!![i])
             }
         }
     }
 
-    public synchronized void registerVariable(@NonNull Var<?> var) {
-        log("registerVariable() called with: var = [" + var.name() + "]");
-        vars.put(var.name(), var);
+    @Synchronized
+    open fun registerVariable(`var`: Var<*>) {
+        log("registerVariable() called with: var = [" + `var`.name() + "]")
+        vars[`var`.name()!!] = `var`
 
-        Object defaultValue = var.defaultValue();
-        if (defaultValue instanceof Map) {
-            defaultValue = CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(defaultValue));
+        var defaultValue: Any? = `var`.defaultValue()
+        if (defaultValue is Map<*, *>) {
+            defaultValue = CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(defaultValue))
         }
         CTVariableUtils.updateValuesAndKinds(
-                var.name(),
-                var.nameComponents(),
-                defaultValue,
-                var.kind(),
-                valuesFromClient,
-                defaultKinds
-        );
+            `var`.name(),
+            `var`.nameComponents(),
+            defaultValue,
+            `var`.kind(),
+            valuesFromClient,
+            defaultKinds
+        )
 
-        mergeVariable(var);
+        mergeVariable(`var`)
     }
 
-    public synchronized Object getMergedValue(String variableName) {
-        Var<?> var = vars.get(variableName);
-        if (var != null && CTVariableUtils.FILE.equals(var.kind())) {
-            return filePathFromDisk(var.stringValue);
+    @Synchronized
+    open fun getMergedValue(variableName: String?): Any? {
+        val `var` = vars[variableName]
+        if (`var` != null && CTVariableUtils.FILE == `var`.kind()) {
+            return filePathFromDisk(`var`.stringValue)
         }
 
-        String[] components = CTVariableUtils.getNameComponents(variableName);
-        Object mergedValue = getMergedValueFromComponentArray(components);
-        if (mergedValue instanceof Map) {
-            return CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(mergedValue));
+        val components = CTVariableUtils.getNameComponents(variableName)
+        val mergedValue: Any? = getMergedValueFromComponentArray(components)
+        return if (mergedValue is Map<*, *>) {
+            CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(mergedValue))
         } else {
-            return mergedValue;
+            mergedValue
         }
     }
 
-    public synchronized <T> T getMergedValueFromComponentArray(Object[] components) {
+    @Synchronized
+    open fun <T> getMergedValueFromComponentArray(components: Array<out Any?>): T {
         return getMergedValueFromComponentArray(
-                components,
-                merged != null ? merged : valuesFromClient
-        );
+            components,
+            if (merged != null) merged else valuesFromClient
+        )
     }
 
-    public synchronized <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
-        Object mergedPtr = values;
-        for (Object component : components) {
-            mergedPtr = CTVariableUtils.traverse(mergedPtr, component, false);
+    @Synchronized
+    open fun <T> getMergedValueFromComponentArray(components: Array<out Any?>, values: Any?): T {
+        var mergedPtr = values
+        for (component in components) {
+            mergedPtr = CTVariableUtils.traverse(mergedPtr, component, false)
         }
-        return JsonUtil.uncheckedCast(mergedPtr);
+        return JsonUtil.uncheckedCast(mergedPtr)
     }
 
-    public synchronized void loadDiffs(Function0<Unit> func) {
-        handleVariablesData(func);
-        handleAbVariantsData();
+    @Synchronized
+    open fun loadDiffs(func: Function0<Unit>) {
+        handleVariablesData(func)
+        handleAbVariantsData()
     }
 
-    private void handleVariablesData(Function0<Unit> func) {
+    private fun handleVariablesData(func: Function0<Unit>) {
         try {
-            String variablesFromCache = variablesRepo.loadDataFromCache();
-            Map<String, Object> variablesAsMap = JsonUtil.fromJson(variablesFromCache);
+            val variablesFromCache = variablesRepo.loadDataFromCache()
+            val variablesAsMap = JsonUtil.fromJson(variablesFromCache)
 
             // Update variables with new values. Have to copy the dictionary because a
             // dictionary variable may add a new sub-variable, modifying the variable dictionary.
-            HashMap<String, Var<?>> clientRegisteredVars = new HashMap<>(vars);
+            val clientRegisteredVars = HashMap(vars)
 
-            applyVariableDiffs(variablesAsMap, clientRegisteredVars);
-            startFilesDownload(clientRegisteredVars, func);
-
-        } catch (Exception e) {
-            log("Could not load variable diffs.\n", e);
+            applyVariableDiffs(variablesAsMap, clientRegisteredVars)
+            startFilesDownload(clientRegisteredVars, func)
+        } catch (e: Exception) {
+            log("Could not load variable diffs.\n", e)
         }
     }
 
-    private void handleAbVariantsData() {
+    private fun handleAbVariantsData() {
         try {
-            String variantsFromCache = variablesRepo.loadVariantsFromCache();
-            JSONArray variants;
-            if (variantsFromCache == null) {
-                variants = new JSONArray();
+            val variantsFromCache = variablesRepo.loadVariantsFromCache()
+            val variants: JSONArray = if (variantsFromCache == null) {
+                JSONArray()
             } else {
-                variants = new JSONArray(variantsFromCache);
+                JSONArray(variantsFromCache)
             }
-            abVariants = Objects.requireNonNull(JsonUtil.listFromJson(variants));
-        } catch (Exception e) {
-            log("Could not load variants", e);
+            abVariants = Objects.requireNonNull(JsonUtil.listFromJson<Map<String, Any?>>(variants))!!
+        } catch (e: Exception) {
+            log("Could not load variants", e)
         }
     }
 
-    public synchronized void loadDiffsAndTriggerHandlers(Function0<Unit> func) {
-        loadDiffs(func);
-        triggerGlobalCallbacks();
+    @Synchronized
+    open fun loadDiffsAndTriggerHandlers(func: Function0<Unit>) {
+        loadDiffs(func)
+        triggerGlobalCallbacks()
     }
 
-    public synchronized void updateAbVariants(@NonNull List<Map<String, Object>> variants) {
-        abVariants = variants;
+    @Synchronized
+    open fun updateAbVariants(variants: List<Map<String, Any?>>) {
+        abVariants = variants
     }
 
-    public synchronized void updateDiffsAndTriggerHandlers(
-            Map<String, Object> diffs,
-            Function0<Unit> func
+    @Synchronized
+    open fun updateDiffsAndTriggerHandlers(
+        diffs: Map<String, Any?>?,
+        func: Function0<Unit>
     ) {
         // Update variables with new values. Have to copy the dictionary because a
         // dictionary variable may add a new sub-variable, modifying the variable dictionary.
-        HashMap<String, Var<?>> clientRegisteredVars = new HashMap<>(vars);
+        val clientRegisteredVars = HashMap(vars)
 
-        applyVariableDiffs(diffs, clientRegisteredVars);
-        startFilesDownload(clientRegisteredVars, func);
-        saveDiffsAsync();
-        triggerGlobalCallbacks();
+        applyVariableDiffs(diffs, clientRegisteredVars)
+        startFilesDownload(clientRegisteredVars, func)
+        saveDiffsAsync()
+        triggerGlobalCallbacks()
     }
 
-    private void saveDiffsAsync() {
-        Task<Void> task = CTExecutorFactory.executors(instanceConfig).postAsyncSafelyTask();
-        task.execute("VarCache#saveDiffsAsync", () -> {
-            saveDiffs();
-            saveAbVariants();
-            return null;
-        });
+    private fun saveDiffsAsync() {
+        val task = CTExecutorFactory.executors(instanceConfig).postAsyncSafelyTask<Void?>()
+        task.execute("VarCache#saveDiffsAsync", Callable<Void?> {
+            saveDiffs()
+            saveAbVariants()
+            null
+        })
     }
 
     @WorkerThread
-    private void saveDiffs() {
-        log("saveDiffs() called");
-        String variablesCipher = JsonUtil.toJson(diffs);
+    private fun saveDiffs() {
+        log("saveDiffs() called")
+        val variablesCipher = JsonUtil.toJson(diffs)
         if (variablesCipher != null) {
-            variablesRepo.storeDataInCache(variablesCipher);
+            variablesRepo.storeDataInCache(variablesCipher)
         }
     }
 
     @WorkerThread
-    private void saveAbVariants() {
-        log("saveAbVariables() called");
-        String variantsCipher = JsonUtil.toJson(abVariants);
+    private fun saveAbVariants() {
+        log("saveAbVariables() called")
+        val variantsCipher = JsonUtil.toJson(abVariants)
         if (variantsCipher != null) {
-            variablesRepo.storeVariantsInCache(variantsCipher);
+            variablesRepo.storeVariantsInCache(variantsCipher)
         }
     }
 
-    /**
-     * @noinspection unchecked
-     */
-    private void applyVariableDiffs(
-            Map<String, Object> diffs,
-            HashMap<String, Var<?>> clientRegisteredVars
+    private fun applyVariableDiffs(
+        diffs: Map<String, Any?>?,
+        clientRegisteredVars: HashMap<String, Var<*>>
     ) {
-        log("applyVariableDiffs() called with: diffs = [" + diffs + "]");
+        log("applyVariableDiffs() called with: diffs = [$diffs]")
         if (diffs != null) {
-            this.diffs = diffs;
-            merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs);
-            log("applyVariableDiffs: updated value of merged=[" + merged + "]");
+            this.diffs = diffs
+            merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs)
+            log("applyVariableDiffs: updated value of merged=[$merged]")
 
-            for (Map.Entry<String, Var<?>> entry : clientRegisteredVars.entrySet()) {
-                String name = entry.getKey();
-                Var<?> var = vars.get(name);
-                if (var != null) {
-                    var.update();
-                }
+            for ((name, _) in clientRegisteredVars) {
+                val `var` = vars[name]
+                `var`?.update()
             }
         }
     }
 
-    private void startFilesDownload(
-            HashMap<String, Var<?>> clientRegisteredVars,
-            Function0<Unit> func
+    private fun startFilesDownload(
+        clientRegisteredVars: HashMap<String, Var<*>>,
+        func: Function0<Unit>
     ) {
-
         if (clientRegisteredVars.isEmpty()) {
-            log("There are no variables registered by the client. Not downloading files " +
-                    "& posting global callbacks");
-            return;
+            log(
+                "There are no variables registered by the client. Not downloading files " +
+                        "& posting global callbacks"
+            )
+            return
         }
 
-        StringBuilder skipped = new StringBuilder();
-        skipped.append("Skipped these file vars cause urls are not present :");
-        skipped.append("\n");
+        val skipped = StringBuilder()
+        skipped.append("Skipped these file vars cause urls are not present :")
+        skipped.append("\n")
 
-        StringBuilder added = new StringBuilder();
-        added.append("Adding these files to download :");
-        added.append("\n");
+        val added = StringBuilder()
+        added.append("Adding these files to download :")
+        added.append("\n")
 
-        ArrayList<Pair<String, CtCacheType>> urls = new ArrayList<>();
+        val urls = ArrayList<Pair<String, CtCacheType>>()
 
-        for (Map.Entry<String, Var<?>> entry : clientRegisteredVars.entrySet()) {
-            String name = entry.getKey();
-            Var<?> var = vars.get(name);
+        for ((name, _) in clientRegisteredVars) {
+            val `var` = vars[name]
 
-            if (var != null && var.kind().equals(CTVariableUtils.FILE)) {
-
-                String url = var.rawFileValue();
+            if (`var` != null && `var`.kind()!! == CTVariableUtils.FILE) {
+                val url = `var`.rawFileValue()
 
                 if (url != null) {
-                    boolean isFileCached = FileResourceProvider.getInstance(variablesCtx, instanceConfig.getLogger())
-                            .isFileCached(url);
+                    val isFileCached = FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger)
+                        .isFileCached(url)
                     if (!isFileCached) {
-                        urls.add(new Pair<>(url, CtCacheType.FILES));
-                        added.append(name).append(" : ").append(url);
-                        added.append("\n");
+                        urls.add(Pair(url, CtCacheType.FILES))
+                        added.append(name).append(" : ").append(url)
+                        added.append("\n")
                     }
-
                 } else {
-                    skipped.append(name);
-                    skipped.append("\n");
+                    skipped.append(name)
+                    skipped.append("\n")
                 }
             }
         }
-        log(skipped.toString());
-        log(added.toString());
+        log(skipped.toString())
+        log(added.toString())
 
         if (urls.isEmpty()) {
-            func.invoke(); // triggers global files callbacks
-            return;
+            func.invoke() // triggers global files callbacks
+            return
         }
-        fileResourcesRepoImpl.preloadFilesAndCache(
-                urls,
-                downloadAllBlock -> {
-                    // triggers global files callbacks to client
-                    func.invoke();
-                    return Unit.INSTANCE;
-                }
-        );
-    }
-
-    private synchronized void triggerGlobalCallbacks() {
-        if (globalCallbacksRunnable != null) {
-            globalCallbacksRunnable.run();
+        val completion: (Map<String, Boolean>) -> Unit = {
+            // triggers global files callbacks to client
+            func.invoke()
         }
+        fileResourcesRepoImpl.preloadFilesAndCache(urls, completion)
     }
 
-    public JSONObject getDefineVarsData() {
-        return CTVariableUtils.getFlatVarsJson(valuesFromClient, defaultKinds);
+    @Synchronized
+    private fun triggerGlobalCallbacks() {
+        globalCallbacksRunnable?.run()
     }
 
-    public synchronized void clearUserContent() {
-        log("Clear user content in VarCache");
+    open fun getDefineVarsData(): JSONObject {
+        return CTVariableUtils.getFlatVarsJson(valuesFromClient, defaultKinds)
+    }
+
+    @Synchronized
+    open fun clearUserContent() {
+        log("Clear user content in VarCache")
         // 1. clear Var state to allow callback invocation when server values are downloaded
-        HashMap<String, Var<?>> clientRegisteredVars = new HashMap<>(vars);
-        for (String name : clientRegisteredVars.keySet()) {
-            Var<?> var = vars.get(name);
-            if (var != null) {
-                var.clearStartFlag();
-            }
+        val clientRegisteredVars = HashMap(vars)
+        for (name in clientRegisteredVars.keys) {
+            val `var` = vars[name]
+            `var`?.clearStartFlag()
         }
 
         // 2. reset server values for previous user
-        applyVariableDiffs(new HashMap<>(), clientRegisteredVars);
-        abVariants = new ArrayList<>();
+        applyVariableDiffs(HashMap(), clientRegisteredVars)
+        abVariants = ArrayList()
 
         // 3. reset data in shared prefs
-        saveDiffsAsync();
+        saveDiffsAsync()
     }
 
-    public synchronized <T> Var<T> getVariable(String name) {
-        return JsonUtil.uncheckedCast(vars.get(name));
+    @Synchronized
+    open fun <T> getVariable(name: String?): Var<T>? {
+        return JsonUtil.uncheckedCast(vars[name])
     }
 
     @VisibleForTesting
-    int getVariablesCount() {
-        return vars.size();
+    internal fun getVariablesCount(): Int {
+        return vars.size
     }
 
-    public synchronized void setGlobalCallbacksRunnable(Runnable runnable) {
-        globalCallbacksRunnable = runnable;
+    @Synchronized
+    open fun setGlobalCallbacksRunnable(runnable: Runnable?) {
+        globalCallbacksRunnable = runnable
     }
 
-    public String filePathFromDisk(String url) {
-        return FileResourceProvider.getInstance(variablesCtx, instanceConfig.getLogger()).cachedFilePath(url);
+    open fun filePathFromDisk(url: String?): String? {
+        return FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).cachedFilePath(url)
     }
 
-    public void fileVarUpdated(Var<String> fileVar) {
-        String url = fileVar.rawFileValue();
-        Task<Boolean> task = CTExecutorFactory.executors(instanceConfig).ioTask();
-        task.addOnSuccessListener(isCached -> {
+    open fun fileVarUpdated(fileVar: Var<String>) {
+        val url = fileVar.rawFileValue()
+        val task = CTExecutorFactory.executors(instanceConfig).ioTask<Boolean>()
+        task.addOnSuccessListener(OnSuccessListener { isCached ->
             if (isCached) {
-                fileVar.triggerFileIsReady();
+                fileVar.triggerFileIsReady()
             } else {
-                List<Pair<String, CtCacheType>> list = new ArrayList<>();
-                list.add(new Pair<>(url, CtCacheType.FILES));
-                fileResourcesRepoImpl.preloadFilesAndCache(
-                        list,
-                        downloadAllBlock -> {
-                            fileVar.triggerFileIsReady();
-                            return Unit.INSTANCE;
-                        }
-                );
+                val list: MutableList<Pair<String, CtCacheType>> = ArrayList()
+                list.add(Pair(url!!, CtCacheType.FILES))
+                val completion: (Map<String, Boolean>) -> Unit = { fileVar.triggerFileIsReady() }
+                fileResourcesRepoImpl.preloadFilesAndCache(list, completion)
             }
-        });
-        task.execute("isFileCached", () -> url == null || FileResourceProvider.getInstance(variablesCtx, instanceConfig.getLogger()).isFileCached(url));
+        })
+        task.execute("isFileCached", Callable {
+            url == null || FileResourceProvider.getInstance(variablesCtx, instanceConfig.logger).isFileCached(url)
+        })
     }
 
-    public List<Map<String, Object>> variants() {
-        return abVariants;
+    open fun variants(): List<Map<String, Any?>> {
+        return abVariants
+    }
+
+    private companion object {
+        private fun log(msg: String) {
+            Logger.d("variables", msg)
+        }
+
+        private fun log(msg: String, t: Throwable) {
+            Logger.d("variables", msg, t)
+        }
     }
 }

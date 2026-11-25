@@ -1,329 +1,342 @@
-package com.clevertap.android.sdk.variables;
+package com.clevertap.android.sdk.variables
 
-import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import org.json.JSONObject
+import java.math.BigDecimal
+import java.math.BigInteger
 
-import androidx.annotation.VisibleForTesting;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
+/**
+ * Public + RestrictTo(LIBRARY_GROUP_PREFIX) (bucket E): used by the react-native wrapper.
+ * Static JVM shape is unchanged (companion + @JvmStatic / const val).
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+class CTVariableUtils {
 
-import org.json.JSONObject;
+    companion object {
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
+        private const val TAG = "CTVariableUtils"
+        const val VARS = "vars"
+        const val STRING = "string"
+        const val BOOLEAN = "boolean"
+        const val DICTIONARY = "group"
+        const val NUMBER = "number"
+        const val FILE = "file"
 
-@RestrictTo(RestrictTo.Scope.LIBRARY)
-public final class CTVariableUtils {
+        private fun log(msg: String) {
+            Logger.d(TAG, msg)
+        }
 
-    private static final String TAG = "CTVariableUtils";
-    public static final String VARS = "vars";
-    public static final String STRING = "string";
-    public static final String BOOLEAN = "boolean";
-    public static final String DICTIONARY = "group";
-    public static final String NUMBER = "number";
-    public static final String FILE = "file";
-
-    private static void log(String msg){
-        Logger.d(TAG, msg);
-    }
-
-    public static void updateValuesAndKinds(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
-        Object valuesPtr = values;
-        if (nameComponents != null && nameComponents.length > 0) {
-            for (int i = 0; i < nameComponents.length - 1; i++) {
-                valuesPtr = CTVariableUtils.traverse(valuesPtr, nameComponents[i], true);// can be either the actual value, or empty hashmap
-            }
-            if (valuesPtr instanceof Map) {
-                Map<String, Object> map = JsonUtil.uncheckedCast(valuesPtr);
-                Object currentValue = map.get(nameComponents[nameComponents.length - 1]);
-
-                if (currentValue instanceof Map && value instanceof Map) {
-                    value = mergeHelper(value, currentValue);
-                } else if (currentValue != null && currentValue.equals(value)) {
-                    log(String.format("Variable with name %s will override value: %s, with new value: %s.", name, currentValue, value));
+        @JvmStatic
+        fun updateValuesAndKinds(
+            name: String?,
+            nameComponents: Array<String>?,
+            value: Any?,
+            kind: String?,
+            values: MutableMap<String, *>?,
+            kinds: MutableMap<String, *>?
+        ) {
+            var value = value
+            var valuesPtr: Any? = values
+            if (nameComponents != null && nameComponents.isNotEmpty()) {
+                for (i in 0 until nameComponents.size - 1) {
+                    valuesPtr = traverse(valuesPtr, nameComponents[i], true) // can be either the actual value, or empty hashmap
                 }
+                if (valuesPtr is Map<*, *>) {
+                    val map: MutableMap<String, Any?> = JsonUtil.uncheckedCast(valuesPtr)
+                    val currentValue = map[nameComponents[nameComponents.size - 1]]
 
-                map.put(nameComponents[nameComponents.length - 1], value);
+                    if (currentValue is Map<*, *> && value is Map<*, *>) {
+                        value = mergeHelper(value, currentValue)
+                    } else if (currentValue != null && currentValue == value) {
+                        log(
+                            String.format(
+                                "Variable with name %s will override value: %s, with new value: %s.",
+                                name,
+                                currentValue,
+                                value
+                            )
+                        )
+                    }
+
+                    map[nameComponents[nameComponents.size - 1]] = value
+                }
+            }
+            if (kinds != null) {
+                val kindsMap: MutableMap<String?, Any?> = JsonUtil.uncheckedCast(kinds)
+                kindsMap[name] = kind
             }
         }
-        if (kinds != null) {
-            kinds.put(name, kind);
-        }
-    }
 
-    /**
-     * Converts a map like following: <br>
-     * <code>
-     * &emsp;[<br>
-     * &emsp;&emsp;"android.samsung.s22" : 54000,<br>
-     * &emsp;&emsp;"android.samsung.s23" : "unreleased",<br>
-     *&emsp;&emsp;"welcomeMsg": "hello"<br>
-     * &emsp;]<br>
-     * </code>
-     * to: <br>
-     * <code>
-     * &emsp;[<br>
-     * &emsp;&emsp;"android": {<br>
-     * &emsp;&emsp;&emsp;&emsp;"samsung: {"s22": 54000, "s23" : "unreleased"}<br>
-     * &emsp;&emsp;},<br>
-     * &emsp;&emsp;"welcomeMsg" : "hello"<br>
-     * &emsp;]<br>
-     * </code>
-     * to support legacy parsing implementation <br>
-     **/
-    public static Map<String, Object> convertFlatMapToNestedMaps(Map<String, Object> map) {
-        Map<String, Object> result = new HashMap<>();
+        /**
+         * Converts a map like following:
+         * ```
+         * [
+         *   "android.samsung.s22" : 54000,
+         *   "android.samsung.s23" : "unreleased",
+         *   "welcomeMsg": "hello"
+         * ]
+         * ```
+         * to:
+         * ```
+         * [
+         *   "android": {
+         *     "samsung: {"s22": 54000, "s23" : "unreleased"}
+         *   },
+         *   "welcomeMsg" : "hello"
+         * ]
+         * ```
+         * to support legacy parsing implementation
+         */
+        @JvmStatic
+        fun convertFlatMapToNestedMaps(map: Map<String, *>): MutableMap<String, Any?> {
+            val result: MutableMap<String, Any?> = HashMap()
 
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String key = entry.getKey();
-            if (key.contains(".")) {
-                String[] components = getNameComponents(key) ;
-                int namePosition = components.length - 1;
-                Map<String, Object> currentMap = result;
-                for (int i = 0; i < components.length; i++) {
-                    String component = components[i];
-                    if (i == namePosition) {
-                        currentMap.put(component, entry.getValue());
-                    } else {
-                        Object currentValue = currentMap.get(component);
-                        if (!(currentValue instanceof Map)) { // null or not a map
-                            // If it is not a map it will fix the invalid data.
-                            Map<String, Object> nestedMap = new HashMap<>();
-                            currentMap.put(component, nestedMap);
-                            currentMap = nestedMap;
+            for ((key, entryValue) in map) {
+                if (key.contains(".")) {
+                    val components = getNameComponents(key)
+                    val namePosition = components.size - 1
+                    var currentMap = result
+                    for (i in components.indices) {
+                        val component = components[i]
+                        if (i == namePosition) {
+                            currentMap[component] = entryValue
                         } else {
-                            currentMap = JsonUtil.uncheckedCast(currentMap.get(component));
+                            val currentValue = currentMap[component]
+                            if (currentValue !is Map<*, *>) { // null or not a map
+                                // If it is not a map it will fix the invalid data.
+                                val nestedMap: MutableMap<String, Any?> = HashMap()
+                                currentMap[component] = nestedMap
+                                currentMap = nestedMap
+                            } else {
+                                currentMap = JsonUtil.uncheckedCast(currentMap[component])
+                            }
+                        }
+                    }
+                } else {
+                    result[key] = entryValue
+                }
+            }
+
+            return result
+        }
+
+        /**
+         * Returns the merge of vars and diff, where values in vars are replaced from values
+         * in diff, i.e. calling mergeHelper with vars=[a:10, b:20] and diff=[a:15, c:25] produces a
+         * merge=[a:15, b:20, c:25]. The methods works recursively when nested maps are presented.
+         *
+         * @param vars - Variable values as defined by user.
+         * @param diff - Variable values from server.
+         *
+         * @return Merge of both parameters with priority of diff over vars when overriding values.
+         */
+        @JvmStatic
+        fun mergeHelper(vars: Any?, diff: Any?): Any? {
+            if (diff == null) {
+                return vars
+            }
+            if (diff is Number ||
+                diff is Boolean ||
+                diff is String ||
+                diff is Char ||
+                vars is Number ||
+                vars is Boolean ||
+                vars is String ||
+                vars is Char
+            ) {
+                return diff
+            }
+
+            val diffKeys: Iterable<*> = if (diff is Map<*, *>) diff.keys else diff as Iterable<*>
+            val varsKeys: Iterable<*>? = if (vars is Map<*, *>) vars.keys else vars as Iterable<*>?
+            val diffMap: Map<*, *>? = if (diff is Map<*, *>) diff else null
+            val varsMap: Map<*, *>? = if (vars is Map<*, *>) vars else null
+
+            // Merge dictionaries.
+            if (vars is Map<*, *> || diff is Map<*, *>) {
+                val merged = HashMap<Any?, Any?>()
+                if (varsKeys != null) {
+                    for (`var` in varsKeys) {
+                        if (diffMap != null && varsMap != null) {
+                            val diffVar = diffMap[`var`]
+                            val value = varsMap[`var`]
+                            if (diffVar == null && value != null) {
+                                merged[`var`] = value
+                            }
                         }
                     }
                 }
-            } else {
-                result.put(entry.getKey(), entry.getValue());
+                for (`var` in diffKeys) {
+                    val diffsValue = diffMap?.get(`var`)
+                    val varsValue = varsMap?.get(`var`)
+                    val mergedValues = mergeHelper(varsValue, diffsValue)
+                    merged[`var`] = mergedValues
+                }
+                return merged
+            }
+            return null
+        }
+
+        // check test for more info
+        @JvmStatic
+        fun traverse(collection: Any?, key: Any?, autoInsert: Boolean): Any? {
+            if (collection == null) {
+                return null
+            }
+            if (collection is Map<*, *>) {
+                val castedCollection: MutableMap<Any?, Any?> = JsonUtil.uncheckedCast(collection)
+                var result = castedCollection[key]
+                if (autoInsert && result == null && key is String) {
+                    result = HashMap<String, Any?>()
+                    castedCollection[key] = result
+                }
+                return result
+            }
+
+            return null
+        }
+
+        /**
+         * Resolves the server type of variable by checking the generic type T of the default value.
+         */
+        @JvmStatic
+        fun <T> kindFromValue(defaultValue: T): String? {
+            var kind: String? = null
+            if (defaultValue is Int ||
+                defaultValue is Long ||
+                defaultValue is Short ||
+                defaultValue is Char ||
+                defaultValue is Byte ||
+                defaultValue is BigInteger
+            ) {
+                kind = NUMBER
+            } else if (defaultValue is Float ||
+                defaultValue is Double ||
+                defaultValue is BigDecimal
+            ) {
+                kind = NUMBER
+            } else if (defaultValue is String) {
+                kind = STRING
+            } else if (defaultValue is Map<*, *>) {
+                kind = DICTIONARY
+            } else if (defaultValue is Boolean) {
+                kind = BOOLEAN
+            }
+            return kind
+        }
+
+        /**
+         * converts a string of this format : "a.b.c" to  an array of strings, i.e ["a","b","c"]
+         */
+        @JvmStatic
+        fun getNameComponents(name: String?): Array<String> {
+            return try {
+                // java.lang.String#split(regex): drops trailing empty strings, unlike Kotlin's split.
+                (name as java.lang.String).split("\\.")
+            } catch (t: Throwable) {
+                Logger.d(TAG, "Error splitting variable name: $name", t)
+                arrayOf()
             }
         }
 
-        return result;
-    }
-
-    /**
-     * Returns the merge of vars and diff, where values in vars are replaced from values
-     * in diff, i.e. calling mergeHelper with vars=[a:10, b:20] and diff=[a:15, c:25] produces a
-     * merge=[a:15, b:20, c:25]. The methods works recursively when nested maps are presented.
-     *
-     * @param vars - Variable values as defined by user.
-     * @param diff - Variable values from server.
-     *
-     * @return Merge of both parameters with priority of diff over vars when overriding values.
-     */
-    public static Object mergeHelper(Object vars, Object diff) {
-        if (diff == null) {
-            return vars;
-        }
-        if (diff instanceof Number
-                || diff instanceof Boolean
-                || diff instanceof String
-                || diff instanceof Character
-                || vars instanceof Number
-                || vars instanceof Boolean
-                || vars instanceof String
-                || vars instanceof Character) {
-            return diff;
-        }
-
-        Iterable<?> diffKeys = (diff instanceof Map) ? ((Map<?, ?>) diff).keySet() : (Iterable<?>) diff;
-        Iterable<?> varsKeys = (vars instanceof Map) ? ((Map<?, ?>) vars).keySet() : (Iterable<?>) vars;
-        Map<?, ?> diffMap = (diff instanceof Map) ? ((Map<?, ?>) diff) : null;
-        Map<?, ?> varsMap = (vars instanceof Map) ? ((Map<?, ?>) vars) : null;
-
-        // Merge dictionaries.
-        if (vars instanceof Map || diff instanceof Map) {
-            HashMap<Object, Object> merged = new HashMap<>();
-            if (varsKeys != null) {
-                for (Object var : varsKeys) {
-                    if (diffMap != null && varsMap != null) {
-                        Object diffVar = diffMap.get(var);
-                        Object value = varsMap.get(var);
-                        if (diffVar == null && value != null) {
-                            merged.put(var, value);
-                        }
-                    }
+        /**
+         * Converts a map like following:
+         * ```
+         * [
+         *   "android": [
+         *     "samsung: [
+         *       "s22": 54000,
+         *       "s23" : "unreleased"
+         *     ]
+         *   ],
+         *   "welcomeMsg" : "hello"
+         * ]
+         * ```
+         * to:
+         * ```
+         * [
+         *   "android.samsung.s22" : 54000,
+         *   "android.samsung.s23" : "unreleased",
+         *   "welcomeMsg": "hello"
+         * ]
+         * ```
+         * @author Ansh Sachdeva
+         */
+        @VisibleForTesting
+        @JvmStatic
+        internal fun convertNestedMapsToFlatMap(prefix: String, map: Map<String, *>, result: MutableMap<String, *>) {
+            val resultMap: MutableMap<String, Any?> = JsonUtil.uncheckedCast(result)
+            for ((key, value) in map) {
+                if (value is Map<*, *>) {
+                    convertNestedMapsToFlatMap("$prefix$key.", JsonUtil.uncheckedCast(value), resultMap)
+                } else {
+                    resultMap[prefix + key] = value
                 }
             }
-            for (Object var : diffKeys) {
-                Object diffsValue = diffMap != null ? diffMap.get(var) : null;
-                Object varsValue = varsMap != null ? varsMap.get(var) : null;
-                Object mergedValues = mergeHelper(varsValue, diffsValue);
-                merged.put(var, mergedValues);
-            }
-            return merged;
-        }
-        return null;
-    }
-
-    // check test for more info
-    public static Object traverse(Object collection, Object key, boolean autoInsert) {
-        if (collection == null) {
-            return null;
-        }
-        if (collection instanceof Map) {
-            Map<Object, Object> castedCollection = JsonUtil.uncheckedCast(collection);
-            Object result = castedCollection.get(key);
-            if (autoInsert && result == null && key instanceof String) {
-                result = new HashMap<String, Object>();
-                castedCollection.put(key, result);
-            }
-            return result;
         }
 
-        return null;
-    }
+        @JvmStatic
+        fun getFlatVarsJson(
+            values: Map<String, *>,
+            kinds: Map<String, *>
+        ): JSONObject {
+            try {
+                val resultJson = JSONObject()
+                resultJson.put("type", Constants.variablePayloadType)
 
-    /**
-     * Resolves the server type of variable by checking the generic type T of the default value.
-     */
-    public static <T> String kindFromValue(T defaultValue) {
-        String kind = null;
-        if (defaultValue instanceof Integer ||
-            defaultValue instanceof Long ||
-            defaultValue instanceof Short ||
-            defaultValue instanceof Character ||
-            defaultValue instanceof Byte ||
-            defaultValue instanceof BigInteger) {
-            kind = NUMBER;
-        }
-        else if (defaultValue instanceof Float ||
-                 defaultValue instanceof Double ||
-                 defaultValue instanceof BigDecimal) {
-            kind = NUMBER;
-        }
-        else if (defaultValue instanceof String) {
-            kind = STRING;
-        }
-        else if (defaultValue instanceof Map) {
-            kind = DICTIONARY;
-        }
-        else if (defaultValue instanceof Boolean) {
-            kind = BOOLEAN;
-        }
-        return kind;
-    }
+                val vars = JSONObject()
+                for (valueKey in values.keys) {
+                    val kind = kinds[valueKey] as String?
+                    val value = values[valueKey]
+                    if (value is Map<*, *>) {
+                        val valueMap: MutableMap<String, Any?> = HashMap()
+                        valueMap[valueKey] = value
+                        val flattenedValueMap: MutableMap<String, Any?> = HashMap()
+                        convertNestedMapsToFlatMap("", valueMap, flattenedValueMap)
+                        for ((flattenedKey, flattenedValue) in flattenedValueMap) {
+                            // check if it is file type, in this case we cannot deduce the type from value
+                            val flattenedValueKind: String? = if (FILE == kinds[flattenedKey]) {
+                                FILE
+                            } else {
+                                kindFromValue(flattenedValue)
+                            }
 
-    /**
-     * converts a string of this format : "a.b.c" to  an array of strings, i.e ["a","b","c"]
-     * */
-    public static String[] getNameComponents(String name) {
-        try {
-            return name.split("\\.");
-        }
-        catch (Throwable t){
-            Logger.d(TAG, "Error splitting variable name: " + name, t);
-            return new String[]{};
-        }
-    }
-
-
-    /**
-     * Converts a map like following: <br>
-     * <code>
-     * &emsp;[<br>
-     * &emsp;&emsp;"android": [<br><br>
-     * &emsp;&emsp;&emsp;&emsp;"samsung: [<br>
-     * &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"s22": 54000, <br>
-     * &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"s23" : "unreleased"<br>
-     * &emsp;&emsp;&emsp;&emsp]<br>
-     * &emsp;&emsp;],<br><br>
-     * &emsp;&emsp;"welcomeMsg" : "hello"<br>
-     * &emsp;]<br>
-     * </code> <br><br>
-     * to: <br><br>
-     * <code>
-     * &emsp;[<br>
-     * &emsp;&emsp;"android.samsung.s22" : 54000,<br>
-     * &emsp;&emsp;"android.samsung.s23" : "unreleased",<br>
-     * &emsp;&emsp;"welcomeMsg": "hello"<br>
-     * &emsp;]<br>
-     * </code>
-     * -------------------------------------- <br>
-     * @author Ansh Sachdeva
-     */
-    @VisibleForTesting
-    static void convertNestedMapsToFlatMap(String prefix, Map<String, Object> map, Map<String, Object> result) {
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof Map) {
-                convertNestedMapsToFlatMap(prefix + key + ".", JsonUtil.uncheckedCast(value) , result);
-            } else {
-                result.put(prefix + key, value);
-            }
-        }
-    }
-
-    public static JSONObject getFlatVarsJson(
-            Map<String, Object> values,
-            Map<String, String> kinds
-    ) {
-       try {
-           JSONObject resultJson = new JSONObject();
-           resultJson.put("type", Constants.variablePayloadType);
-
-           JSONObject vars = new JSONObject();
-           for (String valueKey : values.keySet()) {
-
-               String kind = kinds.get(valueKey);
-               Object value = values.get(valueKey);
-               if (value instanceof Map) {
-                   Map<String, Object> valueMap = new HashMap<>();
-                   valueMap.put(valueKey, value);
-                   Map<String, Object> flattenedValueMap = new HashMap<>();
-                   convertNestedMapsToFlatMap("", valueMap, flattenedValueMap);
-                   for (HashMap.Entry<String, Object> entry : flattenedValueMap.entrySet()) {
-                       String flattenedKey = entry.getKey();
-                       Object flattenedValue = entry.getValue();
-
-                       // check if it is file type, in this case we cannot deduce the type from value
-                       String flattenedValueKind;
-                       if (CTVariableUtils.FILE.equals(kinds.get(flattenedKey))) {
-                           flattenedValueKind = CTVariableUtils.FILE;
-                       } else {
-                           flattenedValueKind = kindFromValue(flattenedValue);
-                       }
-
-                       JSONObject varData = new JSONObject();
-                       varData.put("type", flattenedValueKind);
-                       varData.put("defaultValue", flattenedValue);
-                       vars.put(flattenedKey, varData);
-                   }
-               } else {
-                   JSONObject varData = new JSONObject();
-                   varData.put("type", kind);
-                   varData.put("defaultValue", value);
-                   vars.put(valueKey, varData);
-               }
-           }
-           resultJson.put("vars",vars);
-           return resultJson;
-       }
-       catch (Throwable t){
-           Logger.d(TAG, "Error creating flat vars JSON", t);
-           return new JSONObject();
-       }
-    }
-
-    public static Map<Object, Object> deepCopyMap(Map<Object, Object> originalMap) {
-        Map<Object, Object> copiedMap = new HashMap<>();
-
-        for (Map.Entry<Object, Object> entry : originalMap.entrySet()) {
-            Object key = entry.getKey();
-            Object value = entry.getValue();
-
-            if (value instanceof Map) {
-                copiedMap.put(key, deepCopyMap(JsonUtil.uncheckedCast(value)));
-            } else {
-                copiedMap.put(key, value);
+                            val varData = JSONObject()
+                            varData.put("type", flattenedValueKind)
+                            varData.put("defaultValue", flattenedValue)
+                            vars.put(flattenedKey, varData)
+                        }
+                    } else {
+                        val varData = JSONObject()
+                        varData.put("type", kind)
+                        varData.put("defaultValue", value)
+                        vars.put(valueKey, varData)
+                    }
+                }
+                resultJson.put("vars", vars)
+                return resultJson
+            } catch (t: Throwable) {
+                Logger.d(TAG, "Error creating flat vars JSON", t)
+                return JSONObject()
             }
         }
 
-        return copiedMap;
+        @JvmStatic
+        fun deepCopyMap(originalMap: Map<*, *>): MutableMap<Any?, Any?> {
+            val copiedMap: MutableMap<Any?, Any?> = HashMap()
+
+            for ((key, value) in originalMap) {
+                if (value is Map<*, *>) {
+                    copiedMap[key] = deepCopyMap(JsonUtil.uncheckedCast(value))
+                } else {
+                    copiedMap[key] = value
+                }
+            }
+
+            return copiedMap
+        }
     }
 }
