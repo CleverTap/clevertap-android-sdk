@@ -486,7 +486,7 @@ open class CleverTapAPI internal constructor(
     open fun getAllDisplayUnits(): ArrayList<CleverTapDisplayUnit>? {
         val cache = coreState.controllerManager.displayUnitCache
         if (cache != null) {
-            return cache.allDisplayUnits
+            return cache.getAllDisplayUnits()
         }
         configLogger
             .verbose(accountId, Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units")
@@ -2314,7 +2314,8 @@ open class CleverTapAPI internal constructor(
      * @param <T> Type of value.
      * @return Returns the Var instance.
      */
-    open fun <T> defineVariable(name: String?, defaultValue: T): Var<T> {
+    open fun <T> defineVariable(name: String?, defaultValue: T): Var<T>? {
+        // Var.define returns null for an invalid name or a null non-file default, as it did in Java.
         return Var.define(name, defaultValue, coreState.cTVariables)
     }
 
@@ -2324,8 +2325,10 @@ open class CleverTapAPI internal constructor(
      * @param name Name of the variable.
      * @return Returns the Var instance.
      */
-    open fun defineFileVariable(name: String?): Var<String> {
-        return Var.define(name, null, CTVariableUtils.FILE, coreState.cTVariables)
+    @Suppress("UNCHECKED_CAST")
+    open fun defineFileVariable(name: String?): Var<String>? {
+        // Var.define returns null for an invalid name, as it did in Java.
+        return Var.define<String?>(name, null, CTVariableUtils.FILE, coreState.cTVariables) as Var<String>?
     }
 
     /**
@@ -2385,7 +2388,8 @@ open class CleverTapAPI internal constructor(
      */
     open fun variants(): List<Map<String, Any>> {
         val originalVariants = coreState.varCache.variants()
-        return Collections.unmodifiableList(ArrayList(originalVariants))
+        @Suppress("UNCHECKED_CAST")
+        return Collections.unmodifiableList(ArrayList(originalVariants)) as List<Map<String, Any>>
     }
 
     /**
