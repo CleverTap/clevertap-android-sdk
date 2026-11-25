@@ -39,7 +39,9 @@ interface DisplayUnitCache {
      *
      * @param displayUnits parsed display units; may be `null` or empty.
      */
-    fun updateDisplayUnits(displayUnits: List<CleverTapDisplayUnit>?)
+    // @JvmSuppressWildcards keeps the Java signature `List<CleverTapDisplayUnit>` (not
+    // `List<? extends CleverTapDisplayUnit>`) so existing Java implementations still @Override it.
+    fun updateDisplayUnits(displayUnits: List<@JvmSuppressWildcards CleverTapDisplayUnit>?)
 
     /**
      * Clears all units. Called by the SDK on logout / reset flows.
