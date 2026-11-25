@@ -46,7 +46,7 @@ internal open class PushAmpResponse(
                 if (pushAmpObject.has("pf")) {
                     try {
                         val frequency = pushAmpObject.getInt("pf")
-                        controllerManager.pushProviders.updatePingFrequencyIfNeeded(context, frequency)
+                        controllerManager.pushProviders!!.updatePingFrequencyIfNeeded(context, frequency)
                     } catch (t: Throwable) {
                         logger
                             .verbose("Error handling ping frequency in response : " + t.message)

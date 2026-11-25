@@ -699,7 +699,7 @@ internal object CleverTapFactory {
         deviceScopedInit.execute("initDeviceScopedState") {
             // Read the device id already resolved and cached by Job 1 (resolveDeviceId), which ran
             // first on this serial queue. No re-resolution here.
-            val deviceId = deviceInfo.getDeviceID()
+            val deviceId = deviceInfo.deviceID
 
             // Each device-scoped component is built in its own guarded step. A failure in one
             // (e.g. a storage error while opening the in-app store) must NOT skip the others — on
@@ -728,7 +728,7 @@ internal object CleverTapFactory {
                 val inAppStore = storeProvider.provideInAppStore(
                     context = context,
                     cryptHandler = cryptHandler,
-                    deviceId = deviceId,
+                    deviceId = deviceId!!,
                     accountId = config.accountId,
                 )
                 storeRegistry.inAppStore = inAppStore
@@ -739,7 +739,7 @@ internal object CleverTapFactory {
             step("impressionStore") {
                 val impressionStore = storeProvider.provideImpressionStore(
                     context = context,
-                    deviceId = deviceId,
+                    deviceId = deviceId!!,
                     accountId = config.accountId,
                 )
                 storeRegistry.impressionStore = impressionStore

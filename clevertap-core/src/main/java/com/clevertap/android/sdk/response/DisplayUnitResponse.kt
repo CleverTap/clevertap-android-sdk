@@ -215,7 +215,7 @@ internal class DisplayUnitResponse(
             return
         }
 
-        val cache = controllerManager.orCreateDisplayUnitCache
+        val cache = controllerManager.getOrCreateDisplayUnitCache()
         if (cache == null) {
             logger.verbose(config.accountId, "${Constants.FEATURE_DISPLAY_UNIT}No display-unit cache available")
             return

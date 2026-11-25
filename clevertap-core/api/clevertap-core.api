@@ -5,35 +5,6 @@ public final class com/clevertap/android/sdk/ActivityLifecycleCallback {
 	public static fun register (Landroid/app/Application;Ljava/lang/String;)V
 }
 
-public class com/clevertap/android/sdk/AnalyticsManager : com/clevertap/android/sdk/BaseAnalyticsManager {
-	public fun addMultiValuesForKey (Ljava/lang/String;Ljava/util/ArrayList;)V
-	public fun decrementValue (Ljava/lang/String;Ljava/lang/Number;)V
-	public fun fetchFeatureFlags ()V
-	public fun forcePushAppLaunchedEvent ()V
-	public fun incrementValue (Ljava/lang/String;Ljava/lang/Number;)V
-	public fun pushAppLaunchedEvent ()V
-	public fun pushChargedEvent (Ljava/util/HashMap;Ljava/util/ArrayList;)V
-	public fun pushDefineVarsEvent (Lorg/json/JSONObject;)V
-	public fun pushDisplayUnitClickedEventForID (Ljava/lang/String;)V
-	public fun pushDisplayUnitElementClickedEventForID (Ljava/lang/String;Ljava/util/HashMap;)V
-	public fun pushDisplayUnitElementViewedEventForID (Ljava/lang/String;Ljava/util/HashMap;)V
-	public fun pushDisplayUnitViewedEventForID (Ljava/lang/String;)V
-	public fun pushError (Ljava/lang/String;I)V
-	public fun pushEvent (Ljava/lang/String;Ljava/util/Map;)V
-	public fun pushInAppNotificationStateEvent (ZLcom/clevertap/android/sdk/inapp/CTInAppNotification;Landroid/os/Bundle;)V
-	public fun pushInstallReferrer (Ljava/lang/String;)V
-	public fun pushInstallReferrer (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public fun pushNotificationClickedEvent (Landroid/os/Bundle;)V
-	public fun pushNotificationViewedEvent (Landroid/os/Bundle;)V
-	public fun pushProfile (Ljava/util/Map;)V
-	public fun raiseLiveUpdateLifecycleEvent (Landroid/os/Bundle;Ljava/lang/String;)V
-	public fun removeMultiValuesForKey (Ljava/lang/String;Ljava/util/ArrayList;)V
-	public fun removeValueForKey (Ljava/lang/String;)V
-	public fun sendDataEvent (Lorg/json/JSONObject;)V
-	public fun sendFetchEvent (Lorg/json/JSONObject;)V
-	public fun sendPingEvent (Lorg/json/JSONObject;)V
-}
-
 public final class com/clevertap/android/sdk/AnalyticsManagerBundler {
 	public static final field INSTANCE Lcom/clevertap/android/sdk/AnalyticsManagerBundler;
 	public static final fun liveUpdateEventJson (Lorg/json/JSONObject;Ljava/lang/String;)Lorg/json/JSONObject;
@@ -45,78 +16,6 @@ public final class com/clevertap/android/sdk/AnalyticsManagerBundler {
 public class com/clevertap/android/sdk/Application : android/app/Application {
 	public fun <init> ()V
 	public fun onCreate ()V
-}
-
-public abstract class com/clevertap/android/sdk/BaseAnalyticsManager {
-	public fun <init> ()V
-	public abstract fun addMultiValuesForKey (Ljava/lang/String;Ljava/util/ArrayList;)V
-	public abstract fun decrementValue (Ljava/lang/String;Ljava/lang/Number;)V
-	public abstract fun fetchFeatureFlags ()V
-	public abstract fun forcePushAppLaunchedEvent ()V
-	public abstract fun incrementValue (Ljava/lang/String;Ljava/lang/Number;)V
-	public abstract fun pushAppLaunchedEvent ()V
-	public abstract fun pushDefineVarsEvent (Lorg/json/JSONObject;)V
-	public abstract fun pushDisplayUnitClickedEventForID (Ljava/lang/String;)V
-	public abstract fun pushDisplayUnitElementClickedEventForID (Ljava/lang/String;Ljava/util/HashMap;)V
-	public abstract fun pushDisplayUnitElementViewedEventForID (Ljava/lang/String;Ljava/util/HashMap;)V
-	public abstract fun pushDisplayUnitViewedEventForID (Ljava/lang/String;)V
-	public abstract fun pushError (Ljava/lang/String;I)V
-	public abstract fun pushEvent (Ljava/lang/String;Ljava/util/Map;)V
-	public abstract fun pushInAppNotificationStateEvent (ZLcom/clevertap/android/sdk/inapp/CTInAppNotification;Landroid/os/Bundle;)V
-	public abstract fun pushInstallReferrer (Ljava/lang/String;)V
-	public abstract fun pushInstallReferrer (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public abstract fun pushNotificationClickedEvent (Landroid/os/Bundle;)V
-	public abstract fun pushNotificationViewedEvent (Landroid/os/Bundle;)V
-	public abstract fun pushProfile (Ljava/util/Map;)V
-	public abstract fun removeMultiValuesForKey (Ljava/lang/String;Ljava/util/ArrayList;)V
-	public abstract fun removeValueForKey (Ljava/lang/String;)V
-	public abstract fun sendDataEvent (Lorg/json/JSONObject;)V
-	public abstract fun sendFetchEvent (Lorg/json/JSONObject;)V
-}
-
-public abstract class com/clevertap/android/sdk/BaseCallbackManager {
-	public fun <init> ()V
-	public abstract fun _notifyInboxMessagesDidUpdate ()V
-	public abstract fun addChangeUserCallback (Lcom/clevertap/android/sdk/login/ChangeUserCallback;)V
-	public abstract fun addOnInitCleverTapIDListener (Lcom/clevertap/android/sdk/interfaces/OnInitCleverTapIDListener;)V
-	public abstract fun getBatchListener ()Lcom/clevertap/android/sdk/network/BatchListener;
-	public abstract fun getChangeUserCallbackList ()Ljava/util/List;
-	public abstract fun getFailureFlushListener ()Lcom/clevertap/android/sdk/FailureFlushListener;
-	public abstract fun getFeatureFlagListener ()Lcom/clevertap/android/sdk/CTFeatureFlagsListener;
-	public abstract fun getFetchInAppsCallback ()Lcom/clevertap/android/sdk/inapp/callbacks/FetchInAppsCallback;
-	public abstract fun getFetchVariablesCallback ()Lcom/clevertap/android/sdk/variables/callbacks/FetchVariablesCallback;
-	public abstract fun getGeofenceCallback ()Lcom/clevertap/android/sdk/GeofenceCallback;
-	public abstract fun getInAppNotificationButtonListener ()Lcom/clevertap/android/sdk/InAppNotificationButtonListener;
-	public abstract fun getInAppNotificationListener ()Lcom/clevertap/android/sdk/InAppNotificationListener;
-	public abstract fun getInboxListener ()Lcom/clevertap/android/sdk/CTInboxListener;
-	public abstract fun getProductConfigListener ()Lcom/clevertap/android/sdk/product_config/CTProductConfigListener;
-	public abstract fun getPushAmpListener ()Lcom/clevertap/android/sdk/pushnotification/amp/CTPushAmpListener;
-	public abstract fun getPushNotificationListener ()Lcom/clevertap/android/sdk/pushnotification/CTPushNotificationListener;
-	public abstract fun getPushPermissionResponseListenerList ()Ljava/util/List;
-	public abstract fun getSCDomainListener ()Lcom/clevertap/android/sdk/interfaces/SCDomainListener;
-	public abstract fun getSyncListener ()Lcom/clevertap/android/sdk/SyncListener;
-	public abstract fun notifyCleverTapIDChanged (Ljava/lang/String;)V
-	public abstract fun notifyDisplayUnitsLoaded (Ljava/util/ArrayList;)V
-	public abstract fun notifyUserProfileInitialized (Ljava/lang/String;)V
-	public abstract fun registerPushPermissionResponseListener (Lcom/clevertap/android/sdk/PushPermissionResponseListener;)V
-	public abstract fun removeChangeUserCallback (Lcom/clevertap/android/sdk/login/ChangeUserCallback;)V
-	public abstract fun removeOnInitCleverTapIDListener (Lcom/clevertap/android/sdk/interfaces/OnInitCleverTapIDListener;)V
-	public abstract fun setBatchListener (Lcom/clevertap/android/sdk/network/BatchListener;)V
-	public abstract fun setDisplayUnitListener (Lcom/clevertap/android/sdk/displayunits/DisplayUnitListener;)V
-	public abstract fun setFailureFlushListener (Lcom/clevertap/android/sdk/FailureFlushListener;)V
-	public abstract fun setFeatureFlagListener (Lcom/clevertap/android/sdk/CTFeatureFlagsListener;)V
-	public abstract fun setFetchInAppsCallback (Lcom/clevertap/android/sdk/inapp/callbacks/FetchInAppsCallback;)V
-	public abstract fun setFetchVariablesCallback (Lcom/clevertap/android/sdk/variables/callbacks/FetchVariablesCallback;)V
-	public abstract fun setGeofenceCallback (Lcom/clevertap/android/sdk/GeofenceCallback;)V
-	public abstract fun setInAppNotificationButtonListener (Lcom/clevertap/android/sdk/InAppNotificationButtonListener;)V
-	public abstract fun setInAppNotificationListener (Lcom/clevertap/android/sdk/InAppNotificationListener;)V
-	public abstract fun setInboxListener (Lcom/clevertap/android/sdk/CTInboxListener;)V
-	public abstract fun setProductConfigListener (Lcom/clevertap/android/sdk/product_config/CTProductConfigListener;)V
-	public abstract fun setPushAmpListener (Lcom/clevertap/android/sdk/pushnotification/amp/CTPushAmpListener;)V
-	public abstract fun setPushNotificationListener (Lcom/clevertap/android/sdk/pushnotification/CTPushNotificationListener;)V
-	public abstract fun setSCDomainListener (Lcom/clevertap/android/sdk/interfaces/SCDomainListener;)V
-	public abstract fun setSyncListener (Lcom/clevertap/android/sdk/SyncListener;)V
-	public abstract fun unregisterPushPermissionResponseListener (Lcom/clevertap/android/sdk/PushPermissionResponseListener;)V
 }
 
 public final class com/clevertap/android/sdk/BuildConfig {
@@ -496,47 +395,9 @@ public class com/clevertap/android/sdk/CleverTapInstanceConfig : android/os/Parc
 public abstract interface annotation class com/clevertap/android/sdk/Constants$IdentityType : java/lang/annotation/Annotation {
 }
 
-public class com/clevertap/android/sdk/ControllerManager {
-	public fun <init> (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;Lcom/clevertap/android/sdk/CTLockManager;Lcom/clevertap/android/sdk/BaseCallbackManager;Lcom/clevertap/android/sdk/DeviceInfo;Lcom/clevertap/android/sdk/db/BaseDatabaseManager;)V
-	public fun getCTDisplayUnitController ()Lcom/clevertap/android/sdk/displayunits/CTDisplayUnitController;
-	public fun getCTFeatureFlagsController ()Lcom/clevertap/android/sdk/featureFlags/CTFeatureFlagsController;
-	public fun getCTInboxController ()Lcom/clevertap/android/sdk/inbox/CTInboxController;
-	public fun getCTProductConfigController ()Lcom/clevertap/android/sdk/product_config/CTProductConfigController;
-	public fun getConfig ()Lcom/clevertap/android/sdk/CleverTapInstanceConfig;
-	public fun getCtVariables ()Lcom/clevertap/android/sdk/variables/CTVariables;
-	public fun getDisplayUnitCache ()Lcom/clevertap/android/sdk/displayunits/DisplayUnitCache;
-	public fun getInAppController ()Lcom/clevertap/android/sdk/inapp/InAppController;
-	public fun getInAppFCManager ()Lcom/clevertap/android/sdk/InAppFCManager;
-	public fun getInboxDeleteCoordinator ()Lcom/clevertap/android/sdk/inbox/InboxDeleteCoordinator;
-	public fun getNativeDisplayController ()Lcom/clevertap/android/sdk/displayunits/NativeDisplayController;
-	public fun getNdFCManager ()Lcom/clevertap/android/sdk/NdFCManager;
-	public fun getOrCreateDisplayUnitCache ()Lcom/clevertap/android/sdk/displayunits/DisplayUnitCache;
-	public fun getPushProviders ()Lcom/clevertap/android/sdk/pushnotification/PushProviders;
-	public fun initializeInbox ()V
-	public fun initializeInboxSync ()V
-	public fun invokeBatchListener (Lorg/json/JSONArray;Z)V
-	public fun invokeCallbacksForNetworkError ()V
-	public fun setCTDisplayUnitController (Lcom/clevertap/android/sdk/displayunits/CTDisplayUnitController;)V
-	public fun setCTFeatureFlagsController (Lcom/clevertap/android/sdk/featureFlags/CTFeatureFlagsController;)V
-	public fun setCTInboxController (Lcom/clevertap/android/sdk/inbox/CTInboxController;)V
-	public fun setCTProductConfigController (Lcom/clevertap/android/sdk/product_config/CTProductConfigController;)V
-	public fun setCtVariables (Lcom/clevertap/android/sdk/variables/CTVariables;)V
-	public fun setDisplayUnitCache (Lcom/clevertap/android/sdk/displayunits/DisplayUnitCache;)V
-	public fun setInAppController (Lcom/clevertap/android/sdk/inapp/InAppController;)V
-	public fun setInAppFCManager (Lcom/clevertap/android/sdk/InAppFCManager;)V
-	public fun setInboxDeleteCoordinator (Lcom/clevertap/android/sdk/inbox/InboxDeleteCoordinator;)V
-	public fun setNativeDisplayController (Lcom/clevertap/android/sdk/displayunits/NativeDisplayController;)V
-	public fun setNdFCManager (Lcom/clevertap/android/sdk/NdFCManager;)V
-	public fun setPushProviders (Lcom/clevertap/android/sdk/pushnotification/PushProviders;)V
-}
-
 public abstract interface class com/clevertap/android/sdk/DidClickForHardPermissionListener {
 	public abstract fun didCancelPermissionRequest ()V
 	public abstract fun didClickForHardPermissionWithFallbackSettings (Z)V
-}
-
-public abstract interface class com/clevertap/android/sdk/FailureFlushListener {
-	public abstract fun failureFlush (Landroid/content/Context;)V
 }
 
 public abstract interface class com/clevertap/android/sdk/FetchInboxCallback {
@@ -660,42 +521,6 @@ public class com/clevertap/android/sdk/UTMDetail {
 	public fun setCampaign (Ljava/lang/String;)V
 	public fun setMedium (Ljava/lang/String;)V
 	public fun setSource (Ljava/lang/String;)V
-}
-
-public final class com/clevertap/android/sdk/Utils {
-	public fun <init> ()V
-	public static fun areNamesNormalizedEqual (Ljava/lang/String;Ljava/lang/String;)Z
-	public static fun cleanupOldGIFs (Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;Lcom/clevertap/android/sdk/utils/Clock;)V
-	public static fun containsIgnoreCase (Ljava/util/Collection;Ljava/lang/String;)Z
-	public static fun convertBundleObjectToHashMap (Landroid/os/Bundle;)Ljava/util/HashMap;
-	public static fun convertJSONArrayOfJSONObjectsToArrayListOfHashMaps (Lorg/json/JSONArray;)Ljava/util/ArrayList;
-	public static fun convertJSONArrayToArrayList (Lorg/json/JSONArray;)Ljava/util/ArrayList;
-	public static fun convertJSONObjectToHashMap (Lorg/json/JSONObject;)Ljava/util/HashMap;
-	public static fun convertToTitleCase (Ljava/lang/String;)Ljava/lang/String;
-	public static fun getBitmapFromURL (Ljava/lang/String;)Landroid/graphics/Bitmap;
-	public static fun getDeviceNetworkType (Landroid/content/Context;)Ljava/lang/String;
-	public static fun getDownloadedBitmapPostFallbackIconCheck (ZLandroid/content/Context;Lcom/clevertap/android/sdk/network/DownloadedBitmap;)Lcom/clevertap/android/sdk/network/DownloadedBitmap;
-	public static fun getMemoryConsumption ()J
-	public static fun getNormalizedName (Ljava/lang/String;)Ljava/lang/String;
-	public static fun getNotificationBitmapWithTimeout (Ljava/lang/String;ZLandroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;J)Lcom/clevertap/android/sdk/network/DownloadedBitmap;
-	public static fun getNotificationBitmapWithTimeoutAndSize (Ljava/lang/String;ZLandroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;JI)Lcom/clevertap/android/sdk/network/DownloadedBitmap;
-	public static fun getNotificationGifURI (Ljava/lang/String;Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;Lcom/clevertap/android/sdk/utils/Clock;)Landroid/net/Uri;
-	public static fun getNowInMillis ()J
-	public static fun getSCDomain (Ljava/lang/String;)Ljava/lang/String;
-	public static fun getThumbnailImage (Landroid/content/Context;Ljava/lang/String;)I
-	public static fun hasPermission (Landroid/content/Context;Ljava/lang/String;)Z
-	public static fun haversineDistance (Landroid/location/Location;Landroid/location/Location;)D
-	public static fun isActivityDead (Landroid/app/Activity;)Z
-	public static fun isMainProcess (Landroid/content/Context;Ljava/lang/String;)Z
-	public static fun isRenderFallback (Lcom/google/firebase/messaging/RemoteMessage;Landroid/content/Context;)Z
-	public static fun navigateToAndroidSettingsForNotifications (Landroid/content/Context;)V
-	public static fun optionalStringKey (Lorg/json/JSONObject;Ljava/lang/String;)Ljava/lang/String;
-	public static fun readAssetFile (Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
-	public static fun runOnUiThread (Ljava/lang/Runnable;)V
-	public static fun setPackageNameFromResolveInfoList (Landroid/content/Context;Landroid/content/Intent;)V
-	public static fun stringToBundle (Ljava/lang/String;)Landroid/os/Bundle;
-	public static fun toJSONObjectList (Lorg/json/JSONArray;)Ljava/util/List;
-	public static fun validateCTID (Ljava/lang/String;)Z
 }
 
 public final class com/clevertap/android/sdk/bitmap/BitmapDownloadRequest {
@@ -2247,6 +2072,9 @@ public final class com/clevertap/android/sdk/inapp/store/preference/LegacyInAppS
 public final class com/clevertap/android/sdk/inapp/store/preference/LegacyInAppStore$Companion {
 }
 
+public final class com/clevertap/android/sdk/inbox/CTInboxActivity$Companion {
+}
+
 public abstract interface class com/clevertap/android/sdk/inbox/CTInboxActivity$InboxActivityListener {
 	public abstract fun messageDidClick (Lcom/clevertap/android/sdk/inbox/CTInboxActivity;ILcom/clevertap/android/sdk/inbox/CTInboxMessage;Landroid/os/Bundle;Ljava/util/HashMap;I)V
 	public abstract fun messageDidShow (Lcom/clevertap/android/sdk/inbox/CTInboxActivity;Lcom/clevertap/android/sdk/inbox/CTInboxMessage;Landroid/os/Bundle;)V
@@ -2265,14 +2093,18 @@ public final class com/clevertap/android/sdk/inbox/CTInboxImageData {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/clevertap/android/sdk/inbox/CTInboxListViewFragment$Companion {
+}
+
 public class com/clevertap/android/sdk/inbox/CTInboxMessage : android/os/Parcelable {
 	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field Companion Lcom/clevertap/android/sdk/inbox/CTInboxMessage$Companion;
 	public fun <init> (Lorg/json/JSONObject;)V
 	public fun describeContents ()I
 	public fun getActionUrl ()Ljava/lang/String;
 	public fun getBgColor ()Ljava/lang/String;
 	public fun getBody ()Ljava/lang/String;
-	public static fun getCREATOR ()Landroid/os/Parcelable$Creator;
+	public static final fun getCREATOR ()Landroid/os/Parcelable$Creator;
 	public fun getCampaignId ()Ljava/lang/String;
 	public fun getCarouselImages ()Ljava/util/ArrayList;
 	public fun getCarouselImagesData ()Ljava/util/ArrayList;
@@ -2289,11 +2121,35 @@ public class com/clevertap/android/sdk/inbox/CTInboxMessage : android/os/Parcela
 	public fun getType ()Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
 	public fun getWzrkParams ()Lorg/json/JSONObject;
 	public fun isRead ()Z
+	public final synthetic fun ktGetActionUrl ()Ljava/lang/String;
+	public final synthetic fun ktGetBgColor ()Ljava/lang/String;
+	public final synthetic fun ktGetBody ()Ljava/lang/String;
+	public final synthetic fun ktGetCampaignId ()Ljava/lang/String;
+	public final synthetic fun ktGetCarouselImages ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetCarouselImagesData ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetCustomData ()Lorg/json/JSONObject;
+	public final synthetic fun ktGetData ()Lorg/json/JSONObject;
+	public final synthetic fun ktGetDate ()J
+	public final synthetic fun ktGetExpires ()J
+	public final synthetic fun ktGetImageUrl ()Ljava/lang/String;
+	public final synthetic fun ktGetInboxMessageContents ()Ljava/util/ArrayList;
+	public final synthetic fun ktGetMessageId ()Ljava/lang/String;
+	public final synthetic fun ktGetOrientation ()Ljava/lang/String;
+	public final synthetic fun ktGetTags ()Ljava/util/List;
+	public final synthetic fun ktGetTitle ()Ljava/lang/String;
+	public final synthetic fun ktGetType ()Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
+	public final synthetic fun ktGetWzrkParams ()Lorg/json/JSONObject;
+	public final synthetic fun ktIsRead ()Z
 	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/clevertap/android/sdk/inbox/CTInboxMessage$Companion {
+	public final fun getCREATOR ()Landroid/os/Parcelable$Creator;
 }
 
 public class com/clevertap/android/sdk/inbox/CTInboxMessageContent : android/os/Parcelable {
 	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field Companion Lcom/clevertap/android/sdk/inbox/CTInboxMessageContent$Companion;
 	protected fun <init> (Landroid/os/Parcel;)V
 	public fun describeContents ()I
 	public fun getActionUrl ()Ljava/lang/String;
@@ -2316,6 +2172,19 @@ public class com/clevertap/android/sdk/inbox/CTInboxMessageContent : android/os/
 	public fun getTitle ()Ljava/lang/String;
 	public fun getTitleColor ()Ljava/lang/String;
 	public fun isFallbackSettingsEnabled (Lorg/json/JSONObject;)Z
+	public final synthetic fun ktGetActionUrl ()Ljava/lang/String;
+	public final synthetic fun ktGetContentType ()Ljava/lang/String;
+	public final synthetic fun ktGetIcon ()Ljava/lang/String;
+	public final synthetic fun ktGetIconContentDescription ()Ljava/lang/String;
+	public final synthetic fun ktGetLinks ()Lorg/json/JSONArray;
+	public final synthetic fun ktGetMedia ()Ljava/lang/String;
+	public final synthetic fun ktGetMediaContentDescription ()Ljava/lang/String;
+	public final synthetic fun ktGetMessage ()Ljava/lang/String;
+	public final synthetic fun ktGetMessageColor ()Ljava/lang/String;
+	public final synthetic fun ktGetPosterUrl ()Ljava/lang/String;
+	public final synthetic fun ktGetTitle ()Ljava/lang/String;
+	public final synthetic fun ktGetTitleColor ()Ljava/lang/String;
+	public final synthetic fun ktSetPosterUrl (Ljava/lang/String;)V
 	public fun mediaIsAudio ()Z
 	public fun mediaIsGIF ()Z
 	public fun mediaIsImage ()Z
@@ -2325,14 +2194,25 @@ public class com/clevertap/android/sdk/inbox/CTInboxMessageContent : android/os/
 	public fun writeToParcel (Landroid/os/Parcel;I)V
 }
 
+public final class com/clevertap/android/sdk/inbox/CTInboxMessageContent$Companion {
+}
+
 public final class com/clevertap/android/sdk/inbox/CTInboxMessageType : java/lang/Enum {
 	public static final field CarouselImageMessage Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
 	public static final field CarouselMessage Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
+	public static final field Companion Lcom/clevertap/android/sdk/inbox/CTInboxMessageType$Companion;
 	public static final field IconMessage Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
 	public static final field SimpleMessage Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public fun toString ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
 	public static fun values ()[Lcom/clevertap/android/sdk/inbox/CTInboxMessageType;
+}
+
+public final class com/clevertap/android/sdk/inbox/CTInboxMessageType$Companion {
+}
+
+public final class com/clevertap/android/sdk/inbox/CTMessageDAO$Companion {
 }
 
 public abstract interface class com/clevertap/android/sdk/interfaces/ActionButtonClickHandler : com/clevertap/android/sdk/interfaces/NotificationHandler {
@@ -2745,10 +2625,14 @@ public final class com/clevertap/android/sdk/pushnotification/CTLiveUpdateDismis
 }
 
 public class com/clevertap/android/sdk/pushnotification/CTNotificationIntentService : android/app/IntentService {
+	public static final field Companion Lcom/clevertap/android/sdk/pushnotification/CTNotificationIntentService$Companion;
 	public static final field MAIN_ACTION Ljava/lang/String;
 	public static final field TYPE_BUTTON_CLICK Ljava/lang/String;
 	public fun <init> ()V
 	protected fun onHandleIntent (Landroid/content/Intent;)V
+}
+
+public final class com/clevertap/android/sdk/pushnotification/CTNotificationIntentService$Companion {
 }
 
 public abstract interface class com/clevertap/android/sdk/pushnotification/CTPushNotificationListener {
@@ -2758,18 +2642,6 @@ public abstract interface class com/clevertap/android/sdk/pushnotification/CTPus
 public class com/clevertap/android/sdk/pushnotification/CTPushNotificationReceiver : android/content/BroadcastReceiver {
 	public fun <init> ()V
 	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
-}
-
-public abstract interface class com/clevertap/android/sdk/pushnotification/CTPushProvider {
-	public abstract fun getPushType ()Lcom/clevertap/android/sdk/pushnotification/PushType;
-	public abstract fun isAvailable ()Z
-	public abstract fun isSupported ()Z
-	public abstract fun minSDKSupportVersionCode ()I
-	public abstract fun requestToken ()V
-}
-
-public abstract interface class com/clevertap/android/sdk/pushnotification/CTPushProviderListener {
-	public abstract fun onNewToken (Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;)V
 }
 
 public abstract interface class com/clevertap/android/sdk/pushnotification/ICleverTapLiveUpdateNotificationFactory {
@@ -2792,39 +2664,43 @@ public final class com/clevertap/android/sdk/pushnotification/NotificationInfo {
 	public fun toString ()Ljava/lang/String;
 }
 
-public class com/clevertap/android/sdk/pushnotification/PushConstants {
-	public static final field CT_FIREBASE_PROVIDER_CLASS Ljava/lang/String;
-	public static final field FCM Lcom/clevertap/android/sdk/pushnotification/PushType;
-	public static final field FCM_DELIVERY_TYPE Ljava/lang/String;
-	public static final field FCM_LOG_TAG Ljava/lang/String;
-	public static final field FCM_PROPERTY_REG_ID Ljava/lang/String;
-	public static final field FCM_PUSH_TYPE Ljava/lang/String;
-	public static final field FIREBASE_SDK_CLASS Ljava/lang/String;
-	public static final field LOG_TAG Ljava/lang/String;
-}
-
 public class com/clevertap/android/sdk/pushnotification/PushNotificationHandler : com/clevertap/android/sdk/interfaces/ActionButtonClickHandler {
-	public static fun getPushNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
-	public static fun isForPushTemplates (Landroid/os/Bundle;)Z
+	public static final field Companion Lcom/clevertap/android/sdk/pushnotification/PushNotificationHandler$Companion;
+	public static final fun getPushNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
+	public static final fun isForPushTemplates (Landroid/os/Bundle;)Z
 	public fun onActionButtonClick (Landroid/content/Context;Landroid/os/Bundle;I)Z
 	public fun onMessageReceived (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;)Z
 	public fun onNewToken (Landroid/content/Context;Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;)Z
+}
+
+public final class com/clevertap/android/sdk/pushnotification/PushNotificationHandler$Companion {
+	public final fun getPushNotificationHandler ()Lcom/clevertap/android/sdk/interfaces/NotificationHandler;
+	public final fun isForPushTemplates (Landroid/os/Bundle;)Z
 }
 
 public final class com/clevertap/android/sdk/pushnotification/PushProviders$Companion {
 }
 
 public class com/clevertap/android/sdk/pushnotification/PushType {
+	public static final field Companion Lcom/clevertap/android/sdk/pushnotification/PushType$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public fun equals (Ljava/lang/Object;)Z
-	public static fun fromJSONObject (Lorg/json/JSONObject;)Lcom/clevertap/android/sdk/pushnotification/PushType;
+	public static final fun fromJSONObject (Lorg/json/JSONObject;)Lcom/clevertap/android/sdk/pushnotification/PushType;
 	public fun getCtProviderClassName ()Ljava/lang/String;
 	public fun getMessagingSDKClassName ()Ljava/lang/String;
 	public fun getTokenPrefKey ()Ljava/lang/String;
 	public fun getType ()Ljava/lang/String;
 	public fun hashCode ()I
+	public final synthetic fun ktGetCtProviderClassName ()Ljava/lang/String;
+	public final synthetic fun ktGetMessagingSDKClassName ()Ljava/lang/String;
+	public final synthetic fun ktGetTokenPrefKey ()Ljava/lang/String;
+	public final synthetic fun ktGetType ()Ljava/lang/String;
 	public fun toJSONObject ()Lorg/json/JSONObject;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/clevertap/android/sdk/pushnotification/PushType$Companion {
+	public final fun fromJSONObject (Lorg/json/JSONObject;)Lcom/clevertap/android/sdk/pushnotification/PushType;
 }
 
 public abstract interface class com/clevertap/android/sdk/pushnotification/amp/CTPushAmpListener {
@@ -2844,12 +2720,6 @@ public class com/clevertap/android/sdk/pushnotification/fcm/CTFcmMessageHandler 
 	public synthetic fun processPushAmp (Landroid/content/Context;Ljava/lang/Object;)V
 }
 
-public class com/clevertap/android/sdk/pushnotification/fcm/CTFirebaseMessagingReceiver : android/content/BroadcastReceiver, com/clevertap/android/sdk/interfaces/NotificationRenderedListener {
-	public fun <init> ()V
-	public fun onNotificationRendered (Z)V
-	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
-}
-
 public class com/clevertap/android/sdk/pushnotification/fcm/FcmMessageListenerService : com/google/firebase/messaging/FirebaseMessagingService {
 	public fun <init> ()V
 	public fun onMessageReceived (Lcom/google/firebase/messaging/RemoteMessage;)V
@@ -2861,14 +2731,6 @@ public final class com/clevertap/android/sdk/pushnotification/fcm/FcmNotificatio
 	public fun addPriority (Lcom/google/firebase/messaging/RemoteMessage;)Lcom/clevertap/android/sdk/pushnotification/fcm/INotificationBundleManipulation;
 	public synthetic fun addPriority (Ljava/lang/Object;)Lcom/clevertap/android/sdk/pushnotification/fcm/INotificationBundleManipulation;
 	public fun build ()Landroid/os/Bundle;
-}
-
-public class com/clevertap/android/sdk/pushnotification/fcm/FcmSdkHandlerImpl : com/clevertap/android/sdk/pushnotification/fcm/IFcmSdkHandler {
-	public fun <init> (Lcom/clevertap/android/sdk/pushnotification/CTPushProviderListener;Landroid/content/Context;Lcom/clevertap/android/sdk/CleverTapInstanceConfig;)V
-	public fun getPushType ()Lcom/clevertap/android/sdk/pushnotification/PushType;
-	public fun isAvailable ()Z
-	public fun isSupported ()Z
-	public fun requestToken ()V
 }
 
 public abstract interface class com/clevertap/android/sdk/pushnotification/fcm/INotificationBundleManipulation {

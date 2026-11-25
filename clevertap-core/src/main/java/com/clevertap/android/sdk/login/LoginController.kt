@@ -51,7 +51,7 @@ internal open class LoginController(
 
     private val dbManager: BaseDatabaseManager = dbManager
 
-    private val pushProviders: PushProviders = controllerManager.pushProviders
+    private val pushProviders: PushProviders? = controllerManager.pushProviders
 
     open fun asyncProfileSwitchUser(
         profile: Map<String, Any?>?, cacheGuid: String?,
@@ -68,7 +68,7 @@ internal open class LoginController(
                 //set optOut to false on the current user to unregister the device token
                 coreMetaData.isCurrentUserOptedOut = false
                 // unregister the device token on the current user
-                pushProviders.forcePushDeviceToken(false)
+                pushProviders!!.forcePushDeviceToken(false)
 
                 // try and flush and then reset the queues
                 baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
@@ -77,8 +77,9 @@ internal open class LoginController(
                 // in-app is never shown to the new user. Must run BEFORE cancelAllResponseJobs():
                 // cancelling the fetch coroutine fires its completion signal, which would otherwise
                 // display that buffered in-app.
-                if (controllerManager.inAppController != null) {
-                    controllerManager.inAppController.abandonAppLaunchArbitration()
+                val inAppController = controllerManager.inAppController
+                if (inAppController != null) {
+                    inAppController.abandonAppLaunchArbitration()
                 }
                 contentFetchManager.cancelAllResponseJobs()
                 cancelScheduledInApps()
@@ -111,7 +112,7 @@ internal open class LoginController(
                 if (profile != null) {
                     analyticsManager.pushProfile(profile)
                 }
-                pushProviders.forcePushDeviceToken(true)
+                pushProviders!!.forcePushDeviceToken(true)
                 resetInbox()
                 schedulePostSwitchInboxFetch()
                 resetFeatureFlags()
@@ -138,7 +139,7 @@ internal open class LoginController(
         val changeUserCallbackList = callbackManager.changeUserCallbackList
         synchronized(changeUserCallbackList) {
             for (callback in changeUserCallbackList) {
-                callback?.onChangeUser(deviceInfo.deviceID, config.accountId)
+                callback?.onChangeUser(deviceInfo.deviceID!!, config.accountId)
             }
         }
     }
@@ -166,7 +167,7 @@ internal open class LoginController(
     }
 
     open fun recordDeviceIDErrors() {
-        for (validationResult in deviceInfo.validationResults) {
+        for (validationResult in deviceInfo.getValidationResults()) {
             validationResultStack.pushValidationResult(validationResult)
         }
     }
@@ -338,8 +339,9 @@ internal open class LoginController(
      */
     @WorkerThread
     private fun cancelScheduledInApps() {
-        if (controllerManager.inAppController != null) {
-            controllerManager.inAppController.cancelAllScheduledInApps()
+        val inAppController = controllerManager.inAppController
+        if (inAppController != null) {
+            inAppController.cancelAllScheduledInApps()
             config.logger.verbose(config.accountId, "Cancelled all scheduled in-apps for user change")
         }
     }

@@ -275,8 +275,9 @@ open class CTFeatureFlagsController @Deprecated(
             val task = CTExecutorFactory.executors(config).mainTask<Void?>()
             task.execute("notifyFeatureFlagUpdate", Callable<Void?> {
                 try {
-                    if (mCallbackManager.featureFlagListener != null) {
-                        mCallbackManager.featureFlagListener.featureFlagsUpdated()
+                    val featureFlagListener = mCallbackManager.featureFlagListener
+                    if (featureFlagListener != null) {
+                        featureFlagListener.featureFlagsUpdated()
                     }
                 } catch (e: Exception) {
                     getConfigLogger().verbose(getLogTag(), e.localizedMessage)

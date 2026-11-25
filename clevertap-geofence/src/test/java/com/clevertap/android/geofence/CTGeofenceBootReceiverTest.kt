@@ -3,7 +3,8 @@ package com.clevertap.android.geofence
 import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Intent
-import com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG
+import com.clevertap.android.geofence.CTGeofenceAPI.Companion.GEOFENCE_LOG_TAG
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -60,7 +61,7 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
             every { Utils.hasBackgroundLocationPermission(application) } returns true
             every { Utils.initCTGeofenceApiIfRequired(application) } returns true
 
-            mockkStatic(CTGeofenceAPI::class) {
+            mockkObject(CTGeofenceAPI.Companion) {
                 every { CTGeofenceAPI.getLogger() } returns logger
 
                 spy.onReceive(application, intent)
@@ -97,7 +98,7 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
             every { Utils.hasBackgroundLocationPermission(application) } returns true
             every { Utils.initCTGeofenceApiIfRequired(application) } returns false
 
-            mockkStatic(CTGeofenceAPI::class) {
+            mockkObject(CTGeofenceAPI.Companion) {
                 every { CTGeofenceAPI.getLogger() } returns logger
 
                 spy.onReceive(application, intent)
@@ -126,7 +127,7 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
                 )
             } returns false
 
-            mockkStatic(CTGeofenceAPI::class) {
+            mockkObject(CTGeofenceAPI.Companion) {
                 every { CTGeofenceAPI.getLogger() } returns logger
 
                 spy.onReceive(application, intent)
@@ -158,7 +159,7 @@ class CTGeofenceBootReceiverTest : BaseTestCase() {
             } returns true
             every { Utils.hasBackgroundLocationPermission(application) } returns false
 
-            mockkStatic(CTGeofenceAPI::class) {
+            mockkObject(CTGeofenceAPI.Companion) {
                 every { CTGeofenceAPI.getLogger() } returns logger
 
                 spy.onReceive(application, intent)

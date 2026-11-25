@@ -217,7 +217,7 @@ class CleverTapAPITest : BaseTestCase() {
         with(manifestInfo) {
             assertNotEquals(expectedAccountId, accountId)
             assertNotEquals(expectedToken, accountToken)
-            assertNotEquals(expectedRegion, accountRegion)
+            assertNotEquals(expectedRegion, getAccountRegion())
         }
     }
 
@@ -240,7 +240,7 @@ class CleverTapAPITest : BaseTestCase() {
         with(manifestInfo) {
             assertEquals(expectedAccountId, accountId)
             assertEquals(expectedToken, accountToken)
-            assertEquals(expectedRegion, accountRegion)
+            assertEquals(expectedRegion, getAccountRegion())
         }
     }
 
@@ -936,7 +936,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_addMultiValuesForKey() {
         // Arrange
         val key = "Skills"
-        val values = arrayListOf("Java", "Kotlin", "Android", "Mobile Development")
+        val values = arrayListOf<String?>("Java", "Kotlin", "Android", "Mobile Development")
 
         // Act
         initializeCleverTapAPI()
@@ -1000,7 +1000,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_removeMultiValuesForKey() {
         // Arrange
         val key = "OldInterests"
-        val values = arrayListOf("Sports", "Movies", "Music")
+        val values = arrayListOf<String?>("Sports", "Movies", "Music")
 
         // Act
         initializeCleverTapAPI()
@@ -1016,7 +1016,7 @@ class CleverTapAPITest : BaseTestCase() {
     fun test_setMultiValuesForKey() {
         // Arrange
         val key = "Languages"
-        val values = arrayListOf("English", "Spanish", "French")
+        val values = arrayListOf<String?>("English", "Spanish", "French")
 
         // Act
         initializeCleverTapAPI()

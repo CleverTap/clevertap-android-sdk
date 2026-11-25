@@ -104,8 +104,8 @@ internal object CTJsonConverter {
             evtData.put("OS", deviceInfo.osName)
             evtData.put("wdt", deviceInfo.width)
             evtData.put("hgt", deviceInfo.height)
-            evtData.put("dpi", deviceInfo.dpi)
-            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.context))
+            evtData.put("dpi", deviceInfo.getDPI())
+            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()))
             evtData.put("locale", deviceInfo.locale)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -115,22 +115,22 @@ internal object CTJsonConverter {
                 evtData.put("lib", deviceInfo.library)
             }
 
-            val proxyDomain = ManifestInfo.getInstance(deviceInfo.context).proxyDomain
+            val proxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getProxyDomain()
             if (!TextUtils.isEmpty(proxyDomain)) {
                 evtData.put("proxyDomain", proxyDomain)
             }
 
-            val spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.context).spikeyProxyDomain
+            val spikyProxyDomain = ManifestInfo.getInstance(deviceInfo.getContext()).getSpikeyProxyDomain()
             if (!TextUtils.isEmpty(spikyProxyDomain)) {
                 evtData.put("spikyProxyDomain", spikyProxyDomain)
             }
 
-            val sslPinning = ManifestInfo.getInstance(deviceInfo.context).isSSLPinningEnabled
+            val sslPinning = ManifestInfo.getInstance(deviceInfo.getContext()).isSSLPinningEnabled
             if (sslPinning) {
                 evtData.put("sslpin", true)
             }
 
-            val fcmSenderId = ManifestInfo.getInstance(deviceInfo.context).fcmSenderId
+            val fcmSenderId = ManifestInfo.getInstance(deviceInfo.getContext()).fcmSenderId
             if (!TextUtils.isEmpty(fcmSenderId)) { //only for 4.3.0 for tracking custom sender ID users.
                 evtData.put("fcmsid", true)
             }
@@ -201,9 +201,9 @@ internal object CTJsonConverter {
 
     @JvmStatic
     @Throws(JSONException::class)
-    fun getWzrkFields(root: CTInAppNotification): JSONObject {
+    fun getWzrkFields(root: CTInAppNotification?): JSONObject {
         val fields = JSONObject()
-        val jsonObject = root.jsonDescription
+        val jsonObject = root!!.jsonDescription
         val iterator = jsonObject.keys()
 
         while (iterator.hasNext()) {
@@ -217,7 +217,7 @@ internal object CTJsonConverter {
     }
 
     @JvmStatic
-    fun getWzrkFields(root: CTInboxMessage): JSONObject? {
+    fun getWzrkFields(root: CTInboxMessage): JSONObject {
         return root.wzrkParams
     }
 

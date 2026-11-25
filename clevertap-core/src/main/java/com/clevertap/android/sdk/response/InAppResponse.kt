@@ -115,7 +115,7 @@ internal open class InAppResponse(
             var contentFetchItems: List<ContentFetchItem> = emptyList()
             if (responseContext.source != CTResponseSource.CONTENT_FETCH) {
                 contentFetchItems = res.contentFetchItems
-                controllerManager.inAppController.openAppLaunchArbitrationWindowIfNeeded(contentFetchItems)
+                controllerManager.inAppController!!.openAppLaunchArbitrationWindowIfNeeded(contentFetchItems)
             }
 
             handleLegacyInApps(res)
@@ -141,7 +141,7 @@ internal open class InAppResponse(
 
         val partitionedLegacyMetaInApps = res.partitionedLegacyMetaInApps
         if (partitionedLegacyMetaInApps.hasInActionInApps()) {
-            controllerManager.inAppController
+            controllerManager.inAppController!!
                 .scheduleInActionInApps(partitionedLegacyMetaInApps.inActionInApps)
         }
     }
@@ -151,14 +151,14 @@ internal open class InAppResponse(
     private fun handleAppLaunchInApps(res: InAppResponseAdapter, contentFetchItems: List<ContentFetchItem>) {
         val partitionedAppLaunchServerSideInApps = res.partitionedAppLaunchServerSideInApps
         if (partitionedAppLaunchServerSideInApps.hasImmediateInApps()) {
-            controllerManager.inAppController.onAppLaunchServerSideInAppsResponse(
+            controllerManager.inAppController!!.onAppLaunchServerSideInAppsResponse(
                 partitionedAppLaunchServerSideInApps.immediateInApps,
                 contentFetchItems,
                 coreMetaData.locationFromUser
             )
         }
         if (partitionedAppLaunchServerSideInApps.hasDelayedInApps()) {
-            controllerManager.inAppController.onAppLaunchServerSideDelayedInAppsResponse(
+            controllerManager.inAppController!!.onAppLaunchServerSideDelayedInAppsResponse(
                 partitionedAppLaunchServerSideInApps.delayedInApps,
                 coreMetaData.locationFromUser
             )
@@ -166,7 +166,7 @@ internal open class InAppResponse(
 
         val partitionedAppLaunchServerSideMetaInApps = res.partitionedAppLaunchServerSideMetaInApps
         if (partitionedAppLaunchServerSideMetaInApps.hasInActionInApps()) {
-            controllerManager.inAppController
+            controllerManager.inAppController!!
                 .onAppLaunchServerSideInactionInAppsResponse(
                     partitionedAppLaunchServerSideMetaInApps.inActionInApps,
                     coreMetaData.locationFromUser
@@ -239,13 +239,13 @@ internal open class InAppResponse(
         // Fire the first notification, if any
         val task = CTExecutorFactory.executors(config).postAsyncSafelyTask<Void?>(Constants.TAG_FEATURE_IN_APPS)
         task.execute("InAppResponse#processResponse") {
-            controllerManager.inAppController.addInAppNotificationsToQueue(inappNotifsList)
+            controllerManager.inAppController!!.addInAppNotificationsToQueue(inappNotifsList)
             null
         }
     }
 
     private fun scheduleDelayedLegacyInApps(delayedLegacyInApps: List<JSONObject>) {
-        val inAppController = controllerManager.inAppController
+        val inAppController = controllerManager.inAppController!!
 
         // Schedule using delay functionality
         inAppController.scheduleDelayedInAppsForAllModes(delayedLegacyInApps, false)

@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Intent
 import android.location.Location
 import com.google.android.gms.location.LocationResult
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -47,7 +48,7 @@ class CTLocationUpdateReceiverTest : BaseTestCase() {
         val intent = Intent()
         intent.putExtra("com.google.android.gms.location.EXTRA_LOCATION_RESULT", locationResult)
 
-        mockkStatic(CTGeofenceAPI::class) {
+        mockkObject(CTGeofenceAPI.Companion) {
             every { CTGeofenceAPI.getLogger() } returns logger
 
             spy.onReceive(application, intent)

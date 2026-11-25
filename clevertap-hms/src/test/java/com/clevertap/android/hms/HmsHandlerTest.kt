@@ -1,7 +1,7 @@
 package com.clevertap.android.hms
 
-import com.clevertap.android.hms.HmsConstants.APP_ID_KEY
-import com.clevertap.android.hms.HmsConstants.HCM_SCOPE
+import com.clevertap.android.hms.HmsConstants.Companion.APP_ID_KEY
+import com.clevertap.android.hms.HmsConstants.Companion.HCM_SCOPE
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.huawei.agconnect.AGConnectInstance
@@ -238,7 +238,7 @@ class HmsHandlerTest : BaseTestCase() {
         val handler = HmsSdkHandler(application, cleverTapInstanceConfig)
 
         // Act
-        val result = handler.isAvailable()
+        val result = handler.isAvailable
 
         // Assert
         assertTrue(result)
@@ -259,7 +259,7 @@ class HmsHandlerTest : BaseTestCase() {
         val handler = HmsSdkHandler(application, cleverTapInstanceConfig)
 
         // Act
-        val result = handler.isAvailable()
+        val result = handler.isAvailable
 
         // Assert
         assertFalse(result)

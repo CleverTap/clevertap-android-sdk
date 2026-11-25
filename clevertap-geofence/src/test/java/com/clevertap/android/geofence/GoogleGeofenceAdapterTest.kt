@@ -10,6 +10,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -44,7 +46,7 @@ class GoogleGeofenceAdapterTest : BaseTestCase() {
         ctGeofenceAdapter = mockk(relaxed = true)
         logger = mockk(relaxed = true)
 
-        mockkStatic(CTGeofenceAPI::class)
+        mockkObject(CTGeofenceAPI.Companion)
         mockkStatic(LocationServices::class)
         mockkStatic(Utils::class)
         mockkStatic(Tasks::class)
@@ -58,7 +60,7 @@ class GoogleGeofenceAdapterTest : BaseTestCase() {
     @After
     override fun cleanUp() {
         super.cleanUp()
-        unmockkStatic(CTGeofenceAPI::class)
+        unmockkObject(CTGeofenceAPI.Companion)
         unmockkStatic(LocationServices::class)
         unmockkStatic(Utils::class)
         unmockkStatic(Tasks::class)

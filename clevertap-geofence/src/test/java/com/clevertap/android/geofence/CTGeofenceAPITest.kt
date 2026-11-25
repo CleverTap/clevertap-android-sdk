@@ -419,6 +419,30 @@ class CTGeofenceAPITest : BaseTestCase() {
     }
 
     @Test
+    fun testKotlinPropertyAndAccessorFormsAreEquivalent() {
+        // Kotlin callers of the former Java class may use either form; both must compile and agree.
+        val ctGeofenceAPI = CTGeofenceAPI.getInstance(application)
+
+        val locationListener = CTLocationUpdatesListener {}
+        ctGeofenceAPI.ctLocationUpdatesListener = locationListener
+        assertSame(locationListener, ctGeofenceAPI.getCtLocationUpdatesListener())
+        ctGeofenceAPI.setCtLocationUpdatesListener { }
+        assertSame(ctGeofenceAPI.getCtLocationUpdatesListener(), ctGeofenceAPI.ctLocationUpdatesListener)
+
+        val eventsListener = mockk<CTGeofenceEventsListener>()
+        ctGeofenceAPI.ctGeofenceEventsListener = eventsListener
+        assertSame(eventsListener, ctGeofenceAPI.getCtGeofenceEventsListener())
+
+        assertSame(ctGeofenceAPI.getGeofenceSettings(), ctGeofenceAPI.geofenceSettings)
+
+        val settings = CTGeofenceSettings.Builder().setId("id").setInterval(3_600_000L).build()
+        assertEquals(settings.getInterval(), settings.interval)
+        assertEquals(settings.getId(), settings.id)
+        assertEquals(settings.isBackgroundLocationUpdatesEnabled(), settings.isBackgroundLocationUpdatesEnabled)
+        assertEquals(settings.getLocationFetchMode(), settings.locationFetchMode)
+    }
+
+    @Test
     fun testTriggerLocationTC1() {
         // when location access permission is denied
         every {

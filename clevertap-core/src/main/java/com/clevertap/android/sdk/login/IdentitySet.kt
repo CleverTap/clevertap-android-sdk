@@ -85,7 +85,7 @@ internal open class IdentitySet {
         if (keysArrays != null && keysArrays.isNotEmpty()) {
             for (key in keysArrays) {
                 if (Utils.containsIgnoreCase(Constants.ALL_IDENTITY_KEYS, key)) {
-                    identities.add(Utils.convertToTitleCase(key))
+                    identities.add(Utils.convertToTitleCase(key)!!)
                 }
             }
         }

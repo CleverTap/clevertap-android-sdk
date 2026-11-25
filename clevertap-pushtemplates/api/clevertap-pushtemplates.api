@@ -11,6 +11,7 @@ public final class com/clevertap/android/pushtemplates/BuildConfig {
 public class com/clevertap/android/pushtemplates/PTConstants {
 	public static final field ALT_TEXT_SUFFIX Ljava/lang/String;
 	public static final field COLOR_KEYS Ljava/util/Set;
+	public static final field Companion Lcom/clevertap/android/pushtemplates/PTConstants$Companion;
 	public static final field DEFAULT_DL Ljava/lang/String;
 	public static final field KEY_CLICKED_STAR Ljava/lang/String;
 	public static final field KEY_REQUEST_CODES Ljava/lang/String;
@@ -158,6 +159,9 @@ public class com/clevertap/android/pushtemplates/PTConstants {
 	public fun <init> ()V
 }
 
+public final class com/clevertap/android/pushtemplates/PTConstants$Companion {
+}
+
 public final class com/clevertap/android/pushtemplates/PTHttpBitmapLoader {
 	public static final field INSTANCE Lcom/clevertap/android/pushtemplates/PTHttpBitmapLoader;
 	public static final fun getHttpBitmap (Lcom/clevertap/android/pushtemplates/PTHttpBitmapLoader$PTHttpBitmapOperation;Lcom/clevertap/android/sdk/bitmap/BitmapDownloadRequest;)Lcom/clevertap/android/sdk/network/DownloadedBitmap;
@@ -168,17 +172,6 @@ public final class com/clevertap/android/pushtemplates/PTHttpBitmapLoader$PTHttp
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/clevertap/android/pushtemplates/PTHttpBitmapLoader$PTHttpBitmapOperation;
 	public static fun values ()[Lcom/clevertap/android/pushtemplates/PTHttpBitmapLoader$PTHttpBitmapOperation;
-}
-
-public final class com/clevertap/android/pushtemplates/PTLog {
-	public static fun debug (Ljava/lang/String;)V
-	public static fun verbose (Ljava/lang/String;)V
-	public static fun verbose (Ljava/lang/String;Ljava/lang/Throwable;)V
-}
-
-public class com/clevertap/android/pushtemplates/PTPushNotificationReceiver : com/clevertap/android/sdk/pushnotification/CTPushNotificationReceiver {
-	public fun <init> ()V
-	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
 }
 
 public final class com/clevertap/android/pushtemplates/PTScaleType : java/lang/Enum {
@@ -203,11 +196,6 @@ public class com/clevertap/android/pushtemplates/PushTemplateNotificationHandler
 	public fun onActionButtonClick (Landroid/content/Context;Landroid/os/Bundle;I)Z
 	public fun onMessageReceived (Landroid/content/Context;Landroid/os/Bundle;Ljava/lang/String;)Z
 	public fun onNewToken (Landroid/content/Context;Ljava/lang/String;Lcom/clevertap/android/sdk/pushnotification/PushType;)Z
-}
-
-public class com/clevertap/android/pushtemplates/PushTemplateReceiver : android/content/BroadcastReceiver {
-	public fun <init> ()V
-	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
 }
 
 public final class com/clevertap/android/pushtemplates/TemplateRenderer : com/clevertap/android/sdk/interfaces/AudibleNotification, com/clevertap/android/sdk/pushnotification/INotificationRenderer {
@@ -240,23 +228,6 @@ public final class com/clevertap/android/pushtemplates/TemplateRenderer$LogLevel
 	public final fun intValue ()I
 	public static fun valueOf (Ljava/lang/String;)Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
 	public static fun values ()[Lcom/clevertap/android/pushtemplates/TemplateRenderer$LogLevel;
-}
-
-public class com/clevertap/android/pushtemplates/Utils {
-	public fun <init> ()V
-	public static fun createColorMap (Landroid/os/Bundle;Z)Ljava/util/Map;
-	public static fun getAppIcon (Landroid/content/Context;)Landroid/graphics/Bitmap;
-	public static fun getApplicationName (Landroid/content/Context;)Ljava/lang/String;
-	public static fun getColour (Ljava/lang/String;Ljava/lang/String;)I
-	public static fun getColourOrNull (Ljava/lang/String;)Ljava/lang/Integer;
-	public static fun getFlipInterval (Landroid/os/Bundle;)I
-	public static fun getNotificationById (Landroid/content/Context;I)Landroid/app/Notification;
-	public static fun getNotificationIds (Landroid/content/Context;)Ljava/util/ArrayList;
-	public static fun getTimeStamp (Landroid/content/Context;J)Ljava/lang/String;
-	public static fun getTimerEnd (Landroid/os/Bundle;J)I
-	public static fun isDarkMode (Landroid/content/Context;)Z
-	public static fun isNotificationInTray (Landroid/content/Context;I)Z
-	public static fun setBitMapColour (Landroid/content/Context;ILjava/lang/String;Ljava/lang/String;)Landroid/graphics/Bitmap;
 }
 
 public abstract interface class com/clevertap/android/pushtemplates/checkers/Checker {

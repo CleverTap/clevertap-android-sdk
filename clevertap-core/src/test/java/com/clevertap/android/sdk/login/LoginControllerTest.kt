@@ -123,7 +123,7 @@ class LoginControllerTest : BaseTestCase() {
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
             // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
             // previous user's buffered in-app is dropped rather than shown to the new user.
-            controllerManager.inAppController.abandonAppLaunchArbitration()
+            controllerManager.inAppController!!.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
@@ -136,7 +136,7 @@ class LoginControllerTest : BaseTestCase() {
             analyticsManager.forcePushAppLaunchedEvent()
             analyticsManager.pushProfile(profile)
             pushProviders.forcePushDeviceToken(true)
-            controllerManager.inAppFCManager.changeUser(any())
+            controllerManager.inAppFCManager!!.changeUser(any())
         }
     }
 
@@ -164,7 +164,7 @@ class LoginControllerTest : BaseTestCase() {
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
             // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
             // previous user's buffered in-app is dropped rather than shown to the new user.
-            controllerManager.inAppController.abandonAppLaunchArbitration()
+            controllerManager.inAppController!!.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
@@ -177,7 +177,7 @@ class LoginControllerTest : BaseTestCase() {
             analyticsManager.forcePushAppLaunchedEvent()
             analyticsManager.pushProfile(profile)
             pushProviders.forcePushDeviceToken(true)
-            controllerManager.inAppFCManager.changeUser(any())
+            controllerManager.inAppFCManager!!.changeUser(any())
         }
     }
 
@@ -196,13 +196,13 @@ class LoginControllerTest : BaseTestCase() {
         }
 
         verifyOrder {
-            coreMetaData.setCurrentUserOptedOut(false)
+            coreMetaData.isCurrentUserOptedOut = false
             pushProviders.forcePushDeviceToken(false)
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR, null, true)
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
             // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
             // previous user's buffered in-app is dropped rather than shown to the new user.
-            controllerManager.inAppController.abandonAppLaunchArbitration()
+            controllerManager.inAppController!!.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
@@ -214,7 +214,7 @@ class LoginControllerTest : BaseTestCase() {
             deviceInfo.setSystemEventsAllowedStateFromStorage()
             analyticsManager.forcePushAppLaunchedEvent()
             pushProviders.forcePushDeviceToken(true)
-            controllerManager.inAppFCManager.changeUser(any())
+            controllerManager.inAppFCManager!!.changeUser(any())
         }
         verify(exactly = 0) { analyticsManager.pushProfile(any()) }
     }
@@ -244,7 +244,7 @@ class LoginControllerTest : BaseTestCase() {
         // The flush runs before submit so the new user's ARP is in SharedPreferences
         // before the inbox FETCH request header is built.
         verifyOrder {
-            controllerManager.setCTInboxController(null)
+            controllerManager.ctInboxController = null
             baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR)
             inboxV2Bridge.submit(FetchTrigger.SYSTEM, null)
         }
@@ -273,7 +273,7 @@ class LoginControllerTest : BaseTestCase() {
             baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, null, true)
             // Arbitration window must be abandoned BEFORE the fetch jobs are cancelled, so the
             // previous user's buffered in-app is dropped rather than shown to the new user.
-            controllerManager.inAppController.abandonAppLaunchArbitration()
+            controllerManager.inAppController!!.abandonAppLaunchArbitration()
             contentFetchManager.cancelAllResponseJobs()
             dbManager.clearQueues(context)
             CoreMetaData.setActivityCount(1)
@@ -286,7 +286,7 @@ class LoginControllerTest : BaseTestCase() {
             analyticsManager.forcePushAppLaunchedEvent()
             analyticsManager.pushProfile(profile)
             pushProviders.forcePushDeviceToken(true)
-            controllerManager.inAppFCManager.changeUser(any())
+            controllerManager.inAppFCManager!!.changeUser(any())
         }
     }
 

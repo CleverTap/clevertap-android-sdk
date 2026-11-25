@@ -14,6 +14,8 @@ import com.clevertap.android.geofence.fakes.GeofenceJSON.geofenceArray
 import com.clevertap.android.geofence.fakes.GeofenceJSON.lastFromGeofenceArray
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener
 import com.clevertap.android.sdk.CleverTapAPI
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -47,7 +49,7 @@ class UtilsTest : BaseTestCase() {
 
         shadowApplication = Shadows.shadowOf(application)
 
-        mockkStatic(CTGeofenceAPI::class)
+        mockkObject(CTGeofenceAPI.Companion)
 
         every { CTGeofenceAPI.getInstance(application) } returns ctGeofenceAPI
         every { CTGeofenceAPI.getLogger() } returns logger
@@ -56,7 +58,7 @@ class UtilsTest : BaseTestCase() {
     @After
     override fun cleanUp() {
         super.cleanUp()
-        unmockkStatic(CTGeofenceAPI::class)
+        unmockkObject(CTGeofenceAPI.Companion)
     }
 
     @Test
@@ -182,25 +184,25 @@ class UtilsTest : BaseTestCase() {
         val actualList = Utils.jsonToGeoFenceList(geofence)
         val expectedList = mutableListOf<String?>("310001", "310002")
 
-        MatcherAssert.assertThat<MutableList<String?>?>(
+        MatcherAssert.assertThat<List<String?>?>(
             actualList,
-            CoreMatchers.`is`<MutableList<String?>?>(expectedList)
+            CoreMatchers.`is`<List<String?>?>(expectedList)
         )
 
         val actualListWhenJsonArrayIsEmpty = Utils.jsonToGeoFenceList(emptyGeofence)
         val expectedListWhenJsonArrayIsEmpty: MutableList<String?> = ArrayList<String?>()
 
-        MatcherAssert.assertThat<MutableList<String?>?>(
+        MatcherAssert.assertThat<List<String?>?>(
             actualListWhenJsonArrayIsEmpty,
-            CoreMatchers.`is`<MutableList<String?>?>(expectedListWhenJsonArrayIsEmpty)
+            CoreMatchers.`is`<List<String?>?>(expectedListWhenJsonArrayIsEmpty)
         )
 
         val actualListWhenJsonIsEmpty = Utils.jsonToGeoFenceList(emptyJson)
         val expectedListWhenJsonIsEmpty: MutableList<String?> = ArrayList<String?>()
 
-        MatcherAssert.assertThat<MutableList<String?>?>(
+        MatcherAssert.assertThat<List<String?>?>(
             actualListWhenJsonIsEmpty,
-            CoreMatchers.`is`<MutableList<String?>?>(expectedListWhenJsonIsEmpty)
+            CoreMatchers.`is`<List<String?>?>(expectedListWhenJsonIsEmpty)
         )
     }
 

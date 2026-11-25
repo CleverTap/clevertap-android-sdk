@@ -698,22 +698,25 @@ open class CTProductConfigController @Deprecated(
     }
 
     private fun onActivated() {
-        if (callbackManager!!.productConfigListener != null) {
-            callbackManager.productConfigListener.onActivated()
+        val productConfigListener = callbackManager!!.productConfigListener
+        if (productConfigListener != null) {
+            productConfigListener.onActivated()
         }
     }
 
     //Event
     private fun onFetched() {
-        if (callbackManager!!.productConfigListener != null) {
-            callbackManager.productConfigListener.onFetched()
+        val productConfigListener = callbackManager!!.productConfigListener
+        if (productConfigListener != null) {
+            productConfigListener.onFetched()
         }
     }
 
     private fun onInit() {
-        if (callbackManager!!.productConfigListener != null) {
+        val productConfigListener = callbackManager!!.productConfigListener
+        if (productConfigListener != null) {
             config.logger.verbose(config.accountId, "Product Config initialized")
-            callbackManager.productConfigListener.onInit()
+            productConfigListener.onInit()
         }
     }
 
