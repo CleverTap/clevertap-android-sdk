@@ -1,104 +1,83 @@
-package com.clevertap.android.sdk.pushnotification;
+package com.clevertap.android.sdk.pushnotification
 
-import androidx.annotation.NonNull;
+import org.json.JSONException
+import org.json.JSONObject
+import java.util.Objects
 
-import org.json.JSONException;
-import org.json.JSONObject;
+/**
+ * Describes a push delivery channel: its [type], the preference key its token is stored under
+ * ([tokenPrefKey]), the CleverTap provider class ([ctProviderClassName]) and the messaging SDK class
+ * whose presence enables it ([messagingSDKClassName]).
+ *
+ * The two class names are nullable: wrapper SDKs build a [PushType] from maps where they may be absent.
+ */
+open class PushType(
+    type: String,
+    prefKey: String,
+    className: String?,
+    messagingSDKClassName: String?
+) {
 
-import java.util.Objects;
+    open val ctProviderClassName: String? = className
 
-public class PushType {
+    open val messagingSDKClassName: String? = messagingSDKClassName
 
-    @NonNull
-    private final String ctProviderClassName;
+    open val tokenPrefKey: String = prefKey
 
-    @NonNull
-    private final String messagingSDKClassName;
+    open val type: String = type
 
-    @NonNull
-    private final String tokenPrefKey;
-
-    @NonNull
-    private final String type;
-
-    public PushType(
-            String type,
-            String prefKey,
-            String className,
-            String messagingSDKClassName
-    ) {
-        this.type = type;
-        this.tokenPrefKey = prefKey;
-        this.ctProviderClassName = className;
-        this.messagingSDKClassName = messagingSDKClassName;
-    }
-
-    @NonNull
-    public String getCtProviderClassName() {
-        return ctProviderClassName;
-    }
-
-    @NonNull
-    public String getMessagingSDKClassName() {
-        return messagingSDKClassName;
-    }
-
-    @NonNull
-    public String getTokenPrefKey() {
-        return tokenPrefKey;
-    }
-
-    @NonNull
-    public String getType() {
-        return type;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return " [PushType:" + type + "] ";
+    override fun toString(): String {
+        return " [PushType:$type] "
     }
 
     // Method to convert PushType to JSONObject
-    public JSONObject toJSONObject() {
-        JSONObject jsonObject = new JSONObject();
+    open fun toJSONObject(): JSONObject? {
+        val jsonObject = JSONObject()
         try {
-            jsonObject.put("ctProviderClassName", ctProviderClassName);
-            jsonObject.put("messagingSDKClassName", messagingSDKClassName);
-            jsonObject.put("tokenPrefKey", tokenPrefKey);
-            jsonObject.put("type", type);
-        } catch (JSONException e) {
-            return null;
+            jsonObject.put("ctProviderClassName", ctProviderClassName)
+            jsonObject.put("messagingSDKClassName", messagingSDKClassName)
+            jsonObject.put("tokenPrefKey", tokenPrefKey)
+            jsonObject.put("type", type)
+        } catch (e: JSONException) {
+            return null
         }
-        return jsonObject;
+        return jsonObject
     }
 
-    // Static method to convert JSONObject to PushType
-    public static PushType fromJSONObject(JSONObject jsonObject) {
-        if (jsonObject == null) {
-            return null;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        try {
-            String ctProviderClassName = jsonObject.getString("ctProviderClassName");
-            String messagingSDKClassName = jsonObject.getString("messagingSDKClassName");
-            String tokenPrefKey = jsonObject.getString("tokenPrefKey");
-            String type = jsonObject.getString("type");
-            return new PushType(type, tokenPrefKey, ctProviderClassName, messagingSDKClassName);
-        } catch (JSONException e) {
-            return null;
+        if (other !is PushType) {
+            return false
         }
+        return ctProviderClassName == other.ctProviderClassName &&
+                messagingSDKClassName == other.messagingSDKClassName &&
+                tokenPrefKey == other.tokenPrefKey &&
+                type == other.type
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PushType)) return false;
-        PushType pushType = (PushType) o;
-        return Objects.equals(ctProviderClassName, pushType.ctProviderClassName) && Objects.equals(messagingSDKClassName, pushType.messagingSDKClassName) && Objects.equals(tokenPrefKey, pushType.tokenPrefKey) && Objects.equals(type, pushType.type);
+    override fun hashCode(): Int {
+        return Objects.hash(ctProviderClassName, messagingSDKClassName, tokenPrefKey, type)
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(ctProviderClassName, messagingSDKClassName, tokenPrefKey, type);
+    companion object {
+
+        // Static method to convert JSONObject to PushType
+        @JvmStatic
+        fun fromJSONObject(jsonObject: JSONObject?): PushType? {
+            if (jsonObject == null) {
+                return null
+            }
+            return try {
+                val ctProviderClassName = jsonObject.getString("ctProviderClassName")
+                val messagingSDKClassName = jsonObject.getString("messagingSDKClassName")
+                val tokenPrefKey = jsonObject.getString("tokenPrefKey")
+                val type = jsonObject.getString("type")
+                PushType(type, tokenPrefKey, ctProviderClassName, messagingSDKClassName)
+            } catch (e: JSONException) {
+                null
+            }
+        }
     }
 }

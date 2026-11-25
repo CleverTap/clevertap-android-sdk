@@ -1,20 +1,19 @@
-package com.clevertap.android.sdk.pushnotification;
+package com.clevertap.android.sdk.pushnotification
 
-import android.annotation.SuppressLint;
-import android.app.IntentService;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
-import android.os.Bundle;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
-import com.clevertap.android.sdk.interfaces.NotificationHandler;
+import android.annotation.SuppressLint
+import android.app.IntentService
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
+import android.os.Bundle
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler
 
 /**
  * Android 12 prevents components that start other activities inside services or broadcast receivers when notification is opened.
@@ -27,99 +26,92 @@ import com.clevertap.android.sdk.interfaces.NotificationHandler;
  * the Notification Clicked event will be triggered with the event properties mentioning which action button was clicked.
  * If the deep link is to a third-party application or a URL, then the Notification Clicked event will not be tracked.
  */
-@Deprecated(since = "4.3.0")
-public class CTNotificationIntentService extends IntentService {
+@Deprecated("Deprecated since 4.3.0: Android 12 notification trampoline restrictions.")
+@Suppress("DEPRECATION")
+open class CTNotificationIntentService : IntentService("CTNotificationIntentService") {
 
-    public final static String MAIN_ACTION = "com.clevertap.PUSH_EVENT";
+    private var mActionButtonClickHandler: ActionButtonClickHandler? = null
 
-    public final static String TYPE_BUTTON_CLICK = "com.clevertap.ACTION_BUTTON_CLICK";
+    @Deprecated("Deprecated in Java")
+    override fun onHandleIntent(intent: Intent?) {
+        val extras = intent!!.extras ?: return
 
-    private ActionButtonClickHandler mActionButtonClickHandler;
-
-    public CTNotificationIntentService() {
-        super("CTNotificationIntentService");
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        Bundle extras = intent.getExtras();
-        if (extras == null) {
-            return;
+        val notificationHandler = CleverTapAPI.getNotificationHandler()
+        mActionButtonClickHandler = if (PushNotificationHandler.isForPushTemplates(extras) && notificationHandler != null) {
+            notificationHandler as ActionButtonClickHandler
+        } else {
+            PushNotificationHandler.getPushNotificationHandler() as ActionButtonClickHandler
         }
 
-        NotificationHandler notificationHandler = CleverTapAPI.getNotificationHandler();
-        if (PushNotificationHandler.isForPushTemplates(extras) && notificationHandler != null) {
-            mActionButtonClickHandler = (ActionButtonClickHandler) notificationHandler;
+        val type = extras.getString(Constants.KEY_CT_TYPE) //mActionButtonClickHandler.getType(extras);
+        if (TYPE_BUTTON_CLICK == type) {
+            Logger.v("CTNotificationIntentService handling $TYPE_BUTTON_CLICK")
+            handleActionButtonClick(extras)
         } else {
-            mActionButtonClickHandler = (ActionButtonClickHandler) PushNotificationHandler
-                    .getPushNotificationHandler();
-        }
-
-        String type = extras.getString(Constants.KEY_CT_TYPE);//mActionButtonClickHandler.getType(extras);
-        if (TYPE_BUTTON_CLICK.equals(type)) {
-            Logger.v("CTNotificationIntentService handling " + TYPE_BUTTON_CLICK);
-            handleActionButtonClick(extras);
-        } else {
-            Logger.v("CTNotificationIntentService: unhandled intent " + intent.getAction());
+            Logger.v("CTNotificationIntentService: unhandled intent " + intent.action)
         }
     }
 
     @SuppressLint("MissingPermission")
-    private void handleActionButtonClick(Bundle extras) {
+    private fun handleActionButtonClick(extras: Bundle) {
         try {
-            boolean autoCancel = extras.getBoolean("autoCancel", false);
-            int notificationId = extras.getInt("notificationId", -1);
-            String dl = extras.getString("dl");
+            val autoCancel = extras.getBoolean("autoCancel", false)
+            val notificationId = extras.getInt("notificationId", -1)
+            val dl = extras.getString("dl")
 
-            Context context = getApplicationContext();
+            val context = applicationContext
 
-            boolean isActionButtonClickHandled = mActionButtonClickHandler
-                    .onActionButtonClick(context, extras, notificationId);
+            val isActionButtonClickHandled = mActionButtonClickHandler!!
+                .onActionButtonClick(context, extras, notificationId)
             if (isActionButtonClickHandled) {
-                return;
+                return
             }
 
             // For Android 12 Trampoline restrictions, do not process deeplink from here
-            if (VERSION.SDK_INT>= VERSION_CODES.S)
-            {
-                return;
+            if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                return
             }
 
-            Intent launchIntent;
+            val launchIntent: Intent?
             if (dl != null) {
-                launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
-                Utils.setPackageNameFromResolveInfoList(context, launchIntent);
+                launchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                Utils.setPackageNameFromResolveInfoList(context, launchIntent)
             } else {
-                launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+                launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
             }
 
             if (launchIntent == null) {
-                Logger.v("CTNotificationService: create launch intent.");
-                return;
+                Logger.v("CTNotificationService: create launch intent.")
+                return
             }
 
-            launchIntent.setFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            launchIntent.flags =
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
 
-            CleverTapAPI.handleNotificationClicked(context, extras);
+            CleverTapAPI.handleNotificationClicked(context, extras)
 
-            launchIntent.putExtras(extras);
-            launchIntent.removeExtra("dl");
+            launchIntent.putExtras(extras)
+            launchIntent.removeExtra("dl")
 
-            String ptDismissOnClick = extras.getString("pt_dismiss_on_click","");
+            val ptDismissOnClick = extras.getString("pt_dismiss_on_click", "")
 
             if (autoCancel && notificationId > -1 && ptDismissOnClick.isEmpty()) {
-                NotificationManager notificationManager =
-                        (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                if (notificationManager != null) {
-                    notificationManager.cancel(notificationId);
-                }
+                val notificationManager =
+                    applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
+                notificationManager?.cancel(notificationId)
 
             }
-            sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)); // close the notification drawer
-            startActivity(launchIntent);
-        } catch (Throwable t) {
-            Logger.v("CTNotificationService: unable to process action button click:  " + t.getLocalizedMessage());
+            sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) // close the notification drawer
+            startActivity(launchIntent)
+        } catch (t: Throwable) {
+            Logger.v("CTNotificationService: unable to process action button click:  " + t.localizedMessage)
         }
+    }
+
+    companion object {
+
+        const val MAIN_ACTION: String = "com.clevertap.PUSH_EVENT"
+
+        const val TYPE_BUTTON_CLICK: String = "com.clevertap.ACTION_BUTTON_CLICK"
     }
 }

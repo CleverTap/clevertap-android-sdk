@@ -1,26 +1,26 @@
-package com.clevertap.android.sdk.pushnotification;
+package com.clevertap.android.sdk.pushnotification
 
-import static com.clevertap.android.sdk.Constants.WZRK_ACCT_ID_KEY;
-import static com.clevertap.android.sdk.Constants.WZRK_PUSH_ID;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM;
-
-import android.os.Bundle;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-
-import java.util.ArrayList;
+import android.os.Bundle
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope
+import com.clevertap.android.sdk.Constants.WZRK_ACCT_ID_KEY
+import com.clevertap.android.sdk.Constants.WZRK_PUSH_ID
+import com.clevertap.android.sdk.pushnotification.PushConstants.FCM
+import java.util.ArrayList
 
 @RestrictTo(Scope.LIBRARY_GROUP)
-public class PushNotificationUtil {
+object PushNotificationUtil {
 
-    public static String getAccountIdFromNotificationBundle(Bundle message) {
-        String defaultValue = "";
-        return message != null ? message.getString(WZRK_ACCT_ID_KEY, defaultValue) : defaultValue;
+    @JvmStatic
+    fun getAccountIdFromNotificationBundle(message: Bundle?): String {
+        val defaultValue = ""
+        return if (message != null) message.getString(WZRK_ACCT_ID_KEY, defaultValue) else defaultValue
     }
 
-    public static String getPushIdFromNotificationBundle(Bundle message) {
-        String defaultValue = "";
-        return message != null ? message.getString(WZRK_PUSH_ID, defaultValue) : defaultValue;
+    @JvmStatic
+    fun getPushIdFromNotificationBundle(message: Bundle?): String {
+        val defaultValue = ""
+        return if (message != null) message.getString(WZRK_PUSH_ID, defaultValue) else defaultValue
     }
 
     /**
@@ -28,18 +28,16 @@ public class PushNotificationUtil {
      *
      * @return list
      */
-    public static ArrayList<PushType> getDefaultPushTypes() {
-        ArrayList<PushType> list = new ArrayList<>();
-        list.add(FCM);
-        return list;
+    @JvmStatic
+    fun getDefaultPushTypes(): ArrayList<PushType> {
+        val list = ArrayList<PushType>()
+        list.add(FCM)
+        return list
     }
 
-    private PushNotificationUtil() {
-
-    }
-
-    public static String buildPushNotificationRenderedListenerKey(String accountId, String pushId){
-        return accountId+"_"+pushId;
+    @JvmStatic
+    fun buildPushNotificationRenderedListenerKey(accountId: String?, pushId: String?): String {
+        return accountId + "_" + pushId
     }
 
 }

@@ -1,43 +1,43 @@
-package com.clevertap.android.sdk.pushnotification;
+package com.clevertap.android.sdk.pushnotification
 
-import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo
 
 /**
  * Defines a push provider.
  */
-public interface CTPushProvider {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+interface CTPushProvider {
 
     /**
      * Returns the delivery type.
      *
-     * @return The push delivery type Ref{@link PushType}.
+     * @return The push delivery type Ref[PushType].
      */
-    @NonNull
-    PushType getPushType();
+    val pushType: PushType
 
     /**
      * If the underlying push provider is currently available.
      *
-     * @return {@code true} if the push provider is currently available, otherwise {@code false}.
+     * @return `true` if the push provider is currently available, otherwise `false`.
      */
-    boolean isAvailable();
+    val isAvailable: Boolean
 
     /**
      * If the underlying push provider is supported on the device.
      *
-     * @return {@code true} if the push provider is supported on the device, otherwise {@code false}.
+     * @return `true` if the push provider is supported on the device, otherwise `false`.
      */
-    boolean isSupported();
+    val isSupported: Boolean
 
     /**
      * The minimum SDK version code to support the provider.
      *
      * @return int - the minimum SDK Version Code
      */
-    int minSDKSupportVersionCode();
+    fun minSDKSupportVersionCode(): Int
 
     /**
      * Requests the push registration token.
      */
-    void requestToken();
+    fun requestToken()
 }

@@ -1,7 +1,10 @@
-package com.clevertap.android.sdk.pushnotification;
+package com.clevertap.android.sdk.pushnotification
 
-public interface CTPushProviderListener {
+import androidx.annotation.RestrictTo
 
-    void onNewToken(String token, PushType pushType);
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+fun interface CTPushProviderListener {
+
+    fun onNewToken(token: String?, pushType: PushType?)
 
 }

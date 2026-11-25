@@ -1,29 +1,30 @@
-package com.clevertap.android.sdk.pushnotification;
+package com.clevertap.android.sdk.pushnotification
 
-import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo
 
-public class PushConstants {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+object PushConstants {
 
-    private PushConstants() {
-        // intentional
-    }
+    const val LOG_TAG: String = "PushProvider"
 
-    public static final String LOG_TAG = "PushProvider";
+    const val FCM_LOG_TAG: String = "FCM"
 
-    public static final String FCM_LOG_TAG = "FCM";
+    const val FCM_DELIVERY_TYPE: String = "fcm"
 
-    @NonNull
-    public static final String FCM_DELIVERY_TYPE = "fcm";
-    @NonNull
-    public static final String CT_FIREBASE_PROVIDER_CLASS = "com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider";
-    public static final String FIREBASE_SDK_CLASS = "com.google.firebase.messaging.FirebaseMessagingService";
-    public static final String FCM_PROPERTY_REG_ID = "fcm_token";
-    public static final String FCM_PUSH_TYPE = "FCM";
+    const val CT_FIREBASE_PROVIDER_CLASS: String =
+        "com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider"
 
-    public static final PushType FCM = new PushType(
-            FCM_DELIVERY_TYPE,
-            FCM_PROPERTY_REG_ID,
-            CT_FIREBASE_PROVIDER_CLASS,
-            FIREBASE_SDK_CLASS
-    );
+    const val FIREBASE_SDK_CLASS: String = "com.google.firebase.messaging.FirebaseMessagingService"
+
+    const val FCM_PROPERTY_REG_ID: String = "fcm_token"
+
+    const val FCM_PUSH_TYPE: String = "FCM"
+
+    @JvmField
+    val FCM: PushType = PushType(
+        FCM_DELIVERY_TYPE,
+        FCM_PROPERTY_REG_ID,
+        CT_FIREBASE_PROVIDER_CLASS,
+        FIREBASE_SDK_CLASS
+    )
 }
