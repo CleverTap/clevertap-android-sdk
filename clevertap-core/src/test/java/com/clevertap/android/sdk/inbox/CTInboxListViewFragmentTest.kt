@@ -321,10 +321,10 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
 
         assertSame(originalListInstance, fragment.inboxMessages)
         assertEquals(2, fragment.inboxMessages.size)
-        val recycler = fragment.linearLayout.findViewById<RecyclerView>(R.id.list_view_recycler_view)
+        val recycler = fragment.linearLayout!!.findViewById<RecyclerView>(R.id.list_view_recycler_view)
         assertEquals(View.VISIBLE, recycler.visibility)
         assertEquals(2, recycler.adapter?.itemCount)
-        assertEquals(View.GONE, fragment.noMessageView.visibility)
+        assertEquals(View.GONE, fragment.noMessageView!!.visibility)
     }
 
     @Test
@@ -367,10 +367,10 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
         fragment.refreshList()
 
         assertTrue(fragment.inboxMessages.isEmpty())
-        val recycler = fragment.linearLayout.findViewById<RecyclerView>(R.id.list_view_recycler_view)
+        val recycler = fragment.linearLayout!!.findViewById<RecyclerView>(R.id.list_view_recycler_view)
         assertEquals(View.GONE, recycler.visibility)
         assertEquals(0, recycler.adapter?.itemCount)
-        assertEquals(View.VISIBLE, fragment.noMessageView.visibility)
+        assertEquals(View.VISIBLE, fragment.noMessageView!!.visibility)
     }
 
     @Test
@@ -397,6 +397,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
+            // CTInboxListViewFragment only asks CleverTapAPI for an instance when it has a config
+            fragment.config = mockk(relaxed = true)
             every { fragment.requireContext() } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }
@@ -426,6 +428,8 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             justRun { api.fetchInbox(capture(callbackSlot)) }
 
             val fragment = viewReadyFragment()
+            // CTInboxListViewFragment only asks CleverTapAPI for an instance when it has a config
+            fragment.config = mockk(relaxed = true)
             every { fragment.requireContext() } returns appCtx
             every { fragment.isAdded } returns true
             justRun { fragment.refreshList() }

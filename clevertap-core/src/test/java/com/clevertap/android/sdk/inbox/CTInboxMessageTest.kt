@@ -116,4 +116,41 @@ class CTInboxMessageTest {
         assertNotNull(customData)
         assertEquals(0, customData.length())
     }
+
+    @Test
+    fun `getters are reachable as both Java-style calls and Kotlin properties`() {
+        val json = JSONObject()
+            .put(Constants.KEY_ID, "msg-1")
+            .put(Constants.KEY_IS_READ, true)
+            .put(
+                Constants.KEY_MSG, JSONObject()
+                    .put(Constants.KEY_TYPE, "simple")
+                    .put(Constants.KEY_BG, "#FFFFFF")
+                    .put(
+                        Constants.KEY_CONTENT, JSONArray().put(
+                            JSONObject().put(
+                                Constants.KEY_TITLE,
+                                JSONObject().put(Constants.KEY_TEXT, "hello")
+                            )
+                        )
+                    )
+            )
+        val message = CTInboxMessage(json)
+
+        assertEquals("msg-1", message.getMessageId())
+        assertEquals("msg-1", message.messageId)
+        assertTrue(message.isRead())
+        assertTrue(message.isRead)
+        assertEquals(CTInboxMessageType.SimpleMessage, message.getType())
+        assertEquals(CTInboxMessageType.SimpleMessage, message.type)
+
+        val content = message.getInboxMessageContents()[0]
+        assertEquals(content, message.inboxMessageContents[0])
+        assertEquals("hello", content.getTitle())
+        assertEquals("hello", content.title)
+        content.setPosterUrl("poster")
+        assertEquals("poster", content.posterUrl)
+        content.posterUrl = "poster2"
+        assertEquals("poster2", content.getPosterUrl())
+    }
 }

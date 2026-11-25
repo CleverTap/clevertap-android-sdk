@@ -13,8 +13,8 @@ class InboxV2MergerTest {
     ): CTMessageDAO = object : CTMessageDAO() {
         override fun containsVideoOrAudio(): Boolean = false
     }.apply {
-        setId(id)
-        setExpires(expires)
+        this.id = id
+        this.expires = expires
         setRead(read)
     }
 
@@ -24,8 +24,8 @@ class InboxV2MergerTest {
     ): CTMessageDAO = object : CTMessageDAO() {
         override fun containsVideoOrAudio(): Boolean = true
     }.apply {
-        setId(id)
-        setExpires(expires)
+        this.id = id
+        this.expires = expires
     }
 
     // ========== preWriteFilter ==========
