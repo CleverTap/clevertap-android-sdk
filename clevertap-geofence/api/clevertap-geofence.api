@@ -1,0 +1,169 @@
+public class com/clevertap/android/geofence/BackgroundLocationWork : androidx/work/ListenableWorker {
+	public fun <init> (Landroid/content/Context;Landroidx/work/WorkerParameters;)V
+	public fun startWork ()Lcom/google/common/util/concurrent/ListenableFuture;
+}
+
+public final class com/clevertap/android/geofence/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field SDK_VERSION_STRING Ljava/lang/String;
+	public static final field VERSION_CODE I
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public class com/clevertap/android/geofence/CTGeofenceAPI : com/clevertap/android/sdk/GeofenceCallback {
+	public static final field GEOFENCE_LOG_TAG Ljava/lang/String;
+	public fun deactivate ()V
+	public fun getCtGeofenceEventsListener ()Lcom/clevertap/android/geofence/interfaces/CTGeofenceEventsListener;
+	public fun getCtLocationUpdatesListener ()Lcom/clevertap/android/geofence/interfaces/CTLocationUpdatesListener;
+	public fun getGeofenceSettings ()Lcom/clevertap/android/geofence/CTGeofenceSettings;
+	public static fun getInstance (Landroid/content/Context;)Lcom/clevertap/android/geofence/CTGeofenceAPI;
+	public static fun getLogger ()Lcom/clevertap/android/geofence/Logger;
+	public fun init (Lcom/clevertap/android/geofence/CTGeofenceSettings;Lcom/clevertap/android/sdk/CleverTapAPI;)V
+	public fun initBackgroundLocationUpdates ()V
+	public fun setCtGeofenceEventsListener (Lcom/clevertap/android/geofence/interfaces/CTGeofenceEventsListener;)V
+	public fun setCtLocationUpdatesListener (Lcom/clevertap/android/geofence/interfaces/CTLocationUpdatesListener;)V
+	public fun setOnGeofenceApiInitializedListener (Lcom/clevertap/android/geofence/CTGeofenceAPI$OnGeofenceApiInitializedListener;)V
+	public fun triggerLocation ()V
+}
+
+public abstract interface class com/clevertap/android/geofence/CTGeofenceAPI$OnGeofenceApiInitializedListener {
+	public abstract fun OnGeofenceApiInitialized ()V
+}
+
+public class com/clevertap/android/geofence/CTGeofenceBootReceiver : android/content/BroadcastReceiver {
+	public fun <init> ()V
+	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
+}
+
+public class com/clevertap/android/geofence/CTGeofenceConstants {
+	public static final field KEY_GEOFENCES Ljava/lang/String;
+	public static final field KEY_ID Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public class com/clevertap/android/geofence/CTGeofenceReceiver : android/content/BroadcastReceiver {
+	public fun <init> ()V
+	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
+}
+
+public class com/clevertap/android/geofence/CTGeofenceSettings {
+	public static final field ACCURACY_HIGH B
+	public static final field ACCURACY_LOW B
+	public static final field ACCURACY_MEDIUM B
+	public static final field DEFAULT_GEO_MONITOR_COUNT I
+	public static final field FETCH_CURRENT_LOCATION_PERIODIC B
+	public static final field FETCH_LAST_LOCATION_PERIODIC B
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFastestInterval ()J
+	public fun getGeofenceMonitoringCount ()I
+	public fun getGeofenceNotificationResponsiveness ()I
+	public fun getId ()Ljava/lang/String;
+	public fun getInterval ()J
+	public fun getLocationAccuracy ()I
+	public fun getLocationFetchMode ()I
+	public fun getLogLevel ()I
+	public fun getSmallestDisplacement ()F
+	public fun hashCode ()I
+	public fun isBackgroundLocationUpdatesEnabled ()Z
+}
+
+public final class com/clevertap/android/geofence/CTGeofenceSettings$Builder {
+	public fun <init> ()V
+	public fun build ()Lcom/clevertap/android/geofence/CTGeofenceSettings;
+	public fun enableBackgroundLocationUpdates (Z)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setFastestInterval (J)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setGeofenceMonitoringCount (I)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setGeofenceNotificationResponsiveness (I)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setId (Ljava/lang/String;)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setInterval (J)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setLocationAccuracy (B)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setLocationFetchMode (B)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setLogLevel (I)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+	public fun setSmallestDisplacement (F)Lcom/clevertap/android/geofence/CTGeofenceSettings$Builder;
+}
+
+public class com/clevertap/android/geofence/CTLocationUpdateReceiver : android/content/BroadcastReceiver {
+	public fun <init> ()V
+	public fun onReceive (Landroid/content/Context;Landroid/content/Intent;)V
+}
+
+public class com/clevertap/android/geofence/FileUtils {
+	public fun <init> ()V
+}
+
+public final class com/clevertap/android/geofence/GeofenceStorageHelper {
+	public fun <init> ()V
+}
+
+public final class com/clevertap/android/geofence/Logger {
+	public static final field DEBUG I
+	public static final field INFO I
+	public static final field OFF I
+	public static final field VERBOSE I
+	public fun debug (Ljava/lang/String;)V
+	public fun debug (Ljava/lang/String;Ljava/lang/String;)V
+	public fun debug (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun debug (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun info (Ljava/lang/String;)V
+	public fun info (Ljava/lang/String;Ljava/lang/String;)V
+	public fun info (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun info (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun setDebugLevel (I)V
+	public fun verbose (Ljava/lang/String;)V
+	public fun verbose (Ljava/lang/String;Ljava/lang/String;)V
+	public fun verbose (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun verbose (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public abstract interface annotation class com/clevertap/android/geofence/Logger$LogLevel : java/lang/annotation/Annotation {
+}
+
+public abstract interface class com/clevertap/android/geofence/interfaces/CTGeofenceAdapter {
+	public abstract fun addAllGeofence (Ljava/util/List;Lcom/google/android/gms/tasks/OnSuccessListener;)V
+	public abstract fun removeAllGeofence (Ljava/util/List;Lcom/google/android/gms/tasks/OnSuccessListener;)V
+	public abstract fun stopGeofenceMonitoring (Landroid/app/PendingIntent;)V
+}
+
+public abstract interface class com/clevertap/android/geofence/interfaces/CTGeofenceEventsListener {
+	public abstract fun onGeofenceEnteredEvent (Lorg/json/JSONObject;)V
+	public abstract fun onGeofenceExitedEvent (Lorg/json/JSONObject;)V
+}
+
+public abstract interface class com/clevertap/android/geofence/interfaces/CTGeofenceTask {
+	public abstract fun execute ()V
+	public abstract fun setOnCompleteListener (Lcom/clevertap/android/geofence/interfaces/CTGeofenceTask$OnCompleteListener;)V
+}
+
+public abstract interface class com/clevertap/android/geofence/interfaces/CTGeofenceTask$OnCompleteListener {
+	public abstract fun onComplete ()V
+}
+
+public abstract interface class com/clevertap/android/geofence/interfaces/CTLocationAdapter {
+	public abstract fun getLastLocation (Lcom/clevertap/android/geofence/interfaces/CTLocationCallback;)V
+	public abstract fun removeLocationUpdates (Landroid/app/PendingIntent;)V
+	public abstract fun requestLocationUpdates ()V
+}
+
+public abstract interface class com/clevertap/android/geofence/interfaces/CTLocationCallback {
+	public abstract fun onLocationComplete (Landroid/location/Location;)V
+}
+
+public abstract interface class com/clevertap/android/geofence/interfaces/CTLocationUpdatesListener {
+	public abstract fun onLocationUpdates (Landroid/location/Location;)V
+}
+
+public class com/clevertap/android/geofence/model/CTGeofence {
+	public static fun from (Lorg/json/JSONObject;)Ljava/util/List;
+	public fun getId ()Ljava/lang/String;
+	public fun getLatitude ()D
+	public fun getLongitude ()D
+	public fun getRadius ()I
+	public fun getTransitionType ()I
+}
+
+public final class com/clevertap/android/geofence/model/CTGeofence$Builder {
+}
+

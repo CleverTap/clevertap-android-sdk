@@ -23,6 +23,15 @@ buildscript {
 plugins {
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.binary.compatibility.validator)
+}
+
+// Public API guard: `./gradlew apiCheck` fails if a published module's public ABI drifts from its
+// checked-in `<module>/api/<module>.api`; run `./gradlew apiDump` to accept an intentional change.
+// @RestrictTo members/types are SDK-internal (used across our own modules) and are excluded.
+apiValidation {
+    ignoredProjects += ["sample", "instantapp", "test_shared"]
+    nonPublicMarkers += ["androidx.annotation.RestrictTo"]
 }
 allprojects {
     repositories {
