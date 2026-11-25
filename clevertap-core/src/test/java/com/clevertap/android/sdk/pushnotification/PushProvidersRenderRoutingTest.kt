@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.pushnotification
 
 import android.app.Notification
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -61,7 +63,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
 
     @After
     fun tearDown() {
-        unmockkStatic(CleverTapAPI::class)
+        unmockkObject(CleverTapAPI.Companion)
     }
 
     /** Builds a real PushProviders via its internal constructor (skips provider discovery in init()). */
@@ -166,7 +168,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
     @Test
     fun `Mode A with factory - renders and raises Started`() {
         createChannel("la_ch")
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         val factory = mockk<ICleverTapLiveUpdateNotificationFactory>()
         every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns factory
         every { factory.onCreateNotification(any(), any()) } returns factoryNotification("la_ch")
@@ -190,7 +192,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
 
     @Test
     fun `Mode A factory returns null - does not raise lifecycle`() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         val factory = mockk<ICleverTapLiveUpdateNotificationFactory>()
         every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns factory
         every { factory.onCreateNotification(any(), any()) } returns null
@@ -208,7 +210,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
     @Test
     fun `Mode A end event - raises Ended`() {
         createChannel("la_ch")
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         val factory = mockk<ICleverTapLiveUpdateNotificationFactory>()
         every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns factory
         every { factory.onCreateNotification(any(), any()) } returns factoryNotification("la_ch")
@@ -229,7 +231,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
 
     @Test
     fun `Mode A no factory - empty-message core renderer is silent (not blank render)`() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns null
 
         // Real core renderer: getMessage reads nm (absent -> empty), so the empty-message gate applies.
@@ -248,7 +250,7 @@ class PushProvidersRenderRoutingTest : BaseTestCase() {
 
     @Test
     fun `Mode B pt_id with empty message - not silent, proceeds to render`() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         every { CleverTapAPI.getLiveUpdateNotificationFactory() } returns null
         every { renderer.getMessage(any()) } returns "" // title-only pt_progress
 

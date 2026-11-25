@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.inbox
 
 import android.os.Bundle
+import io.mockk.unmockkObject
+import io.mockk.mockkObject
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -386,7 +388,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
 
     @Test
     fun test_swipe_refresh_success_triggers_refreshList_and_stops_spinner() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
             every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
@@ -409,13 +411,13 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             assertFalse(swipeRefreshLayout.isRefreshing)
             verify(exactly = 1) { fragment.refreshList() }
         } finally {
-            unmockkStatic(CleverTapAPI::class)
+            unmockkObject(CleverTapAPI.Companion)
         }
     }
 
     @Test
     fun test_swipe_refresh_failure_stops_spinner_without_refreshing() {
-        mockkStatic(CleverTapAPI::class)
+        mockkObject(CleverTapAPI.Companion)
         try {
             val api = mockk<CleverTapAPI>(relaxed = true)
             every { CleverTapAPI.instanceWithConfig(any(), any()) } returns api
@@ -439,7 +441,7 @@ class CTInboxListViewFragmentTest : BaseTestCase() {
             assertTrue(swipeRefreshLayout.isEnabled)
             verify(exactly = 0) { fragment.refreshList() }
         } finally {
-            unmockkStatic(CleverTapAPI::class)
+            unmockkObject(CleverTapAPI.Companion)
         }
     }
 

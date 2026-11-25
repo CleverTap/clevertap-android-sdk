@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.network
 
 import android.content.Context
+import io.mockk.mockkObject
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -65,7 +66,7 @@ class QueueHeaderBuilderTest {
 
     @Test
     fun `header contains debug true when debug level is 3`() {
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every { CleverTapAPI.getDebugLevel() } returns 3
             val header = builder.buildHeader(null)
             assertNotNull(header)

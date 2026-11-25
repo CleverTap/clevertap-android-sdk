@@ -442,7 +442,10 @@ open class CTWebInterface {
     /**
      * Retrieve the version code of the CleverTap SDK.
      */
-    @get:JavascriptInterface
-    open val sdkVersion: Int
-        get() = BuildConfig.VERSION_CODE
+    @JavascriptInterface
+    open fun getSdkVersion(): Int = BuildConfig.VERSION_CODE
+
+    /** Kotlin property syntax, equivalent to [getSdkVersion]. */
+    val sdkVersion: Int
+        @JvmSynthetic @JvmName("ktGetSdkVersion") inline get() = getSdkVersion()
 }

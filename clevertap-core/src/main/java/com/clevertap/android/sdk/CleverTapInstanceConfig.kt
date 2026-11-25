@@ -282,21 +282,33 @@ open class CleverTapInstanceConfig : Parcelable {
      * The CleverTap account ID. Every public factory rejects a null account ID, so this is non-null
      * for any config created through the public API.
      */
-    open val accountId: String
-        get() = _accountId!!
+    open fun getAccountId(): String = _accountId!!
 
-    open val accountRegion: String?
-        get() = _accountRegion
+    /** Kotlin property syntax, equivalent to [getAccountId]. */
+    val accountId: String
+        @JvmSynthetic @JvmName("ktGetAccountId") inline get() = getAccountId()
+
+    open fun getAccountRegion(): String? = _accountRegion
+
+    /** Kotlin property syntax, equivalent to [getAccountRegion]. */
+    val accountRegion: String?
+        @JvmSynthetic @JvmName("ktGetAccountRegion") inline get() = getAccountRegion()
 
     /**
      * The CleverTap account token. Every public factory rejects a null token, so this is non-null
      * for any config created through the public API.
      */
-    open val accountToken: String
-        get() = _accountToken!!
+    open fun getAccountToken(): String = _accountToken!!
 
-    open val pushTypes: ArrayList<PushType>
-        get() = _pushTypes
+    /** Kotlin property syntax, equivalent to [getAccountToken]. */
+    val accountToken: String
+        @JvmSynthetic @JvmName("ktGetAccountToken") inline get() = getAccountToken()
+
+    open fun getPushTypes(): ArrayList<PushType> = _pushTypes
+
+    /** Kotlin property syntax, equivalent to [getPushTypes]. */
+    val pushTypes: ArrayList<PushType>
+        @JvmSynthetic @JvmName("ktGetPushTypes") inline get() = getPushTypes()
 
     open fun addPushType(allowedPushType: PushType) {
         if (!_pushTypes.contains(allowedPushType)) {
@@ -307,71 +319,114 @@ open class CleverTapInstanceConfig : Parcelable {
     /**
      * Debug level of this instance. Setting it also updates this instance's [logger].
      */
-    open var debugLevel: Int
-        get() = _debugLevel
-        set(debugLevel) {
-            this._debugLevel = debugLevel
-            val currentLogger = _logger
-            if (currentLogger != null) {
-                currentLogger.setDebugLevel(debugLevel)
-            }
-        }
+    open fun getDebugLevel(): Int = _debugLevel
 
-    open var proxyDomain: String?
-        get() = _proxyDomain
-        set(proxyDomain) {
-            this._proxyDomain = proxyDomain
+    open fun setDebugLevel(debugLevel: Int) {
+        this._debugLevel = debugLevel
+        val currentLogger = _logger
+        if (currentLogger != null) {
+            currentLogger.setDebugLevel(debugLevel)
         }
+    }
 
-    open var spikyProxyDomain: String?
-        get() = _spikyProxyDomain
-        set(spikyProxyDomain) {
-            this._spikyProxyDomain = spikyProxyDomain
-        }
+    /** Kotlin property syntax, equivalent to [getDebugLevel] / [setDebugLevel]. */
+    var debugLevel: Int
+        @JvmSynthetic @JvmName("ktGetDebugLevel") inline get() = getDebugLevel()
+        @JvmSynthetic @JvmName("ktSetDebugLevel") inline set(value) = setDebugLevel(value)
 
-    open var customHandshakeDomain: String?
-        get() = _customHandshakeDomain
-        set(handshakeDomain) {
-            this._customHandshakeDomain = handshakeDomain
-        }
+    open fun getProxyDomain(): String? = _proxyDomain
+
+    open fun setProxyDomain(proxyDomain: String?) {
+        this._proxyDomain = proxyDomain
+    }
+
+    /** Kotlin property syntax, equivalent to [getProxyDomain] / [setProxyDomain]. */
+    var proxyDomain: String?
+        @JvmSynthetic @JvmName("ktGetProxyDomain") inline get() = getProxyDomain()
+        @JvmSynthetic @JvmName("ktSetProxyDomain") inline set(value) = setProxyDomain(value)
+
+    open fun getSpikyProxyDomain(): String? = _spikyProxyDomain
+
+    open fun setSpikyProxyDomain(spikyProxyDomain: String?) {
+        this._spikyProxyDomain = spikyProxyDomain
+    }
+
+    /** Kotlin property syntax, equivalent to [getSpikyProxyDomain] / [setSpikyProxyDomain]. */
+    var spikyProxyDomain: String?
+        @JvmSynthetic @JvmName("ktGetSpikyProxyDomain") inline get() = getSpikyProxyDomain()
+        @JvmSynthetic @JvmName("ktSetSpikyProxyDomain") inline set(value) = setSpikyProxyDomain(value)
+
+    open fun getCustomHandshakeDomain(): String? = _customHandshakeDomain
+
+    open fun setCustomHandshakeDomain(handshakeDomain: String?) {
+        this._customHandshakeDomain = handshakeDomain
+    }
+
+    /** Kotlin property syntax, equivalent to [getCustomHandshakeDomain] / [setCustomHandshakeDomain]. */
+    var customHandshakeDomain: String?
+        @JvmSynthetic @JvmName("ktGetCustomHandshakeDomain") inline get() = getCustomHandshakeDomain()
+        @JvmSynthetic @JvmName("ktSetCustomHandshakeDomain") inline set(value) = setCustomHandshakeDomain(value)
 
     open fun setDebugLevel(debugLevel: CleverTapAPI.LogLevel) {
         this.debugLevel = debugLevel.intValue()
     }
 
-    open val fcmSenderId: String?
-        get() = _fcmSenderId
+    open fun getFcmSenderId(): String? = _fcmSenderId
 
-    open val logger: Logger
-        get() {
-            var currentLogger = _logger
-            if (currentLogger == null) {
-                currentLogger = Logger(this._debugLevel)
-                _logger = currentLogger
-            }
-            return currentLogger
+    /** Kotlin property syntax, equivalent to [getFcmSenderId]. */
+    val fcmSenderId: String?
+        @JvmSynthetic @JvmName("ktGetFcmSenderId") inline get() = getFcmSenderId()
+
+    open fun getLogger(): Logger {
+        var currentLogger = _logger
+        if (currentLogger == null) {
+            currentLogger = Logger(this._debugLevel)
+            _logger = currentLogger
         }
+        return currentLogger
+    }
 
-    open val packageName: String?
-        get() = _packageName
+    /** Kotlin property syntax, equivalent to [getLogger]. */
+    val logger: Logger
+        @JvmSynthetic @JvmName("ktGetLogger") inline get() = getLogger()
+
+    open fun getPackageName(): String? = _packageName
+
+    /** Kotlin property syntax, equivalent to [getPackageName]. */
+    val packageName: String?
+        @JvmSynthetic @JvmName("ktGetPackageName") inline get() = getPackageName()
 
     /**
      * Identity keys used for user login. Set them with [setIdentityKeys].
      */
-    open val identityKeys: Array<String>?
-        get() = _identityKeys
+    open fun getIdentityKeys(): Array<String>? = _identityKeys
 
-    open var isAnalyticsOnly: Boolean
-        get() = _analyticsOnly
-        set(analyticsOnly) {
-            this._analyticsOnly = analyticsOnly
-        }
+    /** Kotlin property syntax, equivalent to [getIdentityKeys]. */
+    val identityKeys: Array<String>?
+        @JvmSynthetic @JvmName("ktGetIdentityKeys") inline get() = getIdentityKeys()
 
-    open val isBeta: Boolean
-        get() = _beta
+    open fun isAnalyticsOnly(): Boolean = _analyticsOnly
 
-    open val isDefaultInstance: Boolean
-        get() = _isDefaultInstance
+    open fun setAnalyticsOnly(analyticsOnly: Boolean) {
+        this._analyticsOnly = analyticsOnly
+    }
+
+    /** Kotlin property syntax, equivalent to [isAnalyticsOnly] / [setAnalyticsOnly]. */
+    var isAnalyticsOnly: Boolean
+        @JvmSynthetic @JvmName("ktIsAnalyticsOnly") inline get() = isAnalyticsOnly()
+        @JvmSynthetic @JvmName("ktSetAnalyticsOnly") inline set(value) = setAnalyticsOnly(value)
+
+    open fun isBeta(): Boolean = _beta
+
+    /** Kotlin property syntax, equivalent to [isBeta]. */
+    val isBeta: Boolean
+        @JvmSynthetic @JvmName("ktIsBeta") inline get() = isBeta()
+
+    open fun isDefaultInstance(): Boolean = _isDefaultInstance
+
+    /** Kotlin property syntax, equivalent to [isDefaultInstance]. */
+    val isDefaultInstance: Boolean
+        @JvmSynthetic @JvmName("ktIsDefaultInstance") inline get() = isDefaultInstance()
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     open fun log(tag: String, message: String) {
@@ -425,42 +480,63 @@ open class CleverTapInstanceConfig : Parcelable {
         dest.writeString(allowTypesString)
     }
 
-    open var enableCustomCleverTapId: Boolean
-        get() = _enableCustomCleverTapId
-        set(enableCustomCleverTapId) {
-            this._enableCustomCleverTapId = enableCustomCleverTapId
-        }
+    open fun getEnableCustomCleverTapId(): Boolean = _enableCustomCleverTapId
+
+    open fun setEnableCustomCleverTapId(enableCustomCleverTapId: Boolean) {
+        this._enableCustomCleverTapId = enableCustomCleverTapId
+    }
+
+    /** Kotlin property syntax, equivalent to [getEnableCustomCleverTapId] / [setEnableCustomCleverTapId]. */
+    var enableCustomCleverTapId: Boolean
+        @JvmSynthetic @JvmName("ktGetEnableCustomCleverTapId") inline get() = getEnableCustomCleverTapId()
+        @JvmSynthetic @JvmName("ktSetEnableCustomCleverTapId") inline set(value) = setEnableCustomCleverTapId(value)
 
     /**
      * Background sync flag. The getter is SDK-internal (`@RestrictTo(LIBRARY)`), the setter is public API.
      */
-    open var isBackgroundSync: Boolean
-        @RestrictTo(Scope.LIBRARY)
-        get() = _backgroundSync
-        set(backgroundSync) {
-            this._backgroundSync = backgroundSync
-        }
+    @RestrictTo(Scope.LIBRARY)
+    open fun isBackgroundSync(): Boolean = _backgroundSync
 
-    open val isCreatedPostAppLaunch: Boolean
-        get() = _createdPostAppLaunch
+    open fun setBackgroundSync(backgroundSync: Boolean) {
+        this._backgroundSync = backgroundSync
+    }
+
+    /** Kotlin property syntax, equivalent to [isBackgroundSync] / [setBackgroundSync]. */
+    var isBackgroundSync: Boolean
+        @JvmSynthetic @JvmName("ktIsBackgroundSync") inline get() = isBackgroundSync()
+        @JvmSynthetic @JvmName("ktSetBackgroundSync") inline set(value) = setBackgroundSync(value)
+
+    open fun isCreatedPostAppLaunch(): Boolean = _createdPostAppLaunch
+
+    /** Kotlin property syntax, equivalent to [isCreatedPostAppLaunch]. */
+    val isCreatedPostAppLaunch: Boolean
+        @JvmSynthetic @JvmName("ktIsCreatedPostAppLaunch") inline get() = isCreatedPostAppLaunch()
 
     /**
      * Whether the App Launched event is disabled. The getter was package-private in Java and is
      * SDK-internal (`@RestrictTo(LIBRARY)`); the setter is public API.
      */
-    open var isDisableAppLaunchedEvent: Boolean
-        @RestrictTo(Scope.LIBRARY)
-        get() = _disableAppLaunchedEvent
-        set(disableAppLaunchedEvent) {
-            this._disableAppLaunchedEvent = disableAppLaunchedEvent
-        }
+    @RestrictTo(Scope.LIBRARY)
+    open fun isDisableAppLaunchedEvent(): Boolean = _disableAppLaunchedEvent
+
+    open fun setDisableAppLaunchedEvent(disableAppLaunchedEvent: Boolean) {
+        this._disableAppLaunchedEvent = disableAppLaunchedEvent
+    }
+
+    /** Kotlin property syntax, equivalent to [isDisableAppLaunchedEvent] / [setDisableAppLaunchedEvent]. */
+    var isDisableAppLaunchedEvent: Boolean
+        @JvmSynthetic @JvmName("ktIsDisableAppLaunchedEvent") inline get() = isDisableAppLaunchedEvent()
+        @JvmSynthetic @JvmName("ktSetDisableAppLaunchedEvent") inline set(value) = setDisableAppLaunchedEvent(value)
 
     @get:JvmName("isPersonalizationEnabled")
     internal val isPersonalizationEnabled: Boolean
         get() = _personalization
 
-    open val isSslPinningEnabled: Boolean
-        get() = _sslPinning
+    open fun isSslPinningEnabled(): Boolean = _sslPinning
+
+    /** Kotlin property syntax, equivalent to [isSslPinningEnabled]. */
+    val isSslPinningEnabled: Boolean
+        @JvmSynthetic @JvmName("ktIsSslPinningEnabled") inline get() = isSslPinningEnabled()
 
     @get:JvmName("isUseGoogleAdId")
     internal val isUseGoogleAdId: Boolean
@@ -475,22 +551,28 @@ open class CleverTapInstanceConfig : Parcelable {
         this._encryptionLevel = encryptionLevel.intValue()
     }
 
-    open val encryptionLevel: Int
-        get() = _encryptionLevel
+    open fun getEncryptionLevel(): Int = _encryptionLevel
+
+    /** Kotlin property syntax, equivalent to [getEncryptionLevel]. */
+    val encryptionLevel: Int
+        @JvmSynthetic @JvmName("ktGetEncryptionLevel") inline get() = getEncryptionLevel()
 
     open fun setEncryptionInTransit(encryptionInTransit: Boolean) {
         this._encryptionInTransit = if (encryptionInTransit) "1" else "0"
     }
 
-    open val isEncryptionInTransitEnabled: Boolean
-        get() {
-            try {
-                return Integer.parseInt(_encryptionInTransit) > 0
-            } catch (e: NumberFormatException) {
-                Logger.v("Invalid value passed in manifest for encryption in transit")
-                return false
-            }
+    open fun isEncryptionInTransitEnabled(): Boolean {
+        try {
+            return Integer.parseInt(_encryptionInTransit) > 0
+        } catch (e: NumberFormatException) {
+            Logger.v("Invalid value passed in manifest for encryption in transit")
+            return false
         }
+    }
+
+    /** Kotlin property syntax, equivalent to [isEncryptionInTransitEnabled]. */
+    val isEncryptionInTransitEnabled: Boolean
+        @JvmSynthetic @JvmName("ktIsEncryptionInTransitEnabled") inline get() = isEncryptionInTransitEnabled()
 
     @JvmName("toJSONString")
     internal fun toJSONString(): String? {
@@ -650,6 +732,8 @@ open class CleverTapInstanceConfig : Parcelable {
             return createInstanceWithManifest(manifestInfo, accountId, accountToken, accountRegion, true)
         }
 
+        // @RestrictTo keeps the BCV dump clean: @JvmName makes BCV treat this internal member as public.
+        @RestrictTo(Scope.LIBRARY)
         @JvmStatic
         @JvmName("createInstanceWithManifest")
         internal fun createInstanceWithManifest(
@@ -665,6 +749,14 @@ open class CleverTapInstanceConfig : Parcelable {
         // for internal use only!
         @JvmStatic
         protected fun createInstance(jsonString: String?): CleverTapInstanceConfig? {
+            return createInstanceFromJson(jsonString)
+        }
+
+        /**
+         * SDK-internal access to [createInstance] (String): Kotlin `protected` companion members are
+         * not visible to other classes in the package, unlike Java `protected static`.
+         */
+        internal fun createInstanceFromJson(jsonString: String?): CleverTapInstanceConfig? {
             try {
                 return CleverTapInstanceConfig(jsonString)
             } catch (t: Throwable) {

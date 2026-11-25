@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.app.Activity
+import io.mockk.mockkObject
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import com.clevertap.android.shared.test.BaseTestCase
@@ -56,7 +57,7 @@ class ActivityLifecycleCallbackTest : BaseTestCase() {
         ActivityLifecycleCallback.register(applicationMock)
         verify { applicationMock.registerActivityLifecycleCallbacks(capture(callbackSlot)) }
         val value: ActivityLifecycleCallbacks = callbackSlot.captured
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             val mockActivity = mockk<Activity>(relaxed = true)
             value.onActivityCreated(mockActivity, Bundle())
             verify { CleverTapAPI.onActivityCreated(mockActivity, null) }
@@ -73,7 +74,7 @@ class ActivityLifecycleCallbackTest : BaseTestCase() {
         ActivityLifecycleCallback.register(applicationMock,"1234567890")
         verify { applicationMock.registerActivityLifecycleCallbacks(capture(callbackSlot)) }
         val value: ActivityLifecycleCallbacks = callbackSlot.captured
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             val mockActivity = mockk<Activity>(relaxed = true)
             value.onActivityCreated(mockActivity, Bundle())
             verify { CleverTapAPI.onActivityCreated(mockActivity, "1234567890") }

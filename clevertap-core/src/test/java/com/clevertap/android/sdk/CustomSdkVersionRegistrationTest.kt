@@ -26,7 +26,7 @@ class CustomSdkVersionRegistrationTest : BaseTestCase() {
     fun test_setSharedCustomSdkVersion_whenCalledBeforeInstanceIsCreated_appliesToNewInstance() {
         CoreMetaData.setSharedCustomSdkVersion("LaterInstanceModule", 20601)
 
-        val instance = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+        val instance = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)!!
 
         Assert.assertEquals(20601, instance.getCustomSdkVersion("LaterInstanceModule"))
     }

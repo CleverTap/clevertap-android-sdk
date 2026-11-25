@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.pushnotification.fcm
 
 import android.os.Bundle
+import io.mockk.mockkObject
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.PushConstants.FCM
@@ -63,7 +64,7 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
 
     @Test
     fun testOnNewToken_Failure() {
-        mockkStatic(CleverTapAPI::class) {
+        mockkObject(CleverTapAPI.Companion) {
             every {
                 CleverTapAPI.tokenRefresh(
                     any(),
