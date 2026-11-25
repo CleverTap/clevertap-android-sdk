@@ -877,10 +877,10 @@ open class CleverTapAPI internal constructor(
      *
      * Getter returns the [InAppNotificationListener] object; setter sets it.
      */
-    open fun getInAppNotificationListener(): InAppNotificationListener? = coreState.callbackManager.inAppNotificationListener
+    open fun getInAppNotificationListener(): InAppNotificationListener? = coreState.callbackManager.getInAppNotificationListener()
 
     open fun setInAppNotificationListener(inAppNotificationListener: InAppNotificationListener?) {
-        coreState.callbackManager.inAppNotificationListener = inAppNotificationListener
+        coreState.callbackManager.setInAppNotificationListener(inAppNotificationListener)
     }
 
     /** Kotlin property syntax, equivalent to [getInAppNotificationListener] / [setInAppNotificationListener]. */
@@ -1355,7 +1355,7 @@ open class CleverTapAPI internal constructor(
         keyValue: HashMap<String, String>?,
         buttonIndex: Int
     ) {
-        coreState.analyticsManager.pushInboxMessageStateEvent(true, inboxMessage, data)
+        coreState.analyticsManager.pushInboxMessageStateEvent(true, inboxMessage!!, data)
 
         Logger.v("clicked inbox notification.")
         //notify the onInboxItemClicked callback if the listener is set.
@@ -1497,8 +1497,8 @@ open class CleverTapAPI internal constructor(
     ) {
         @Suppress("UNCHECKED_CAST")
         coreState.analyticsManager.pushChargedEvent(
-            chargeDetails as HashMap<String, Any?>?,
-            items as ArrayList<HashMap<String, Any?>>?
+            chargeDetails as HashMap<String, Any>?,
+            items as ArrayList<HashMap<String, Any>>?
         )
     }
 
@@ -1571,7 +1571,7 @@ open class CleverTapAPI internal constructor(
     ) {
         @Suppress("UNCHECKED_CAST")
         coreState.analyticsManager.pushDisplayUnitElementClickedEventForID(
-            unitID, additionalProperties as HashMap<String, Any?>?
+            unitID, additionalProperties as HashMap<String, Any>?
         )
     }
 
@@ -1590,7 +1590,7 @@ open class CleverTapAPI internal constructor(
     ) {
         @Suppress("UNCHECKED_CAST")
         coreState.analyticsManager.pushDisplayUnitElementViewedEventForID(
-            unitID, additionalProperties as HashMap<String, Any?>?
+            unitID, additionalProperties as HashMap<String, Any>?
         )
     }
 
@@ -1682,7 +1682,7 @@ open class CleverTapAPI internal constructor(
      */
     open fun pushGeoFenceExitedEvent(geoFenceProperties: JSONObject?): Future<*>? {
         return coreState.analyticsManager
-            .raiseEventForGeofences(Constants.GEOFENCE_EXITED_EVENT_NAME, geoFenceProperties)
+            .raiseEventForGeofences(Constants.GEOFENCE_EXITED_EVENT_NAME, geoFenceProperties!!)
     }
 
     /**
@@ -1693,7 +1693,7 @@ open class CleverTapAPI internal constructor(
      */
     open fun pushGeofenceEnteredEvent(geofenceProperties: JSONObject?): Future<*>? {
         return coreState.analyticsManager
-            .raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME, geofenceProperties)
+            .raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME, geofenceProperties!!)
     }
 
     /**
@@ -1705,7 +1705,7 @@ open class CleverTapAPI internal constructor(
         Logger.v("CleverTapAPI:pushInboxNotificationClickedEvent() called with: messageId = [$messageId]")
 
         val message = getInboxMessageForId(messageId)
-        coreState.analyticsManager.pushInboxMessageStateEvent(true, message, null)
+        coreState.analyticsManager.pushInboxMessageStateEvent(true, message!!, null)
     }
 
     /**
@@ -1716,7 +1716,7 @@ open class CleverTapAPI internal constructor(
     open fun pushInboxNotificationViewedEvent(messageId: String?) {
         Logger.v("CleverTapAPI:pushInboxNotificationViewedEvent() called with: messageId = [$messageId]")
         val message = getInboxMessageForId(messageId)
-        coreState.analyticsManager.pushInboxMessageStateEvent(false, message, null)
+        coreState.analyticsManager.pushInboxMessageStateEvent(false, message!!, null)
     }
 
     /**
@@ -1873,7 +1873,7 @@ open class CleverTapAPI internal constructor(
     @Suppress("DEPRECATION")
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun setCTFeatureFlagsListener(featureFlagsListener: CTFeatureFlagsListener?) {
-        coreState.callbackManager.setFeatureFlagListener(featureFlagsListener)
+        coreState.callbackManager.featureFlagListener = featureFlagsListener
     }
 
     /**
@@ -1888,7 +1888,7 @@ open class CleverTapAPI internal constructor(
     @Suppress("DEPRECATION")
     @Deprecated("This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.")
     open fun setCTProductConfigListener(listener: CTProductConfigListener?) {
-        coreState.callbackManager.setProductConfigListener(listener)
+        coreState.callbackManager.productConfigListener = listener
     }
 
     /**
@@ -2042,7 +2042,7 @@ open class CleverTapAPI internal constructor(
             coreState.coreMetaData.isCurrentUserOptedOut = false
             coreState.analyticsManager.pushProfile(optOutMap)
             coreState.coreMetaData.isCurrentUserOptedOut = userOptOut
-            coreState.coreMetaData.setEnabledSystemEvents(resolvedAllowSystemEvents)
+            coreState.coreMetaData.enabledSystemEvents = resolvedAllowSystemEvents
             // persist the new optOut state
             coreState.deviceInfo.saveOptOutState(userOptOut)
             coreState.deviceInfo.saveAllowedSystemEventsState(resolvedAllowSystemEvents)
@@ -2163,12 +2163,12 @@ open class CleverTapAPI internal constructor(
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     open fun getCustomSdkVersion(customSdkName: String?): Int {
-        return coreState.coreMetaData.getCustomSdkVersion(customSdkName)
+        return coreState.coreMetaData.getCustomSdkVersion(customSdkName!!)
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
     open fun setCustomSdkVersion(customSdkName: String?, customSdkVersion: Int) {
-        coreState.coreMetaData.setCustomSdkVersion(customSdkName, customSdkVersion)
+        coreState.coreMetaData.setCustomSdkVersion(customSdkName!!, customSdkVersion)
     }
 
     //To be called from DeviceInfo AdID GUID generation
@@ -2394,7 +2394,7 @@ open class CleverTapAPI internal constructor(
         Logger.v(Constants.LOG_TAG_INAPP + " Fetching In Apps...")
 
         if (callback != null) {
-            coreState.callbackManager.setFetchInAppsCallback(callback)
+            coreState.callbackManager.fetchInAppsCallback = callback
         }
 
         val event = getFetchRequestAsJson(Constants.FETCH_TYPE_IN_APPS)
@@ -2446,7 +2446,7 @@ open class CleverTapAPI internal constructor(
         }
         Logger.v("variables", "Fetching  variables")
         if (callback != null) {
-            coreState.callbackManager.setFetchVariablesCallback(callback)
+            coreState.callbackManager.fetchVariablesCallback = callback
         }
 
         val event = getFetchRequestAsJson(Constants.FETCH_TYPE_VARIABLES)
@@ -3896,10 +3896,10 @@ open class CleverTapAPI internal constructor(
             val manifest = ManifestInfo.getInstance(context)
             val accountId = manifest.accountId
             val accountToken = manifest.accountToken
-            val accountRegion = manifest.accountRegion
-            val proxyDomain = manifest.proxyDomain
-            val spikyProxyDomain = manifest.spikeyProxyDomain
-            val handshakeDomain = manifest.handshakeDomain
+            val accountRegion = manifest.getAccountRegion()
+            val proxyDomain = manifest.getProxyDomain()
+            val spikyProxyDomain = manifest.getSpikeyProxyDomain()
+            val handshakeDomain = manifest.getHandshakeDomain()
             if (accountId == null || accountToken == null) {
                 Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance")
                 return null
