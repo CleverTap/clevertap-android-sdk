@@ -1,38 +1,35 @@
-package com.clevertap.android.sdk.inbox;
+package com.clevertap.android.sdk.inbox
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 
 /**
  * Real fragment (safe to attach through a FragmentManager, unlike a MockK spy)
- * that records {@link #refreshList()} and {@link #onPageSettled()} invocations instead of
+ * that records [refreshList] and [onPageSettled] invocations instead of
  * executing them.
  */
-public class RecordingInboxListFragment extends CTInboxListViewFragment {
+class RecordingInboxListFragment : CTInboxListViewFragment() {
 
-    public int refreshListCalls = 0;
+    var refreshListCalls = 0
 
-    public int onPageSettledCalls = 0;
+    var onPageSettledCalls = 0
 
-    @Override
-    public void refreshList() {
-        refreshListCalls++;
+    override fun refreshList() {
+        refreshListCalls++
     }
 
-    @Override
-    public void onPageSettled() {
-        onPageSettledCalls++;
+    override fun onPageSettled() {
+        onPageSettledCalls++
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState) {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         // Headless: the real onCreateView needs styleConfig/config intent extras.
-        return null;
+        return null
     }
 }

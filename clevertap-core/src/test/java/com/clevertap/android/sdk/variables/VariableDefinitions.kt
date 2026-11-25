@@ -1,42 +1,42 @@
-package com.clevertap.android.sdk.variables;
+package com.clevertap.android.sdk.variables
 
-import com.clevertap.android.sdk.variables.annotations.Variable;
-import java.util.HashMap;
-import java.util.Map;
+import com.clevertap.android.sdk.variables.annotations.Variable
 
-public class VariableDefinitions {
-    @Variable public static String welcomeMsg = "Hello User";
-    @Variable public static boolean isOptedForOffers = true;
-    @Variable public static int initialCoins = 45;
-    @Variable public static float correctGuessPercentage = 50.0F;
+/**
+ * Variable holders read by [Parser] through reflection (`Class.getFields()`).
+ *
+ * `object` + `@JvmField` keeps these as public **static** fields with the original names (the
+ * parser reads them with a null instance); the nested holder classes keep **instance** fields.
+ */
+object VariableDefinitions {
+    @Variable @JvmField var welcomeMsg: String = "Hello User"
+    @Variable @JvmField var isOptedForOffers: Boolean = true
+    @Variable @JvmField var initialCoins: Int = 45
+    @Variable @JvmField var correctGuessPercentage: Float = 50.0f
 
-
-    public static class TestVarsJI {
-        @Variable public  String javaIStr = "code_string";
-        @Variable public  double javaIDouble = 1.42;
-        @Variable public  double javaIInt  = 1;
-        @Variable public  boolean javaIBool = false;
+    class TestVarsJI {
+        @Variable @JvmField var javaIStr: String = "code_string"
+        @Variable @JvmField var javaIDouble: Double = 1.42
+        @Variable @JvmField var javaIInt: Double = 1.0
+        @Variable @JvmField var javaIBool: Boolean = false
     }
 
-    public static class NullDefaultValue {
-        @Variable public String string_with_null = null;
+    class NullDefaultValue {
+        @Variable @JvmField var string_with_null: String? = null
     }
 
-    public static class Groups {
-        @Variable(group = "group1") public static String var_string1 = "str1";
+    object Groups {
+        @Variable(group = "group1") @JvmField var var_string1: String = "str1"
 
         @Variable
-        public static Map<String, Object> group1 = new HashMap<String, Object>() {{
-            put("var_int1", 1);
-            put("var_string2", "str2");
-
+        @JvmField
+        var group1: MutableMap<String, Any> = hashMapOf(
+            "var_int1" to 1,
+            "var_string2" to "str2",
             // nested map
-            put("group2", new HashMap<String, Object>() {{
-                put("var_int2", 2);
-            }});
-        }};
+            "group2" to hashMapOf<String, Any>("var_int2" to 2)
+        )
 
-        @Variable public static int var_int3 = 3;
+        @Variable @JvmField var var_int3: Int = 3
     }
-
 }
