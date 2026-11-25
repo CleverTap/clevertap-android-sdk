@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import com.clevertap.android.shared.test.BaseTestCase
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.*
@@ -19,7 +20,7 @@ class ApplicationTest : BaseTestCase() {
     @Test
     fun test_getCoreState_ReturnedObjectMustHaveNonNullInAppFCManagerInsideControllerManager() {
         val application = Application()
-        mockkStatic(ActivityLifecycleCallback::class) {
+        mockkObject(ActivityLifecycleCallback.Companion) {
             application.onCreate()
             verify { ActivityLifecycleCallback.register(application) }
         }
