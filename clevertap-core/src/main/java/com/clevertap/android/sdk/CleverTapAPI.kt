@@ -69,6 +69,7 @@ import com.clevertap.android.sdk.variables.CTVariableUtils
 import com.clevertap.android.sdk.variables.Var
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import java.lang.ref.WeakReference
 import java.util.ArrayList
@@ -750,23 +751,28 @@ open class CleverTapAPI internal constructor(
             FirebaseMessaging
                 .getInstance()
                 .token
-                .addOnCompleteListener { task ->
-                    if (!task.isSuccessful) {
+                // Anonymous object, not a lambda: a lambda body would become a CleverTapAPI method
+                // taking the gms Task type, and then reflecting on CleverTapAPI (e.g. mocking it)
+                // would need play-services-tasks on the classpath. Java's anonymous class avoided that.
+                .addOnCompleteListener(object : OnCompleteListener<String> {
+                    override fun onComplete(task: com.google.android.gms.tasks.Task<String>) {
+                        if (!task.isSuccessful) {
+                            Logger.v(
+                                LOG_TAG,
+                                FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                task.exception
+                            )
+                            requestTokenListener!!.onDevicePushToken(null, FCM)
+                            return
+                        }
+                        val token = if (task.result != null) task.result else null
                         Logger.v(
                             LOG_TAG,
-                            FCM_LOG_TAG + "FCM token using googleservices.json failed",
-                            task.exception
+                            FCM_LOG_TAG + "FCM token using googleservices.json - " + token
                         )
-                        requestTokenListener!!.onDevicePushToken(null, FCM)
-                        return@addOnCompleteListener
+                        requestTokenListener!!.onDevicePushToken(token, FCM)
                     }
-                    val token = if (task.result != null) task.result else null
-                    Logger.v(
-                        LOG_TAG,
-                        FCM_LOG_TAG + "FCM token using googleservices.json - " + token
-                    )
-                    requestTokenListener!!.onDevicePushToken(token, FCM)
-                }
+                })
         } catch (t: Throwable) {
             Logger.v(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t)
             requestTokenListener!!.onDevicePushToken(null, FCM)
