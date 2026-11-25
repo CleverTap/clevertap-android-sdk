@@ -150,7 +150,7 @@ internal open class AnalyticsManager(
     }
 
     override fun pushDefineVarsEvent(data: JSONObject?) {
-        baseEventQueueManager.queueEvent(context, data, Constants.DEFINE_VARS_EVENT)
+        baseEventQueueManager.queueEvent(context, data!!, Constants.DEFINE_VARS_EVENT)
     }
 
     override fun pushDisplayUnitClickedEventForID(unitID: String?) {
@@ -883,7 +883,7 @@ internal open class AnalyticsManager(
     }
 
     override fun sendDataEvent(event: JSONObject?) {
-        baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT)
+        baseEventQueueManager.queueEvent(context, event!!, Constants.DATA_EVENT)
     }
 
     fun pushChargedEvent(chargeDetails: HashMap<String, Any>?, items: ArrayList<HashMap<String, Any>>?) {
@@ -1241,12 +1241,12 @@ internal open class AnalyticsManager(
 
     fun sendPingEvent(eventObject: JSONObject?) {
         baseEventQueueManager
-            .queueEvent(context, eventObject, Constants.PING_EVENT)
+            .queueEvent(context, eventObject!!, Constants.PING_EVENT)
     }
 
     override fun sendFetchEvent(eventObject: JSONObject?) {
         baseEventQueueManager
-            .queueEvent(context, eventObject, Constants.FETCH_EVENT)
+            .queueEvent(context, eventObject!!, Constants.FETCH_EVENT)
     }
 
     /**
@@ -1322,7 +1322,7 @@ internal open class AnalyticsManager(
             }
 
             event.put("evtData", notif)
-            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
+            baseEventQueueManager.queueEvent(context, event!!, Constants.RAISED_EVENT, getFlattenedEventProperties(notif))
         } catch (ignored: Throwable) {
             // We won't get here
         }

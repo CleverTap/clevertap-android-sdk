@@ -22,7 +22,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
         super.setUp()
         mExecutorService = mockk(relaxed = true)
         executor = PostAsyncSafelyExecutor()
-        executor.setExecutor(mExecutorService)
+        executor.executor = mExecutorService
     }
 
     @Test

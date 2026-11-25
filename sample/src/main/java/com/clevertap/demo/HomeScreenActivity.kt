@@ -234,7 +234,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "inboxMessagesDidUpdate() called")
     }
 
-    override fun onDisplayUnitsLoaded(units: ArrayList<CleverTapDisplayUnit>?) {
+    override fun onDisplayUnitsLoaded(units: ArrayList<CleverTapDisplayUnit>) {
         Log.i(TAG, "onDisplayUnitsLoaded() called")
         // Per-slide wzrk_* attribution, logged as soon as a server response carries
         // units so the split-of-clicks payload can be checked without opening a screen.

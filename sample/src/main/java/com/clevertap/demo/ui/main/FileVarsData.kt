@@ -84,7 +84,7 @@ object FileVarsData {
             ?.apply {
                 for (count in 0 until fileReadyListenerCount) {
                     addFileReadyHandler(object : VariableCallback<String>() {
-                        override fun onValueChanged(variable: Var<String>?) {
+                        override fun onValueChanged(variable: Var<String>) {
                             Log.i(tag, "${variable?.name()} ready: from listener $count")
                         }
                     })

@@ -28,7 +28,7 @@ class HuaweiNotificationParserTest : BaseTestCase() {
         every { message.data } returns null
         val returnedBundle = parser.toBundle(message)!!
         Assert.assertNotNull(returnedBundle)
-        Assert.assertEquals(0, returnedBundle.keySet().size)
+        Assert.assertEquals(0, returnedBundle!!.keySet().size)
     }
 
     @Test
@@ -38,9 +38,9 @@ class HuaweiNotificationParserTest : BaseTestCase() {
 
         val returnedBundle = parser.toBundle(message)!!
         Assert.assertNotNull(returnedBundle)
-        Assert.assertEquals(2, returnedBundle.keySet().size)
-        Assert.assertEquals("Sample Title", returnedBundle.getString("Title"))
-        Assert.assertEquals("Sample Message Title", returnedBundle.getString("Message"))
+        Assert.assertEquals(2, returnedBundle!!.keySet().size)
+        Assert.assertEquals("Sample Title", returnedBundle!!.getString("Title"))
+        Assert.assertEquals("Sample Message Title", returnedBundle!!.getString("Message"))
 
     }
 

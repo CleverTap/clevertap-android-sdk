@@ -67,7 +67,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
 
     @Test
     fun testInit() {
-        Assert.assertTrue(mProductConfigController.isInitialized.get())
+        Assert.assertTrue(mProductConfigController.initializedFlag.get())
     }
 
     @Test
@@ -172,13 +172,13 @@ class CTProductConfigControllerTest : BaseTestCase() {
             )
             Assert.assertEquals(
                 44444.4444,
-                mProductConfigController.getDouble("fetched_double"),
+                mProductConfigController.getDouble("fetched_double")!!,
                 0.1212
             )
             Assert.assertEquals(true, mProductConfigController.getBoolean("fetched_bool"))
             Assert.assertEquals("This is def_string", mProductConfigController.getString("def_str"))
             Assert.assertEquals(11111L, mProductConfigController.getLong("def_long"))
-            Assert.assertEquals(2222.2222, mProductConfigController.getDouble("def_double"), 0.1212)
+            Assert.assertEquals(2222.2222, mProductConfigController.getDouble("def_double")!!, 0.1212)
             Assert.assertEquals(false, mProductConfigController.getBoolean("def_bool"))
         }
     }
@@ -227,13 +227,13 @@ class CTProductConfigControllerTest : BaseTestCase() {
             Assert.assertEquals(333333L, mProductConfigController.getLong("fetched_long"))
             Assert.assertEquals(
                 44444.4444,
-                mProductConfigController.getDouble("fetched_double"),
+                mProductConfigController.getDouble("fetched_double")!!,
                 0.1212
             )
             Assert.assertEquals(true, mProductConfigController.getBoolean("fetched_bool"))
             Assert.assertEquals("This is def_string", mProductConfigController.getString("def_str"))
             Assert.assertEquals(11111L, mProductConfigController.getLong("def_long"))
-            Assert.assertEquals(2222.2222, mProductConfigController.getDouble("def_double"), 0.1212)
+            Assert.assertEquals(2222.2222, mProductConfigController.getDouble("def_double")!!, 0.1212)
             Assert.assertEquals(false, mProductConfigController.getBoolean("def_bool"))
         }
     }
@@ -291,7 +291,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
                 cleverTapInstanceConfig
             )
             val controller = spyk(mProductConfigController)
-            controller.isInitialized = AtomicBoolean(true)
+            controller.initializedFlag = AtomicBoolean(true)
             val newGuid = "333333333"
             controller.setGuidAndInit(newGuid)
             Assert.assertEquals(controller.settings.guid, guid)
@@ -317,12 +317,12 @@ class CTProductConfigControllerTest : BaseTestCase() {
                     settings, fileUtils
                 )
             )
-            controller.isInitialized.set(false)
+            controller.initializedFlag.set(false)
             val newGuid = "333333333"
             controller.setGuidAndInit(newGuid)
             Assert.assertEquals(controller.settings.guid, newGuid)
             verify { controller.initAsync() }
-            Assert.assertTrue(controller.isInitialized.get())
+            Assert.assertTrue(controller.initializedFlag.get())
         }
     }
 

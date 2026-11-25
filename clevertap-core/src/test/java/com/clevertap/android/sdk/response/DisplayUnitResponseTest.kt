@@ -413,7 +413,7 @@ class DisplayUnitResponseTest : BaseTestCase() {
     }
 
     private fun CTDisplayUnitController.ids(): Set<String> =
-        allDisplayUnits.orEmpty().map { it.unitID }.toSet()
+        getAllDisplayUnits().orEmpty().map { it.unitID!! }.toSet()
 
     @Test
     fun `a1 response replaces the display-unit cache`() {

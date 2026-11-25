@@ -11,7 +11,9 @@ import com.clevertap.android.sdk.pushnotification.PushType
 
 open class PushTemplateNotificationHandler : ActionButtonClickHandler {
 
-    override fun onActionButtonClick(context: Context?, extras: Bundle, notificationId: Int): Boolean {
+    override fun onActionButtonClick(context: Context?, extras: Bundle?, notificationId: Int): Boolean {
+        // Same NPE point as the previous non-null parameter when a caller passes null extras.
+        extras!!
         val actionID = extras.getString(PTConstants.PT_ACTION_ID)
         val dismissOnClick = extras.getString(PTConstants.PT_DISMISS_ON_CLICK)
         @Suppress("DEPRECATION")

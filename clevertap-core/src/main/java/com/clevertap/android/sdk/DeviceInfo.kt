@@ -835,7 +835,7 @@ open class DeviceInfo internal constructor(
         @Suppress("UNCHECKED_CAST")
         val validationResult = ValidationResultFactory.create(error, *(varargs as Array<String>))
         validationResults.add(validationResult)
-        return validationResult.errorDesc
+        return validationResult.errorDesc!!
     }
 
     private fun removeDeviceID() {

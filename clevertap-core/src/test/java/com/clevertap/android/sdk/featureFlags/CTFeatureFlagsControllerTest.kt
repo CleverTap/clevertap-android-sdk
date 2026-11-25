@@ -119,18 +119,18 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             verify { featureFlagsListener.featureFlagsUpdated() }
             verify {
                 fileUtils.writeJsonToFile(
-                    mCTFeatureFlagsController.cachedDirName,
-                    mCTFeatureFlagsController.cachedFileName,
+                    mCTFeatureFlagsController.getCachedDirName(),
+                    mCTFeatureFlagsController.getCachedFileName(),
                     jsonObject
                 )
             }
 
-            Assert.assertTrue(mCTFeatureFlagsController.get("feature_A", false))
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_B", true))
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_C", true))
-            Assert.assertTrue(mCTFeatureFlagsController.get("feature_D", false))
-            Assert.assertTrue(mCTFeatureFlagsController.get("feature_E", true))
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_F", false))
+            Assert.assertTrue(mCTFeatureFlagsController.get("feature_A", false)!!)
+            Assert.assertFalse(mCTFeatureFlagsController.get("feature_B", true)!!)
+            Assert.assertFalse(mCTFeatureFlagsController.get("feature_C", true)!!)
+            Assert.assertTrue(mCTFeatureFlagsController.get("feature_D", false)!!)
+            Assert.assertTrue(mCTFeatureFlagsController.get("feature_E", true)!!)
+            Assert.assertFalse(mCTFeatureFlagsController.get("feature_F", false)!!)
         }
     }
 
@@ -142,8 +142,8 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             )
             val jsonObject = MockFFResponse().getResponseJSON()
             mCTFeatureFlagsController.updateFeatureFlags(jsonObject)
-            mCTFeatureFlagsController.isInitialized = false
-            Assert.assertFalse(mCTFeatureFlagsController.get("feature_A", false))
+            mCTFeatureFlagsController.initialized = false
+            Assert.assertFalse(mCTFeatureFlagsController.get("feature_A", false)!!)
         }
     }
 
@@ -194,7 +194,7 @@ class CTFeatureFlagsControllerTest : BaseTestCase() {
             )
             val controller = spyk(mCTFeatureFlagsController)
             val newGuid = "131"
-            controller.isInitialized = false
+            controller.initialized = false
             controller.setGuidAndInit(newGuid)
             Assert.assertEquals(controller.guid, newGuid)
             verify { controller.init() }
