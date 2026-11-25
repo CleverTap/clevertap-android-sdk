@@ -1,7 +1,6 @@
-package com.clevertap.android.sdk.login;
+package com.clevertap.android.sdk.login
 
-public interface LoginConstants {
+internal object LoginConstants {
 
-    String LOG_TAG_ON_USER_LOGIN = "ON_USER_LOGIN";
-
+    const val LOG_TAG_ON_USER_LOGIN = "ON_USER_LOGIN"
 }

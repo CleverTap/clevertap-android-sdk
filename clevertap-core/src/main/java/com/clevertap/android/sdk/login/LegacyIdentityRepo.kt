@@ -1,43 +1,41 @@
-package com.clevertap.android.sdk.login;
+package com.clevertap.android.sdk.login
 
-import static com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN;
-
-import androidx.annotation.NonNull;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN
 
 /**
  * Legacy class which handles old static identity logic.
  * Here the profile set was fixed as < Email, Identity >
  */
-public class LegacyIdentityRepo implements IdentityRepo {
+internal open class LegacyIdentityRepo(private val config: CleverTapInstanceConfig) : IdentityRepo {
 
-    private static final String TAG = "LegacyIdentityRepo";
+    private lateinit var identities: IdentitySet
 
-    private IdentitySet identities;
-
-    private final CleverTapInstanceConfig config;
-
-    public LegacyIdentityRepo(final CleverTapInstanceConfig config) {
-        this.config = config;
-        loadIdentitySet();
+    init {
+        loadIdentitySet()
     }
 
-    @Override
-    public IdentitySet getIdentitySet() {
-        return identities;
+    override val identitySet: IdentitySet
+        get() = identities
+
+    override fun hasIdentity(Key: String): Boolean {
+        val hasIdentity = identities.contains(Key)
+        config.log(
+            LOG_TAG_ON_USER_LOGIN,
+            "isIdentity [Key: $Key , Value: $hasIdentity]"
+        )
+        return hasIdentity
     }
 
-    @Override
-    public boolean hasIdentity(@NonNull final String Key) {
-        boolean hasIdentity = identities.contains(Key);
-        config.log(LOG_TAG_ON_USER_LOGIN,
-                "isIdentity [Key: " + Key + " , Value: " + hasIdentity + "]");
-        return hasIdentity;
+    private fun loadIdentitySet() {
+        this.identities = IdentitySet.getDefault()
+        config.log(
+            LOG_TAG_ON_USER_LOGIN,
+            "$TAG Setting the default IdentitySet[$identities]"
+        )
     }
 
-    private void loadIdentitySet() {
-        this.identities = IdentitySet.getDefault();
-        config.log(LOG_TAG_ON_USER_LOGIN,
-                TAG + " Setting the default IdentitySet[" + identities + "]");
+    private companion object {
+        private const val TAG = "LegacyIdentityRepo"
     }
 }

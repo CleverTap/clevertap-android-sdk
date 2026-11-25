@@ -1,50 +1,36 @@
-package com.clevertap.android.sdk.login;
+package com.clevertap.android.sdk.login
 
-import static com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN;
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN
+import com.clevertap.android.sdk.validation.ValidationError
+import com.clevertap.android.sdk.validation.ValidationResultFactory
+import com.clevertap.android.sdk.validation.ValidationResultStack
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
+internal open class ConfigurableIdentityRepo(
+    private val config: CleverTapInstanceConfig,
+    private val infoProvider: LoginInfoProvider,
+    private val validationResultStack: ValidationResultStack
+) : IdentityRepo {
 
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.validation.ValidationError;
-import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.validation.ValidationResultFactory;
-import com.clevertap.android.sdk.validation.ValidationResultStack;
+    private lateinit var _identitySet: IdentitySet
 
-@RestrictTo(RestrictTo.Scope.LIBRARY)
-public class ConfigurableIdentityRepo implements IdentityRepo {
-
-    private static final String TAG = "ConfigurableIdentityRepo";
-
-    private IdentitySet identitySet;
-
-    private final LoginInfoProvider infoProvider;
-
-    private final CleverTapInstanceConfig config;
-
-    private final ValidationResultStack validationResultStack;
-
-    public ConfigurableIdentityRepo(CleverTapInstanceConfig config, LoginInfoProvider loginInfoProvider, ValidationResultStack mValidationResultStack) {
-        this.config = config;
-        this.infoProvider = loginInfoProvider;
-        this.validationResultStack = mValidationResultStack;
-        loadIdentitySet();
+    init {
+        loadIdentitySet()
     }
 
     /**
      * Returns the loaded identity set. checkout the loadIdentitySet() for implementation
-     * */
-    @Override
-    public IdentitySet getIdentitySet() {
-        return identitySet;
-    }
+     */
+    override val identitySet: IdentitySet
+        get() = _identitySet
 
-    @Override
-    public boolean hasIdentity(@NonNull String Key) {
-        boolean hasIdentity = identitySet.contains(Key);
-        config.log(LOG_TAG_ON_USER_LOGIN,
-                TAG + "isIdentity [Key: " + Key + " , Value: " + hasIdentity + "]");
-        return hasIdentity;
+    override fun hasIdentity(Key: String): Boolean {
+        val hasIdentity = _identitySet.contains(Key)
+        config.log(
+            LOG_TAG_ON_USER_LOGIN,
+            "${TAG}isIdentity [Key: $Key , Value: $hasIdentity]"
+        )
+        return hasIdentity
     }
 
     /**
@@ -68,7 +54,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
      * ---------------------------------------------------------------------------
      * 3. validate sets  : handleError(prefKeySet, configKeySet)
      *   3.1 note that : the validation criteria is simply that KeySet must not be empty
-     *   3.2 if prefKeySet.isValid() AND configKeySet.isValid() AND !prefKeySet.equals(configKeySet),
+     *   3.2 if prefKeySet.isValid AND configKeySet.isValid AND !prefKeySet.equals(configKeySet),
      *      it will generate a validation error on vr stack passed via external dependency
      * ---------------------------------------------------------------------------
      * 4. setting identity set
@@ -80,49 +66,49 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
      *   5.1 if prefKeySet was not valid, loginInfoProvider.saveIdentityKeysForAccount(identitySet)
      *       is also called on the newly initialised identitySet
      */
-    void loadIdentitySet() {
+    fun loadIdentitySet() {
         // Read from Pref
-        IdentitySet prefKeySet = IdentitySet.from(infoProvider.getCachedIdentityKeysForAccount());
+        val prefKeySet = IdentitySet.from(infoProvider.cachedIdentityKeysForAccount!!)
 
-        config.log(LOG_TAG_ON_USER_LOGIN, TAG + "PrefIdentitySet [" + prefKeySet + "]");
+        config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}PrefIdentitySet [$prefKeySet]")
 
         /* ----------------------------------------------------------------
          *   For Default Instance - Get Identity Set configured via Manifest
          *   For Multi Instance - Get Identity Set configured via the setter
          * ---------------------------------------------------------------- */
-        IdentitySet configKeySet = IdentitySet.from(config.getIdentityKeys());
+        val configKeySet = IdentitySet.from(config.identityKeys)
 
-        config.log(LOG_TAG_ON_USER_LOGIN, TAG + "ConfigIdentitySet [" + configKeySet + "]");
+        config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}ConfigIdentitySet [$configKeySet]")
 
         /* ---------------------------------------------------
          *    Push error to LC in-case the data available
          *   in the config & preferences are not matching
          * --------------------------------------------------- */
-        handleError(prefKeySet, configKeySet);
+        handleError(prefKeySet, configKeySet)
 
         /* ---------------------------------------------------
          *      If data is available from Pref, use
          *      else data is available via from config use
          *      else use legacy key set
          * --------------------------------------------------- */
-        if (prefKeySet.isValid()) {
-            identitySet = prefKeySet;
-            config.log(LOG_TAG_ON_USER_LOGIN, TAG + "Identity Set activated from Pref[" + identitySet + "]");
-        } else if (configKeySet.isValid()) {
-            identitySet = configKeySet;
-            config.log(LOG_TAG_ON_USER_LOGIN, TAG + "Identity Set activated from Config[" + identitySet + "]");
+        if (prefKeySet.isValid) {
+            _identitySet = prefKeySet
+            config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Pref[$_identitySet]")
+        } else if (configKeySet.isValid) {
+            _identitySet = configKeySet
+            config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Config[$_identitySet]")
         } else {
-            identitySet = IdentitySet.getDefault();
-            config.log(LOG_TAG_ON_USER_LOGIN, TAG + "Identity Set activated from Default[" + identitySet + "]");
+            _identitySet = IdentitySet.getDefault()
+            config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Identity Set activated from Default[$_identitySet]")
         }
-        boolean isSavedInPref = prefKeySet.isValid();
+        val isSavedInPref = prefKeySet.isValid
         if (!isSavedInPref) {
             /* -------------------------------------------------------------------------
              *  If Config data is available, save in the preference if not saved already.
              * ------------------------------------------------------------------------ */
-            String storedValue = identitySet.toString();
-            infoProvider.saveIdentityKeysForAccount(storedValue);
-            config.log(LOG_TAG_ON_USER_LOGIN, TAG + "Saving Identity Keys in Pref[" + storedValue + "]");
+            val storedValue = _identitySet.toString()
+            infoProvider.saveIdentityKeysForAccount(storedValue)
+            config.log(LOG_TAG_ON_USER_LOGIN, "${TAG}Saving Identity Keys in Pref[$storedValue]")
         }
     }
 
@@ -133,15 +119,23 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
      * @param prefKeySet   - key set in the preference
      * @param configKeySet - key set in the config
      */
-    private void handleError(final IdentitySet prefKeySet, final IdentitySet configKeySet) {
-        if (prefKeySet.isValid() && configKeySet.isValid() && !prefKeySet.equals(configKeySet)) {
-            ValidationResult error = ValidationResultFactory.create(ValidationError.PROFILE_IDENTIFIERS_MISMATCH);
-            validationResultStack.pushValidationResult(error);
-            config.log(LOG_TAG_ON_USER_LOGIN,
-                    TAG + "pushing error due to mismatch [Pref:" + prefKeySet + "], [Config:" + configKeySet + "]");
+    private fun handleError(prefKeySet: IdentitySet, configKeySet: IdentitySet) {
+        if (prefKeySet.isValid && configKeySet.isValid && prefKeySet != configKeySet) {
+            val error = ValidationResultFactory.create(ValidationError.PROFILE_IDENTIFIERS_MISMATCH)
+            validationResultStack.pushValidationResult(error)
+            config.log(
+                LOG_TAG_ON_USER_LOGIN,
+                "${TAG}pushing error due to mismatch [Pref:$prefKeySet], [Config:$configKeySet]"
+            )
         } else {
-            config.log(LOG_TAG_ON_USER_LOGIN,
-                    TAG + "No error found while comparing [Pref:" + prefKeySet + "], [Config:" + configKeySet + "]");
+            config.log(
+                LOG_TAG_ON_USER_LOGIN,
+                "${TAG}No error found while comparing [Pref:$prefKeySet], [Config:$configKeySet]"
+            )
         }
+    }
+
+    private companion object {
+        private const val TAG = "ConfigurableIdentityRepo"
     }
 }

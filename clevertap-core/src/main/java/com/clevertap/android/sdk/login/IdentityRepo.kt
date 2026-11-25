@@ -1,13 +1,11 @@
-package com.clevertap.android.sdk.login;
-
-import androidx.annotation.NonNull;
+package com.clevertap.android.sdk.login
 
 /**
  * Interface to provide Identities related functionality
  */
-public interface IdentityRepo {
+internal interface IdentityRepo {
 
-    IdentitySet getIdentitySet();
+    val identitySet: IdentitySet
 
     /**
      * checks if a given key is an identity or not
@@ -15,6 +13,5 @@ public interface IdentityRepo {
      * @param Key - String value of key
      * @return - true , if the given key is an identity key else false.
      */
-    boolean hasIdentity(@NonNull String Key);
-
+    fun hasIdentity(Key: String): Boolean
 }
