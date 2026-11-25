@@ -15,6 +15,7 @@ import java.math.BigInteger
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
 class CTVariableUtils {
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
     companion object {
 
         private const val TAG = "CTVariableUtils"

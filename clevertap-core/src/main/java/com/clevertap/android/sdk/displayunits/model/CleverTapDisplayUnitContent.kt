@@ -313,7 +313,6 @@ open class CleverTapDisplayUnitContent : Parcelable {
          * @param contentObject - jsonObject
          * @return - CleverTapDisplayUnitContent - can have empty fields with an error message in case of parsing error
          */
-        @JvmStatic
         internal fun toContent(contentObject: JSONObject?): CleverTapDisplayUnitContent {
             try {
                 contentObject!!

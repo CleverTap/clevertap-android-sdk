@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.variables
 
 import android.text.TextUtils
+import androidx.annotation.RestrictTo
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
@@ -265,6 +266,7 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
         /**
          * SDK-internal: takes the internal [CTVariables]; customers use `CleverTapAPI#defineVariable`.
          */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @JvmStatic
         @JvmName("define")
         internal fun <T> define(name: String?, defaultValue: T, ctVariables: CTVariables): Var<T>? {
@@ -281,6 +283,7 @@ open class Var<T> internal constructor(private val ctVariables: CTVariables) {
          * @param T          Type of the variable.
          * @return instance of a [Var] class
          */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @JvmStatic
         @JvmName("define")
         internal fun <T> define(name: String?, defaultValue: T, kind: String?, ctVariables: CTVariables): Var<T>? {
