@@ -34,7 +34,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
-import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.TYPE_BUTTON_CLICK
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.Companion.TYPE_BUTTON_CLICK
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import com.clevertap.android.sdk.task.CTExecutorFactory
 
