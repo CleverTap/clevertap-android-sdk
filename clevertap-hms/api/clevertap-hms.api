@@ -16,15 +16,10 @@ public class com/clevertap/android/hms/CTHmsMessageHandler : com/clevertap/andro
 	public synthetic fun processPushAmp (Landroid/content/Context;Ljava/lang/Object;)V
 }
 
-public class com/clevertap/android/hms/CTHmsMessageService : com/huawei/hms/push/HmsMessageService {
-	public fun <init> ()V
-	public fun onMessageReceived (Lcom/huawei/hms/push/RemoteMessage;)V
-	public fun onNewToken (Ljava/lang/String;)V
-}
-
 public class com/clevertap/android/hms/HmsConstants {
 	public static final field APP_ID_KEY Ljava/lang/String;
 	public static final field CT_HUAWEI_PROVIDER_CLASS Ljava/lang/String;
+	public static final field Companion Lcom/clevertap/android/hms/HmsConstants$Companion;
 	public static final field HCM_SCOPE Ljava/lang/String;
 	public static final field HMS_DELIVERY_TYPE Ljava/lang/String;
 	public static final field HMS_LOG_TAG Ljava/lang/String;
@@ -35,21 +30,6 @@ public class com/clevertap/android/hms/HmsConstants {
 	public fun <init> ()V
 }
 
-public class com/clevertap/android/hms/HmsNotificationParser : com/clevertap/android/sdk/interfaces/INotificationParser {
-	public fun <init> ()V
-	public fun toBundle (Lcom/huawei/hms/push/RemoteMessage;)Landroid/os/Bundle;
-	public synthetic fun toBundle (Ljava/lang/Object;)Landroid/os/Bundle;
-}
-
-public abstract interface class com/clevertap/android/hms/IHmsMessageHandler {
-	public abstract fun createNotification (Landroid/content/Context;Lcom/huawei/hms/push/RemoteMessage;)Z
-	public abstract fun onNewToken (Landroid/content/Context;Ljava/lang/String;)Z
-}
-
-public abstract interface class com/clevertap/android/hms/IHmsSdkHandler {
-	public abstract fun appId ()Ljava/lang/String;
-	public abstract fun isAvailable ()Z
-	public abstract fun isSupported ()Z
-	public abstract fun onNewToken ()Ljava/lang/String;
+public final class com/clevertap/android/hms/HmsConstants$Companion {
 }
 
