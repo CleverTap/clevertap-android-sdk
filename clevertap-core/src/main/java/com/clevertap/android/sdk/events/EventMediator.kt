@@ -1,144 +1,132 @@
-package com.clevertap.android.sdk.events;
+package com.clevertap.android.sdk.events
 
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.network.NetworkRepo;
-import com.clevertap.android.sdk.validation.ValidationConfig;
-import com.clevertap.android.sdk.variables.JsonUtil;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.network.NetworkRepo
+import com.clevertap.android.sdk.validation.ValidationConfig
+import com.clevertap.android.sdk.variables.JsonUtil
+import org.json.JSONException
+import org.json.JSONObject
 
-public class EventMediator {
+internal open class EventMediator(
+    private val config: CleverTapInstanceConfig,
+    private val cleverTapMetaData: CoreMetaData,
+    private val networkRepo: NetworkRepo
+) {
 
-    private final CoreMetaData cleverTapMetaData;
-
-    private final CleverTapInstanceConfig config;
-
-    private final NetworkRepo networkRepo;
-
-
-    public EventMediator(CleverTapInstanceConfig config, CoreMetaData coreMetaData, NetworkRepo networkRepo) {
-        this.config = config;
-        this.networkRepo = networkRepo;
-        cleverTapMetaData = coreMetaData;
-    }
-
-    public boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
-        //noinspection SimplifiableIfStatement
+    open fun shouldDeferProcessingEvent(event: JSONObject, eventType: Int): Boolean {
         if (eventType == Constants.DEFINE_VARS_EVENT) {
-            return false;
+            return false
         }
-        if (config.isCreatedPostAppLaunch()) {
-            return false;
+        if (config.isCreatedPostAppLaunch) {
+            return false
         }
         if (event.has("evtName")) {
             try {
-                if (Arrays.asList(Constants.SYSTEM_EVENTS).contains(event.getString("evtName"))) {
-                    return false;
+                if (listOf(*Constants.SYSTEM_EVENTS).contains(event.getString("evtName"))) {
+                    return false
                 }
-            } catch (JSONException e) {
+            } catch (e: JSONException) {
                 //no-op
             }
         }
-        return (eventType == Constants.RAISED_EVENT && !cleverTapMetaData.isAppLaunchPushed());
+        return (eventType == Constants.RAISED_EVENT && !cleverTapMetaData.isAppLaunchPushed)
     }
 
-    public boolean shouldDropEvent(JSONObject event, int eventType) {
-
+    open fun shouldDropEvent(event: JSONObject?, eventType: Int): Boolean {
         if (eventType == Constants.FETCH_EVENT || eventType == Constants.DEFINE_VARS_EVENT) {
-            return false;
+            return false
         }
 
         if (networkRepo.isMuted()) {
-            config.getLogger()
-                    .verbose(config.getAccountId(), "CleverTap is muted, dropping event - " + event.toString());
-            return true;
+            config.logger
+                .verbose(config.accountId, "CleverTap is muted, dropping event - " + event!!.toString())
+            return true
         }
 
-        if (!cleverTapMetaData.isCurrentUserOptedOut()) {
-            return false;
+        if (!cleverTapMetaData.isCurrentUserOptedOut) {
+            return false
         }
 
-        if (!cleverTapMetaData.getEnabledSystemEvents()) {
-            config.getLogger().debug(config.getAccountId(), "Current user is opted out dropping event: " + event);
+        if (!cleverTapMetaData.enabledSystemEvents) {
+            config.logger.debug(config.accountId, "Current user is opted out dropping event: $event")
             // opted-out and system events disabled
-            return true;
+            return true
         }
 
         if (eventType != Constants.RAISED_EVENT && eventType != Constants.NV_EVENT) {
             // opted-out and system events enabled
-            config.getLogger().debug(config.getAccountId(), "This is not RAISED_EVENT or NV_EVENT, not dropping event: " + event);
-            return false;
+            config.logger.debug(
+                config.accountId,
+                "This is not RAISED_EVENT or NV_EVENT, not dropping event: $event"
+            )
+            return false
         }
 
         // opted-out and system events enabled
         // check for Constants.RAISED_EVENT and Constants.NV_EVENT event special cases
-        String eName = event != null ? getEventName(event) : null;
-        boolean isSystemEvent = ValidationConfig.DEFAULT_RESTRICTED_EVENT_NAMES.contains(eName);
-        boolean dropEvent = !isSystemEvent;
+        val eName = if (event != null) getEventName(event) else null
+        val isSystemEvent = ValidationConfig.DEFAULT_RESTRICTED_EVENT_NAMES.contains(eName)
+        val dropEvent = !isSystemEvent
         if (dropEvent) {
-            config.getLogger().debug(config.getAccountId(), "Current user is opted out dropping event: " + event);
+            config.logger.debug(config.accountId, "Current user is opted out dropping event: $event")
         } else {
-            config.getLogger().debug(config.getAccountId(), "This is a system event, not dropping event: " + event);
+            config.logger.debug(config.accountId, "This is a system event, not dropping event: $event")
         }
-        return dropEvent;
+        return dropEvent
     }
 
-    public boolean isAppLaunchedEvent(JSONObject event) {
-        try {
-            return event.has(Constants.KEY_EVT_NAME)
-                    && event.getString(Constants.KEY_EVT_NAME).equals(Constants.APP_LAUNCHED_EVENT);
-        } catch (JSONException e) {
-            return false;
-        }
-    }
-
-    public boolean isEvent(JSONObject event) {
-        return event.has(Constants.KEY_EVT_NAME);
-    }
-
-
-    public String getEventName(JSONObject event) {
-        try {
-            return event.getString(Constants.KEY_EVT_NAME);
-        } catch (JSONException e) {
-            return null;
+    open fun isAppLaunchedEvent(event: JSONObject): Boolean {
+        return try {
+            event.has(Constants.KEY_EVT_NAME) &&
+                    event.getString(Constants.KEY_EVT_NAME) == Constants.APP_LAUNCHED_EVENT
+        } catch (e: JSONException) {
+            false
         }
     }
 
-    public boolean isChargedEvent(JSONObject event) {
-        try {
-            return event.has(Constants.KEY_EVT_NAME)
-                    && event.getString(Constants.KEY_EVT_NAME).equals(Constants.CHARGED_EVENT);
-        } catch (JSONException e) {
-            return false;
+    open fun isEvent(event: JSONObject): Boolean {
+        return event.has(Constants.KEY_EVT_NAME)
+    }
+
+    open fun getEventName(event: JSONObject): String? {
+        return try {
+            event.getString(Constants.KEY_EVT_NAME)
+        } catch (e: JSONException) {
+            null
         }
     }
 
-    public List<Map<String, Object>> getChargedEventItemDetails(JSONObject event) {
-        try {
-            return JsonUtil.listFromJson(
-                    event.getJSONObject(Constants.KEY_EVT_DATA).getJSONArray(Constants.KEY_ITEMS));
-        } catch (JSONException e) {
-            return new ArrayList<>();
+    open fun isChargedEvent(event: JSONObject): Boolean {
+        return try {
+            event.has(Constants.KEY_EVT_NAME) &&
+                    event.getString(Constants.KEY_EVT_NAME) == Constants.CHARGED_EVENT
+        } catch (e: JSONException) {
+            false
         }
     }
 
-    public Map<String, Object> getChargedEventDetails(JSONObject event) {
-        try {
-            final Object items = event.getJSONObject(Constants.KEY_EVT_DATA).remove(Constants.KEY_ITEMS);
-            final Map<String, Object> chargedDetails = JsonUtil.mapFromJson(
-                    event.getJSONObject(Constants.KEY_EVT_DATA));
-            event.getJSONObject(Constants.KEY_EVT_DATA).put(Constants.KEY_ITEMS, items);
-            return chargedDetails;
-        } catch (JSONException e) {
-            return new HashMap<>();
+    open fun getChargedEventItemDetails(event: JSONObject): List<Map<String, Any>> {
+        return try {
+            JsonUtil.listFromJson<Map<String, Any>>(
+                event.getJSONObject(Constants.KEY_EVT_DATA).getJSONArray(Constants.KEY_ITEMS)
+            )!!
+        } catch (e: JSONException) {
+            ArrayList()
+        }
+    }
+
+    open fun getChargedEventDetails(event: JSONObject): Map<String, Any> {
+        return try {
+            val items = event.getJSONObject(Constants.KEY_EVT_DATA).remove(Constants.KEY_ITEMS)
+            val chargedDetails: Map<String, Any> = JsonUtil.mapFromJson<Any>(
+                event.getJSONObject(Constants.KEY_EVT_DATA)
+            )
+            event.getJSONObject(Constants.KEY_EVT_DATA).put(Constants.KEY_ITEMS, items)
+            chargedDetails
+        } catch (e: JSONException) {
+            HashMap()
         }
     }
 }

@@ -1,45 +1,66 @@
-package com.clevertap.android.sdk.events;
+package com.clevertap.android.sdk.events
 
-import android.content.Context;
-import androidx.annotation.AnyThread;
-import androidx.annotation.WorkerThread;
-import java.util.concurrent.Future;
-import org.json.JSONObject;
+import android.content.Context
+import androidx.annotation.AnyThread
+import androidx.annotation.WorkerThread
+import org.json.JSONObject
+import java.util.concurrent.Future
 
-public abstract class BaseEventQueueManager {
-
-    @AnyThread
-    public abstract Future<?> queueEvent(final Context context, final JSONObject event, final int eventType);
+internal abstract class BaseEventQueueManager {
 
     @AnyThread
-    public abstract Future<?> queueEvent(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData);
+    abstract fun queueEvent(context: Context, event: JSONObject, eventType: Int): Future<*>?
+
+    @AnyThread
+    abstract fun queueEvent(
+        context: Context,
+        event: JSONObject,
+        eventType: Int,
+        flattenedEventData: FlattenedEventData
+    ): Future<*>?
 
     @WorkerThread
-    public abstract void addToQueue(final Context context, final JSONObject event, final int eventType, FlattenedEventData flattenedEventData);
+    abstract fun addToQueue(
+        context: Context,
+        event: JSONObject,
+        eventType: Int,
+        flattenedEventData: FlattenedEventData
+    )
 
-    public abstract void flush();
+    abstract fun flush()
 
-    public abstract void flushQueueAsync(final Context context, final EventGroup eventGroup);
+    abstract fun flushQueueAsync(context: Context, eventGroup: EventGroup)
 
-    public abstract void pushBasicProfile(JSONObject baseProfile, boolean removeFromSharedPrefs, FlattenedEventData profileChanges);
+    abstract fun pushBasicProfile(
+        baseProfile: JSONObject?,
+        removeFromSharedPrefs: Boolean,
+        profileChanges: FlattenedEventData
+    )
 
-    public abstract void pushInitialEventsAsync();
+    abstract fun pushInitialEventsAsync()
+
     @WorkerThread
-    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup);
-    @WorkerThread
-    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller);
+    abstract fun flushQueueSync(context: Context, eventGroup: EventGroup)
 
     @WorkerThread
-    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup,final String caller, boolean isUserSwitchFlush);
+    abstract fun flushQueueSync(context: Context, eventGroup: EventGroup, caller: String?)
 
     @WorkerThread
-    public abstract void sendImmediately(Context context, EventGroup eventGroup, JSONObject eventData);
+    abstract fun flushQueueSync(
+        context: Context,
+        eventGroup: EventGroup,
+        caller: String?,
+        isUserSwitchFlush: Boolean
+    )
 
-    public abstract void scheduleQueueFlush(final Context context);
+    @WorkerThread
+    abstract fun sendImmediately(context: Context, eventGroup: EventGroup, eventData: JSONObject?)
+
+    abstract fun scheduleQueueFlush(context: Context)
 
     /**
      * Flushes queued events immediately when the whole app moves to background, bypassing the
      * scheduled flush delay so events reach the server before the process may be killed.
      */
-    public abstract void flushOnAppBackground(final Context context);
+    abstract fun flushOnAppBackground(context: Context)
 }

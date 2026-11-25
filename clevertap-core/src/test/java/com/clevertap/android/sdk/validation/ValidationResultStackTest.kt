@@ -52,8 +52,8 @@ class ValidationResultStackTest : BaseTestCase() {
         vrStack.pushValidationResult(vr1)
         vrStack.pushValidationResult(vr2)
         val poppedElement = vrStack.popValidationResult()
-        assertEquals(vr1.errorCode,poppedElement.errorCode)
-        assertEquals(vr1.errorDesc,poppedElement.errorDesc)
+        assertEquals(vr1.errorCode,poppedElement!!.errorCode)
+        assertEquals(vr1.errorDesc,poppedElement!!.errorDesc)
 
 
     }

@@ -164,8 +164,8 @@ class CleverTapAPITest : BaseTestCase() {
 
         // Assert
         val actualValidationResult = coreState.validationResultStack.popValidationResult()
-        assertEquals(expectedErrorCode, actualValidationResult.errorCode)
-        assertEquals(expectedErrorMessage, actualValidationResult.errorDesc)
+        assertEquals(expectedErrorCode, actualValidationResult!!.errorCode)
+        assertEquals(expectedErrorMessage, actualValidationResult!!.errorDesc)
     }
 
     @Test

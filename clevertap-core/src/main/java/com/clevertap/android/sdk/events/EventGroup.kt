@@ -1,16 +1,14 @@
-package com.clevertap.android.sdk.events;
+package com.clevertap.android.sdk.events
 
-public enum EventGroup {
+import androidx.annotation.RestrictTo
 
-    REGULAR("",""),
-    PUSH_NOTIFICATION_VIEWED("-spiky",""),
-    VARIABLES("","/defineVars");
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+enum class EventGroup(
+    @JvmField val httpResource: String,
+    @JvmField val additionalPath: String
+) {
 
-    public final String httpResource;
-    public final String additionalPath;
-
-    EventGroup(String httpResource, String additionalPath) {
-        this.httpResource = httpResource;
-        this.additionalPath = additionalPath;
-    }
+    REGULAR("", ""),
+    PUSH_NOTIFICATION_VIEWED("-spiky", ""),
+    VARIABLES("", "/defineVars");
 }

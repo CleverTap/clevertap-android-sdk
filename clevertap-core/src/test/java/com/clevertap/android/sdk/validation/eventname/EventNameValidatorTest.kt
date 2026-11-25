@@ -78,8 +78,8 @@ class EventNameValidatorTest {
         assertTrue(result is ValidationOutcome.Warning)
         assertEquals(1, result.errors.size)
         assertEquals(ValidationError.EVENT_NAME_TOO_LONG.code, result.errors[0].errorCode)
-        assertTrue(result.errors[0].errorDesc.contains("VeryLongEventName"))
-        assertTrue(result.errors[0].errorDesc.contains("VeryLongEv"))
+        assertTrue(result.errors[0].errorDesc!!.contains("VeryLongEventName"))
+        assertTrue(result.errors[0].errorDesc!!.contains("VeryLongEv"))
     }
 
     @Test
@@ -96,8 +96,8 @@ class EventNameValidatorTest {
         assertTrue(result is ValidationOutcome.Warning)
         assertEquals(1, result.errors.size)
         assertEquals(ValidationError.EVENT_NAME_INVALID_CHARACTERS.code, result.errors[0].errorCode)
-        assertTrue(result.errors[0].errorDesc.contains("Event!Name"))
-        assertTrue(result.errors[0].errorDesc.contains("EventName"))
+        assertTrue(result.errors[0].errorDesc!!.contains("Event!Name"))
+        assertTrue(result.errors[0].errorDesc!!.contains("EventName"))
     }
 
     @Test

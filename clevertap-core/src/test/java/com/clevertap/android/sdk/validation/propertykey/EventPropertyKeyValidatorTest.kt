@@ -168,8 +168,8 @@ class EventPropertyKeyValidatorTest {
         assertTrue(result is ValidationOutcome.Warning)
         val error = result.errors[0]
         assertEquals(ValidationError.KEY_INVALID_CHARACTERS.code, error.errorCode)
-        assertTrue(error.errorDesc.contains("test!key"))
-        assertTrue(error.errorDesc.contains("testkey"))
+        assertTrue(error.errorDesc!!.contains("test!key"))
+        assertTrue(error.errorDesc!!.contains("testkey"))
     }
 
     @Test
@@ -195,7 +195,7 @@ class EventPropertyKeyValidatorTest {
         assertTrue(result is ValidationOutcome.Warning)
         val error = result.errors[0]
         assertEquals(ValidationError.KEY_LENGTH_EXCEEDED.code, error.errorCode)
-        assertTrue(error.errorDesc.contains("6"))
+        assertTrue(error.errorDesc!!.contains("6"))
     }
 
     @Test
@@ -520,6 +520,6 @@ class EventPropertyKeyValidatorTest {
         val error = result.errors[0]
         assertNotNull(error.errorCode)
         assertNotNull(error.errorDesc)
-        assertTrue(error.errorDesc.isNotEmpty())
+        assertTrue(error.errorDesc!!.isNotEmpty())
     }
 }
