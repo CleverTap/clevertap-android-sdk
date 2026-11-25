@@ -243,6 +243,7 @@ open class CoreMetaData : CleverTapMetaData() {
         }
     }
 
+    @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
     companion object {
 
         private var appForeground = false

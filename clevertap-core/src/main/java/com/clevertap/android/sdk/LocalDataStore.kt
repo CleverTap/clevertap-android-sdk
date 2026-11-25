@@ -708,6 +708,7 @@ open class LocalDataStore internal constructor(
         }
     }
 
+    @RestrictTo(Scope.LIBRARY_GROUP_PREFIX)
     companion object {
         private var EXECUTOR_THREAD_ID: Long = 0
     }

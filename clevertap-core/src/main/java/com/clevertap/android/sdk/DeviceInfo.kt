@@ -341,6 +341,7 @@ open class DeviceInfo internal constructor(
      * - [DeviceInfo.UNKNOWN]
      * - [DeviceInfo.NULL]
      */
+    @RestrictTo(Scope.LIBRARY_GROUP)
     @IntDef(SMART_PHONE, TABLET, TV, UNKNOWN, NULL)
     @Retention(AnnotationRetention.SOURCE)
     annotation class DeviceType
@@ -862,6 +863,7 @@ open class DeviceInfo internal constructor(
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId)
     }
 
+    @RestrictTo(Scope.LIBRARY_GROUP)
     companion object {
 
         private const val TAG = "DeviceInfo"

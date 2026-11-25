@@ -253,6 +253,7 @@ open class ManifestInfo {
     val vendorTwoProvider: String?
         get() = provider2
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     companion object {
 
         private const val LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID"
