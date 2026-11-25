@@ -171,11 +171,11 @@ class SessionManagerTest : BaseTestCase() {
         sessionManagerDef = SessionManager(configDef,coreMetaData, validationConfig,localDataStoreMockk)
         val appLaunchedEventLog = UserEventLog(
             Constants.APP_LAUNCHED_EVENT,
-            Utils.getNormalizedName(Constants.APP_LAUNCHED_EVENT),
+            Utils.getNormalizedName(Constants.APP_LAUNCHED_EVENT)!!,
             0,
             1000000L,
             1,
-            deviceInfo.deviceID
+            deviceInfo.deviceID!!
         )
         every { localDataStoreMockk.readUserEventLog(Constants.APP_LAUNCHED_EVENT) } returns appLaunchedEventLog
         sessionManagerDef.setUserLastVisitTs()

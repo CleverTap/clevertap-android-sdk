@@ -800,7 +800,7 @@ class UserEventLogDAOImplTest {
         // Given
         val events = (1..5).map { "event_$it" }
         val setOfActualAndNormalizedEventNamePair = events.map {
-            Pair(it, Utils.getNormalizedName(it))
+            Pair(it, Utils.getNormalizedName(it)!!)
         }.toSet()
         setOfActualAndNormalizedEventNamePair.forEach { pair ->
             userEventLogDAO.insertEvent(testDeviceId, pair.first,pair.second)
@@ -843,7 +843,7 @@ class UserEventLogDAOImplTest {
         // Given
         val events = (1..10).map { "event_$it" }
         val setOfActualAndNormalizedEventNamePair = events.map {
-            Pair(it, Utils.getNormalizedName(it))
+            Pair(it, Utils.getNormalizedName(it)!!)
         }.toSet()
 
         setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
@@ -888,7 +888,7 @@ class UserEventLogDAOImplTest {
         // Given
         val events = (1..3).map { "event_$it" }
         val setOfActualAndNormalizedEventNamePair = events.map {
-            Pair(it, Utils.getNormalizedName(it))
+            Pair(it, Utils.getNormalizedName(it)!!)
         }.toSet()
 
         setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
@@ -924,7 +924,7 @@ class UserEventLogDAOImplTest {
         val eventCount = 10
         val events = (1..eventCount).map { "event_$it" }
         val setOfActualAndNormalizedEventNamePair = events.map {
-            Pair(it, Utils.getNormalizedName(it))
+            Pair(it, Utils.getNormalizedName(it)!!)
         }.toSet()
 
         setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
@@ -975,7 +975,7 @@ class UserEventLogDAOImplTest {
         // Given
         val events = (1..3).map { "event_$it" }
         val setOfActualAndNormalizedEventNamePair = events.map {
-            Pair(it, Utils.getNormalizedName(it))
+            Pair(it, Utils.getNormalizedName(it)!!)
         }.toSet()
 
         setOfActualAndNormalizedEventNamePair.forEachIndexed { index, pair ->
@@ -1034,7 +1034,7 @@ class UserEventLogDAOImplTest {
             val mockTime = MOCK_TIME + (index * 1000L)
             every { Utils.getNowInMillis() } returns mockTime
             val eventName = "EV e n t_$index"
-            userEventLogDAO.insertEvent(testDeviceId, eventName,Utils.getNormalizedName(eventName))
+            userEventLogDAO.insertEvent(testDeviceId, eventName,Utils.getNormalizedName(eventName)!!)
 
             // Add some updates to earlier events to mix up lastTs
             if (index > 1) {

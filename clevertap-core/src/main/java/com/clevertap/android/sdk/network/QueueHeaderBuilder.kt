@@ -115,7 +115,7 @@ internal class QueueHeaderBuilder(
     }
 
     private fun addDoNotDisturb(header: JSONObject) {
-        header.put("ddnd", !(context.areAppNotificationsEnabled() && (controllerManager.pushProviders == null || controllerManager.pushProviders.isNotificationSupported)))
+        header.put("ddnd", !(context.areAppNotificationsEnabled() && (controllerManager.pushProviders?.isNotificationSupported ?: true)))
     }
 
     private fun addBackgroundPing(header: JSONObject) {

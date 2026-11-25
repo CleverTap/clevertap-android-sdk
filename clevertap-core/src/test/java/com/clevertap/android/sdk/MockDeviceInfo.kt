@@ -7,8 +7,8 @@ class MockDeviceInfo(
     context: Context?, config: CleverTapInstanceConfig?, cleverTapID: String?,
     coreMetaData: CoreMetaData?
 ) : DeviceInfo(
-    context, config,
-    cleverTapID, coreMetaData, null
+    context!!, config!!,
+    cleverTapID, coreMetaData!!, null
 ) {
 
     val ctId: String?
@@ -17,117 +17,98 @@ class MockDeviceInfo(
         ctId = cleverTapID
     }
 
-    override fun getDeviceID(): String? {
-        return ctId
-    }
+    override val deviceID: String?
+        get() = ctId
 
     override fun cacheDeviceInfoAsync() {
     }
 
-    override fun getAttributionID(): String {
-        return "some-att-id"
-    }
+    override val attributionID: String
+        get() = "some-att-id"
 
-    override fun getBluetoothVersion(): String {
-        return "2.0"
-    }
+    override val bluetoothVersion: String
+        get() = "2.0"
 
-    override fun getBuild(): Int {
-        return 1
-    }
+    override val build: Int
+        get() = 1
 
-    override fun getCarrier(): String {
-        return "Android"
-    }
+    override val carrier: String
+        get() = "Android"
 
     override fun getContext(): Context {
         return super.getContext()
     }
 
-    override fun getCountryCode(): String {
-        return "us"
-    }
+    override val countryCode: String
+        get() = "us"
 
     override fun getDPI(): Int {
         return 420
     }
 
-    override fun getGoogleAdID(): String {
-        return "__48703e3cc2ff468ab3c641edf2770d74"
-    }
+    override val googleAdID: String
+        get() = "__48703e3cc2ff468ab3c641edf2770d74"
 
-    override fun getHeight(): Double {
-        return 4.27
-    }
+    override val height: Double
+        get() = 4.27
 
-    override fun getLibrary(): String {
-        return "Android"
-    }
+    override var library: String?
+        get() = "Android"
+        set(value) {}
 
-    override fun getManufacturer(): String {
-        return super.getManufacturer()
-    }
+    override val manufacturer: String?
+        get() = super.manufacturer
 
-    override fun getModel(): String {
-        return "sdk_gphone_x86"
-    }
+    override val model: String
+        get() = "sdk_gphone_x86"
 
-    override fun getNetworkType(): String {
-        return "4G"
-    }
+    override val networkType: String
+        get() = "4G"
 
-    override fun getOsName(): String {
-        return "Android"
-    }
+    override val osName: String
+        get() = "Android"
 
-    override fun getOsVersion(): String {
-        return "11"
-    }
+    override val osVersion: String
+        get() = "11"
 
-    override fun getSdkVersion(): Int {
-        return 40100
-    }
+    override val sdkVersion: Int
+        get() = 40100
 
-    override fun getVersionName(): String {
-        return "1.0"
-    }
+    override val versionName: String
+        get() = "1.0"
 
-    override fun getWidth(): Double {
-        return 2.57
-    }
+    override val width: Double
+        get() = 2.57
 
-    override fun isBluetoothEnabled(): Boolean {
-        return true
-    }
+    override val isBluetoothEnabled: Boolean
+        get() = true
 
-    override fun isLimitAdTrackingEnabled(): Boolean {
-        return false
-    }
+    override val isLimitAdTrackingEnabled: Boolean
+        get() = false
 
-    override fun isWifiConnected(): Boolean {
-        return true
-    }
+    override val isWifiConnected: Boolean
+        get() = true
 
-    override fun getAppBucket(): String {
-        return "active"
-    }
+    override val appBucket: String
+        get() = "active"
 
-    override fun getAppLaunchedFields(): JSONObject {
-        val obj = JSONObject()
-        obj.put("Build", "1")
-        obj.put("Version", "1.0")
-        obj.put("OS Version", "11")
-        obj.put("SDK Version", 40100)
-        obj.put("Make", "Google")
-        obj.put("Model", "sdk_gphone_x86")
-        obj.put("Carrier", "Android")
-        obj.put("useIP", false)
-        obj.put("OS", "Android")
-        obj.put("wdt", 2.57)
-        obj.put("hgt", 4.27)
-        obj.put("dpi", 420)
-        obj.put("dt", 1)
-        obj.put("cc", "us")
-        return obj
-    }
+    override val appLaunchedFields: JSONObject
+        get() {
+            val obj = JSONObject()
+            obj.put("Build", "1")
+            obj.put("Version", "1.0")
+            obj.put("OS Version", "11")
+            obj.put("SDK Version", 40100)
+            obj.put("Make", "Google")
+            obj.put("Model", "sdk_gphone_x86")
+            obj.put("Carrier", "Android")
+            obj.put("useIP", false)
+            obj.put("OS", "Android")
+            obj.put("wdt", 2.57)
+            obj.put("hgt", 4.27)
+            obj.put("dpi", 420)
+            obj.put("dt", 1)
+            obj.put("cc", "us")
+            return obj
+        }
 }
