@@ -1,68 +1,70 @@
-package com.clevertap.demo;
+package com.clevertap.demo
 
-import com.clevertap.android.sdk.variables.annotations.Variable;
-import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
+import com.clevertap.android.sdk.variables.annotations.Variable
+import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 
-public class ExampleVariables {
+/**
+ * Variables registered through `CleverTapAPI.parseVariables(instance)`. The SDK's Parser reads the
+ * public fields (Class.getFields()) annotated with [Variable] by reflection, so every variable stays a
+ * public JVM field with the same name and primitive type (@JvmField), not a Kotlin property.
+ */
+class ExampleVariables {
 
-    @Variable
-    public boolean var_boolean = true;
+    @JvmField
+    @field:Variable
+    var var_boolean: Boolean = true
 
-    @Variable
-    public byte var_byte = 1;
+    @JvmField
+    @field:Variable
+    var var_byte: Byte = 1
 
-    @Variable
-    public short var_short = 2;
+    @JvmField
+    @field:Variable
+    var var_short: Short = 2
 
-    @Variable
-    public int var_int = 3;
+    @JvmField
+    @field:Variable
+    var var_int: Int = 3
 
-    @Variable
-    public long var_long = 4L;
+    @JvmField
+    @field:Variable
+    var var_long: Long = 4L
 
-    @Variable
-    public float var_float = 5F;
+    @JvmField
+    @field:Variable
+    var var_float: Float = 5f
 
-    @Variable
-    public double var_double = 6.;
+    @JvmField
+    @field:Variable
+    var var_double: Double = 6.0
 
-    @Variable
-    public String var_string = "str";
+    @JvmField
+    @field:Variable
+    var var_string: String? = "str"
 
-    private final VariablesChangedCallback oneTimeVariablesChangedCallback;
-    private final VariablesChangedCallback variablesChangedCallback;
-
-    public final VariablesChangedCallback downloadsCompleteOnce = new VariablesChangedCallback() {
-        @Override public void variablesChanged() {
-            System.out.println("File downloads finished from downloadsCompleteOnce");
+    @JvmField
+    val downloadsCompleteOnce: VariablesChangedCallback = object : VariablesChangedCallback() {
+        override fun variablesChanged() {
+            println("File downloads finished from downloadsCompleteOnce")
         }
-    };
-
-    public final VariablesChangedCallback downloadsCompleteRepeated = new VariablesChangedCallback() {
-        @Override public void variablesChanged() {
-            System.out.println("File downloads finished from downloadsCompleteRepeated");
-        }
-    };
-
-    public VariablesChangedCallback getOneTimeVariablesChangedCallback() {
-        return oneTimeVariablesChangedCallback;
     }
 
-    public VariablesChangedCallback getVariablesChangedCallback() {
-        return variablesChangedCallback;
+    @JvmField
+    val downloadsCompleteRepeated: VariablesChangedCallback = object : VariablesChangedCallback() {
+        override fun variablesChanged() {
+            println("File downloads finished from downloadsCompleteRepeated")
+        }
     }
 
-    public ExampleVariables() {
-        oneTimeVariablesChangedCallback = new VariablesChangedCallback() {
-            @Override public void variablesChanged() {
-                System.out.println("One Time Variables Changed");
-            }
-        };
+    val oneTimeVariablesChangedCallback: VariablesChangedCallback = object : VariablesChangedCallback() {
+        override fun variablesChanged() {
+            println("One Time Variables Changed")
+        }
+    }
 
-        variablesChangedCallback = new VariablesChangedCallback() {
-            @Override public void variablesChanged() {
-                System.out.println("Variables Changed");
-            }
-        };
+    val variablesChangedCallback: VariablesChangedCallback = object : VariablesChangedCallback() {
+        override fun variablesChanged() {
+            println("Variables Changed")
+        }
     }
 }
