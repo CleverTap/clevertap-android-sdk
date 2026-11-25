@@ -1,110 +1,99 @@
-package com.clevertap.android.hms;
+package com.clevertap.android.hms
 
-import static com.clevertap.android.hms.HmsConstants.APP_ID_KEY;
-import static com.clevertap.android.hms.HmsConstants.HCM_SCOPE;
-import static com.clevertap.android.hms.HmsConstants.HMS_LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-
-import android.content.Context;
-import android.text.TextUtils;
-
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.huawei.agconnect.AGConnectInstance;
-import com.huawei.agconnect.AGConnectOptions;
-import com.huawei.agconnect.AGConnectOptionsBuilder;
-import com.huawei.hms.aaid.HmsInstanceId;
-import com.huawei.hms.api.HuaweiApiAvailability;
-
-import org.jetbrains.annotations.TestOnly;
+import android.content.Context
+import android.text.TextUtils
+import com.clevertap.android.hms.HmsConstants.Companion.APP_ID_KEY
+import com.clevertap.android.hms.HmsConstants.Companion.HCM_SCOPE
+import com.clevertap.android.hms.HmsConstants.Companion.HMS_LOG_TAG
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
+import com.huawei.agconnect.AGConnectInstance
+import com.huawei.agconnect.AGConnectOptions
+import com.huawei.agconnect.AGConnectOptionsBuilder
+import com.huawei.hms.aaid.HmsInstanceId
+import com.huawei.hms.api.HuaweiApiAvailability
+import org.jetbrains.annotations.TestOnly
 
 /**
- * Implementation of {@link IHmsSdkHandler}
+ * Implementation of [IHmsSdkHandler]
  */
-class HmsSdkHandler implements IHmsSdkHandler {
+internal class HmsSdkHandler(
+    context: Context,
+    private val mConfig: CleverTapInstanceConfig?
+) : IHmsSdkHandler {
 
-    private final Context context;
-    private final CleverTapInstanceConfig mConfig;
-    private volatile AGConnectOptions options;
+    private val context: Context = context.applicationContext
 
-    HmsSdkHandler(final Context context, final CleverTapInstanceConfig config) {
-        this.context = context.getApplicationContext();
-        this.mConfig = config;
-    }
+    @Volatile
+    private var options: AGConnectOptions? = null
 
     @TestOnly
-    HmsSdkHandler(final Context context, final CleverTapInstanceConfig config, final AGConnectOptions op) {
-        this.context = context.getApplicationContext();
-        mConfig = config;
-        options = op;
+    constructor(context: Context, config: CleverTapInstanceConfig?, op: AGConnectOptions?) : this(context, config) {
+        options = op
     }
 
-    private synchronized void initializeOptions() {
+    @Synchronized
+    private fun initializeOptions() {
         if (options != null) {
-            return;
+            return
         }
         try {
             // Try existing AGConnect instance first
-            AGConnectInstance instance = AGConnectInstance.getInstance();
-            if (instance != null && instance.getOptions() != null) {
-                options = instance.getOptions();
-                return;
+            val instance: AGConnectInstance? = AGConnectInstance.getInstance()
+            if (instance != null && instance.options != null) {
+                options = instance.options
+                return
             }
-        } catch (Exception e) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to initialize AGConnect options: " + e.getMessage());
+        } catch (e: Exception) {
+            mConfig!!.log(LOG_TAG, HMS_LOG_TAG + "Failed to initialize AGConnect options: " + e.message)
         }
 
         // Fallback to building new options
         try {
-            options = new AGConnectOptionsBuilder().build(context);
-        } catch (Exception e) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to build new AGConnect options: " + e.getMessage());
+            options = AGConnectOptionsBuilder().build(context)
+        } catch (e: Exception) {
+            mConfig!!.log(LOG_TAG, HMS_LOG_TAG + "Failed to build new AGConnect options: " + e.message)
         }
     }
 
-    @Override
-    public String appId() {
+    override fun appId(): String? {
         if (options == null) {
-            initializeOptions();
+            initializeOptions()
         }
 
         if (options == null) {
-            return null;
+            return null
         }
 
-        try {
-            return options.getString(APP_ID_KEY);
-        } catch (Throwable t) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Failed to get HMS app ID: " + t.getMessage());
-            return null;
-        }
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return !TextUtils.isEmpty(appId());
-    }
-
-    @Override
-    public boolean isSupported() {
-        try {
-            return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(context) == 0;
-        } catch (Throwable e) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "HMS is supported check failed.");
-            return false;
+        return try {
+            options!!.getString(APP_ID_KEY)
+        } catch (t: Throwable) {
+            mConfig!!.log(LOG_TAG, HMS_LOG_TAG + "Failed to get HMS app ID: " + t.message)
+            null
         }
     }
 
-    @Override
-    public String onNewToken() {
-        String token = null;
+    override val isAvailable: Boolean
+        get() = !TextUtils.isEmpty(appId())
+
+    override val isSupported: Boolean
+        get() = try {
+            HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(context) == 0
+        } catch (e: Throwable) {
+            mConfig!!.log(LOG_TAG, HMS_LOG_TAG + "HMS is supported check failed.")
+            false
+        }
+
+    override fun onNewToken(): String? {
+        var token: String? = null
         try {
-            String appId = appId();
+            val appId = appId()
             if (!TextUtils.isEmpty(appId)) {
-                token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
+                token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE)
             }
-        } catch (Throwable t) {
-            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Error requesting HMS token", t);
+        } catch (t: Throwable) {
+            mConfig!!.log(LOG_TAG, HMS_LOG_TAG + "Error requesting HMS token", t)
         }
-        return token;
+        return token
     }
 }

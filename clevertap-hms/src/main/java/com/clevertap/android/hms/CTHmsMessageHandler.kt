@@ -1,97 +1,83 @@
-package com.clevertap.android.hms;
+package com.clevertap.android.hms
 
-import static com.clevertap.android.hms.HmsConstants.HMS_LOG_TAG;
-import static com.clevertap.android.hms.HmsConstants.HPS;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-
-import android.content.Context;
-import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.interfaces.INotificationParser;
-import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
-import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
-import com.clevertap.android.sdk.pushnotification.fcm.IFcmMessageHandler;
-import com.huawei.hms.push.RemoteMessage;
+import android.content.Context
+import com.clevertap.android.hms.HmsConstants.Companion.HMS_LOG_TAG
+import com.clevertap.android.hms.HmsConstants.Companion.HPS
+import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.interfaces.INotificationParser
+import com.clevertap.android.sdk.interfaces.IPushAmpHandler
+import com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG
+import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
+import com.clevertap.android.sdk.pushnotification.fcm.IFcmMessageHandler
+import com.huawei.hms.push.RemoteMessage
 
 /**
- * implementation of {@link IFcmMessageHandler} and {@link IPushAmpHandler} for huawei notification message
+ * implementation of [IFcmMessageHandler] and [IPushAmpHandler] for huawei notification message
  */
-public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
+open class CTHmsMessageHandler internal constructor(
+    private val mParser: INotificationParser<RemoteMessage>
+) : IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
 
-    private final INotificationParser<RemoteMessage> mParser;
-
-    public CTHmsMessageHandler() {
-        this(new HmsNotificationParser());
-    }
-
-    CTHmsMessageHandler(final INotificationParser<RemoteMessage> parser) {
-        mParser = parser;
-    }
+    constructor() : this(HmsNotificationParser())
 
     /**
      * {@inheritDoc}
-     * <br><br>
+     *
      * Use this method if you have custom implementation of huawei messaging service and wants to create push-template
      * notification/non push-template notification using CleverTap
-     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     * Note: Starting from core v5.1.0, this method runs on the caller's thread. Make sure to call it
-     * in onMessageReceive() of messaging service.
-     * </p>
+     *
+     * **Note: Starting from core v5.1.0, this method runs on the caller's thread. Make sure to call it
+     * in onMessageReceive() of messaging service.**
      */
-    @Override
-    public boolean createNotification(Context context, final RemoteMessage remoteMessage) {
-        boolean isSuccess = false;
-        Bundle messageBundle = mParser.toBundle(remoteMessage);
+    override fun createNotification(context: Context?, remoteMessage: RemoteMessage?): Boolean {
+        var isSuccess = false
+        // The parser contract is @NonNull; Java passed null through and the parser's own catch
+        // turned the resulting NPE into a null bundle. Skip the call instead (same outcome: false).
+        val messageBundle = if (remoteMessage != null) mParser.toBundle(remoteMessage) else null
         if (messageBundle != null) {
             try {
                 isSuccess = PushNotificationHandler
-                        .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.getType());
-            } catch (Throwable e) {
-                Logger.d(LOG_TAG, HMS_LOG_TAG + "Error Creating Notification", e);
+                    .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.type)
+            } catch (e: Throwable) {
+                Logger.d(LOG_TAG, HMS_LOG_TAG + "Error Creating Notification", e)
             }
         }
-        return isSuccess;
+        return isSuccess
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public boolean onNewToken(Context context, final String token) {
-        boolean isSuccess = false;
+    override fun onNewToken(context: Context?, token: String?): Boolean {
+        var isSuccess = false
         try {
             PushNotificationHandler
-                    .getPushNotificationHandler()
-                    .onNewToken(context, token, HPS);
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "onNewToken: " + token);
-            isSuccess = true;
-        } catch (Throwable throwable) {
+                .getPushNotificationHandler()
+                .onNewToken(context, token, HPS)
+            Logger.d(LOG_TAG, HMS_LOG_TAG + "onNewToken: " + token)
+            isSuccess = true
+        } catch (throwable: Throwable) {
             // do nothing
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "Error onNewToken: " + token, throwable);
+            Logger.d(LOG_TAG, HMS_LOG_TAG + "Error onNewToken: " + token, throwable)
         }
-        return isSuccess;
+        return isSuccess
     }
 
     /**
      * {@inheritDoc}
-     * <br><br>
+     *
      * Use this method if you are rendering notification by your own and wants to support your custom rendered
      * notification for Pull Notifications
      */
-    @Override
-    public void processPushAmp(final Context context, @NonNull final RemoteMessage message) {
+    override fun processPushAmp(context: Context?, message: RemoteMessage) {
         try {
-            Bundle messageBundle = mParser.toBundle(message);
+            val messageBundle = mParser.toBundle(message)
             if (messageBundle != null) {
-                CleverTapAPI.processPushNotification(context, messageBundle);
+                CleverTapAPI.processPushNotification(context, messageBundle)
             }
-        } catch (Throwable t) {
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "Error processing push amp", t);
+        } catch (t: Throwable) {
+            Logger.d(LOG_TAG, HMS_LOG_TAG + "Error processing push amp", t)
         }
     }
-
 }

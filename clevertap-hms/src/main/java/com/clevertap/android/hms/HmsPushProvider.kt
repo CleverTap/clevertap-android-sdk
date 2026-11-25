@@ -1,63 +1,48 @@
-package com.clevertap.android.hms;
+package com.clevertap.android.hms
 
-import static com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
-import static com.clevertap.android.hms.HmsConstants.HPS;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.pushnotification.CTPushProvider;
-import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushType;
+import android.annotation.SuppressLint
+import android.content.Context
+import androidx.annotation.RestrictTo
+import com.clevertap.android.hms.HmsConstants.Companion.HPS
+import com.clevertap.android.hms.HmsConstants.Companion.MIN_CT_ANDROID_SDK_VERSION
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.pushnotification.CTPushProvider
+import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
+import com.clevertap.android.sdk.pushnotification.PushType
 
 /**
- * Clevertap's Huawei Plugin Ref: {@link CTPushProvider}
+ * Clevertap's Huawei Plugin Ref: [CTPushProvider]
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class HmsPushProvider implements CTPushProvider {
+internal class HmsPushProvider @SuppressLint("unused") constructor(
+    private val ctPushListener: CTPushProviderListener,
+    context: Context,
+    config: CleverTapInstanceConfig?
+) : CTPushProvider {
 
-    private final @NonNull
-    CTPushProviderListener ctPushListener;
+    private var hmsSdkHandler: IHmsSdkHandler = HmsSdkHandler(context, config)
 
-    private @NonNull
-    IHmsSdkHandler hmsSdkHandler;
-
-    @SuppressLint(value = "unused")
-    public HmsPushProvider(@NonNull CTPushProviderListener ctPushListener, Context context,
-            CleverTapInstanceConfig config) {
-        this.ctPushListener = ctPushListener;
-        this.hmsSdkHandler = new HmsSdkHandler(context, config);
+    override fun getPushType(): PushType {
+        return HPS
     }
 
-    @NonNull
-    @Override
-    public PushType getPushType() {
-        return HPS;
+    override fun isAvailable(): Boolean {
+        return hmsSdkHandler.isAvailable
     }
 
-    @Override
-    public boolean isAvailable() {
-        return hmsSdkHandler.isAvailable();
+    override fun isSupported(): Boolean {
+        return hmsSdkHandler.isSupported
     }
 
-    @Override
-    public boolean isSupported() {
-        return hmsSdkHandler.isSupported();
+    override fun minSDKSupportVersionCode(): Int {
+        return MIN_CT_ANDROID_SDK_VERSION
     }
 
-    @Override
-    public int minSDKSupportVersionCode() {
-        return MIN_CT_ANDROID_SDK_VERSION;
+    override fun requestToken() {
+        ctPushListener.onNewToken(hmsSdkHandler.onNewToken(), pushType)
     }
 
-    @Override
-    public void requestToken() {
-        ctPushListener.onNewToken(hmsSdkHandler.onNewToken(), getPushType());
-    }
-
-    void setHmsSdkHandler(@NonNull final IHmsSdkHandler hmsSdkHandler) {
-        this.hmsSdkHandler = hmsSdkHandler;
+    fun setHmsSdkHandler(hmsSdkHandler: IHmsSdkHandler) {
+        this.hmsSdkHandler = hmsSdkHandler
     }
 }

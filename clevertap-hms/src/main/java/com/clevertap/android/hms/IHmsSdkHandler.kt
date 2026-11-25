@@ -1,28 +1,27 @@
-package com.clevertap.android.hms;
+package com.clevertap.android.hms
 
 /**
  * Bridge interface to communicate with Huawei SDK
  */
-public interface IHmsSdkHandler {
+internal interface IHmsSdkHandler {
 
     /**
      * @return App ID of Huawei Project
      */
-    String appId();
+    fun appId(): String?
 
     /*
      * Tells whether Huawei Credentials are valid
      */
-    boolean isAvailable();
+    val isAvailable: Boolean
 
     /*
      * Tells whether Huawei push is supported
      */
-    boolean isSupported();
+    val isSupported: Boolean
 
     /**
      * @return Xiaomi Message token
      */
-    String onNewToken();
-
+    fun onNewToken(): String?
 }
