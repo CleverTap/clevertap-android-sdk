@@ -69,7 +69,7 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
         override fun addMediaPlayer(
             currentVolume: Float,
             muteClick: Function0<Float>,
-            playMedia: Function3<String, Boolean, Boolean, Void>,
+            playMedia: Function3<String, Boolean, Boolean, Void?>,
             videoSurfaceView: View
         ): Boolean {
             attempts++
@@ -78,9 +78,9 @@ class MediaPlayerRecyclerViewTest : BaseTestCase() {
             }
             attachCount++
             this.muteClick = muteClick
-            frameLayout.removeAllViews()
-            frameLayout.addView(videoSurfaceView)
-            frameLayout.visibility = View.VISIBLE // what playerReady() does once the player is ready
+            container.removeAllViews()
+            container.addView(videoSurfaceView)
+            container.visibility = View.VISIBLE // what playerReady() does once the player is ready
             playMedia.invoke(mediaUrlValue.orEmpty(), false, true)
             return true
         }
