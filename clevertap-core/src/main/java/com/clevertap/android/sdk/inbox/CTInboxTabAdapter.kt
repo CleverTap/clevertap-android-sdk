@@ -1,59 +1,42 @@
-package com.clevertap.android.sdk.inbox;
+package com.clevertap.android.sdk.inbox
 
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import java.util.ArrayList;
-import java.util.List;
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
 
 /**
  * Custom PagerAdapter for Notification Inbox tabs
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
-@RestrictTo(Scope.LIBRARY)
-public class CTInboxTabAdapter extends FragmentPagerAdapter {
+@Suppress("DEPRECATION")
+internal open class CTInboxTabAdapter(fm: FragmentManager, size: Int) :
+    FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
-    private final Fragment[] fragmentList;
+    private val fragmentList: Array<Fragment?> = arrayOfNulls(size)
 
-    private final List<String> fragmentTitleList = new ArrayList<>();
+    private val fragmentTitleList: MutableList<String?> = ArrayList()
 
-    public CTInboxTabAdapter(FragmentManager fm, int size) {
-        super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
-        fragmentList = new Fragment[size];
+    override fun getCount(): Int {
+        return fragmentList.size
     }
 
-    @Override
-    public int getCount() {
-        return fragmentList.length;
+    override fun getItem(position: Int): Fragment {
+        // Every slot is filled through addFragment() before the adapter is attached.
+        return fragmentList[position]!!
     }
 
-    @NonNull
-    @Override
-    public Fragment getItem(int position) {
-        return fragmentList[position];
+    override fun getPageTitle(position: Int): CharSequence? {
+        return fragmentTitleList[position]
     }
 
-    @Nullable
-    @Override
-    public CharSequence getPageTitle(int position) {
-        return fragmentTitleList.get(position);
+    override fun instantiateItem(container: ViewGroup, position: Int): Any {
+        val ret = super.instantiateItem(container, position)
+        fragmentList[position] = ret as Fragment
+        return ret
     }
 
-    @NonNull
-    @Override
-    public Object instantiateItem(@NonNull ViewGroup container, int position) {
-        Object ret = super.instantiateItem(container, position);
-        fragmentList[position] = (Fragment) ret;
-        return ret;
-    }
-
-    void addFragment(Fragment fragment, String title, int position) {
-        fragmentList[position] = fragment;
-        fragmentTitleList.add(title);
+    fun addFragment(fragment: Fragment, title: String?, position: Int) {
+        fragmentList[position] = fragment
+        fragmentTitleList.add(title)
     }
 }

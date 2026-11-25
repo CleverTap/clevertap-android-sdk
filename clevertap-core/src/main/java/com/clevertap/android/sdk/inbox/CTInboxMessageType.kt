@@ -1,42 +1,31 @@
-package com.clevertap.android.sdk.inbox;
+package com.clevertap.android.sdk.inbox
 
-import androidx.annotation.NonNull;
-
-public enum CTInboxMessageType {
+enum class CTInboxMessageType(private val inboxMessageType: String) {
 
     SimpleMessage("simple"),
     IconMessage("message-icon"),
     CarouselMessage("carousel"),
     CarouselImageMessage("carousel-image");
 
-    private final String inboxMessageType;
-
-    CTInboxMessageType(String type) {
-        this.inboxMessageType = type;
+    override fun toString(): String {
+        return inboxMessageType
     }
 
-    @NonNull
-    @Override
-    public String toString() {
-        return inboxMessageType;
-    }
+    companion object {
 
-    static CTInboxMessageType fromString(String type) {
-        switch (type) {
-            case "simple":
-                return SimpleMessage;
+        @JvmStatic
+        internal fun fromString(type: String): CTInboxMessageType? {
+            return when (type) {
+                "simple" -> SimpleMessage
 
-            case "message-icon":
-                return IconMessage;
+                "message-icon" -> IconMessage
 
-            case "carousel":
-                return CarouselMessage;
+                "carousel" -> CarouselMessage
 
-            case "carousel-image":
-                return CarouselImageMessage;
+                "carousel-image" -> CarouselImageMessage
 
-            default:
-                return null;
+                else -> null
+            }
         }
     }
 }

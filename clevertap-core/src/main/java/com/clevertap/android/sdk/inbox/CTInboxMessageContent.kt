@@ -1,138 +1,185 @@
-package com.clevertap.android.sdk.inbox;
+package com.clevertap.android.sdk.inbox
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.text.TextUtils;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import java.util.HashMap;
-import java.util.Iterator;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.os.Parcel
+import android.os.Parcelable
+import android.text.TextUtils
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Public model class for the "msg" object from notification inbox payload
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
-public class CTInboxMessageContent implements Parcelable {
+open class CTInboxMessageContent : Parcelable {
 
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInboxMessageContent> CREATOR
-            = new Parcelable.Creator<CTInboxMessageContent>() {
-        @Override
-        public CTInboxMessageContent createFromParcel(Parcel in) {
-            return new CTInboxMessageContent(in);
-        }
-
-        @Override
-        public CTInboxMessageContent[] newArray(int size) {
-            return new CTInboxMessageContent[size];
-        }
-    };
-
-    private String actionUrl;
-
-    private String contentType;
-
-    private Boolean hasLinks;
-
-    private Boolean hasUrl;
-
-    private String icon;
-
-    private String iconContentDescription;
-
-    private JSONArray links;
-
-    private String media;
-
-    private String mediaContentDescription;
-
-    private String message;
-
-    private String messageColor;
-
-    private String posterUrl;
-
-    private String title;
-
-    private String titleColor;
-
-    CTInboxMessageContent() {
-    }
-
-    protected CTInboxMessageContent(Parcel in) {
-        title = in.readString();
-        titleColor = in.readString();
-        message = in.readString();
-        messageColor = in.readString();
-        media = in.readString();
-        mediaContentDescription = in.readString();
-        hasUrl = in.readByte() != 0x00;
-        hasLinks = in.readByte() != 0x00;
-        actionUrl = in.readString();
-        icon = in.readString();
-        iconContentDescription = in.readString();
-        try {
-            links = in.readByte() == 0x00 ? null : new JSONArray(in.readString());
-        } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessageContent with Parcel - " + e.getLocalizedMessage());
-        }
-        contentType = in.readString();
-        posterUrl = in.readString();
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+    private var _actionUrl: String? = null
 
     /**
      * Return the action URL of the body of the inbox message
-     *
-     * @return String
      */
-    public String getActionUrl() {
-        return actionUrl;
-    }
+    open fun getActionUrl(): String? = _actionUrl
 
-    void setActionUrl(String actionUrl) {
-        this.actionUrl = actionUrl;
-    }
+    /** Kotlin property syntax, equivalent to [getActionUrl]. */
+    val actionUrl: String?
+        @JvmSynthetic @JvmName("ktGetActionUrl") inline get() = getActionUrl()
+
+    private var _contentType: String? = null
 
     /**
      * Returns the content type of the media
-     *
-     * @return String
      */
-    public String getContentType() {
-        return contentType;
-    }
+    open fun getContentType(): String? = _contentType
+
+    /** Kotlin property syntax, equivalent to [getContentType]. */
+    val contentType: String?
+        @JvmSynthetic @JvmName("ktGetContentType") inline get() = getContentType()
+
+    private var hasLinks: Boolean? = null
+
+    private var hasUrl: Boolean? = null
+
+    private var _icon: String? = null
 
     /**
      * Returns the URL as String for the icon in case of Icon Message template
-     *
-     * @return String
      */
-    public String getIcon() {
-        return icon;
-    }
+    open fun getIcon(): String? = _icon
 
-    void setIcon(String icon) {
-        this.icon = icon;
-    }
+    /** Kotlin property syntax, equivalent to [getIcon]. */
+    val icon: String?
+        @JvmSynthetic @JvmName("ktGetIcon") inline get() = getIcon()
 
+    private var _iconContentDescription: String? = null
 
     /**
      * Returns the content description for the icon in case of an Icon Message template.
      */
-    public String getIconContentDescription() {
-        return iconContentDescription;
+    open fun getIconContentDescription(): String? = _iconContentDescription
+
+    /** Kotlin property syntax, equivalent to [getIconContentDescription]. */
+    val iconContentDescription: String?
+        @JvmSynthetic @JvmName("ktGetIconContentDescription") inline get() = getIconContentDescription()
+
+    private var _links: JSONArray? = null
+
+    /**
+     * Returns a JSONArray of Call to Action buttons
+     */
+    open fun getLinks(): JSONArray? = _links
+
+    /** Kotlin property syntax, equivalent to [getLinks]. */
+    val links: JSONArray?
+        @JvmSynthetic @JvmName("ktGetLinks") inline get() = getLinks()
+
+    private var _media: String? = null
+
+    /**
+     * Returns the media URL of the inbox message
+     */
+    open fun getMedia(): String? = _media
+
+    /** Kotlin property syntax, equivalent to [getMedia]. */
+    val media: String?
+        @JvmSynthetic @JvmName("ktGetMedia") inline get() = getMedia()
+
+    private var _mediaContentDescription: String? = null
+
+    /**
+     * Returns the content description of the media in the inbox message.
+     */
+    open fun getMediaContentDescription(): String? = _mediaContentDescription
+
+    /** Kotlin property syntax, equivalent to [getMediaContentDescription]. */
+    val mediaContentDescription: String?
+        @JvmSynthetic @JvmName("ktGetMediaContentDescription") inline get() = getMediaContentDescription()
+
+    private var _message: String? = null
+
+    /**
+     * Returns the message section of the inbox message
+     */
+    open fun getMessage(): String? = _message
+
+    /** Kotlin property syntax, equivalent to [getMessage]. */
+    val message: String?
+        @JvmSynthetic @JvmName("ktGetMessage") inline get() = getMessage()
+
+    private var _messageColor: String? = null
+
+    /**
+     * Returns the hexcode value of the message color as String
+     */
+    open fun getMessageColor(): String? = _messageColor
+
+    /** Kotlin property syntax, equivalent to [getMessageColor]. */
+    val messageColor: String?
+        @JvmSynthetic @JvmName("ktGetMessageColor") inline get() = getMessageColor()
+
+    private var _posterUrl: String? = null
+
+    /**
+     * Returns URL for the thumbnail of the video
+     */
+    open fun getPosterUrl(): String? = _posterUrl
+
+    open fun setPosterUrl(posterUrl: String?) {
+        this._posterUrl = posterUrl
     }
 
-    void setIconContentDescription(String contentDescription) {
-        this.iconContentDescription = contentDescription;
+    /** Kotlin property syntax, equivalent to [getPosterUrl] / [setPosterUrl]. */
+    var posterUrl: String?
+        @JvmSynthetic @JvmName("ktGetPosterUrl") inline get() = getPosterUrl()
+        @JvmSynthetic @JvmName("ktSetPosterUrl") inline set(value) = setPosterUrl(value)
+
+    private var _title: String? = null
+
+    /**
+     * Returns the title section of the inbox message
+     */
+    open fun getTitle(): String? = _title
+
+    /** Kotlin property syntax, equivalent to [getTitle]. */
+    val title: String?
+        @JvmSynthetic @JvmName("ktGetTitle") inline get() = getTitle()
+
+    private var _titleColor: String? = null
+
+    /**
+     * Returns the hexcode value of the title color as String
+     */
+    open fun getTitleColor(): String? = _titleColor
+
+    /** Kotlin property syntax, equivalent to [getTitleColor]. */
+    val titleColor: String?
+        @JvmSynthetic @JvmName("ktGetTitleColor") inline get() = getTitleColor()
+
+    internal constructor()
+
+    protected constructor(`in`: Parcel) {
+        _title = `in`.readString()
+        _titleColor = `in`.readString()
+        _message = `in`.readString()
+        _messageColor = `in`.readString()
+        _media = `in`.readString()
+        _mediaContentDescription = `in`.readString()
+        hasUrl = `in`.readByte().toInt() != 0x00
+        hasLinks = `in`.readByte().toInt() != 0x00
+        _actionUrl = `in`.readString()
+        _icon = `in`.readString()
+        _iconContentDescription = `in`.readString()
+        try {
+            _links = if (`in`.readByte().toInt() == 0x00) null else JSONArray(`in`.readString())
+        } catch (e: JSONException) {
+            Logger.v("Unable to init CTInboxMessageContent with Parcel - " + e.localizedMessage)
+        }
+        _contentType = `in`.readString()
+        _posterUrl = `in`.readString()
+    }
+
+    override fun describeContents(): Int {
+        return 0
     }
 
     /**
@@ -141,15 +188,15 @@ public class CTInboxMessageContent implements Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    public String getLinkBGColor(JSONObject jsonObject) {
+    open fun getLinkBGColor(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
-            return null;
+            return null
         }
-        try {
-            return jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
-        } catch (JSONException e) {
-            Logger.v("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
-            return null;
+        return try {
+            if (jsonObject.has(Constants.KEY_BG)) jsonObject.getString(Constants.KEY_BG) else ""
+        } catch (e: JSONException) {
+            Logger.v("Unable to get Link Text Color with JSON - " + e.localizedMessage)
+            null
         }
     }
 
@@ -159,15 +206,15 @@ public class CTInboxMessageContent implements Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    public String getLinkColor(JSONObject jsonObject) {
+    open fun getLinkColor(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
-            return null;
+            return null
         }
-        try {
-            return jsonObject.has(Constants.KEY_COLOR) ? jsonObject.getString(Constants.KEY_COLOR) : "";
-        } catch (JSONException e) {
-            Logger.v("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
-            return null;
+        return try {
+            if (jsonObject.has(Constants.KEY_COLOR)) jsonObject.getString(Constants.KEY_COLOR) else ""
+        } catch (e: JSONException) {
+            Logger.v("Unable to get Link Text Color with JSON - " + e.localizedMessage)
+            null
         }
     }
 
@@ -178,47 +225,47 @@ public class CTInboxMessageContent implements Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    public String getLinkCopyText(JSONObject jsonObject) {
+    open fun getLinkCopyText(jsonObject: JSONObject?): String {
         if (jsonObject == null) {
-            return "";
+            return ""
         }
-        try {
-            JSONObject copyObject = jsonObject.has("copyText") ? jsonObject.getJSONObject("copyText") : null;
+        return try {
+            val copyObject = if (jsonObject.has("copyText")) jsonObject.getJSONObject("copyText") else null
             if (copyObject != null) {
-                return copyObject.has(Constants.KEY_TEXT) ? copyObject.getString(Constants.KEY_TEXT) : "";
+                if (copyObject.has(Constants.KEY_TEXT)) copyObject.getString(Constants.KEY_TEXT) else ""
             } else {
-                return "";
+                ""
             }
-        } catch (JSONException e) {
-            Logger.v("Unable to get Link Text with JSON - " + e.getLocalizedMessage());
-            return "";
+        } catch (e: JSONException) {
+            Logger.v("Unable to get Link Text with JSON - " + e.localizedMessage)
+            ""
         }
     }
 
     /**
      * Returns the Key Value pair with for the JSONObject of Link provided
      */
-    public HashMap<String, String> getLinkKeyValue(JSONObject jsonObject) {
+    open fun getLinkKeyValue(jsonObject: JSONObject?): HashMap<String, String>? {
         if (jsonObject == null || !jsonObject.has(Constants.KEY_KV)) {
-            return null;
+            return null
         }
-        try {
-            JSONObject keyValues = jsonObject.getJSONObject(Constants.KEY_KV);
-                Iterator<String> keys = keyValues.keys();
-                HashMap<String, String> keyValuesMap = new HashMap<>();
-                    String key, value;
-                    while (keys.hasNext()) {
-                        key = keys.next();
-                        value = keyValues.getString(key);
-                        if (!TextUtils.isEmpty(key)) {
-                            keyValuesMap.put(key, value);
-                        }
-                    }
-                return !keyValuesMap.isEmpty() ? keyValuesMap : null;
-
-        } catch (JSONException e) {
-            Logger.v("Unable to get Link Key Value with JSON - " + e.getLocalizedMessage());
-            return null;
+        return try {
+            val keyValues = jsonObject.getJSONObject(Constants.KEY_KV)
+            val keys = keyValues.keys()
+            val keyValuesMap = HashMap<String, String>()
+            var key: String
+            var value: String
+            while (keys.hasNext()) {
+                key = keys.next()
+                value = keyValues.getString(key)
+                if (!TextUtils.isEmpty(key)) {
+                    keyValuesMap[key] = value
+                }
+            }
+            if (keyValuesMap.isNotEmpty()) keyValuesMap else null
+        } catch (e: JSONException) {
+            Logger.v("Unable to get Link Key Value with JSON - " + e.localizedMessage)
+            null
         }
     }
 
@@ -228,15 +275,15 @@ public class CTInboxMessageContent implements Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    public String getLinkText(JSONObject jsonObject) {
+    open fun getLinkText(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
-            return null;
+            return null
         }
-        try {
-            return jsonObject.has(Constants.KEY_TEXT) ? jsonObject.getString(Constants.KEY_TEXT) : "";
-        } catch (JSONException e) {
-            Logger.v("Unable to get Link Text with JSON - " + e.getLocalizedMessage());
-            return null;
+        return try {
+            if (jsonObject.has(Constants.KEY_TEXT)) jsonObject.getString(Constants.KEY_TEXT) else ""
+        } catch (e: JSONException) {
+            Logger.v("Unable to get Link Text with JSON - " + e.localizedMessage)
+            null
         }
     }
 
@@ -247,40 +294,24 @@ public class CTInboxMessageContent implements Parcelable {
      * @param jsonObject of Link
      * @return String
      */
-    public String getLinkUrl(JSONObject jsonObject) {
+    open fun getLinkUrl(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
-            return null;
+            return null
         }
-        try {
-            JSONObject urlObject = jsonObject.has(Constants.KEY_URL) ? jsonObject.getJSONObject(Constants.KEY_URL)
-                    : null;
-            if (urlObject == null) {
-                return null;
-            }
-            JSONObject androidObject = urlObject.has(Constants.KEY_ANDROID) ? urlObject
-                    .getJSONObject(Constants.KEY_ANDROID) : null;
+        return try {
+            val urlObject = (if (jsonObject.has(Constants.KEY_URL)) jsonObject.getJSONObject(Constants.KEY_URL)
+            else null) ?: return null
+            val androidObject = if (urlObject.has(Constants.KEY_ANDROID)) urlObject
+                .getJSONObject(Constants.KEY_ANDROID) else null
             if (androidObject != null) {
-                return androidObject.has(Constants.KEY_TEXT) ? androidObject.getString(Constants.KEY_TEXT) : "";
+                if (androidObject.has(Constants.KEY_TEXT)) androidObject.getString(Constants.KEY_TEXT) else ""
             } else {
-                return "";
+                ""
             }
-        } catch (JSONException e) {
-            Logger.v("Unable to get Link URL with JSON - " + e.getLocalizedMessage());
-            return null;
+        } catch (e: JSONException) {
+            Logger.v("Unable to get Link URL with JSON - " + e.localizedMessage)
+            null
         }
-    }
-
-    /**
-     * Returns a JSONArray of Call to Action buttons
-     *
-     * @return JSONArray
-     */
-    public JSONArray getLinks() {
-        return links;
-    }
-
-    void setLinks(JSONArray links) {
-        this.links = links;
     }
 
     /**
@@ -290,251 +321,182 @@ public class CTInboxMessageContent implements Parcelable {
      * @return String "copy" for Copy Text
      * String "url" for URLs
      */
-    public String getLinktype(JSONObject jsonObject) {
+    open fun getLinktype(jsonObject: JSONObject?): String? {
         if (jsonObject == null) {
-            return null;
+            return null
         }
-        try {
-            return jsonObject.has(Constants.KEY_TYPE) ? jsonObject.getString(Constants.KEY_TYPE) : "";
-        } catch (JSONException e) {
-            Logger.v("Unable to get Link Type with JSON - " + e.getLocalizedMessage());
-            return null;
+        return try {
+            if (jsonObject.has(Constants.KEY_TYPE)) jsonObject.getString(Constants.KEY_TYPE) else ""
+        } catch (e: JSONException) {
+            Logger.v("Unable to get Link Type with JSON - " + e.localizedMessage)
+            null
         }
     }
 
-    public boolean isFallbackSettingsEnabled(JSONObject jsonObject) {
+    open fun isFallbackSettingsEnabled(jsonObject: JSONObject?): Boolean {
         if (jsonObject == null) {
-            return false;
+            return false
         }
-        try {
-            return jsonObject.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) ?
-                    jsonObject.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) : false;
-        } catch (JSONException e) {
-            Logger.v("Unable to get fallback settings key with JSON - " + e.getLocalizedMessage());
-            return false;
+        return try {
+            if (jsonObject.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS)) {
+                jsonObject.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS)
+            } else {
+                false
+            }
+        } catch (e: JSONException) {
+            Logger.v("Unable to get fallback settings key with JSON - " + e.localizedMessage)
+            false
         }
     }
 
     /**
-     * Returns the media URL of the inbox message
-     *
-     * @return String
-     */
-    public String getMedia() {
-        return media;
-    }
-
-    /**
-     * Returns the content description of the media in the inbox message.
-     */
-    public String getMediaContentDescription() {
-        return mediaContentDescription;
-    }
-
-    void setMedia(String media) {
-        this.media = media;
-    }
-
-    void setMediaContentDescription(String contentDescription) {
-        this.mediaContentDescription = contentDescription;
-    }
-
-    /**
-     * Returns the message section of the inbox message
-     *
-     * @return String
-     */
-    public String getMessage() {
-        return message;
-    }
-
-    void setMessage(String message) {
-        this.message = message;
-    }
-
-    /**
-     * Returns the hexcode value of the message color as String
-     *
-     * @return String
-     */
-    public String getMessageColor() {
-        return messageColor;
-    }
-
-    void setMessageColor(String messageColor) {
-        this.messageColor = messageColor;
-    }
-
-    /**
-     * Returns URL for the thumbnail of the video
-     *
-     * @return String
-     */
-    public String getPosterUrl() {
-        return posterUrl;
-    }
-
-    public void setPosterUrl(String posterUrl) {
-        this.posterUrl = posterUrl;
-    }
-
-    /**
-     * Returns the title section of the inbox message
-     *
-     * @return String
-     */
-    public String getTitle() {
-        return title;
-    }
-
-    void setTitle(String title) {
-        this.title = title;
-    }
-
-    /**
-     * Returns the hexcode value of the title color as String
-     *
-     * @return String
-     */
-    public String getTitleColor() {
-        return titleColor;
-    }
-
-    void setTitleColor(String titleColor) {
-        this.titleColor = titleColor;
-    }
-
-    /**
-     * Method to check whether media in the {@link CTInboxMessageContent} object is an audio.
+     * Method to check whether media in the [CTInboxMessageContent] object is an audio.
      *
      * @return true if the media type is audio
      * false if the media type is not an audio
      */
-    public boolean mediaIsAudio() {
-        String contentType = this.getContentType();
-        return contentType != null && this.media != null && contentType.startsWith("audio");
+    open fun mediaIsAudio(): Boolean {
+        val contentType = this.getContentType()
+        return contentType != null && this._media != null && contentType.startsWith("audio")
     }
 
     /**
-     * Method to check whether media in the {@link CTInboxMessageContent} object is an GIF.
+     * Method to check whether media in the [CTInboxMessageContent] object is an GIF.
      *
      * @return true if the media type is GIF
      * false if the media type is not an GIF
      */
-    public boolean mediaIsGIF() {
-        String contentType = this.getContentType();
-        return contentType != null && this.media != null && contentType.equals("image/gif");
+    open fun mediaIsGIF(): Boolean {
+        val contentType = this.getContentType()
+        return contentType != null && this._media != null && contentType == "image/gif"
     }
 
     /**
-     * Method to check whether media in the {@link CTInboxMessageContent} object is an image.
+     * Method to check whether media in the [CTInboxMessageContent] object is an image.
      *
      * @return true if the media type is image
      * false if the media type is not an image
      */
-    public boolean mediaIsImage() {
-        String contentType = this.getContentType();
-        return contentType != null && this.media != null && contentType.startsWith("image") && !contentType
-                .equals("image/gif");
+    open fun mediaIsImage(): Boolean {
+        val contentType = this.getContentType()
+        return contentType != null && this._media != null && contentType.startsWith("image") &&
+                contentType != "image/gif"
     }
 
     /**
-     * Method to check whether media in the {@link CTInboxMessageContent} object is a video.
+     * Method to check whether media in the [CTInboxMessageContent] object is a video.
      *
      * @return true if the media type is video
      * false if the media type is not a video
      */
-    public boolean mediaIsVideo() {
-        String contentType = this.getContentType();
-        return contentType != null && this.media != null && contentType.startsWith("video");
+    open fun mediaIsVideo(): Boolean {
+        val contentType = this.getContentType()
+        return contentType != null && this._media != null && contentType.startsWith("video")
     }
 
-    public boolean mediaIsStreamable() {
-        return mediaIsAudio() || mediaIsVideo();
+    open fun mediaIsStreamable(): Boolean {
+        return mediaIsAudio() || mediaIsVideo()
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(title);
-        dest.writeString(titleColor);
-        dest.writeString(message);
-        dest.writeString(messageColor);
-        dest.writeString(media);
-        dest.writeString(mediaContentDescription);
-        dest.writeByte((byte) (hasUrl ? 0x01 : 0x00));
-        dest.writeByte((byte) (hasLinks ? 0x01 : 0x00));
-        dest.writeString(actionUrl);
-        dest.writeString(icon);
-        dest.writeString(iconContentDescription);
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(_title)
+        dest.writeString(_titleColor)
+        dest.writeString(_message)
+        dest.writeString(_messageColor)
+        dest.writeString(_media)
+        dest.writeString(_mediaContentDescription)
+        // Unboxes like the Java code did: throws if the payload had no "action" object.
+        dest.writeByte((if (hasUrl!!) 0x01 else 0x00).toByte())
+        dest.writeByte((if (hasLinks!!) 0x01 else 0x00).toByte())
+        dest.writeString(_actionUrl)
+        dest.writeString(_icon)
+        dest.writeString(_iconContentDescription)
+        val links = _links
         if (links == null) {
-            dest.writeByte((byte) (0x00));
+            dest.writeByte(0x00.toByte())
         } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeString(links.toString());
+            dest.writeByte(0x01.toByte())
+            dest.writeString(links.toString())
         }
-        dest.writeString(contentType);
-        dest.writeString(posterUrl);
+        dest.writeString(_contentType)
+        dest.writeString(_posterUrl)
     }
 
-    CTInboxMessageContent initWithJSON(JSONObject contentObject) {
+    internal fun initWithJSON(contentObject: JSONObject): CTInboxMessageContent {
         try {
-            JSONObject titleObject = contentObject.has(Constants.KEY_TITLE) ? contentObject
-                    .getJSONObject(Constants.KEY_TITLE) : null;
+            val titleObject = if (contentObject.has(Constants.KEY_TITLE)) contentObject
+                .getJSONObject(Constants.KEY_TITLE) else null
             if (titleObject != null) {
-                this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
-                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR)
-                        : "";
+                this._title = if (titleObject.has(Constants.KEY_TEXT)) titleObject.getString(Constants.KEY_TEXT) else ""
+                this._titleColor = if (titleObject.has(Constants.KEY_COLOR)) titleObject.getString(Constants.KEY_COLOR)
+                else ""
             }
-            JSONObject msgObject = contentObject.has(Constants.KEY_MESSAGE) ? contentObject
-                    .getJSONObject(Constants.KEY_MESSAGE) : null;
+            val msgObject = if (contentObject.has(Constants.KEY_MESSAGE)) contentObject
+                .getJSONObject(Constants.KEY_MESSAGE) else null
             if (msgObject != null) {
-                this.message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
-                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR)
-                        : "";
+                this._message = if (msgObject.has(Constants.KEY_TEXT)) msgObject.getString(Constants.KEY_TEXT) else ""
+                this._messageColor = if (msgObject.has(Constants.KEY_COLOR)) msgObject.getString(Constants.KEY_COLOR)
+                else ""
             }
-            JSONObject iconObject = contentObject.has(Constants.KEY_ICON) ? contentObject
-                    .getJSONObject(Constants.KEY_ICON) : null;
+            val iconObject = if (contentObject.has(Constants.KEY_ICON)) contentObject
+                .getJSONObject(Constants.KEY_ICON) else null
             if (iconObject != null) {
-                this.icon = iconObject.has(Constants.KEY_URL) ? iconObject.getString(Constants.KEY_URL) : "";
-                this.iconContentDescription = iconObject.optString(Constants.KEY_ALT_TEXT, "");
+                this._icon = if (iconObject.has(Constants.KEY_URL)) iconObject.getString(Constants.KEY_URL) else ""
+                this._iconContentDescription = iconObject.optString(Constants.KEY_ALT_TEXT, "")
             }
-            JSONObject mediaObject = contentObject.has(Constants.KEY_MEDIA) ? contentObject
-                    .getJSONObject(Constants.KEY_MEDIA) : null;
+            val mediaObject = if (contentObject.has(Constants.KEY_MEDIA)) contentObject
+                .getJSONObject(Constants.KEY_MEDIA) else null
             if (mediaObject != null) {
-                this.media = mediaObject.has(Constants.KEY_URL) ? mediaObject.getString(Constants.KEY_URL) : "";
-                this.mediaContentDescription = mediaObject.optString(Constants.KEY_ALT_TEXT, "");
-                this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject
-                        .getString(Constants.KEY_CONTENT_TYPE) : "";
-                this.posterUrl = mediaObject.has(Constants.KEY_POSTER_URL) ? mediaObject
-                        .getString(Constants.KEY_POSTER_URL) : "";
+                this._media = if (mediaObject.has(Constants.KEY_URL)) mediaObject.getString(Constants.KEY_URL) else ""
+                this._mediaContentDescription = mediaObject.optString(Constants.KEY_ALT_TEXT, "")
+                this._contentType = if (mediaObject.has(Constants.KEY_CONTENT_TYPE)) mediaObject
+                    .getString(Constants.KEY_CONTENT_TYPE) else ""
+                this._posterUrl = if (mediaObject.has(Constants.KEY_POSTER_URL)) mediaObject
+                    .getString(Constants.KEY_POSTER_URL) else ""
             }
 
-            JSONObject actionObject = contentObject.has(Constants.KEY_ACTION) ? contentObject
-                    .getJSONObject(Constants.KEY_ACTION) : null;
+            val actionObject = if (contentObject.has(Constants.KEY_ACTION)) contentObject
+                .getJSONObject(Constants.KEY_ACTION) else null
             if (actionObject != null) {
-                this.hasUrl = actionObject.has(Constants.KEY_HAS_URL) && actionObject
-                        .getBoolean(Constants.KEY_HAS_URL);
-                this.hasLinks = actionObject.has(Constants.KEY_HAS_LINKS) && actionObject
-                        .getBoolean(Constants.KEY_HAS_LINKS);
-                JSONObject urlObject = actionObject.has(Constants.KEY_URL) ? actionObject
-                        .getJSONObject(Constants.KEY_URL) : null;
-                if (urlObject != null && this.hasUrl) {
-                    JSONObject androidObject = urlObject.has(Constants.KEY_ANDROID) ? urlObject
-                            .getJSONObject(Constants.KEY_ANDROID) : null;
+                val hasUrl = actionObject.has(Constants.KEY_HAS_URL) && actionObject
+                    .getBoolean(Constants.KEY_HAS_URL)
+                this.hasUrl = hasUrl
+                val hasLinks = actionObject.has(Constants.KEY_HAS_LINKS) && actionObject
+                    .getBoolean(Constants.KEY_HAS_LINKS)
+                this.hasLinks = hasLinks
+                val urlObject = if (actionObject.has(Constants.KEY_URL)) actionObject
+                    .getJSONObject(Constants.KEY_URL) else null
+                if (urlObject != null && hasUrl) {
+                    val androidObject = if (urlObject.has(Constants.KEY_ANDROID)) urlObject
+                        .getJSONObject(Constants.KEY_ANDROID) else null
                     if (androidObject != null) {
-                        this.actionUrl = androidObject.has(Constants.KEY_TEXT) ? androidObject
-                                .getString(Constants.KEY_TEXT) : "";
+                        this._actionUrl = if (androidObject.has(Constants.KEY_TEXT)) androidObject
+                            .getString(Constants.KEY_TEXT) else ""
                     }
                 }
-                if (urlObject != null && this.hasLinks) {
-                    this.links = actionObject.has(Constants.KEY_LINKS) ? actionObject
-                            .getJSONArray(Constants.KEY_LINKS) : null;
+                if (urlObject != null && hasLinks) {
+                    this._links = if (actionObject.has(Constants.KEY_LINKS)) actionObject
+                        .getJSONArray(Constants.KEY_LINKS) else null
                 }
             }
 
-        } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessageContent with JSON - " + e.getLocalizedMessage());
+        } catch (e: JSONException) {
+            Logger.v("Unable to init CTInboxMessageContent with JSON - " + e.localizedMessage)
         }
-        return this;
+        return this
+    }
+
+    companion object {
+
+        @JvmField
+        val CREATOR: Parcelable.Creator<CTInboxMessageContent> = object : Parcelable.Creator<CTInboxMessageContent> {
+            override fun createFromParcel(`in`: Parcel): CTInboxMessageContent {
+                return CTInboxMessageContent(`in`)
+            }
+
+            override fun newArray(size: Int): Array<CTInboxMessageContent?> {
+                return arrayOfNulls(size)
+            }
+        }
     }
 }

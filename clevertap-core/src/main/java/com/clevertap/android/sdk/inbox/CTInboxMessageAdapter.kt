@@ -1,89 +1,81 @@
-package com.clevertap.android.sdk.inbox;
+package com.clevertap.android.sdk.inbox
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.R
 
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.R;
-import java.util.ArrayList;
+internal class CTInboxMessageAdapter(
+    private val inboxMessages: ArrayList<CTInboxMessage>,
+    private val fragment: CTInboxListViewFragment
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-
-@SuppressWarnings("rawtypes")
-class CTInboxMessageAdapter extends RecyclerView.Adapter {
-
-    private static final int SIMPLE = 0;
-
-    private static final int ICON = 1;
-
-    private static final int CAROUSEL = 2;
-
-    private static final int IMAGE_CAROUSEL = 3;
-
-    private CTInboxListViewFragment fragment;
-
-    private ArrayList<CTInboxMessage> inboxMessages;
-
-    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, CTInboxListViewFragment fragment) {
-        Logger.v("CTInboxMessageAdapter: messages="+inboxMessages);
-        this.inboxMessages = inboxMessages;
-        this.fragment = fragment;
+    init {
+        Logger.v("CTInboxMessageAdapter: messages=$inboxMessages")
     }
 
-
-    @Override
-    public int getItemCount() {
-        return inboxMessages.size();
+    override fun getItemCount(): Int {
+        return inboxMessages.size
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        switch (inboxMessages.get(position).getType()) {
-            case SimpleMessage:
-                return SIMPLE;
-            case IconMessage:
-                return ICON;
-            case CarouselMessage:
-                return CAROUSEL;
-            case CarouselImageMessage:
-                return IMAGE_CAROUSEL;
-            default:
-                return -1;
+    override fun getItemViewType(position: Int): Int {
+        // A null type threw from the Java switch as well.
+        return when (inboxMessages[position].type!!) {
+            CTInboxMessageType.SimpleMessage -> SIMPLE
+            CTInboxMessageType.IconMessage -> ICON
+            CTInboxMessageType.CarouselMessage -> CAROUSEL
+            CTInboxMessageType.CarouselImageMessage -> IMAGE_CAROUSEL
         }
     }
 
-    @Override
-    public void onBindViewHolder(final @NonNull RecyclerView.ViewHolder viewHolder, int i) {
-        CTInboxMessage inboxMessage = this.inboxMessages.get(i);
-        final CTInboxBaseMessageViewHolder _viewHolder = (CTInboxBaseMessageViewHolder) viewHolder;
-        _viewHolder.configureWithMessage(inboxMessage, fragment, i);
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, i: Int) {
+        val inboxMessage = this.inboxMessages[i]
+        val holder = viewHolder as CTInboxBaseMessageViewHolder
+        holder.configureWithMessage(inboxMessage, fragment, i)
     }
 
+    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val view: View
+        when (viewType) {
+            SIMPLE -> {
+                view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.inbox_simple_message_layout, viewGroup, false)
+                return CTSimpleMessageViewHolder(view)
+            }
 
-    @SuppressWarnings({"ConstantConditions", "NullableProblems"})
-    @Override
-    public CTInboxBaseMessageViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
-        View view;
-        switch (viewType) {
-            case SIMPLE:
-                view = LayoutInflater.from(viewGroup.getContext())
-                        .inflate(R.layout.inbox_simple_message_layout, viewGroup, false);
-                return new CTSimpleMessageViewHolder(view);
-            case ICON:
-                view = LayoutInflater.from(viewGroup.getContext())
-                        .inflate(R.layout.inbox_icon_message_layout, viewGroup, false);
-                return new CTIconMessageViewHolder(view);
-            case CAROUSEL:
-                view = LayoutInflater.from(viewGroup.getContext())
-                        .inflate(R.layout.inbox_carousel_text_layout, viewGroup, false);
-                return new CTCarouselMessageViewHolder(view);
-            case IMAGE_CAROUSEL:
-                view = LayoutInflater.from(viewGroup.getContext())
-                        .inflate(R.layout.inbox_carousel_layout, viewGroup, false);
-                return new CTCarouselImageViewHolder(view);
+            ICON -> {
+                view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.inbox_icon_message_layout, viewGroup, false)
+                return CTIconMessageViewHolder(view)
+            }
+
+            CAROUSEL -> {
+                view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.inbox_carousel_text_layout, viewGroup, false)
+                return CTCarouselMessageViewHolder(view)
+            }
+
+            IMAGE_CAROUSEL -> {
+                view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.inbox_carousel_layout, viewGroup, false)
+                return CTCarouselImageViewHolder(view)
+            }
         }
-        return null;
+        // Unreachable: getItemViewType() only yields the four types above. Java returned null
+        // here, which RecyclerView fails on with a NullPointerException.
+        throw NullPointerException("CTInboxMessageAdapter: no view holder for viewType $viewType")
+    }
+
+    private companion object {
+
+        private const val SIMPLE = 0
+
+        private const val ICON = 1
+
+        private const val CAROUSEL = 2
+
+        private const val IMAGE_CAROUSEL = 3
     }
 }

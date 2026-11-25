@@ -1,254 +1,124 @@
-package com.clevertap.android.sdk.inbox;
+package com.clevertap.android.sdk.inbox
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import android.os.Parcel
+import android.os.Parcelable
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Public facing model class for type of InboxMessage
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
-public class CTInboxMessage implements Parcelable {
+open class CTInboxMessage : Parcelable {
 
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInboxMessage> CREATOR = new Parcelable.Creator<CTInboxMessage>() {
-        @Override
-        public CTInboxMessage createFromParcel(Parcel in) {
-            return new CTInboxMessage(in);
-        }
+    private var _actionUrl: String? = null
 
-        @Override
-        public CTInboxMessage[] newArray(int size) {
-            return new CTInboxMessage[size];
-        }
-    };
+    open fun getActionUrl(): String? = _actionUrl
 
-    private String actionUrl;
+    /** Kotlin property syntax, equivalent to [getActionUrl]. */
+    val actionUrl: String?
+        @JvmSynthetic @JvmName("ktGetActionUrl") inline get() = getActionUrl()
 
-    private String bgColor;
+    private var _bgColor: String? = null
 
-    private String body;
+    open fun getBgColor(): String? = _bgColor
 
-    private String campaignId;
+    /** Kotlin property syntax, equivalent to [getBgColor]. */
+    val bgColor: String?
+        @JvmSynthetic @JvmName("ktGetBgColor") inline get() = getBgColor()
 
-    private JSONObject customData = new JSONObject();
+    private var _body: String? = null
 
-    private JSONObject data;
+    open fun getBody(): String? = _body
 
-    private long date;
+    /** Kotlin property syntax, equivalent to [getBody]. */
+    val body: String?
+        @JvmSynthetic @JvmName("ktGetBody") inline get() = getBody()
 
-    private long expires;
+    private var _campaignId: String? = null
 
-    private String imageUrl;
+    open fun getCampaignId(): String? = _campaignId
 
-    private ArrayList<CTInboxMessageContent> inboxMessageContents = new ArrayList<>();
+    /** Kotlin property syntax, equivalent to [getCampaignId]. */
+    val campaignId: String?
+        @JvmSynthetic @JvmName("ktGetCampaignId") inline get() = getCampaignId()
 
-    private boolean isRead;
-
-    private String messageId;
-
-    private String orientation;
-
-    private List<String> tags = new ArrayList<>();
-
-    private String title;
-
-    private CTInboxMessageType type;
-
-    private JSONObject wzrkParams;
-
-    public static Creator<CTInboxMessage> getCREATOR() {
-        return CREATOR;
-    }
-
-    public CTInboxMessage(JSONObject jsonObject) {
-        this.data = jsonObject;
-        try {
-            this.messageId = jsonObject.has(Constants.KEY_ID) ? jsonObject.getString(Constants.KEY_ID) : "0";
-            this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
-                    .getString(Constants.NOTIFICATION_ID_TAG) : "0_0";
-            this.date = jsonObject.has(Constants.KEY_DATE) ? jsonObject.getLong(Constants.KEY_DATE)
-                    : System.currentTimeMillis() / 1000;
-            this.expires = jsonObject.has(Constants.KEY_WZRK_TTL) ? jsonObject.getLong(Constants.KEY_WZRK_TTL)
-                    : System.currentTimeMillis() + 1000 * 60 * 60 * 24;
-            this.isRead = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ);
-            JSONArray tagsArray = jsonObject.has(Constants.KEY_TAGS) ? jsonObject.getJSONArray(Constants.KEY_TAGS)
-                    : null;
-            if (tagsArray != null) {
-                for (int i = 0; i < tagsArray.length(); i++) {
-                    this.tags.add(tagsArray.getString(i));
-                }
-            }
-            JSONObject cellObject = jsonObject.has(Constants.KEY_MSG) ? jsonObject.getJSONObject(Constants.KEY_MSG)
-                    : null;
-            if (cellObject != null) {
-                this.type = cellObject.has(Constants.KEY_TYPE) ? CTInboxMessageType
-                        .fromString(cellObject.getString(Constants.KEY_TYPE)) : CTInboxMessageType.fromString("");
-                this.bgColor = cellObject.has(Constants.KEY_BG) ? cellObject.getString(Constants.KEY_BG) : "";
-                JSONArray contentArray = cellObject.has(Constants.KEY_CONTENT) ? cellObject
-                        .getJSONArray(Constants.KEY_CONTENT) : null;
-                if (contentArray != null) {
-                    for (int i = 0; i < contentArray.length(); i++) {
-                        CTInboxMessageContent ctInboxMessageContent = new CTInboxMessageContent()
-                                .initWithJSON(contentArray.getJSONObject(i));
-                        this.inboxMessageContents.add(ctInboxMessageContent);
-                    }
-                }
-
-                JSONArray customKVJsonArray = cellObject.has(Constants.KEY_CUSTOM_KV) ? cellObject
-                        .getJSONArray(Constants.KEY_CUSTOM_KV) : null;
-                if (customKVJsonArray != null) {
-                    for (int i = 0; i < customKVJsonArray.length(); i++) {
-                        JSONObject customKVJSONObject = customKVJsonArray.getJSONObject(i);
-                        if (customKVJSONObject.has(Constants.KEY_KEY)) {
-                            String key = customKVJSONObject.getString(Constants.KEY_KEY);
-                            if (customKVJSONObject.has(Constants.KEY_VALUE)) {
-                                JSONObject value = customKVJSONObject.getJSONObject(Constants.KEY_VALUE);
-                                {
-                                    customData.put(key, value.getString(Constants.KEY_TEXT));
-                                }
-                            }
-                        }
-                    }
-                }
-
-                this.orientation = cellObject.has(Constants.KEY_ORIENTATION) ? cellObject
-                        .getString(Constants.KEY_ORIENTATION) : "";
-            }
-            this.wzrkParams = jsonObject.has(Constants.KEY_WZRK_PARAMS) ? jsonObject
-                    .getJSONObject(Constants.KEY_WZRK_PARAMS) : null;
-        } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessage with JSON - " + e.getLocalizedMessage());
-        }
-    }
-
-    private CTInboxMessage(Parcel in) {
-        try {
-            title = in.readString();
-            body = in.readString();
-            imageUrl = in.readString();
-            actionUrl = in.readString();
-            date = in.readLong();
-            expires = in.readLong();
-            messageId = in.readString();
-            data = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-            customData = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-            isRead = in.readByte() != 0x00;
-            type = (CTInboxMessageType) in.readValue(CTInboxMessageType.class.getClassLoader());
-            if (in.readByte() == 0x01) {
-                tags = new ArrayList<>();
-                in.readList(tags, String.class.getClassLoader());
-            } else {
-                tags = null;
-            }
-            bgColor = in.readString();
-            if (in.readByte() == 0x01) {
-                inboxMessageContents = new ArrayList<>();
-                in.readList(inboxMessageContents, CTInboxMessageContent.class.getClassLoader());
-            } else {
-                inboxMessageContents = null;
-            }
-            orientation = in.readString();
-            campaignId = in.readString();
-            wzrkParams = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-        } catch (JSONException e) {
-            Logger.v("Unable to parse CTInboxMessage from parcel - " + e.getLocalizedMessage());
-        }
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public String getActionUrl() {
-        return actionUrl;
-    }
-
-    public String getBgColor() {
-        return bgColor;
-    }
-
-    public String getBody() {
-        return body;
-    }
-
-    public String getCampaignId() {
-        return campaignId;
-    }
+    private var _customData: JSONObject = JSONObject()
 
     /**
-     * Returns an ArrayList of CTInboxMessageData(url, contentDescription) of the Carousel Images
+     * Custom key-value data set on the CleverTap dashboard.
      *
-     * @return ArrayList of CTInboxImageData
+     * Never `null` for a message built from JSON; only a malformed [Parcel] could leave it unset.
      */
-    public ArrayList<CTInboxImageData> getCarouselImagesData() {
-        ArrayList<CTInboxImageData> carouselImages = new ArrayList<>();
-        for (CTInboxMessageContent ctInboxMessageContent : getInboxMessageContents()) {
-            carouselImages.add(new CTInboxImageData(ctInboxMessageContent.getMedia(),
-                    ctInboxMessageContent.getMediaContentDescription()));
-        }
-        return carouselImages;
-    }
+    open fun getCustomData(): JSONObject = _customData
 
+    /** Kotlin property syntax, equivalent to [getCustomData]. */
+    val customData: JSONObject
+        @JvmSynthetic @JvmName("ktGetCustomData") inline get() = getCustomData()
+
+    private var _data: JSONObject = JSONObject()
+
+    open fun getData(): JSONObject = _data
+
+    /** Kotlin property syntax, equivalent to [getData]. */
+    val data: JSONObject
+        @JvmSynthetic @JvmName("ktGetData") inline get() = getData()
+
+    private var _date: Long = 0
+
+    open fun getDate(): Long = _date
+
+    /** Kotlin property syntax, equivalent to [getDate]. */
+    val date: Long
+        @JvmSynthetic @JvmName("ktGetDate") inline get() = getDate()
+
+    private var _expires: Long = 0
+
+    open fun getExpires(): Long = _expires
+
+    /** Kotlin property syntax, equivalent to [getExpires]. */
+    val expires: Long
+        @JvmSynthetic @JvmName("ktGetExpires") inline get() = getExpires()
+
+    private var _imageUrl: String? = null
+
+    open fun getImageUrl(): String? = _imageUrl
+
+    /** Kotlin property syntax, equivalent to [getImageUrl]. */
+    val imageUrl: String?
+        @JvmSynthetic @JvmName("ktGetImageUrl") inline get() = getImageUrl()
+
+    private var _inboxMessageContents: ArrayList<CTInboxMessageContent> = ArrayList()
 
     /**
-     * Returns an ArrayList of String URLs of the Carousel Images
-     *
-     * @return ArrayList of Strings
-     */
-    public ArrayList<String> getCarouselImages() {
-        ArrayList<String> carouselImages = new ArrayList<>();
-        for (CTInboxMessageContent ctInboxMessageContent : getInboxMessageContents()) {
-            carouselImages.add(ctInboxMessageContent.getMedia());
-        }
-        return carouselImages;
-    }
-
-    public JSONObject getCustomData() {
-        return customData;
-    }
-
-    public JSONObject getData() {
-        return data;
-    }
-
-    public long getDate() {
-        return date;
-    }
-
-    public long getExpires() {
-        return expires;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    /**
-     * Returns an ArrayList of the contents of {@link CTInboxMessage}
+     * Returns an ArrayList of the contents of [CTInboxMessage]
      * For Simple Message and Icon Message templates the size of this ArrayList is by default 1.
      * For Carousel templates, the size of the ArrayList is the number of slides in the Carousel
      *
-     * @return ArrayList of {@link CTInboxMessageContent} objects
+     * @return ArrayList of [CTInboxMessageContent] objects
      */
-    public ArrayList<CTInboxMessageContent> getInboxMessageContents() {
-        return inboxMessageContents;
-    }
+    open fun getInboxMessageContents(): ArrayList<CTInboxMessageContent> = _inboxMessageContents
 
-    public String getMessageId() {
-        return messageId;
-    }
+    /** Kotlin property syntax, equivalent to [getInboxMessageContents]. */
+    val inboxMessageContents: ArrayList<CTInboxMessageContent>
+        @JvmSynthetic @JvmName("ktGetInboxMessageContents") inline get() = getInboxMessageContents()
+
+    private var read = false
+
+    private var _messageId: String = ""
+
+    /**
+     * Never `null`: "0" when the payload has no id.
+     */
+    open fun getMessageId(): String = _messageId
+
+    /** Kotlin property syntax, equivalent to [getMessageId]. */
+    val messageId: String
+        @JvmSynthetic @JvmName("ktGetMessageId") inline get() = getMessageId()
+
+    private var _orientation: String? = null
 
     /**
      * Returns the orientation of the media.
@@ -256,87 +126,255 @@ public class CTInboxMessage implements Parcelable {
      * @return Returns "l" for landscape
      * Returns "p" for portrait
      */
-    public String getOrientation() {
-        return orientation;
-    }
+    open fun getOrientation(): String? = _orientation
+
+    /** Kotlin property syntax, equivalent to [getOrientation]. */
+    val orientation: String?
+        @JvmSynthetic @JvmName("ktGetOrientation") inline get() = getOrientation()
+
+    private var _tags: MutableList<String> = ArrayList()
 
     /**
      * Returns a List of tags as set on the CleverTap dashboard
      *
      * @return List of Strings
      */
-    public List<String> getTags() {
-        return tags;
+    open fun getTags(): MutableList<String> = _tags
+
+    /** Kotlin property syntax, equivalent to [getTags]. */
+    val tags: MutableList<String>
+        @JvmSynthetic @JvmName("ktGetTags") inline get() = getTags()
+
+    private var _title: String? = null
+
+    open fun getTitle(): String? = _title
+
+    /** Kotlin property syntax, equivalent to [getTitle]. */
+    val title: String?
+        @JvmSynthetic @JvmName("ktGetTitle") inline get() = getTitle()
+
+    private var _type: CTInboxMessageType? = null
+
+    open fun getType(): CTInboxMessageType? = _type
+
+    /** Kotlin property syntax, equivalent to [getType]. */
+    val type: CTInboxMessageType?
+        @JvmSynthetic @JvmName("ktGetType") inline get() = getType()
+
+    private var _wzrkParams: JSONObject? = null
+
+    constructor(jsonObject: JSONObject) {
+        this._data = jsonObject
+        try {
+            this._messageId = if (jsonObject.has(Constants.KEY_ID)) jsonObject.getString(Constants.KEY_ID) else "0"
+            this._campaignId = if (jsonObject.has(Constants.NOTIFICATION_ID_TAG)) jsonObject
+                .getString(Constants.NOTIFICATION_ID_TAG) else "0_0"
+            this._date = if (jsonObject.has(Constants.KEY_DATE)) jsonObject.getLong(Constants.KEY_DATE)
+            else System.currentTimeMillis() / 1000
+            this._expires = if (jsonObject.has(Constants.KEY_WZRK_TTL)) jsonObject.getLong(Constants.KEY_WZRK_TTL)
+            else System.currentTimeMillis() + 1000 * 60 * 60 * 24
+            this.read = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ)
+            val tagsArray = if (jsonObject.has(Constants.KEY_TAGS)) jsonObject.getJSONArray(Constants.KEY_TAGS)
+            else null
+            if (tagsArray != null) {
+                for (i in 0 until tagsArray.length()) {
+                    this._tags.add(tagsArray.getString(i))
+                }
+            }
+            val cellObject = if (jsonObject.has(Constants.KEY_MSG)) jsonObject.getJSONObject(Constants.KEY_MSG)
+            else null
+            if (cellObject != null) {
+                this._type = if (cellObject.has(Constants.KEY_TYPE)) CTInboxMessageType
+                    .fromString(cellObject.getString(Constants.KEY_TYPE)) else CTInboxMessageType.fromString("")
+                this._bgColor = if (cellObject.has(Constants.KEY_BG)) cellObject.getString(Constants.KEY_BG) else ""
+                val contentArray = if (cellObject.has(Constants.KEY_CONTENT)) cellObject
+                    .getJSONArray(Constants.KEY_CONTENT) else null
+                if (contentArray != null) {
+                    for (i in 0 until contentArray.length()) {
+                        val ctInboxMessageContent = CTInboxMessageContent()
+                            .initWithJSON(contentArray.getJSONObject(i))
+                        this._inboxMessageContents.add(ctInboxMessageContent)
+                    }
+                }
+
+                val customKVJsonArray: JSONArray? = if (cellObject.has(Constants.KEY_CUSTOM_KV)) cellObject
+                    .getJSONArray(Constants.KEY_CUSTOM_KV) else null
+                if (customKVJsonArray != null) {
+                    for (i in 0 until customKVJsonArray.length()) {
+                        val customKVJSONObject = customKVJsonArray.getJSONObject(i)
+                        if (customKVJSONObject.has(Constants.KEY_KEY)) {
+                            val key = customKVJSONObject.getString(Constants.KEY_KEY)
+                            if (customKVJSONObject.has(Constants.KEY_VALUE)) {
+                                val value = customKVJSONObject.getJSONObject(Constants.KEY_VALUE)
+                                _customData.put(key, value.getString(Constants.KEY_TEXT))
+                            }
+                        }
+                    }
+                }
+
+                this._orientation = if (cellObject.has(Constants.KEY_ORIENTATION)) cellObject
+                    .getString(Constants.KEY_ORIENTATION) else ""
+            }
+            this._wzrkParams = if (jsonObject.has(Constants.KEY_WZRK_PARAMS)) jsonObject
+                .getJSONObject(Constants.KEY_WZRK_PARAMS) else null
+        } catch (e: JSONException) {
+            Logger.v("Unable to init CTInboxMessage with JSON - " + e.localizedMessage)
+        }
     }
 
-    public String getTitle() {
-        return title;
+    // The 0x00 branches below are only reachable with a Parcel that this class did not write
+    // (writeToParcel always writes customData, tags and inboxMessageContents); they leave the
+    // non-null defaults in place instead of storing null.
+    @Suppress("DEPRECATION")
+    private constructor(`in`: Parcel) {
+        try {
+            _title = `in`.readString()
+            _body = `in`.readString()
+            _imageUrl = `in`.readString()
+            _actionUrl = `in`.readString()
+            _date = `in`.readLong()
+            _expires = `in`.readLong()
+            _messageId = `in`.readString() ?: _messageId
+            if (`in`.readByte().toInt() != 0x00) {
+                _data = JSONObject(`in`.readString()!!)
+            }
+            if (`in`.readByte().toInt() != 0x00) {
+                _customData = JSONObject(`in`.readString()!!)
+            }
+            read = `in`.readByte().toInt() != 0x00
+            _type = `in`.readValue(CTInboxMessageType::class.java.classLoader) as CTInboxMessageType?
+            if (`in`.readByte().toInt() == 0x01) {
+                _tags = ArrayList()
+                `in`.readList(_tags, String::class.java.classLoader)
+            }
+            _bgColor = `in`.readString()
+            if (`in`.readByte().toInt() == 0x01) {
+                _inboxMessageContents = ArrayList()
+                `in`.readList(_inboxMessageContents, CTInboxMessageContent::class.java.classLoader)
+            }
+            _orientation = `in`.readString()
+            _campaignId = `in`.readString()
+            _wzrkParams = if (`in`.readByte().toInt() == 0x00) null else JSONObject(`in`.readString()!!)
+        } catch (e: JSONException) {
+            Logger.v("Unable to parse CTInboxMessage from parcel - " + e.localizedMessage)
+        }
     }
 
-    public CTInboxMessageType getType() {
-        return type;
+    override fun describeContents(): Int {
+        return 0
     }
+
+    /**
+     * Returns an ArrayList of CTInboxMessageData(url, contentDescription) of the Carousel Images
+     *
+     * @return ArrayList of CTInboxImageData
+     */
+    open fun getCarouselImagesData(): ArrayList<CTInboxImageData> {
+        val carouselImages = ArrayList<CTInboxImageData>()
+        for (ctInboxMessageContent in getInboxMessageContents()) {
+            carouselImages.add(
+                // CTInboxImageData takes non-null values; a null here threw from Java as well.
+                CTInboxImageData(
+                    ctInboxMessageContent.getMedia()!!,
+                    ctInboxMessageContent.getMediaContentDescription()!!
+                )
+            )
+        }
+        return carouselImages
+    }
+
+    /** Kotlin property syntax, equivalent to [getCarouselImagesData]. */
+    val carouselImagesData: ArrayList<CTInboxImageData>
+        @JvmSynthetic @JvmName("ktGetCarouselImagesData") inline get() = getCarouselImagesData()
+
+    /**
+     * Returns an ArrayList of String URLs of the Carousel Images
+     *
+     * @return ArrayList of Strings
+     */
+    open fun getCarouselImages(): ArrayList<String?> {
+        val carouselImages = ArrayList<String?>()
+        for (ctInboxMessageContent in getInboxMessageContents()) {
+            carouselImages.add(ctInboxMessageContent.getMedia())
+        }
+        return carouselImages
+    }
+
+    /** Kotlin property syntax, equivalent to [getCarouselImages]. */
+    val carouselImages: ArrayList<String?>
+        @JvmSynthetic @JvmName("ktGetCarouselImages") inline get() = getCarouselImages()
 
     /**
      * Returns a JSONObject of wzrk_* parameters.
      *
      * @return JSONObject of wzrk_* parameters
      */
-    public JSONObject getWzrkParams() {
-        return wzrkParams == null ? new JSONObject() : wzrkParams;
+    open fun getWzrkParams(): JSONObject {
+        return _wzrkParams ?: JSONObject()
     }
 
-    public boolean isRead() {
-        return isRead;
+    /** Kotlin property syntax, equivalent to [getWzrkParams]. */
+    val wzrkParams: JSONObject
+        @JvmSynthetic @JvmName("ktGetWzrkParams") inline get() = getWzrkParams()
+
+    open fun isRead(): Boolean {
+        return read
     }
 
-    void setRead(boolean read) {
-        isRead = read;
+    /** Kotlin property syntax, equivalent to [isRead]. */
+    val isRead: Boolean
+        @JvmSynthetic @JvmName("ktIsRead") inline get() = isRead()
+
+    internal fun setRead(read: Boolean) {
+        this.read = read
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(title);
-        dest.writeString(body);
-        dest.writeString(imageUrl);
-        dest.writeString(actionUrl);
-        dest.writeLong(date);
-        dest.writeLong(expires);
-        dest.writeString(messageId);
-        if (data == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeString(data.toString());
-        }
-        if (customData == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeString(customData.toString());
-        }
-        dest.writeByte((byte) (isRead ? 0x01 : 0x00));
-        dest.writeValue(type);
-        if (tags == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeList(tags);
-        }
-        dest.writeString(bgColor);
-        if (inboxMessageContents == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeList(inboxMessageContents);
-        }
-        dest.writeString(orientation);
-        dest.writeString(campaignId);
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(_title)
+        dest.writeString(_body)
+        dest.writeString(_imageUrl)
+        dest.writeString(_actionUrl)
+        dest.writeLong(_date)
+        dest.writeLong(_expires)
+        dest.writeString(_messageId)
+        dest.writeByte(0x01.toByte())
+        dest.writeString(_data.toString())
+        dest.writeByte(0x01.toByte())
+        dest.writeString(_customData.toString())
+        dest.writeByte((if (read) 0x01 else 0x00).toByte())
+        dest.writeValue(_type)
+        dest.writeByte(0x01.toByte())
+        dest.writeList(_tags)
+        dest.writeString(_bgColor)
+        dest.writeByte(0x01.toByte())
+        dest.writeList(_inboxMessageContents)
+        dest.writeString(_orientation)
+        dest.writeString(_campaignId)
+        val wzrkParams = _wzrkParams
         if (wzrkParams == null) {
-            dest.writeByte((byte) (0x00));
+            dest.writeByte(0x00.toByte())
         } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeString(wzrkParams.toString());
+            dest.writeByte(0x01.toByte())
+            dest.writeString(wzrkParams.toString())
+        }
+    }
+
+    companion object {
+
+        @JvmField
+        val CREATOR: Parcelable.Creator<CTInboxMessage> = object : Parcelable.Creator<CTInboxMessage> {
+            override fun createFromParcel(`in`: Parcel): CTInboxMessage {
+                return CTInboxMessage(`in`)
+            }
+
+            override fun newArray(size: Int): Array<CTInboxMessage?> {
+                return arrayOfNulls(size)
+            }
+        }
+
+        @JvmStatic
+        fun getCREATOR(): Parcelable.Creator<CTInboxMessage> {
+            return CREATOR
         }
     }
 }

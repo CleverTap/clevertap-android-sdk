@@ -1,298 +1,296 @@
-package com.clevertap.android.sdk.inbox;
+package com.clevertap.android.sdk.inbox
 
-import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX;
+import android.content.Context
+import android.content.Intent
+import android.graphics.Color
+import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Parcelable
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.annotation.OptIn
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope
+import androidx.annotation.VisibleForTesting
+import androidx.fragment.app.Fragment
+import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.clevertap.android.sdk.CTInboxStyleConfig
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX
+import com.clevertap.android.sdk.DidClickForHardPermissionListener
+import com.clevertap.android.sdk.FetchInboxCallback
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.R
+import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.customviews.InboxVideoStates
+import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView
+import com.clevertap.android.sdk.customviews.VerticalSpaceItemDecoration
+import com.clevertap.android.sdk.video.VideoLibChecker
+import org.json.JSONObject
+import java.lang.ref.WeakReference
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Parcelable;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
-import androidx.annotation.VisibleForTesting;
-import androidx.fragment.app.Fragment;
-import androidx.media3.common.util.UnstableApi;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import com.clevertap.android.sdk.CTInboxStyleConfig;
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.DidClickForHardPermissionListener;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.customviews.InboxVideoStates;
-import com.clevertap.android.sdk.customviews.MediaPlayerRecyclerView;
-import com.clevertap.android.sdk.customviews.VerticalSpaceItemDecoration;
-import com.clevertap.android.sdk.video.VideoLibChecker;
-
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import org.json.JSONObject;
-
+/**
+ * Stays public (with [RestrictTo]): [CTInboxActivity], which [com.clevertap.android.sdk.CleverTapAPI]
+ * reaches through its listener, implements the nested [InboxListener].
+ */
 @RestrictTo(Scope.LIBRARY)
-@OptIn(markerClass = UnstableApi.class)
-public class CTInboxListViewFragment extends Fragment {
+@OptIn(markerClass = [UnstableApi::class])
+open class CTInboxListViewFragment : Fragment() {
 
+    @RestrictTo(Scope.LIBRARY)
     interface InboxListener {
 
-        void messageDidClick(int contentPageIndex, CTInboxMessage inboxMessage, Bundle data,
-                HashMap<String, String> keyValue, int buttonIndex);
+        fun messageDidClick(
+            contentPageIndex: Int, inboxMessage: CTInboxMessage?, data: Bundle?,
+            keyValue: HashMap<String, String>?, buttonIndex: Int
+        )
 
-        void messageDidShow(CTInboxMessage inboxMessage, Bundle data);
+        fun messageDidShow(inboxMessage: CTInboxMessage?, data: Bundle?)
     }
 
-    CleverTapInstanceConfig config;
+    internal var config: CleverTapInstanceConfig? = null
 
-    boolean haveVideoPlayerSupport = VideoLibChecker.haveVideoPlayerSupport;
+    internal var haveVideoPlayerSupport: Boolean = VideoLibChecker.haveVideoPlayerSupport
 
-    ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
+    internal var inboxMessages = ArrayList<CTInboxMessage>()
 
-    LinearLayout linearLayout;
+    internal var linearLayout: LinearLayout? = null
 
-    MediaPlayerRecyclerView mediaRecyclerView;
+    internal var mediaRecyclerView: MediaPlayerRecyclerView? = null
 
-    private InboxVideoStates ownVideoStates;
+    private var ownVideoStates: InboxVideoStates? = null
 
-    RecyclerView recyclerView;
+    internal var recyclerView: RecyclerView? = null
 
-    TextView noMessageView;
+    internal var noMessageView: TextView? = null
 
-    private CTInboxMessageAdapter inboxMessageAdapter;
+    private var inboxMessageAdapter: CTInboxMessageAdapter? = null
 
+    internal var styleConfig: CTInboxStyleConfig? = null
 
-    CTInboxStyleConfig styleConfig;
+    private var firstTime = true
 
-    private boolean firstTime = true;
+    private var listenerWeakReference: WeakReference<InboxListener>? = null
 
-    private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
+    private var tabPosition = 0
 
-    private int tabPosition;
+    private var didClickForHardPermissionListener: DidClickForHardPermissionListener? = null
 
-    private DidClickForHardPermissionListener didClickForHardPermissionListener;
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        Bundle bundle = getArguments();
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        val bundle = arguments
         if (bundle != null) {
-            config = bundle.getParcelable("config");
-            styleConfig = bundle.getParcelable("styleConfig");
-            tabPosition = bundle.getInt("position", -1);
-            updateInboxMessages();
-            if (context instanceof CTInboxActivity) {
-                setListener((CTInboxListViewFragment.InboxListener) getActivity());
+            @Suppress("DEPRECATION")
+            config = bundle.getParcelable("config")
+            @Suppress("DEPRECATION")
+            styleConfig = bundle.getParcelable("styleConfig")
+            tabPosition = bundle.getInt("position", -1)
+            updateInboxMessages()
+            if (context is CTInboxActivity) {
+                setListener(activity as InboxListener?)
             }
             /*Initializes the below listener only when inbox payload has CTInbox activity as their host activity
             when requesting permission for notification.*/
-            if (context instanceof DidClickForHardPermissionListener) {
-                didClickForHardPermissionListener = (DidClickForHardPermissionListener) context;
+            if (context is DidClickForHardPermissionListener) {
+                didClickForHardPermissionListener = context
             }
         }
     }
-    private void updateInboxMessages(){
-        ArrayList<CTInboxMessage> freshMessages = fetchFreshMessages();
+
+    private fun updateInboxMessages() {
+        val freshMessages = fetchFreshMessages()
         if (freshMessages != null) {
-            inboxMessages = freshMessages;
+            inboxMessages = freshMessages
         }
     }
 
-    @Nullable
-    ArrayList<CTInboxMessage> fetchFreshMessages() {
-        Bundle bundle = getArguments();
-        if (bundle == null) return null;
-        final String filter = bundle.getString("filter", null);
+    internal fun fetchFreshMessages(): ArrayList<CTInboxMessage>? {
+        val bundle = arguments ?: return null
+        val filter = bundle.getString("filter", null)
         // Application context, not the Activity: instanceWithConfig may retain the Context for the
         // instance's lifetime, which would leak the Activity.
-        CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
-        if (cleverTapAPI == null) return null;
-        Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
-        ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
-        return filter != null ? filterMessages(allMessages, filter) : allMessages;
+        val cleverTapAPI = CTInboxActivity.instanceWithConfig(requireContext().applicationContext, config)
+            ?: return null
+        Logger.v("CTInboxListViewFragment: fetching messages with: tabPosition = [$tabPosition], filter = [$filter]")
+        val allMessages = cleverTapAPI.allInboxMessages
+        return if (filter != null) filterMessages(allMessages, filter) else allMessages
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState) {
-        View allView = inflater.inflate(R.layout.inbox_list_view, container, false);
-        SwipeRefreshLayout swipeRefreshLayout = allView.findViewById(R.id.ct_inbox_swipe_refresh);
-        wireSwipeToRefresh(swipeRefreshLayout);
-        linearLayout = allView.findViewById(R.id.list_view_linear_layout);
-        linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
-        noMessageView = allView.findViewById(R.id.list_view_no_message_view);
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val allView = inflater.inflate(R.layout.inbox_list_view, container, false)
+        val swipeRefreshLayout = allView.findViewById<SwipeRefreshLayout>(R.id.ct_inbox_swipe_refresh)
+        wireSwipeToRefresh(swipeRefreshLayout)
+        val linearLayout = allView.findViewById<LinearLayout>(R.id.list_view_linear_layout)
+        this.linearLayout = linearLayout
+        linearLayout.setBackgroundColor(Color.parseColor(styleConfig!!.inboxBackgroundColor))
+        val noMessageView = allView.findViewById<TextView>(R.id.list_view_no_message_view)
+        this.noMessageView = noMessageView
 
-        if (inboxMessages.size() <= 0) {
-            showNoMessageView();
-            return allView;
+        if (inboxMessages.size <= 0) {
+            showNoMessageView()
+            return allView
         }
 
-        noMessageView.setVisibility(View.GONE);
-        buildListView();
-        return allView;
+        noMessageView.visibility = View.GONE
+        buildListView()
+        return allView
     }
 
-    private void showNoMessageView() {
-        noMessageView.setText(styleConfig.getNoMessageViewText());
-        noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
-        noMessageView.setVisibility(View.VISIBLE);
+    private fun showNoMessageView() {
+        val noMessageView = noMessageView!!
+        noMessageView.text = styleConfig!!.noMessageViewText
+        noMessageView.setTextColor(Color.parseColor(styleConfig!!.noMessageViewTextColor))
+        noMessageView.visibility = View.VISIBLE
     }
 
     /** In the inbox screen the tabs share the screen's states; a fragment outside it keeps its own. */
     @VisibleForTesting
-    InboxVideoStates videoStates() {
-        if (getActivity() instanceof CTInboxActivity) {
-            return ((CTInboxActivity) getActivity()).getVideoStates();
+    internal fun videoStates(): InboxVideoStates {
+        val activity = activity
+        if (activity is CTInboxActivity) {
+            return activity.videoStates
         }
         if (ownVideoStates == null) {
-            ownVideoStates = new InboxVideoStates();
+            ownVideoStates = InboxVideoStates()
         }
-        return ownVideoStates;
+        return ownVideoStates!!
     }
 
-    private void buildListView() {
-        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
+    private fun buildListView() {
+        val linearLayoutManager = LinearLayoutManager(activity)
+        val inboxMessageAdapter = CTInboxMessageAdapter(inboxMessages, this)
+        this.inboxMessageAdapter = inboxMessageAdapter
         if (haveVideoPlayerSupport) {
-            mediaRecyclerView = new MediaPlayerRecyclerView(getActivity(), videoStates());
-            mediaRecyclerView.setVisibility(View.VISIBLE);
-            mediaRecyclerView.setLayoutManager(linearLayoutManager);
-            mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
-            mediaRecyclerView.setItemAnimator(new DefaultItemAnimator());
+            val mediaRecyclerView = MediaPlayerRecyclerView(activity!!, videoStates())
+            this.mediaRecyclerView = mediaRecyclerView
+            mediaRecyclerView.visibility = View.VISIBLE
+            mediaRecyclerView.layoutManager = linearLayoutManager
+            mediaRecyclerView.addItemDecoration(VerticalSpaceItemDecoration(18))
+            mediaRecyclerView.itemAnimator = DefaultItemAnimator()
 
-            mediaRecyclerView.setAdapter(inboxMessageAdapter);
-            inboxMessageAdapter.notifyDataSetChanged();
-            linearLayout.addView(mediaRecyclerView);
+            mediaRecyclerView.adapter = inboxMessageAdapter
+            inboxMessageAdapter.notifyDataSetChanged()
+            linearLayout!!.addView(mediaRecyclerView)
 
             if (firstTime && shouldAutoPlayOnFirstLaunch()) {
-                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mediaRecyclerView.playVideo();
-                    }
-                }, 1000);
-                firstTime = false;
+                Handler(Looper.getMainLooper()).postDelayed({ this.mediaRecyclerView!!.playVideo() }, 1000)
+                firstTime = false
             }
 
         } else {
-            recyclerView = linearLayout.findViewById(R.id.list_view_recycler_view);
-            recyclerView.setVisibility(View.VISIBLE);
-            recyclerView.setLayoutManager(linearLayoutManager);
-            recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
-            recyclerView.setItemAnimator(new DefaultItemAnimator());
-            recyclerView.setAdapter(inboxMessageAdapter);
-            inboxMessageAdapter.notifyDataSetChanged();
+            val recyclerView = linearLayout!!.findViewById<RecyclerView>(R.id.list_view_recycler_view)
+            this.recyclerView = recyclerView
+            recyclerView.visibility = View.VISIBLE
+            recyclerView.layoutManager = linearLayoutManager
+            recyclerView.addItemDecoration(VerticalSpaceItemDecoration(18))
+            recyclerView.itemAnimator = DefaultItemAnimator()
+            recyclerView.adapter = inboxMessageAdapter
+            inboxMessageAdapter.notifyDataSetChanged()
         }
     }
 
-    @Override
-    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        super.onViewStateRestored(savedInstanceState);
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
         if (savedInstanceState != null) {
-            Parcelable savedRecyclerLayoutState = savedInstanceState.getParcelable("recyclerLayoutState");
+            @Suppress("DEPRECATION")
+            val savedRecyclerLayoutState = savedInstanceState.getParcelable<Parcelable>("recyclerLayoutState")
             if (mediaRecyclerView != null) {
-                if (mediaRecyclerView.getLayoutManager() != null) {
-                    mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+                if (mediaRecyclerView!!.layoutManager != null) {
+                    mediaRecyclerView!!.layoutManager!!.onRestoreInstanceState(savedRecyclerLayoutState)
                 }
             }
-            if (!(getActivity() instanceof CTInboxActivity)) {
+            if (activity !is CTInboxActivity) {
                 // Outside the inbox screen the fragment keeps its own states, even before its list is built
-                videoStates().restore(savedInstanceState.getBundle(CTInboxActivity.VIDEO_STATES_KEY));
+                videoStates().restore(savedInstanceState.getBundle(CTInboxActivity.VIDEO_STATES_KEY))
             }
 
             if (recyclerView != null) {
-                if (recyclerView.getLayoutManager() != null) {
-                    recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+                if (recyclerView!!.layoutManager != null) {
+                    recyclerView!!.layoutManager!!.onRestoreInstanceState(savedRecyclerLayoutState)
                 }
             }
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
+    override fun onResume() {
+        super.onResume()
+        val mediaRecyclerView = mediaRecyclerView
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.onRestartPlayer();
+            mediaRecyclerView.onRestartPlayer()
             // Retry after layout: a tab restored without a scroll - after rotation - gets no
             // idle callback, and onRestartPlayer() alone runs too early to find any row.
-            mediaRecyclerView.post(mediaRecyclerView::playVideo);
+            mediaRecyclerView.post(mediaRecyclerView::playVideo)
         }
     }
 
     /**
-     * Called by {@link CTInboxActivity} once this page has finished animating into place.
-     * {@link #onResume()} is too early: it runs while the pager is still settling, so every row
-     * measures zero visible height and {@code playVideo()} finds no candidate.
+     * Called by [CTInboxActivity] once this page has finished animating into place.
+     * [onResume] is too early: it runs while the pager is still settling, so every row
+     * measures zero visible height and `playVideo()` finds no candidate.
      */
-    void onPageSettled() {
+    open fun onPageSettled() {
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.playVideo();
+            mediaRecyclerView!!.playVideo()
         }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
+    override fun onPause() {
+        super.onPause()
         // A tab that is not the current one must not keep a player and its decoder
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.releasePlayer();
+            mediaRecyclerView!!.releasePlayer()
         }
     }
 
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val mediaRecyclerView = mediaRecyclerView
         if (mediaRecyclerView != null) {
-            if (mediaRecyclerView.getLayoutManager() != null) {
-                outState.putParcelable("recyclerLayoutState",
-                        mediaRecyclerView.getLayoutManager().onSaveInstanceState());
+            if (mediaRecyclerView.layoutManager != null) {
+                outState.putParcelable(
+                    "recyclerLayoutState",
+                    mediaRecyclerView.layoutManager!!.onSaveInstanceState()
+                )
             }
-            mediaRecyclerView.rememberPlayingVideo(); // into the states the activity or this fragment keeps
+            mediaRecyclerView.rememberPlayingVideo() // into the states the activity or this fragment keeps
             if (ownVideoStates != null) {
-                outState.putBundle(CTInboxActivity.VIDEO_STATES_KEY, ownVideoStates.save());
+                outState.putBundle(CTInboxActivity.VIDEO_STATES_KEY, ownVideoStates!!.save())
             }
         }
 
+        val recyclerView = recyclerView
         if (recyclerView != null) {
-            if (recyclerView.getLayoutManager() != null) {
-                outState.putParcelable("recyclerLayoutState", recyclerView.getLayoutManager().onSaveInstanceState());
+            if (recyclerView.layoutManager != null) {
+                outState.putParcelable("recyclerLayoutState", recyclerView.layoutManager!!.onSaveInstanceState())
             }
         }
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
+    override fun onStop() {
+        super.onStop()
         // Free the player while the inbox is not visible; each video resumes from where it was.
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.releasePlayer();
+            mediaRecyclerView!!.releasePlayer()
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    override fun onDestroy() {
+        super.onDestroy()
         if (mediaRecyclerView != null) {
-            mediaRecyclerView.releasePlayer();
+            mediaRecyclerView!!.releasePlayer()
         }
     }
 
@@ -301,339 +299,361 @@ public class CTInboxListViewFragment extends Fragment {
      * Main thread only. Called from the pull-to-refresh success path — never from
      * background updates, so an on-screen list never changes without a user action.
      */
-    void refreshList() {
-        if (getActivity() == null) {
-            return;
+    open fun refreshList() {
+        if (activity == null) {
+            return
         }
-        ArrayList<CTInboxMessage> freshMessages = fetchFreshMessages();
-        if (freshMessages == null) {
-            return;
-        }
+        val freshMessages = fetchFreshMessages() ?: return
 
         // The view holders mark the on-screen copies read instantly, but the store's
         // write is async — never let a refresh flip a just-read message back to unread.
-        int preservedReads = mergeReadStateForward(inboxMessages, freshMessages);
+        val preservedReads = mergeReadStateForward(inboxMessages, freshMessages)
         if (preservedReads > 0) {
-            Logger.v("refreshList: preserved read state for " + preservedReads + " just-read message(s)");
+            Logger.v("refreshList: preserved read state for $preservedReads just-read message(s)")
         }
 
         if (isContentIdentical(inboxMessages, freshMessages)) {
-            Logger.v("refreshList: content identical (" + freshMessages.size()
-                    + " messages) — skipping repaint, video untouched");
-            return; // nothing changed — keep any playing video untouched
+            Logger.v(
+                "refreshList: content identical (" + freshMessages.size +
+                        " messages) — skipping repaint, video untouched"
+            )
+            return  // nothing changed — keep any playing video untouched
         }
 
-        if (getView() == null || noMessageView == null) {
+        val noMessageView = noMessageView
+        if (view == null || noMessageView == null) {
             // View not created (or already destroyed) — refresh the data only.
-            Logger.v("refreshList: view not available — data-only refresh ("
-                    + freshMessages.size() + " messages)");
-            replaceMessagesInPlace(freshMessages);
-            return;
+            Logger.v(
+                "refreshList: view not available — data-only refresh (" +
+                        freshMessages.size + " messages)"
+            )
+            replaceMessagesInPlace(freshMessages)
+            return
         }
 
-        int oldCount = inboxMessages.size();
+        val oldCount = inboxMessages.size
         if (mediaRecyclerView != null) {
             // Detach the shared video surface while its holder is still known;
             // rebinding with the surface attached is the SDK-2330 video regression.
-            mediaRecyclerView.prepareForListRebind();
+            mediaRecyclerView!!.prepareForListRebind()
         }
 
-        replaceMessagesInPlace(freshMessages);
+        replaceMessagesInPlace(freshMessages)
 
         if (inboxMessages.isEmpty()) {
-            Logger.v("refreshList: list now empty — showing no-message view");
+            Logger.v("refreshList: list now empty — showing no-message view")
             if (mediaRecyclerView != null) {
-                mediaRecyclerView.setVisibility(View.GONE);
+                mediaRecyclerView!!.visibility = View.GONE
             }
             if (recyclerView != null) {
-                recyclerView.setVisibility(View.GONE);
+                recyclerView!!.visibility = View.GONE
             }
             if (inboxMessageAdapter != null) {
-                inboxMessageAdapter.notifyDataSetChanged();
+                inboxMessageAdapter!!.notifyDataSetChanged()
             }
-            showNoMessageView();
-            return;
+            showNoMessageView()
+            return
         }
 
-        noMessageView.setVisibility(View.GONE);
+        noMessageView.visibility = View.GONE
+        val inboxMessageAdapter = inboxMessageAdapter
         if (inboxMessageAdapter == null) {
-            Logger.v("refreshList: first messages arrived (" + inboxMessages.size()
-                    + ") — building list UI");
-            buildListView(); // tab was opened empty — the list UI is built lazily now
-            return;
+            Logger.v(
+                "refreshList: first messages arrived (" + inboxMessages.size +
+                        ") — building list UI"
+            )
+            buildListView() // tab was opened empty — the list UI is built lazily now
+            return
         }
-        Logger.v("refreshList: repainting list, " + oldCount + " -> " + inboxMessages.size() + " messages");
-        RecyclerView activeRecyclerView = mediaRecyclerView != null ? mediaRecyclerView : recyclerView;
+        Logger.v("refreshList: repainting list, " + oldCount + " -> " + inboxMessages.size + " messages")
+        val activeRecyclerView: RecyclerView? = if (mediaRecyclerView != null) mediaRecyclerView else recyclerView
         if (activeRecyclerView != null) {
-            activeRecyclerView.setVisibility(View.VISIBLE);
+            activeRecyclerView.visibility = View.VISIBLE
         }
-        inboxMessageAdapter.notifyDataSetChanged();
+        inboxMessageAdapter.notifyDataSetChanged()
+        val mediaRecyclerView = mediaRecyclerView
         if (mediaRecyclerView != null) {
             // Post so findBestVisibleMediaHolder() sees the re-laid-out children.
-            mediaRecyclerView.post(mediaRecyclerView::playVideo);
+            mediaRecyclerView.post(mediaRecyclerView::playVideo)
         }
     }
 
     /**
-     * The adapter aliases {@link #inboxMessages}; the field must never be reassigned
+     * The adapter aliases [inboxMessages]; the field must never be reassigned
      * after the adapter exists, or click positions resolve against the wrong list.
      */
-    private void replaceMessagesInPlace(ArrayList<CTInboxMessage> freshMessages) {
-        inboxMessages.clear();
-        inboxMessages.addAll(freshMessages);
+    private fun replaceMessagesInPlace(freshMessages: ArrayList<CTInboxMessage>) {
+        inboxMessages.clear()
+        inboxMessages.addAll(freshMessages)
     }
 
-    /** @return how many fresh copies were upgraded to read. */
-    static int mergeReadStateForward(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
-        HashSet<String> readIds = new HashSet<>();
-        for (CTInboxMessage message : currentMessages) {
-            if (message.isRead()) {
-                readIds.add(message.getMessageId());
-            }
-        }
-        if (readIds.isEmpty()) {
-            return 0;
-        }
-        int upgraded = 0;
-        for (CTInboxMessage message : freshMessages) {
-            if (!message.isRead() && readIds.contains(message.getMessageId())) {
-                message.setRead(true);
-                upgraded++;
-            }
-        }
-        return upgraded;
-    }
-
-    static boolean isContentIdentical(List<CTInboxMessage> currentMessages, List<CTInboxMessage> freshMessages) {
-        if (currentMessages.size() != freshMessages.size()) {
-            return false;
-        }
-        for (int i = 0; i < currentMessages.size(); i++) {
-            CTInboxMessage current = currentMessages.get(i);
-            CTInboxMessage fresh = freshMessages.get(i);
-            if (!current.getMessageId().equals(fresh.getMessageId())
-                    || current.isRead() != fresh.isRead()
-                    || current.getDate() != fresh.getDate()
-                    || !contentJson(current).equals(contentJson(fresh))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * The "msg" sub-object only: the top-level read-state key must stay out of this
-     * comparison because the on-screen copies' backing JSON is fetch-time stale
-     * relative to their in-place-mutated read flag.
-     */
-    private static String contentJson(CTInboxMessage message) {
-        JSONObject data = message.getData();
-        if (data == null) {
-            return "";
-        }
-        JSONObject msg = data.optJSONObject(Constants.KEY_MSG);
-        return msg != null ? msg.toString() : "";
-    }
-
-    void wireSwipeToRefresh(@NonNull final SwipeRefreshLayout swipeRefreshLayout) {
+    internal fun wireSwipeToRefresh(swipeRefreshLayout: SwipeRefreshLayout) {
         // Direct child is a LinearLayout, whose canScrollVertically(-1) is always false.
         // Delegate to whichever RecyclerView is actually on screen so mid-scroll pulls
         // don't falsely trigger a refresh.
-        swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> {
-            RecyclerView target = mediaRecyclerView != null ? mediaRecyclerView : recyclerView;
-            return target != null && target.canScrollVertically(-1);
-        });
+        swipeRefreshLayout.setOnChildScrollUpCallback { _, _ ->
+            val target: RecyclerView? = if (mediaRecyclerView != null) mediaRecyclerView else recyclerView
+            target != null && target.canScrollVertically(-1)
+        }
 
         // If the V2 fetch endpoint was already disabled this session, disable the widget
         // before registering the listener so no zombie callback is ever attached.
-        CleverTapAPI api = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
-        if (api != null && api.isInboxFetchDisabledForSession()) {
-            swipeRefreshLayout.setEnabled(false);
-            return;
+        val api = CTInboxActivity.instanceWithConfig(requireContext().applicationContext, config)
+        if (api != null && api.isInboxFetchDisabledForSession) {
+            swipeRefreshLayout.isEnabled = false
+            return
         }
 
-        swipeRefreshLayout.setOnRefreshListener(() -> {
+        swipeRefreshLayout.setOnRefreshListener {
             // Re-resolve at swipe time — do not capture the outer `api` reference, as the
             // listener lambda can fire long after onCreateView (e.g. after rotation).
-            CleverTapAPI refreshApi = CleverTapAPI.instanceWithConfig(requireContext().getApplicationContext(), config);
+            val refreshApi = CTInboxActivity.instanceWithConfig(requireContext().applicationContext, config)
             if (refreshApi == null) {
-                swipeRefreshLayout.setRefreshing(false);
-                return;
+                swipeRefreshLayout.isRefreshing = false
+                return@setOnRefreshListener
             }
-            refreshApi.fetchInbox(success -> {
-                Activity activity = getActivity();
-                if (activity == null) return;
-                activity.runOnUiThread(() -> {
-                    swipeRefreshLayout.setRefreshing(false);
+            refreshApi.fetchInbox(FetchInboxCallback { success ->
+                val activity = activity ?: return@FetchInboxCallback
+                activity.runOnUiThread(Runnable {
+                    swipeRefreshLayout.isRefreshing = false
                     if (!success) {
-                        Logger.v("pull-to-refresh: fetch failed or throttled — list unchanged");
+                        Logger.v("pull-to-refresh: fetch failed or throttled — list unchanged")
                         // First fetch that hit a 403 — hide the widget now that the spinner is done.
-                        if (refreshApi.isInboxFetchDisabledForSession()) {
-                            swipeRefreshLayout.setEnabled(false);
+                        if (refreshApi.isInboxFetchDisabledForSession) {
+                            swipeRefreshLayout.isEnabled = false
                         }
-                        return; // fetch failed or throttled — the stored data is unchanged
+                        return@Runnable  // fetch failed or throttled — the stored data is unchanged
                     }
                     // Re-check inside the runnable: state can change between post and run.
-                    if (!isAdded()) return;
-                    Activity currentActivity = getActivity();
-                    if (currentActivity instanceof CTInboxActivity && !currentActivity.isFinishing()) {
+                    if (!isAdded) {
+                        return@Runnable
+                    }
+                    val currentActivity = this.activity
+                    if (currentActivity is CTInboxActivity && !currentActivity.isFinishing) {
                         // All resident tab fragments repaint from the same committed
                         // snapshot, so no tab keeps showing a server-deleted message.
-                        Logger.v("pull-to-refresh success: refreshing all inbox tabs");
-                        ((CTInboxActivity) currentActivity).refreshAllInboxListFragments();
+                        Logger.v("pull-to-refresh success: refreshing all inbox tabs")
+                        currentActivity.refreshAllInboxListFragments()
                     } else {
-                        Logger.v("pull-to-refresh success: host is not CTInboxActivity — refreshing this list only");
-                        refreshList();
+                        Logger.v("pull-to-refresh success: host is not CTInboxActivity — refreshing this list only")
+                        refreshList()
                     }
-                });
-            });
-        });
+                })
+            })
+        }
     }
 
-    void didClick(Bundle data, int position, int contentPageIndex, HashMap<String, String> keyValuePayload, int buttonIndex) {
+    internal fun didClick(
+        data: Bundle?,
+        position: Int,
+        contentPageIndex: Int,
+        keyValuePayload: HashMap<String, String>?,
+        buttonIndex: Int
+    ) {
         // A row's click listener remembers its position from the moment the row was
         // drawn. Touch events are queued, and after a refresh shrinks the list the
         // rows are redrawn only on the NEXT frame — so a tap can arrive carrying a
         // position from the old, longer list. Indexing with it would go out of
         // bounds, so such a tap is ignored instead of acted on.
-        if (position < 0 || position >= inboxMessages.size()) {
-            Logger.v("didClick: stale position " + position + ", ignoring click");
-            return;
+        if (position < 0 || position >= inboxMessages.size) {
+            Logger.v("didClick: stale position $position, ignoring click")
+            return
         }
-        CTInboxListViewFragment.InboxListener listener = getListener();
+        val listener = getListener()
+        listener?.messageDidClick(contentPageIndex, inboxMessages[position], data, keyValuePayload, buttonIndex)
+    }
+
+    internal fun didShow(data: Bundle?, inboxMessage: CTInboxMessage?) {
+        val listener = getListener()
         if (listener != null) {
-            listener.messageDidClick(contentPageIndex, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
+            Logger.v(
+                "CTInboxListViewFragment:didShow() called with: data = [" + data + "], messageId = [" +
+                        inboxMessage!!.messageId + "]"
+            )
+            listener.messageDidShow(inboxMessage, data)
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
-    void didShow(Bundle data, CTInboxMessage inboxMessage) {
-        CTInboxListViewFragment.InboxListener listener = getListener();
-        if (listener != null) {
-            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], messageId = [" + inboxMessage.getMessageId() + "]");
-            listener.messageDidShow(inboxMessage, data);
-        }
-    }
-
-    void fireUrlThroughIntent(String url) {
+    internal fun fireUrlThroughIntent(url: String?) {
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
-            if (getActivity() != null) {
-                Utils.setPackageNameFromResolveInfoList(getActivity(), intent);
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url!!.replace("\n", "").replace("\r", "")))
+            if (activity != null) {
+                Utils.setPackageNameFromResolveInfoList(activity, intent)
             }
-            startActivity(intent);
-        } catch (Throwable t) {
+            startActivity(intent)
+        } catch (t: Throwable) {
             // Ignore
         }
     }
 
-    CTInboxListViewFragment.InboxListener getListener() {
-        CTInboxListViewFragment.InboxListener listener = null;
+    internal fun getListener(): InboxListener? {
+        var listener: InboxListener? = null
         try {
-            listener = listenerWeakReference.get();
-        } catch (Throwable t) {
+            listener = listenerWeakReference!!.get()
+        } catch (t: Throwable) {
             // no-op
         }
         if (listener == null) {
-            Logger.v("InboxListener is null for messages");
+            Logger.v("InboxListener is null for messages")
         }
-        return listener;
+        return listener
     }
 
-    void setListener(CTInboxListViewFragment.InboxListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
+    internal fun setListener(listener: InboxListener?) {
+        listenerWeakReference = WeakReference(listener)
     }
 
-    MediaPlayerRecyclerView getMediaRecyclerView() {
-        return this.mediaRecyclerView;
-    }
-
-    void setMediaRecyclerView(MediaPlayerRecyclerView mediaRecyclerView) {
-        this.mediaRecyclerView = mediaRecyclerView;
-    }
-
-    void handleClick(int position, int viewPagerPosition, String buttonText, JSONObject jsonObject, HashMap<String, String> keyValuePayload, int buttonIndex) {
-        boolean isInboxMessageButtonClick = jsonObject != null;
+    internal fun handleClick(
+        position: Int,
+        viewPagerPosition: Int,
+        buttonText: String?,
+        jsonObject: JSONObject?,
+        keyValuePayload: HashMap<String, String>?,
+        buttonIndex: Int
+    ) {
+        val isInboxMessageButtonClick = jsonObject != null
 
         try {
             if (isInboxMessageButtonClick) {
-                String linkType = inboxMessages.get(position).getInboxMessageContents().
-                        get(0).getLinktype(jsonObject);
-                if (linkType.equalsIgnoreCase(Constants.KEY_URL)) {
-                    String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0)
-                            .getLinkUrl(jsonObject);
+                val linkType = inboxMessages[position].inboxMessageContents[0].getLinktype(jsonObject)
+                if (linkType!!.equals(Constants.KEY_URL, ignoreCase = true)) {
+                    val actionUrl = inboxMessages[position].inboxMessageContents[0]
+                        .getLinkUrl(jsonObject)
                     if (actionUrl != null) {
-                        fireUrlThroughIntent(actionUrl);
+                        fireUrlThroughIntent(actionUrl)
                     }
-                }
-                else if (linkType.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
-                        && didClickForHardPermissionListener != null) {
-                    boolean isFallbackSettings = inboxMessages.get(position).
-                            getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
-                    didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
+                } else if (linkType.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION) &&
+                    didClickForHardPermissionListener != null
+                ) {
+                    val isFallbackSettings = inboxMessages[position]
+                        .inboxMessageContents[0].isFallbackSettingsEnabled(jsonObject)
+                    didClickForHardPermissionListener!!.didClickForHardPermissionWithFallbackSettings(
+                        isFallbackSettings
+                    )
                 }
             } else {
-                String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
+                val actionUrl = inboxMessages[position].inboxMessageContents[0].actionUrl
                 if (actionUrl != null) {
-                    fireUrlThroughIntent(actionUrl);
+                    fireUrlThroughIntent(actionUrl)
                 }
             }
 
-            Bundle data = new Bundle();
-            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
-            Iterator<String> iterator = wzrkParams.keys();
+            val data = Bundle()
+            val wzrkParams = inboxMessages[position].wzrkParams
+            val iterator = wzrkParams.keys()
             while (iterator.hasNext()) {
-                String keyName = iterator.next();
+                val keyName = iterator.next()
                 if (keyName.startsWith(Constants.WZRK_PREFIX)) {
-                    data.putString(keyName, wzrkParams.getString(keyName));
+                    data.putString(keyName, wzrkParams.getString(keyName))
                 }
             }
 
-            if (buttonText != null && !buttonText.isEmpty()) {
-                data.putString("wzrk_c2a", buttonText);
+            if (!buttonText.isNullOrEmpty()) {
+                data.putString("wzrk_c2a", buttonText)
             }
-            didClick(data, position, viewPagerPosition, keyValuePayload, buttonIndex);
-        } catch (Throwable t) {
-            Logger.d("Error handling notification button click: " + t.getCause());
+            didClick(data, position, viewPagerPosition, keyValuePayload, buttonIndex)
+        } catch (t: Throwable) {
+            Logger.d("Error handling notification button click: " + t.cause)
         }
     }
 
-    void handleViewPagerClick(int position, int viewPagerPosition) {
+    internal fun handleViewPagerClick(position: Int, viewPagerPosition: Int) {
         try {
-            Bundle data = new Bundle();
-            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
-            Iterator<String> iterator = wzrkParams.keys();
+            val data = Bundle()
+            val wzrkParams = inboxMessages[position].wzrkParams
+            val iterator = wzrkParams.keys()
             while (iterator.hasNext()) {
-                String keyName = iterator.next();
+                val keyName = iterator.next()
                 if (keyName.startsWith(Constants.WZRK_PREFIX)) {
-                    data.putString(keyName, wzrkParams.getString(keyName));
+                    data.putString(keyName, wzrkParams.getString(keyName))
                 }
             }
             //pass APP_INBOX_ITEM_INDEX as value of buttonIndex to indicate the item click not the button.
-            didClick(data, position, viewPagerPosition,null, APP_INBOX_ITEM_INDEX);
-            String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition)
-                    .getActionUrl();
-            fireUrlThroughIntent(actionUrl);
-        } catch (Throwable t) {
-            Logger.d("Error handling notification button click: " + t.getCause());
+            didClick(data, position, viewPagerPosition, null, APP_INBOX_ITEM_INDEX)
+            val actionUrl = inboxMessages[position].inboxMessageContents[viewPagerPosition]
+                .actionUrl
+            fireUrlThroughIntent(actionUrl)
+        } catch (t: Throwable) {
+            Logger.d("Error handling notification button click: " + t.cause)
         }
     }
 
-    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> messages, String filter) {
-        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
-        for (CTInboxMessage inboxMessage : messages) {
-            if (inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
-                for (String stringTag : inboxMessage.getTags()) {
-                    if (stringTag.equalsIgnoreCase(filter)) {
-                        filteredMessages.add(inboxMessage);
+    private fun filterMessages(messages: ArrayList<CTInboxMessage>, filter: String): ArrayList<CTInboxMessage> {
+        val filteredMessages = ArrayList<CTInboxMessage>()
+        for (inboxMessage in messages) {
+            if (inboxMessage.tags.size > 0) {
+                for (stringTag in inboxMessage.tags) {
+                    if (stringTag.equals(filter, ignoreCase = true)) {
+                        filteredMessages.add(inboxMessage)
                     }
                 }
             }
         }
-        return filteredMessages;
+        return filteredMessages
     }
 
-    private boolean shouldAutoPlayOnFirstLaunch() {
-        return tabPosition <= 0;
+    private fun shouldAutoPlayOnFirstLaunch(): Boolean {
+        return tabPosition <= 0
+    }
+
+    companion object {
+
+        /** @return how many fresh copies were upgraded to read. */
+        @JvmStatic
+        internal fun mergeReadStateForward(
+            currentMessages: List<CTInboxMessage>,
+            freshMessages: List<CTInboxMessage>
+        ): Int {
+            val readIds = HashSet<String?>()
+            for (message in currentMessages) {
+                if (message.isRead) {
+                    readIds.add(message.messageId)
+                }
+            }
+            if (readIds.isEmpty()) {
+                return 0
+            }
+            var upgraded = 0
+            for (message in freshMessages) {
+                if (!message.isRead && readIds.contains(message.messageId)) {
+                    message.setRead(true)
+                    upgraded++
+                }
+            }
+            return upgraded
+        }
+
+        @JvmStatic
+        internal fun isContentIdentical(
+            currentMessages: List<CTInboxMessage>,
+            freshMessages: List<CTInboxMessage>
+        ): Boolean {
+            if (currentMessages.size != freshMessages.size) {
+                return false
+            }
+            for (i in currentMessages.indices) {
+                val current = currentMessages[i]
+                val fresh = freshMessages[i]
+                if (current.messageId != fresh.messageId ||
+                    current.isRead != fresh.isRead ||
+                    current.date != fresh.date ||
+                    contentJson(current) != contentJson(fresh)
+                ) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        /**
+         * The "msg" sub-object only: the top-level read-state key must stay out of this
+         * comparison because the on-screen copies' backing JSON is fetch-time stale
+         * relative to their in-place-mutated read flag.
+         */
+        private fun contentJson(message: CTInboxMessage): String {
+            val data = message.data
+            val msg = data.optJSONObject(Constants.KEY_MSG)
+            return msg?.toString() ?: ""
+        }
     }
 }
